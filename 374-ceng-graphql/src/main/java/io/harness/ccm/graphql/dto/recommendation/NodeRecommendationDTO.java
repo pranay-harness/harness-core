@@ -1,5 +1,9 @@
 package io.harness.ccm.graphql.dto.recommendation;
 
+import io.harness.ccm.commons.beans.recommendation.NodePoolId;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -7,11 +11,10 @@ import lombok.Value;
 @Builder
 public class NodeRecommendationDTO implements RecommendationDetailsDTO {
   String id;
-  // TODO(UTSAV): Integer or int
-  Integer sumCpu;
-  Integer sumMemory;
-  Integer maxCpu;
-  Integer maxMemory;
-  String currentCloudProvider; // gcp/google, azure, aws
-  String currentService; // gke, aks, eks
+  NodePoolId nodePoolId;
+
+  RecommendClusterRequest resourceRequirement;
+
+  RecommendationResponse current;
+  RecommendationResponse recommended;
 }

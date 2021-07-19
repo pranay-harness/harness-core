@@ -3,6 +3,7 @@ package io.harness.pms.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
@@ -91,7 +92,7 @@ public class JiraStepHelperServiceImpl implements JiraStepHelperService {
             .stream()
             .map(s -> TaskSelector.newBuilder().setSelector(s).build())
             .collect(Collectors.toList()),
-        Scope.PROJECT);
+        Scope.PROJECT, EnvironmentType.ALL);
   }
 
   @Override

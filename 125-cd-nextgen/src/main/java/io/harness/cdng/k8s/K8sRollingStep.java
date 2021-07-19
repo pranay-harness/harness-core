@@ -107,7 +107,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
     TaskChainResponse response =
         k8sStepHelper.queueK8sTask(stepElementParameters, k8sRollingDeployRequest, ambiance, executionPassThroughData);
     executionSweepingOutputService.consume(ambiance, K8sRollingReleaseOutput.OUTPUT_NAME,
-        K8sRollingReleaseOutput.builder().name(releaseName).build(), StepOutcomeGroup.STAGE.name());
+        K8sRollingReleaseOutput.builder().name(releaseName).build(), StepOutcomeGroup.STEP.name());
 
     return response;
   }
@@ -154,7 +154,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT,
-          k8sRollingOutcomeBuilder.build(), StepOutcomeGroup.STAGE.name());
+          k8sRollingOutcomeBuilder.build(), StepOutcomeGroup.STEP.name());
       return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
     }
 
@@ -163,7 +163,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
     K8sRollingOutcome k8sRollingOutcome =
         k8sRollingOutcomeBuilder.releaseNumber(k8sTaskResponse.getReleaseNumber()).build();
     executionSweepingOutputService.consume(
-        ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STAGE.name());
+        ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STEP.name());
 
     return stepResponseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()

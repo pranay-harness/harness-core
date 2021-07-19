@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.provision.terraform.TerraformConfig;
 import io.harness.cdng.provision.terraform.TerraformConfigHelper;
 import io.harness.cdng.provision.terraform.TerraformStepHelper;
@@ -57,6 +58,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
   @Inject private TerraformConfigHelper terraformConfigHelper;
   @Inject private TerraformStepHelper terraformStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject private StepHelper stepHelper;
 
   @Override
   public TaskRequest obtainTaskAfterRbac(
@@ -139,9 +141,9 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
 
       List<TaskSelector> taskSelectors = StepUtils.getTaskSelectors(delegateSelectors);
 
-      return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+      return StepUtils.prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
           Collections.singletonList(TerraformCommandUnit.Rollback.name()), TaskType.TERRAFORM_TASK_NG.getDisplayName(),
-          taskSelectors);
+          taskSelectors, stepHelper.getEnvironmentType(ambiance));
     }
   }
 

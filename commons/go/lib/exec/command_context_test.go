@@ -2,8 +2,6 @@ package exec
 
 import (
 	"context"
-	osExec "os/exec"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,16 +43,6 @@ func TestOsCmdContext_WithEnvVarsMap(t *testing.T) {
 	assert.Contains(t, cmd.Env, "CUSTOMER_ID=1234")
 	assert.Contains(t, cmd.Env, "SESSION_ID=id1234")
 	assert.Contains(t, cmd.Env, "ENVIRONMENT=prod")
-}
-
-func TestOsCmdContext_String(t *testing.T) {
-	//find out where 'echo' is so that test can be platform agnostic
-	path, err := osExec.Command("which", "echo").Output()
-	assert.NoError(t, err)
-	pathString := strings.TrimSpace(string(path))
-
-	c := osCommandContext.CmdContext(context.Background(), "echo", "hello", "beautiful world").String()
-	assert.Equal(t, pathString+" hello beautiful world", c)
 }
 
 func TestOsCmdContext_Pid(t *testing.T) {

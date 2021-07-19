@@ -1,6 +1,6 @@
 package io.harness.cvng;
 
-import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
@@ -12,6 +12,9 @@ import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.cdng.beans.CVNGStepInfo.CVNGStepInfoBuilder;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
+import io.harness.cvng.cdng.entities.CVNGStepTask;
+import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
+import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -72,6 +75,15 @@ public class BuilderFactory {
       return builder;
     }
   }
+
+  public CVNGStepTaskBuilder cvngStepTaskBuilder() {
+    return CVNGStepTask.builder()
+        .accountId(context.getAccountId())
+        .activityId(generateUuid())
+        .status(Status.IN_PROGRESS)
+        .callbackId(generateUuid());
+  }
+
   public VerificationJobInstanceBuilder verificationJobInstanceBuilder() {
     return VerificationJobInstance.builder()
         .accountId(context.getAccountId())
@@ -96,18 +108,18 @@ public class BuilderFactory {
                      .build());
   }
 
-  public HeatMapBuilder heatMapBuilderWith5MinResolution() {
+  public HeatMapBuilder heatMapBuilder() {
     Instant bucketEndTime = clock.instant();
-    bucketEndTime = roundDownTo5MinBoundary(bucketEndTime);
-    Instant bucketStartTime = bucketEndTime.minus(4, ChronoUnit.HOURS);
+    bucketEndTime = roundDownToMinBoundary(bucketEndTime, 30);
+    Instant bucketStartTime = bucketEndTime.minus(24, ChronoUnit.HOURS);
     List<HeatMapRisk> heatMapRisks = new ArrayList<>();
 
     for (Instant startTime = bucketStartTime; startTime.isBefore(bucketEndTime);
-         startTime = startTime.plus(5, ChronoUnit.MINUTES)) {
+         startTime = startTime.plus(30, ChronoUnit.MINUTES)) {
       heatMapRisks.add(HeatMapRisk.builder()
                            .riskScore(-1)
                            .startTime(startTime)
-                           .endTime(startTime.plus(5, ChronoUnit.MINUTES))
+                           .endTime(startTime.plus(30, ChronoUnit.MINUTES))
                            .build());
     }
 
@@ -118,7 +130,7 @@ public class BuilderFactory {
         .category(CVMonitoringCategory.ERRORS)
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier())
-        .heatMapResolution(HeatMapResolution.FIVE_MIN)
+        .heatMapResolution(HeatMapResolution.THIRTY_MINUTES)
         .heatMapBucketStartTime(bucketStartTime)
         .heatMapBucketEndTime(bucketEndTime)
         .heatMapRisks(heatMapRisks);
@@ -135,8 +147,8 @@ public class BuilderFactory {
 
   private HealthSourceSpec createHealthSourceSpec() {
     return AppDynamicsHealthSourceSpec.builder()
-        .appdApplicationName("appApplicationName")
-        .appdTierName("tier")
+        .applicationName("appApplicationName")
+        .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
         .metricPacks(new HashSet<MetricPackDTO>() {

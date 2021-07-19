@@ -396,6 +396,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTaskParameters;
 import software.wings.delegatetasks.cv.DataCollectionException;
+import software.wings.delegatetasks.event.EventsDeliveryCallback;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionResponse;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
@@ -806,6 +807,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
@@ -1734,5 +1736,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactCollectionCallback.class, 40011);
     kryo.register(ExecutionWaitCallback.class, 40012);
     kryo.register(AzureContainerRegistry.class, 40013);
+    kryo.register(StackStatus.class, 40113);
+    kryo.register(EventsDeliveryCallback.class, 40014);
   }
 }

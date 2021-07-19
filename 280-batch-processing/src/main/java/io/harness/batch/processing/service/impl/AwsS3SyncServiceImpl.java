@@ -79,9 +79,12 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
                                        .fromJson(processResult.getOutput().getString(), JsonObject.class)
                                        .getAsJsonObject("AssumedRoleUser");
 
-      destinationBucketPath = String.join("/", "s3://" + awsCredentials.getAwsS3BucketName(),
-          assumedRoleUser.get("AssumedRoleId").getAsString(), s3SyncRecord.getSettingId(),
-          s3SyncRecord.getCurReportName());
+      String destinationBucket = s3SyncRecord.getDestinationBucket() != null ? s3SyncRecord.getDestinationBucket()
+                                                                             : awsCredentials.getAwsS3BucketName();
+
+      destinationBucketPath =
+          String.join("/", "s3://" + destinationBucket, assumedRoleUser.get("AssumedRoleId").getAsString(),
+              s3SyncRecord.getSettingId(), s3SyncRecord.getCurReportName());
 
       final ArrayList<String> cmd =
           Lists.newArrayList("aws", "s3", "sync", s3SyncRecord.getBillingBucketPath(), destinationBucketPath,

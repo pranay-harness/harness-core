@@ -145,7 +145,8 @@
           "type": "string"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -301,7 +302,9 @@
                   }
                 },
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
                 }
               ]
             },
@@ -461,10 +464,19 @@
               "type": "boolean"
             },
             "manifestPaths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
             }
           }
         }
@@ -506,10 +518,19 @@
           "type": "object",
           "properties": {
             "resourceNames": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
             }
           }
         }
@@ -985,7 +1006,9 @@
                   }
                 },
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
                 }
               ]
             },
@@ -1068,7 +1091,9 @@
                   }
                 },
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
                 }
               ]
             },
@@ -1151,7 +1176,9 @@
                   }
                 },
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
                 }
               ]
             },
@@ -1704,7 +1731,8 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "value": {
           "type": "string"
@@ -1758,13 +1786,16 @@
           ],
           "properties": {
             "connectorRef": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "namespace": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "releaseName": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         }
@@ -1786,10 +1817,19 @@
               }
             },
             "filePaths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
             },
             "skipDryRun": {
               "oneOf": [
@@ -1989,19 +2029,23 @@
           ],
           "properties": {
             "cluster": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "connectorRef": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "metadata": {
               "type": "string"
             },
             "namespace": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "releaseName": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         }

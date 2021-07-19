@@ -182,3 +182,7 @@ func (h *handler) GetAuthenticatedUser(ctx context.Context, in *pb.GetAuthentica
 func (h *handler) GetUserRepos(ctx context.Context, in *pb.GetUserReposRequest) (*pb.GetUserReposResponse, error) {
 	return git.GetUserRepos(ctx, in, h.log)
 }
+
+func (h *handler) FindPR(ctx context.Context, in *pb.FindPRRequest) (*pb.FindPRResponse, error) {
+	return git.FindPR(ctx, in, h.log)
+}

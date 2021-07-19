@@ -9,7 +9,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.InternalApi;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
@@ -101,8 +101,8 @@ public class HarnessUserGroupResource {
   }
 
   @GET
-  @Path("internal/checkIfHarnessSupportEnabledForAccount")
-  @InternalApi
+  @Path("supportEnabledStatus")
+  @NextGenManagerAuth
   public RestResponse<Boolean> checkIfHarnessSupportEnabledForAccountInternal(
       @QueryParam("accountId") String accountId) {
     return new RestResponse<>(harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId));
@@ -118,11 +118,11 @@ public class HarnessUserGroupResource {
   }
 
   @GET
-  @Path("internal/listAllHarnessSupportUsers")
-  @InternalApi
-  public RestResponse<List<HarnessSupportUserDTO>> listAllHarnessSupportUsersInternal(
-      @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(
-        harnessUserGroupService.toHarnessSupportUser(harnessUserGroupService.listAllHarnessSupportUsers()));
+  @Path("supportUsers")
+  @NextGenManagerAuth
+  public RestResponse<List<HarnessSupportUserDTO>> getSupportUsersInternal() {
+    List<HarnessSupportUserDTO> supportUsers =
+        harnessUserGroupService.toHarnessSupportUser(harnessUserGroupService.listAllHarnessSupportUserInternal());
+    return new RestResponse<>(supportUsers);
   }
 }

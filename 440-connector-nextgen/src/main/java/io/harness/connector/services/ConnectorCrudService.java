@@ -55,4 +55,7 @@ public interface ConnectorCrudService {
       String identifier, ConnectorValidationResult connectorValidationResult, Long activityTime);
 
   List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorsFQN);
+
+  void deleteBatch(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList);
 }

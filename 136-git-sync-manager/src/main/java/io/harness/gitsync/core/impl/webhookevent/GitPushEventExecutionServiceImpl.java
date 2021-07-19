@@ -47,7 +47,15 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
         String branchName = getBranchName(scmParsedWebhookResponse);
         GitBranch gitBranch = gitBranchService.get(webhookDTO.getAccountId(), repository.getLink(), branchName);
         if (gitBranch == null) {
-          log.info("{} : Branch {} doesn't exist, ignoring the event : {}", GIT_PUSH_EVENT, branchName, webhookDTO);
+          log.info("{} : Branch {} doesn't exist adding it and ignoring push event : {} ", GIT_PUSH_EVENT, branchName,
+              webhookDTO);
+          final GitBranch branch = GitBranch.builder()
+                                       .accountIdentifier(webhookDTO.getAccountId())
+                                       .branchSyncStatus(BranchSyncStatus.UNSYNCED)
+                                       .branchName(branchName)
+                                       .repoURL(repository.getLink())
+                                       .build();
+          gitBranchService.save(branch);
           return;
         }
 

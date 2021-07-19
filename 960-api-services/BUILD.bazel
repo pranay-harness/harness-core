@@ -11,7 +11,7 @@ java_library(
     ] + [
         "//:lombok",
         "//970-api-services-beans:module",
-        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
+        "//970-api-services-beans/src/main/proto:970_api_services_beans_java_proto",
         "//970-grpc:module",
         "//980-commons:module",
         "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
@@ -25,6 +25,7 @@ java_library(
         "@maven//:com_amazonaws_aws_java_sdk_ecs",
         "@maven//:com_amazonaws_aws_java_sdk_iam",
         "@maven//:com_amazonaws_aws_java_sdk_lambda",
+        "@maven//:com_amazonaws_aws_java_sdk_organizations",
         "@maven//:com_amazonaws_aws_java_sdk_s3",
         "@maven//:com_amazonaws_aws_java_sdk_servicediscovery",
         "@maven//:com_amazonaws_aws_java_sdk_sns",

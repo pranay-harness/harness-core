@@ -34,8 +34,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
   @NotNull String feature;
-  @NotNull String appdApplicationName;
-  @NotNull String appdTierName;
+  @NotNull String applicationName;
+  @NotNull String tierName;
   @NotNull @NotEmpty @Valid Set<MetricPackDTO> metricPacks;
 
   @Override
@@ -87,8 +87,8 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
                                                     .connectorIdentifier(getConnectorRef())
                                                     .monitoringSourceName(name)
                                                     .productName(feature)
-                                                    .applicationName(appdApplicationName)
-                                                    .tierName(appdTierName)
+                                                    .applicationName(applicationName)
+                                                    .tierName(tierName)
                                                     .envIdentifier(environmentRef)
                                                     .serviceIdentifier(serviceRef)
                                                     .metricPack(metricPack.toMetricPack(accountId, orgIdentifier,

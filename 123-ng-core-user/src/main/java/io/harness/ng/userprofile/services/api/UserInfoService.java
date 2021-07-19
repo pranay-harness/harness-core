@@ -16,4 +16,5 @@ public interface UserInfoService {
   UserInfo updateTwoFactorAuthInfo(TwoFactorAuthSettingsInfo authSettingsInfo);
   UserInfo disableTFA();
   PasswordChangeResponse changeUserPassword(PasswordChangeDTO passwordChangeDTO);
+  UserInfo unlockUser(String userId, String accountId);
 }

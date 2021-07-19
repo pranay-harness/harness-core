@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -83,6 +84,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
   @Inject private SshKeySpecDTOHelper sshKeySpecDTOHelper;
   @Inject private OutcomeService outcomeService;
   @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private StepHelper stepHelper;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -161,9 +163,10 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
             .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
             .build();
     String taskName = TaskType.SHELL_SCRIPT_TASK_NG.getDisplayName();
-    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    return StepUtils.prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName,
-        TaskSelectorYaml.toTaskSelector(shellScriptStepParameters.delegateSelectors.getValue()));
+        TaskSelectorYaml.toTaskSelector(shellScriptStepParameters.delegateSelectors.getValue()),
+        stepHelper.getEnvironmentType(ambiance));
   }
 
   private String getShellScript(ShellScriptStepParameters stepParameters) {

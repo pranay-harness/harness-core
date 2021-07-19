@@ -123,4 +123,18 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
     final String s = jsonWriter.writeValueAsString(entityTypeJsonNodeMap.get(EntityType.CONNECTORS));
     assertThat(s).isEqualTo(expectedOutput);
   }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category({UnitTests.class})
+  public void testGenerateYamlSchemaWithNonEmptyField() throws IOException {
+    setup(TestClassWithManyFields.ClassWithNonEmptyField.class);
+    final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
+    assertThat(entityTypeJsonNodeMap.size()).isEqualTo(1);
+    final String expectedOutput = IOUtils.resourceToString(
+        "testSchema/testNotEmptyField.json", StandardCharsets.UTF_8, this.getClass().getClassLoader());
+    ObjectWriter jsonWriter = yamlSchemaGenerator.getObjectWriter();
+    final String s = jsonWriter.writeValueAsString(entityTypeJsonNodeMap.get(EntityType.CONNECTORS));
+    assertThat(s).isEqualTo(expectedOutput);
+  }
 }

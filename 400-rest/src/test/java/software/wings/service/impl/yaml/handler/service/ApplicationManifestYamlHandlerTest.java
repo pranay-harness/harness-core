@@ -59,6 +59,23 @@ public class ApplicationManifestYamlHandlerTest extends WingsBaseTest {
     shouldDeleteValuesYaml();
     shouldDeleteHelmChartOverride();
     shouldDeletePcfOverrride();
+    shouldDeleteDeleteK8sManifestWhenPollForChangesEnabled();
+  }
+
+  private void shouldDeleteDeleteK8sManifestWhenPollForChangesEnabled() {
+    doReturn(ApplicationManifest.builder()
+                 .storeType(Local)
+                 .kind(K8S_MANIFEST)
+                 .serviceId("service")
+                 .pollForChanges(true)
+                 .build())
+        .when(yamlHandler)
+        .get(anyString(), anyString());
+
+    yamlHandler.delete(changeContext);
+
+    verify(applicationManifestService, times(1)).deleteAppManifest(any(ApplicationManifest.class));
+    reset(applicationManifestService);
   }
 
   private void shouldDeleteHelmChartOverride() throws Exception {

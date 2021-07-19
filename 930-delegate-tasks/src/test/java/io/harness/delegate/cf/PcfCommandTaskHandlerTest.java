@@ -5,6 +5,7 @@ import static io.harness.delegate.cf.PcfCommandTaskBaseHelperTest.ACTIVITY_ID;
 import static io.harness.delegate.cf.PcfCommandTaskBaseHelperTest.APP_ID;
 import static io.harness.delegate.task.pcf.request.CfInfraMappingDataRequest.ActionType.RUNNING_COUNT;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
 
 import static java.util.Collections.emptyList;
@@ -75,6 +76,7 @@ import java.util.Set;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -657,16 +659,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
             .existingApplicationDetails(
                 Arrays.asList(CfAppSetupTimeDetails.builder().applicationName("app1").initialInstanceCount(1).build()))
             .build();
-    CfCommandRequest cfCommandRequest = CfCommandRouteUpdateRequest.builder()
-                                            .pcfCommandType(PcfCommandType.RESIZE)
-                                            .pcfConfig(getPcfConfig())
-                                            .accountId(ACCOUNT_ID)
-                                            .organization(ORG)
-                                            .space(SPACE)
-                                            .timeoutIntervalInMin(2)
-                                            .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
-                                            .pcfRouteUpdateConfigData(routeUpdateRequestConfigData)
-                                            .build();
+    CfCommandRequest cfCommandRequest = getRouteUpdateRequest(routeUpdateRequestConfigData);
 
     doNothing().when(pcfCommandTaskHelper).mapRouteMaps(anyString(), anyList(), any(), any());
     doNothing().when(pcfCommandTaskHelper).unmapRouteMaps(anyString(), anyList(), any(), any());
@@ -887,5 +880,330 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
       assertThat(invalidArgumentsException.getParams())
           .containsValue("cfCommandRequest: Must be instance of CfInstanceSyncRequest");
     }
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwapRouteRollbackForInActiveApp() throws Exception {
+    reset(pcfDeploymentManager);
+    String appPrefix = "cf_app";
+    String inActiveAppName = appPrefix + "_4";
+    String activeAppName = appPrefix + "_5";
+    String newAppName = appPrefix + "_6";
+    List<String> finalRoutes = Arrays.asList("basicRoute.apps.pcf-harness.com", "shiny-jackal-pa.apps.pcf-harness.com");
+    List<String> tempRoutes = Collections.singletonList("tempBg.apps.pcf-harness.com");
+
+    CfAppSetupTimeDetails inActiveApp = CfAppSetupTimeDetails.builder()
+                                            .activeApp(false)
+                                            .applicationGuid("ca289f74-fdb6-486e-8679-2f91d8ce566e")
+                                            .initialInstanceCount(5)
+                                            .urls(tempRoutes)
+                                            .applicationName(inActiveAppName)
+                                            .build();
+
+    List<ApplicationSummary> existingApplicationSummaries =
+        getExistingApplicationSummaries(appPrefix, inActiveAppName, activeAppName, newAppName);
+    doReturn(existingApplicationSummaries).when(pcfDeploymentManager).getPreviousReleases(any(), eq(appPrefix));
+
+    CfRouteUpdateRequestConfigData routeUpdateRequestConfigData =
+        getRouteUpdateConfigData(appPrefix, activeAppName, finalRoutes, tempRoutes, inActiveApp);
+
+    CfCommandRequest cfCommandRequest = getRouteUpdateRequest(routeUpdateRequestConfigData);
+
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
+
+    verifyRollbackBehaviour(
+        inActiveAppName, activeAppName, newAppName, finalRoutes, tempRoutes, cfCommandExecutionResponse);
+  }
+
+  private void verifyRollbackBehaviour(String inActiveAppName, String activeAppName, String newAppName,
+      List<String> finalRoutes, List<String> tempRoutes, CfCommandExecutionResponse cfCommandExecutionResponse)
+      throws PivotalClientApiException {
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    // verify In Active app was up sized
+    verify(pcfDeploymentManager).upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    // verify correct routes are mapped to Active & InActive application
+    ArgumentCaptor<String> appNameMapRouteCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<List<String>> mapRoutesCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(pcfCommandTaskHelper, times(2))
+        .mapRouteMaps(appNameMapRouteCaptor.capture(), mapRoutesCaptor.capture(), any(), any());
+    List<String> appWhoseRoutesWasModified = appNameMapRouteCaptor.getAllValues();
+    List<List<String>> routesLists = mapRoutesCaptor.getAllValues();
+    assertThat(appWhoseRoutesWasModified).isNotNull();
+    assertThat(appWhoseRoutesWasModified.size()).isEqualTo(2);
+    assertThat(routesLists).isNotNull();
+    assertThat(appWhoseRoutesWasModified.get(0).equalsIgnoreCase(activeAppName)).isTrue();
+    assertThat(routesLists.get(0).containsAll(finalRoutes)).isTrue();
+    assertThat(appWhoseRoutesWasModified.get(1).equalsIgnoreCase(inActiveAppName)).isTrue();
+    assertThat(routesLists.get(1).containsAll(tempRoutes)).isTrue();
+
+    // verify correct routes are unmapped from Active & New application
+    ArgumentCaptor<String> appNameUnMapRouteCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<List<String>> unMapRoutesCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(pcfCommandTaskHelper, times(2))
+        .unmapRouteMaps(appNameUnMapRouteCaptor.capture(), unMapRoutesCaptor.capture(), any(), any());
+    List<String> appWhoseRoutesWereRemoved = appNameUnMapRouteCaptor.getAllValues();
+    List<List<String>> removedRouteList = unMapRoutesCaptor.getAllValues();
+    assertThat(appWhoseRoutesWereRemoved).isNotNull();
+    assertThat(appWhoseRoutesWereRemoved.size()).isEqualTo(2);
+    assertThat(removedRouteList).isNotNull();
+    assertThat(appWhoseRoutesWereRemoved.get(0).equalsIgnoreCase(activeAppName)).isTrue();
+    assertThat(removedRouteList.get(0).containsAll(tempRoutes)).isTrue();
+    assertThat(appWhoseRoutesWereRemoved.get(1).equalsIgnoreCase(newAppName)).isTrue();
+    assertThat(removedRouteList.get(1).containsAll(finalRoutes)).isTrue();
+
+    // verify setting of ENV variables for Active & InActive app
+    ArgumentCaptor<Boolean> isActiveAppCaptor = ArgumentCaptor.forClass(Boolean.class);
+    verify(pcfDeploymentManager, times(2))
+        .setEnvironmentVariableForAppStatus(any(), isActiveAppCaptor.capture(), any());
+    List<Boolean> isActiveAppValues = isActiveAppCaptor.getAllValues();
+    assertThat(isActiveAppValues).isNotNull();
+    assertThat(isActiveAppValues.get(0)).isTrue(); // for active app
+    assertThat(isActiveAppValues.get(1)).isFalse(); // for inactive app
+
+    // verify un-setting of ENV variables for New app
+    ArgumentCaptor<CfRequestConfig> cfRequestConfigArgumentCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(pcfDeploymentManager).unsetEnvironmentVariableForAppStatus(cfRequestConfigArgumentCaptor.capture(), any());
+    CfRequestConfig cfRequestConfig = cfRequestConfigArgumentCaptor.getValue();
+    assertThat(cfRequestConfig).isNotNull();
+    assertThat(cfRequestConfig.getApplicationName()).isEqualTo(newAppName);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwapRouteRollbackForInActiveAppNotPresent() throws Exception {
+    reset(pcfDeploymentManager);
+    String appPrefix = "cf_app";
+    String inActiveAppName = appPrefix + "_4";
+    String activeAppName = appPrefix + "_5";
+    String newAppName = appPrefix + "_6";
+    List<String> finalRoutes = Arrays.asList("basicRoute.apps.pcf-harness.com", "shiny-jackal-pa.apps.pcf-harness.com");
+    List<String> tempRoutes = Collections.singletonList("tempBg.apps.pcf-harness.com");
+
+    List<ApplicationSummary> existingApplicationSummaries =
+        getExistingApplicationSummaries(appPrefix, inActiveAppName, activeAppName, newAppName);
+    doReturn(existingApplicationSummaries).when(pcfDeploymentManager).getPreviousReleases(any(), eq(appPrefix));
+
+    CfRouteUpdateRequestConfigData routeUpdateRequestConfigData =
+        getRouteUpdateConfigData(appPrefix, activeAppName, finalRoutes, tempRoutes, null);
+
+    CfCommandRequest cfCommandRequest = getRouteUpdateRequest(routeUpdateRequestConfigData);
+
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
+    verifyRollbackBehaviourInActiveAppNotPresent(
+        activeAppName, newAppName, finalRoutes, tempRoutes, cfCommandExecutionResponse);
+  }
+
+  private void verifyRollbackBehaviourInActiveAppNotPresent(String activeAppName, String newAppName,
+      List<String> finalRoutes, List<String> tempRoutes, CfCommandExecutionResponse cfCommandExecutionResponse)
+      throws PivotalClientApiException {
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    // verify In Active app was not up sized as there is no In Active app
+    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    // verify correct routes are mapped to Active app only
+    ArgumentCaptor<String> appNameMapRouteCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<List<String>> mapRoutesCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(pcfCommandTaskHelper).mapRouteMaps(appNameMapRouteCaptor.capture(), mapRoutesCaptor.capture(), any(), any());
+    List<String> appWhoseRoutesWasModified = appNameMapRouteCaptor.getAllValues();
+    List<List<String>> routesLists = mapRoutesCaptor.getAllValues();
+    assertThat(appWhoseRoutesWasModified).isNotNull();
+    assertThat(appWhoseRoutesWasModified.size()).isEqualTo(1);
+    assertThat(routesLists).isNotNull();
+    assertThat(appWhoseRoutesWasModified.get(0).equalsIgnoreCase(activeAppName)).isTrue();
+    assertThat(routesLists.get(0).containsAll(finalRoutes)).isTrue();
+
+    // verify correct routes are unmapped to Active & New application
+    ArgumentCaptor<String> appNameUnMapRouteCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<List<String>> unMapRoutesCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(pcfCommandTaskHelper, times(2))
+        .unmapRouteMaps(appNameUnMapRouteCaptor.capture(), unMapRoutesCaptor.capture(), any(), any());
+    List<String> appWhoseRoutesWereRemoved = appNameUnMapRouteCaptor.getAllValues();
+    List<List<String>> removedRouteList = unMapRoutesCaptor.getAllValues();
+    assertThat(appWhoseRoutesWereRemoved).isNotNull();
+    assertThat(appWhoseRoutesWereRemoved.size()).isEqualTo(2);
+    assertThat(removedRouteList).isNotNull();
+    assertThat(appWhoseRoutesWereRemoved.get(0).equalsIgnoreCase(activeAppName)).isTrue();
+    assertThat(removedRouteList.get(0).containsAll(tempRoutes)).isTrue();
+    assertThat(appWhoseRoutesWereRemoved.get(1).equalsIgnoreCase(newAppName)).isTrue();
+    assertThat(removedRouteList.get(1).containsAll(finalRoutes)).isTrue();
+
+    // verify setting of ENV variables for Active
+    ArgumentCaptor<Boolean> isActiveAppCaptor = ArgumentCaptor.forClass(Boolean.class);
+    verify(pcfDeploymentManager).setEnvironmentVariableForAppStatus(any(), isActiveAppCaptor.capture(), any());
+    List<Boolean> isActiveAppValues = isActiveAppCaptor.getAllValues();
+    assertThat(isActiveAppValues).isNotNull();
+    assertThat(isActiveAppValues.size()).isEqualTo(1);
+    assertThat(isActiveAppValues.get(0)).isTrue(); // for active app
+
+    // verify un-setting of ENV variables for New app
+    ArgumentCaptor<CfRequestConfig> cfRequestConfigArgumentCaptor = ArgumentCaptor.forClass(CfRequestConfig.class);
+    verify(pcfDeploymentManager).unsetEnvironmentVariableForAppStatus(cfRequestConfigArgumentCaptor.capture(), any());
+    CfRequestConfig cfRequestConfig = cfRequestConfigArgumentCaptor.getValue();
+    assertThat(cfRequestConfig).isNotNull();
+    assertThat(cfRequestConfig.getApplicationName()).isEqualTo(newAppName);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwapRouteRollbackForInActiveAppFeatureFlagDisabled() throws Exception {
+    reset(pcfDeploymentManager);
+    String appPrefix = "cf_app";
+    String inActiveAppName = appPrefix + "_4";
+    String activeAppName = appPrefix + "_5";
+    String newAppName = appPrefix + "_6";
+    List<String> finalRoutes = Arrays.asList("basicRoute.apps.pcf-harness.com", "shiny-jackal-pa.apps.pcf-harness.com");
+    List<String> tempRoutes = Collections.singletonList("tempBg.apps.pcf-harness.com");
+
+    CfAppSetupTimeDetails inActiveApp = CfAppSetupTimeDetails.builder()
+                                            .activeApp(false)
+                                            .applicationGuid("ca289f74-fdb6-486e-8679-2f91d8ce566e")
+                                            .initialInstanceCount(5)
+                                            .urls(tempRoutes)
+                                            .applicationName(inActiveAppName)
+                                            .build();
+
+    List<ApplicationSummary> existingApplicationSummaries =
+        getExistingApplicationSummaries(appPrefix, inActiveAppName, activeAppName, newAppName);
+    doReturn(existingApplicationSummaries).when(pcfDeploymentManager).getPreviousReleases(any(), eq(appPrefix));
+
+    CfRouteUpdateRequestConfigData routeUpdateRequestConfigData =
+        getRouteUpdateConfigData(appPrefix, activeAppName, finalRoutes, tempRoutes, inActiveApp);
+    routeUpdateRequestConfigData.setUpSizeInActiveApp(false);
+
+    CfCommandRequest cfCommandRequest = getRouteUpdateRequest(routeUpdateRequestConfigData);
+
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        pcfRouteUpdateCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
+
+    assertThat(cfCommandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    verifyRollbackBehaviourFFDisabled(activeAppName, newAppName, finalRoutes, tempRoutes);
+  }
+
+  private void verifyRollbackBehaviourFFDisabled(String activeAppName, String newAppName, List<String> finalRoutes,
+      List<String> tempRoutes) throws PivotalClientApiException {
+    // verify In Active app was not up sized as upSizeInActiveApp is disabled
+    verify(pcfDeploymentManager, never()).upsizeApplicationWithSteadyStateCheck(any(), any());
+
+    // verify correct routes are mapped to Active & New app
+    ArgumentCaptor<String> appNameMapRouteCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<List<String>> mapRoutesCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(pcfCommandTaskHelper, times(2))
+        .mapRouteMaps(appNameMapRouteCaptor.capture(), mapRoutesCaptor.capture(), any(), any());
+    List<String> appWhoseRoutesWasModified = appNameMapRouteCaptor.getAllValues();
+    List<List<String>> routesLists = mapRoutesCaptor.getAllValues();
+    assertThat(appWhoseRoutesWasModified).isNotNull();
+    assertThat(appWhoseRoutesWasModified.size()).isEqualTo(2);
+    assertThat(routesLists).isNotNull();
+    assertThat(appWhoseRoutesWasModified.get(0).equalsIgnoreCase(activeAppName)).isTrue();
+    assertThat(routesLists.get(0).containsAll(finalRoutes)).isTrue();
+    assertThat(appWhoseRoutesWasModified.get(1).equalsIgnoreCase(newAppName)).isTrue();
+    assertThat(routesLists.get(1).containsAll(tempRoutes)).isTrue();
+
+    // verify correct routes are unmapped from Active & New application
+    ArgumentCaptor<String> appNameUnMapRouteCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<List<String>> unMapRoutesCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(pcfCommandTaskHelper, times(2))
+        .unmapRouteMaps(appNameUnMapRouteCaptor.capture(), unMapRoutesCaptor.capture(), any(), any());
+    List<String> appWhoseRoutesWereRemoved = appNameUnMapRouteCaptor.getAllValues();
+    List<List<String>> removedRouteList = unMapRoutesCaptor.getAllValues();
+    assertThat(appWhoseRoutesWereRemoved).isNotNull();
+    assertThat(appWhoseRoutesWereRemoved.size()).isEqualTo(2);
+    assertThat(removedRouteList).isNotNull();
+    assertThat(appWhoseRoutesWereRemoved.get(0).equalsIgnoreCase(activeAppName)).isTrue();
+    assertThat(removedRouteList.get(0).containsAll(tempRoutes)).isTrue();
+    assertThat(appWhoseRoutesWereRemoved.get(1).equalsIgnoreCase(newAppName)).isTrue();
+    assertThat(removedRouteList.get(1).containsAll(finalRoutes)).isTrue();
+
+    // verify setting of ENV variables for Active & New app
+    ArgumentCaptor<Boolean> isActiveAppCaptor = ArgumentCaptor.forClass(Boolean.class);
+    verify(pcfDeploymentManager, times(2))
+        .setEnvironmentVariableForAppStatus(any(), isActiveAppCaptor.capture(), any());
+    List<Boolean> isActiveAppValues = isActiveAppCaptor.getAllValues();
+    assertThat(isActiveAppValues).isNotNull();
+    assertThat(isActiveAppValues.get(0)).isTrue(); // for active app
+    assertThat(isActiveAppValues.get(1)).isFalse(); // for inactive app
+  }
+
+  @NotNull
+  private List<ApplicationSummary> getExistingApplicationSummaries(
+      String appPrefix, String inActiveAppName, String activeAppName, String newAppName) {
+    return Arrays.asList(ApplicationSummary.builder()
+                             .id("ca289f74-fdb6-486e-8679-2f91d8ce566e")
+                             .name(appPrefix + "_3")
+                             .diskQuota(1)
+                             .instances(2)
+                             .memoryLimit(250)
+                             .requestedState("STOPPED")
+                             .runningInstances(2)
+                             .build(),
+        ApplicationSummary.builder()
+            .id("ca289f74-fdb6-486e-8679-2f91d8ce566e")
+            .name(inActiveAppName)
+            .diskQuota(1)
+            .instances(2)
+            .memoryLimit(250)
+            .requestedState("RUNNING")
+            .runningInstances(2)
+            .build(),
+        ApplicationSummary.builder()
+            .id("806c5057-10d4-44c1-ba1b-9e56bd5a997f")
+            .name(activeAppName)
+            .diskQuota(1)
+            .instances(2)
+            .memoryLimit(250)
+            .requestedState("RUNNING")
+            .runningInstances(2)
+            .build(),
+        ApplicationSummary.builder()
+            .id("914d10c2-76e4-4467-96c7-688b0be7e8ad")
+            .name(newAppName)
+            .diskQuota(1)
+            .instances(2)
+            .memoryLimit(250)
+            .requestedState("RUNNING")
+            .runningInstances(2)
+            .build());
+  }
+
+  private CfRouteUpdateRequestConfigData getRouteUpdateConfigData(String appPrefix, String activeAppName,
+      List<String> finalRoutes, List<String> tempRoutes, CfAppSetupTimeDetails inActiveApp) {
+    return CfRouteUpdateRequestConfigData.builder()
+        .downsizeOldApplication(false)
+        .finalRoutes(finalRoutes)
+        .isRollback(true)
+        .isStandardBlueGreen(true)
+        .existingApplicationDetails(Collections.singletonList(
+            CfAppSetupTimeDetails.builder().applicationName(activeAppName).initialInstanceCount(1).build()))
+        .existingApplicationNames(Collections.singletonList(activeAppName))
+        .newApplicatiaonName(appPrefix + "_6")
+        .upSizeInActiveApp(true)
+        .existingInActiveApplicationDetails(inActiveApp)
+        .cfAppNamePrefix(appPrefix)
+        .finalRoutes(finalRoutes)
+        .tempRoutes(tempRoutes)
+        .build();
+  }
+
+  private CfCommandRouteUpdateRequest getRouteUpdateRequest(
+      CfRouteUpdateRequestConfigData routeUpdateRequestConfigData) {
+    return CfCommandRouteUpdateRequest.builder()
+        .pcfCommandType(PcfCommandType.RESIZE)
+        .pcfConfig(getPcfConfig())
+        .accountId(ACCOUNT_ID)
+        .organization(ORG)
+        .space(SPACE)
+        .timeoutIntervalInMin(2)
+        .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
+        .pcfRouteUpdateConfigData(routeUpdateRequestConfigData)
+        .build();
   }
 }

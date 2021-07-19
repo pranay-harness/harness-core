@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.AccountId;
-import io.harness.dtos.infrastructuremapping.InfrastructureMappingDTO;
+import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.models.constants.InstanceSyncConstants;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;

@@ -20,6 +20,7 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
@@ -33,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
@@ -227,9 +227,9 @@ public class OrchestrationAdjacencyListGenerator {
         String currentNodeId = queue.removeFirst();
         NodeExecution nodeExecution = nodeExIdMap.get(currentNodeId);
 
-        Map<String, Document> outcomes;
+        Map<String, OrchestrationMap> outcomes;
         if (isOutcomePresent) {
-          outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+          outcomes = PmsOutcomeMapper.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
               nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
         } else {
           outcomes = new LinkedHashMap<>();

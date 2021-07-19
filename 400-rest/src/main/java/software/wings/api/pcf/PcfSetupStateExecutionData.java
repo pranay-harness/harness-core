@@ -65,6 +65,8 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements De
   private boolean useArtifactProcessingScript;
   private String artifactProcessingScript;
   private List<String> tags;
+  private String cfAppNamePrefix;
+  private boolean isNonVersioning;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

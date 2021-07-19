@@ -179,8 +179,16 @@ public class SecretManagerImpl implements SecretManager {
                                       .filter(EncryptedDataKeys.ID_KEY, encryptedDataId)
                                       .get();
     if (encryptedData == null) {
-      log.info("No encrypted record set for field {} for id: {}", fieldName, encryptedDataId);
-      return Optional.empty();
+      log.info(
+          "No encrypted record found with UUID, trying with name for field {} for id: {}", fieldName, encryptedDataId);
+      encryptedData = wingsPersistence.createQuery(EncryptedData.class)
+                          .filter(EncryptedDataKeys.accountId, accountId)
+                          .filter(EncryptedDataKeys.name, encryptedDataId)
+                          .get();
+      if (encryptedData == null) {
+        log.info("No encrypted record set for field {} for id: {}", fieldName, encryptedDataId);
+        return Optional.empty();
+      }
     }
 
     SecretManagerConfig encryptionConfig = secretManagerConfigService.getSecretManager(

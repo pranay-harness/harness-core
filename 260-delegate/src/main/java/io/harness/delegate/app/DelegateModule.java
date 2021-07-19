@@ -745,7 +745,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("taskPollExecutor")
   public ExecutorService taskPollExecutor() {
-    ExecutorService taskPollExecutorService = ThreadPool.create(4, 4, 3, TimeUnit.SECONDS,
+    ExecutorService taskPollExecutorService = ThreadPool.create(4, 10, 3, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("task-poll-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskPollExecutorService.shutdownNow(); }));
     return taskPollExecutorService;

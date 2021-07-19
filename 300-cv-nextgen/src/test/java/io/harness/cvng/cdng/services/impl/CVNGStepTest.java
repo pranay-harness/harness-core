@@ -79,11 +79,34 @@ public class CVNGStepTest extends CvNextGenTestBase {
     Ambiance ambiance = getAmbiance();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
-
-    assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("No monitoredService is defined for service %s and env %s", serviceIdentifier, envIdentifier);
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String callbackId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callbackId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    assertThat(cvngStepTask.isSkip()).isTrue();
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteAsync_skipWhenMonitoredServiceRefIsEmpty() {
+    Ambiance ambiance = getAmbiance();
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    cvngStepParameter.setMonitoredServiceRef(ParameterField.createValueField(""));
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String callbackId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callbackId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    assertThat(cvngStepTask.isSkip()).isTrue();
+  }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
@@ -100,6 +123,21 @@ public class CVNGStepTest extends CvNextGenTestBase {
     CVNGStepTask cvngStepTask =
         hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
     assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteAsync_monitoringServiceRefDoesNotMatch() {
+    Ambiance ambiance = getAmbiance();
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    cvngStepParameter.setMonitoredServiceRef(ParameterField.createValueField("monitoredService"));
+    assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Invalid monitored service identifier for service %s and env %s", serviceIdentifier, envIdentifier);
   }
 
   @Test
@@ -192,6 +230,28 @@ public class CVNGStepTest extends CvNextGenTestBase {
                                        .activityStatusDTO(activityStatusDTO)
                                        .build())))
         .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_skip() {
+    Ambiance ambiance = getAmbiance();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    String activityId = generateUuid();
+    StepResponse stepResponse = cvngStep.handleAsyncResponse(ambiance, cvngStepParameter,
+        Collections.singletonMap(activityId, CVNGStep.CVNGResponseData.builder().skip(true).build()));
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.SKIPPED);
+    assertThat(stepResponse.getFailureInfo())
+        .isEqualTo(FailureInfo.newBuilder()
+                       .addFailureData(FailureData.newBuilder()
+                                           .setCode(ErrorCode.UNKNOWN_ERROR.name())
+                                           .setLevel(io.harness.eraro.Level.INFO.name())
+                                           .addFailureTypes(FailureType.SKIPPING_FAILURE)
+                                           .setMessage("No monitoredServiceRef is defined for service "
+                                               + serviceIdentifier + " and env " + envIdentifier + "")
+                                           .build())
+                       .build());
   }
 
   @Test

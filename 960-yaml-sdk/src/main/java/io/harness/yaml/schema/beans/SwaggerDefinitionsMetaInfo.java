@@ -19,4 +19,5 @@ public class SwaggerDefinitionsMetaInfo {
   Set<OneOfMapping> oneOfMappings;
   Set<PossibleFieldTypes> fieldPossibleTypes;
   Set<FieldEnumData> fieldEnumData;
+  Set<String> notEmptyStringFields;
 }

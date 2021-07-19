@@ -71,7 +71,8 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
             : (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData());
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(), responseData);
 
-        if (lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
+        if (lockedAsyncTaskResponse.getHoldUntil() == null
+            || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
           responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
           if (responsesToBeDeleted.size() >= DELETE_THRESHOLD) {
             deleteProcessedResponses(responsesToBeDeleted);

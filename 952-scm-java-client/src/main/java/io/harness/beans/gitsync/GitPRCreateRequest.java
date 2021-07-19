@@ -17,7 +17,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class GitPRCreateRequest {
   @NotEmpty @NotNull @Trimmed String sourceBranch;
   @NotEmpty @NotNull @Trimmed String targetBranch;
-  @NotEmpty @NotNull @Trimmed String title;
+  @NotEmpty @NotNull String title;
   @NotNull String yamlGitConfigRef;
   @NotBlank String accountIdentifier;
   String orgIdentifier;

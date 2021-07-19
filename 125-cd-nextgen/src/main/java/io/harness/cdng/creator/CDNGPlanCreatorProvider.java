@@ -2,11 +2,11 @@ package io.harness.cdng.creator;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
+import io.harness.cdng.creator.plan.steps.K8sRollingRollbackPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.creator.variables.ShellScriptStepVariableCreator;
@@ -40,6 +40,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
+    planCreators.add(new K8sRollingRollbackPMSStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }
@@ -133,7 +134,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
                                                        .addAllCategory(TERRAFORM_CATEGORY)
                                                        .setFolderPath(TERRAFORM_STEP_METADATA)
                                                        .build())
-                                  .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
                                   .build();
     StepInfo terraformPlan = StepInfo.newBuilder()
                                  .setName("Terraform Plan")
@@ -142,7 +142,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
                                                       .addAllCategory(TERRAFORM_CATEGORY)
                                                       .setFolderPath(TERRAFORM_STEP_METADATA)
                                                       .build())
-                                 .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
                                  .build();
     StepInfo terraformDestroy = StepInfo.newBuilder()
                                     .setName("Terraform Destroy")
@@ -151,7 +150,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
                                                          .addAllCategory(TERRAFORM_CATEGORY)
                                                          .setFolderPath(TERRAFORM_STEP_METADATA)
                                                          .build())
-                                    .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
                                     .build();
     StepInfo terraformRollback = StepInfo.newBuilder()
                                      .setName("Terraform Rollback")
@@ -160,7 +158,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
                                                           .addAllCategory(TERRAFORM_CATEGORY)
                                                           .setFolderPath(TERRAFORM_STEP_METADATA)
                                                           .build())
-                                     .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
                                      .build();
 
     List<StepInfo> stepInfos = new ArrayList<>();

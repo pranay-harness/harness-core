@@ -182,6 +182,10 @@ aeriform("//830-resource-group:tests")
 
 aeriform("//835-notification-senders:module")
 
+aeriform("//840-template-service:module")
+
+aeriform("//840-template-service:tests")
+
 aeriform("//850-ng-pipeline-commons:module")
 
 aeriform("//850-ng-pipeline-commons:tests")
@@ -245,6 +249,8 @@ aeriform("//900-git-sync-sdk:module")
 aeriform("//900-git-sync-sdk:tests")
 
 aeriform("//910-delegate-service-driver:module")
+
+aeriform("//910-delegate-service-driver:tests")
 
 aeriform("//910-delegate-task-grpc-service:module")
 
@@ -446,6 +452,10 @@ aeriform("//960-yaml-sdk:module")
 
 aeriform("//960-yaml-sdk:tests")
 
+aeriform("//965-api-key-filter:module")
+
+aeriform("//965-api-key-filter:tests")
+
 aeriform("//970-api-services-beans:module")
 
 aeriform("//970-api-services-beans:tests")
@@ -475,3 +485,5 @@ aeriform("//990-commons-test:abstract-module")
 aeriform("//990-commons-test:module")
 
 aeriform("//990-commons-test:tests")
+
+aeriform("//999-annotations:module")

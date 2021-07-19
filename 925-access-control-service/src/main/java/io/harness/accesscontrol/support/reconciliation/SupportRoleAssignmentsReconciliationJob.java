@@ -53,10 +53,10 @@ public class SupportRoleAssignmentsReconciliationJob implements Runnable {
         TimeUnit.SECONDS.sleep(300);
       }
     } catch (InterruptedException e) {
-      log.error("Interrupted while syncing support role assignments");
+      log.error("Interrupted while syncing support role assignments", e);
       Thread.currentThread().interrupt();
     } catch (Exception e) {
-      log.error("Exception while syncing support role assignments");
+      log.error("Exception while syncing support role assignments", e);
     }
   }
 

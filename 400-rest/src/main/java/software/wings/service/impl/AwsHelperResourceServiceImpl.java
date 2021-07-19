@@ -25,12 +25,14 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.cloudformation.model.Capability;
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.ec2.model.ResourceType;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,5 +128,10 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Override
   public List<String> listCloudformationCapabilities() {
     return Stream.of(Capability.values()).map(Capability::toString).collect(Collectors.toList());
+  }
+
+  @Override
+  public Set<String> listCloudFormationStatues() {
+    return EnumSet.allOf(StackStatus.class).stream().map(status -> status.name()).collect(Collectors.toSet());
   }
 }

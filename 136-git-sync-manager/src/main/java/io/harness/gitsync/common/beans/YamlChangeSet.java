@@ -77,7 +77,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @Trimmed @NotEmpty @NotNull private String accountId;
   @FdIndex @NotNull private String status;
-  @Builder.Default private long queuedOn = System.currentTimeMillis();
+  private long queuedOn = System.currentTimeMillis();
   // todo: replace/modify with whatever comes from webhook svc
   private GitWebhookRequestAttributes gitWebhookRequestAttributes;
   @Default private Integer retryCount = 0;
@@ -86,7 +86,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   private String messageCode;
   private String repoUrl;
   private String branch;
-  @Default private Long cutOffTime = 0L;
+  private Long cutOffTime = 0L;
 
   // Any special event metadata which has to go back from queue as is can be pushed in this interface.
   EventMetadata eventMetadata;

@@ -632,6 +632,12 @@ public class ConnectorServiceImpl implements ConnectorService {
     return defaultConnectorService.listbyFQN(accountIdentifier, connectorFQN);
   }
 
+  @Override
+  public void deleteBatch(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList) {
+    defaultConnectorService.deleteBatch(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifiersList);
+  }
+
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {
     List<ErrorDetail> errorDetails = Collections.singletonList(ngErrorHelper.getGenericErrorDetail());
     return ConnectorValidationResult.builder()

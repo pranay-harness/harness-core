@@ -82,9 +82,11 @@ BAZEL_MODULES="\
   //830-resource-group:module \
   //835-notification-senders:module \
   //835-notification-senders:module \
+  //840-template-service:module \
   //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
+  //865-cg-events:module \
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
@@ -94,7 +96,6 @@ BAZEL_MODULES="\
   //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
-  //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
   //900-git-sync-sdk:module \
@@ -168,7 +169,6 @@ BAZEL_MODULES="\
   //960-persistence:module \
   //960-persistence:supporter-test \
   //960-yaml-sdk:module \
-  //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
@@ -355,6 +355,7 @@ build_bazel_module 830-notification-service
 build_bazel_module 830-resource-group
 build_bazel_module 835-notification-senders
 build_bazel_module 850-ng-pipeline-commons
+build_bazel_module 865-cg-events
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-cg-orchestration

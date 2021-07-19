@@ -27,7 +27,7 @@ public interface AccountClient {
   String ACCOUNT_EXISTS = "ng/accounts/exists";
   String ACCOUNT_ADMIN_API = ACCOUNT_API + "/account-admins";
   String FEATURE_FLAG_LIST_API = "ng/user/feature-flags/{accountId}";
-  String HARNESS_USER_GROUP_API = "harnessUserGroup/internal";
+  String HARNESS_USER_GROUP_API = "harnessUserGroup";
 
   @POST(ACCOUNT_API) Call<RestResponse<AccountDTO>> create(@Body AccountDTO dto);
 
@@ -59,9 +59,8 @@ public interface AccountClient {
   @GET(FEATURE_FLAG_LIST_API)
   Call<RestResponse<Collection<FeatureFlag>>> listAllFeatureFlagsForAccount(@Path("accountId") String accountId);
 
-  @GET(HARNESS_USER_GROUP_API + "/listAllHarnessSupportUsers")
-  Call<RestResponse<Collection<UserMetadata>>> listAllHarnessSupportUsers(@Query("accountId") String accountId);
+  @GET(HARNESS_USER_GROUP_API + "/supportUsers") Call<RestResponse<List<UserMetadata>>> listAllHarnessSupportUsers();
 
-  @GET(HARNESS_USER_GROUP_API + "/checkIfHarnessSupportEnabledForAccount")
+  @GET(HARNESS_USER_GROUP_API + "/supportEnabledStatus")
   Call<RestResponse<Boolean>> checkIfHarnessSupportEnabledForAccount(@Query("accountId") String accountId);
 }

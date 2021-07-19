@@ -1,5 +1,10 @@
 package software.wings.beans.appmanifest;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public enum StoreType {
   Local,
   Remote,

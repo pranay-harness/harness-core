@@ -230,6 +230,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
 
     if (existingUserGroup.getUsers().stream().noneMatch(userIdentifier::equals)) {
+      log.info("[NGSamlUserGroupSync] Adding member {} to Existing Usergroup: {}", userIdentifier, existingUserGroup);
       existingUserGroup.getUsers().add(userIdentifier);
     }
     return updateInternal(existingUserGroup, oldUserGroup);
@@ -242,8 +243,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     for (UserGroup userGroup : userGroups) {
-      if (!checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), userId)) {
-        addMember(accountIdentifier, null, null, userGroup.getIdentifier(), userId);
+      if (!checkMember(accountIdentifier, userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier(),
+              userGroup.getIdentifier(), userId)) {
+        log.info("[NGSamlUserGroupSync] Trying to add user {} to UserGroup:{}", userId, userGroup);
+        addMember(accountIdentifier, userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier(),
+            userGroup.getIdentifier(), userId);
+      } else {
+        log.info("[NGSamlUserGroupSync] Not adding user {} to UserGroup:{} CheckMember failed ", userId, userGroup);
       }
     }
   }
@@ -355,16 +361,19 @@ public class UserGroupServiceImpl implements UserGroupService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Optional<UserGroup> userGroupOptional = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (!userGroupOptional.isPresent()) {
-      throw new InvalidArgumentsException("User Group in the given scope does not exist");
+      throw new InvalidArgumentsException("User Group in the given scope does not exist:" + identifier);
     }
     return userGroupOptional.get();
   }
 
   private UserGroup updateInternal(UserGroup newUserGroup, UserGroupDTO oldUserGroup) {
+    log.info("[NGSamlUserGroupSync] Old User Group {}", oldUserGroup);
     validate(newUserGroup);
     try {
       return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        log.info("[NGSamlUserGroupSync] Saving new User group {}", newUserGroup);
         UserGroup updatedUserGroup = userGroupRepository.save(newUserGroup);
+        log.info("[NGSamlUserGroupSync] Saved New User Group Successfully");
         outboxService.save(
             new UserGroupUpdateEvent(updatedUserGroup.getAccountIdentifier(), toDTO(updatedUserGroup), oldUserGroup));
         return updatedUserGroup;
@@ -476,9 +485,25 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup linkToSsoGroup(@NotBlank String accountIdentifier, @NotBlank String userGroupIdentifier,
-      @NotNull SSOType ssoType, @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName) {
-    UserGroup existingUserGroup = getOrThrow(accountIdentifier, null, null, userGroupIdentifier);
+  public List<UserGroup> getUserGroupsBySsoId(String ssoId) {
+    Criteria criteria = new Criteria();
+    criteria.and(UserGroupKeys.isSsoLinked).is(true);
+    criteria.and(UserGroupKeys.linkedSsoId).is(ssoId);
+    return userGroupRepository.findAll(criteria);
+  }
+
+  private Criteria getUserGroupbySsoIdCriteria(String ssoId) {
+    Criteria criteria = new Criteria();
+    criteria.and(UserGroupKeys.isSsoLinked).is(true);
+    criteria.and(UserGroupKeys.linkedSsoId).is(ssoId);
+    return criteria;
+  }
+
+  @Override
+  public UserGroup linkToSsoGroup(@NotBlank String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      @NotBlank String userGroupIdentifier, @NotNull SSOType ssoType, @NotBlank String ssoId,
+      @NotBlank String ssoGroupId, @NotBlank String ssoGroupName) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
 
     if (TRUE.equals(existingUserGroup.getIsSsoLinked())) {
@@ -510,9 +535,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup unlinkSsoGroup(
-      @NotBlank String accountIdentifier, @NotBlank String userGroupIdentifier, boolean retainMembers) {
-    UserGroup existingUserGroup = getOrThrow(accountIdentifier, null, null, userGroupIdentifier);
+  public UserGroup unlinkSsoGroup(@NotBlank String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      @NotBlank String userGroupIdentifier, boolean retainMembers) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
 
     if (FALSE.equals(existingUserGroup.getIsSsoLinked()) || existingUserGroup.getIsSsoLinked() == null) {

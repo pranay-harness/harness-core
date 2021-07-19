@@ -43,7 +43,9 @@ def java_binary(**kwargs):
     name = kwargs.get("name")
 
     sign = kwargs.pop("sign", False)
-    orginal_java_binary(**kwargs)
+
+    tags = kwargs.pop("tags", [])
+    orginal_java_binary(tags = tags + ["harness"], **kwargs)
 
     if sign:
         harness_sign(name + "_deploy.jar")

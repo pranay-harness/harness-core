@@ -6,6 +6,7 @@ import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.pms.events.base.PmsAbstractRedisConsumer;
+import io.harness.queue.QueueController;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -18,7 +19,7 @@ public class InterruptEventRedisConsumer extends PmsAbstractRedisConsumer<Interr
   @Inject
   public InterruptEventRedisConsumer(@Named(PT_INTERRUPT_CONSUMER) Consumer redisConsumer,
       InterruptEventMessageListener interruptEventMessageListener,
-      @Named("sdkEventsCache") Cache<String, Integer> eventsCache) {
-    super(redisConsumer, interruptEventMessageListener, eventsCache);
+      @Named("sdkEventsCache") Cache<String, Integer> eventsCache, QueueController queueController) {
+    super(redisConsumer, interruptEventMessageListener, eventsCache, queueController);
   }
 }

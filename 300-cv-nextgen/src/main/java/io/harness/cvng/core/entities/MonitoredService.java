@@ -8,6 +8,7 @@ import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,10 +19,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -76,6 +80,8 @@ public final class MonitoredService
   private long lastUpdatedAt;
   private long createdAt;
   private boolean enabled;
+
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
   public List<String> getHealthSourceIdentifiers() {
     if (healthSourceIdentifiers == null) {
