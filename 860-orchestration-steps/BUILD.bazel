@@ -11,6 +11,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//861-cg-orchestration-states:module",
         "//870-cg-orchestration:module",
         "//870-orchestration:module",
         "//870-yaml-beans:module",
