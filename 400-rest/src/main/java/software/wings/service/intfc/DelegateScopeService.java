@@ -32,6 +32,15 @@ public interface DelegateScopeService {
   DelegateScope get(String accountId, String delegateScopeId);
 
   /**
+   * Get delegate.
+   *
+   * @param accountId  the account id
+   * @param name the delegate scope name
+   * @return the delegate
+   */
+  DelegateScope getByName(String accountId, String name);
+
+  /**
    * Update delegate.
    *
    * @param delegateScope the delegate scope
