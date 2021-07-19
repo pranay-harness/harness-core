@@ -415,8 +415,7 @@ public class NextGenModule extends AbstractModule {
     install(new InviteModule(appConfig.isNGAuthUIEnabled()));
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
-        appConfig.getSignupNotificationConfiguration(), appConfig.getBaseUrls().getNextGenUiUrl(),
-        appConfig.getBaseUrls().getNextGenAuthUiUrl()));
+        appConfig.getSignupNotificationConfiguration()));
     install(ConnectorModule.getInstance());
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
