@@ -20,7 +20,6 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
-import io.harness.delegate.resources.DelegateTaskSelectorMapResource;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.NoResultFoundException;
 import io.harness.rest.RestResponse;

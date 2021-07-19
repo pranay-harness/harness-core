@@ -1,4 +1,4 @@
-package io.harness.delegate.resources;
+package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
