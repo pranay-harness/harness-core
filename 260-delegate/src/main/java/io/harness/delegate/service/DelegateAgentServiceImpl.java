@@ -129,7 +129,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
-import io.harness.logging.RemoteTriggeringPolicy;
+import io.harness.logging.LoggingTriggerPolicy;
 import io.harness.logstreaming.LogStreamingClient;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.logstreaming.LogStreamingSanitizer;
@@ -1256,7 +1256,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void startUpgradeCheck(String version) {
+  @VisibleForTesting
+  void startUpgradeCheck(String version) {
     if (!delegateConfiguration.isDoUpgrade()) {
       log.info("Auto upgrade is disabled in configuration");
       log.info("Delegate stays on version: [{}]", version);
@@ -1289,7 +1290,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             log.info("[Old] Run scripts downloaded. Upgrading delegate. Stop acquiring async tasks");
             upgradeVersion = delegateScripts.getVersion();
             upgradeNeeded.set(true);
-            RemoteTriggeringPolicy.resetRollingPolicy();
+            LoggingTriggerPolicy.resetRollingPolicy();
           } else {
             log.info("Delegate up to date");
           }

@@ -25,7 +25,7 @@
             <maxHistory>10</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
-        <triggeringPolicy class="io.harness.logging.RemoteTriggeringPolicy"/>
+        <triggeringPolicy class="io.harness.logging.LoggingTriggerPolicy"/>
 
 
         <withJansi>true</withJansi>
