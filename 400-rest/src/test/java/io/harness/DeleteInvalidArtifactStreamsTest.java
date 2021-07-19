@@ -3,6 +3,8 @@ package io.harness;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import graphql.VisibleForTesting;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HIterator;
 import io.harness.rule.Owner;
@@ -33,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class DeleteInvalidArtifactStreamsTest extends WingsBaseTest {
   private static final String DEBUG_LINE = "[DELETE_INVALID_ARTIFACT_STREAMS_MIGRATION]: ";
   @Inject private WingsPersistence wingsPersistence;
