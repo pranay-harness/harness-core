@@ -18,6 +18,7 @@ shared_dependencies = [
     "//490-ce-commons:module",
     "//820-platform-service:module",
     "//835-notification-senders:module",
+    "//865-cg-events:module",
     "//870-cg-orchestration:module",
     "//874-orchestration-delay:module",
     "//890-sm-core:module",
