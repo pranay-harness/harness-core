@@ -17,7 +17,7 @@ public class MonitoredServiceListItemDTO {
   String environmentRef;
   MonitoredServiceType type;
   boolean healthMonitoringEnabled;
-  int currentHealthScore;
+  RiskData currentHealthScore;
   HistoricalTrend historicalTrend;
 
   public static class MonitoredServiceListItemDTOBuilder {
