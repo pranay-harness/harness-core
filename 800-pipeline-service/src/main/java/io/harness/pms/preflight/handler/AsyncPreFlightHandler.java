@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.EntityDetail;
@@ -61,7 +60,7 @@ public class AsyncPreFlightHandler implements Runnable {
               entity.getProjectIdentifier(), entity.getUuid(), fqnToObjectMapMergedYaml, connectorUsages);
       preflightService.updateStatus(entity.getUuid(),
           PreflightCommonUtils.getOverallStatus(connectorCheckResponses, entity.getPipelineInputResponse()), null);
-    } catch (EventsFrameworkDownException e) {
+    } catch (Exception e) {
       log.error("Error occurred while handling preflight check. Event Framework Down", e);
       preflightService.updateStatus(
           entity.getUuid(), PreFlightStatus.FAILURE, PreflightCommonUtils.getInternalIssueErrorInfo());
