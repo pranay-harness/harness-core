@@ -512,7 +512,6 @@ public class DelegateSetupResourceTest {
                                 .target("/setup/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID + "&forceDelete=true")
                                 .request()
                                 .delete();
-
     verify(delegateService, atLeastOnce()).delete(ACCOUNT_ID, ID_KEY, true);
   }
 
