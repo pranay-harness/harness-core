@@ -170,7 +170,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DatadogYaml;
-import io.harness.delegate.beans.DelegateTaskBroadcast;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.EcrConfig;
@@ -1613,7 +1612,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TimeSpan.class, 7425);
     kryo.register(BuiltImage.class, 7426);
     kryo.register(GcbTaskParams.GcbTaskType.class, 7427);
-    kryo.register(DelegateTaskBroadcast.class, 7428);
     kryo.register(Event.class, 7429);
     kryo.register(Event.Type.class, 7430);
     kryo.register(AmiServiceTrafficShiftAlbSetupElement.class, 7431);
