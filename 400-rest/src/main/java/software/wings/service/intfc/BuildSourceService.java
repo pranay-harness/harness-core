@@ -171,6 +171,10 @@ public interface BuildSourceService {
     throw new UnsupportedOperationException();
   }
 
+  default List<BuildDetails> getNewBuilds(String appId, String artifactStreamId, String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
   default List<BuildDetails> getBuilds(String artifactStreamId, String settingId, int limit) {
     throw new UnsupportedOperationException();
   }
