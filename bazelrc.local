@@ -1,5 +1,4 @@
 import bazelrc.common
-try-import bazelrc.cache
 
 # Add properties that are specific to local bazel  build
 

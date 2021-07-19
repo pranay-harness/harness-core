@@ -8,6 +8,7 @@
     <modules>
         <module>260-delegate</module>
     </modules>
+
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
         <developerConnection>scm:git:git@github.com:wings-software/portal.git</developerConnection>
