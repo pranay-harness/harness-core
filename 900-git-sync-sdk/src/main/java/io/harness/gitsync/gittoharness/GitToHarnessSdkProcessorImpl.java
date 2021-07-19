@@ -7,6 +7,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
@@ -137,8 +138,8 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
           updateFileProcessingResponse(
               FileProcessingStatus.SUCCESS, null, processingResponseMap, changeSet.getFilePath(), commitId, accountId);
         } catch (Exception e) {
-          log.error("Exception {}", changeSet.getFilePath(), e);
-          updateFileProcessingResponse(FileProcessingStatus.FAILURE, e.getMessage(), processingResponseMap,
+          log.error("Exception in processing [{}]", changeSet.getFilePath(), e);
+          updateFileProcessingResponse(FileProcessingStatus.FAILURE, getErrorMessage(e), processingResponseMap,
               changeSet.getFilePath(), commitId, accountId);
         }
       }
@@ -235,5 +236,9 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
 
   private List<ChangeSet> sortChangeSets(Supplier<List<EntityType>> sortOrder, List<ChangeSet> changeSetList) {
     return changeSetList.stream().sorted(new ChangeSetSortComparator(sortOrder.get())).collect(Collectors.toList());
+  }
+
+  private String getErrorMessage(Exception ex) {
+    return ExceptionUtils.getMessage(ex);
   }
 }
