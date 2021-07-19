@@ -3,8 +3,6 @@ package software.wings.security.saml;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
@@ -26,19 +24,19 @@ public class SamlUserGroupSync {
 
   public void syncUserGroup(
       final SamlUserAuthorization samlUserAuthorization, final String accountId, final String ssoId) {
+    log.info("Syncing saml user groups for user: {}", samlUserAuthorization.getEmail());
+
     List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountId, ssoId);
-    log.info("Syncing SAML user groups userGroups:{} accountId:{} ssoId:{}", userGroupsToSync, accountId, ssoId);
     updateUserGroups(userGroupsToSync, samlUserAuthorization, accountId);
   }
 
   private void updateUserGroups(
       List<UserGroup> userGroupsToSync, SamlUserAuthorization samlUserAuthorization, String accountId) {
     User user = userService.getUserByEmail(samlUserAuthorization.getEmail());
-    if (user == null) {
-      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, "Cannot find User in DB");
-    }
+
     List<String> newUserGroups = samlUserAuthorization.getUserGroups();
-    log.info("SAML authorisation user groups for user: {} are: {}", user.getUuid(), newUserGroups.toString());
+    log.info("SAML authorisation user groups for user: {} are: {}", samlUserAuthorization.getEmail(),
+        newUserGroups.toString());
 
     List<UserGroup> userAddedToGroups = new ArrayList<>();
 
