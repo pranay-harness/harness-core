@@ -268,17 +268,27 @@ public class UserGroupResource {
   @Path("{userGroupId}/unlink")
   @ApiOperation(value = "API to unlink the harness user group from SSO group", nickname = "unlinkSsoGroup")
   public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("retainMembers") boolean retainMembers) {
-    return new RestResponse<>(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers));
+      @QueryParam("retainMembers") boolean retainMembers,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
+    return new RestResponse<>(userGroupService.unlinkSsoGroup(
+        accountIdentifier, orgIdentifier, projectIdentifier, userGroupId, retainMembers));
   }
 
   @PUT
   @Path("{userGroupId}/link/saml/{samlId}")
   @ApiOperation(value = "Link to SAML group", nickname = "linkToSamlGroup")
   public RestResponse<UserGroup> linkToSamlGroup(@PathParam("userGroupId") String userGroupId,
-      @PathParam("samlId") String samlId, @QueryParam("accountId") @NotEmpty String accountId,
-      @NotNull @Valid SamlLinkGroupRequest groupRequest) {
-    return new RestResponse<>(userGroupService.linkToSsoGroup(accountId, userGroupId, SSOType.SAML, samlId,
-        groupRequest.getSamlGroupName(), groupRequest.getSamlGroupName()));
+      @PathParam("samlId") String samlId, @NotNull @Valid SamlLinkGroupRequest groupRequest,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
+    return new RestResponse<>(userGroupService.linkToSsoGroup(accountIdentifier, orgIdentifier, projectIdentifier,
+        userGroupId, SSOType.SAML, samlId, groupRequest.getSamlGroupName(), groupRequest.getSamlGroupName()));
   }
 }
