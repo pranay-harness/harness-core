@@ -23,8 +23,6 @@ public class PrometheusHealthSourceSpecTransformer
       prometheusCVConfig.getMetricInfoList().forEach(metricInfo -> {
         PrometheusMetricDefinition metricDefinition =
             PrometheusMetricDefinition.builder()
-                .serviceIdentifier(prometheusCVConfig.getServiceIdentifier())
-                .envIdentifier(prometheusCVConfig.getEnvIdentifier())
                 .groupName(prometheusCVConfig.getGroupName())
                 .serviceFilter(metricInfo.getServiceFilter())
                 .envFilter(metricInfo.getEnvFilter())
