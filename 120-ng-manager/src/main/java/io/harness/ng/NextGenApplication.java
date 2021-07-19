@@ -324,7 +324,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(UserMembershipMigrationProvider.class); }
           { add(NGBeanMigrationProvider.class); }
           { add(InstanceMigrationProvider.class); }
-          { add(UserMetadataMigrationProvider.class); }
+//          { add(UserMetadataMigrationProvider.class); }
         })
         .build();
   }
