@@ -1,5 +1,6 @@
 package io.harness.cdng.provision.terraform.steps.rolllback;
 
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -270,5 +271,12 @@ public class TerraformRollbackStepTest extends CategoryTest {
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
     assertThat(stepResponse.getUnitProgressList()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testGetStepParametersClass() {
+    assertThat(terraformRollbackStep.getStepParametersClass()).isEqualTo(StepElementParameters.class);
   }
 }
