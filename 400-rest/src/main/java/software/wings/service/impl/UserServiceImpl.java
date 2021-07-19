@@ -147,6 +147,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -163,6 +164,7 @@ import software.wings.security.SecretManager;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.authentication.AccountSettingsResponse;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
@@ -1040,11 +1042,7 @@ public class UserServiceImpl implements UserService {
       String message = "No email provided. Please provide vaild email info";
       throw new InvalidArgumentsException(message);
     }
-    for (String email : userInvite.getEmails()) {
-      UserInvite userInviteClone = kryoSerializer.clone(userInvite);
-      userInviteClone.setEmail(email.trim());
-      inviteOperationResponses.add(inviteUser(userInviteClone, true, false));
-    }
+    inviteUserToAccount(accountId, userInvite, inviteOperationResponses);
 
     List<String> alreadyAddedUsers = new ArrayList<>();
     List<String> alreadyInvitedUsers = new ArrayList<>();
@@ -1073,6 +1071,21 @@ public class UserServiceImpl implements UserService {
     }
 
     return inviteOperationResponses;
+  }
+
+  private void inviteUserToAccount(
+      String accountId, UserInvite userInvite, List<InviteOperationResponse> inviteOperationResponses) {
+    List<SSOSettings> ssoSettings = ssoSettingService.getAllSsoSettings(accountId);
+    boolean isSAMLConfigured = ssoSettings.stream().anyMatch(settings -> settings.getType() == SSOType.SAML);
+    AccountSettingsResponse accountSettingsResponse = accountService.getAuthSettingsByAccountId(accountId);
+    AuthenticationMechanism authenticationMechanism = accountSettingsResponse.getAuthenticationMechanism();
+    boolean inviteAcceptanceRequired = (!isSAMLConfigured && authenticationMechanism != AuthenticationMechanism.SAML);
+    boolean markEmailVerified = (isSAMLConfigured && authenticationMechanism == AuthenticationMechanism.SAML);
+    for (String email : userInvite.getEmails()) {
+      UserInvite userInviteClone = kryoSerializer.clone(userInvite);
+      userInviteClone.setEmail(email.trim());
+      inviteOperationResponses.add(inviteUser(userInviteClone, inviteAcceptanceRequired, markEmailVerified));
+    }
   }
 
   private void limitCheck(String accountId, String email) {

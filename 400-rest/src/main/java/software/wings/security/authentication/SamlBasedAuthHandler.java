@@ -1,28 +1,22 @@
 package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.FeatureName.SAML_LOGIN_WITHOUT_INVITE_ACCEPT;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-
-import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.account.AuthenticationMechanism;
 
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.beans.UserInvite;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.logcontext.UserLogContext;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlClientService.HostType;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.intfc.SSOSettingService;
-import software.wings.service.intfc.UserService;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
@@ -39,7 +33,6 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.jetbrains.annotations.Nullable;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.schema.XSString;
 import org.opensaml.core.xml.schema.impl.XSAnyImpl;
@@ -56,8 +49,6 @@ public class SamlBasedAuthHandler implements AuthHandler {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private DomainWhitelistCheckerService domainWhitelistCheckerService;
   @Inject private NgSamlAuthorizationEventPublisher ngSamlAuthorizationEventPublisher;
-  @Inject private FeatureFlagService featureFlagService;
-  @Inject private UserService userService;
 
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
@@ -264,24 +255,8 @@ public class SamlBasedAuthHandler implements AuthHandler {
     } catch (WingsException e) {
       log.warn("SamlResponse contains nameId=[{}] which does not exist in db, url=[{}], accountId=[{}]", nameId,
           samlSettings.getUrl(), samlSettings.getAccountId());
-      User user = tryAutoAcceptingInvite(samlSettings, nameId);
-      if (user != null) {
-        return user;
-      }
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, e);
     }
-  }
-
-  @Nullable
-  private User tryAutoAcceptingInvite(SamlSettings samlSettings, String nameId) {
-    //  if (featureFlagService.isEnabled(SAML_LOGIN_WITHOUT_INVITE_ACCEPT, samlSettings.getAccountId())) {
-    log.info(SAML_LOGIN_WITHOUT_INVITE_ACCEPT + "FF is enabled for account, Creating user with auto approved invite");
-    UserInvite userInvite = anUserInvite().withAccountId(samlSettings.getAccountId()).withEmail(nameId).build();
-    userService.inviteUser(userInvite, false, true);
-    User user = authenticationUtils.getUserByEmail(nameId);
-    return user;
-    //   }
-    //  return null;
   }
 
   // TODO : revisit this method when we are doing SAML authorization
