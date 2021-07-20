@@ -1290,7 +1290,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             log.info("[Old] Run scripts downloaded. Upgrading delegate. Stop acquiring async tasks");
             upgradeVersion = delegateScripts.getVersion();
             upgradeNeeded.set(true);
-            LoggingTriggerPolicy.resetRollingPolicy();
+            log.info("Starting new active version");
+            //LoggingTriggerPolicy.resetRollingPolicy();
           } else {
             log.info("Delegate up to date");
           }

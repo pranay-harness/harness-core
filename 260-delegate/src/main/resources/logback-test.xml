@@ -20,7 +20,7 @@
             <!-- daily rollover -->
             <fileNamePattern>delegate.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <!-- or whenever the file size reaches 50MB -->
-            <maxFileSize>50MB</maxFileSize>
+            <maxFileSize>1MB</maxFileSize>
             <!-- keep 10 days' worth of history capped at 1GB total size -->
             <maxHistory>10</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
