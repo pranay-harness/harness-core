@@ -12,9 +12,7 @@ import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURA
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
@@ -768,7 +766,6 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -857,6 +854,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
+    bind(PortalConfig.class).toInstance(configuration.getPortal());
     // RetryOnException Binding start
     bind(MethodExecutionHelper.class); // untargetted binding for eager loading
     ProviderMethodInterceptor retryOnExceptionInterceptor =

@@ -1,5 +1,9 @@
 package software.wings.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -11,6 +15,7 @@ import lombok.Data;
  * The Class PortalConfig.
  */
 @Data
+@OwnedBy(PL)
 public class PortalConfig {
   @JsonProperty(defaultValue = "https://localhost:8000") private String url = "https://localhost:8000";
   private List<String> allowedOrigins = Lists.newArrayList();
