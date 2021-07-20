@@ -11,7 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
-import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator.Builder;
@@ -42,36 +42,36 @@ public class SecretManager {
 
   private static final String ISSUER = "Harness Inc";
 
-  @Inject private MainConfiguration configuration;
+  @Inject private PortalConfig configuration;
 
   private static ObjectMapper objectMapper = new ObjectMapper();
 
   public String getJWTSecret(JWT_CATEGORY category) {
     switch (category) {
       case MULTIFACTOR_AUTH:
-        return configuration.getPortal().getJwtMultiAuthSecret();
+        return configuration.getJwtMultiAuthSecret();
       case ZENDESK_SECRET:
-        return configuration.getPortal().getJwtZendeskSecret();
+        return configuration.getJwtZendeskSecret();
       case PASSWORD_SECRET:
-        return configuration.getPortal().getJwtPasswordSecret();
+        return configuration.getJwtPasswordSecret();
       case EXTERNAL_SERVICE_SECRET:
-        return configuration.getPortal().getJwtExternalServiceSecret();
+        return configuration.getJwtExternalServiceSecret();
       case SSO_REDIRECT:
-        return configuration.getPortal().getJwtSsoRedirectSecret();
+        return configuration.getJwtSsoRedirectSecret();
       case AUTH_SECRET:
-        return configuration.getPortal().getJwtAuthSecret();
+        return configuration.getJwtAuthSecret();
       case JIRA_SERVICE_SECRET:
-        return configuration.getPortal().getJwtExternalServiceSecret();
+        return configuration.getJwtExternalServiceSecret();
       case DATA_HANDLER_SECRET:
-        return configuration.getPortal().getJwtDataHandlerSecret();
+        return configuration.getJwtDataHandlerSecret();
       case MARKETPLACE_SIGNUP:
-        return configuration.getPortal().getJwtMarketPlaceSecret();
+        return configuration.getJwtMarketPlaceSecret();
       case IDENTITY_SERVICE_SECRET:
-        return configuration.getPortal().getJwtIdentityServiceSecret();
+        return configuration.getJwtIdentityServiceSecret();
       case NEXT_GEN_MANAGER_SECRET:
-        return configuration.getPortal().getJwtNextGenManagerSecret();
+        return configuration.getJwtNextGenManagerSecret();
       default:
-        return configuration.getPortal().getJwtMultiAuthSecret();
+        return configuration.getJwtMultiAuthSecret();
     }
   }
 

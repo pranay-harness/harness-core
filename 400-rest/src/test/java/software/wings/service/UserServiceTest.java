@@ -280,6 +280,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Inject @InjectMocks SecretManager secretManager;
   @Inject @InjectMocks private AwsMarketPlaceApiHandlerImpl marketPlaceService;
   @Inject WingsPersistence realWingsPersistence;
+  @Mock PortalConfig portalConfig;
 
   @InjectMocks private HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupServiceImpl.class);
   @InjectMocks private AccessRequestService accessRequestService = mock(AccessRequestServiceImpl.class);
@@ -1447,8 +1448,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testJWTToken() {
-    PortalConfig portalConfig = mock(PortalConfig.class);
-    when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getJwtMultiAuthSecret())
         .thenReturn("5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN");
     HashMap<String, String> claimMap = new HashMap<>();
