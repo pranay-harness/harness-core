@@ -1239,7 +1239,8 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
-  private void checkForWatcherUpgrade() {
+  @VisibleForTesting
+  void checkForWatcherUpgrade() {
     if (!watcherConfiguration.isDoUpgrade()) {
       log.info("Auto upgrade is disabled in watcher configuration");
       log.info("Watcher stays on version: [{}]", getVersion());
@@ -1250,7 +1251,7 @@ public class WatcherServiceImpl implements WatcherService {
       boolean upgrade = false;
       String latestVersion = "";
       if (!watcherConfiguration.getDelegateCheckLocation().startsWith("file://")) {
-        String watcherMetadata = Http.getResponseStringFromUrl(watcherConfiguration.getUpgradeCheckLocation(), 10, 10);
+        String watcherMetadata = getResponseStringFromUrl();
         latestVersion = substringBefore(watcherMetadata, " ").trim();
         if (Pattern.matches("\\d{1}\\.\\d{1}\\.\\d{5,6}(\\-\\d{3})?", latestVersion)) {
           upgrade = !StringUtils.equals(getVersion(), latestVersion);
@@ -1270,6 +1271,11 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
+  @VisibleForTesting
+  String getResponseStringFromUrl() throws IOException {
+    return Http.getResponseStringFromUrl(watcherConfiguration.getUpgradeCheckLocation(), 10, 10);
+  }
+
   private static void logConfigWatcherYml() {
     try {
       File configWatcher = new File("config-watcher.yml");
@@ -1285,7 +1291,8 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
-  private void upgradeWatcher(String version, String newVersion) {
+  @VisibleForTesting
+  void upgradeWatcher(String version, String newVersion) {
     StartedProcess process = null;
     try {
       log.info("[Old] Starting new watcher");
@@ -1410,7 +1417,8 @@ public class WatcherServiceImpl implements WatcherService {
         });
   }
 
-  private String getVersion() {
+  @VisibleForTesting
+  String getVersion() {
     return (new VersionInfoManager()).getVersionInfo().getVersion();
   }
 
