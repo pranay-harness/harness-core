@@ -26,6 +26,8 @@ java_library(
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_inject_guice",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_google_protobuf_protobuf_java_util",
         "@maven//:io_github_resilience4j_resilience4j_core",
         "@maven//:io_github_resilience4j_resilience4j_retry",
         "@maven//:io_vavr_vavr",
