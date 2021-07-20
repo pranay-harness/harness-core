@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateGroup;
-import io.harness.delegate.beans.DelegateTaskBroadcast;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -16,7 +15,6 @@ import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateInsightsSummary;
 import software.wings.beans.DelegatePerpetualTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.Set;
 
@@ -33,7 +31,6 @@ public class DelegateServiceMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateTaskUsageInsights.class);
     set.add(DelegatePerpetualTaskUsageInsights.class);
     set.add(PerpetualTaskRecord.class);
-    set.add(DelegateTaskBroadcast.class);
   }
 
   @Override
