@@ -38,6 +38,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
+import io.harness.perpetualtask.PerpetualTaskCrudObserver;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
@@ -54,7 +55,6 @@ import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
-import io.harness.perpetualtask.PerpetualTaskCrudObserver;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;

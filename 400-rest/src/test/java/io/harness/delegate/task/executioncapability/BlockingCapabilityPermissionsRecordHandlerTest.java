@@ -20,9 +20,9 @@ import io.harness.delegate.beans.TaskGroup;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.service.AssignDelegateService;
 
 import software.wings.WingsBaseTest;
-import io.harness.service.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 

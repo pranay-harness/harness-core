@@ -97,6 +97,7 @@ import io.harness.rule.Cache;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.AssignDelegateService;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateSyncService;
@@ -128,7 +129,6 @@ import software.wings.service.impl.DelegateTaskServiceClassicImpl;
 import software.wings.service.impl.DelegateTaskStatusObserver;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
-import io.harness.service.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.sm.ExecutionStatusData;
 

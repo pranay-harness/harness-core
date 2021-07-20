@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateToken;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import software.wings.delegatetasks.validation.DelegateConnectionResult;
 
 import java.util.Set;
 
@@ -27,6 +28,7 @@ public class DelegateServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateTaskProgressResponse.class);
     set.add(TaskSelectorMap.class);
     set.add(DelegateToken.class);
+    set.add(DelegateConnectionResult.class);
   }
 
   @Override

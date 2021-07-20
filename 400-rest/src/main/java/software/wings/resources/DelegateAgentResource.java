@@ -9,6 +9,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.alert.perpetualTask.PerpetualTaskLogContext;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -47,7 +48,6 @@ import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.HttpsCertRequirement;
 import io.harness.managerclient.HttpsCertRequirementQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
-import io.harness.alert.perpetualTask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;

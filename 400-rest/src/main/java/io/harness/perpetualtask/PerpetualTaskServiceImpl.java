@@ -7,6 +7,7 @@ import io.harness.alert.perpetualTask.PerpetualTaskLogContext;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.PerpetualTaskBroadcastEvent;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
@@ -16,7 +17,6 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.service.intfc.PerpetualTaskStateObserver;
 
-import io.harness.delegate.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 

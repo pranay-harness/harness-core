@@ -9,10 +9,9 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.DelegateTaskBroadcast;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
-
-import io.harness.delegate.beans.DelegateTaskBroadcast;
 import io.harness.service.AssignDelegateService;
 
 import com.google.inject.Inject;

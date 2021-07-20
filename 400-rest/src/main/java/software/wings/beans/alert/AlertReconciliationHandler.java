@@ -11,6 +11,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
+import io.harness.service.AssignDelegateService;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
 import software.wings.alerts.AlertStatus;
@@ -18,7 +19,6 @@ import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import io.harness.service.AssignDelegateService;
 
 import com.google.inject.Inject;
 import java.time.Duration;
