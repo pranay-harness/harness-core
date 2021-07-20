@@ -1,14 +1,19 @@
-package service;
+package io.harness.watcher.service;
 
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+import static io.harness.rule.OwnerRule.XIN;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -21,7 +26,7 @@ import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
-import io.harness.watcher.service.WatcherServiceImpl;
+import io.harness.watcher.app.WatcherConfiguration;
 
 import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -50,9 +55,17 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class WatcherServiceImplTest extends CategoryTest {
   @Mock private TimeLimiter timeLimiter;
   @Mock private MessageService messageService;
+  @Mock private WatcherConfiguration watcherConfiguration;
   @InjectMocks @Spy private WatcherServiceImpl watcherService;
 
   private static final String TEST_RESOURCE_PATH = "250-watcher/src/test/resources/service/";
+  private static final String DELEGATE_CHECK_LOCATION = "DELEGATE_CHECK_LOCATION";
+  private static final String INVALID_UPGRADE_VERSION = "1070400";
+  private static final String CURRENT_VERSION = "1.0.70400";
+  private static final String VALID_FIVE_DIGITS_VERSION = "1.0.70500";
+  private static final String VALID_FIVE_DIGITS_WITH_HYPHEN = "1.0.70500-001";
+  private static final String VALID_SIX_DIGITS_VERSION = "1.0.703000";
+  private static final String VALID_SIX_DIGITS_VERSION_WITH_HYPHEN = "1.0.703000-000";
 
   // Do not remove, identifies the use of powermock.mockito for the unused dependency check
   private static final Class DUMMY = ChronicleEventTailer.class;
@@ -346,5 +359,80 @@ public class WatcherServiceImplTest extends CategoryTest {
     } else {
       return new File(resource.getFile());
     }
+  }
+
+  @Test
+  @Owner(developers = XIN)
+  @Category(UnitTests.class)
+  public void testCheckForWatcherUpgradeValidFiveDigitsVersion() throws Exception {
+    when(watcherConfiguration.isDoUpgrade()).thenReturn(true);
+    when(watcherConfiguration.getDelegateCheckLocation()).thenReturn(DELEGATE_CHECK_LOCATION);
+    doReturn(VALID_FIVE_DIGITS_VERSION).when(watcherService).getResponseStringFromUrl();
+    when(watcherService.getVersion()).thenReturn(CURRENT_VERSION);
+
+    watcherService.checkForWatcherUpgrade();
+
+    verify(watcherService).upgradeWatcher(CURRENT_VERSION, VALID_FIVE_DIGITS_VERSION);
+    verify(watcherService, times(2)).getVersion();
+  }
+
+  @Test
+  @Owner(developers = XIN)
+  @Category(UnitTests.class)
+  public void testCheckForWatcherUpgradeValidFiveDigitsWithHyphenVersion() throws Exception {
+    when(watcherConfiguration.isDoUpgrade()).thenReturn(true);
+    when(watcherConfiguration.getDelegateCheckLocation()).thenReturn(DELEGATE_CHECK_LOCATION);
+    doReturn(VALID_FIVE_DIGITS_WITH_HYPHEN).when(watcherService).getResponseStringFromUrl();
+    when(watcherService.getVersion()).thenReturn(CURRENT_VERSION);
+
+    watcherService.checkForWatcherUpgrade();
+
+    verify(watcherService).upgradeWatcher(CURRENT_VERSION, VALID_FIVE_DIGITS_WITH_HYPHEN);
+    verify(watcherService, times(2)).getVersion();
+  }
+
+  @Test
+  @Owner(developers = XIN)
+  @Category(UnitTests.class)
+  public void testCheckForWatcherUpgradeValidSixDigitsVersion() throws Exception {
+    when(watcherConfiguration.isDoUpgrade()).thenReturn(true);
+    when(watcherConfiguration.getDelegateCheckLocation()).thenReturn(DELEGATE_CHECK_LOCATION);
+    doReturn(VALID_SIX_DIGITS_VERSION).when(watcherService).getResponseStringFromUrl();
+    when(watcherService.getVersion()).thenReturn(CURRENT_VERSION);
+
+    watcherService.checkForWatcherUpgrade();
+
+    verify(watcherService).upgradeWatcher(CURRENT_VERSION, VALID_SIX_DIGITS_VERSION);
+    verify(watcherService, times(2)).getVersion();
+  }
+
+  @Test
+  @Owner(developers = XIN)
+  @Category(UnitTests.class)
+  public void testCheckForWatcherUpgradeValidSixDigitsWithHyphenVersion() throws Exception {
+    when(watcherConfiguration.isDoUpgrade()).thenReturn(true);
+    when(watcherConfiguration.getDelegateCheckLocation()).thenReturn(DELEGATE_CHECK_LOCATION);
+    doReturn(VALID_SIX_DIGITS_VERSION_WITH_HYPHEN).when(watcherService).getResponseStringFromUrl();
+    when(watcherService.getVersion()).thenReturn(CURRENT_VERSION);
+
+    watcherService.checkForWatcherUpgrade();
+
+    verify(watcherService).upgradeWatcher(CURRENT_VERSION, VALID_SIX_DIGITS_VERSION_WITH_HYPHEN);
+    verify(watcherService, times(2)).getVersion();
+  }
+
+  @Test
+  @Owner(developers = XIN)
+  @Category(UnitTests.class)
+  public void testCheckForWatcherUpgradeInvalidVersion() throws Exception {
+    when(watcherConfiguration.isDoUpgrade()).thenReturn(true);
+    when(watcherConfiguration.getDelegateCheckLocation()).thenReturn(DELEGATE_CHECK_LOCATION);
+    doReturn(INVALID_UPGRADE_VERSION).when(watcherService).getResponseStringFromUrl();
+    when(watcherService.getVersion()).thenReturn(CURRENT_VERSION);
+
+    watcherService.checkForWatcherUpgrade();
+
+    verify(watcherService, never()).upgradeWatcher(CURRENT_VERSION, INVALID_UPGRADE_VERSION);
+    verify(watcherService, never()).getVersion();
   }
 }
