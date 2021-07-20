@@ -92,6 +92,7 @@ public class TerraformStepHelperTest extends CategoryTest {
   @Mock private GitConfigAuthenticationInfoHelper mockGitConfigAuthenticationInfoHelper;
   @Mock private FileServiceClientFactory mockFileService;
   @Mock private SecretManagerClientService mockSecretManagerClientService;
+  @Mock private TerraformConfigDAL terraformConfigDAL;
   @InjectMocks private TerraformStepHelper helper;
 
   private Ambiance getAmbiance() {
@@ -208,7 +209,7 @@ public class TerraformStepHelperTest extends CategoryTest {
             .build();
     helper.saveRollbackDestroyConfigInline(parameters, response, ambiance);
     ArgumentCaptor<TerraformConfig> captor = ArgumentCaptor.forClass(TerraformConfig.class);
-    verify(mockPersistence).save(captor.capture());
+    verify(terraformConfigDAL).saveTerraformConfig(captor.capture());
     TerraformConfig config = captor.getValue();
     assertThat(config).isNotNull();
     assertThat(config.getAccountId()).isEqualTo("test-account");
@@ -479,7 +480,7 @@ public class TerraformStepHelperTest extends CategoryTest {
         .resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(inheritOutputName));
     helper.saveRollbackDestroyConfigInherited(parameters, ambiance);
     ArgumentCaptor<TerraformConfig> captor = ArgumentCaptor.forClass(TerraformConfig.class);
-    then(mockPersistence).should(times(1)).save(captor.capture());
+    then(terraformConfigDAL).should(times(1)).saveTerraformConfig(captor.capture());
     TerraformConfig config = captor.getValue();
     assertThat(config).isNotNull();
     assertThat(config.getAccountId()).isEqualTo("test-account");
@@ -538,7 +539,7 @@ public class TerraformStepHelperTest extends CategoryTest {
     TerraformConfig terraformConfig =
         TerraformConfig.builder().backendConfig("back-content").workspace("w1").configFiles(configFiles).build();
     helper.saveTerraformConfig(terraformConfig, ambiance);
-    then(mockPersistence).should(times(1)).save(captor.capture());
+    then(terraformConfigDAL).should(times(1)).saveTerraformConfig(captor.capture());
     System.out.println("");
     TerraformConfig config = captor.getValue();
     assertThat(config.getVarFileConfigs()).isNull();

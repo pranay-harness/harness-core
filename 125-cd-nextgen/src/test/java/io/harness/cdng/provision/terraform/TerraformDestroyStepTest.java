@@ -78,6 +78,7 @@ public class TerraformDestroyStepTest extends CategoryTest {
   @Mock private CDFeatureFlagHelper cdFeatureFlagHelper;
   @Mock private PipelineRbacHelper pipelineRbacHelper;
   @Mock private StepHelper stepHelper;
+  @Mock private TerraformConfigDAL terraformConfigDAL;
   @InjectMocks private TerraformDestroyStep terraformDestroyStep;
   @Captor ArgumentCaptor<List<EntityDetail>> captor;
 
@@ -361,7 +362,7 @@ public class TerraformDestroyStepTest extends CategoryTest {
         ambiance, stepElementParameters, () -> terraformTaskNGResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(stepResponse.getStepOutcomes()).isNotNull();
-    verify(terraformStepHelper, times(1)).clearTerraformConfig(any(), any());
+    verify(terraformConfigDAL, times(1)).clearTerraformConfig(any(), any());
     verify(terraformStepHelper, times(1)).updateParentEntityIdAndVersion(any(), any());
   }
 
