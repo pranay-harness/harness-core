@@ -30,6 +30,6 @@ public class LoggingInitializer {
 
       initialized = true;
     }
-    LoggingTriggerPolicy.resetRollingPolicy();
+    //LoggingTriggerPolicy.resetRollingPolicy();
   }
 }

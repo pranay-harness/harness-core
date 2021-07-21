@@ -1291,7 +1291,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             upgradeVersion = delegateScripts.getVersion();
             upgradeNeeded.set(true);
             log.info("Starting new active version");
-            //LoggingTriggerPolicy.resetRollingPolicy();
+            LoggingTriggerPolicy.resetRollingPolicy();
           } else {
             log.info("Delegate up to date");
           }

@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class LoggingTriggerPolicy<E> extends TriggeringPolicyBase<E> {
-  static AtomicBoolean doRolling = new AtomicBoolean();
+  static AtomicBoolean doRolling = new AtomicBoolean(false);
 
   @Override
   public boolean isTriggeringEvent(File file, E e) {
