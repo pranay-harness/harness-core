@@ -132,24 +132,13 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
-
-#Delegate Service specific configs & gRpc configs
-#delegateServiceUrl: https://localhost:9080/
-grpcServerConfig:
-  connectors:
-    - port: 14011
-      secure: true
-      keyFilePath: key.pem
-      certFilePath: cert.pem
-    - port: 9878
-
 grpcServerClassicConfig:
   connectors:
     - port: 15011
       secure: true
       keyFilePath: key.pem
       certFilePath: cert.pem
-    - port: 9879
+    - port: 15022
 
 #grpcDelegateServiceClientConfig:
  # target: localhost:14011
