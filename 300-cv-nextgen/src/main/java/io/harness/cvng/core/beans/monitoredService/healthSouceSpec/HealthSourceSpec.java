@@ -22,6 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
   @JsonSubTypes.Type(value = AppDynamicsHealthSourceSpec.class, name = "AppDynamics")
   , @JsonSubTypes.Type(value = NewRelicHealthSourceSpec.class, name = "NewRelic"),
       @JsonSubTypes.Type(value = StackdriverLogHealthSourceSpec.class, name = "StackdriverLog"),
+      @JsonSubTypes.Type(value = SplunkHealthSourceSpec.class, name = "Splunk"),
       @JsonSubTypes.Type(value = PrometheusHealthSourceSpec.class, name = "Prometheus")
 })
 public abstract class HealthSourceSpec {

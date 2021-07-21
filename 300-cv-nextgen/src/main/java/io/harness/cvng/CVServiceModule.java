@@ -140,6 +140,7 @@ import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTr
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.PrometheusHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.SplunkHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.StackdriverLogHealthSourceSpecTransformer;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
@@ -301,6 +302,10 @@ public class CVServiceModule extends AbstractModule {
     bind(CVConfigToHealthSourceTransformer.class)
         .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
         .to(StackdriverLogHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+        .to(SplunkHealthSourceSpecTransformer.class);
 
     bind(CVConfigToHealthSourceTransformer.class)
         .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
