@@ -5,6 +5,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.StepType;
@@ -123,5 +125,13 @@ public class AmbianceUtils {
       throw new InvalidRequestException("Ambiance.levels is empty");
     }
     return currLevel.getStartTs();
+  }
+
+  public NGAccess getNgAccess(Ambiance ambiance) {
+    return BaseNGAccess.builder()
+        .accountIdentifier(getAccountId(ambiance))
+        .orgIdentifier(getOrgIdentifier(ambiance))
+        .projectIdentifier(getProjectIdentifier(ambiance))
+        .build();
   }
 }
