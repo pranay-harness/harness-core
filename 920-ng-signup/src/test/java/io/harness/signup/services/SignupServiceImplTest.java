@@ -50,6 +50,7 @@ import io.harness.user.remote.UserClient;
 
 import com.google.inject.name.Named;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import org.junit.Before;
@@ -80,15 +81,13 @@ public class SignupServiceImplTest extends CategoryTest {
   private static final String PASSWORD = "admin12345";
   private static final String ACCOUNT_ID = "account1";
   private static final String VERIFY_URL = "register/verify";
-  private static final String NEXT_GEN_MANAGER_URI = "http://localhost:8181/ng/#/";
-  private static final String NEXT_GEN_AUTH_URI = "http://localhost:8181/auth/#/";
+  private static final String NEXT_GEN_PORATL = "http://localhost:8181/";
 
   @Before
   public void setup() throws IllegalAccessException {
     initMocks(this);
     signupServiceImpl = new SignupServiceImpl(accountService, userClient, signupValidator, reCaptchaVerifier,
-        telemetryReporter, signupNotificationHelper, featureFlagService, verificationTokenRepository, executorService,
-        NEXT_GEN_MANAGER_URI, NEXT_GEN_AUTH_URI);
+        telemetryReporter, signupNotificationHelper, featureFlagService, verificationTokenRepository, executorService);
   }
 
   @Test
@@ -257,7 +256,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
-  public void testResendEmailNotification() throws IOException {
+  public void testResendEmailNotification() throws IOException, URISyntaxException {
     when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(true);
 
     SignupInviteDTO signupInviteDTO =
@@ -266,15 +265,15 @@ public class SignupServiceImplTest extends CategoryTest {
     when(getSignupInviteCall.execute()).thenReturn(Response.success(new RestResponse<>(signupInviteDTO)));
     when(userClient.getSignupInvite(EMAIL)).thenReturn(getSignupInviteCall);
     SignupVerificationToken verificationToken =
-        SignupVerificationToken.builder().email(EMAIL).validUntil(Long.MAX_VALUE).build();
+        SignupVerificationToken.builder().email(EMAIL).validUntil(Long.MAX_VALUE).token("123").build();
     when(verificationTokenRepository.findByEmail(EMAIL)).thenReturn(Optional.of(verificationToken));
     when(verificationTokenRepository.save(any())).thenReturn(verificationToken);
-    when(accountService.getBaseUrl(ACCOUNT_ID, NEXT_GEN_AUTH_URI)).thenReturn(NEXT_GEN_AUTH_URI);
+    when(accountService.getBaseUrl(any())).thenReturn(NEXT_GEN_PORATL);
 
     signupServiceImpl.resendVerificationEmail(EMAIL);
     verify(signupNotificationHelper, times(1))
         .sendSignupNotification(any(), eq(EmailType.VERIFY), any(),
-            eq(NEXT_GEN_AUTH_URI + VERIFY_URL + "/" + verificationToken.getToken() + "?email=" + EMAIL));
+            eq(NEXT_GEN_PORATL + "auth/#/" + VERIFY_URL + "/" + verificationToken.getToken() + "?email=" + EMAIL));
     verify(verificationTokenRepository, times(1)).save(any());
     assertThat(verificationToken.getToken()).isNotNull();
   }

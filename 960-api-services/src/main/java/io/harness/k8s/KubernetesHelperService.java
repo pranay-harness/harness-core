@@ -57,6 +57,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.OperationContext;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
 import io.fabric8.kubernetes.client.utils.Utils;
@@ -453,8 +454,11 @@ public class KubernetesHelperService {
      * */
     MixedOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
         Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>> mixedOperation =
-        new HorizontalPodAutoscalerOperationsImpl(
-            kubernetesClient.getHttpClient(), kubernetesClient.getConfiguration(), kubernetesClient.getNamespace());
+        new HorizontalPodAutoscalerOperationsImpl((new OperationContext())
+                                                      .withOkhttpClient(kubernetesClient.getHttpClient())
+                                                      .withConfig(kubernetesClient.getConfiguration())
+                                                      .withNamespace(kubernetesClient.getNamespace())
+                                                      .withName(apiName));
 
     return mixedOperation.inNamespace(kubernetesConfig.getNamespace());
   }

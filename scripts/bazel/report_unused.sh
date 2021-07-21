@@ -15,11 +15,13 @@ fi
 echo "REPORT_UNUSED = True" > project/flags/report_unused.bzl
 
 echo "start analyzing ..."
-bazel build \
+TARGETS=$(bazel query 'attr(tags, "unused_dependency", //...:*)')
+
+bazel build -k \
   --strict_java_deps=error \
   --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8 \
   --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8 \
-  $(bazel query 'attr(tags, "unused_dependency", //...:*)') \
-  -k 2>&1 | grep "^buildozer 'remove deps\|^# "
+  ${TARGETS} \
+  2>&1 | grep "^buildozer 'remove deps\|^# "
 
 echo "REPORT_UNUSED = False" > project/flags/report_unused.bzl

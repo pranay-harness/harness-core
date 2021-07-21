@@ -9,7 +9,6 @@ import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidYamlException;
 import io.harness.exception.JsonSchemaException;
@@ -18,7 +17,6 @@ import io.harness.jackson.JsonNodeUtils;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.plancreator.stages.stage.StageElementConfig;
-import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
@@ -67,7 +65,6 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final YamlSchemaValidator yamlSchemaValidator;
   private final PmsSdkInstanceService pmsSdkInstanceService;
-  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
   private final PmsYamlSchemaHelper pmsYamlSchemaHelper;
   private final ApprovalYamlSchemaService approvalYamlSchemaService;
   private final FeatureFlagYamlService featureFlagYamlService;
@@ -77,14 +74,12 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   @Inject
   public PMSYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
       YamlSchemaValidator yamlSchemaValidator, PmsSdkInstanceService pmsSdkInstanceService,
-      PmsFeatureFlagHelper pmsFeatureFlagHelper, PmsYamlSchemaHelper pmsYamlSchemaHelper,
-      ApprovalYamlSchemaService approvalYamlSchemaService, FeatureFlagYamlService featureFlagYamlService,
-      SchemaFetcher schemaFetcher, ProjectClient projectClient) {
+      PmsYamlSchemaHelper pmsYamlSchemaHelper, ApprovalYamlSchemaService approvalYamlSchemaService,
+      FeatureFlagYamlService featureFlagYamlService, SchemaFetcher schemaFetcher, ProjectClient projectClient) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaValidator = yamlSchemaValidator;
     this.pmsSdkInstanceService = pmsSdkInstanceService;
-    this.pmsFeatureFlagHelper = pmsFeatureFlagHelper;
     this.pmsYamlSchemaHelper = pmsYamlSchemaHelper;
     this.approvalYamlSchemaService = approvalYamlSchemaService;
     this.featureFlagYamlService = featureFlagYamlService;
@@ -105,9 +100,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
   @Override
   public void validateYamlSchema(String accountId, String orgId, String projectId, String yaml) {
-    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_SCHEMA_VALIDATION)) {
-      validateYamlSchemaInternal(accountId, orgId, projectId, yaml);
-    }
+    validateYamlSchemaInternal(accountId, orgId, projectId, yaml);
   }
 
   private void validateYamlSchemaInternal(String accountIdentifier, String orgId, String projectId, String yaml) {

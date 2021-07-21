@@ -30,7 +30,6 @@ import net.jodah.failsafe.RetryPolicy;
 public class SupportServiceImpl implements SupportService {
   private final SupportPreferenceDao supportPreferenceDao;
   private final AccountClient accountClient;
-  private static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the support configuration with the given accountIdentifier",
           "Could not find the support configuration with the given accountIdentifier",
@@ -71,8 +70,7 @@ public class SupportServiceImpl implements SupportService {
   @Override
   public Set<String> fetchSupportUsers() {
     Collection<UserMetadata> supportUsers =
-        Failsafe.with(retryPolicy)
-            .get(() -> RestClientUtils.getResponse(accountClient.listAllHarnessSupportUsers(GLOBAL_ACCOUNT_ID)));
+        Failsafe.with(retryPolicy).get(() -> RestClientUtils.getResponse(accountClient.listAllHarnessSupportUsers()));
     return supportUsers.stream().map(UserMetadata::getId).collect(Collectors.toSet());
   }
 }

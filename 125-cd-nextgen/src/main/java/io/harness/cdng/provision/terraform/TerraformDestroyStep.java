@@ -61,6 +61,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
   @Inject private CDFeatureFlagHelper cdFeatureFlagHelper;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Inject private StepHelper stepHelper;
+  @Inject public TerraformConfigDAL terraformConfigDAL;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -259,7 +260,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     }
 
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
-      helper.clearTerraformConfig(ambiance,
+      terraformConfigDAL.clearTerraformConfig(ambiance,
           helper.generateFullIdentifier(
               ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance));
       helper.updateParentEntityIdAndVersion(

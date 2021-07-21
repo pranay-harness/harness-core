@@ -47,5 +47,6 @@ java_binary(
 )
 
 run_analysis(
+    run_duplicated = False,
     run_sonar = False,
 )

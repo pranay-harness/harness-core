@@ -37,7 +37,6 @@ public class StackdriverLogDataCollectionInfoMapperTest extends CvNextGenTestBas
                        .serviceInstanceIdentifier(stackdriverLogCVConfig.getServiceInstanceIdentifier())
                        .messageIdentifier(stackdriverLogCVConfig.getMessageIdentifier())
                        .build());
-    assertThat(info.getDataCollectionDsl())
-        .startsWith("Var authTokenUrl = \"https://www.googleapis.com/oauth2/v4/token\"");
+    assertThat(info.getDataCollectionDsl()).startsWith("Var header = {}");
   }
 }

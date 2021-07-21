@@ -1,5 +1,6 @@
 package io.harness.cdng.provision.terraform.steps.rolllback;
 
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.manifest.yaml.GitStoreDTO;
 import io.harness.cdng.provision.terraform.TerraformConfig;
+import io.harness.cdng.provision.terraform.TerraformConfigDAL;
 import io.harness.cdng.provision.terraform.TerraformConfigHelper;
 import io.harness.cdng.provision.terraform.TerraformStepHelper;
 import io.harness.delegate.beans.TaskData;
@@ -63,6 +65,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private TerraformStepHelper terraformStepHelper;
+  @Mock private TerraformConfigDAL terraformConfigDAL;
   @Mock private TerraformConfigHelper terraformConfigHelper;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
   @Mock private StepHelper stepHelper;
@@ -232,7 +235,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
     OptionalSweepingOutput optionalSweepingOutput =
         OptionalSweepingOutput.builder().output(terraformConfigSweepingOutput).build();
     doReturn(optionalSweepingOutput).when(executionSweepingOutputService).resolveOptional(any(), any());
-    doNothing().when(terraformStepHelper).clearTerraformConfig(ambiance, "entityId");
+    doNothing().when(terraformConfigDAL).clearTerraformConfig(ambiance, "entityId");
 
     StepResponse stepResponse =
         terraformRollbackStep.handleTaskResult(ambiance, stepElementParameters, () -> terraformTaskNGResponse);
@@ -240,7 +243,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(stepResponse.getUnitProgressList()).isEqualTo(unitProgresses);
-    verify(terraformStepHelper, times(1)).clearTerraformConfig(ambiance, "entityId");
+    verify(terraformConfigDAL, times(1)).clearTerraformConfig(ambiance, "entityId");
   }
 
   @Test
@@ -270,5 +273,12 @@ public class TerraformRollbackStepTest extends CategoryTest {
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
     assertThat(stepResponse.getUnitProgressList()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testGetStepParametersClass() {
+    assertThat(terraformRollbackStep.getStepParametersClass()).isEqualTo(StepElementParameters.class);
   }
 }

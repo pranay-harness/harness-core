@@ -6,10 +6,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMetadata;
-import io.harness.ng.core.user.service.NgUserService;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.user.spring.UserMetadataRepository;
+import io.harness.user.remote.UserClient;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,14 +27,14 @@ import org.springframework.data.mongodb.core.query.Query;
 public class UserMetadataMigrationService implements NGMigration {
   private final MongoTemplate mongoTemplate;
   private final UserMetadataRepository userMetadataRepository;
-  private final NgUserService ngUserService;
+  private final UserClient userClient;
 
   @Inject
-  public UserMetadataMigrationService(
-      MongoTemplate mongoTemplate, UserMetadataRepository userMetadataRepository, NgUserService ngUserService) {
+  public UserMetadataMigrationService(MongoTemplate mongoTemplate, UserMetadataRepository userMetadataRepository,
+      @Named("PRIVILEGED") UserClient userClient) {
     this.mongoTemplate = mongoTemplate;
     this.userMetadataRepository = userMetadataRepository;
-    this.ngUserService = ngUserService;
+    this.userClient = userClient;
   }
 
   public void migrate() {
@@ -75,7 +77,7 @@ public class UserMetadataMigrationService implements NGMigration {
 
   private boolean getLockedStatus(UserMetadata userMetadata) {
     String userId = userMetadata.getUserId();
-    Optional<UserInfo> userInfoOptional = ngUserService.getUserById(userId);
+    Optional<UserInfo> userInfoOptional = RestClientUtils.getResponse(userClient.getUserById(userId));
     if (userInfoOptional.isPresent()) {
       UserInfo userInfo = userInfoOptional.get();
       return userInfo.isLocked();

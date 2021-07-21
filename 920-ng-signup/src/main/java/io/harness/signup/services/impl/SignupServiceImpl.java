@@ -50,7 +50,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,8 +72,6 @@ public class SignupServiceImpl implements SignupService {
   private FeatureFlagService featureFlagService;
   private final SignupVerificationTokenRepository verificationTokenRepository;
   private final ExecutorService executorService;
-  private final String nextGenManagerUri;
-  private final String nextGenAuthUri;
 
   public static final String FAILED_EVENT_NAME = "SIGNUP_ATTEMPT_FAILED";
   public static final String SUCCEED_EVENT_NAME = "NEW_SIGNUP";
@@ -83,14 +80,14 @@ public class SignupServiceImpl implements SignupService {
   private static final String LOGIN_URL = "/signin";
   private static final int SIGNUP_TOKEN_VALIDITY_IN_DAYS = 30;
   private static final String UNDEFINED_ACCOUNT_ID = "undefined";
+  private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
 
   @Inject
   public SignupServiceImpl(AccountService accountService, UserClient userClient, SignupValidator signupValidator,
       ReCaptchaVerifier reCaptchaVerifier, TelemetryReporter telemetryReporter,
       SignupNotificationHelper signupNotificationHelper, FeatureFlagService featureFlagService,
       SignupVerificationTokenRepository verificationTokenRepository,
-      @Named("NGSignupNotification") ExecutorService executorService,
-      @Named("nextGenManagerUri") String nextGenManagerUri, @Named("nextGenAuthUri") String nextGenAuthUri) {
+      @Named("NGSignupNotification") ExecutorService executorService) {
     this.accountService = accountService;
     this.userClient = userClient;
     this.signupValidator = signupValidator;
@@ -100,8 +97,6 @@ public class SignupServiceImpl implements SignupService {
     this.featureFlagService = featureFlagService;
     this.verificationTokenRepository = verificationTokenRepository;
     this.executorService = executorService;
-    this.nextGenManagerUri = nextGenManagerUri;
-    this.nextGenAuthUri = nextGenAuthUri;
   }
 
   /**
@@ -258,30 +253,23 @@ public class SignupServiceImpl implements SignupService {
   }
 
   private String generateVerifyUrl(String accountId, String token, String email) throws URISyntaxException {
-    String baseUrl;
-    if (Objects.isNull(accountId)) {
-      baseUrl = nextGenAuthUri;
-    } else {
-      baseUrl = accountService.getBaseUrl(accountId, nextGenAuthUri);
-    }
-
-    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    URIBuilder uriBuilder = getNextGenAuthUiURL(accountId);
     String fragment = String.format(VERIFY_URL, token, email);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
   }
 
   private String generateLoginUrl(String accountId) throws URISyntaxException {
-    String baseUrl;
-    if (Objects.isNull(accountId)) {
-      baseUrl = nextGenAuthUri;
-    } else {
-      baseUrl = accountService.getBaseUrl(accountId, nextGenAuthUri);
-    }
-
-    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    URIBuilder uriBuilder = getNextGenAuthUiURL(accountId);
     uriBuilder.setFragment(LOGIN_URL);
     return uriBuilder.toString();
+  }
+
+  private URIBuilder getNextGenAuthUiURL(String accountId) throws URISyntaxException {
+    String baseUrl = accountService.getBaseUrl(accountId);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
+    return uriBuilder;
   }
 
   @Override

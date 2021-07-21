@@ -5,14 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 import io.harness.account.AccountClient;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.WingsException;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.signup.dto.SignupDTO;
 
 import com.google.inject.Inject;
-import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -22,7 +20,7 @@ public class AccountServiceImpl implements AccountService {
   private final AccountClient accountClient;
 
   @Override
-  public AccountDTO createAccount(SignupDTO dto) throws WingsException {
+  public AccountDTO createAccount(SignupDTO dto) {
     String username = dto.getEmail().split("@")[0];
 
     AccountDTO accountDTO =
@@ -37,12 +35,8 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public String getBaseUrl(String accountId, String defaultUrl) {
-    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(accountId));
-    if (Objects.isNull(accountBaseUrl)) {
-      accountBaseUrl = defaultUrl;
-    }
-    return accountBaseUrl;
+  public String getBaseUrl(String accountId) {
+    return RestClientUtils.getResponse(accountClient.getBaseUrl(accountId));
   }
 
   @Override

@@ -12,9 +12,7 @@ import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURA
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
@@ -179,7 +177,13 @@ import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
+import io.harness.service.CgEventHelper;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.EventConfigService;
+import io.harness.service.EventConfigServiceImpl;
+import io.harness.service.EventHelper;
+import io.harness.service.EventService;
+import io.harness.service.EventServiceImpl;
 import io.harness.service.impl.DelegateTokenServiceImpl;
 import io.harness.service.intfc.DelegateTokenService;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
@@ -762,7 +766,6 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -851,6 +854,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
+    bind(PortalConfig.class).toInstance(configuration.getPortal());
     // RetryOnException Binding start
     bind(MethodExecutionHelper.class); // untargetted binding for eager loading
     ProviderMethodInterceptor retryOnExceptionInterceptor =
@@ -893,6 +897,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(GcsService.class).to(GcsServiceImpl.class);
     bind(GcsBuildService.class).to(GcsBuildServiceImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
+    bind(EventConfigService.class).to(EventConfigServiceImpl.class);
+    bind(EventService.class).to(EventServiceImpl.class);
+    bind(EventHelper.class).to(CgEventHelper.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(EmailNotificationService.class).to(EmailNotificationServiceImpl.class);
     bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);

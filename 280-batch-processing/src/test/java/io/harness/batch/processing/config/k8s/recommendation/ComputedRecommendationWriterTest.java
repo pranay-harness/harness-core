@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -21,7 +20,7 @@ import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
-import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
@@ -68,7 +67,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   private ArgumentCaptor<String> stringCaptor;
   private WorkloadRepository workloadRepository;
   private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
-  private K8sRecommendationDAO k8sRecommendationDAO;
+  private RecommendationCrudService recommendationCrudService;
 
   @Before
   public void setUp() throws Exception {
@@ -76,16 +75,16 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     workloadRecommendationDao = mock(WorkloadRecommendationDao.class);
     workloadRepository = mock(WorkloadRepository.class);
     k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
-    k8sRecommendationDAO = mock(K8sRecommendationDAO.class);
+    recommendationCrudService = mock(RecommendationCrudService.class);
 
     when(workloadRecommendationDao.save(any(K8sWorkloadRecommendation.class))).thenReturn(UUID);
     when(workloadRepository.getWorkload(any())).thenReturn(Optional.empty());
     when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(anyString(), anyMap()))
         .thenReturn(Optional.empty());
-    doNothing().when(k8sRecommendationDAO).insertIntoCeRecommendation(any(), any(), any(), any(), anyBoolean(), any());
+    doNothing().when(recommendationCrudService).upsertWorkloadRecommendation(any(), any(), any());
 
     computedRecommendationWriter = new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService,
-        workloadRepository, k8sLabelServiceInfoFetcher, k8sRecommendationDAO, JOB_START_DATE);
+        workloadRepository, k8sLabelServiceInfoFetcher, recommendationCrudService, JOB_START_DATE);
     captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
     stringCaptor = ArgumentCaptor.forClass(String.class);
   }
@@ -383,8 +382,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(189.52));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
 
-    verify(k8sRecommendationDAO)
-        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -486,8 +484,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(183.80));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
 
-    verify(k8sRecommendationDAO)
-        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -649,8 +646,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
 
     assertThat(recommendation.isLastDayCostAvailable()).isFalse();
 
-    verify(k8sRecommendationDAO)
-        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -738,8 +734,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .limit("memory", "20M")
                        .build());
 
-    verify(k8sRecommendationDAO)
-        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -828,8 +823,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .limit("memory", "250M")
                        .build());
 
-    verify(k8sRecommendationDAO)
-        .insertIntoCeRecommendation(stringCaptor.capture(), any(), any(), any(), anyBoolean(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }

@@ -784,6 +784,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>865-cg-events</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>870-cg-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

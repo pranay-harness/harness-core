@@ -34,8 +34,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
   @NotNull String feature;
-  @NotNull String applicationName;
-  @NotNull String tierName;
+  @NotEmpty String applicationName;
+  @NotEmpty String tierName;
   @NotNull @NotEmpty @Valid Set<MetricPackDTO> metricPacks;
 
   @Override

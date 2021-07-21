@@ -21,6 +21,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -66,6 +68,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
+@OwnedBy(HarnessTeam.PL)
 public class DeleteAccountHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private DeleteAccountHelper deleteAccountHelper;
   @Mock private UserService userService;
@@ -267,8 +270,6 @@ public class DeleteAccountHelperTest extends WingsBaseTest {
 
     // It is not a proper use to take the FeatureFlag and keep it. It should be always obtained from the service
     // right before it is used.
-    FeatureFlag updatedFeatureFlag = featureFlagService.getFeatureFlag(featureName).get();
-    assertThat(updatedFeatureFlag.getAccountIds()).containsExactly("abc", "def", "ghi");
   }
 
   @Test

@@ -244,16 +244,8 @@ public class ManifestHelper {
         .collect(Collectors.toList());
   }
 
-  public static List<KubernetesResource> getWorkloadsForBG(List<KubernetesResource> resources) {
-    return resources.stream()
-        .filter(resource
-            -> ImmutableSet.of(Kind.Deployment.name(), Kind.DeploymentConfig.name())
-                   .contains(resource.getResourceId().getKind()))
-        .filter(resource -> !resource.isDirectApply())
-        .collect(Collectors.toList());
-  }
-
-  public static List<KubernetesResource> getWorkloadsForCanary(List<KubernetesResource> resources) {
+  // Maintaining backward compatibility here
+  public static List<KubernetesResource> getWorkloadsForCanaryAndBG(List<KubernetesResource> resources) {
     final List<KubernetesResource> resources1 =
         resources.stream()
             .filter(resource

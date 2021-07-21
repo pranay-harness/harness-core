@@ -10,7 +10,7 @@ import lombok.Value;
 @Value
 @Builder
 public class UserMetadata {
-  String id;
   String name;
+  String id;
   String emailId;
 }

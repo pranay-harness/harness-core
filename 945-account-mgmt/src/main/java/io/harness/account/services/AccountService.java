@@ -12,6 +12,6 @@ import io.harness.signup.dto.SignupDTO;
 public interface AccountService {
   AccountDTO createAccount(SignupDTO dto) throws WingsException;
   Boolean updateDefaultExperienceIfApplicable(String accountId, DefaultExperience defaultExperience);
-  String getBaseUrl(String accountId, String defaultUrl);
+  String getBaseUrl(String accountId);
   AccountDTO getAccount(String accountId);
 }

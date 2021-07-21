@@ -25,4 +25,7 @@ public class CfRouteUpdateRequestConfigData {
   private boolean downsizeOldApplication;
   private boolean isMapRoutesOperation;
   private boolean skipRollback;
+  private boolean upSizeInActiveApp;
+  private CfAppSetupTimeDetails existingInActiveApplicationDetails;
+  private String cfAppNamePrefix;
 }

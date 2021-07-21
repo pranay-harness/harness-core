@@ -166,7 +166,7 @@ public class GcpHelperService {
   public GoogleCredential getGoogleCredential(char[] serviceAccountKeyFileContent, boolean isUseDelegate)
       throws IOException {
     if (isUseDelegate) {
-      return gcpCredentialsHelperService.getApplicationDefaultCredentials();
+      return GcpCredentialsHelperService.getApplicationDefaultCredentials();
     }
     validateServiceAccountKey(serviceAccountKeyFileContent);
     return checkIfUseProxyAndGetGoogleCredentials(serviceAccountKeyFileContent);

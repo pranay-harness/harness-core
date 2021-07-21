@@ -4217,8 +4217,6 @@ http_archive(
     ],
 )
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
-
 RULES_JVM_EXTERNAL_TAG = "4.1"
 
 http_archive(
@@ -4345,7 +4343,7 @@ plain_artifacts = [
     "com.google.code.findbugs:jsr305:3.0.2",
     "com.google.code.gson:gson:2.8.0",
     "com.google.errorprone:error_prone_annotations:2.3.3",
-    "com.google.guava:guava:21.0",
+    "com.google.guava:guava:30.1.1-jre",
     "com.google.http-client:google-http-client-apache-v2:1.38.0",
     "com.google.http-client:google-http-client-appengine:1.34.1",
     "com.google.http-client:google-http-client-jackson2:1.34.1",
@@ -4644,6 +4642,7 @@ plain_artifacts = [
     "net.openhft:chronicle-threads:2.17.27",
     "net.openhft:chronicle-wire:2.17.71",
     "net.openhft:compiler:2.3.4",
+    "net.rcarz:jira-client:0.9-SNAPSHOT",
     "net.redhogs.cronparser:cron-parser:2.6",
     "net.sf.ezmorph:ezmorph:1.0.6",
     "net.sf.jopt-simple:jopt-simple:5.0.2",
@@ -5084,12 +5083,6 @@ maven_install(
 load("@maven//:defs.bzl", "pinned_maven_install")
 
 pinned_maven_install()
-
-http_jar(
-    name = "jira_client",
-    sha256 = "4e733673d5ecfbd0f81f6adef1703a1c3d8975bb091ce6af8dc6ec1604a56112",
-    url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
-)
 
 maven_install(
     name = "ce_nextgen",

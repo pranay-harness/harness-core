@@ -87,7 +87,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
@@ -118,7 +117,9 @@ public class InviteServiceImpl implements InviteService {
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private static final String INVITE_URL =
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
-  private static final String ACCEPT_INVITE_PATH = "/ng/api/invites/verify";
+  private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
+  private static final String NG_UI_PATH_PREFIX = "ng/";
+  private static final String ACCEPT_INVITE_PATH = "gateway/ng/api/invites/verify";
   private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final NgUserService ngUserService;
@@ -131,9 +132,6 @@ public class InviteServiceImpl implements InviteService {
   private final OrganizationService organizationService;
   private final ProjectService projectService;
   private final AccessControlClient accessControlClient;
-  private final String currentGenUiUrl;
-  private final String nextGenUiUrl;
-  private final String nextGenAuthUiUrl;
   private final boolean isNgAuthUIEnabled;
   private final UserClient userClient;
 
@@ -147,8 +145,7 @@ public class InviteServiceImpl implements InviteService {
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
       InviteRepository inviteRepository, NotificationClient notificationClient, AccountClient accountClient,
       OutboxService outboxService, OrganizationService organizationService, ProjectService projectService,
-      AccessControlClient accessControlClient, UserClient userClient, @Named("currentGenUiUrl") String currentGenUiUrl,
-      @Named("nextGenUiUrl") String nextGenUiUrl, @Named("nextGenAuthUiUrl") String nextGenAuthUiUrl,
+      AccessControlClient accessControlClient, UserClient userClient,
       @Named("isNgAuthUIEnabled") boolean isNgAuthUIEnabled) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
@@ -161,9 +158,6 @@ public class InviteServiceImpl implements InviteService {
     this.outboxService = outboxService;
     this.organizationService = organizationService;
     this.projectService = projectService;
-    this.currentGenUiUrl = currentGenUiUrl;
-    this.nextGenUiUrl = nextGenUiUrl;
-    this.nextGenAuthUiUrl = nextGenAuthUiUrl;
     this.isNgAuthUIEnabled = isNgAuthUIEnabled;
     this.accessControlClient = accessControlClient;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
@@ -311,19 +305,30 @@ public class InviteServiceImpl implements InviteService {
     String orgIdentifier = inviteAcceptResponse.getOrgIdentifier();
     String projectIdentifier = inviteAcceptResponse.getProjectIdentifier();
 
-    String baseUrl = getBaseUrl(accountIdentifier, nextGenUiUrl);
-    String resourceUrl = String.format("%saccount/%s/home/get-started", baseUrl, accountIdentifier);
-    if (isNotEmpty(projectIdentifier)) {
-      resourceUrl = String.format("%saccount/%s/home/orgs/%s/projects/%s/details", baseUrl, accountIdentifier,
-          orgIdentifier, projectIdentifier);
-    } else if (isNotEmpty(orgIdentifier)) {
-      resourceUrl =
-          String.format("%saccount/%s/home/organizations/%s/details", baseUrl, accountIdentifier, orgIdentifier);
+    String baseUrl = getBaseUrl(accountIdentifier);
+    URIBuilder uriBuilder = null;
+    try {
+      uriBuilder = new URIBuilder(baseUrl);
+    } catch (URISyntaxException e) {
+      log.error("Error building URIBuilder from baseUrl: " + baseUrl, e);
+      throw new WingsException(e);
     }
 
+    uriBuilder.setPath(NG_UI_PATH_PREFIX);
+
+    String resourceUrl = String.format("/account/%s/home/get-started", accountIdentifier);
+    if (isNotEmpty(projectIdentifier)) {
+      resourceUrl = String.format(
+          "/account/%s/home/orgs/%s/projects/%s/details", accountIdentifier, orgIdentifier, projectIdentifier);
+    } else if (isNotEmpty(orgIdentifier)) {
+      resourceUrl = String.format("/account/%s/home/organizations/%s/details", accountIdentifier, orgIdentifier);
+    }
+
+    uriBuilder.setFragment(resourceUrl);
     try {
-      return new URI(resourceUrl);
+      return uriBuilder.build();
     } catch (URISyntaxException e) {
+      log.error("Error building resourceUrl", e);
       throw new WingsException(e);
     }
   }
@@ -333,9 +338,9 @@ public class InviteServiceImpl implements InviteService {
     try {
       String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s",
           accountIdentifier, email, jwtToken, getResourceUrl(inviteAcceptResponse));
-      String baseUrl = getBaseUrl(accountIdentifier, nextGenAuthUiUrl);
+      String baseUrl = getBaseUrl(accountIdentifier);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
-
+      uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
       uriBuilder.setFragment("/accept-invite?" + accountCreationFragment);
       return uriBuilder.build();
     } catch (URISyntaxException e) {
@@ -345,8 +350,9 @@ public class InviteServiceImpl implements InviteService {
 
   private URI getLoginPageUrl(String accountIdentifier) {
     try {
-      String baseUrl = getBaseUrl(accountIdentifier, nextGenAuthUiUrl);
+      String baseUrl = getBaseUrl(accountIdentifier);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
       uriBuilder.setFragment("/signin");
       return uriBuilder.build();
     } catch (URISyntaxException e) {
@@ -354,12 +360,8 @@ public class InviteServiceImpl implements InviteService {
     }
   }
 
-  private String getBaseUrl(String accountIdentifier, String defaultEnvUrl) {
-    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(accountIdentifier));
-    if (Objects.isNull(accountBaseUrl)) {
-      accountBaseUrl = defaultEnvUrl;
-    }
-    return accountBaseUrl;
+  private String getBaseUrl(String accountIdentifier) {
+    return RestClientUtils.getResponse(accountClient.getBaseUrl(accountIdentifier));
   }
 
   private Invite resendInvite(Invite newInvite) {
@@ -567,14 +569,14 @@ public class InviteServiceImpl implements InviteService {
     String fragment = String.format(INVITE_URL, invite.getAccountIdentifier(), account.getName(),
         account.getCompanyName(), invite.getEmail(), invite.getInviteToken());
 
-    String baseUrl = getBaseUrl(invite.getAccountIdentifier(), currentGenUiUrl);
+    String baseUrl = getBaseUrl(invite.getAccountIdentifier());
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
   }
 
   private String getAcceptInviteUrl(Invite invite) throws URISyntaxException, UnsupportedEncodingException {
-    String baseUrl = getBaseUrl(invite.getAccountIdentifier(), currentGenUiUrl);
+    String baseUrl = getBaseUrl(invite.getAccountIdentifier());
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setPath(ACCEPT_INVITE_PATH);
     uriBuilder.setParameters(getParameterList(invite));

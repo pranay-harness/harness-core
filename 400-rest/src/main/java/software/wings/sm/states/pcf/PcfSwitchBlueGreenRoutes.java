@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.CF_APP_NON_VERSIONING_INACTIVE_ROLLBACK;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -77,6 +78,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   static final String PCF_BG_SKIP_SWAP_ROUTE_MESG = "Skipping route swapping";
 
   @Attributes(title = "Downsize Old Applications") private boolean downsizeOldApps;
+  @Getter @Setter @Attributes(title = "Up size InActive app") private boolean upSizeInActiveApp;
 
   public boolean isDownsizeOldApps() {
     return downsizeOldApps;
@@ -124,7 +126,10 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
-    CfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
+    SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
+    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
+    CfRouteUpdateRequestConfigData requestConfigData =
+        getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf, pcfConfig);
     Activity activity = createActivity(context);
 
     if (isRollback()) {
@@ -152,9 +157,6 @@ public class PcfSwitchBlueGreenRoutes extends State {
       }
       requestConfigData.setSkipRollback(sweepingOutputInstance == null);
     }
-
-    SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
-    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
 
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
@@ -184,7 +186,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   }
 
   private CfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
-      SetupSweepingOutputPcf setupSweepingOutputPcf) {
+      SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
     List<String> existingAppNames;
 
     if (setupSweepingOutputPcf != null && isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
@@ -206,7 +208,17 @@ public class PcfSwitchBlueGreenRoutes extends State {
         .isRollback(isRollback())
         .isStandardBlueGreen(true)
         .downsizeOldApplication(downsizeOldApps)
+        .upSizeInActiveApp(shouldUpSizeInActiveApp(pcfConfig))
+        .existingInActiveApplicationDetails(
+            setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getMostRecentInactiveAppVersionDetails() : null)
+        .cfAppNamePrefix(setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getCfAppNamePrefix() : null)
         .build();
+  }
+
+  private boolean shouldUpSizeInActiveApp(PcfConfig pcfConfig) {
+    return isRollback()
+        && featureFlagService.isEnabled(CF_APP_NON_VERSIONING_INACTIVE_ROLLBACK, pcfConfig.getAccountId())
+        && upSizeInActiveApp;
   }
 
   @VisibleForTesting

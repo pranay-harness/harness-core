@@ -9,6 +9,7 @@ import static io.harness.logging.LogLevel.INFO;
 import static io.harness.pcf.CfCommandUnitConstants.Downsize;
 import static io.harness.pcf.CfCommandUnitConstants.Upsize;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
+import static io.harness.pcf.PcfUtils.encodeColor;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
 import static software.wings.beans.LogColor.White;
@@ -231,7 +232,7 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog(
           new StringBuilder(128)
               .append("# Failed to fetch InstanceDetails for existing Application: ")
-              .append(downsizeAppDetail.getApplicationName())
+              .append(encodeColor(downsizeAppDetail.getApplicationName()))
               .append(", Verification may be able to use older instances to compare data")
               .toString());
     }

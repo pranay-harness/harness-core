@@ -49,6 +49,7 @@ import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -78,6 +79,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
@@ -94,6 +96,8 @@ public class TerraformStepHelper {
   @Inject private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private FileServiceClientFactory fileService;
   @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
+  @Inject private EngineExpressionService engineExpressionService;
+  @Inject public TerraformConfigDAL terraformConfigDAL;
 
   public static List<EntityDetail> prepareEntityDetailsForVarFiles(
       String accountId, String orgIdentifier, String projectIdentifier, Map<String, TerraformVarFile> varFiles) {
@@ -310,13 +314,13 @@ public class TerraformStepHelper {
     TerraformInheritOutput inheritOutput = getSavedInheritOutput(
         ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance);
 
-    persistence.save(
+    TerraformConfig terraformConfig =
         TerraformConfig.builder()
             .accountId(AmbianceHelper.getAccountId(ambiance))
             .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
             .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
-            .entityId(generateFullIdentifier(
-                ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
+            .entityId(
+                generateFullIdentifier(getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId())
             .configFiles(inheritOutput.getConfigFiles().toGitStoreConfigDTO())
             .varFileConfigs(inheritOutput.getVarFileConfigs())
@@ -324,7 +328,9 @@ public class TerraformStepHelper {
             .environmentVariables(inheritOutput.getEnvironmentVariables())
             .workspace(inheritOutput.getWorkspace())
             .targets(inheritOutput.getTargets())
-            .build());
+            .build();
+
+    terraformConfigDAL.saveTerraformConfig(terraformConfig);
   }
 
   public void validateApplyStepParamsInline(TerraformApplyStepParameters stepParameters) {
@@ -390,7 +396,8 @@ public class TerraformStepHelper {
         .environmentVariables(getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
         .workspace(ParameterFieldHelper.getParameterFieldValue(spec.getWorkspace()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()));
-    persistence.save(builder.build());
+
+    terraformConfigDAL.saveTerraformConfig(builder.build());
   }
 
   public String getBackendConfig(TerraformBackendConfig backendConfig) {
@@ -407,26 +414,18 @@ public class TerraformStepHelper {
   public TerraformConfig getLastSuccessfulApplyConfig(TerraformDestroyStepParameters parameters, Ambiance ambiance) {
     String entityId = generateFullIdentifier(
         ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier()), ambiance);
-    TerraformConfig terraformConfig =
+    Query<TerraformConfig> query =
         persistence.createQuery(TerraformConfig.class)
             .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
             .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
             .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
             .filter(TerraformConfigKeys.entityId, entityId)
-            .order(Sort.descending(TerraformConfigKeys.createdAt))
-            .get();
+            .order(Sort.descending(TerraformConfigKeys.createdAt));
+    TerraformConfig terraformConfig = terraformConfigDAL.getTerraformConfig(query, ambiance);
     if (terraformConfig == null) {
       throw new InvalidRequestException(String.format("Terraform config for Last Apply not found: [%s]", entityId));
     }
     return terraformConfig;
-  }
-
-  public void clearTerraformConfig(Ambiance ambiance, String entityId) {
-    persistence.delete(persistence.createQuery(TerraformConfig.class)
-                           .filter(TerraformConfigKeys.accountId, AmbianceHelper.getAccountId(ambiance))
-                           .filter(TerraformConfigKeys.orgId, AmbianceHelper.getOrgIdentifier(ambiance))
-                           .filter(TerraformConfigKeys.projectId, AmbianceHelper.getProjectIdentifier(ambiance))
-                           .filter(TerraformConfigKeys.entityId, entityId));
   }
 
   public Map<String, Object> parseTerraformOutputs(String terraformOutputString) {
@@ -456,19 +455,21 @@ public class TerraformStepHelper {
   }
 
   public void saveTerraformConfig(TerraformConfig rollbackConfig, Ambiance ambiance) {
-    persistence.save(TerraformConfig.builder()
-                         .accountId(AmbianceHelper.getAccountId(ambiance))
-                         .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
-                         .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
-                         .entityId(rollbackConfig.getEntityId())
-                         .pipelineExecutionId(ambiance.getPlanExecutionId())
-                         .configFiles(rollbackConfig.getConfigFiles())
-                         .varFileConfigs(rollbackConfig.getVarFileConfigs())
-                         .backendConfig(rollbackConfig.getBackendConfig())
-                         .environmentVariables(rollbackConfig.getEnvironmentVariables())
-                         .workspace(rollbackConfig.getWorkspace())
-                         .targets(rollbackConfig.getTargets())
-                         .build());
+    TerraformConfig terraformConfig = TerraformConfig.builder()
+                                          .accountId(AmbianceHelper.getAccountId(ambiance))
+                                          .orgId(AmbianceHelper.getOrgIdentifier(ambiance))
+                                          .projectId(AmbianceHelper.getProjectIdentifier(ambiance))
+                                          .entityId(rollbackConfig.getEntityId())
+                                          .pipelineExecutionId(ambiance.getPlanExecutionId())
+                                          .configFiles(rollbackConfig.getConfigFiles())
+                                          .varFileConfigs(rollbackConfig.getVarFileConfigs())
+                                          .backendConfig(rollbackConfig.getBackendConfig())
+                                          .environmentVariables(rollbackConfig.getEnvironmentVariables())
+                                          .workspace(rollbackConfig.getWorkspace())
+                                          .targets(rollbackConfig.getTargets())
+                                          .build();
+
+    terraformConfigDAL.saveTerraformConfig(terraformConfig);
   }
 
   public void updateParentEntityIdAndVersion(String entityId, String stateFileId) {

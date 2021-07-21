@@ -464,10 +464,19 @@
               "type": "boolean"
             },
             "manifestPaths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
             }
           }
         }
@@ -509,10 +518,19 @@
           "type": "object",
           "properties": {
             "resourceNames": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
             }
           }
         }
@@ -1768,13 +1786,16 @@
           ],
           "properties": {
             "connectorRef": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "namespace": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "releaseName": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         }
@@ -2008,19 +2029,23 @@
           ],
           "properties": {
             "cluster": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "connectorRef": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "metadata": {
               "type": "string"
             },
             "namespace": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "releaseName": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         }

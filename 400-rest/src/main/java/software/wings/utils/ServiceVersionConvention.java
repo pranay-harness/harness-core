@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static org.apache.commons.lang3.StringUtils.trim;
 
 import io.harness.logging.Misc;
@@ -17,6 +19,10 @@ public class ServiceVersionConvention {
 
   public static String getServiceName(String prefix, Integer revision) {
     return trim(prefix) + DELIMITER + revision;
+  }
+
+  public static String getServiceName(String prefix, String revision) {
+    return trim(prefix) + (isEmpty(revision) ? "" : DELIMITER + revision);
   }
 
   public static String getServiceNamePrefixFromServiceName(String serviceName) {

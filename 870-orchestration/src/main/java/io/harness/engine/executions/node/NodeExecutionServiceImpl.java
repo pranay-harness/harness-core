@@ -425,4 +425,18 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return interruptConfig.hasIssuedBy() && interruptConfig.getIssuedBy().hasTriggerIssuer()
         && interruptConfig.getIssuedBy().getTriggerIssuer().getAbortPrevConcurrentExecution();
   }
+
+  @Override
+  public boolean removeTimeoutInstances(String nodeExecutionId) {
+    Update ops = new Update();
+    ops.set(NodeExecutionKeys.timeoutInstanceIds, new ArrayList<>());
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+
+    if (!updateResult.wasAcknowledged()) {
+      log.warn("TimeoutInstanceIds cannot be removed from nodeExecution {}", nodeExecutionId);
+      return false;
+    }
+    return true;
+  }
 }
