@@ -25,38 +25,38 @@
             <maxHistory>10</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
-        <triggeringPolicy class="io.harness.logging.LoggingTriggerPolicy"/>
+        <!-- <triggeringPolicy class="io.harness.logging.LoggingTriggerPolicy"/> -->
 
 
-        <withJansi>true</withJansi>
+         <withJansi>true</withJansi>
 
-        <encoder>
-            <pattern>%date{ISO8601} %blue([%version]) %boldGreen(%process_id) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n</pattern>
-        </encoder>
-    </appender>
+         <encoder>
+             <pattern>%date{ISO8601} %blue([%version]) %boldGreen(%process_id) %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n</pattern>
+         </encoder>
+     </appender>
 
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-        <withJansi>true</withJansi>
-        <encoder>
-            <pattern>%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n</pattern>
-        </encoder>
-    </appender>
+     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+         <withJansi>true</withJansi>
+         <encoder>
+             <pattern>%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n</pattern>
+         </encoder>
+     </appender>
 
-    <appender name="REST2" class="io.harness.delegate.logging.DelegateStackdriverLogAppender">
-        <threshold>TRACE</threshold>
-    </appender>
+     <appender name="REST2" class="io.harness.delegate.logging.DelegateStackdriverLogAppender">
+         <threshold>TRACE</threshold>
+     </appender>
 
-    <logger name="software.wings" level="INFO"/>
-    <logger name="org.zeroturnaround" level="WARN"/>
-    <logger name="io.harness.event.client.impl" level="${LOGGING_LEVEL_EVENT_CLIENT:-INFO}"/>
+     <logger name="software.wings" level="INFO"/>
+     <logger name="org.zeroturnaround" level="WARN"/>
+     <logger name="io.harness.event.client.impl" level="${LOGGING_LEVEL_EVENT_CLIENT:-INFO}"/>
 
-    // todo(avmohan): Temporarily added till we root cause the high frequency logging issue
-    <logger name="io.kubernetes.client.informer.cache.ReflectorRunnable" level="${KUBE_WATCH_LEVEL:-OFF}"/>
+     // todo(avmohan): Temporarily added till we root cause the high frequency logging issue
+     <logger name="io.kubernetes.client.informer.cache.ReflectorRunnable" level="${KUBE_WATCH_LEVEL:-OFF}"/>
 
-    <root level="INFO">
-        <appender-ref ref="file"/>
-        <appender-ref ref="REST2"/>
-        <appender-ref ref="stdout"/>
-    </root>
+     <root level="INFO">
+         <appender-ref ref="file"/>
+         <appender-ref ref="REST2"/>
+         <appender-ref ref="stdout"/>
+     </root>
 
-</configuration>
+ </configuration>
