@@ -1,5 +1,9 @@
 package io.harness.ccm.views.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -7,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 
 @Value
 @Builder
+@OwnedBy(CE)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ClusterData {
   String id;
@@ -15,8 +20,11 @@ public class ClusterData {
   Double totalCost;
   Double idleCost;
   Double networkCost;
+  Double systemCost;
   Double cpuIdleCost;
+  Double cpuActualIdleCost;
   Double memoryIdleCost;
+  Double memoryActualIdleCost;
   Double costTrend;
   String trendType;
   String region;
@@ -28,6 +36,9 @@ public class ClusterData {
   String namespace;
   String clusterType;
   String clusterId;
+  String instanceId;
+  String instanceName;
+  String instanceType;
   String environment;
   String cloudProvider;
   Double maxCpuUtilization;

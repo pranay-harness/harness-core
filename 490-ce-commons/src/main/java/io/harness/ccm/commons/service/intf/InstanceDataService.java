@@ -1,4 +1,4 @@
-package io.harness.ccm.cluster;
+package io.harness.ccm.commons.service.intf;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 

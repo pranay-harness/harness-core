@@ -1,10 +1,11 @@
-package io.harness.ccm.cluster;
+package io.harness.ccm.commons.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.cluster.dao.InstanceDataDao;
+import io.harness.ccm.commons.dao.InstanceDataDao;
 import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.service.intf.InstanceDataService;
 
 import com.google.inject.Inject;
 import java.util.List;

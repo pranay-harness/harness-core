@@ -111,7 +111,7 @@ public class PerspectivesQuery {
     return PerspectiveEntityStatsData.builder()
         .data(viewsBillingService
                   .getEntityStatsDataPointsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
-                      cloudProviderTableName, limit, offset, accountId, true)
+                      cloudProviderTableName, limit, offset, accountId, false)
                   .getData())
         .build();
   }
@@ -152,10 +152,12 @@ public class PerspectivesQuery {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
+    long timePeriod = perspectiveTimeSeriesHelper.getTimePeriod(groupBy);
 
-    PerspectiveTimeSeriesData data =
-        perspectiveTimeSeriesHelper.fetch(viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy,
-            aggregateFunction, sortCriteria, cloudProviderTableName, accountId, includeOthers, limit));
+    PerspectiveTimeSeriesData data = perspectiveTimeSeriesHelper.fetch(
+        viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
+            cloudProviderTableName, accountId, includeOthers, limit),
+        timePeriod);
 
     return perspectiveTimeSeriesHelper.postFetch(data, limit, includeOthers);
   }

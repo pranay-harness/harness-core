@@ -20,7 +20,9 @@ import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.bigQuery.BigQueryServiceImpl;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.ccm.commons.service.intf.ClusterRecordService;
+import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
 import io.harness.ccm.service.impl.AWSBucketPolicyHelperServiceImpl;
@@ -214,6 +216,7 @@ public class CENextGenModule extends AbstractModule {
     bind(AWSOrganizationHelperService.class).to(AWSOrganizationHelperServiceImpl.class);
     bind(AWSBucketPolicyHelperService.class).to(AWSBucketPolicyHelperServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
+    bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
 
     registerEventsFrameworkMessageListeners();
 
