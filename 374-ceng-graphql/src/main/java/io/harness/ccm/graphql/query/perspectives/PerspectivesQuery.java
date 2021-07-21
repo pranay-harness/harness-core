@@ -170,6 +170,6 @@ public class PerspectivesQuery {
   @GraphQLQuery(name = "perspectives", description = "Fetch perspectives for account")
   public PerspectiveData perspectives(@GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
-    return PerspectiveData.builder().customerViews(viewService.getAllViews(accountId, false)).build();
+    return PerspectiveData.builder().customerViews(viewService.getAllViews(accountId, true)).build();
   }
 }

@@ -8,6 +8,8 @@ import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord.CEMetadataRecordBuilder;
+import io.harness.ccm.views.dto.DefaultViewIdDto;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResourceClient;
@@ -90,8 +92,15 @@ public class CEMetaDataRecordUpdateService {
             updateConnectorPresent(isAzureConnectorPresent, ConnectorType.CE_AZURE, nextGenConnectorResponses);
       }
 
-      if (isAzureConnectorPresent && ceViewService.getDefaultAzureViewId(accountId) == null) {
-        ceViewService.createDefaultAzureView(accountId);
+      DefaultViewIdDto defaultViewIds = ceViewService.getDefaultViewIds(accountId);
+      if (isAwsConnectorPresent && defaultViewIds.getAwsViewId() == null) {
+        ceViewService.createDefaultView(accountId, ViewFieldIdentifier.AWS);
+      }
+      if (isAzureConnectorPresent && defaultViewIds.getAzureViewId() == null) {
+        ceViewService.createDefaultView(accountId, ViewFieldIdentifier.AZURE);
+      }
+      if (isGCPConnectorPresent && defaultViewIds.getGcpViewId() == null) {
+        ceViewService.createDefaultView(accountId, ViewFieldIdentifier.GCP);
       }
 
       CEMetadataRecordBuilder ceMetadataRecordBuilder = CEMetadataRecord.builder().accountId(accountId);
