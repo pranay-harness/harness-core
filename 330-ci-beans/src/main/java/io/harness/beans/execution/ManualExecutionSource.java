@@ -14,6 +14,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class ManualExecutionSource implements ExecutionSource {
   private String branch;
   private String tag;
+  private String prNumber;
+  private String commitSha;
 
   @Override
   public Type getType() {

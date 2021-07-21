@@ -25,9 +25,9 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
-import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -36,6 +36,7 @@ import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
+import io.harness.yaml.extended.ci.codebase.impl.PRBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import java.io.IOException;
@@ -78,16 +79,14 @@ public class IntegrationStageUtils {
     }
   }
 
-  public ExecutionSource buildExecutionSource(
-      PlanCreationContextValue planCreationContextValue, String identifier, ParameterField<Build> parameterFieldBuild) {
-    ExecutionTriggerInfo executionTriggerInfo = planCreationContextValue.getMetadata().getTriggerInfo();
-
+  public ExecutionSource buildExecutionSource(ExecutionTriggerInfo executionTriggerInfo, TriggerPayload triggerPayload,
+      String identifier, ParameterField<Build> parameterFieldBuild) {
     if (!executionTriggerInfo.getIsRerun()) {
       if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
           || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+        ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
       } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
         return buildCustomExecutionSource(identifier, parameterFieldBuild);
@@ -97,7 +96,7 @@ public class IntegrationStageUtils {
           || executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.SCHEDULER_CRON) {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK) {
-        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+        ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
       } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
         return buildCustomExecutionSource(identifier, parameterFieldBuild);
@@ -122,6 +121,12 @@ public class IntegrationStageUtils {
         String branchString =
             RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
         return ManualExecutionSource.builder().branch(branchString).build();
+
+      } else if (build.getType().equals(BuildType.PR)) {
+        ParameterField<String> number = ((PRBuildSpec) build.getSpec()).getNumber();
+        String prNumber =
+            RunTimeInputHandler.resolveStringParameter("prNumber", "Git Clone", identifier, number, false);
+        return ManualExecutionSource.builder().prNumber(prNumber).build();
       }
     }
 
