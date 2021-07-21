@@ -170,7 +170,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
   }
 
   private String trimStringValue(String stringObject) {
-    if (stringObject != null && !stringObject.isEmpty()) {
+    if (!stringObject.isEmpty()) {
       return stringObject.trim();
     }
     return stringObject;
