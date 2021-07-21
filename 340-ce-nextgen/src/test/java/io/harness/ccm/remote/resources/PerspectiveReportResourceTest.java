@@ -19,7 +19,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
-import org.springframework.scheduling.support.CronSequenceGenerator;
 
 public class PerspectiveReportResourceTest extends CategoryTest {
   private CEReportScheduleService ceReportScheduleService = mock(CEReportScheduleService.class);
@@ -65,8 +64,7 @@ public class PerspectiveReportResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateReportSetting() {
     perspectiveReportResource.createReportSetting(ACCOUNT_ID, reportSchedule);
-    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(reportSchedule.getUserCron());
-    verify(ceReportScheduleService).createReportSetting(cronSequenceGenerator, ACCOUNT_ID, reportSchedule);
+    verify(ceReportScheduleService).createReportSetting(ACCOUNT_ID, reportSchedule);
   }
 
   @Test
@@ -75,9 +73,7 @@ public class PerspectiveReportResourceTest extends CategoryTest {
   public void testModifyRecipients() {
     reportSchedule.setRecipients(RECIPIENTS2);
     perspectiveReportResource.updateReportSetting(ACCOUNT_ID, reportSchedule);
-
-    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(reportSchedule.getUserCron());
-    verify(ceReportScheduleService).update(cronSequenceGenerator, ACCOUNT_ID, reportSchedule);
+    verify(ceReportScheduleService).update(ACCOUNT_ID, reportSchedule);
   }
 
   @Test

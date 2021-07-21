@@ -104,7 +104,7 @@ public class PerspectiveReportResource {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      ceList.add(ceReportScheduleService.createReportSetting(cronSequenceGenerator, accountId, schedule));
+      ceList.add(ceReportScheduleService.createReportSetting(accountId, schedule));
       return new RestResponse<>(ceList);
     } catch (IllegalArgumentException e) {
       log.error("ERROR", e);
@@ -124,7 +124,7 @@ public class PerspectiveReportResource {
       @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      return new RestResponse<>(ceReportScheduleService.update(cronSequenceGenerator, accountId, schedule));
+      return new RestResponse<>(ceReportScheduleService.update(accountId, schedule));
     } catch (IllegalArgumentException e) {
       log.warn(String.valueOf(e));
       RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();

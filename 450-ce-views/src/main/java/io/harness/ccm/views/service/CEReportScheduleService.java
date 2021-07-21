@@ -1,11 +1,13 @@
 package io.harness.ccm.views.service;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.entities.CEReportSchedule;
 
 import java.util.Date;
 import java.util.List;
-import org.springframework.scheduling.support.CronSequenceGenerator;
 
+@OwnedBy(HarnessTeam.CE)
 public interface CEReportScheduleService {
   CEReportSchedule get(String uuid, String accountId);
   // List all report schedules for this view id
@@ -13,9 +15,9 @@ public interface CEReportScheduleService {
   // List all report schedules for this account id
   List<CEReportSchedule> getAllByAccount(String accountId);
   // Create
-  CEReportSchedule createReportSetting(CronSequenceGenerator cronTrigger, String accountId, CEReportSchedule schedule);
+  CEReportSchedule createReportSetting(String accountId, CEReportSchedule schedule);
   // Update
-  List<CEReportSchedule> update(CronSequenceGenerator cronTrigger, String accountId, CEReportSchedule schedule);
+  List<CEReportSchedule> update(String accountId, CEReportSchedule schedule);
   // Delete all report schedule for this view uuid.
   void deleteAllByView(String viewsId, String accountId);
   // Delete a report schedule by its document uuid.
