@@ -1,11 +1,16 @@
 package io.harness.ccm.budget.utils;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.exception.InvalidRequestException;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class BudgetUtils {
   private static final double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
   private static final String NO_BUDGET_AMOUNT_EXCEPTION = "Error in creating budget. No budget amount specified.";
@@ -49,6 +54,8 @@ public class BudgetUtils {
     if (scope == null) {
       return entityIds;
     }
+    log.debug(
+        "Budget scope info is: {} {} {}", scope.getBudgetScopeType(), scope.getEntityIds(), scope.getEntityNames());
     return scope.getEntityIds().toArray(new String[0]);
   }
 }
