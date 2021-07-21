@@ -18,7 +18,6 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.UnitStatus.RUNNING;
 import static io.harness.steps.StepUtils.prepareCDTaskRequest;
-import static io.harness.steps.StepUtils.prepareTaskRequestWithTaskSelector;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static java.lang.String.format;
@@ -751,9 +750,10 @@ public class K8sStepHelper {
 
     String taskName = TaskType.HELM_VALUES_FETCH_NG.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         k8SSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))),
+        stepHelper.getEnvironmentType(ambiance));
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -788,9 +788,10 @@ public class K8sStepHelper {
 
     String taskName = TaskType.GIT_FETCH_NEXT_GEN_TASK.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         k8SSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))),
+        stepHelper.getEnvironmentType(ambiance));
 
     return TaskChainResponse.builder()
         .chainEnd(false)
