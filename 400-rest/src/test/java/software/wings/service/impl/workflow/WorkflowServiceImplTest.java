@@ -831,10 +831,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             .appId(APP_ID)
             .envId(ENV_ID)
             .uuid(WORKFLOW_ID)
-            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
-                                       .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID).build())
-                                       .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID + 2).build())
-                                       .build())
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .addWorkflowPhase(aWorkflowPhase().uuid(PHASE_ID).serviceId(SERVICE_ID).build())
+                    .addWorkflowPhase(aWorkflowPhase().uuid(PHASE_ID + 2).serviceId(SERVICE_ID + 2).build())
+                    .build())
             .build();
     Workflow newWorkflow =
         aWorkflow()
@@ -842,10 +843,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             .appId(APP_ID)
             .envId(ENV_ID)
             .uuid(WORKFLOW_ID)
-            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
-                                       .addWorkflowPhase(aWorkflowPhase().serviceId("").build())
-                                       .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID).build())
-                                       .build())
+            .orchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .addWorkflowPhase(aWorkflowPhase().uuid(PHASE_ID).serviceId("").build())
+                    .addWorkflowPhase(aWorkflowPhase().uuid(PHASE_ID + 2).serviceId(SERVICE_ID).build())
+                    .build())
             .build();
     when(wingsPersistence.getWithAppId(any(), anyString(), anyString())).thenReturn(oldWorkflow);
 
