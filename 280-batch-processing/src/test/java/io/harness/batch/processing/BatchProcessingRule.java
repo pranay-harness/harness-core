@@ -16,6 +16,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.common.collect.ImmutableSet;
@@ -69,6 +70,7 @@ public class BatchProcessingRule implements MethodRule, InjectorRuleMixin, Mongo
         bind(HPersistence.class).to(WingsMongoPersistence.class);
         bind(WingsPersistence.class).to(WingsMongoPersistence.class);
         bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+        bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
       }
 
       @Provides

@@ -135,6 +135,7 @@ resourceRestraints {"name": "createdAt_1", "background": true} {"createdAt": 1}
 resourceRestraints {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 secretChangeLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
 secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
+secretManagerRuntimeParameters {"name": "executionId_1", "background": true} {"executionId": 1}
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}
 secretManagers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagers {"name": "identifierCheckIdx", "background": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}

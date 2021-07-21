@@ -1,5 +1,8 @@
 package io.harness.event.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.MessageProcessorType;
 import io.harness.event.grpc.DelegateTokenEventServerAuthenticatorImpl;
 import io.harness.event.grpc.EventPublisherServerImpl;
@@ -17,6 +20,7 @@ import io.harness.security.DelegateTokenAuthenticator;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.common.util.concurrent.Service;
@@ -35,6 +39,7 @@ import io.grpc.ServerInterceptor;
 import java.util.Collections;
 import java.util.Set;
 
+@OwnedBy(PL)
 public class EventServiceModule extends AbstractModule {
   private final EventServiceConfig eventServiceConfig;
 
@@ -49,6 +54,7 @@ public class EventServiceModule extends AbstractModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(DelegateTokenAuthenticator.class).to(DelegateTokenEventServerAuthenticatorImpl.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(LastReceivedPublishedMessageRepository.class).to(LastReceivedPublishedMessageRepositoryImpl.class);
 
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
