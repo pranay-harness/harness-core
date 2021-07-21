@@ -49,6 +49,7 @@ java_library(
 run_tests()
 
 run_analysis(
+    run_duplicated = False,
     run_pmd = False,
     run_sonar = False,
 )

@@ -1363,7 +1363,7 @@ java_library(
 
 run_tests()
 
-run_analysis()
+run_analysis(run_duplicated = False)
 
 # The //260-delegate:module_deploy.jar is not public, this is why this tar needs to be in
 # the container sub-directory. This os because springboot does not propagate the visibility.
