@@ -4,7 +4,6 @@ import static io.harness.cvng.utils.StackdriverUtils.Scope.METRIC_SCOPE;
 import static io.harness.cvng.utils.StackdriverUtils.checkForNullAndReturnValue;
 
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
-import io.harness.cvng.beans.stackdriver.StackdriverCredential;
 import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 
@@ -24,8 +23,7 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
 
   @Override
   public Map<String, Object> getDslEnvVariables(GcpConnectorDTO connectorConfigDTO) {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(connectorConfigDTO);
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(connectorConfigDTO, METRIC_SCOPE);
     List<String> crossSeriesReducerList = new ArrayList<>();
     List<String> perSeriesAlignerList = new ArrayList<>();
     List<String> filterList = new ArrayList<>();

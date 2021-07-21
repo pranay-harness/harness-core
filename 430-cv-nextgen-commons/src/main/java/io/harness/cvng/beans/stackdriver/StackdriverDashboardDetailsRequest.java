@@ -35,8 +35,7 @@ public class StackdriverDashboardDetailsRequest extends StackdriverRequest {
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
+    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), METRIC_SCOPE);
     envVariables.put("path", path);
     return envVariables;
   }
