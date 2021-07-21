@@ -250,6 +250,8 @@ run_ui ()
     sudo docker run -it -p 8000:8080 --rm -e API_URL=https://localhost:9090 harness/ui$tag
 }  
 
+    
+    
 alias runui='run_ui'
 ```
    * Add following line to ~/.bashrc: `source <path-to-startui-script>/startui.sh`
