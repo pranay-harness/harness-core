@@ -28,6 +28,7 @@ import static software.wings.sm.StateType.HELM_ROLLBACK;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchEnvFromExecutionContext;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
 
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -83,9 +84,11 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -1550,8 +1553,26 @@ public class HelmDeployState extends State {
           applicationManifest, helmOverrideManifestMap, K8sValuesLocation.EnvironmentGlobal);
     }
 
-    helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(
-        helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest));
+    HelmChartConfigParams helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest);
+    if (helmChartConfigTaskParams != null) {
+      helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(helmChartConfigTaskParams);
+      SettingValue connectorConfig = helmChartConfigTaskParams.getConnectorConfig();
+      if (connectorConfig != null) {
+        if (connectorConfig instanceof AwsConfig) {
+          AwsConfig awsConfig = (AwsConfig) connectorConfig;
+          if (isNotEmpty(awsConfig.getTag())) {
+            helmValuesFetchTaskParameters.setDelegateSelectors(singleton(awsConfig.getTag()));
+          }
+        } else if (connectorConfig instanceof GcpConfig) {
+          GcpConfig gcpConfig = (GcpConfig) connectorConfig;
+          if (isNotEmpty(gcpConfig.getDelegateSelectors())) {
+            helmValuesFetchTaskParameters.setDelegateSelectors(new HashSet<>(gcpConfig.getDelegateSelectors()));
+          }
+        }
+      }
+    }
+
     return helmValuesFetchTaskParameters;
   }
 

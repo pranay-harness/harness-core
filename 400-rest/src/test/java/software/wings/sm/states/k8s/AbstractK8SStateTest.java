@@ -118,6 +118,7 @@ import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Account;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -1089,7 +1090,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
   public void testHelmValueFetchParamInExecuteHelmValuesFetchTask() {
     ApplicationManifest appManifest = ApplicationManifest.builder().storeType(Remote).build();
     appManifest.setStoreType(HelmChartRepo);
-    HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder().build();
+    HelmChartConfigParams helmChartConfigParams =
+        HelmChartConfigParams.builder().connectorConfig(AwsConfig.builder().tag("aws-delegate").build()).build();
     DirectKubernetesInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.builder().build();
     infrastructureMapping.setUuid(INFRA_MAPPING_ID);
@@ -1116,6 +1118,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
 
     assertThat(helmValuesFetchTaskParameters.isBindTaskFeatureSet()).isTrue();
     assertThat(helmValuesFetchTaskParameters.getContainerServiceParams().getClusterName()).isEqualTo("us-east-1");
+    assertThat(helmValuesFetchTaskParameters.getDelegateSelectors()).containsExactly("aws-delegate");
   }
 
   @Test

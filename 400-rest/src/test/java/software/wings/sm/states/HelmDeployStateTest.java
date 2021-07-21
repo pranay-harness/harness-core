@@ -137,6 +137,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -1357,7 +1358,10 @@ public class HelmDeployStateTest extends CategoryTest {
 
     doReturn(serviceHelmChartManifest).when(applicationManifestUtils).getApplicationManifestForService(context);
     when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, serviceHelmChartManifest))
-        .thenReturn(HelmChartConfigParams.builder().repoName("repoName").build());
+        .thenReturn(HelmChartConfigParams.builder()
+                        .connectorConfig(GcpConfig.builder().delegateSelectors(singletonList("gcp-delegate")).build())
+                        .repoName("repoName")
+                        .build());
 
     helmDeployState.executeHelmValuesFetchTask(context, ACTIVITY_ID, helmOverrideManifestMap);
 
@@ -1371,6 +1375,7 @@ public class HelmDeployStateTest extends CategoryTest {
     HelmValuesFetchTaskParameters taskParameters = (HelmValuesFetchTaskParameters) task.getData().getParameters()[0];
     assertThat(taskParameters.getHelmChartConfigTaskParams()).isNotNull();
     assertThat(taskParameters.getHelmChartConfigTaskParams().getRepoName()).isEqualTo("repoName");
+    assertThat(taskParameters.getDelegateSelectors()).containsExactly("gcp-delegate");
   }
 
   @Test
