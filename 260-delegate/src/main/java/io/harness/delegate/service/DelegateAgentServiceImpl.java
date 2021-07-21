@@ -572,6 +572,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Delegate started");
       log.info("Manager Authority:{}, Manager Target:{}", delegateConfiguration.getManagerAuthority(),
           delegateConfiguration.getManagerTarget());
+      LoggingTriggerPolicy.resetRollingPolicy();
 
       startProfileCheck();
 
