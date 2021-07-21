@@ -54,17 +54,29 @@ public class ClusterRecordDao {
   }
 
   public ClusterRecord upsert(ClusterRecord clusterRecord) {
-    Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class)
-                                     .filter(ClusterRecordKeys.uuid, new ObjectId(clusterRecord.getUuid()));
+    Query<ClusterRecord> query =
+        persistence.createQuery(ClusterRecord.class)
+            .filter(ClusterRecordKeys.accountId, clusterRecord.getAccountId())
+            .filter(ClusterRecordKeys.k8sBaseConnectorRefIdentifier, clusterRecord.getK8sBaseConnectorRefIdentifier())
+            .filter(ClusterRecordKeys.ceK8sConnectorIdentifier, clusterRecord.getCeK8sConnectorIdentifier());
+
     UpdateOperations<ClusterRecord> updateOperations =
         persistence.createUpdateOperations(ClusterRecord.class)
             .set(ClusterRecordKeys.accountId, clusterRecord.getAccountId())
             .set(ClusterRecordKeys.ceK8sConnectorIdentifier, clusterRecord.getCeK8sConnectorIdentifier())
-            .set(ClusterRecordKeys.k8sBaseConnectorRefIdentifier, clusterRecord.getK8sBaseConnectorRefIdentifier())
-            .set(ClusterRecordKeys.orgIdentifier, clusterRecord.getOrgIdentifier())
-            .set(ClusterRecordKeys.projectIdentifier, clusterRecord.getProjectIdentifier())
-            .set(ClusterRecordKeys.perpetualTaskId, clusterRecord.getPerpetualTaskId())
-            .set(ClusterRecordKeys.clusterName, clusterRecord.getClusterName());
+            .set(ClusterRecordKeys.k8sBaseConnectorRefIdentifier, clusterRecord.getK8sBaseConnectorRefIdentifier());
+    if (clusterRecord.getOrgIdentifier() != null) {
+      updateOperations.set(ClusterRecordKeys.orgIdentifier, clusterRecord.getOrgIdentifier());
+    }
+    if (clusterRecord.getProjectIdentifier() != null) {
+      updateOperations.set(ClusterRecordKeys.projectIdentifier, clusterRecord.getProjectIdentifier());
+    }
+    if (clusterRecord.getPerpetualTaskId() != null) {
+      updateOperations.set(ClusterRecordKeys.perpetualTaskId, clusterRecord.getPerpetualTaskId());
+    }
+    if (clusterRecord.getClusterName() != null) {
+      updateOperations.set(ClusterRecordKeys.clusterName, clusterRecord.getClusterName());
+    }
     return persistence.upsert(query, updateOperations, upsertReturnNewOptions);
   }
 

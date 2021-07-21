@@ -1,5 +1,8 @@
 package io.harness.ccm.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.K8sEventCollectionBundle;
 import io.harness.ng.core.dto.ResponseDTO;
 
@@ -11,12 +14,13 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
+@OwnedBy(CE)
 public interface K8sWatchTaskResourceClient {
   String MANAGER_URL_PREFIX = "/api";
   String K8S_WATCH_TASK_RESOURCE_ENDPOINT = "/ccm/perpetual-task";
 
   String TASK_ID = "taskId";
-  String ACCOUNT_ID = "accountId";
+  String ACCOUNT_ID = "accountIdentifier";
 
   @POST(MANAGER_URL_PREFIX + K8S_WATCH_TASK_RESOURCE_ENDPOINT + "/create")
   Call<ResponseDTO<String>> create(
