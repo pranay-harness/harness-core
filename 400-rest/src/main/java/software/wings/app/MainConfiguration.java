@@ -240,13 +240,13 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     return assetsConfiguration;
   }
 
-  private ConnectorFactory getDefaultAdminConnectorFactory() {
+  protected ConnectorFactory getDefaultAdminConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
     factory.setPort(9091);
     return factory;
   }
 
-  private ConnectorFactory getDefaultApplicationConnectorFactory() {
+  protected ConnectorFactory getDefaultApplicationConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
     factory.setPort(9090);
     return factory;
