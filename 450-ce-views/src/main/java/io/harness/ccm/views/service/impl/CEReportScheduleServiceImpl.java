@@ -41,15 +41,22 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
     // ID – the ID for a TimeZone, either an abbreviation such as "PST", a full name such as "America/Los_Angeles",
     // or a custom ID such as "GMT-8:00". Note that the support of abbreviations is for JDK 1.1.x compatibility only
     // and full names should be used.
+    String cronTimeZone;
+    if (schedule.getUserCronTimeZone() != null) {
+      cronTimeZone = schedule.getUserCronTimeZone();
+    } else {
+      // Default to UTC
+      cronTimeZone = "UTC";
+    }
     CronSequenceGenerator cronTrigger =
-        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(schedule.getUserCronTimeZone()));
+        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(cronTimeZone));
     if (entry == null) {
       Date next = cronTrigger.next(new Date());
       log.info("Next Execution Time in user timezone: " + next);
       schedule.setNextExecution(next);
       schedule.setAccountId(accountId);
       schedule.setEnabled(true);
-      schedule.setUserCronTimeZone(schedule.getUserCronTimeZone());
+      schedule.setUserCronTimeZone(cronTimeZone);
       // Remove dupes from these lists
       schedule.setRecipients(new HashSet<>(Arrays.asList(schedule.getRecipients())).toArray(new String[0]));
       schedule.setViewsId(new HashSet<>(Arrays.asList(schedule.getViewsId())).toArray(new String[0]));
@@ -61,8 +68,15 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
   @Override
   public List<CEReportSchedule> update(String accountId, CEReportSchedule schedule) {
     // validate cron expression during updates as well
+    String cronTimeZone;
+    if (schedule.getUserCronTimeZone() != null) {
+      cronTimeZone = schedule.getUserCronTimeZone();
+    } else {
+      // Default to UTC
+      cronTimeZone = "UTC";
+    }
     CronSequenceGenerator cronSequenceGenerator =
-        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(schedule.getUserCronTimeZone()));
+        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(cronTimeZone));
     Date next = cronSequenceGenerator.next(new Date());
     log.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);
@@ -95,14 +109,15 @@ public class CEReportScheduleServiceImpl implements CEReportScheduleService {
 
   @Override
   public List<CEReportSchedule> updateNextExecution(String accountId, CEReportSchedule schedule) {
-    CronSequenceGenerator cronSequenceGenerator;
+    String cronTimeZone;
     if (schedule.getUserCronTimeZone() != null) {
-      cronSequenceGenerator =
-          new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(schedule.getUserCronTimeZone()));
+      cronTimeZone = schedule.getUserCronTimeZone();
     } else {
       // Default to UTC
-      cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
+      cronTimeZone = "UTC";
     }
+    CronSequenceGenerator cronSequenceGenerator =
+        new CronSequenceGenerator(schedule.getUserCron(), TimeZone.getTimeZone(cronTimeZone));
     Date next = cronSequenceGenerator.next(new Date());
     log.info("Updated next Execution Time: " + next);
     schedule.setNextExecution(next);
