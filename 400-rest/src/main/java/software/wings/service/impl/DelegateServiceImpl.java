@@ -1231,8 +1231,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
-        String minorVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
+        String fullVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
+        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, inquiry.getAccountId());
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
           log.info("Using CDN delegateStorageUrl " + delegateStorageUrl);

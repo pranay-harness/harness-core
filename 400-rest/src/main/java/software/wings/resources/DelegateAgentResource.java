@@ -385,10 +385,12 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("delegateName") String delegateName)
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
+      @QueryParam("patchVersion") @NotEmpty String patchVersion, @QueryParam("delegateName") String delegateName)
       throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
+      String fullVersion = delegateVersion + "-" + patchVersion;
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, fullVersion,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
     }
   }

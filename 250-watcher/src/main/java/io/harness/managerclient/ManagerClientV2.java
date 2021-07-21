@@ -5,6 +5,8 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
 
+import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -12,8 +14,8 @@ import retrofit2.http.Query;
 
 public interface ManagerClientV2 {
   @GET("agent/delegates/delegateScripts")
-  Call<RestResponse<DelegateScripts>> getDelegateScripts(
-      @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
+  Call<RestResponse<DelegateScripts>> getDelegateScripts(@Query("accountId") String accountId,
+      @Query("delegateVersion") String delegateVersion, @Query("patchVersion") String patchVersion);
 
   @GET("agent/delegates/delegateScriptsNg")
   Call<RestResponse<DelegateScripts>> getDelegateScriptsNg(@Query("accountId") String accountId,
