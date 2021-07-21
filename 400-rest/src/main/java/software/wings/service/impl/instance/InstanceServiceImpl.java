@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -338,17 +339,10 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public List<Instance> listInstancesNotRemovedFully(Query<Instance> query) {
-    long sevenDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
-    query.and(query.or(query.criteria(InstanceKeys.deletedAt).greaterThanOrEq(sevenDaysOldTimeInMills),
+    long twoDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2);
+    query.and(query.or(query.criteria(InstanceKeys.deletedAt).greaterThanOrEq(twoDaysOldTimeInMills),
         query.criteria(InstanceKeys.isDeleted).equal(false)));
-    final long count = query.count();
-    int total = 0;
-    List<Instance> instances = new ArrayList<>();
-    while (total < count) {
-      instances.addAll(query.asList(new FindOptions().limit(100).skip(total)));
-      total += 100;
-    }
-    return instances;
+    return query.asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()));
   }
 
   @Override
