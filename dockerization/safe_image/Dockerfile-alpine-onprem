@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk8:x86_64-alpine-jre8u242-b08
+FROM adoptopenjdk/openjdk8:x86_64-alpine-jdk8u242-b08
 
 RUN apk add --no-cache bash
 
@@ -7,12 +7,12 @@ RUN set -x \
     && chmod +x /usr/bin/yq
 
 RUN set -x \
-    && addgroup -g 1001 -S harness \
-    && adduser -S -u 1001 -G harness harness \
+    && addgroup -S 65534 \
+    && adduser -S 65534 -G 65534 \
     && mkdir -p /opt/harness/plugins \
-    && chown -R harness:harness /opt/harness \
+    && chown -R 65534:65534 /opt/harness \
     && chmod -R 700 /opt/harness
 
 WORKDIR /opt/harness
 
-USER harness
+USER 65534

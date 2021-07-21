@@ -1,14 +1,14 @@
 # to be used when building in Jenkins
-FROM harness/manager-openjdk-8u242:x86_64-alpine-jre8u242-b08
+FROM harness/manager-openjdk-8u242:x86_64-alpine-jdk8u242-b08
 
-COPY --chown=harness:harness alpn-boot-8.1.13.v20181017.jar /opt/harness/
-COPY --chown=harness:harness keystore.jks /opt/harness/
-COPY --chown=harness:harness newrelic.yml /opt/harness/
-COPY --chown=harness:harness hazelcast.xml /opt/harness/
-COPY --chown=harness:harness redisson-jcache.yaml /opt/harness/
-COPY --chown=harness:harness config.yml /opt/harness/
-COPY --chown=harness:harness rest-capsule.jar /opt/harness/
-COPY --chown=harness:harness scripts /opt/harness/
+COPY --chown=65534:65534 alpn-boot-8.1.13.v20181017.jar /opt/harness/
+COPY --chown=65534:65534 keystore.jks /opt/harness/
+COPY --chown=65534:65534 newrelic.yml /opt/harness/
+COPY --chown=65534:65534 hazelcast.xml /opt/harness/
+COPY --chown=65534:65534 redisson-jcache.yaml /opt/harness/
+COPY --chown=65534:65534 config.yml /opt/harness/
+COPY --chown=65534:65534 rest-capsule.jar /opt/harness/
+COPY --chown=65534:65534 scripts /opt/harness/
 
 RUN chmod 500 /opt/harness/*.sh
 

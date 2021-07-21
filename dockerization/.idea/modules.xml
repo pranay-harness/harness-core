@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/dockerization.iml" filepath="$PROJECT_DIR$/.idea/dockerization.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../on-prem/on-prem.iml" filepath="$PROJECT_DIR$/../on-prem/on-prem.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../scripts/scripts.iml" filepath="$PROJECT_DIR$/../scripts/scripts.iml" />
+    </modules>
+  </component>
+</project>
