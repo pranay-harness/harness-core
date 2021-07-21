@@ -30,6 +30,8 @@ import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusCVConfigBuilder;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigBuilder;
+import io.harness.cvng.core.entities.StackdriverCVConfig;
+import io.harness.cvng.core.entities.StackdriverCVConfig.StackdriverCVConfigBuilder;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap;
@@ -223,6 +225,18 @@ public class BuilderFactory {
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier())
         .connectorIdentifier("connectorRef")
+        .category(CVMonitoringCategory.PERFORMANCE);
+  }
+
+  public StackdriverCVConfigBuilder stackdriverMetricCVConfigBuilder() {
+    return StackdriverCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .connectorIdentifier("connectorRef")
+        .dashboardName("dashboardName")
         .category(CVMonitoringCategory.PERFORMANCE);
   }
 
