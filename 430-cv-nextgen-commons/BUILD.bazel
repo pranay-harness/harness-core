@@ -16,6 +16,7 @@ java_library(
         "//440-connector-nextgen:module",
         "//950-common-entities:module",
         "//950-delegate-tasks-beans:module",
+        "//960-api-services:module",
         "@maven//:com_auth0_java_jwt",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

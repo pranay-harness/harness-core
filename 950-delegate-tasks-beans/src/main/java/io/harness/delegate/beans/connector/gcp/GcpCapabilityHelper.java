@@ -23,10 +23,11 @@ public class GcpCapabilityHelper extends ConnectorCapabilityBaseHelper {
     GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorConfigDTO;
     GcpConnectorCredentialDTO credential = gcpConnectorDTO.getCredential();
     List<ExecutionCapability> capabilityList = new ArrayList<>();
-    if (credential.getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
+    if (credential.getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS
+        || credential.getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
       capabilityList.add(
           HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(GCS_URL, maskingEvaluator));
-    } else if (credential.getGcpCredentialType() != GcpCredentialType.INHERIT_FROM_DELEGATE) {
+    } else {
       throw new UnknownEnumTypeException("Gcp Credential Type", String.valueOf(credential.getGcpCredentialType()));
     }
     populateDelegateSelectorCapability(capabilityList, gcpConnectorDTO.getDelegateSelectors());
