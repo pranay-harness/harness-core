@@ -19,14 +19,12 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerRuntimeParameters;
-import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingVariableTypes;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,10 +66,6 @@ public interface SecretManager extends OwnedByAccount {
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object, String appId, String workflowExecutionId);
-
-  Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId);
-
-  Collection<SettingAttribute> listEncryptedSettingAttributes(String accountId, Set<String> categories);
 
   String getEncryptedYamlRef(String accountId, String secretId);
 

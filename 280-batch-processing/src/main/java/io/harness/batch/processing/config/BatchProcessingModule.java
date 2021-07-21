@@ -41,6 +41,7 @@ import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.AbstractModule;
@@ -60,6 +61,7 @@ public class BatchProcessingModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);

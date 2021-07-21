@@ -685,6 +685,7 @@ import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
@@ -1471,6 +1472,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ManagerDecryptionService.class).to(ManagerDecryptionServiceImpl.class);
     bind(RuntimeCredentialsInjector.class).annotatedWith(Names.named(hashicorpvault)).to(VaultServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(SecretManagerImpl.class);
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretService.class).to(NGSecretServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);

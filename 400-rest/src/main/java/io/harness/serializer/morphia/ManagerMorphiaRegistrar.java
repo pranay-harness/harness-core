@@ -2,9 +2,7 @@ package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -255,7 +253,6 @@ import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.Schema;
-import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceNowConfig;
@@ -806,7 +803,6 @@ import java.security.Principal;
 import java.util.Set;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
 
@@ -1060,7 +1056,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlHistory.class);
     set.add(YamlSuccessfulChange.class);
     set.add(YamlVersion.class);
-    set.add(SecretManagerRuntimeParameters.class);
     set.add(HelmChart.class);
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
