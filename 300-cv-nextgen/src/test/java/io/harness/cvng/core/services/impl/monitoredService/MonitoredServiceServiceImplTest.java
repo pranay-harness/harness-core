@@ -305,13 +305,14 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, null, 0, 10, null);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
     assertThat(monitoredServiceListDTOPageResponse.getTotalItems()).isEqualTo(2);
-    MonitoredServiceListItemDTO monitoredServiceListItemDTO = monitoredServiceListDTOPageResponse.getContent().get(1);
+    MonitoredServiceListItemDTO monitoredServiceListItemDTO = monitoredServiceListDTOPageResponse.getContent().get(0);
     assertThat(monitoredServiceListItemDTO.getName()).isEqualTo(monitoredServiceName);
     assertThat(monitoredServiceListItemDTO.getIdentifier()).isEqualTo(monitoredServiceIdentifier);
     assertThat(monitoredServiceListItemDTO.getServiceRef()).isEqualTo(serviceIdentifier);
     assertThat(monitoredServiceListItemDTO.getEnvironmentRef()).isEqualTo(environmentIdentifier);
     assertThat(monitoredServiceListItemDTO.getType()).isEqualTo(MonitoredServiceType.APPLICATION);
     assertThat(monitoredServiceListItemDTO.isHealthMonitoringEnabled()).isTrue();
+    assertThat(monitoredServiceListItemDTO.getTags()).isEqualTo(tags);
   }
 
   @Test

@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class MonitoredServiceServiceImpl implements MonitoredServiceService {
@@ -301,7 +302,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         hPersistence.createQuery(MonitoredService.class)
             .filter(MonitoredServiceKeys.accountId, accountId)
             .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
-            .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier);
+            .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
+            .order(Sort.descending(MonitoredServiceKeys.lastUpdatedAt));
     if (environmentIdentifier != null) {
       monitoredServicesQuery.filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier);
     }
@@ -435,6 +437,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .serviceRef(monitoredService.getServiceIdentifier())
         .environmentRef(monitoredService.getEnvironmentIdentifier())
         .healthMonitoringEnabled(monitoredService.isEnabled())
+        .tags(TagMapper.convertToMap(monitoredService.getTags()))
         .type(monitoredService.getType());
   }
 
