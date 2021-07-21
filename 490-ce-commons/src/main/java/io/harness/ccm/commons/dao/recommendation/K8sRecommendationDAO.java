@@ -140,33 +140,6 @@ public class K8sRecommendationDAO {
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  public void insertIntoCeRecommendation(@NonNull String uuid, @NonNull ResourceId workloadId,
-      @Nullable Double monthlyCost, @Nullable Double monthlySaving, boolean shouldShowRecommendation,
-      @NonNull Instant lastReceivedUntilAt) {
-    dslContext.insertInto(CE_RECOMMENDATIONS)
-        .set(CE_RECOMMENDATIONS.ACCOUNTID, workloadId.getAccountId())
-        .set(CE_RECOMMENDATIONS.ID, uuid)
-        // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
-        .set(CE_RECOMMENDATIONS.CLUSTERNAME, workloadId.getClusterId())
-        .set(CE_RECOMMENDATIONS.NAME, workloadId.getName())
-        .set(CE_RECOMMENDATIONS.NAMESPACE, workloadId.getNamespace())
-        .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.WORKLOAD.name())
-        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
-        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
-        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
-        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
-        .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
-        .doUpdate()
-        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
-        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
-        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
-        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
-        .execute();
-  }
-
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public List<NodePoolId> getUniqueNodePools(@NonNull String accountId) {
     // TODO(UTSAV): We want to fetch only node pools which has at least one node running in jobStartTime and jobEndTime
     // window. will enforce this once the recommendation algo is stable.
@@ -286,7 +259,6 @@ public class K8sRecommendationDAO {
     return dslContext.selectDistinct(tableField).from(jooqTable).where(condition).fetchInto(String.class);
   }
 
-  // Will be used with GraphQL API with custom start and end Time
   @NonNull
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public TotalResourceUsage aggregateTotalResourceRequirement(
@@ -356,12 +328,6 @@ public class K8sRecommendationDAO {
   public String insertNodeRecommendationResponse(JobConstants jobConstants, NodePoolId nodePoolId,
       RecommendClusterRequest recommendClusterRequest, K8sServiceProvider serviceProvider,
       RecommendationResponse recommendation) {
-    // TODO: Any elegant way to do this, i.e., update other fields on duplicate unique key constraint?
-    // on com.mongodb.DuplicateKeyException: Write failed with error code 11000 and error message 'E11000 duplicate key
-    // error collection: events.K8sNodeRecommendation index: unique_accountId_clusterid_nodepoolname dup key: {
-    // accountId: "kmpySmUISimoRrJL6NL73w", nodePoolId.clusterid: "6038e62a82d2f0abd704ba87", nodePoolId.nodepoolname:
-    // "general-preemptible" }'
-
     Query<K8sNodeRecommendation> query =
         hPersistence.createQuery(K8sNodeRecommendation.class)
             .filter(K8sNodeRecommendationKeys.accountId, jobConstants.getAccountId())
@@ -381,13 +347,39 @@ public class K8sRecommendationDAO {
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  public void updateCeRecommendation(String entityUuid, JobConstants jobConstants, NodePoolId nodePoolId,
-      RecommendationOverviewStats stats, Instant lastReceivedUntilAt) {
+  public void upsertCeRecommendation(@NonNull String uuid, @NonNull ResourceId workloadId, String clusterName,
+      @Nullable Double monthlyCost, @Nullable Double monthlySaving, boolean shouldShowRecommendation,
+      @NonNull Instant lastReceivedUntilAt) {
+    dslContext.insertInto(CE_RECOMMENDATIONS)
+        .set(CE_RECOMMENDATIONS.ACCOUNTID, workloadId.getAccountId())
+        .set(CE_RECOMMENDATIONS.ID, uuid)
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName)
+        .set(CE_RECOMMENDATIONS.NAME, workloadId.getName())
+        .set(CE_RECOMMENDATIONS.NAMESPACE, workloadId.getNamespace())
+        .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.WORKLOAD.name())
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
+        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
+        .doUpdate()
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
+        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .execute();
+  }
+
+  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
+  public void upsertCeRecommendation(String entityUuid, @NonNull JobConstants jobConstants,
+      @NonNull NodePoolId nodePoolId, String clusterName, @NonNull RecommendationOverviewStats stats,
+      Instant lastReceivedUntilAt) {
     dslContext.insertInto(CE_RECOMMENDATIONS)
         .set(CE_RECOMMENDATIONS.ACCOUNTID, jobConstants.getAccountId())
         .set(CE_RECOMMENDATIONS.ID, entityUuid)
-        // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
-        .set(CE_RECOMMENDATIONS.CLUSTERNAME, nodePoolId.getClusterid())
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName)
         .set(CE_RECOMMENDATIONS.NAME, nodePoolId.getNodepoolname())
         .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.NODE_POOL.name())
         .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
