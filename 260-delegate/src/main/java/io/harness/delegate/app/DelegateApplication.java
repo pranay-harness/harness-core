@@ -51,7 +51,12 @@ import io.harness.utils.ProcessControl;
 
 import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
+import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
+import ch.qos.logback.core.rolling.TimeBasedFileNamingAndTriggeringPolicy;
+import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -128,6 +133,14 @@ public class DelegateApplication {
       java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
 
       initializeLogging();
+      Logger logger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+      RollingFileAppender<?> appender = (RollingFileAppender<?>) logger.getAppender("file");
+      SizeAndTimeBasedRollingPolicy<?> policy = (SizeAndTimeBasedRollingPolicy<?>) appender.getRollingPolicy();
+      TimeBasedFileNamingAndTriggeringPolicy<?> trigger = policy.getTimeBasedFileNamingAndTriggeringPolicy();
+      trigger.setCurrentTime(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
+      log.info("reset log files");
+      trigger.setCurrentTime(0);
+
       log.info("Starting Delegate");
       log.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
       DelegateApplication delegateApplication = new DelegateApplication();
