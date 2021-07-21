@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
@@ -41,6 +42,7 @@ import static software.wings.beans.InfrastructureType.PDC;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -102,6 +104,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(CDP)
 @Singleton
 public class InfrastructureDefinitionGenerator {
   private static final String AZURE_HELM_NAME = "Azure Helm";
@@ -174,6 +177,7 @@ public class InfrastructureDefinitionGenerator {
 
   public enum InfrastructureDefinitions {
     AWS_SSH_TEST,
+    AWS_LAMBDA_TEST,
     TERRAFORM_AWS_SSH_TEST,
     AWS_SSH_FUNCTIONAL_TEST,
     AWS_WINRM_FUNCTIONAL_TEST,
@@ -210,6 +214,8 @@ public class InfrastructureDefinitionGenerator {
     switch (infraType) {
       case AWS_SSH_TEST:
         return ensureAwsSsh(seed, owners);
+      case AWS_LAMBDA_TEST:
+        return ensureAwsLambda(seed, owners);
       case AWS_WINRM_FUNCTIONAL_TEST:
         return ensureAwsWinrmFunctionalTest(seed, owners);
       case AWS_SSH_FUNCTIONAL_TEST:
@@ -456,6 +462,31 @@ public class InfrastructureDefinitionGenerator {
             .appId(owners.obtainApplication().getUuid())
             .build();
 
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensureAwsLambda(Randomizer.Seed seed, Owners owners) {
+    Environment environment = ensureEnv(seed, owners);
+    final String region = "us-east-2";
+
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
+
+    AwsLambdaInfrastructure awsLambdaInfrastructure = AwsLambdaInfrastructure.builder()
+                                                          .cloudProviderId(awsCloudProvider.getUuid())
+                                                          .region(region)
+                                                          .role(GeneratorConstants.AWS_TEST_LAMBDA_ROLE)
+                                                          .build();
+
+    String name = "aws-lamda-infra";
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(name)
+                                                            .cloudProviderType(CloudProviderType.AWS)
+                                                            .deploymentType(DeploymentType.AWS_LAMBDA)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .infrastructure(awsLambdaInfrastructure)
+                                                            .build();
     return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 
