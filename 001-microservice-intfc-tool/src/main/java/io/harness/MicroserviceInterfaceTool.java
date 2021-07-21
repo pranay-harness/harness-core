@@ -1,5 +1,7 @@
 package io.harness;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.connector.ConnectivityStatus;
@@ -19,8 +21,11 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.logging.AccessTokenBean;
 import io.harness.ng.core.dto.ErrorDetail;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.packages.HarnessPackages;
 import io.harness.reflection.ReflectionUtils;
+import io.harness.rest.RestResponse;
+import io.harness.security.annotations.InternalApi;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -30,7 +35,9 @@ import com.esotericsoftware.kryo.util.ObjectMap;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.ProtocolMessageEnum;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -42,8 +49,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.ws.rs.Path;
 import org.reflections.Reflections;
 
+@OwnedBy(HarnessTeam.CDP)
 class MicroserviceInterfaceTool {
   private static void log(String message) {
     System.out.println(message);
@@ -124,6 +133,70 @@ class MicroserviceInterfaceTool {
     }
   }
 
+  private static Map<String, String> computeBEInternalApis() throws Exception {
+    Reflections reflections =
+        new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "io.serializer");
+    Set<Class<?>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
+    Map<String, String> classToHash = new HashMap<>();
+    for (Class resourceClass : resourceClasses) {
+      Method[] methods = resourceClass.getMethods();
+      if (EmptyPredicate.isEmpty(methods)) {
+        continue;
+      }
+      for (Method method : methods) {
+        Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
+        if (EmptyPredicate.isEmpty(declaredAnnotations)) {
+          continue;
+        }
+        for (Annotation declaredAnnotation : declaredAnnotations) {
+          if (declaredAnnotation instanceof InternalApi) {
+            /*
+             * The return type information is tricky to find as the types are either
+             * io.harness.rest.RestResponse<T> OR io.harness.ng.core.dto.ResponseDTO<T>
+             * We need to find the type of Type Parameter.
+             * This information is not directly available via reflection,
+             * Hence we use the "toGenericString" and try to extract the information from there
+             */
+            Class<?> returnType = method.getReturnType();
+            String methodString = method.toGenericString();
+            String[] split = methodString.split(" ");
+            String paramClassName = "";
+            if (split.length == 3) {
+              if (RestResponse.class.equals(returnType)) {
+                // Example: public io.harness.rest.RestResponse<io.harness.beans.FeatureFlag>
+                // software.wings.resources.FeatureFlagResource.getFeatureFlag(java.lang.String)
+                paramClassName = split[1].substring(29, split[1].length() - 1);
+              } else if (ResponseDTO.class.equals(returnType)) {
+                // Example: public io.harness.ng.core.dto.ResponseDTO<io.harness.ng.core.dto.TokenDTO>
+                // io.harness.ng.core.remote.TokenResource.getToken(java.lang.String)
+                paramClassName = split[1].substring(35, split[1].length() - 1);
+              }
+            }
+            if (EmptyPredicate.isNotEmpty(paramClassName)) {
+              /*
+               * The String could be a collection also. And in general could be pretty
+               * complicated to parse. Hence we do not fail, if we are not able to parse.
+               */
+              try {
+                Class<?> paramClass = Class.forName(paramClassName);
+                classToHash.put(paramClass.getCanonicalName(), calculateStringHash(paramClass));
+              } catch (Exception ex) {
+                ex.printStackTrace();
+              }
+            }
+            Class<?>[] parameterTypes = method.getParameterTypes();
+            if (EmptyPredicate.isNotEmpty(parameterTypes)) {
+              for (Class parameterType : parameterTypes) {
+                classToHash.put(parameterType.getCanonicalName(), calculateStringHash(parameterType));
+              }
+            }
+          }
+        }
+      }
+    }
+    return classToHash;
+  }
+
   public static void main(String[] args) {
     try {
       Set<String> kryoDependencies = new HashSet<>();
@@ -134,6 +207,7 @@ class MicroserviceInterfaceTool {
       if (!Arrays.asList(args).contains("ignore-json")) {
         classToHash.putAll(computeJsonHashes());
       }
+      classToHash.putAll(computeBEInternalApis());
       List<String> sortedClasses = classToHash.keySet().stream().sorted(String::compareTo).collect(Collectors.toList());
       List<String> sortedHashes = sortedClasses.stream().map(classToHash::get).collect(Collectors.toList());
       String concatenatedHashes = HarnessStringUtils.join(",", sortedHashes);
