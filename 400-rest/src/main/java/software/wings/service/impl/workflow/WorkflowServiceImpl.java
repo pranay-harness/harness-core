@@ -1200,12 +1200,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           (CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
       if (canaryOrchestrationWorkflow.getWorkflowPhases() != null && savedCanaryOrchestrationWorkflow != null
           && savedCanaryOrchestrationWorkflow.getWorkflowPhases() != null) {
-        for (int i = 0; i < canaryOrchestrationWorkflow.getWorkflowPhases().size()
-             && i < savedCanaryOrchestrationWorkflow.getWorkflowPhases().size();
-             i++) {
+        for (int i = 0; i < canaryOrchestrationWorkflow.getWorkflowPhases().size(); i++) {
+          String phaseId = canaryOrchestrationWorkflow.getWorkflowPhases().get(i).getUuid();
+          Optional<WorkflowPhase> savedWorkflowPhase =
+              savedCanaryOrchestrationWorkflow.getWorkflowPhases()
+                  .stream()
+                  .filter(workflowPhase -> workflowPhase.getUuid().equals(phaseId))
+                  .findFirst();
           if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases().get(i).getServiceId())) {
             canaryOrchestrationWorkflow.getWorkflowPhases().get(i).setServiceId(
-                savedCanaryOrchestrationWorkflow.getWorkflowPhases().get(i).getServiceId());
+                savedWorkflowPhase.map(WorkflowPhase::getServiceId).orElse(null));
           }
         }
       }
