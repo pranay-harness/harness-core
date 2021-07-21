@@ -28,6 +28,8 @@ import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusCVConfigBuilder;
+import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigBuilder;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap;
@@ -222,6 +224,24 @@ public class BuilderFactory {
         .envIdentifier(context.getEnvIdentifier())
         .connectorIdentifier("connectorRef")
         .category(CVMonitoringCategory.PERFORMANCE);
+  }
+
+  public SplunkCVConfigBuilder splunkCVConfigBuilder() {
+    return SplunkCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .serviceInstanceIdentifier(randomAlphabetic(10))
+        .envIdentifier(context.getEnvIdentifier())
+        .queryName(randomAlphabetic(10))
+        .query(randomAlphabetic(10))
+        .serviceInstanceIdentifier(randomAlphabetic(10))
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .connectorIdentifier("Splunk Connector")
+        .category(CVMonitoringCategory.ERRORS)
+        .productName(generateUuid());
   }
 
   private VerificationJob getVerificationJob() {
