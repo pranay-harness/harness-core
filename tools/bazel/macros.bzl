@@ -1,6 +1,7 @@
 load("//tools/bazel/sonarqube:defs.bzl", "sq_project")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:tools/bazel/duplicated.bzl", "report_duplicated")
 load("@rules_jvm_external//:specs.bzl", "maven")
 
 def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = None):
@@ -69,7 +70,8 @@ def sonarqube_test(
 def run_analysis(
         run_checkstyle = True,
         run_pmd = True,
-        run_sonar = True):
+        run_sonar = True,
+        run_duplicated = True):
     if run_checkstyle:
         checkstyle()
 
@@ -78,6 +80,9 @@ def run_analysis(
 
     if run_sonar:
         sonarqube_test()
+
+    if run_duplicated:
+        report_duplicated()
 
 def maven_test_artifact(artifact):
     entities = artifact.split(":")
