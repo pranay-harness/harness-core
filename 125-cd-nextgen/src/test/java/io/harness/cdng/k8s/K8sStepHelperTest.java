@@ -80,6 +80,7 @@ import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
@@ -99,6 +100,7 @@ import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
@@ -119,6 +121,7 @@ import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.execution.invokers.StrategyHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -128,16 +131,20 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -160,6 +167,8 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private K8sStepExecutor k8sStepExecutor;
   @Mock private KryoSerializer kryoSerializer;
   @Mock private StepHelper stepHelper;
+  @Mock private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
+  @Mock private PipelineRbacHelper pipelineRbacHelper;
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
   @Mock private LogCallback mockLogCallback;
@@ -1440,5 +1449,42 @@ public class K8sStepHelperTest extends CategoryTest {
                        .getSetupAbstractions()
                        .getValuesOrThrow("envType");
     assertThat(value).isEqualTo(PROD.name());
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFailRuntimeAccess() {
+    K8sManifestOutcome k8s = K8sManifestOutcome.builder().store(sampleGitStore("test1")).build();
+    ValuesManifestOutcome values1 = ValuesManifestOutcome.builder().build();
+    ValuesManifestOutcome values2 = ValuesManifestOutcome.builder().store(sampleGitStore("test2")).build();
+    Set<EntityDetailProtoDTO> k8sEntities = ImmutableSet.of(EntityDetailProtoDTO.newBuilder().build());
+    Set<EntityDetailProtoDTO> values2Entities = ImmutableSet.of(EntityDetailProtoDTO.newBuilder().build());
+    HashSet<EntityDetailProtoDTO> allEntities = new HashSet<>();
+    allEntities.addAll(k8sEntities);
+    allEntities.addAll(values2Entities);
+    ManifestsOutcome manifests =
+        new ManifestsOutcome(ImmutableMap.of("k8s", k8s, "values1", values1, "values2", values2));
+    RuntimeException runtimeAccessFailure = new RuntimeException("Unauthorized");
+
+    doReturn(k8sEntities).when(entityReferenceExtractorUtils).extractReferredEntities(ambiance, k8s.getStore());
+    doReturn(values2Entities).when(entityReferenceExtractorUtils).extractReferredEntities(ambiance, values2.getStore());
+    doThrow(runtimeAccessFailure).when(pipelineRbacHelper).checkRuntimePermissions(ambiance, allEntities);
+    doReturn(manifests)
+        .when(outcomeService)
+        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+
+    assertThatThrownBy(
+        () -> k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, StepElementParameters.builder().build()))
+        .isSameAs(runtimeAccessFailure);
+  }
+
+  private GitStore sampleGitStore(String identifier) {
+    return GitStore.builder()
+        .connectorRef(ParameterField.createValueField(identifier))
+        .paths(ParameterField.createValueField(asList("file1", "file2")))
+        .gitFetchType(FetchType.BRANCH)
+        .branch(ParameterField.createValueField("master"))
+        .build();
   }
 }
