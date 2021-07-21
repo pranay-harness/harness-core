@@ -12,6 +12,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
@@ -64,13 +65,21 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
             .branch(scmGitRefTaskParams.getBranch())
             .listCommitsResponse(listCommitsResponse.toByteArray())
             .build();
-      case PULL_REQUEST:
+      case PULL_REQUEST_COMMITS:
         ListCommitsInPRResponse listCommitsInPRResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listCommitsInPR(
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getPrNumber(), SCMGrpc.newBlockingStub(c)));
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .listCommitsInPRResponse(listCommitsInPRResponse.toByteArray())
+            .build();
+      case PULL_REQUEST:
+        FindPRResponse findPRResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.findPR(
+                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getPrNumber(), SCMGrpc.newBlockingStub(c)));
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .findPRResponse(findPRResponse.toByteArray())
             .build();
       case COMPARE_COMMITS:
         CompareCommitsResponse compareCommitsResponse = scmDelegateClient.processScmRequest(c
