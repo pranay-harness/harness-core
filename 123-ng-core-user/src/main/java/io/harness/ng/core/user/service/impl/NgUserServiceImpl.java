@@ -188,15 +188,11 @@ public class NgUserServiceImpl implements NgUserService {
       return user.map(UserMetadataMapper::toDTO);
     } else {
       Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.getUserByEmailId(email));
-      UserMetadataDTO userMetadataDTO = userInfo
-                                            .map(user
-                                                -> UserMetadataDTO.builder()
-                                                       .uuid(user.getUuid())
-                                                       .name(user.getName())
-                                                       .email(user.getEmail())
-                                                       .locked(user.isLocked())
-                                                       .build())
-                                            .orElse(null);
+      UserMetadataDTO userMetadataDTO =
+          userInfo
+              .map(user
+                  -> UserMetadataDTO.builder().uuid(user.getUuid()).name(user.getName()).email(user.getEmail()).build())
+              .orElse(null);
       return Optional.ofNullable(userMetadataDTO);
     }
   }
@@ -366,12 +362,8 @@ public class NgUserServiceImpl implements NgUserService {
     Optional<UserInfo> userInfoOptional = getUserById(userId);
     UserInfo userInfo = userInfoOptional.orElseThrow(
         () -> new InvalidRequestException(String.format("User with id %s doesn't exists", userId)));
-    UserMetadata userMetadata = UserMetadata.builder()
-                                    .userId(userInfo.getUuid())
-                                    .name(userInfo.getName())
-                                    .email(userInfo.getEmail())
-                                    .locked(userInfo.isLocked())
-                                    .build();
+    UserMetadata userMetadata =
+        UserMetadata.builder().userId(userInfo.getUuid()).name(userInfo.getName()).email(userInfo.getEmail()).build();
     try {
       userMetadataRepository.save(userMetadata);
     } catch (DuplicateKeyException e) {
@@ -467,7 +459,6 @@ public class NgUserServiceImpl implements NgUserService {
     if (!isBlank(user.getName())) {
       Update update = new Update();
       update.set(UserMetadataKeys.name, user.getName());
-      update.set(UserMetadataKeys.locked, user.isLocked());
       return userMetadataRepository.updateFirst(user.getUuid(), update) != null;
     }
     return true;

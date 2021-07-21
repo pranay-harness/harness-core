@@ -22,13 +22,11 @@ public class UserMetadataDTO {
   String name;
   @ApiModelProperty(required = true) @NotEmpty String email;
   @ApiModelProperty(required = true) @NotEmpty String uuid;
-  @NotEmpty boolean locked;
 
   @Builder
-  public UserMetadataDTO(String name, String email, String uuid, boolean locked) {
+  public UserMetadataDTO(String name, String email, String uuid) {
     this.name = name;
     this.email = email;
     this.uuid = uuid;
-    this.locked = locked;
   }
 }

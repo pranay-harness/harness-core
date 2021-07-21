@@ -2337,7 +2337,7 @@ public class UserServiceImpl implements UserService {
     setUnset(operations, UserKeys.userLockoutInfo, new UserLockoutInfo());
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Type.UNLOCK);
     log.info("Auditing unlocking of user={} in account={}", user.getName(), accountId);
-    return updateUser(user.getUuid(), operations);
+    return applyUpdateOperations(user, operations);
   }
 
   @Override
@@ -2565,9 +2565,9 @@ public class UserServiceImpl implements UserService {
       action = EventsFrameworkMetadataConstants.UPDATE_ACTION;
       /**
        * Dont send unnecessary events. Right now we only send events when username has changed or user is
-       * created/deleted or user locked status has changed.
+       * created/deleted.
        */
-      if (updatedUser.getName().equals(oldUser.getName()) && updatedUser.isUserLocked() == oldUser.isUserLocked()) {
+      if (updatedUser.getName().equals(oldUser.getName())) {
         return;
       }
     }
@@ -2576,7 +2576,6 @@ public class UserServiceImpl implements UserService {
     userDTOBuilder.setUserId(updatedUser != null ? updatedUser.getUuid() : oldUser.getUuid());
     userDTOBuilder.setName(updatedUser != null ? updatedUser.getName() : oldUser.getName());
     userDTOBuilder.setEmail(updatedUser != null ? updatedUser.getEmail() : oldUser.getEmail());
-    userDTOBuilder.setLocked(updatedUser != null ? updatedUser.isUserLocked() : oldUser.isUserLocked());
     userDTO = userDTOBuilder.build();
 
     try {

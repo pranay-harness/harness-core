@@ -394,15 +394,10 @@ public class InviteServiceImpl implements InviteService {
 
     Invite invite = inviteOptional.get();
     Optional<UserMetadataDTO> ngUserOpt = ngUserService.getUserByEmail(invite.getEmail(), true);
-    UserInfo userInfo = ngUserOpt
-                            .map(user
-                                -> UserInfo.builder()
-                                       .uuid(user.getUuid())
-                                       .name(user.getName())
-                                       .email(user.getEmail())
-                                       .locked(user.isLocked())
-                                       .build())
-                            .orElse(null);
+    UserInfo userInfo =
+        ngUserOpt
+            .map(user -> UserInfo.builder().uuid(user.getUuid()).name(user.getName()).email(user.getEmail()).build())
+            .orElse(null);
 
     markInviteApproved(invite);
     return InviteAcceptResponse.builder()
@@ -685,12 +680,7 @@ public class InviteServiceImpl implements InviteService {
     Map<String, UserMetadataDTO> userMetadataMap = new HashMap<>();
     users.forEach(user
         -> userMetadataMap.put(user.getEmail(),
-            UserMetadataDTO.builder()
-                .email(user.getEmail())
-                .name(user.getName())
-                .uuid(user.getUuid())
-                .locked(user.isLocked())
-                .build()));
+            UserMetadataDTO.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build()));
     for (String email : userEmails) {
       userMetadataMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());
     }

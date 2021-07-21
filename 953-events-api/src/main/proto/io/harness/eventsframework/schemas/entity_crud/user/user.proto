@@ -9,5 +9,4 @@ message UserDTO {
   string userId = 2;
   string name = 5;
   string email = 6;
-  bool locked = 7;
 }
