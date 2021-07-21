@@ -6,6 +6,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.InputSetReference;
 import io.harness.common.EntityReference;
+import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
@@ -15,11 +16,13 @@ import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @OwnedBy(PIPELINE)
 @Singleton
-public class InputSetEntityGitSyncHelper implements GitSdkEntityHandlerInterface<InputSetEntity, InputSetYamlDTO> {
+public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<InputSetEntity, InputSetYamlDTO>
+    implements GitSdkEntityHandlerInterface<InputSetEntity, InputSetYamlDTO> {
   private final PMSInputSetService pmsInputSetService;
 
   @Inject
@@ -100,5 +103,28 @@ public class InputSetEntityGitSyncHelper implements GitSdkEntityHandlerInterface
   @Override
   public String getBranchKey() {
     return InputSetEntityKeys.branch;
+  }
+
+  @Override
+  public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
+    final InputSetYamlDTO inputSetYamlDTO = getYamlDTO(yaml);
+    final Optional<InputSetEntity> inputSetEntity;
+    if (inputSetYamlDTO.getInputSetInfo() != null) {
+      final InputSetYamlInfoDTO inputSetInfo = inputSetYamlDTO.getInputSetInfo();
+      inputSetEntity = pmsInputSetService.get(accountIdentifier, inputSetInfo.getOrgIdentifier(),
+          inputSetInfo.getProjectIdentifier(), inputSetInfo.getPipelineInfoConfig().getIdentifier(),
+          inputSetInfo.getIdentifier(), false);
+    } else {
+      final OverlayInputSetYamlInfoDTO overlayInputSetInfo = inputSetYamlDTO.getOverlayInputSetInfo();
+      inputSetEntity = pmsInputSetService.get(accountIdentifier, overlayInputSetInfo.getOrgIdentifier(),
+          overlayInputSetInfo.getProjectIdentifier(), overlayInputSetInfo.getPipelineIdentifier(),
+          overlayInputSetInfo.getIdentifier(), false);
+    }
+    return inputSetEntity.map(InputSetEntity::getObjectIdOfYaml).orElse(null);
+  }
+
+  @Override
+  public InputSetYamlDTO getYamlDTO(String yaml) {
+    return InputSetYamlDTOMapper.toDTO(yaml);
   }
 }
