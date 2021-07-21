@@ -30,4 +30,12 @@ public class PipelineYamlDtoMapper {
     return PMSPipelineDtoMapper.toPipelineEntity(
         accountIdentifier, infoDto.getOrgIdentifier(), infoDto.getProjectIdentifier(), NGYamlUtils.getYamlString(dto));
   }
+
+  public PipelineConfig toDto(String yaml) {
+    try {
+      return YamlUtils.read(yaml, PipelineConfig.class);
+    } catch (IOException ex) {
+      throw new InvalidRequestException("Cannot create pipeline yaml: " + ex.getMessage(), ex);
+    }
+  }
 }

@@ -129,8 +129,10 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
           continue;
         }
         try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
-             AutoLogContext ignore1 =
-                 YamlProcessingLogContext.builder().changeSetId(changeSet.getChangeSetId()).build(OVERRIDE_ERROR);) {
+             AutoLogContext ignore1 = YamlProcessingLogContext.builder()
+                                          .changeSetId(changeSet.getChangeSetId())
+                                          .changeType(changeSet.getChangeType().name())
+                                          .build(OVERRIDE_ERROR);) {
           GlobalContextManager.upsertGlobalContextRecord(
               createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet,
                   gitToHarnessRequest.getCommitId().getValue()));
