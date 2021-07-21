@@ -8,6 +8,8 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.Validator.nullCheck;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -41,6 +43,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -64,6 +67,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class InstanceServiceImpl implements InstanceService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WingsMongoPersistence wingsMongoPersistence;
@@ -338,17 +342,10 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public List<Instance> listInstancesNotRemovedFully(Query<Instance> query) {
-    long sevenDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
-    query.and(query.or(query.criteria(InstanceKeys.deletedAt).greaterThanOrEq(sevenDaysOldTimeInMills),
+    long twoDaysOldTimeInMills = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2);
+    query.and(query.or(query.criteria(InstanceKeys.deletedAt).greaterThanOrEq(twoDaysOldTimeInMills),
         query.criteria(InstanceKeys.isDeleted).equal(false)));
-    final long count = query.count();
-    int total = 0;
-    List<Instance> instances = new ArrayList<>();
-    while (total < count) {
-      instances.addAll(query.asList(new FindOptions().limit(100).skip(total)));
-      total += 100;
-    }
-    return instances;
+    return query.asList(new FindOptions().readPreference(ReadPreference.secondaryPreferred()));
   }
 
   @Override
