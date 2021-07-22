@@ -23,6 +23,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
+import io.harness.exception.WingsException;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secrets.SecretService;
@@ -221,6 +222,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   public SecretManagerConfig getSecretManager(
       String accountId, String kmsId, EncryptionType encryptionType, Map<String, String> runtimeParameters) {
     SecretManagerConfig secretManagerConfig = getSecretManager(accountId, kmsId, encryptionType);
+    if (secretManagerConfig == null) {
+      throw new WingsException("Secret manager id could not be found");
+    }
     if (secretManagerConfig.isTemplatized()) {
       updateRuntimeParameters(secretManagerConfig, runtimeParameters, true);
     }
