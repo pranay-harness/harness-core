@@ -13,6 +13,8 @@ import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.CESlackWebhookServiceImpl;
 import io.harness.ccm.views.service.CEViewService;
@@ -77,6 +79,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
     install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
         batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId()));
+    bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
 
     bindCFServices();
 
