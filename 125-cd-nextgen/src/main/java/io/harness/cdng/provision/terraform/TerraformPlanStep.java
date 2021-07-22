@@ -103,6 +103,7 @@ public class TerraformPlanStep extends TaskExecutableWithRollbackAndRbac<Terrafo
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    log.info("Starting execution ObtainTask after Rbac for the Plan Step");
     TerraformPlanStepParameters planStepParameters = (TerraformPlanStepParameters) stepElementParameters.getSpec();
     helper.validatePlanStepConfigFiles(planStepParameters);
     TerraformPlanExecutionDataParameters configuration = planStepParameters.getConfiguration();
@@ -146,6 +147,7 @@ public class TerraformPlanStep extends TaskExecutableWithRollbackAndRbac<Terrafo
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
       StepElementParameters stepElementParameters, ThrowingSupplier<TerraformTaskNGResponse> responseSupplier)
       throws Exception {
+    log.info("Handling Task result with Security Context for the Plan Step");
     TerraformPlanStepParameters planStepParameters = (TerraformPlanStepParameters) stepElementParameters.getSpec();
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
