@@ -11,5 +11,4 @@ public class QLCEViewTrendInfo {
   String statsValue;
   Number statsTrend;
   Number value;
-  EfficiencyScoreStats efficiencyScoreStats;
 }

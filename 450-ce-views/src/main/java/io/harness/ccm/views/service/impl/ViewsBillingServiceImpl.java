@@ -11,6 +11,7 @@ import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantC
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantIdleCost;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMaxStartTime;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMinStartTime;
+import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantSystemCost;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantUnallocatedCost;
 import static io.harness.ccm.views.graphql.ViewsQueryBuilder.K8S_NODE;
 import static io.harness.ccm.views.graphql.ViewsQueryBuilder.K8S_POD;
@@ -102,6 +103,7 @@ import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
 import io.harness.ccm.views.graphql.QLCEViewTimeGroupType;
 import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
 import io.harness.ccm.views.graphql.QLCEViewTimeTruncGroupBy;
+import io.harness.ccm.views.graphql.QLCEViewTrendData;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 import io.harness.ccm.views.graphql.ViewCostData;
 import io.harness.ccm.views.graphql.ViewCostData.ViewCostDataBuilder;
@@ -163,9 +165,16 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   public static final String nullStringValueConstant = "Others";
   private static final String COST_DESCRIPTION = "of %s - %s";
+  private static final String OTHER_COST_DESCRIPTION = "%s of total";
   private static final String COST_VALUE = "$%s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String FORECAST_COST_LABEL = "Forecasted Cost";
+  private static final String IDLE_COST_LABEL = "Idle Cost";
+  private static final String UNALLOCATED_COST_LABEL = "Unallocated Cost";
+  private static final String UTILIZED_COST_LABEL = "Utilized Cost";
+  private static final String SYSTEM_COST_LABEL = "System Cost";
+  private static final String EMPTY_VALUE = "-";
+  private static final String NA_VALUE = "NA";
   private static final String DATE_PATTERN_FOR_CHART = "MMM dd";
   private static final long ONE_DAY_MILLIS = 86400000L;
   private static final Double defaultDoubleValue = 0D;
@@ -298,11 +307,11 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   @Override
   public QLCEViewTrendInfo getTrendStatsData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName) {
-    return getTrendStatsDataNg(bigQuery, filters, aggregateFunction, cloudProviderTableName, null);
+    return getTrendStatsDataNg(bigQuery, filters, aggregateFunction, cloudProviderTableName, null).getTotalCost();
   }
 
   @Override
-  public QLCEViewTrendInfo getTrendStatsDataNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+  public QLCEViewTrendData getTrendStatsDataNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId) {
     boolean isClusterTableQuery = isClusterTableQuery(filters, accountId);
     List<ViewRule> viewRuleList = new ArrayList<>();
@@ -325,7 +334,14 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       efficiencyScoreStats = viewsQueryHelper.getEfficiencyScoreStats(costData, prevCostData);
     }
 
-    return getCostBillingStats(costData, prevCostData, timeFilters, trendStartInstant, efficiencyScoreStats);
+    return QLCEViewTrendData.builder()
+        .totalCost(getCostBillingStats(costData, prevCostData, timeFilters, trendStartInstant))
+        .idleCost(getOtherCostBillingStats(costData, IDLE_COST_LABEL))
+        .unallocatedCost(getOtherCostBillingStats(costData, UNALLOCATED_COST_LABEL))
+        .systemCost(getOtherCostBillingStats(costData, SYSTEM_COST_LABEL))
+        .utilizedCost(getOtherCostBillingStats(costData, UTILIZED_COST_LABEL))
+        .efficiencyScoreStats(efficiencyScoreStats)
+        .build();
   }
 
   @Override
@@ -407,6 +423,9 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
     ViewCostDataBuilder viewCostDataBuilder = ViewCostData.builder();
+    Double totalCost = null;
+    Double idleCost = null;
+    Double unallocatedCost = null;
     for (FieldValueList row : result.iterateAll()) {
       for (Field field : fields) {
         switch (field.getName()) {
@@ -418,24 +437,37 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
             break;
           case entityConstantCost:
           case entityConstantClusterCost:
-            viewCostDataBuilder.cost(getNumericValue(row, field));
+            totalCost = getNumericValue(row, field);
+            viewCostDataBuilder.cost(totalCost);
             break;
           case entityConstantIdleCost:
-            viewCostDataBuilder.idleCost(getNumericValue(row, field));
+            idleCost = getNumericValue(row, field);
+            viewCostDataBuilder.idleCost(idleCost);
             break;
           case entityConstantUnallocatedCost:
-            viewCostDataBuilder.unallocatedCost(getNumericValue(row, field));
+            unallocatedCost = getNumericValue(row, field);
+            viewCostDataBuilder.unallocatedCost(unallocatedCost);
+            break;
+          case entityConstantSystemCost:
+            viewCostDataBuilder.systemCost(getNumericValue(row, field));
             break;
           default:
             break;
         }
       }
     }
+    if (totalCost != null && idleCost != null) {
+      Double utilizedCost = totalCost - idleCost;
+      if (unallocatedCost != null) {
+        utilizedCost -= unallocatedCost;
+      }
+      viewCostDataBuilder.utilizedCost(viewsQueryHelper.getRoundedDoubleValue(utilizedCost));
+    }
     return viewCostDataBuilder.build();
   }
 
   protected QLCEViewTrendInfo getCostBillingStats(ViewCostData costData, ViewCostData prevCostData,
-      List<QLCEViewTimeFilter> filters, Instant trendFilterStartTime, EfficiencyScoreStats efficiencyScoreStats) {
+      List<QLCEViewTimeFilter> filters, Instant trendFilterStartTime) {
     Instant startInstant = Instant.ofEpochMilli(getTimeFilter(filters, AFTER).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(costData.getMaxStartTime() / 1000);
     if (costData.getMaxStartTime() == 0) {
@@ -464,7 +496,47 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         .statsTrend(
             viewsQueryHelper.getBillingTrend(costData.getCost(), forecastCost, prevCostData, trendFilterStartTime))
         .value(costData.getCost())
-        .efficiencyScoreStats(efficiencyScoreStats)
+        .build();
+  }
+
+  protected QLCEViewTrendInfo getOtherCostBillingStats(ViewCostData costData, String costLabel) {
+    if (costData == null) {
+      return null;
+    }
+    Double otherCost;
+    double totalCost = costData.getCost();
+    String otherCostDescription = EMPTY_VALUE;
+    String otherCostValue = EMPTY_VALUE;
+    switch (costLabel) {
+      case IDLE_COST_LABEL:
+        otherCost = costData.getIdleCost();
+        break;
+      case UNALLOCATED_COST_LABEL:
+        otherCost = costData.getUnallocatedCost();
+        break;
+      case UTILIZED_COST_LABEL:
+        otherCost = costData.getUtilizedCost();
+        break;
+      case SYSTEM_COST_LABEL:
+        otherCost = costData.getSystemCost();
+        break;
+      default:
+        return null;
+    }
+    if (otherCost != null) {
+      otherCostValue =
+          String.format(COST_VALUE, viewsQueryHelper.formatNumber(viewsQueryHelper.getRoundedDoubleValue(otherCost)));
+      if (totalCost != 0) {
+        double percentageOfTotalCost = viewsQueryHelper.getRoundedDoublePercentageValue(otherCost / totalCost);
+        otherCostDescription = String.format(OTHER_COST_DESCRIPTION, percentageOfTotalCost + "%");
+      }
+    }
+
+    return QLCEViewTrendInfo.builder()
+        .statsLabel(costLabel)
+        .statsDescription(otherCostDescription)
+        .statsValue(otherCostValue)
+        .value(otherCost)
         .build();
   }
 

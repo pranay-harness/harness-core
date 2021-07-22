@@ -91,6 +91,9 @@ public class ViewsQueryBuilder {
   private static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
   private static final ImmutableList<String> applicationGroupBys =
       ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT, GROUP_BY_CLOUD_PROVIDER);
+  private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING = "PROVIDERS";
+  private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY =
+      "CASE WHEN cloudProvider = 'CLUSTER' THEN 'CLUSTER' ELSE 'CLOUD' END";
 
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
@@ -167,6 +170,31 @@ public class ViewsQueryBuilder {
     selectQuery.addCondition(BinaryCondition.equalTo(new CustomSql("table_name"), table));
 
     log.info("Information schema query for table {}", selectQuery.toString());
+    return selectQuery;
+  }
+
+  public SelectQuery getCostByProvidersOverviewQuery(List<QLCEViewTimeFilter> timeFilters,
+      List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations, String cloudProviderTableName) {
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.addCustomFromTable(cloudProviderTableName);
+    QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
+
+    selectQuery.addAliasedColumn(new CustomSql(CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY), CLOUD_PROVIDERS_CUSTOM_GROUPING);
+    selectQuery.addCustomGroupings(CLOUD_PROVIDERS_CUSTOM_GROUPING);
+
+    if (!aggregations.isEmpty()) {
+      decorateQueryWithAggregations(selectQuery, aggregations);
+    }
+
+    if (!timeFilters.isEmpty()) {
+      decorateQueryWithTimeFilters(selectQuery, timeFilters, false);
+    }
+
+    if (groupByTime != null) {
+      decorateQueryWithGroupByTime(selectQuery, groupByTime, false);
+    }
+
+    log.info("Query for Overview cost by providers {}", selectQuery.toString());
     return selectQuery;
   }
 
