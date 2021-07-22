@@ -2,6 +2,7 @@ package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -55,7 +56,7 @@ public class PerspectiveReportResource {
   @ExceptionMetered
   @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
   public RestResponse<List<CEReportSchedule>> getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
-      @QueryParam("reportId") String reportId, @PathParam("accountId") String accountId) {
+      @QueryParam("reportId") String reportId, @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     if (perspectiveId != null) {
       return new RestResponse<>(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
     } else if (reportId != null) {
@@ -79,7 +80,8 @@ public class PerspectiveReportResource {
   @ExceptionMetered
   @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
   public RestResponse<String> deleteReportSetting(@QueryParam("reportId") String reportId,
-      @QueryParam("perspectiveId") String perspectiveId, @PathParam("accountId") String accountId) {
+      @QueryParam("perspectiveId") String perspectiveId,
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     if (perspectiveId != null) {
       ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
       return new RestResponse<>("Successfully deleted the record");
@@ -100,7 +102,7 @@ public class PerspectiveReportResource {
   @ExceptionMetered
   @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
   public RestResponse<List<CEReportSchedule>> createReportSetting(
-      @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
@@ -121,7 +123,7 @@ public class PerspectiveReportResource {
   @ExceptionMetered
   @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
   public RestResponse<List<CEReportSchedule>> updateReportSetting(
-      @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
       return new RestResponse<>(ceReportScheduleService.update(accountId, schedule));
