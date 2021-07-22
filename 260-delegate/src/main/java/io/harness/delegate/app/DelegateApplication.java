@@ -278,12 +278,11 @@ public class DelegateApplication {
     RollingFileAppender<?> appender = (RollingFileAppender<?>) logger.getAppender("file");
     SizeAndTimeBasedRollingPolicy<?> policy = (SizeAndTimeBasedRollingPolicy<?>) appender.getRollingPolicy();
     TimeBasedFileNamingAndTriggeringPolicy<?> trigger = policy.getTimeBasedFileNamingAndTriggeringPolicy();
-    //set trigger time one day ahead for rollover
+    // set trigger time one day ahead for rollover
     trigger.setCurrentTime(System.currentTimeMillis() + 24 * 60 * 60 * 1000);
     log.info("reset log files");
     trigger.setCurrentTime(0);
 
     initializeLogging();
-    
   }
 }
