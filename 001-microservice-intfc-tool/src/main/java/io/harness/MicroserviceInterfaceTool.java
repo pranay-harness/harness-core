@@ -181,7 +181,7 @@ class MicroserviceInterfaceTool {
                 Class<?> paramClass = Class.forName(paramClassName);
                 classToHash.put(paramClass.getCanonicalName(), calculateStringHash(paramClass));
               } catch (Exception ex) {
-                ex.printStackTrace();
+                log(ex.getMessage());
               }
             }
             Class<?>[] parameterTypes = method.getParameterTypes();
