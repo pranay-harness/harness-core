@@ -8,6 +8,7 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -59,17 +60,18 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
-    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+    K8sCanaryDeleteStepParameters k8sCanaryDeleteStepParameters =
+        (K8sCanaryDeleteStepParameters) stepElementParameters.getSpec();
+    String canaryStepFqn = k8sCanaryDeleteStepParameters.getCanaryStepFqn();
+    if (EmptyPredicate.isEmpty(canaryStepFqn)) {
+      throw new InvalidRequestException(K8S_CANARY_STEP_MISSING, USER);
+    }
+
+    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(ambiance,
+        RefObjectUtils.getSweepingOutputRefObject(canaryStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
 
     if (!optionalSweepingOutput.isFound()) {
-      if (StepUtils.isStepInRollbackSection(ambiance)) {
-        return TaskRequest.newBuilder()
-            .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_K8S_CANARY_DELETE_STEP_EXECUTION).build())
-            .build();
-      }
-
-      throw new InvalidRequestException(K8S_CANARY_STEP_MISSING, USER);
+      return skipTaskRequestOrThrowException(ambiance);
     }
 
     K8sCanaryOutcome canaryOutcome = (K8sCanaryOutcome) optionalSweepingOutput.getOutput();
@@ -80,12 +82,16 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
             .build();
       }
 
-      OptionalSweepingOutput existingCanaryDeleteOutput = executionSweepingOutputService.resolveOptional(
-          ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_DELETE_OUTCOME));
-      if (existingCanaryDeleteOutput.isFound()) {
-        return TaskRequest.newBuilder()
-            .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(K8S_CANARY_DELETE_ALREADY_DELETED).build())
-            .build();
+      String canaryDeleteStepFqn = k8sCanaryDeleteStepParameters.getCanaryDeleteStepFqn();
+      if (EmptyPredicate.isNotEmpty(canaryDeleteStepFqn)) {
+        OptionalSweepingOutput existingCanaryDeleteOutput = executionSweepingOutputService.resolveOptional(ambiance,
+            RefObjectUtils.getSweepingOutputRefObject(
+                canaryDeleteStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_DELETE_OUTCOME));
+        if (existingCanaryDeleteOutput.isFound()) {
+          return TaskRequest.newBuilder()
+              .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(K8S_CANARY_DELETE_ALREADY_DELETED).build())
+              .build();
+        }
       }
     }
 
@@ -109,6 +115,16 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
         .getTaskRequest();
   }
 
+  private TaskRequest skipTaskRequestOrThrowException(Ambiance ambiance) {
+    if (StepUtils.isStepInRollbackSection(ambiance)) {
+      return TaskRequest.newBuilder()
+          .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_K8S_CANARY_DELETE_STEP_EXECUTION).build())
+          .build();
+    }
+
+    throw new InvalidRequestException(K8S_CANARY_STEP_MISSING, USER);
+  }
+
   @Override
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
       StepElementParameters stepElementParameters, ThrowingSupplier<K8sDeployResponse> responseSupplier)
@@ -123,7 +139,7 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
 
     if (!StepUtils.isStepInRollbackSection(ambiance)) {
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_CANARY_DELETE_OUTCOME,
-          K8sCanaryDeleteOutcome.builder().build(), StepOutcomeGroup.STAGE.name());
+          K8sCanaryDeleteOutcome.builder().build(), StepOutcomeGroup.STEP.name());
     }
 
     return responseBuilder.status(Status.SUCCEEDED).build();

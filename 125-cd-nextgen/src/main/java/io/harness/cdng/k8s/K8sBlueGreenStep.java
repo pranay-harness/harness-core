@@ -151,8 +151,8 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
                                                   .stageColor(k8sBGDeployResponse.getStageColor())
                                                   .primaryColor(k8sBGDeployResponse.getPrimaryColor())
                                                   .build();
-    executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME,
-        k8sBlueGreenOutcome, StepOutcomeGroup.STAGE.name());
+    executionSweepingOutputService.consume(
+        ambiance, OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME, k8sBlueGreenOutcome, StepOutcomeGroup.STEP.name());
 
     return responseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()
