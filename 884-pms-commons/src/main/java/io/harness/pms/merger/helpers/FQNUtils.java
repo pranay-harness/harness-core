@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -28,6 +29,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PIPELINE)
 @UtilityClass
 public class FQNUtils {
+  List<String> possibleUUIDs = Arrays.asList(YAMLFieldNameConstants.IDENTIFIER, YAMLFieldNameConstants.NAME,
+      YAMLFieldNameConstants.KEY, YAMLFieldNameConstants.COMMAND_TYPE);
+
   public Map<FQN, Object> getSubMap(Map<FQN, Object> fullMap, FQN baseFQN) {
     Map<FQN, Object> res = new LinkedHashMap<>();
     fullMap.keySet().forEach(key -> {
@@ -338,14 +342,10 @@ public class FQNUtils {
 
   private String getUuidKey(ArrayNode list) {
     JsonNode element = list.get(0);
-    if (element.has(YAMLFieldNameConstants.IDENTIFIER)) {
-      return YAMLFieldNameConstants.IDENTIFIER;
-    }
-    if (element.has(YAMLFieldNameConstants.NAME)) {
-      return YAMLFieldNameConstants.NAME;
-    }
-    if (element.has(YAMLFieldNameConstants.KEY)) {
-      return YAMLFieldNameConstants.KEY;
+    for (String uuidKey : possibleUUIDs) {
+      if (element.has(uuidKey)) {
+        return uuidKey;
+      }
     }
     return "";
   }
