@@ -50,9 +50,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
         // check if existing instance sync perpetual task info record exists or not for incoming infrastructure mapping
         Optional<InstanceSyncPerpetualTaskInfoDTO> instanceSyncPerpetualTaskInfoDTOOptional =
-            instanceSyncPerpetualTaskInfoService.findByInfrastructureMappingId(
-                infrastructureMappingDTO.getAccountIdentifier(), infrastructureMappingDTO.getOrgIdentifier(),
-                infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getId());
+            instanceSyncPerpetualTaskInfoService.findByInfrastructureMappingId(infrastructureMappingDTO.getId());
         if (!instanceSyncPerpetualTaskInfoDTOOptional.isPresent()) {
           // no existing perpetual task info record found for given infrastructure mapping id
           // so create a new perpetual task and instance sync perpetual task info record
@@ -68,15 +66,12 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
             // it means deployment info doesn't exist in the perpetual task info, we need to add it
 
             // reset the perpetual task so that it triggers its next execution right away
-            instanceSyncPerpetualTaskService.resetPerpetualTask(instanceSyncPerpetualTaskInfoDTO.getAccountIdentifier(),
-                instanceSyncPerpetualTaskInfoDTO.getPerpetualTaskId());
+            instanceSyncPerpetualTaskService.resetPerpetualTask(
+                infrastructureMappingDTO.getAccountIdentifier(), instanceSyncPerpetualTaskInfoDTO.getPerpetualTaskId());
 
             // add the deploymentinfo and deployment summary id to the instance sync pt info record
             addNewDeploymentInfoToInstanceSyncPerpetualTaskInfoRecord(
                 instanceSyncPerpetualTaskInfoDTO, deploymentSummaryDTO.getDeploymentInfoDTO());
-            addNewDeploymentSummaryIdToInstanceSyncPerpetualTaskInfoRecord(
-                instanceSyncPerpetualTaskInfoDTO, deploymentSummaryDTO.getId());
-            instanceSyncPerpetualTaskInfoService.save(instanceSyncPerpetualTaskInfoDTO);
           }
         }
 
@@ -98,10 +93,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     InfrastructureMappingDTO infrastructureMappingDTO = deploymentSummaryDTO.getInfrastructureMapping();
     return InstanceSyncPerpetualTaskInfoDTO.builder()
         .accountIdentifier(infrastructureMappingDTO.getAccountIdentifier())
-        .projectIdentifier(infrastructureMappingDTO.getProjectIdentifier())
-        .orgIdentifier(infrastructureMappingDTO.getOrgIdentifier())
-        .infrastructureMappingId(infrastructureMappingDTO.getId())
-        .deploymentSummaryIdList(Collections.singletonList(deploymentSummaryDTO.getId()))
+        .infrastructureMappingId(deploymentSummaryDTO.getInfrastructureMappingId())
         .deploymentInfoDetailsDTOList(
             Collections.singletonList(DeploymentInfoDetailsDTO.builder()
                                           .deploymentInfoDTO(deploymentSummaryDTO.getDeploymentInfoDTO())
@@ -125,10 +117,5 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
                                                                                .deploymentInfoDTO(deploymentInfoDTO)
                                                                                .lastUsedAt(System.currentTimeMillis())
                                                                                .build());
-  }
-
-  private void addNewDeploymentSummaryIdToInstanceSyncPerpetualTaskInfoRecord(
-      InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO, String deploymentSummmaryId) {
-    instanceSyncPerpetualTaskInfoDTO.getDeploymentSummaryIdList().add(deploymentSummmaryId);
   }
 }
