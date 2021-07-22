@@ -1227,4 +1227,39 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     query.filter("serviceId", serviceId);
     return query;
   }
+
+  @Override
+  public PageResponse<CompareEnvironmentAggregationInfo> getCompareEnvironment(
+      String appId, String envId1, String envId2, int offset, int limit) {
+    List<CompareEnvironmentAggregationInfo> instanceInfoList = new ArrayList<>();
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.and(query.criteria("appId").equal(appId),
+        query.or(query.criteria("envId").equal(envId1), query.criteria("envId").equal(envId2)));
+    AggregationPipeline aggregationPipeline =
+        wingsPersistence.getDatastore(query.getEntityClass())
+            .createAggregation(Instance.class)
+            .match(query)
+            .group(Group.id(grouping("serviceId"), grouping("serviceName"), grouping("envId"),
+                grouping("lastArtifactBuildNum"), grouping("infraMappingId"),grouping("lastDeployedAt")))
+            .group(Group.id(grouping("serviceId", "_id.serviceId")),
+                grouping("serviceInfoSummaries",
+                    grouping("$push", projection("serviceId", "_id.serviceId"),
+                        projection("serviceName", "_id.serviceName"), projection("envId", "_id.envId"),
+                        projection("lastDeployedAt", "lastDeployedAt"),
+                        projection("lastWorkflowExecutionId", "lastWorkflowExecutionId"),
+                        projection("lastPipelineExecutionId", "lastPipelineExecutionId"),
+                        projection("infraMappingId", "_id.infraMappingId"),
+                        projection("lastArtifactBuildNum", "_id.lastArtifactBuildNum"))));
+
+    aggregationPipeline.limit(limit);
+
+    final Iterator<CompareEnvironmentAggregationInfo> aggregate =
+        HPersistence.retry(() -> aggregationPipeline.aggregate(CompareEnvironmentAggregationInfo.class));
+    aggregate.forEachRemaining(instanceInfoList::add);
+    return aPageResponse()
+        .withResponse(instanceInfoList)
+        .withOffset(Integer.toString(offset))
+        .withLimit(Integer.toString(limit))
+        .build();
+  }
 }

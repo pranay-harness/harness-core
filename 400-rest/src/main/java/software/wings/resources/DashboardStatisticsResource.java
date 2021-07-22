@@ -19,6 +19,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
@@ -246,5 +247,13 @@ public class DashboardStatisticsResource {
     response.put("percentile", p);
 
     return new RestResponse<>(response);
+  }
+
+  @GET
+  @Path("app-compare-environment")
+  public RestResponse<PageResponse<CompareEnvironmentAggregationInfo>> getCompareEnvironment(@QueryParam("appId") String appId, @QueryParam("envId1") String envId1, @QueryParam("envId2") String envId2, @QueryParam("offset") @DefaultValue("-1") int offset,
+                                                                               @QueryParam("limit") @DefaultValue("-1") int limit)
+  {
+    return new RestResponse<>(dashboardStatsService.getCompareEnvironment(appId, envId1,envId2,offset,limit));
   }
 }
