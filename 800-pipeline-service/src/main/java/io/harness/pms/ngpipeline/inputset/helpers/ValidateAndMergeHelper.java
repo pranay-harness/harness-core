@@ -127,11 +127,7 @@ public class ValidateAndMergeHelper {
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (optionalPipelineEntity.isPresent()) {
       String pipelineYaml = optionalPipelineEntity.get().getYaml();
-      try {
-        return createTemplateFromPipeline(pipelineYaml);
-      } catch (IOException e) {
-        throw new InvalidRequestException("Could not convert pipeline to template");
-      }
+      return createTemplateFromPipeline(pipelineYaml);
     } else {
       throw new InvalidRequestException("Could not find pipeline");
     }
@@ -141,11 +137,7 @@ public class ValidateAndMergeHelper {
       String pipelineIdentifier, String pipelineBranch, String pipelineRepoID) {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
-    try {
-      return createTemplateFromPipeline(pipelineYaml);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not convert pipeline to template");
-    }
+    return createTemplateFromPipeline(pipelineYaml);
   }
 
   public String getMergeInputSetFromPipelineTemplate(String accountId, String orgIdentifier, String projectIdentifier,
@@ -189,11 +181,7 @@ public class ValidateAndMergeHelper {
       String pipelineIdentifier, String mergedRuntimeInputYaml, String pipelineBranch, String pipelineRepoID) {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
-    try {
-      return MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
-    }
+    return MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
   }
 
   private void confirmPipelineIdentifier(String inputSetYaml, String pipelineIdentifier) {

@@ -59,7 +59,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeInputSetIntoPipeline() throws IOException {
+  public void testMergeInputSetIntoPipeline() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
 
@@ -78,7 +78,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeInputSetIntoServiceDependenciesPipeline() throws IOException {
+  public void testMergeInputSetIntoServiceDependenciesPipeline() {
     String filename = "service-dependencies-pipeline.yaml";
     String yaml = readFile(filename);
 
@@ -207,7 +207,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnYamlWithFailureStrategies() throws IOException {
+  public void testMergeOnYamlWithFailureStrategies() {
     String fullYamlFile = "failure-strategy.yaml";
     String fullYaml = readFile(fullYamlFile);
     String templateOfFull = createTemplateFromPipeline(fullYaml);
@@ -230,7 +230,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnCIPipelineYaml() throws IOException {
+  public void testMergeOnCIPipelineYaml() {
     String fullYamlFile = "ci-pipeline-with-reports.yaml";
     String fullYaml = readFile(fullYamlFile);
     String templateOfFull = createTemplateFromPipeline(fullYaml);
@@ -253,7 +253,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnPipelineWithEmptyListAndObject() throws IOException {
+  public void testMergeOnPipelineWithEmptyListAndObject() {
     String yamlFile = "empty-object-and-list-with-runtime.yaml";
     String yaml = readFile(yamlFile);
     String template = createTemplateFromPipeline(yaml);
