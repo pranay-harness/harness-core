@@ -271,6 +271,23 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  public void testMergeOnPipelineWithHelmCommandFlags() throws IOException {
+    String yamlFile = "helm-command-flags-pipeline.yaml";
+    String yaml = readFile(yamlFile);
+    String template = createTemplateFromPipeline(yaml);
+    assertThat(template).isNotNull();
+
+    String runtimeInputFile = "helm-command-flags-runtime-input.yaml";
+    String runtimeInput = readFile(runtimeInputFile);
+    String mergedYaml = mergeInputSetIntoPipeline(yaml, runtimeInput, false);
+    String fullYamlFile = "helm-command-flags-merged-pipeline.yaml";
+    String fullYaml = readFile(fullYamlFile);
+    assertThat(mergedYaml).isEqualTo(fullYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
   public void testGetErrorMapForInputSetValidators() throws IOException {
     String yamlFile = "pipeline-with-input-set-validators.yaml";
     String pipelineYaml = readFile(yamlFile);
