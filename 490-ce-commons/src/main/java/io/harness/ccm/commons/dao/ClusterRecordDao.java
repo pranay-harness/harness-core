@@ -37,12 +37,12 @@ public class ClusterRecordDao {
     return query.get();
   }
 
-  public boolean delete(String accountId, String k8sBaseConnectorRefIdentifier) {
+  public boolean delete(String accountId, String ceK8sConnectorIdentifier) {
     Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class, excludeValidate)
                                      .field(ClusterRecordKeys.accountId)
                                      .equal(accountId)
-                                     .field(ClusterRecordKeys.k8sBaseConnectorRefIdentifier)
-                                     .equal(k8sBaseConnectorRefIdentifier);
+                                     .field(ClusterRecordKeys.ceK8sConnectorIdentifier)
+                                     .equal(ceK8sConnectorIdentifier);
     return persistence.delete(query);
   }
 
@@ -81,20 +81,14 @@ public class ClusterRecordDao {
   }
 
   public ClusterRecord insertTask(ClusterRecord clusterRecord, String taskId) {
-    Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class)
-                                     .filter(ClusterRecordKeys.uuid, new ObjectId(clusterRecord.getUuid()));
+    Query<ClusterRecord> query =
+        persistence.createQuery(ClusterRecord.class)
+            .filter(ClusterRecordKeys.accountId, clusterRecord.getAccountId())
+            .filter(ClusterRecordKeys.k8sBaseConnectorRefIdentifier, clusterRecord.getK8sBaseConnectorRefIdentifier())
+            .filter(ClusterRecordKeys.ceK8sConnectorIdentifier, clusterRecord.getCeK8sConnectorIdentifier());
 
     UpdateOperations<ClusterRecord> updateOperations =
-        persistence.createUpdateOperations(ClusterRecord.class).addToSet(ClusterRecordKeys.perpetualTaskId, taskId);
-    return persistence.findAndModify(query, updateOperations, returnNewOptions);
-  }
-
-  public ClusterRecord removeTask(ClusterRecord clusterRecord, String taskId) {
-    Query<ClusterRecord> query = persistence.createQuery(ClusterRecord.class)
-                                     .filter(ClusterRecordKeys.uuid, new ObjectId(clusterRecord.getUuid()));
-
-    UpdateOperations<ClusterRecord> updateOperations =
-        persistence.createUpdateOperations(ClusterRecord.class).removeAll(ClusterRecordKeys.perpetualTaskId, taskId);
+        persistence.createUpdateOperations(ClusterRecord.class).set(ClusterRecordKeys.perpetualTaskId, taskId);
     return persistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 }
