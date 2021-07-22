@@ -347,7 +347,12 @@ public class ProjectServiceImpl implements ProjectService {
     if (projectFilterDTO == null) {
       return criteria;
     }
-    criteria.and(ProjectKeys.orgIdentifier).in(projectFilterDTO.getOrgIdentifiers());
+    if (isNotEmpty(projectFilterDTO.getOrgIdentifiers())) {
+      criteria.and(ProjectKeys.orgIdentifier).in(projectFilterDTO.getOrgIdentifiers());
+    }
+    if (isNotEmpty(projectFilterDTO.getIdentifiers())) {
+      criteria.and(ProjectKeys.identifier).in(projectFilterDTO.getIdentifiers());
+    }
     if (projectFilterDTO.getModuleType() != null) {
       if (Boolean.TRUE.equals(projectFilterDTO.getHasModule())) {
         criteria.and(ProjectKeys.modules).in(projectFilterDTO.getModuleType());
@@ -361,9 +366,7 @@ public class ProjectServiceImpl implements ProjectService {
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.key).regex(projectFilterDTO.getSearchTerm(), "i"),
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.value).regex(projectFilterDTO.getSearchTerm(), "i"));
     }
-    if (isNotEmpty(projectFilterDTO.getIdentifiers())) {
-      criteria.and(ProjectKeys.identifier).in(projectFilterDTO.getIdentifiers());
-    }
+
     return criteria;
   }
 

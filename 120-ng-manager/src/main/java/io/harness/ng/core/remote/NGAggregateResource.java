@@ -53,8 +53,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;
@@ -69,6 +71,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.http.Body;
 
 @OwnedBy(PL)
@@ -124,6 +127,7 @@ public class NGAggregateResource {
                 Optional.ofNullable(SecurityContextBuilder.getPrincipal()).map(Principal::getName).orElse(null),
                 Scope.of(accountIdentifier, orgIdentifier, null))
             .stream()
+            .filter(x -> !StringUtils.isEmpty(x.getProjectIdentifier()))
             .map(Scope::getProjectIdentifier)
             .collect(Collectors.toList());
     return ResponseDTO.newResponse(getNGPageResponse(
@@ -134,16 +138,6 @@ public class NGAggregateResource {
                 .hasModule(hasModule)
                 .moduleType(moduleType)
                 .build())));
-  }
-
-  private ProjectFilterDTO getProjectFilterDTO(
-      String searchTerm, List<String> projectIdentifiers, boolean hasModule, ModuleType moduleType) {
-    return ProjectFilterDTO.builder()
-        .searchTerm(searchTerm)
-        .identifiers(projectIdentifiers)
-        .hasModule(hasModule)
-        .moduleType(moduleType)
-        .build();
   }
 
   @GET
@@ -159,21 +153,21 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations")
-  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Get OrganizationAggregateDTO list", nickname = "getOrganizationAggregateDTOList")
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
-    List<String> membershipOrgs =
+    Set<String> membershipOrgs =
         ngUserService
             .listMembershipsForUser(
                 Optional.ofNullable(SecurityContextBuilder.getPrincipal()).map(Principal::getName).orElse(null),
                 Scope.of(accountIdentifier, null, null))
             .stream()
+            .filter(x -> !StringUtils.isEmpty(x.getOrgIdentifier()))
             .map(Scope::getOrgIdentifier)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
     OrganizationFilterDTO organizationFilterDTO =
-        OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(membershipOrgs).build();
+        OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(new ArrayList<>(membershipOrgs)).build();
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder harnessManagedOrder =
           SortOrder.Builder.aSortOrder().withField(OrganizationKeys.harnessManaged, SortOrder.OrderType.DESC).build();

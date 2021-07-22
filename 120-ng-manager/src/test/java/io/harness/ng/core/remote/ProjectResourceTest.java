@@ -37,6 +37,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.rule.Owner;
 
 import java.util.Collections;
@@ -53,6 +54,7 @@ public class ProjectResourceTest extends CategoryTest {
   private OrganizationService organizationService;
   private AccessControlClient accessControlClient;
   private ProjectResource projectResource;
+  private NgUserService ngUserService;
 
   String accountIdentifier = randomAlphabetic(10);
   String orgIdentifier = randomAlphabetic(10);
@@ -64,7 +66,7 @@ public class ProjectResourceTest extends CategoryTest {
     projectService = mock(ProjectService.class);
     organizationService = mock(OrganizationService.class);
     accessControlClient = mock(AccessControlClient.class);
-    projectResource = new ProjectResource(projectService, organizationService, accessControlClient);
+    projectResource = new ProjectResource(projectService, organizationService, accessControlClient, ngUserService);
   }
 
   private ProjectDTO getProjectDTO(String orgIdentifier, String identifier, String name) {

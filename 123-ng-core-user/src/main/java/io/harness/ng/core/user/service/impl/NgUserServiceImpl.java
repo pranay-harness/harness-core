@@ -263,10 +263,7 @@ public class NgUserServiceImpl implements NgUserService {
     if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
       criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier).is(scope.getProjectIdentifier());
     }
-    return userMembershipRepository.findAll(criteria)
-        .stream()
-        .map(userMembership -> userMembership.getScope())
-        .collect(toList());
+    return userMembershipRepository.findAll(criteria).stream().map(UserMembership::getScope).collect(toList());
   }
 
   @Override
