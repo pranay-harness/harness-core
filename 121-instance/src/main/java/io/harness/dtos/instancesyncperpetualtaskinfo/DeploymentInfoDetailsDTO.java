@@ -12,5 +12,6 @@ import lombok.Value;
 @Builder
 public class DeploymentInfoDetailsDTO {
   DeploymentInfoDTO deploymentInfoDTO;
+  String deploymentSummaryId;
   long lastUsedAt;
 }
