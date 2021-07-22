@@ -173,7 +173,7 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
       }
       for (ResourceGroup resourceGroup : resourceGroupsPage.getContent()) {
         deleteResourceFromResourceGroup(resource, resourceGroup);
-        resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), false);
+        resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), true);
       }
       counter++;
     }
