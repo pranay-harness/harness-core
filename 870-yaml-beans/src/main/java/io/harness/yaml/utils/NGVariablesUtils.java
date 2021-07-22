@@ -28,12 +28,12 @@ public class NGVariablesUtils {
         String secretValue = getSecretValue(secretNGVariable);
         if (secretValue != null) {
           String value = "${ngSecretManager.obtain(\"" + secretValue + "\", " + expressionFunctorToken + ")}";
-          mapOfVariables.put(variable.getName(), value);
+          mapOfVariables.put(variable.getName().trim(), value);
         }
       } else {
         ParameterField<?> value = getNonSecretValue(variable);
         if (value != null) {
-          mapOfVariables.put(variable.getName(), value);
+          mapOfVariables.put(variable.getName().trim(), value);
         }
       }
     }
@@ -78,6 +78,7 @@ public class NGVariablesUtils {
 
   private ParameterField<?> getNonSecretValue(NGVariable variable) {
     ParameterField<?> value = variable.getCurrentValue();
+    value = ParameterField.createValueField(((String) value.getValue()).trim());
     if (ParameterField.isNull(value) || (!value.isExpression() && value.getValue() == null)) {
       if (variable.isRequired()) {
         throw new InvalidRequestException(

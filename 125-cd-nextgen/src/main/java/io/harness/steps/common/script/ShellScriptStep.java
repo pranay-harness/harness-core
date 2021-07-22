@@ -147,9 +147,9 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     ShellScriptTaskParametersNG taskParameters =
         taskParametersNGBuilder.accountId(trimStringValue(AmbianceHelper.getAccountId(ambiance)))
             .executeOnDelegate(shellScriptStepParameters.onDelegate.getValue())
-            .environmentVariables(trimMapValues(environmentVariables))
+            .environmentVariables(environmentVariables)
             .executionId(trimStringValue(AmbianceUtils.obtainCurrentRuntimeId(ambiance)))
-            .outputVars(trimListValues(outputVars))
+            .outputVars(outputVars)
             .script(trimStringValue(shellScript))
             .scriptType(scriptType)
             .workingDirectory(trimStringValue(workingDirectory))
@@ -176,20 +176,6 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     return stringObject;
   }
 
-  private List<String> trimListValues(List<String> listObject) {
-    for (int i = 0; i < listObject.size(); i++) {
-      listObject.set(i, listObject.get(i).trim());
-    }
-    return listObject;
-  }
-
-  private Map<String, String> trimMapValues(Map<String, String> mapObject) {
-    for (Map.Entry<String, String> entry : mapObject.entrySet()) {
-      entry.setValue(entry.getValue().trim());
-    }
-    return mapObject;
-  }
-
   private String getShellScript(ShellScriptStepParameters stepParameters) {
     ShellScriptInlineSource shellScriptInlineSource = (ShellScriptInlineSource) stepParameters.getSource().getSpec();
     if (shellScriptInlineSource.getScript().isExpression()) {
@@ -212,7 +198,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     }
     Map<String, String> res = new LinkedHashMap<>();
     inputVariables.keySet().forEach(
-        key -> res.put(key, ((ParameterField<?>) inputVariables.get(key)).getValue().toString().trim()));
+        key -> res.put(key, ((ParameterField<?>) inputVariables.get(key)).getValue().toString()));
     return res;
   }
 
@@ -224,7 +210,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     List<String> outputVars = new ArrayList<>();
     outputVariables.values().forEach(val -> {
       if (val instanceof ParameterField) {
-        outputVars.add(((ParameterField<?>) val).getValue().toString().trim());
+        outputVars.add(((ParameterField<?>) val).getValue().toString());
       }
     });
     return outputVars;
@@ -305,7 +291,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     Map<String, String> outputVariables = new HashMap<>();
     stepParameters.getOutputVariables().keySet().forEach(name -> {
       Object value = ((ParameterField<?>) stepParameters.getOutputVariables().get(name)).getValue();
-      outputVariables.put(name, sweepingOutputEnvVariables.get(value.toString().trim()).trim());
+      outputVariables.put(name, sweepingOutputEnvVariables.get(value));
     });
     return ShellScriptOutcome.builder().outputVariables(outputVariables).build();
   }
