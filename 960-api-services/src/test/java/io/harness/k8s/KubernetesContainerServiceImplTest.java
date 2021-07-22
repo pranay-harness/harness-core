@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.util.Arrays.asList;
@@ -71,6 +72,9 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretList;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
+import io.fabric8.kubernetes.api.model.apiextensions.DoneableCustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.kubernetes.api.model.apps.DaemonSetList;
 import io.fabric8.kubernetes.api.model.apps.DaemonSetSpec;
@@ -94,7 +98,6 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
-import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import io.fabric8.kubernetes.client.dsl.ServiceResource;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigList;
@@ -134,6 +137,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import me.snowdrop.istio.api.networking.v1beta1.VirtualServiceBuilder;
 import okhttp3.Call;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -250,6 +254,14 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Mock
   private NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
       Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>> namespacedHpa;
+
+  @Mock
+  private NonNamespaceOperation<CustomResourceDefinition, CustomResourceDefinitionList,
+      DoneableCustomResourceDefinition, Resource<CustomResourceDefinition, DoneableCustomResourceDefinition>>
+      customResourceDefinitionOperation;
+  @Mock private Resource<CustomResourceDefinition, DoneableCustomResourceDefinition> customResourceDefinition;
+  @Mock private CustomResourceDefinition virtualService;
+
   @Mock private Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler> horizontalPodAutoscalerResource;
 
   @Mock private ExtensionsAPIGroupClient extensionsAPIGroupClient;
@@ -1281,5 +1293,36 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     kubernetesContainerService.deleteConfigMap(KUBERNETES_CONFIG, "release");
 
     verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Status.class).getType());
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetCustomResourceDefinition() {
+    when(kubernetesClient.customResourceDefinitions()).thenReturn(customResourceDefinitionOperation);
+    when(customResourceDefinitionOperation.withName("virtualservices.networking.istio.io"))
+        .thenReturn(customResourceDefinition);
+    when(customResourceDefinition.get()).thenReturn(virtualService);
+    assertThat(
+        kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new VirtualServiceBuilder().build()))
+        .isSameAs(virtualService);
+    verify(customResourceDefinitionOperation, times(1)).withName("virtualservices.networking.istio.io");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetCustomResourceDefinitionFail() {
+    when(kubernetesClient.customResourceDefinitions()).thenReturn(customResourceDefinitionOperation);
+    when(customResourceDefinitionOperation.withName("virtualservices.networking.istio.io"))
+        .thenReturn(customResourceDefinition);
+    when(customResourceDefinition.get()).thenReturn(null);
+    assertThatThrownBy(()
+                           -> kubernetesContainerService.getCustomResourceDefinition(
+                               kubernetesClient, new VirtualServiceBuilder().build()))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Custom Resource Definition virtualservices.networking.istio.io is not found in cluster");
+
+    verify(customResourceDefinitionOperation, times(1)).withName("virtualservices.networking.istio.io");
   }
 }
