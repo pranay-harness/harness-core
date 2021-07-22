@@ -208,6 +208,8 @@ roles:
         - core_serviceaccount_manageapikey
         - core_account_view
         - core_account_edit
+        - core_dashboards_view
+        - core_dashboards_edit
       allowedScopeLevels:
         - account
       managed: true
@@ -230,6 +232,7 @@ roles:
         - core_license_view
         - core_authsetting_view
         - core_account_view
+        - core_dashboards_view
       allowedScopeLevels:
         - account
       managed: true
