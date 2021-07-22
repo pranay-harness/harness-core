@@ -1,11 +1,12 @@
 package io.harness.cdng.creator.plan.steps;
 
-import static io.harness.cdng.visitor.YamlTypes.K8S_ROLLING_DEPLOY;
+import static io.harness.cdng.visitor.YamlTypes.K8S_BG_SWAP_SERVICES;
+import static io.harness.cdng.visitor.YamlTypes.K8S_BLUE_GREEN_DEPLOY;
 
 import io.harness.advisers.rollback.RollbackStrategy;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
+import io.harness.cdng.k8s.K8sBGSwapServicesStepParameters;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
@@ -18,10 +19,10 @@ import java.util.Collections;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDP)
-public class K8sRollingRollbackPMSStepPlanCreator extends K8sRetryAdviserObtainment {
+public class K8sBGSwapServicesPMSStepPlanCreator extends K8sRetryAdviserObtainment {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("K8sRollingRollback");
+    return Sets.newHashSet("K8sBGSwapServices");
   }
 
   @Override
@@ -35,9 +36,12 @@ public class K8sRollingRollbackPMSStepPlanCreator extends K8sRetryAdviserObtainm
                   getRollbackParameters(ctx.getCurrentField(), Collections.emptySet(), RollbackStrategy.UNKNOWN));
     }
 
-    String rollingFqn = getExecutionStepFqn(ctx.getCurrentField(), K8S_ROLLING_DEPLOY);
-    ((K8sRollingRollbackStepParameters) ((StepElementParameters) stepParameters).getSpec())
-        .setRollingStepFqn(rollingFqn);
+    String bgStepFqn = getExecutionStepFqn(ctx.getCurrentField(), K8S_BLUE_GREEN_DEPLOY);
+    String bgSwapServicesStepFqn = getExecutionStepFqn(ctx.getCurrentField(), K8S_BG_SWAP_SERVICES);
+    K8sBGSwapServicesStepParameters k8sBGSwapServicesStepParameters =
+        (K8sBGSwapServicesStepParameters) ((StepElementParameters) stepParameters).getSpec();
+    k8sBGSwapServicesStepParameters.setBlueGreenStepFqn(bgStepFqn);
+    k8sBGSwapServicesStepParameters.setBlueGreenSwapServicesStepFqn(bgSwapServicesStepFqn);
 
     return stepParameters;
   }

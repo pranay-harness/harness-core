@@ -1,11 +1,12 @@
 package io.harness.cdng.creator.plan.steps;
 
-import static io.harness.cdng.visitor.YamlTypes.K8S_ROLLING_DEPLOY;
+import static io.harness.cdng.visitor.YamlTypes.K8S_CANARY_DELETE;
+import static io.harness.cdng.visitor.YamlTypes.K8S_CANARY_DEPLOY;
 
 import io.harness.advisers.rollback.RollbackStrategy;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
+import io.harness.cdng.k8s.K8sCanaryDeleteStepParameters;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
@@ -18,10 +19,10 @@ import java.util.Collections;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDP)
-public class K8sRollingRollbackPMSStepPlanCreator extends K8sRetryAdviserObtainment {
+public class K8sCanaryDeletePMSStepPlanCreator extends K8sRetryAdviserObtainment {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("K8sRollingRollback");
+    return Sets.newHashSet("K8sCanaryDelete");
   }
 
   @Override
@@ -35,9 +36,12 @@ public class K8sRollingRollbackPMSStepPlanCreator extends K8sRetryAdviserObtainm
                   getRollbackParameters(ctx.getCurrentField(), Collections.emptySet(), RollbackStrategy.UNKNOWN));
     }
 
-    String rollingFqn = getExecutionStepFqn(ctx.getCurrentField(), K8S_ROLLING_DEPLOY);
-    ((K8sRollingRollbackStepParameters) ((StepElementParameters) stepParameters).getSpec())
-        .setRollingStepFqn(rollingFqn);
+    String canaryStepFqn = getExecutionStepFqn(ctx.getCurrentField(), K8S_CANARY_DEPLOY);
+    String canaryDeleteStepFqn = getExecutionStepFqn(ctx.getCurrentField(), K8S_CANARY_DELETE);
+    K8sCanaryDeleteStepParameters canaryDeleteStepParameters =
+        (K8sCanaryDeleteStepParameters) ((StepElementParameters) stepParameters).getSpec();
+    canaryDeleteStepParameters.setCanaryStepFqn(canaryStepFqn);
+    canaryDeleteStepParameters.setCanaryDeleteStepFqn(canaryDeleteStepFqn);
 
     return stepParameters;
   }

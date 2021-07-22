@@ -10,6 +10,7 @@ import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -28,4 +29,5 @@ public class K8sRollingBaseStepInfo {
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
+  @JsonIgnore String canaryStepFqn;
 }
