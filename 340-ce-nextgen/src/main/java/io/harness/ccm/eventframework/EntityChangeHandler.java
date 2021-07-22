@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.K8sEventCollectionBundle;
 import io.harness.ccm.cluster.NGClusterRecordHandler;
 import io.harness.ccm.commons.entities.ClusterRecord;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.remote.client.NGRestUtils;
 
@@ -35,6 +37,7 @@ public class EntityChangeHandler {
   @Inject NGClusterRecordHandler clusterRecordHandler;
   @Inject ConnectorResourceClient connectorResourceClient;
   @Inject K8sWatchTaskResourceClient k8sWatchTaskResourceClient;
+  @Inject private FeatureFlagService featureFlagService;
 
   public void handleCreateEvent(EntityChangeDTO entityChangeDTO, String connectorEntityType) {
     // Create Events of K8s Base (CD) connectors can be safely ignored
@@ -46,25 +49,28 @@ public class EntityChangeHandler {
   public void handleUpdateEvent(EntityChangeDTO entityChangeDTO, String connectorEntityType) {
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     String k8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
+    boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
 
-    if (ConnectorType.KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
-      ClusterRecord clusterRecordFromK8sBaseConnector =
-          clusterRecordHandler.getClusterRecordFromK8sBaseConnector(accountIdentifier, k8sConnectorIdentifier);
-      log.info("Handle K8s UpdateEvent [Cluster Record: {}]", clusterRecordFromK8sBaseConnector);
-      // K8s Cluster Event is Relevant to CE/ CD Connector has CE Enabled
-      if (clusterRecordFromK8sBaseConnector != null) {
-        String perpetualTaskId = clusterRecordFromK8sBaseConnector.getPerpetualTaskId();
-        try {
-          log.info("Handle K8s UpdateEvent [Starting PT Reset]]");
-          resetPerpetualTask(clusterRecordFromK8sBaseConnector, perpetualTaskId);
-          log.info("Handle K8s UpdateEvent [PT Reset Complete]]");
-        } catch (IOException e) {
-          log.error("Exception Resetting Perpetual Task for Cluster Record: {}", clusterRecordFromK8sBaseConnector);
+    if (isPTEnabled) {
+      if (ConnectorType.KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
+        ClusterRecord clusterRecordFromK8sBaseConnector =
+            clusterRecordHandler.getClusterRecordFromK8sBaseConnector(accountIdentifier, k8sConnectorIdentifier);
+        log.info("Handle K8s UpdateEvent [Cluster Record: {}]", clusterRecordFromK8sBaseConnector);
+        // K8s Cluster Event is Relevant to CE/ CD Connector has CE Enabled
+        if (clusterRecordFromK8sBaseConnector != null) {
+          String perpetualTaskId = clusterRecordFromK8sBaseConnector.getPerpetualTaskId();
+          try {
+            log.info("Handle K8s UpdateEvent [Starting PT Reset]]");
+            resetPerpetualTask(clusterRecordFromK8sBaseConnector, perpetualTaskId);
+            log.info("Handle K8s UpdateEvent [PT Reset Complete]]");
+          } catch (IOException e) {
+            log.error("Exception Resetting Perpetual Task for Cluster Record: {}", clusterRecordFromK8sBaseConnector);
+          }
         }
       }
-    }
-    if (ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
-      handleCEK8sUpdate(entityChangeDTO);
+      if (ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
+        handleCEK8sUpdate(entityChangeDTO);
+      }
     }
   }
 
@@ -73,12 +79,17 @@ public class EntityChangeHandler {
     if (ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
       String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
       String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
-      ClusterRecord clusterRecord = clusterRecordHandler.getClusterRecord(accountIdentifier, ceK8sConnectorIdentifier);
-      log.info("Handle K8s DeleteEvent, Cluster Record: {}]", clusterRecord);
-      if (clusterRecord != null) {
-        log.info("Handle K8s DeleteEvent, Cleanup Start");
-        clusterRecordAndPerpetualTaskCleanup(clusterRecord, accountIdentifier, ceK8sConnectorIdentifier);
-        log.info("Handle K8s DeleteEvent, Cleanup Complete");
+      boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
+
+      if (isPTEnabled) {
+        ClusterRecord clusterRecord =
+            clusterRecordHandler.getClusterRecord(accountIdentifier, ceK8sConnectorIdentifier);
+        log.info("Handle K8s DeleteEvent, Cluster Record: {}]", clusterRecord);
+        if (clusterRecord != null) {
+          log.info("Handle K8s DeleteEvent, Cleanup Start");
+          clusterRecordAndPerpetualTaskCleanup(clusterRecord, accountIdentifier, ceK8sConnectorIdentifier);
+          log.info("Handle K8s DeleteEvent, Cleanup Complete");
+        }
       }
     }
   }
@@ -86,14 +97,18 @@ public class EntityChangeHandler {
   public void handleCEK8sCreate(EntityChangeDTO entityChangeDTO) {
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
+    boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
 
-    ConnectorInfoDTO ceK8sConnectorInfoDTO = getConnectorConfigDTO(entityChangeDTO);
-    ConnectorConfigDTO ceK8sConnectorConfigDTO = ceK8sConnectorInfoDTO.getConnectorConfig();
-    CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO = (CEKubernetesClusterConfigDTO) ceK8sConnectorConfigDTO;
-    if (isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO)) {
-      String k8sBaseConnectorRef = ceKubernetesClusterConfigDTO.getConnectorRef();
-      onboardNewCEK8sConnector(getClusterRecord(
-          accountIdentifier, ceK8sConnectorIdentifier, ceK8sConnectorInfoDTO.getName(), k8sBaseConnectorRef));
+    if (isPTEnabled) {
+      ConnectorInfoDTO ceK8sConnectorInfoDTO = getConnectorConfigDTO(entityChangeDTO);
+      ConnectorConfigDTO ceK8sConnectorConfigDTO = ceK8sConnectorInfoDTO.getConnectorConfig();
+      CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO =
+          (CEKubernetesClusterConfigDTO) ceK8sConnectorConfigDTO;
+      if (isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO)) {
+        String k8sBaseConnectorRef = ceKubernetesClusterConfigDTO.getConnectorRef();
+        onboardNewCEK8sConnector(getClusterRecord(
+            accountIdentifier, ceK8sConnectorIdentifier, ceK8sConnectorInfoDTO.getName(), k8sBaseConnectorRef));
+      }
     }
   }
 
@@ -261,5 +276,9 @@ public class EntityChangeHandler {
   private boolean isVisibilityFeatureEnabled(CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO) {
     List<CEFeatures> featuresEnabled = ceKubernetesClusterConfigDTO.getFeaturesEnabled();
     return featuresEnabled.contains(CEFeatures.VISIBILITY);
+  }
+
+  private boolean isPerpetualTaskEnabled(String accountIdentifier) {
+    return featureFlagService.isEnabled(FeatureName.CE_NG_PERPETUAL_TASK, accountIdentifier);
   }
 }
