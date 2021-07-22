@@ -314,7 +314,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     verify(helmTaskHelperBase, times(1))
         .createProcessExecutor(
             "v3/helm pull repoName/chartName  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
-    verify(processExecutor, times(2)).execute();
+    verify(processExecutor, times(3)).execute();
     FileUtils.deleteDirectory(outputTemporaryDir.toFile());
   }
 
@@ -764,7 +764,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> helmTaskHelper.fetchChartVersions(helmChartCollectionParams, "dir", 10000))
         .withMessageContaining("No chart with the given name found. Chart might be deleted at source");
-    verify(processExecutor, times(3)).execute();
+    verify(processExecutor, times(4)).execute();
     verify(helmTaskHelper, times(1)).initHelm("dir", V3, 10000);
 
     doReturn("No results Found")
@@ -807,7 +807,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts.get(0).getApplicationManifestId()).isEqualTo(MANIFEST_ID);
     assertThat(helmCharts.get(0).getVersion()).isEqualTo("1.0.2");
     assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
-    verify(processExecutor, times(2)).execute();
+    verify(processExecutor, times(3)).execute();
 
     doReturn(getHelmCollectionResult("11.0.1"))
         .when(helmTaskHelper)
@@ -906,7 +906,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts.get(0).getVersion()).isEqualTo("1.0.2");
     assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
     // For helm version 2, we execute another command for helm init apart from add repo
-    verify(processExecutor, times(3)).execute();
+    verify(processExecutor, times(4)).execute();
     verify(helmTaskHelper, times(1)).initHelm("dir", V2, 10000);
   }
 
