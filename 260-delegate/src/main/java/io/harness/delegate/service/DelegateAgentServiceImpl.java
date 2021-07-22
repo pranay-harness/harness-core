@@ -129,7 +129,6 @@ import io.harness.filesystem.FileIo;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
-import io.harness.logging.LoggingTriggerPolicy;
 import io.harness.logstreaming.LogStreamingClient;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.logstreaming.LogStreamingSanitizer;
@@ -572,7 +571,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Delegate started");
       log.info("Manager Authority:{}, Manager Target:{}", delegateConfiguration.getManagerAuthority(),
           delegateConfiguration.getManagerTarget());
-      LoggingTriggerPolicy.resetRollingPolicy();
+      //LoggingTriggerPolicy.resetRollingPolicy();
 
       startProfileCheck();
 
@@ -1292,7 +1291,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             upgradeVersion = delegateScripts.getVersion();
             upgradeNeeded.set(true);
             log.info("Starting new active version");
-            LoggingTriggerPolicy.resetRollingPolicy();
+            //LoggingTriggerPolicy.resetRollingPolicy();
           } else {
             log.info("Delegate up to date");
           }

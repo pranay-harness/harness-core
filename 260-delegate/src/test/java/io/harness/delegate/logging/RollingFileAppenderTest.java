@@ -7,7 +7,6 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.logging.LoggingTriggerPolicy;
 import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
