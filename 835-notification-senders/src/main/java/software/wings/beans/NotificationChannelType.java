@@ -1,10 +1,15 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.settings.SettingVariableTypes;
 
 /**
  * Created by rishi on 10/30/16.
  */
+@OwnedBy(PL)
 public enum NotificationChannelType {
   EMAIL("Email", SettingVariableTypes.SMTP),
   SLACK("Slack", SettingVariableTypes.SLACK),

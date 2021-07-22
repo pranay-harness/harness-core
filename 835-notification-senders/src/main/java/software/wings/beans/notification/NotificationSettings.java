@@ -1,5 +1,8 @@
 package software.wings.beans.notification;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 
 import software.wings.beans.NotificationChannelType;
@@ -13,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Value;
 
 @Value
+@OwnedBy(PL)
 public class NotificationSettings {
   private boolean useIndividualEmails;
   private boolean sendMailToNewMembers;
