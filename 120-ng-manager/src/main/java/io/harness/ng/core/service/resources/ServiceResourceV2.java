@@ -2,8 +2,9 @@ package io.harness.ng.core.service.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_CREATE_PERMISSION;
-import static io.harness.rbac.CDNGRbacPermissions.SERVICE_RUNTIME_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_UPDATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_VIEW_PERMISSION;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -223,7 +224,7 @@ public class ServiceResourceV2 {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
-        Resource.of(NGResourceType.SERVICE, null), SERVICE_RUNTIME_PERMISSION, "Unauthorized to list services");
+        Resource.of(PROJECT, projectIdentifier), VIEW_PROJECT_PERMISSION, "Unauthorized to list services");
 
     Criteria criteria =
         ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false, searchTerm);
@@ -249,7 +250,7 @@ public class ServiceResourceV2 {
       AccessControlDTO accessControlDTO = accessControlList.get(i);
       ServiceResponse serviceResponse = serviceList.get(i);
       if (accessControlDTO.isPermitted()
-          && serviceResponse.getService().getIdentifier() == accessControlDTO.getResourceIdentifier()) {
+          && serviceResponse.getService().getIdentifier().equals(accessControlDTO.getResourceIdentifier())) {
         filteredAccessControlDtoList.add(serviceResponse);
       }
     }

@@ -2,9 +2,10 @@ package io.harness.ng.core.environment.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.pms.rbac.NGResourceType.ENVIRONMENT;
 import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION;
-import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_RUNTIME_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_UPDATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -205,7 +206,7 @@ public class EnvironmentResourceV2 {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
-        Resource.of(ENVIRONMENT, null), ENVIRONMENT_RUNTIME_PERMISSION, "Unauthorized to list environments");
+        Resource.of(PROJECT, projectIdentifier), VIEW_PROJECT_PERMISSION, "Unauthorized to list environments");
     Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
 
     if (isNotEmpty(envIdentifiers)) {
@@ -232,7 +233,7 @@ public class EnvironmentResourceV2 {
       AccessControlDTO accessControlDTO = accessControlList.get(i);
       EnvironmentResponse environmentResponse = environmentList.get(i);
       if (accessControlDTO.isPermitted()
-          && environmentResponse.getEnvironment().getIdentifier() == accessControlDTO.getResourceIdentifier()) {
+          && environmentResponse.getEnvironment().getIdentifier().equals(accessControlDTO.getResourceIdentifier())) {
         filteredAccessControlDtoList.add(environmentResponse);
       }
     }
