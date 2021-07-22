@@ -2,6 +2,8 @@ package io.harness.beans;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.core.Recaster;
 import io.harness.exceptions.RecasterException;
 import io.harness.utils.RecastReflectionUtils;
@@ -17,6 +19,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -25,10 +28,12 @@ import java.util.Set;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Getter
 @Slf4j
 public class CastedField {
   private final Map<Class<? extends Annotation>, Annotation> foundAnnotations = new HashMap<>();
+  private final Map<String, List<Annotation>> annotations = new HashMap<>();
   private final List<CastedField> typeParameters = new ArrayList<>();
   private Class<?> persistedClass;
   private Field field;
@@ -75,6 +80,11 @@ public class CastedField {
   public Map<Class<? extends Annotation>, Annotation> getAnnotations() {
     return foundAnnotations;
   }
+
+  public Map<String, List<Annotation>> getAnnotationsMan() {
+    return annotations;
+  }
+
   /**
    * @return the underlying java field
    */
@@ -135,9 +145,15 @@ public class CastedField {
     //    }
 
     // type must be discovered before the constructor.
+    discoverAnnotations();
     discoverType(recaster);
     constructor = discoverConstructor();
     discoverMultivalued();
+  }
+
+  private void discoverAnnotations() {
+    Annotation[] realTypeAnnotations = field.getAnnotations();
+    this.annotations.put(getNameToStore(), Arrays.asList(realTypeAnnotations));
   }
 
   @SuppressWarnings("unchecked")

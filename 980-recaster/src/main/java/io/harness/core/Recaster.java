@@ -13,6 +13,7 @@ import io.harness.exceptions.RecasterException;
 import io.harness.fieldrecaster.ComplexFieldRecaster;
 import io.harness.fieldrecaster.FieldRecaster;
 import io.harness.fieldrecaster.SimpleValueFieldRecaster;
+import io.harness.metadata.RecastMetadataProcessor;
 
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +34,7 @@ public class Recaster {
   private final FieldRecaster defaultFieldRecaster;
   private final FieldRecaster simpleValueFieldRecaster;
   private final RecastObjectFactory objectFactory = new RecastObjectCreator();
+  private final RecastMetadataProcessor recastMetadataProcessor;
 
   private RecasterOptions options;
 
@@ -42,6 +44,8 @@ public class Recaster {
     this.simpleValueFieldRecaster = new SimpleValueFieldRecaster();
 
     this.transformer = new CustomTransformer(this);
+
+    this.recastMetadataProcessor = new RecastMetadataProcessor();
   }
 
   public Recaster(RecasterOptions recasterOptions) {
@@ -50,6 +54,8 @@ public class Recaster {
     this.simpleValueFieldRecaster = new SimpleValueFieldRecaster();
 
     this.transformer = new CustomTransformer(this);
+
+    this.recastMetadataProcessor = new RecastMetadataProcessor();
   }
 
   public boolean isCasted(Class<?> entityClass) {
@@ -238,6 +244,9 @@ public class Recaster {
   }
 
   private void writeCastedField(Object entity, CastedField cf, RecasterMap recasterMap) {
+    if (cf.getAnnotationsMan() != null && !cf.getAnnotationsMan().isEmpty()) {
+      recastMetadataProcessor.populateAnnotationMetadata(recasterMap, cf);
+    }
     // Annotation logic should be wired here
     if (transformer.hasSimpleValueTransformer(cf.getType())) {
       simpleValueFieldRecaster.toMap(this, entity, cf, recasterMap);
