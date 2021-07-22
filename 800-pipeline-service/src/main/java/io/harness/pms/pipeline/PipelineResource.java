@@ -35,6 +35,7 @@ import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
@@ -375,7 +376,23 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return pmsExecutionService.getInputSetYaml(accountId, orgId, projectId, planExecutionId, false, resolveExpressions);
+    return pmsExecutionService
+        .getInputSetYamlWithTemplate(accountId, orgId, projectId, planExecutionId, false, resolveExpressions)
+        .getInputSetYaml();
+  }
+
+  @GET
+  @Path("/execution/{planExecutionId}/inputsetV2")
+  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYamlV2")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  public ResponseDTO<InputSetYamlWithTemplateDTO> getInputsetYamlV2(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    return ResponseDTO.newResponse(pmsExecutionService.getInputSetYamlWithTemplate(
+        accountId, orgId, projectId, planExecutionId, false, resolveExpressions));
   }
 
   @GET

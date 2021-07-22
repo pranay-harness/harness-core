@@ -203,12 +203,8 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
     String inputSetCorrectFile = "input-set-for-validators.yaml";
     String inputSetCorrect = readFile(inputSetCorrectFile);
 
-    try {
-      pipelineYaml =
-          MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, MergeHelper.getPipelineComponent(inputSetCorrect), true);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Error while merging pipeline and input set", e);
-    }
+    pipelineYaml =
+        MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, MergeHelper.getPipelineComponent(inputSetCorrect), true);
     EntityDetail referredByEntity = EntityDetail.builder()
                                         .type(EntityType.PIPELINES)
                                         .entityRef(IdentifierRef.builder()

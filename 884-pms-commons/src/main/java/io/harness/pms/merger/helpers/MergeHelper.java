@@ -34,8 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class MergeHelper {
-  public String createTemplateFromPipeline(String pipelineYaml) throws IOException {
-    return createTemplateFromPipeline(pipelineYaml, true);
+  public String createTemplateFromPipeline(String pipelineYaml) {
+    try {
+      return createTemplateFromPipeline(pipelineYaml, true);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not convert pipeline to template");
+    }
   }
 
   public String removeRuntimeInputFromYaml(String runtimeInputYaml) throws IOException {
@@ -134,8 +138,12 @@ public class MergeHelper {
   }
 
   public String mergeInputSetIntoPipeline(
-      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) throws IOException {
-    return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
+    try {
+      return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
+    }
   }
 
   private String mergeInputSetIntoPipeline(String pipelineYaml, String inputSetPipelineCompYaml,

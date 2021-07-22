@@ -189,8 +189,7 @@ public class PipelineExecuteHelper {
     }
   }
 
-  private String buildAndValidatePipelineYaml(String inputSetPipelineYaml, PipelineEntity pipelineEntity)
-      throws IOException {
+  private String buildAndValidatePipelineYaml(String inputSetPipelineYaml, PipelineEntity pipelineEntity) {
     String pipelineYaml;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.getYaml();
