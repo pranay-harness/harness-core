@@ -24,9 +24,10 @@
             <!-- keep 10 days' worth of history capped at 1GB total size -->
             <maxHistory>10</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
+            <TimeBasedFileNamingAndTriggeringPolicy class="io.harness.delegate.logging.LoggingTriggerPolicy">
+                <MaxFileSize>1MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
-         <triggeringPolicy class="io.harness.delegate.logging.LoggingTriggerPolicy"/>
-
 
          <withJansi>true</withJansi>
 

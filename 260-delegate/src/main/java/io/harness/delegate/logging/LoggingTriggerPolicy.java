@@ -1,22 +1,23 @@
 package io.harness.delegate.logging;
 
+import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 import ch.qos.logback.core.rolling.TriggeringPolicyBase;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class LoggingTriggerPolicy<E> extends TriggeringPolicyBase<E> {
-  static AtomicBoolean doRolling = new AtomicBoolean(true);
+public class LoggingTriggerPolicy<E> extends SizeAndTimeBasedFNATP<E> {
+  private boolean started = false;
 
   @Override
   public boolean isTriggeringEvent(File file, E e) {
-    return doRolling.getAndSet(false);
+    if (!started) {
+      nextCheck = 0L;
+      return started = true;
+    }
+
+    return super.isTriggeringEvent(file, e);
   }
 
- /* public static void resetRollingPolicy() {
-    log.info("reset rolling policy");
-    doRolling.set(true);
-  }*/
 }

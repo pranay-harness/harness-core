@@ -1028,6 +1028,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             "Error occurred while registering delegate with manager for account {}. Please see the manager log for more information",
             accountId);
         sleep(ofMinutes(1));
+
         continue;
       }
 
