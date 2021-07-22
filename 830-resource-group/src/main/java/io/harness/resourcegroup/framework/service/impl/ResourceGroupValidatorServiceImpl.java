@@ -13,6 +13,7 @@ import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,8 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
                       .build();
 
     boolean updated = false;
-    for (Iterator<ResourceSelector> iterator = resourceGroup.getResourceSelectors().iterator(); iterator.hasNext();) {
+    List<ResourceSelector> newResourceSelectors = new ArrayList<>(resourceGroup.getResourceSelectors());
+    for (Iterator<ResourceSelector> iterator = newResourceSelectors.iterator(); iterator.hasNext();) {
       ResourceSelector resourceSelector = iterator.next();
       if (resourceSelector instanceof StaticResourceSelector) {
         StaticResourceSelector staticResourceSelector = (StaticResourceSelector) resourceSelector;
@@ -52,7 +54,7 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
         }
       }
     }
-
+    resourceGroup.setResourceSelectors(newResourceSelectors);
     return updated;
   }
 
@@ -86,6 +88,6 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
                                         .collect(Collectors.toList());
     resourceSelector.setIdentifiers(validResourceIds);
 
-    return resourceIds.size() != validResourceIds.size();
+    return resourceIds.isEmpty() || (resourceIds.size() != validResourceIds.size());
   }
 }
