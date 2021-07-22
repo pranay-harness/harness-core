@@ -20,6 +20,7 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jackson.annotate.JsonCreator;
+import org.mongodb.morphia.annotations.Transient;
 
 @Getter
 @ToString
@@ -29,6 +30,8 @@ import org.codehaus.jackson.annotate.JsonCreator;
 public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   // if freezeForAllApps=true, ignore appIds
   @Setter private TimeRange timeRange;
+  // this field is used for proper UI rendering
+  @Transient @EqualsAndHashCode.Exclude private boolean active;
 
   public TimeRange getTimeRange() {
     return timeRange;
@@ -67,6 +70,10 @@ public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
       return timeRange.isInRange();
     }
     return currentTime <= getTimeRange().getTo() && currentTime >= getTimeRange().getFrom();
+  }
+
+  public void recalculateActiveStatus() {
+    this.active = checkIfActive();
   }
 
   @Override

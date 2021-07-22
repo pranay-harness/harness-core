@@ -102,7 +102,15 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       if (governanceConfig == null) {
         return getDefaultGovernanceConfig(accountId);
       }
+      populateWindowsStatus(governanceConfig, accountId);
       return governanceConfig;
+    }
+  }
+
+  private void populateWindowsStatus(GovernanceConfig governanceConfig, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)
+        && isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      governanceConfig.getTimeRangeBasedFreezeConfigs().forEach(TimeRangeBasedFreezeConfig::recalculateActiveStatus);
     }
   }
 
@@ -188,7 +196,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       if (!ListUtils.isEqualList(oldSetting.getWeeklyFreezeConfigs(), governanceConfig.getWeeklyFreezeConfigs())) {
         publishToSegment(accountId, user, EventType.BLACKOUT_WINDOW_UPDATED);
       }
-
+      populateWindowsStatus(updatedSetting, accountId);
       return updatedSetting;
     }
   }
