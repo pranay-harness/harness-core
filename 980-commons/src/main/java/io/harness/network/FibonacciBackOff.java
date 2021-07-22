@@ -1,10 +1,14 @@
 package io.harness.network;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.threading.Morpheus.sleep;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import java.io.IOException;
 import java.time.Duration;
 
+@OwnedBy(DEL)
 public final class FibonacciBackOff {
   private static final int[] FIBONACCI = new int[] {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144};
 
@@ -15,7 +19,7 @@ public final class FibonacciBackOff {
       try {
         return fn.execute();
       } catch (IOException e) {
-        handleFailure(attempt, e);
+        handleFailure(attempt);
       }
     }
     throw new RuntimeException("Failed to communicate.");
@@ -26,7 +30,7 @@ public final class FibonacciBackOff {
       try {
         return fn.execute();
       } catch (IOException e) {
-        handleFailure(attempt, e);
+        handleFailure(attempt);
       }
     }
     int attempt = FIBONACCI.length - 1;
@@ -34,16 +38,12 @@ public final class FibonacciBackOff {
       try {
         return fn.execute();
       } catch (IOException e) {
-        handleFailure(attempt, e);
+        handleFailure(attempt);
       }
     }
   }
 
-  private static void handleFailure(int attempt, IOException e) throws IOException {
-    IOException ex = peel(e);
-    if (ex.getCause() != null) {
-      throw ex;
-    }
+  private static void handleFailure(int attempt) {
     sleep(Duration.ofSeconds(FIBONACCI[attempt]));
   }
 
