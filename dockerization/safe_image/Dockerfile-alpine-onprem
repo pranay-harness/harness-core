@@ -1,6 +1,9 @@
 FROM adoptopenjdk/openjdk8:x86_64-alpine-jdk8u242-b08
 
-RUN apk add --no-cache bash
+RUN set -x \
+    && apk update --no-cache \
+    && apk upgrade --no-cache \
+    && apk add --no-cache bash
 
 RUN set -x \
     && wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq \
