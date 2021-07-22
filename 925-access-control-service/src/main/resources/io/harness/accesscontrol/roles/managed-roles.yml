@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 4
+version: 5
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -144,7 +144,6 @@ roles:
       permissions:
         - core_organization_view
         - core_project_view
-        - core_project_create
         - core_secret_view
         - core_connector_view
         - core_delegate_view
