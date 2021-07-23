@@ -1,12 +1,13 @@
-package io.harness.entities.instance;
+package io.harness.entities;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.ArtifactDetails;
-import io.harness.entities.InstanceType;
 import io.harness.entities.instanceinfo.InstanceInfo;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,17 +26,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "InstanceKeys")
-@Entity(value = "instances", noClassnameStored = true)
+@Entity(value = "instanceNG", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document("instances")
+@Document("instanceNG")
+@StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(HarnessTeam.DX)
 public class Instance {
   public static List<MongoIndex> mongoIndexes() {
     // TODO add more indexes
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_account_org_project_id")
-                 .unique(true)
+                 .name("accountId_orgId_projectId_idx")
                  .field(InstanceKeys.accountIdentifier)
                  .field(InstanceKeys.orgIdentifier)
                  .field(InstanceKeys.projectIdentifier)
@@ -47,7 +48,7 @@ public class Instance {
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
-  private InstanceKey instanceKey;
+  @FdUniqueIndex private String instanceKey;
   @NotEmpty private InstanceType instanceType;
 
   private String envId;

@@ -3,7 +3,7 @@ package io.harness.mappers;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
-import io.harness.entities.instance.Instance;
+import io.harness.entities.Instance;
 
 import java.util.ArrayList;
 import java.util.List;
