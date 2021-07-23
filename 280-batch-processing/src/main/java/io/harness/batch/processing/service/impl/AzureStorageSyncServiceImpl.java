@@ -68,6 +68,8 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
     Retry.EventPublisher publisher = retry.getEventPublisher();
     publisher.onRetry(event -> log.info(event.toString()));
     publisher.onSuccess(event -> log.info(event.toString()));
+    log.info("azureStorageSyncRecord is {}", azureStorageSyncRecord);
+
     try {
       // generate SAS token for source
       sourceSasToken = genSasToken(azureStorageSyncRecord.getStorageAccountName(),
@@ -75,7 +77,8 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
           azureStorageSyncConfig.getAzureAppClientId(), azureStorageSyncConfig.getAzureAppClientSecret(), false);
     } catch (Exception exception) {
       log.error("Error in generating sourceSasToken sas token", exception);
-      throw exception;
+      // Proceed to next sync
+      return;
     }
     try {
       destinationSasToken = azureStorageSyncConfig.getAzureSasToken();
