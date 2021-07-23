@@ -47,6 +47,7 @@ public class Instance {
   @Id @org.mongodb.morphia.annotations.Id private String id;
   private String accountIdentifier;
   private String orgIdentifier;
+
   private String projectIdentifier;
   @FdUniqueIndex private String instanceKey;
   @NotEmpty private InstanceType instanceType;

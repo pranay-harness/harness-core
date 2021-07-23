@@ -8,10 +8,15 @@ import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceService {
+  InstanceDTO save(InstanceDTO instanceDTO);
+
+  Optional<InstanceDTO> saveIfNotExists(InstanceDTO instanceDTO);
+
   List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
   List<InstanceDTO> getInstances(

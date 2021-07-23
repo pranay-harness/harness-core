@@ -3,6 +3,7 @@ package io.harness.service.instance;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
+import io.harness.entities.Instance;
 import io.harness.mappers.InstanceMapper;
 import io.harness.models.CountByEnvType;
 import io.harness.models.EnvBuildInstanceCount;
@@ -12,14 +13,43 @@ import io.harness.repositories.instance.InstanceRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
 @Singleton
 @OwnedBy(HarnessTeam.DX)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class InstanceServiceImpl implements InstanceService {
   private final InstanceRepository instanceRepository;
+
+  @Override
+  public InstanceDTO save(InstanceDTO instanceDTO) {
+    Instance instance = InstanceMapper.toEntity(instanceDTO);
+    instance = instanceRepository.save(instance);
+    return InstanceMapper.toDTO(instance);
+  }
+
+  /**
+   * Create instance record if not present already
+   * @param instanceDTO
+   * @return  Optional.empty() in case duplicate key issue occurs as record is already present
+   *          Instance entity in case record is created successfully
+   */
+  @Override
+  public Optional<InstanceDTO> saveIfNotExists(InstanceDTO instanceDTO) {
+    Instance instance = InstanceMapper.toEntity(instanceDTO);
+    try {
+      instance = instanceRepository.save(instance);
+    } catch (DuplicateKeyException duplicateKeyException) {
+      log.warn("Duplicate key error while inserting instance : {}", instanceDTO);
+      return Optional.empty();
+    }
+    return Optional.of(InstanceMapper.toDTO(instance));
+  }
 
   @Override
   public List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp) {
