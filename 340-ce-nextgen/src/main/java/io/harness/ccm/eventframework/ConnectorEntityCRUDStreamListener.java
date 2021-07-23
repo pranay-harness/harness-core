@@ -10,6 +10,8 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.service.intf.AwsEntityChangeEventService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.eventsframework.consumer.Message;
@@ -29,11 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 public class ConnectorEntityCRUDStreamListener implements MessageListener {
   @Inject AwsEntityChangeEventService awsEntityChangeEventService;
   @Inject EntityChangeHandler entityChangeHandler;
+  @Inject CEMetadataRecordDao ceMetadataRecordDao;
 
   @Override
   public boolean handleMessage(Message message) {
     if (message != null && message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
+
+      updateCEMetadataRecord(metadataMap, getEntityChangeDTO(message));
+
       if (hasRequiredMetadata(metadataMap)) {
         EntityChangeDTO entityChangeDTO = getEntityChangeDTO(message);
         String action = metadataMap.get(ACTION);
@@ -51,6 +57,36 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
       }
     }
     return true;
+  }
+
+  private void updateCEMetadataRecord(Map<String, String> metadataMap, EntityChangeDTO entityChangeDTO) {
+    String action = metadataMap.get(ACTION);
+    if (action != null && CREATE_ACTION == action) {
+      if (isCEAWSEvent(metadataMap)) {
+        ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
+                                       .accountId(entityChangeDTO.getAccountIdentifier().getValue())
+                                       .awsConnectorConfigured(true)
+                                       .build());
+      }
+      if (isCEAzureEvent(metadataMap)) {
+        ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
+                                       .accountId(entityChangeDTO.getAccountIdentifier().getValue())
+                                       .azureConnectorConfigured(true)
+                                       .build());
+      }
+      if (isCEGCPEvent(metadataMap)) {
+        ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
+                                       .accountId(entityChangeDTO.getAccountIdentifier().getValue())
+                                       .gcpConnectorConfigured(true)
+                                       .build());
+      }
+      if (isCEK8sEvent(metadataMap)) {
+        ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
+                                       .accountId(entityChangeDTO.getAccountIdentifier().getValue())
+                                       .clusterConnectorConfigured(true)
+                                       .build());
+      }
+    }
   }
 
   private EntityChangeDTO getEntityChangeDTO(Message message) {
@@ -73,6 +109,21 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   private static boolean isCEAWSEvent(Map<String, String> metadataMap) {
     return metadataMap != null && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
         && ConnectorType.CE_AWS.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE));
+  }
+
+  private static boolean isCEAzureEvent(Map<String, String> metadataMap) {
+    return metadataMap != null && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
+        && ConnectorType.CE_AZURE.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE));
+  }
+
+  private static boolean isCEGCPEvent(Map<String, String> metadataMap) {
+    return metadataMap != null && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
+        && ConnectorType.GCP_CLOUD_COST.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE));
+  }
+
+  private static boolean isCEK8sEvent(Map<String, String> metadataMap) {
+    return metadataMap != null && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
+        && ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE));
   }
 
   private boolean processK8sEntityChangeEvent(
