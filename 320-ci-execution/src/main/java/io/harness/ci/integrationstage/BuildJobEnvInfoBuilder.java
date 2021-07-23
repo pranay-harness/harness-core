@@ -33,6 +33,8 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.quantity.unit.DecimalQuantityUnit;
+import io.harness.beans.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
@@ -64,8 +66,6 @@ import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.container.ContainerResource;
-import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
