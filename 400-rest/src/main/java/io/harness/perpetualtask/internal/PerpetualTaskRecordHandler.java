@@ -249,6 +249,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
     }
 
     return DelegateTask.builder()
+        .executionCapabilities(executionCapabilityList)
         .accountId(taskRecord.getAccountId())
         .data(TaskData.builder()
                   .async(false)
