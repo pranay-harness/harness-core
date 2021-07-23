@@ -220,7 +220,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   private InstanceDTO buildInstance(U infrastructureMapping, Z serverInstance, DeploymentSummary deploymentSummary) {
     // TODO build instance base
     InstanceDTOBuilder instanceBuilder = InstanceDTO.builder();
-    instanceBuilder.instanceInfo(getInstanceInfo(serverInstance));
+    //    instanceBuilder.instanceInfo(getInstanceInfo(serverInstance));
     // Why don't we have common field for instance info in mongo
     // rather having separate field names for different deployment type
     // TODO set instance info
@@ -261,11 +261,11 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
       U infrastrastructureMapping, Multimap<T, InstanceDTO> instanceHandlerKeyVsInstanceMap) {
     List<InstanceDTO> instancesInDB = getInstances(infrastrastructureMapping);
 
-    for (InstanceDTO instance : instancesInDB) {
-      Y instanceInfo = validateAndReturnInstanceInfo(instance.getInstanceInfo());
-      T instanceHandlerKey = getInstanceHandlerKey(instanceInfo);
-      instanceHandlerKeyVsInstanceMap.put(instanceHandlerKey, instance);
-    }
+    //    for (InstanceDTO instance : instancesInDB) {
+    //      Y instanceInfo = validateAndReturnInstanceInfo(instance.getInstanceInfo());
+    //      T instanceHandlerKey = getInstanceHandlerKey(instanceInfo);
+    //      instanceHandlerKeyVsInstanceMap.put(instanceHandlerKey, instance);
+    //    }
   }
 
   private List<InstanceDTO> getInstances(InfrastructureMapping infrastructureMapping) {

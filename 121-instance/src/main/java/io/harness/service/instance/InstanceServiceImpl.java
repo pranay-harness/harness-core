@@ -40,7 +40,7 @@ public class InstanceServiceImpl implements InstanceService {
    *          Instance entity in case record is created successfully
    */
   @Override
-  public Optional<InstanceDTO> saveIfNotExists(InstanceDTO instanceDTO) {
+  public Optional<InstanceDTO> saveOrReturnEmptyIfAlreadyExists(InstanceDTO instanceDTO) {
     Instance instance = InstanceMapper.toEntity(instanceDTO);
     try {
       instance = instanceRepository.save(instance);

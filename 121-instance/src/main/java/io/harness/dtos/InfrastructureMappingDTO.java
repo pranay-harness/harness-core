@@ -3,6 +3,7 @@ package io.harness.dtos;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
@@ -11,7 +12,7 @@ import lombok.NonNull;
 @Data
 @Builder
 public class InfrastructureMappingDTO {
-  private String id;
+  @Nullable private String id;
   @NonNull private String accountIdentifier;
   @NonNull private String orgIdentifier;
   @NonNull private String projectIdentifier;
@@ -20,5 +21,5 @@ public class InfrastructureMappingDTO {
   @NonNull private String envId;
   @NonNull private String deploymentType;
   @NonNull private String serviceId;
-  @NonNull private String infrastructureId;
+  @NonNull private String infrastructureKey;
 }

@@ -15,7 +15,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 public interface InstanceService {
   InstanceDTO save(InstanceDTO instanceDTO);
 
-  Optional<InstanceDTO> saveIfNotExists(InstanceDTO instanceDTO);
+  Optional<InstanceDTO> saveOrReturnEmptyIfAlreadyExists(InstanceDTO instanceDTO);
 
   List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
