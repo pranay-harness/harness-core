@@ -3,7 +3,7 @@ package io.harness.models.constants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.ArtifactDetails.ArtifactDetailsKeys;
-import io.harness.entities.instance.Instance.InstanceKeys;
+import io.harness.entities.Instance.InstanceKeys;
 
 import java.time.Duration;
 import lombok.experimental.UtilityClass;

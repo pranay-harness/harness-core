@@ -5,8 +5,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.instance.Instance;
-import io.harness.entities.instance.Instance.InstanceKeys;
+import io.harness.entities.Instance;
+import io.harness.entities.Instance.InstanceKeys;
 import io.harness.models.CountByEnvType;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
