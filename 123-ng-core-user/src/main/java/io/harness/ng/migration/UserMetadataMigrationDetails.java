@@ -17,7 +17,7 @@ public class UserMetadataMigrationDetails implements MigrationDetails {
 
   @Override
   public boolean isBackground() {
-    return false;
+    return true;
   }
 
   @Override
