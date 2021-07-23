@@ -14,7 +14,6 @@ import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
-import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
@@ -1057,7 +1056,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(HelmChart.class);
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
-    set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
     set.add(AccessRequest.class);
   }

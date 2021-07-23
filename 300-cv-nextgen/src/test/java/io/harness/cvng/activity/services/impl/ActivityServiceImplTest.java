@@ -40,7 +40,6 @@ import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
-import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -62,7 +61,6 @@ import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.InfrastructureActivityDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
-import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -195,119 +193,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
         .hasMessage("No monitoring sources with identifiers " + verificationJob.getMonitoringSources()
             + " defined for environment " + verificationJob.getEnvIdentifier() + " and service "
             + verificationJob.getServiceIdentifier());
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_ifCD10FieldsAreNotPresent() {
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(createVerificationJob());
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    assertThatThrownBy(() -> activityService.registerCD10Activity(accountId, deploymentActivity))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("harnessCdAppId is not present in runtimeValues");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_resolveServiceAndEnvIdentifiers() throws IllegalAccessException {
-    String appId = generateUuid();
-    String envId = generateUuid();
-    String serviceId = generateUuid();
-    CD10ActivitySourceDTO cd10ActivitySourceDTO = createCD10ActivitySource(appId, envId, serviceId);
-    activitySourceService.create(accountId, cd10ActivitySourceDTO);
-    VerificationJob verificationJob = createVerificationJob();
-    verificationJob.setActivitySourceIdentifier(cd10ActivitySourceDTO.getIdentifier());
-    realVerificationJobService.save(verificationJob);
-    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    Map<String, String> runtimeValues = new HashMap<>();
-    runtimeValues.put("harnessCdAppId", appId);
-    runtimeValues.put("harnessCdServiceId", serviceId);
-    runtimeValues.put("harnessCdEnvId", envId);
-    List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails =
-        Lists.newArrayList(VerificationJobRuntimeDetails.builder()
-                               .verificationJobIdentifier(verificationJob.getIdentifier())
-                               .runtimeValues(runtimeValues)
-                               .build());
-    deploymentActivity.setVerificationJobRuntimeDetails(verificationJobRuntimeDetails);
-    CD10RegisterActivityDTO cd10RegisterActivityDTO =
-        activityService.registerCD10Activity(accountId, deploymentActivity);
-    DeploymentActivity updated = (DeploymentActivity) activityService.get(cd10RegisterActivityDTO.getActivityId());
-    VerificationJobRuntimeDetails updatedDetails = updated.getVerificationJobRuntimeDetails().get(0);
-    assertThat(updated.getEnvironmentIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
-    assertThat(updated.getServiceIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
-    assertThat(cd10RegisterActivityDTO.getEnvIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
-    assertThat(cd10RegisterActivityDTO.getServiceIdentifier())
-        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
-    assertThat(updatedDetails.getRuntimeValues().get(ENV_IDENTIFIER_KEY))
-        .isEqualTo(cd10ActivitySourceDTO.getEnvMappings().iterator().next().getEnvIdentifier());
-    assertThat(updatedDetails.getRuntimeValues().get(SERVICE_IDENTIFIER_KEY))
-        .isEqualTo(cd10ActivitySourceDTO.getServiceMappings().iterator().next().getServiceIdentifier());
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_validateMappingsWithFailure() throws IllegalAccessException {
-    String appId = generateUuid();
-    String envId = generateUuid();
-    String serviceId = generateUuid();
-    CD10ActivitySourceDTO cd10ActivitySourceDTO = createCD10ActivitySource(appId, envId, serviceId);
-    activitySourceService.create(accountId, cd10ActivitySourceDTO);
-    VerificationJob verificationJob = createVerificationJob();
-    verificationJob.setActivitySourceIdentifier(cd10ActivitySourceDTO.getIdentifier());
-    verificationJob.setServiceIdentifier(generateUuid(), false);
-    realVerificationJobService.save(verificationJob);
-    FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
-    when(verificationJobInstanceService.create(anyList())).thenReturn(Arrays.asList("taskId1"));
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    Map<String, String> runtimeValues = new HashMap<>();
-    runtimeValues.put("harnessCdAppId", appId);
-    runtimeValues.put("harnessCdServiceId", serviceId);
-    runtimeValues.put("harnessCdEnvId", envId);
-    List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails =
-        Lists.newArrayList(VerificationJobRuntimeDetails.builder()
-                               .verificationJobIdentifier(verificationJob.getIdentifier())
-                               .runtimeValues(runtimeValues)
-                               .build());
-    deploymentActivity.setVerificationJobRuntimeDetails(verificationJobRuntimeDetails);
-    assertThatThrownBy(() -> activityService.registerCD10Activity(accountId, deploymentActivity))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Next gen Service identifier does not match CD 1.0 service mapping");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testRegisterCD10Activity_noCD10MappingExists() {
-    VerificationJob verificationJob = createVerificationJob();
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    deploymentActivity.setEnvironmentIdentifier(null);
-    deploymentActivity.setServiceIdentifier(null);
-    Map<String, String> runtimeValues = new HashMap<>();
-    runtimeValues.put("harnessCdAppId", generateUuid());
-    runtimeValues.put("harnessCdServiceId", generateUuid());
-    runtimeValues.put("harnessCdEnvId", generateUuid());
-    List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails =
-        Lists.newArrayList(VerificationJobRuntimeDetails.builder()
-                               .verificationJobIdentifier(verificationJob.getIdentifier())
-                               .runtimeValues(runtimeValues)
-                               .build());
-    deploymentActivity.setVerificationJobRuntimeDetails(verificationJobRuntimeDetails);
-    assertThatThrownBy(() -> activityService.registerCD10Activity(accountId, deploymentActivity))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("No CD 1.0 mapping defined for projectIdentifier: %s", projectIdentifier);
   }
 
   @Test

@@ -16,7 +16,6 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
-import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -288,8 +287,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
-        CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-        bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
     modules.add(new ValidationModule(validatorFactory));

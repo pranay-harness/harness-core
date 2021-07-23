@@ -12,7 +12,6 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
-import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 
 import java.time.Instant;
@@ -27,8 +26,6 @@ public interface ActivityService {
 
   String register(String accountId, ActivityDTO activityDTO);
   String register(Activity activity);
-
-  CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO);
 
   void updateActivityStatus(Activity activity);
 
