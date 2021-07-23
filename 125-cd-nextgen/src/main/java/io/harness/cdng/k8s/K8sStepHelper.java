@@ -160,7 +160,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -877,18 +879,19 @@ public class K8sStepHelper {
         manifestsOutcome, new CDExpressionResolveFunctor(engineExpressionService, ambiance));
     validateManifestsOutcome(ambiance, manifestsOutcome);
 
-    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
+    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(manifestsOutcome.values());
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
           K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
-      return prepareK8sOrHelmWithValuesManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
+      return prepareK8sOrHelmWithValuesManifests(k8sStepExecutor, getOrderedManifestOutcome(manifestsOutcome.values()),
           k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
     } else {
-      return prepareOcTemplateWithOcParamManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
-          k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
+      return prepareOcTemplateWithOcParamManifests(k8sStepExecutor,
+          getOrderedManifestOutcome(manifestsOutcome.values()), k8sManifestOutcome, ambiance, stepElementParameters,
+          infrastructureOutcome);
     }
   }
 
@@ -944,7 +947,7 @@ public class K8sStepHelper {
   }
 
   @VisibleForTesting
-  public ManifestOutcome getK8sSupportedManifestOutcome(@NotEmpty List<ManifestOutcome> manifestOutcomes) {
+  public ManifestOutcome getK8sSupportedManifestOutcome(@NotEmpty Collection<ManifestOutcome> manifestOutcomes) {
     List<ManifestOutcome> k8sManifests =
         manifestOutcomes.stream()
             .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
@@ -999,6 +1002,12 @@ public class K8sStepHelper {
   private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests) {
     // TODO: implement when local store is available
     return emptyList();
+  }
+
+  private List<ManifestOutcome> getOrderedManifestOutcome(Collection<ManifestOutcome> manifestOutcomes) {
+    return manifestOutcomes.stream()
+        .sorted(Comparator.comparingInt(ManifestOutcome::getOrder))
+        .collect(Collectors.toCollection(LinkedList::new));
   }
 
   private boolean isAnyOcParamRemoteStore(@NotEmpty List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
