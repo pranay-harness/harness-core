@@ -23,13 +23,14 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.project.remote.ProjectClient;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
-  @Inject private AccountClient accountClient;
-  @Inject private OrganizationClient organizationClient;
-  @Inject private ProjectClient projectClient;
+  @Inject @Named("PRIVILEGED") private AccountClient accountClient;
+  @Inject @Named("PRIVILEGED") private OrganizationClient organizationClient;
+  @Inject @Named("PRIVILEGED") private ProjectClient projectClient;
   @Inject private ImagePullSecretUtils imagePullSecretUtils;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
 

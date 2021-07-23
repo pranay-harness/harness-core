@@ -1,6 +1,11 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.entities.ClusterData;
+import io.harness.ccm.views.entities.InstanceDetails;
+import io.harness.ccm.views.entities.StorageDetails;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -9,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 
 @Value
 @Builder
+@OwnedBy(CE)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLCEViewEntityStatsDataPoint {
   String name;
@@ -17,4 +23,6 @@ public class QLCEViewEntityStatsDataPoint {
   Number costTrend;
   boolean isClusterPerspective;
   ClusterData clusterData;
+  InstanceDetails instanceDetails;
+  StorageDetails storageDetails;
 }

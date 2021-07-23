@@ -2,7 +2,6 @@ package io.harness.engine;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -54,9 +53,6 @@ public class EndNodeExecutionHelper {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
       setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
-      if (stepResponse.getStatus() != EXPIRED) {
-        setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, new ArrayList<>());
-      }
     }, EnumSet.noneOf(Status.class));
   }
 

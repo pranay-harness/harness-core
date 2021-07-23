@@ -82,14 +82,21 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
         k8sRollingStepParameters.getSkipDryRun(), K8sRollingBaseStepInfoKeys.skipDryRun, stepElementParameters);
     List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
     boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
-    OptionalSweepingOutput optionalCanaryOutcome = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+
+    boolean isCanaryWorkflow = false;
+    String canaryStepFqn = k8sRollingStepParameters.getCanaryStepFqn();
+    if (canaryStepFqn != null) {
+      OptionalSweepingOutput optionalCanaryOutcome = executionSweepingOutputService.resolveOptional(ambiance,
+          RefObjectUtils.getSweepingOutputRefObject(
+              canaryStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+      isCanaryWorkflow = optionalCanaryOutcome.isFound();
+    }
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sRollingDeployRequest k8sRollingDeployRequest =
         K8sRollingDeployRequest.builder()
             .skipDryRun(skipDryRun)
-            .inCanaryWorkflow(optionalCanaryOutcome.isFound())
+            .inCanaryWorkflow(isCanaryWorkflow)
             .releaseName(releaseName)
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)

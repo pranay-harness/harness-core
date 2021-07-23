@@ -42,9 +42,4 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   public ClusterRecord attachTask(ClusterRecord clusterRecord, String taskId) {
     return clusterRecordDao.insertTask(clusterRecord, taskId);
   }
-
-  @Override
-  public ClusterRecord resetTask(ClusterRecord clusterRecord, String taskId) {
-    return clusterRecordDao.removeTask(clusterRecord, taskId);
-  }
 }

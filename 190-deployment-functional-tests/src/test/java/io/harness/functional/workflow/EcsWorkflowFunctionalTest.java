@@ -5,8 +5,10 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
@@ -15,8 +17,10 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,6 +63,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.infra.InfrastructureDefinition;
@@ -69,7 +74,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
@@ -104,6 +112,10 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   final String ECS_SERVICE_SETUP_CONSTANT = "ECS Service Setup";
   final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
   final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
+  final String APPROVAL_CONSTANT = "Approval";
+  final String SWAP_TARGET_GROUPS = "Swap Target Groups";
+  final String CHANGE_ROUTE_53_WEIGHTS = "Change Route 53 Weights";
+  final String SWAP_ROUTE53_DNS = "Swap Route 53 DNS";
 
   private Application application;
   private Service service;
@@ -133,7 +145,7 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
     awsSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
 
-    artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECR);
+    artifactStream = artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     assertThat(artifactStream).isNotNull();
 
     artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
@@ -174,6 +186,19 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
 
     // Test running the workflow
     assertExecution(savedWorkflow);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(CDFunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
+  public void shouldCreateCanaryEcsRollbackWorkflow() throws Exception {
+    Workflow workflow = getEcsEc2TypeCanaryRollbackWorkflow();
+    Workflow savedWorkflow = createAndAssertWorkflow(workflow);
+
+    // Test running the workflow
+    WorkflowExecution workflowExecution = assertExecutionWithStatus(savedWorkflow, ExecutionStatus.FAILED);
+    workflowUtils.assertRollbackInWorkflowExecution(workflowExecution);
   }
 
   private Workflow createAndAssertWorkflow(Workflow workflow) {
@@ -287,6 +312,149 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
         .build();
   }
 
+  private Workflow getEcsEc2TypeCanaryRollbackWorkflow() {
+    List<PhaseStep> phaseSteps1 = new ArrayList<>();
+    phaseSteps1.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
+                        .addStep(GraphNode.builder()
+                                     .id(generateUuid())
+                                     .type(ECS_SERVICE_SETUP.name())
+                                     .name(ECS_SERVICE_SETUP_CONSTANT)
+                                     .properties(ImmutableMap.<String, Object>builder()
+                                                     .put("fixedInstances", "2")
+                                                     .put("useLoadBalancer", false)
+                                                     .put("ecsServiceName", "${app.name}__${service.name}__BASIC")
+                                                     .put("desiredInstanceCount", "fixedInstances")
+                                                     .put("resizeStrategy", ResizeStrategy.DOWNSIZE_OLD_FIRST)
+                                                     .put("serviceSteadyStateTimeout", 10)
+                                                     .build())
+                                     .build())
+                        .build());
+    phaseSteps1.add(workflowUtils.ecsContainerDeployPhaseStep());
+    phaseSteps1.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    List<PhaseStep> phaseSteps2 = new ArrayList<>();
+    List<String> userGroups = Collections.singletonList("uK63L5CVSAa1-BkC4rXoRg");
+    phaseSteps2.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS_CONSTANT)
+                        .addStep(GraphNode.builder()
+                                     .id(generateUuid())
+                                     .type(ECS_SERVICE_DEPLOY.name())
+                                     .name(UPGRADE_CONTAINERS_CONSTANT)
+                                     .properties(ImmutableMap.<String, Object>builder()
+                                                     .put("instanceUnitType", "PERCENTAGE")
+                                                     .put("instanceCount", 100)
+                                                     .put("downsizeInstanceUnitType", "PERCENTAGE")
+                                                     .put("downsizeInstanceCount", 0)
+                                                     .build())
+                                     .build())
+                        .addStep(GraphNode.builder()
+                                     .id(generateUuid())
+                                     .type(APPROVAL.name())
+                                     .name(APPROVAL_CONSTANT)
+                                     .properties(ImmutableMap.<String, Object>builder()
+                                                     .put("timeoutMillis", 60000)
+                                                     .put("approvalStateType", "USER_GROUP")
+                                                     .put("userGroups", userGroups)
+                                                     .build())
+                                     .build())
+                        .build());
+    phaseSteps2.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).build());
+
+    List<PhaseStep> rollbackPhaseStep1 = new ArrayList<>();
+    rollbackPhaseStep1.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS_CONSTANT)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .withPhaseStepNameForRollback(DEPLOY_CONTAINERS_CONSTANT)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .name("Rollback Containers")
+                                            .type(ECS_SERVICE_ROLLBACK.name())
+                                            .rollback(true)
+                                            .origin(true)
+                                            .properties(ImmutableMap.<String, Object>builder().build())
+                                            .build())
+                               .build());
+    rollbackPhaseStep1.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).withRollback(true).build());
+
+    List<PhaseStep> rollbackPhaseStep2 = new ArrayList<>();
+    rollbackPhaseStep2.add(aPhaseStep(CONTAINER_DEPLOY, DEPLOY_CONTAINERS_CONSTANT)
+                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                               .withRollback(true)
+                               .withPhaseStepNameForRollback(DEPLOY_CONTAINERS_CONSTANT)
+                               .addStep(GraphNode.builder()
+                                            .id(generateUuid())
+                                            .name("Rollback Containers")
+                                            .type(ECS_SERVICE_ROLLBACK.name())
+                                            .rollback(true)
+                                            .origin(true)
+                                            .properties(ImmutableMap.<String, Object>builder().build())
+                                            .build())
+                               .build());
+    rollbackPhaseStep2.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).withRollback(true).build());
+
+    WorkflowPhase workflowPhase1 = aWorkflowPhase()
+                                       .name("0% - 50%")
+                                       .serviceId(service.getUuid())
+                                       .deploymentType(DeploymentType.ECS)
+                                       .daemonSet(false)
+                                       .infraDefinitionId(infrastructureDefinition.getUuid())
+                                       .infraDefinitionName(infrastructureDefinition.getName())
+                                       .computeProviderId(awsSettingAttribute.getUuid())
+                                       .phaseSteps(phaseSteps1)
+                                       .build();
+
+    WorkflowPhase workflowPhase2 = aWorkflowPhase()
+                                       .name("50% - 100%")
+                                       .serviceId(service.getUuid())
+                                       .deploymentType(DeploymentType.ECS)
+                                       .daemonSet(false)
+                                       .infraDefinitionId(infrastructureDefinition.getUuid())
+                                       .infraDefinitionName(infrastructureDefinition.getName())
+                                       .computeProviderId(awsSettingAttribute.getUuid())
+                                       .phaseSteps(phaseSteps2)
+                                       .build();
+
+    Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
+    workflowPhaseIdMap.put(workflowPhase1.getUuid(),
+        aWorkflowPhase()
+            .rollback(true)
+            .phaseSteps(rollbackPhaseStep1)
+            .phaseNameForRollback("0% - 50%")
+            .name("Rollback 0% - 50%")
+            .serviceId(service.getUuid())
+            .deploymentType(DeploymentType.ECS)
+            .infraDefinitionId(infrastructureDefinition.getUuid())
+            .computeProviderId(awsSettingAttribute.getUuid())
+            .build());
+    workflowPhaseIdMap.put(workflowPhase2.getUuid(),
+        aWorkflowPhase()
+            .rollback(true)
+            .phaseSteps(rollbackPhaseStep2)
+            .phaseNameForRollback("50% - 100%")
+            .name("Rollback 50% - 100%")
+            .serviceId(service.getUuid())
+            .deploymentType(DeploymentType.ECS)
+            .infraDefinitionId(infrastructureDefinition.getUuid())
+            .computeProviderId(awsSettingAttribute.getUuid())
+            .build());
+
+    return aWorkflow()
+        .name("Canary ECS Rollback" + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(
+            aCanaryOrchestrationWorkflow()
+                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, PRE_DEPLOYMENT_CONSTANT).build())
+                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, POST_DEPLOYMENT_CONSTANT).build())
+                .addWorkflowPhase(workflowPhase1)
+                .addWorkflowPhase(workflowPhase2)
+                .withRollbackWorkflowPhaseIdMap(workflowPhaseIdMap)
+                .build())
+        .build();
+  }
+
   private Workflow getBasicEcsEc2TypeWorkflow() {
     List<PhaseStep> phaseSteps = new ArrayList<>();
     phaseSteps.add(aPhaseStep(CONTAINER_SETUP, SETUP_CONTAINER_CONSTANT)
@@ -346,6 +514,10 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
   }
 
   private void assertExecution(Workflow savedWorkflow) {
+    assertExecutionWithStatus(savedWorkflow, ExecutionStatus.SUCCESS);
+  }
+
+  private WorkflowExecution assertExecutionWithStatus(Workflow savedWorkflow, ExecutionStatus executionStatus) {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
     executionArgs.setArtifacts(Arrays.asList(artifact));
@@ -373,11 +545,13 @@ public class EcsWorkflowFunctionalTest extends AbstractFunctionalTest {
                           .get("/executions/" + workflowExecution.getUuid())
                           .jsonPath()
                           .<String>getJsonObject("resource.status")
-                          .equals(ExecutionStatus.SUCCESS.name()));
+                          .equals(executionStatus.name()));
 
     WorkflowExecution completedWorkflowExecution =
         workflowExecutionService.getExecutionDetails(application.getUuid(), workflowExecution.getUuid(), true, false);
     log.info("ECs Execution status: " + completedWorkflowExecution.getStatus());
-    assertThat(ExecutionStatus.SUCCESS == completedWorkflowExecution.getStatus());
+    assertThat(executionStatus == completedWorkflowExecution.getStatus());
+
+    return completedWorkflowExecution;
   }
 }

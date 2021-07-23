@@ -65,8 +65,11 @@ public class ScheduledTriggerHandler implements Handler<Trigger> {
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .persistenceProvider(persistenceProvider)
             .schedulingType(IRREGULAR_SKIP_MISSED)
-            .filterExpander(
-                query -> query.field(TriggerKeys.triggerConditionType).equal(TriggerConditionType.SCHEDULED))
+            .filterExpander(query
+                -> query.field(TriggerKeys.triggerConditionType)
+                       .equal(TriggerConditionType.SCHEDULED)
+                       .field(TriggerKeys.nextIterations)
+                       .exists())
             .throttleInterval(ofSeconds(45)));
 
     executor.submit(() -> iterator.process());

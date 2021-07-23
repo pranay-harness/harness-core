@@ -1,5 +1,6 @@
 package io.harness.ccm.service.impl;
 
+import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.budget.utils.BudgetUtils;
@@ -13,8 +14,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
+@Slf4j
 public class BudgetServiceImpl implements BudgetService {
   @Inject private BudgetDao budgetDao;
   @Inject private CEViewService ceViewService;
@@ -92,7 +95,8 @@ public class BudgetServiceImpl implements BudgetService {
   private void validatePerspective(Budget budget) {
     BudgetScope scope = budget.getScope();
     String[] entityIds = BudgetUtils.getAppliesToIds(scope);
-    if (ceViewService.get(entityIds[0]) != null) {
+    log.debug("entityIds is {}", entityIds);
+    if (ceViewService.get(entityIds[0]) == null) {
       throw new InvalidRequestException(BudgetUtils.INVALID_ENTITY_ID_EXCEPTION);
     }
   }
@@ -105,5 +109,15 @@ public class BudgetServiceImpl implements BudgetService {
     String[] emailAddresses = ArrayUtils.nullToEmpty(budget.getEmailAddresses());
     String[] uniqueEmailAddresses = new HashSet<>(Arrays.asList(emailAddresses)).toArray(new String[0]);
     budget.setEmailAddresses(uniqueEmailAddresses);
+    // In NG we have per alertThreshold separate email addresses
+    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
+    if (alertThresholds != null && alertThresholds.length > 0) {
+      for (AlertThreshold alertThreshold : alertThresholds) {
+        emailAddresses = ArrayUtils.nullToEmpty(alertThreshold.getEmailAddresses());
+        uniqueEmailAddresses = new HashSet<>(Arrays.asList(emailAddresses)).toArray(new String[0]);
+        alertThreshold.setEmailAddresses(uniqueEmailAddresses);
+      }
+      budget.setAlertThresholds(alertThresholds);
+    }
   }
 }

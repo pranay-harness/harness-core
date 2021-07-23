@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -13,6 +14,8 @@ import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -38,6 +41,8 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   @Mock private PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
   @Mock private UpdateResult updateResult;
   @InjectMocks private PMSExecutionServiceImpl pmsExecutionService;
+  @Mock private PmsGitSyncHelper pmsGitSyncHelper;
+  @Mock private ValidateAndMergeHelper validateAndMergeHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -47,6 +52,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   private final String INVALID_PLAN_EXECUTION_ID = "InvalidPlanId";
   private final Boolean PIPELINE_DELETED = Boolean.FALSE;
   private String inputSetYaml;
+  private String template;
 
   PipelineExecutionSummaryEntity executionSummaryEntity;
   PipelineEntity pipelineEntity;
@@ -58,6 +64,10 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
     inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFilename)), StandardCharsets.UTF_8);
 
+    String templateFilename = "pipeline-extensive-template.yml";
+    template =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(templateFilename)), StandardCharsets.UTF_8);
+
     executionSummaryEntity = PipelineExecutionSummaryEntity.builder()
                                  .accountId(ACCOUNT_ID)
                                  .orgIdentifier(ORG_IDENTIFIER)
@@ -67,6 +77,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
                                  .name(PLAN_EXECUTION_ID)
                                  .runSequence(0)
                                  .inputSetYaml(inputSetYaml)
+                                 .pipelineTemplate(template)
                                  .build();
 
     String pipelineYamlFileName = "failure-strategy.yaml";
@@ -109,9 +120,13 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
         .when(pmsExecutionSummaryRepository)
         .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, !PIPELINE_DELETED);
+    doReturn(null).when(pmsGitSyncHelper).getEntityGitDetailsFromBytes(any());
+    doReturn(template).when(validateAndMergeHelper).getPipelineTemplate(any(), any(), any(), any());
 
-    String inputSet = pmsExecutionService.getInputSetYaml(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED, false);
+    String inputSet = pmsExecutionService
+                          .getInputSetYamlWithTemplate(
+                              ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED, false)
+                          .getInputSetYaml();
 
     assertThat(inputSet).isEqualTo(inputSetYaml);
   }
@@ -124,10 +139,12 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
         .when(pmsExecutionSummaryRepository)
         .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, INVALID_PLAN_EXECUTION_ID, !PIPELINE_DELETED);
+    doReturn(null).when(pmsGitSyncHelper).getEntityGitDetailsFromBytes(any());
+    doReturn(template).when(validateAndMergeHelper).getPipelineTemplate(any(), any(), any(), any());
 
     assertThatThrownBy(()
-                           -> pmsExecutionService.getInputSetYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
-                               INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED, false))
+                           -> pmsExecutionService.getInputSetYamlWithTemplate(ACCOUNT_ID, ORG_IDENTIFIER,
+                               PROJ_IDENTIFIER, INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Invalid request : Input Set did not exist or pipeline execution has been deleted");
   }

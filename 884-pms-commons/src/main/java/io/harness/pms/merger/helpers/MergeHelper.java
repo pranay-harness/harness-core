@@ -34,8 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class MergeHelper {
-  public String createTemplateFromPipeline(String pipelineYaml) throws IOException {
-    return createTemplateFromPipeline(pipelineYaml, true);
+  public String createTemplateFromPipeline(String pipelineYaml) {
+    try {
+      return createTemplateFromPipeline(pipelineYaml, true);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not convert pipeline to template");
+    }
   }
 
   public String removeRuntimeInputFromYaml(String runtimeInputYaml) throws IOException {
@@ -87,8 +91,7 @@ public class MergeHelper {
 
         inputSetFQNs.remove(key);
       } else {
-        Map<FQN, Object> subMap =
-            io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
+        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetConfig.getFqnToValueMap(), key);
         subMap.keySet().forEach(inputSetFQNs::remove);
       }
     });
@@ -134,8 +137,12 @@ public class MergeHelper {
   }
 
   public String mergeInputSetIntoPipeline(
-      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) throws IOException {
-    return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
+    try {
+      return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
+    }
   }
 
   private String mergeInputSetIntoPipeline(String pipelineYaml, String inputSetPipelineCompYaml,
@@ -163,10 +170,9 @@ public class MergeHelper {
         }
         res.put(key, value);
       } else {
-        Map<FQN, Object> subMap =
-            io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
+        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetConfig.getFqnToValueMap(), key);
         if (!subMap.isEmpty()) {
-          res.put(key, FQNUtils.getObject(inputSetConfig, key));
+          res.put(key, YamlSubMapExtractor.getNodeForFQN(inputSetConfig, key));
         }
       }
     });

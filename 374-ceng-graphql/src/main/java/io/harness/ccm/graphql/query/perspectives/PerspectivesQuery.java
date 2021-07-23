@@ -23,6 +23,7 @@ import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
+import io.harness.ccm.views.graphql.QLCEViewTrendData;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewsBillingService;
@@ -60,16 +61,14 @@ public class PerspectivesQuery {
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
 
-    QLCEViewTrendInfo trendStatsData = viewsBillingService.getTrendStatsDataNg(
+    QLCEViewTrendData trendStatsData = viewsBillingService.getTrendStatsDataNg(
         bigQuery, filters, aggregateFunction, cloudProviderTableName, accountId);
     return PerspectiveTrendStats.builder()
-        .cost(StatsInfo.builder()
-                  .statsTrend(trendStatsData.getStatsTrend())
-                  .statsLabel(trendStatsData.getStatsLabel())
-                  .statsDescription(trendStatsData.getStatsDescription())
-                  .statsValue(trendStatsData.getStatsValue())
-                  .value(trendStatsData.getValue())
-                  .build())
+        .cost(getStats(trendStatsData.getTotalCost()))
+        .idleCost(getStats(trendStatsData.getIdleCost()))
+        .unallocatedCost(getStats(trendStatsData.getUnallocatedCost()))
+        .systemCost(getStats(trendStatsData.getSystemCost()))
+        .utilizedCost(getStats(trendStatsData.getUtilizedCost()))
         .efficiencyScoreStats(trendStatsData.getEfficiencyScoreStats())
         .build();
   }
@@ -111,7 +110,7 @@ public class PerspectivesQuery {
     return PerspectiveEntityStatsData.builder()
         .data(viewsBillingService
                   .getEntityStatsDataPointsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
-                      cloudProviderTableName, limit, offset, accountId, true)
+                      cloudProviderTableName, limit, offset, accountId, false)
                   .getData())
         .build();
   }
@@ -152,10 +151,12 @@ public class PerspectivesQuery {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
+    long timePeriod = perspectiveTimeSeriesHelper.getTimePeriod(groupBy);
 
-    PerspectiveTimeSeriesData data =
-        perspectiveTimeSeriesHelper.fetch(viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy,
-            aggregateFunction, sortCriteria, cloudProviderTableName, accountId, includeOthers, limit));
+    PerspectiveTimeSeriesData data = perspectiveTimeSeriesHelper.fetch(
+        viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
+            cloudProviderTableName, accountId, includeOthers, limit),
+        timePeriod);
 
     return perspectiveTimeSeriesHelper.postFetch(data, limit, includeOthers);
   }
@@ -170,6 +171,19 @@ public class PerspectivesQuery {
   @GraphQLQuery(name = "perspectives", description = "Fetch perspectives for account")
   public PerspectiveData perspectives(@GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
-    return PerspectiveData.builder().customerViews(viewService.getAllViews(accountId, false)).build();
+    return PerspectiveData.builder().customerViews(viewService.getAllViews(accountId, true)).build();
+  }
+
+  private StatsInfo getStats(QLCEViewTrendInfo trendInfo) {
+    if (trendInfo == null) {
+      return null;
+    }
+    return StatsInfo.builder()
+        .statsTrend(trendInfo.getStatsTrend())
+        .statsLabel(trendInfo.getStatsLabel())
+        .statsDescription(trendInfo.getStatsDescription())
+        .statsValue(trendInfo.getStatsValue())
+        .value(trendInfo.getValue())
+        .build();
   }
 }

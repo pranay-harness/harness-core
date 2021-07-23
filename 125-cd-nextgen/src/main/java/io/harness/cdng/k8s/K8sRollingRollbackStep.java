@@ -8,6 +8,7 @@ import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.K8sRollingReleaseOutput;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest.K8sRollingRollbackDeployRequestBuilder;
@@ -61,7 +62,7 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sRollingRollbackStepParameters rollingRollbackStepParameters =
         (K8sRollingRollbackStepParameters) stepElementParameters.getSpec();
-    if (rollingRollbackStepParameters.getRollingStepFqn() == null) {
+    if (EmptyPredicate.isEmpty(rollingRollbackStepParameters.getRollingStepFqn())) {
       return TaskRequest.newBuilder()
           .setSkipTaskRequest(SkipTaskRequest.newBuilder()
                                   .setMessage("K8s Rollout Deploy step was not executed. Skipping rollback.")

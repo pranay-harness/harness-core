@@ -4243,8 +4243,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
                                         .available(true)
                                         .build();
-        if (!step.getType().equals(StateType.CVNG.name())
-            || featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
+        if (!step.getType().equals(
+                StateType.CVNG.name())) { // TODO: Hiding it for now. We can remove it after few months.
           if (shouldHideStep(step, accountId)) {
             continue;
           }
@@ -4325,10 +4325,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       // not adding category if there are no steps
       if (isNotEmpty(stepIds)) {
         String displayName = workflowStepType.getDisplayName();
-        if ((workflowStepType.equals(WorkflowStepType.APM) || workflowStepType.equals(WorkflowStepType.LOG))
-            && featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
-          displayName = "Harness CV 1.0 - " + displayName;
-        }
         categories.add(
             WorkflowCategoryStepsMeta.builder().id(workflowStepType.name()).name(displayName).stepIds(stepIds).build());
       }

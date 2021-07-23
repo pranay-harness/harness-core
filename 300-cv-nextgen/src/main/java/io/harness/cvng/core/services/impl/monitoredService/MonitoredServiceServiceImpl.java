@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl.monitoredService;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
@@ -37,12 +38,14 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private HealthSourceService healthSourceService;
   @Inject private HPersistence hPersistence;
   @Inject private HeatMapService heatMapService;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -301,7 +304,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         hPersistence.createQuery(MonitoredService.class)
             .filter(MonitoredServiceKeys.accountId, accountId)
             .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
-            .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier);
+            .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
+            .order(Sort.descending(MonitoredServiceKeys.lastUpdatedAt));
     if (environmentIdentifier != null) {
       monitoredServicesQuery.filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier);
     }
@@ -318,11 +322,28 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         PageUtils.offsetAndLimit(monitoredServiceListItemDTOS, offset, pageSize);
 
     List<Pair<String, String>> serviceEnvironmentIdentifiers = new ArrayList();
+    List<String> serviceIdentifiers = new ArrayList<>();
+    List<String> environmentIdentifiers = new ArrayList<>();
+
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
       serviceEnvironmentIdentifiers.add(
           Pair.of(monitoredServiceListDTOBuilder.getServiceRef(), monitoredServiceListDTOBuilder.getEnvironmentRef()));
+      serviceIdentifiers.add(monitoredServiceListDTOBuilder.getServiceRef());
+      environmentIdentifiers.add(monitoredServiceListDTOBuilder.getEnvironmentRef());
     }
+    Map<String, String> serviceIdNameMap = new HashMap<>();
+    Map<String, String> environmentIdNameMap = new HashMap<>();
+
+    nextGenService.listService(accountId, orgIdentifier, projectIdentifier, serviceIdentifiers)
+        .forEach(serviceResponse
+            -> serviceIdNameMap.put(
+                serviceResponse.getService().getIdentifier(), serviceResponse.getService().getName()));
+    nextGenService.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
+        .forEach(environmentResponse
+            -> environmentIdNameMap.put(
+                environmentResponse.getEnvironment().getIdentifier(), environmentResponse.getEnvironment().getName()));
+
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
     List<RiskData> currentRiskScoreList =
@@ -332,11 +353,16 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     int index = 0;
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
+      String serviceName = serviceIdNameMap.get(monitoredServiceListDTOBuilder.getServiceRef());
+      String environmentName = environmentIdNameMap.get(monitoredServiceListDTOBuilder.getEnvironmentRef());
       HistoricalTrend historicalTrend = historicalTrendList.get(index);
       RiskData riskData = currentRiskScoreList.get(index);
       index++;
-      monitoredServiceListDTOS.add(
-          monitoredServiceListDTOBuilder.historicalTrend(historicalTrend).currentHealthScore(riskData).build());
+      monitoredServiceListDTOS.add(monitoredServiceListDTOBuilder.historicalTrend(historicalTrend)
+                                       .currentHealthScore(riskData)
+                                       .serviceName(serviceName)
+                                       .environmentName(environmentName)
+                                       .build());
     }
     return PageResponse.<MonitoredServiceListItemDTO>builder()
         .pageSize(pageSize)
@@ -435,6 +461,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .serviceRef(monitoredService.getServiceIdentifier())
         .environmentRef(monitoredService.getEnvironmentIdentifier())
         .healthMonitoringEnabled(monitoredService.isEnabled())
+        .tags(TagMapper.convertToMap(monitoredService.getTags()))
         .type(monitoredService.getType());
   }
 

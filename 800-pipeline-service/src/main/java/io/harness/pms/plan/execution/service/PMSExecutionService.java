@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -19,8 +20,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PIPELINE)
 public interface PMSExecutionService {
-  String getInputSetYaml(String accountId, String orgId, String projectId, String planExecutionId,
-      boolean pipelineDeleted, boolean resolveExpressions);
+  InputSetYamlWithTemplateDTO getInputSetYamlWithTemplate(String accountId, String orgId, String projectId,
+      String planExecutionId, boolean pipelineDeleted, boolean resolveExpressions);
 
   Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable);
 

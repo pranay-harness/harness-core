@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.ArtifactDetails;
 import io.harness.entities.InstanceType;
-import io.harness.entities.instance.InstanceKey;
 import io.harness.entities.instanceinfo.InstanceInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
@@ -18,7 +17,6 @@ public class InstanceDTO {
   String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  InstanceKey instanceKey;
   InstanceType instanceType;
   String envId;
   String envName;

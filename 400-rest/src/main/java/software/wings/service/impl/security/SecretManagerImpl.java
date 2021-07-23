@@ -75,6 +75,7 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -119,7 +120,7 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
-public class SecretManagerImpl implements SecretManager {
+public class SecretManagerImpl implements SecretManager, EncryptedSettingAttributes {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
 
   @Inject private WingsPersistence wingsPersistence;

@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.GEORGE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.rule.Owner;
@@ -30,6 +32,7 @@ import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByActivity;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -40,6 +43,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PL)
 public class ServiceClassLocatorTest extends WingsBaseTest {
   @Inject ServiceClassLocator serviceClassLocator;
 
@@ -61,6 +65,7 @@ public class ServiceClassLocatorTest extends WingsBaseTest {
   @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private RoleService roleService;
   @Inject private SecretManager secretManager;
+  @Inject private EncryptedSettingAttributes encryptedSettingAttributes;
   @Inject private SettingsService settingsService;
   @Inject private SSOSettingServiceImpl ssoSettingService;
   @Inject private TemplateGalleryService templateGalleryService;
@@ -89,9 +94,9 @@ public class ServiceClassLocatorTest extends WingsBaseTest {
           .containsExactlyInAnyOrder(alertService, apiKeyService, appContainerService, appService,
               cvConfigurationService, delegateService, governanceConfigService, instanceService,
               limitConfigurationServiceMongo, loginSettingsService, notificationRuleService, notificationSetupService,
-              profileService, resourceConstraintService, roleService, secretManager, settingsService, ssoSettingService,
-              templateGalleryService, templateService, userGroupService, userService, whitelistService,
-              delegateTaskServiceClassic);
+              profileService, resourceConstraintService, roleService, secretManager, encryptedSettingAttributes,
+              settingsService, ssoSettingService, templateGalleryService, templateService, userGroupService,
+              userService, whitelistService, delegateTaskServiceClassic);
     }
   }
 }

@@ -1,5 +1,7 @@
 package io.harness.ccm.ngperpetualtask.service;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.ccm.K8sEventCollectionBundle;
 import io.harness.connector.ConnectorDTO;
@@ -44,6 +46,7 @@ import org.jetbrains.annotations.NotNull;
  * Ref: CVDataCollectionTaskServiceImpl
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private PerpetualTaskService perpetualTaskService;
@@ -54,11 +57,13 @@ public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
   public String create(String accountId, K8sEventCollectionBundle bundle) {
     PerpetualTaskExecutionBundle executionBundle = createExecutionBundle(accountId, bundle);
 
-    PerpetualTaskClientContext clientContext =
-        PerpetualTaskClientContext.builder().executionBundle(executionBundle.toByteArray()).build();
+    PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder()
+                                                   .clientId(bundle.getCloudProviderId() + "/" + bundle.getClusterId())
+                                                   .executionBundle(executionBundle.toByteArray())
+                                                   .build();
 
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
-                                         .setInterval(Durations.fromMinutes(1))
+                                         .setInterval(Durations.fromMinutes(2))
                                          .setTimeout(Durations.fromHours(3))
                                          .build();
 

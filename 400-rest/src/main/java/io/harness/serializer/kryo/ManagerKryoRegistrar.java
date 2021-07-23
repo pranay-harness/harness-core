@@ -210,7 +210,6 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
-import software.wings.beans.NotificationChannelType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Permission;
 import software.wings.beans.PhaseStepType;
@@ -325,8 +324,6 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.beans.loginSettings.UserLockoutInfo;
-import software.wings.beans.notification.NotificationSettings;
-import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.s3.FetchS3FilesCommandParams;
 import software.wings.beans.s3.FetchS3FilesExecutionResponse;
 import software.wings.beans.s3.FetchS3FilesExecutionResponse.FetchS3FilesCommandStatus;
@@ -1040,12 +1037,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraConfig.JiraSetupType.class, 5569);
     kryo.register(JiraConfig.class, 5581);
     kryo.register(KubernetesClusterConfig.class, 5244);
-
     kryo.register(LambdaTestEvent.class, 5604);
     kryo.register(LicenseInfo.class, 5511);
     kryo.register(NameValuePair.class, 5226);
     kryo.register(NewRelicConfig.class, 5175);
-    kryo.register(NotificationSettings.class, 5626);
     kryo.register(PcfConfig.class, 5296);
     kryo.register(Permission.class, 5310);
     kryo.register(PhaseStepType.class, 5026);
@@ -1352,11 +1347,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptApprovalExecutionData.class, 7112);
     kryo.register(K8sDeleteTaskParameters.class, 7113);
     kryo.register(K8sDeleteResponse.class, 7114);
-    kryo.register(NotificationChannelType.class, 7115);
+
     kryo.register(AwsLambdaFunctionRequest.class, 7116);
     kryo.register(AwsLambdaFunctionResponse.class, 7117);
 
-    kryo.register(SlackNotificationSetting.class, 7119);
     kryo.register(AwsAmiSetupExecutionData.class, 7120);
     kryo.register(EcsServiceSetupRequest.class, 7121);
     kryo.register(EcsServiceSetupResponse.class, 7122);

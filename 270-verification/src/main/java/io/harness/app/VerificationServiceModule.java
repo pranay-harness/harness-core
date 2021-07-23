@@ -38,6 +38,7 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.datadog.DatadogService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -85,6 +86,7 @@ public class VerificationServiceModule extends AbstractModule {
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(LearningEngineService.class).to(LearningEngineAnalysisServiceImpl.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(MigrationService.class).to(VerificationMigrationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
 

@@ -1,5 +1,7 @@
 package io.harness.grpc.auth;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.grpc.InterceptorPriority;
 import io.harness.grpc.utils.GrpcAuthUtils;
 import io.harness.security.DelegateTokenAuthenticator;
@@ -22,14 +24,16 @@ import lombok.extern.slf4j.Slf4j;
  * {@link ServerInterceptor} that validates the delegate token, and populates context with accountId before calling the
  * rpc implementation on server-side.
  */
+@OwnedBy(HarnessTeam.DEL)
 @Slf4j
 @Singleton
 @InterceptorPriority(10)
 public class DelegateAuthServerInterceptor implements ServerInterceptor {
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
-  private static final Set<String> INCLUDED_SERVICES = ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService",
-      "io.harness.event.PingPongService", "io.harness.event.EventPublisher", "io.harness.delegate.DelegateService");
+  private static final Set<String> INCLUDED_SERVICES =
+      ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService", "io.harness.event.PingPongService",
+          "io.harness.event.EventPublisher", "io.harness.delegate.DelegateService", "io.harness.delegate.DelegateTask");
 
   private final DelegateTokenAuthenticator tokenAuthenticator;
 

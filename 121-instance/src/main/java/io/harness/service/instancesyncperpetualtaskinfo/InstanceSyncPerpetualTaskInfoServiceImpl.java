@@ -18,12 +18,9 @@ public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPer
   @Inject InstanceSyncPerpetualTaskRepository instanceSyncPerpetualTaskRepository;
 
   @Override
-  public Optional<InstanceSyncPerpetualTaskInfoDTO> findByInfrastructureMappingId(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId) {
+  public Optional<InstanceSyncPerpetualTaskInfoDTO> findByInfrastructureMappingId(String infrastructureMappingId) {
     Optional<InstanceSyncPerpetualTaskInfo> instanceSyncPerpetualTaskInfoOptional =
-        instanceSyncPerpetualTaskRepository
-            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndInfrastructureMappingId(
-                accountIdentifier, orgIdentifier, projectIdentifier, infrastructureMappingId);
+        instanceSyncPerpetualTaskRepository.findByInfrastructureMappingId(infrastructureMappingId);
     return instanceSyncPerpetualTaskInfoOptional.map(InstanceSyncPerpetualTaskInfoMapper::toDTO);
   }
 

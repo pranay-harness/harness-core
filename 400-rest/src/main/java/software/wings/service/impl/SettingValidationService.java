@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
@@ -119,6 +120,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -547,6 +549,19 @@ public class SettingValidationService {
 
       taskParams.setConnectorConfig(connectorSettingAttribute.getValue());
       taskParams.setConnectorEncryptedDataDetails(connectorEncryptedDataDetails);
+
+      // valid as delegate selectors in cloud provider doesn't support expression
+      if (connectorSettingAttribute.getValue() instanceof AwsConfig) {
+        AwsConfig awsConfig = (AwsConfig) connectorSettingAttribute.getValue();
+        if (isNotEmpty(awsConfig.getTag())) {
+          taskParams.setDelegateSelectors(Collections.singleton(awsConfig.getTag()));
+        }
+      } else if (connectorSettingAttribute.getValue() instanceof GcpConfig) {
+        GcpConfig gcpConfig = (GcpConfig) connectorSettingAttribute.getValue();
+        if (isNotEmpty(gcpConfig.getDelegateSelectors())) {
+          taskParams.setDelegateSelectors(new HashSet<>(gcpConfig.getDelegateSelectors()));
+        }
+      }
     }
 
     return taskParams;

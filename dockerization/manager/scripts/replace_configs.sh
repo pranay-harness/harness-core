@@ -281,9 +281,6 @@ if [[ "" != "$jwtNextGenManagerSecret" ]]; then
   yq write -i $CONFIG_FILE portal.jwtNextGenManagerSecret "$jwtNextGenManagerSecret"
 fi
 
-if [[ "" != "$jwtNextGenManagerSecret" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.cvNgServiceSecret "$jwtNextGenManagerSecret"
-fi
 
 if [[ "" != "$FEATURES" ]]; then
   yq write -i $CONFIG_FILE featuresEnabled "$FEATURES"
@@ -861,10 +858,6 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
-fi
-
-if [[ "" != "$CVNG_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
 fi
 
 if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then

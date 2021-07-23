@@ -1,10 +1,12 @@
 package software.wings.beans.settings.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -12,7 +14,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.settings.SettingValue;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 
@@ -28,9 +32,16 @@ public class HelmRepoConfigValidationTaskParams implements TaskParameters, Execu
 
   private SettingValue connectorConfig;
   private List<EncryptedDataDetail> connectorEncryptedDataDetails;
+  private Set<String> delegateSelectors;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return CapabilityHelper.generateDelegateCapabilities(helmRepoConfig, encryptedDataDetails, maskingEvaluator);
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    if (isNotEmpty(delegateSelectors)) {
+      executionCapabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
+    }
+    executionCapabilities.addAll(
+        CapabilityHelper.generateDelegateCapabilities(helmRepoConfig, encryptedDataDetails, maskingEvaluator));
+    return executionCapabilities;
   }
 }

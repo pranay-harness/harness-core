@@ -314,6 +314,8 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     } catch (InterruptedException e) {
       log.error("Failed to get CloudProvider overview data. {}", e);
       Thread.currentThread().interrupt();
+    } catch (Exception ex) {
+      log.error("Exception while executing query", ex);
     }
   }
 

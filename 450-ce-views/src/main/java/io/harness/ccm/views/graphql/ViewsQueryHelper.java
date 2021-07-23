@@ -56,6 +56,10 @@ public class ViewsQueryHelper {
     return Math.round(value * 100D) / 100D;
   }
 
+  public double getRoundedDoublePercentageValue(double value) {
+    return Math.round(value * 10000D) / 100D;
+  }
+
   public double getForecastCost(ViewCostData billingAmountData, Instant endInstant) {
     Preconditions.checkNotNull(billingAmountData);
     Instant currentTime = Instant.now();

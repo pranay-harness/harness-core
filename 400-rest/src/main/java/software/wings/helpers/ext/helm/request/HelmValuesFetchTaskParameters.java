@@ -56,6 +56,10 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
       if (isBindTaskFeatureSet && containerServiceParams != null) {
         capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
       }
+      // Todo: investigate if it can break existing workflows
+      if (isNotEmpty(delegateSelectors)) {
+        capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
+      }
     } else {
       if (mergeCapabilities) {
         capabilities.add(HelmInstallationCapability.builder()
