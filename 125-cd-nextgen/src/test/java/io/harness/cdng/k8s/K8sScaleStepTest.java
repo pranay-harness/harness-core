@@ -45,7 +45,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
-import java.util.LinkedList;
+import java.util.Collection;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -184,7 +184,7 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(Collection.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
@@ -239,7 +239,7 @@ public class K8sScaleStepTest extends CategoryTest {
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
-    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
+    doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(Collection.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
