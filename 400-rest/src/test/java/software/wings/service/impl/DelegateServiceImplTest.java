@@ -994,7 +994,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .build());
 
     // test delete event
-    delegateService.deleteDelegateGroup(ACCOUNT_ID, returnedDelegateGroup.getUuid(), true);
+    delegateService.deleteDelegateGroup(ACCOUNT_ID, returnedDelegateGroup.getUuid());
     outboxEvents = outboxService.list(OutboxEventFilter.builder().maximumEventsPolled(100).build());
     assertThat(outboxEvents.size()).isEqualTo(2);
     outboxEvent = outboxEvents.get(1);
