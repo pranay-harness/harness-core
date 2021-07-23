@@ -32,7 +32,6 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
 
   public ExecutionSummaryUpdateEventHandler() {}
 
-  // Yes
   @Override
   public void handleEvent(OrchestrationEvent orchestrationEvent) {
     if (orchestrationEvent.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE) {
