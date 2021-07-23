@@ -25,6 +25,7 @@ import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.inject.Inject;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
@@ -41,6 +42,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("shellScriptStepInfo")
 @OwnedBy(HarnessTeam.CDC)
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
+  @Inject private static ShellScriptBaseStepInfo shellScriptBaseStepInfo;
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
@@ -70,8 +72,10 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
 
   @Override
   public SpecParameters getSpecParameters() {
+    ExecutionTarget executionTarget = getExecutionTarget();
+    executionTarget = getTrimmedExecutionTarget(executionTarget);
     return ShellScriptStepParameters.infoBuilder()
-        .executionTarget(getExecutionTarget())
+        .executionTarget(executionTarget)
         .onDelegate(getOnDelegate())
         .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
         .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
@@ -79,6 +83,17 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
         .source(getSource())
         .delegateSelectors(ParameterField.createValueField(
             CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
+        .build();
+  }
+
+  private ExecutionTarget getTrimmedExecutionTarget(ExecutionTarget executionTarget) {
+    String host = executionTarget.getHost().getValue();
+    String connecRef = executionTarget.getConnectorRef().getValue();
+    String workingDir = executionTarget.getWorkingDirectory().getValue();
+    return ExecutionTarget.builder()
+        .host(ParameterField.createValueField(host == null ? host : host.trim()))
+        .connectorRef(ParameterField.createValueField(connecRef == null ? connecRef : connecRef.trim()))
+        .workingDirectory(ParameterField.createValueField(workingDir == null ? workingDir : workingDir.trim()))
         .build();
   }
 }

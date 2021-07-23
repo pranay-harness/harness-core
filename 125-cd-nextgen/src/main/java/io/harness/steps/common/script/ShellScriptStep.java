@@ -145,14 +145,14 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     List<String> outputVars = getOutputVars(shellScriptStepParameters.getOutputVariables());
 
     ShellScriptTaskParametersNG taskParameters =
-        taskParametersNGBuilder.accountId(trimStringValue(AmbianceHelper.getAccountId(ambiance)))
+        taskParametersNGBuilder.accountId(AmbianceHelper.getAccountId(ambiance))
             .executeOnDelegate(shellScriptStepParameters.onDelegate.getValue())
             .environmentVariables(environmentVariables)
-            .executionId(trimStringValue(AmbianceUtils.obtainCurrentRuntimeId(ambiance)))
+            .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
             .outputVars(outputVars)
-            .script(trimStringValue(shellScript))
+            .script(shellScript)
             .scriptType(scriptType)
-            .workingDirectory(trimStringValue(workingDirectory))
+            .workingDirectory(workingDirectory)
             .build();
 
     TaskData taskData =
@@ -167,13 +167,6 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
         singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName,
         TaskSelectorYaml.toTaskSelector(shellScriptStepParameters.delegateSelectors.getValue()),
         stepHelper.getEnvironmentType(ambiance));
-  }
-
-  private String trimStringValue(String stringObject) {
-    if (!stringObject.isEmpty()) {
-      return stringObject.trim();
-    }
-    return stringObject;
   }
 
   private String getShellScript(ShellScriptStepParameters stepParameters) {
