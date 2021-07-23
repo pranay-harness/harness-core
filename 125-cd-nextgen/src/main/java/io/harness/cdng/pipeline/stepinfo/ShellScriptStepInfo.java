@@ -25,7 +25,6 @@ import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.inject.Inject;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
