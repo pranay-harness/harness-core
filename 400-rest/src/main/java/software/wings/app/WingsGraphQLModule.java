@@ -105,6 +105,9 @@ import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentStatsDataFetcher;
 import software.wings.graphql.datafetcher.environment.batch.EnvironmentBatchDataFetcher;
 import software.wings.graphql.datafetcher.environment.batch.EnvironmentBatchDataLoader;
+import software.wings.graphql.datafetcher.event.CreateEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.event.DeleteEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.event.UpdateEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
@@ -441,6 +444,9 @@ public class WingsGraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(VerificationResultConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ArtifactCleanupDataFetcher.class);
 
+    bindDataFetcherWithAnnotation(CreateEventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateEventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteEventsConfigDataFetcher.class);
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
         .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))

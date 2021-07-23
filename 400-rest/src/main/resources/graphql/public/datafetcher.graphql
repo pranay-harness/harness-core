@@ -153,4 +153,7 @@ enum DataFetcherEnum {
   delegateList
   addDelegateScope
   attachScopeToDelegate
+  createEventsConfig
+  updateEventsConfig
+  deleteEventsConfig
 }
