@@ -61,18 +61,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         } else {
           InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO =
               instanceSyncPerpetualTaskInfoDTOOptional.get();
-          if (!abstractInstanceSyncHandler.isDeploymentInfoMatching(deploymentSummaryDTO.getDeploymentInfoDTO(),
-                  getDeploymentInfoDTOList(instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList()))) {
-            // it means deployment info doesn't exist in the perpetual task info, we need to add it
-
-            // reset the perpetual task so that it triggers its next execution right away
-            instanceSyncPerpetualTaskService.resetPerpetualTask(
-                infrastructureMappingDTO.getAccountIdentifier(), instanceSyncPerpetualTaskInfoDTO.getPerpetualTaskId());
-
-            // add the deploymentinfo and deployment summary id to the instance sync pt info record
-            addNewDeploymentInfoToInstanceSyncPerpetualTaskInfoRecord(
-                instanceSyncPerpetualTaskInfoDTO, deploymentSummaryDTO.getDeploymentInfoDTO());
-          }
+          // ignore for now
         }
 
         // TODO add a success log here
