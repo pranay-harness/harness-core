@@ -49,7 +49,6 @@ public class LiteEngineTaskStepGenerator {
           .skipGitClone(!gitClone)
           .usePVC(usePVC)
           .buildJobEnvInfo(buildJobEnvInfo)
-          .steps(null)
           .executionElementConfig(executionElement)
           .timeout(getTimeout(infrastructure))
           .build();
@@ -59,7 +58,6 @@ public class LiteEngineTaskStepGenerator {
           .buildJobEnvInfo(buildJobEnvInfo)
           .infrastructure(infrastructure)
           .usePVC(usePVC)
-          .steps(null)
           .executionElementConfig(executionElement)
           .timeout(getTimeout(infrastructure))
           .build();

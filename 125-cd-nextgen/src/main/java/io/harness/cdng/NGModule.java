@@ -24,12 +24,8 @@ import io.harness.cdng.k8s.resources.gcp.service.impl.GcpResourceServiceImpl;
 import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.cdng.yaml.CdYamlSchemaServiceImpl;
 import io.harness.ng.core.NGCoreModule;
-import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
-import io.harness.registrars.NGStageTypeToStageExecutionSummaryMapperRegistrar;
-import io.harness.registrars.StageTypeToStageExecutionMapperRegistrar;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +46,6 @@ public class NGModule extends AbstractModule {
     install(NGCoreModule.getInstance());
     install(WalkTreeModule.getInstance());
     install(NGPipelineCommonsModule.getInstance());
-    install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
@@ -61,10 +56,5 @@ public class NGModule extends AbstractModule {
     bind(GcpResourceService.class).to(GcpResourceServiceImpl.class);
     bind(S3ResourceService.class).to(S3ResourceServiceImpl.class);
     bind(GcsResourceService.class).to(GcsResourceServiceImpl.class);
-
-    MapBinder<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, StageTypeToStageExecutionMapperRegistrar.class);
-    stageExecutionHelperRegistrarMapBinder.addBinding(NGStageTypeToStageExecutionSummaryMapperRegistrar.class.getName())
-        .to(NGStageTypeToStageExecutionSummaryMapperRegistrar.class);
   }
 }
