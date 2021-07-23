@@ -31,6 +31,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.remote.client.ClientMode;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 
@@ -78,7 +79,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
     install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
-        batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId()));
+        batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId(), ClientMode.PRIVILEGED));
     bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
 
     bindCFServices();
