@@ -207,7 +207,7 @@ public class Trigger extends Base
     ScheduledTriggerCondition scheduledCondition = (ScheduledTriggerCondition) condition;
     if (expandNextIterations(skipMissed, throttled, ScheduledTriggerJob.PREFIX + scheduledCondition.getCronExpression(),
             nextIterations)) {
-      return nextIterations;
+      return isNotEmpty(nextIterations) ? nextIterations : Collections.singletonList(Long.MAX_VALUE);
     }
 
     return Collections.singletonList(Long.MAX_VALUE);
