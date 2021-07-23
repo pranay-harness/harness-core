@@ -19,7 +19,7 @@ public class InfrastructureMappingMapper {
         .deploymentType(infrastructureMapping.getDeploymentType())
         .envId(infrastructureMapping.getEnvId())
         .id(infrastructureMapping.getId())
-        .infrastructureId(infrastructureMapping.getId())
+        .infrastructureKey(infrastructureMapping.getInfrastructureKey())
         .serviceId(infrastructureMapping.getServiceId())
         .infrastructureMappingType(infrastructureMapping.getInfrastructureMappingType())
         .build();
@@ -33,10 +33,9 @@ public class InfrastructureMappingMapper {
         .connectorRef(infrastructureMappingDTO.getConnectorRef())
         .deploymentType(infrastructureMappingDTO.getDeploymentType())
         .envId(infrastructureMappingDTO.getEnvId())
-        .infrastructureKey(infrastructureMappingDTO.getInfrastructureId())
+        .infrastructureKey(infrastructureMappingDTO.getInfrastructureKey())
         .infrastructureMappingType(infrastructureMappingDTO.getInfrastructureMappingType())
         .serviceId(infrastructureMappingDTO.getServiceId())
-        .id(infrastructureMappingDTO.getId())
         .build();
   }
 }

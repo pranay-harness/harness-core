@@ -2,9 +2,9 @@ package io.harness.dtos;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dtos.instanceinfo.InstanceInfoDTO;
 import io.harness.entities.ArtifactDetails;
 import io.harness.entities.InstanceType;
-import io.harness.entities.instanceinfo.InstanceInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import lombok.Builder;
@@ -17,6 +17,7 @@ public class InstanceDTO {
   String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
+  String instanceKey;
   InstanceType instanceType;
   String envId;
   String envName;
@@ -25,17 +26,16 @@ public class InstanceDTO {
   String serviceName;
   String infrastructureMappingId;
   String infraMappingType;
-  String connectorId;
+  String connectorRef;
   ArtifactDetails primaryArtifact;
   String lastDeployedById;
   String lastDeployedByName;
   long lastDeployedAt;
   String lastPipelineExecutionId;
   String lastPipelineExecutionName;
-  InstanceInfo instanceInfo;
+  InstanceInfoDTO instanceInfoDTO;
   boolean isDeleted;
   long deletedAt;
   long createdAt;
   long lastModifiedAt;
-  boolean needRetry;
 }

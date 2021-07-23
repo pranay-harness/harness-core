@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.entities.ArtifactDetails;
 import io.harness.entities.Instance;
+import io.harness.entities.instanceinfo.ReferenceInstanceInfo;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
@@ -55,6 +56,7 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
         .deletedAt(10L)
         .createdAt(0L)
         .lastModifiedAt(0L)
+        .instanceInfo(ReferenceInstanceInfo.builder().podName("dummy").build())
         .build();
   }
 

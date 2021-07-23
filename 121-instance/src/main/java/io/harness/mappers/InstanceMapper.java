@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
 import io.harness.entities.Instance;
+import io.harness.mappers.instanceinfo.InstanceInfoMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,6 @@ public class InstanceMapper {
         .lastDeployedByName(instance.getLastDeployedByName())
         .lastPipelineExecutionId(instance.getLastPipelineExecutionId())
         .lastPipelineExecutionName(instance.getLastPipelineExecutionName())
-        .needRetry(instance.isNeedRetry())
         .orgIdentifier(instance.getOrgIdentifier())
         .projectIdentifier(instance.getProjectIdentifier())
         .primaryArtifact(instance.getPrimaryArtifact())
@@ -36,6 +36,9 @@ public class InstanceMapper {
         .deletedAt(instance.getDeletedAt())
         .isDeleted(instance.isDeleted())
         .lastModifiedAt(instance.getLastModifiedAt())
+        .connectorRef(instance.getConnectorRef())
+        .instanceInfoDTO(InstanceInfoMapper.toDTO(instance.getInstanceInfo()))
+        .instanceKey(instance.getInstanceKey())
         .build();
   }
 
@@ -59,7 +62,6 @@ public class InstanceMapper {
         .lastDeployedByName(instanceDTO.getLastDeployedByName())
         .lastPipelineExecutionId(instanceDTO.getLastPipelineExecutionId())
         .lastPipelineExecutionName(instanceDTO.getLastPipelineExecutionName())
-        .needRetry(instanceDTO.isNeedRetry())
         .orgIdentifier(instanceDTO.getOrgIdentifier())
         .projectIdentifier(instanceDTO.getProjectIdentifier())
         .primaryArtifact(instanceDTO.getPrimaryArtifact())
@@ -69,6 +71,9 @@ public class InstanceMapper {
         .deletedAt(instanceDTO.getDeletedAt())
         .isDeleted(instanceDTO.isDeleted())
         .lastModifiedAt(instanceDTO.getLastModifiedAt())
+        .connectorRef(instanceDTO.getConnectorRef())
+        .instanceInfo(InstanceInfoMapper.toEntity(instanceDTO.getInstanceInfoDTO()))
+        .instanceKey(instanceDTO.getInstanceKey())
         .build();
   }
 }
