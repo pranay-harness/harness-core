@@ -75,7 +75,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   @Inject
   public JiraApprovalHelperServiceImpl(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
       ConnectorResourceClient connectorResourceClient, KryoSerializer kryoSerializer,
-      SecretNGManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
+      @Named("PRIVILEGED") SecretNGManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
       LogStreamingStepClientFactory logStreamingStepClientFactory,
       @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName, PmsGitSyncHelper pmsGitSyncHelper) {
     this.ngDelegate2TaskExecutor = ngDelegate2TaskExecutor;
