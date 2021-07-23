@@ -1000,7 +1000,7 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     // Get patched version
-    final String patchVersion = version.contains("-") ? substringBefore(version, "-") : version;
+    final String patchVersion = version.contains("-") ? substringAfter(version, "-") : EMPTY;
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
