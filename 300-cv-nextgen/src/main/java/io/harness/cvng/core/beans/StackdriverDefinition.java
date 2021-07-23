@@ -14,4 +14,5 @@ public class StackdriverDefinition {
   private List<String> metricTags;
   private RiskProfile riskProfile;
   private boolean isManualQuery;
+  private String serviceInstanceField;
 }

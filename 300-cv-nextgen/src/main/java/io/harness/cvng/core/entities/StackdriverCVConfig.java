@@ -48,6 +48,7 @@ public class StackdriverCVConfig extends MetricCVConfig {
     private List<String> tags;
     private TimeSeriesMetricType metricType;
     boolean isManualQuery;
+    private String serviceInstanceField;
   }
 
   @Override
@@ -94,6 +95,7 @@ public class StackdriverCVConfig extends MetricCVConfig {
                              .metricType(metricType)
                              .tags(definition.getMetricTags())
                              .isManualQuery(definition.isManualQuery())
+                             .serviceInstanceField(definition.getServiceInstanceField())
                              .build());
 
       // add this metric to the pack and the corresponding thresholds
