@@ -42,7 +42,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("shellScriptStepInfo")
 @OwnedBy(HarnessTeam.CDC)
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
-  @Inject private static ShellScriptBaseStepInfo shellScriptBaseStepInfo;
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
