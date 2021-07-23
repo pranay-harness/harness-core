@@ -91,8 +91,7 @@ public class MergeHelper {
 
         inputSetFQNs.remove(key);
       } else {
-        Map<FQN, Object> subMap =
-            io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
+        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetConfig.getFqnToValueMap(), key);
         subMap.keySet().forEach(inputSetFQNs::remove);
       }
     });
@@ -171,10 +170,9 @@ public class MergeHelper {
         }
         res.put(key, value);
       } else {
-        Map<FQN, Object> subMap =
-            io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
+        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetConfig.getFqnToValueMap(), key);
         if (!subMap.isEmpty()) {
-          res.put(key, FQNUtils.getObject(inputSetConfig, key));
+          res.put(key, YamlSubMapExtractor.getNodeForFQN(inputSetConfig, key));
         }
       }
     });
