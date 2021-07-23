@@ -6,6 +6,9 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -14,6 +17,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -33,7 +37,9 @@ import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceServic
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -44,15 +50,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject MetricPackService metricPackService;
   @Inject CVConfigService cvConfigService;
   @Inject MonitoredServiceService monitoredServiceService;
   @Inject HPersistence hPersistence;
+  @Mock NextGenService nextGenService;
+
   private BuilderFactory builderFactory;
   String healthSourceName;
   String healthSourceIdentifier;
@@ -71,7 +81,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   Map<String, String> tags;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     builderFactory = BuilderFactory.getDefault();
     healthSourceName = "healthSourceName";
     healthSourceIdentifier = "healthSourceIdentifier";
@@ -94,6 +104,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         put("tag2", "");
       }
     };
+
+    FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
   }
 
   @Test
@@ -277,6 +289,20 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     healthSourceIdentifier = "new-health-source-identifier";
     monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(accountId, monitoredServiceDTO);
+    when(nextGenService.listService(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(ServiceResponse.builder()
+                                      .service(builderFactory.serviceResponseDTOBuilder()
+                                                   .identifier(serviceIdentifier)
+                                                   .name("serviceName")
+                                                   .build())
+                                      .build()));
+    when(nextGenService.listEnvironment(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(EnvironmentResponse.builder()
+                                      .environment(builderFactory.environmentResponseDTOBuilder()
+                                                       .identifier(environmentIdentifier)
+                                                       .name("environmentName")
+                                                       .build())
+                                      .build()));
     PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse =
         monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, 0, 10, null);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
@@ -301,6 +327,21 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     healthSourceIdentifier = "new-health-source-identifier";
     monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(accountId, monitoredServiceDTO);
+
+    when(nextGenService.listService(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(ServiceResponse.builder()
+                                      .service(builderFactory.serviceResponseDTOBuilder()
+                                                   .identifier(serviceIdentifier)
+                                                   .name("serviceName")
+                                                   .build())
+                                      .build()));
+    when(nextGenService.listEnvironment(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(EnvironmentResponse.builder()
+                                      .environment(builderFactory.environmentResponseDTOBuilder()
+                                                       .identifier(environmentIdentifier)
+                                                       .name("environmentName")
+                                                       .build())
+                                      .build()));
     PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse =
         monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, null, 0, 10, null);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
@@ -308,7 +349,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredServiceListItemDTO monitoredServiceListItemDTO = monitoredServiceListDTOPageResponse.getContent().get(0);
     assertThat(monitoredServiceListItemDTO.getName()).isEqualTo(monitoredServiceName);
     assertThat(monitoredServiceListItemDTO.getIdentifier()).isEqualTo(monitoredServiceIdentifier);
+    assertThat(monitoredServiceListItemDTO.getServiceName()).isEqualTo("serviceName");
     assertThat(monitoredServiceListItemDTO.getServiceRef()).isEqualTo(serviceIdentifier);
+    assertThat(monitoredServiceListItemDTO.getEnvironmentName()).isEqualTo("environmentName");
     assertThat(monitoredServiceListItemDTO.getEnvironmentRef()).isEqualTo(environmentIdentifier);
     assertThat(monitoredServiceListItemDTO.getType()).isEqualTo(MonitoredServiceType.APPLICATION);
     assertThat(monitoredServiceListItemDTO.isHealthMonitoringEnabled()).isTrue();

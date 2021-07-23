@@ -42,6 +42,10 @@ import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO.EnvironmentResponseDTOBuilder;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponseDTO.ServiceResponseDTOBuilder;
 import io.harness.pms.yaml.ParameterField;
 
 import java.time.Clock;
@@ -86,6 +90,22 @@ public class BuilderFactory {
         .activityId(generateUuid())
         .status(Status.IN_PROGRESS)
         .callbackId(generateUuid());
+  }
+
+  public ServiceResponseDTOBuilder serviceResponseDTOBuilder() {
+    return ServiceResponseDTO.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .identifier(context.getServiceIdentifier())
+        .projectIdentifier(context.getProjectIdentifier());
+  }
+
+  public EnvironmentResponseDTOBuilder environmentResponseDTOBuilder() {
+    return EnvironmentResponseDTO.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .identifier(context.getEnvIdentifier())
+        .projectIdentifier(context.getProjectIdentifier());
   }
 
   public VerificationJobInstanceBuilder verificationJobInstanceBuilder() {
