@@ -61,6 +61,7 @@ metadata:
   namespace: test-namespace
 spec:
   replicas: 8
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       harness.io/app: harness-delegate
