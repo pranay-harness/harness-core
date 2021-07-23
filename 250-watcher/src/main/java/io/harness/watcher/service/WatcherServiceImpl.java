@@ -1000,21 +1000,22 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     // Get patched version
-    final String patchVersion = version.contains("-") ? substringAfter(version, "-") : EMPTY;
+    final String patchVersion = substringAfter(version, "-");
+    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      log.info(format("Calling getDelegateScripts with version %s and patch %s", version, patchVersion));
+      log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
-                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version, patchVersion)));
+                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), updatedVersion, patchVersion)));
     } else {
-      log.info(format("Calling getDelegateScriptsNg with version %s", version));
+      log.info(format("Calling getDelegateScriptsNg with version %s", updatedVersion));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
-              -> SafeHttpCall.execute(
-                  managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
+              -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
+                  watcherConfiguration.getAccountId(), updatedVersion, delegateSize)));
     }
 
     if (restResponse == null) {
