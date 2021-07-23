@@ -86,13 +86,16 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
   }
 
   private ExecutionTarget getTrimmedExecutionTarget(ExecutionTarget executionTarget) {
+    if (executionTarget == null) {
+      return null;
+    }
     String host = executionTarget.getHost().getValue();
     String connecRef = executionTarget.getConnectorRef().getValue();
     String workingDir = executionTarget.getWorkingDirectory().getValue();
     return ExecutionTarget.builder()
-        .host(ParameterField.createValueField(host == null ? host : host.trim()))
-        .connectorRef(ParameterField.createValueField(connecRef == null ? connecRef : connecRef.trim()))
-        .workingDirectory(ParameterField.createValueField(workingDir == null ? workingDir : workingDir.trim()))
+        .host(ParameterField.createValueField(host == null ? null : host.trim()))
+        .connectorRef(ParameterField.createValueField(connecRef == null ? null : connecRef.trim()))
+        .workingDirectory(ParameterField.createValueField(workingDir == null ? null : workingDir.trim()))
         .build();
   }
 }

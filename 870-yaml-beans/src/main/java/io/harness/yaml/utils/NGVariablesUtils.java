@@ -78,7 +78,9 @@ public class NGVariablesUtils {
 
   private ParameterField<?> getNonSecretValue(NGVariable variable) {
     ParameterField<?> value = variable.getCurrentValue();
-    value = ParameterField.createValueField(((String) value.getValue()).trim());
+    if (value.getValue() instanceof String) {
+      value = ParameterField.createValueField(((String) value.getValue()).trim());
+    }
     if (ParameterField.isNull(value) || (!value.isExpression() && value.getValue() == null)) {
       if (variable.isRequired()) {
         throw new InvalidRequestException(
