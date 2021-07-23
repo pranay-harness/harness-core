@@ -58,12 +58,8 @@ import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
-import io.harness.cvng.client.CVNGService;
-import io.harness.cvng.client.CVNGServiceImpl;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskServiceImpl;
-import io.harness.cvng.state.CVNGVerificationTaskService;
-import io.harness.cvng.state.CVNGVerificationTaskServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.datahandler.services.AdminAccountService;
@@ -437,7 +433,6 @@ import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerIm
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
-import software.wings.service.impl.cvng.CVNGStateServiceImpl;
 import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
@@ -651,7 +646,6 @@ import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
-import software.wings.service.intfc.cvng.CVNGStateService;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
@@ -1077,9 +1071,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ExperimentalMetricAnalysisRecordService.class).to(ExperimentalMetricAnalysisRecordServiceImpl.class);
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
-    bind(CVNGVerificationTaskService.class).to(CVNGVerificationTaskServiceImpl.class);
-    bind(CVNGService.class).to(CVNGServiceImpl.class);
-    bind(CVNGStateService.class).to(CVNGStateServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

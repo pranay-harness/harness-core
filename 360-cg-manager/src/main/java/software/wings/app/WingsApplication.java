@@ -48,9 +48,7 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.client.CVNGClientModule;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
-import io.harness.cvng.state.CVNGVerificationTaskHandler;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -450,7 +448,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (configuration.isEnableIterators()) {
       registerIterators(injector);
     }
-    registerCVNGVerificationTaskIterator(injector);
 
     environment.lifecycle().addServerLifecycleListener(server -> {
       for (Connector connector : server.getConnectors()) {
@@ -586,7 +583,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
     modules.add(new WingsModule(configuration));
-    modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -659,10 +655,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     final ExecutorService entityCRUDConsumerExecutor =
         Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(ENTITY_CRUD).build());
     entityCRUDConsumerExecutor.execute(injector.getInstance(EntityCRUDConsumer.class));
-  }
-
-  private void registerCVNGVerificationTaskIterator(Injector injector) {
-    injector.getInstance(CVNGVerificationTaskHandler.class).registerIterator();
   }
 
   private void registerAtmosphereStreams(Environment environment, Injector injector) {
