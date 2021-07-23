@@ -84,12 +84,12 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   }
 
   @Override
-  public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
-      String accountId, String verificationJobInstanceId, Integer label, int pageNumber, String hostName) {
+  public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(String accountId, String verificationJobInstanceId,
+      Integer label, int pageNumber, int pageSize, String hostName) {
     List<LogAnalysisClusterDTO> logAnalysisClusters =
         getLogAnalysisResult(accountId, verificationJobInstanceId, label, hostName);
 
-    return formPageResponse(logAnalysisClusters, pageNumber, DEFAULT_PAGE_SIZE);
+    return formPageResponse(logAnalysisClusters, pageNumber, pageSize);
   }
 
   private List<LogAnalysisClusterDTO> getLogAnalysisResult(
