@@ -61,26 +61,31 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
 
   private void updateCEMetadataRecord(Map<String, String> metadataMap, EntityChangeDTO entityChangeDTO) {
     String action = metadataMap.get(ACTION);
-    if (action != null && CREATE_ACTION == action) {
+    log.info("In updateCEMetadataRecord with action: {}", action);
+    if (CREATE_ACTION.equals(action)) {
       if (isCEAWSEvent(metadataMap)) {
+        log.info("CE AWS Create Event");
         ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
                                        .accountId(entityChangeDTO.getAccountIdentifier().getValue())
                                        .awsConnectorConfigured(true)
                                        .build());
       }
       if (isCEAzureEvent(metadataMap)) {
+        log.info("CE Azure Create Event");
         ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
                                        .accountId(entityChangeDTO.getAccountIdentifier().getValue())
                                        .azureConnectorConfigured(true)
                                        .build());
       }
       if (isCEGCPEvent(metadataMap)) {
+        log.info("CE GCP Create Event");
         ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
                                        .accountId(entityChangeDTO.getAccountIdentifier().getValue())
                                        .gcpConnectorConfigured(true)
                                        .build());
       }
       if (isCEK8sEvent(metadataMap)) {
+        log.info("CE K8s Create Event");
         ceMetadataRecordDao.upsert(CEMetadataRecord.builder()
                                        .accountId(entityChangeDTO.getAccountIdentifier().getValue())
                                        .clusterConnectorConfigured(true)
