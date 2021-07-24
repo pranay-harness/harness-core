@@ -1,6 +1,5 @@
 package io.harness.batch.processing.service.impl;
 
-import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.intfc.AwsS3SyncService;
@@ -97,7 +96,8 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
       try {
         retryingAwsS3Sync.apply();
       } catch (Throwable throwable) {
-        throw new BatchProcessingException("S3 sync failed", throwable);
+        log.error("Exception during s3 sync {}", throwable);
+        // throw new BatchProcessingException("S3 sync failed", throwable);
       }
       log.info("sync completed");
 
@@ -105,7 +105,7 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
       log.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
           s3SyncRecord.getBillingBucketPath(), s3SyncRecord.getBillingBucketRegion(), destinationBucketPath,
           s3SyncRecord.getRoleArn());
-      throw new BatchProcessingException("S3 sync failed", e);
+      // throw new BatchProcessingException("S3 sync failed", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
