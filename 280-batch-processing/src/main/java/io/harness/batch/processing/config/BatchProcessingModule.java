@@ -15,7 +15,9 @@ import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudServiceImpl;
+import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
 import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.intf.ClusterRecordService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.CESlackWebhookServiceImpl;
@@ -83,6 +85,7 @@ public class BatchProcessingModule extends AbstractModule {
     install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
         batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId(), ClientMode.PRIVILEGED));
     bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
+    bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
     bind(RecommendationCrudService.class).to(RecommendationCrudServiceImpl.class);
 
     bindCFServices();

@@ -51,11 +51,14 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
   @SuppressWarnings("PMD")
   public void syncContainer(AzureStorageSyncRecord azureStorageSyncRecord) {
     AzureStorageSyncConfig azureStorageSyncConfig = configuration.getAzureStorageSyncConfig();
-    String sourcePath = null;
-    String sourceSasToken = null;
+    String sourcePath = "";
+    String sourceSasToken = "";
 
-    String destinationPath = null;
-    String destinationSasToken = null;
+    String destinationPath = "";
+    String destinationSasToken = "";
+
+    String destinationPathWithToken = "";
+    String sourcePathWithToken = "";
 
     // Retry class config to retry aws commands
     RetryConfig config = RetryConfig.custom()
@@ -100,23 +103,23 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
           String.format(AZURE_STORAGE_URL_FORMAT, azureStorageSyncRecord.getStorageAccountName(), AZURE_STORAGE_SUFFIX);
       if (azureStorageSyncRecord.getReportName() != null && isNotEmpty(azureStorageSyncRecord.getReportName())) {
         sourcePath = String.join("/", storageAccountUrl, azureStorageSyncRecord.getContainerName(),
-                         azureStorageSyncRecord.getDirectoryName(), azureStorageSyncRecord.getReportName())
-            + "?" + sourceSasToken;
+            azureStorageSyncRecord.getDirectoryName(), azureStorageSyncRecord.getReportName());
+        destinationPath = String.join("/", storageAccountUrl, azureStorageSyncConfig.getAzureStorageContainerName(),
+            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId(),
+            azureStorageSyncRecord.getTenantId(), azureStorageSyncRecord.getReportName());
       } else {
         sourcePath = String.join("/", storageAccountUrl, azureStorageSyncRecord.getContainerName(),
-                         azureStorageSyncRecord.getDirectoryName())
-            + "?" + sourceSasToken;
+            azureStorageSyncRecord.getDirectoryName());
+        destinationPath = String.join("/", storageAccountUrl, azureStorageSyncConfig.getAzureStorageContainerName(),
+            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId(),
+            azureStorageSyncRecord.getTenantId());
       }
-      storageAccountUrl = String.format(
-          AZURE_STORAGE_URL_FORMAT, azureStorageSyncConfig.getAzureStorageAccountName(), AZURE_STORAGE_SUFFIX);
-      destinationPath = String.join("/", storageAccountUrl, azureStorageSyncConfig.getAzureStorageContainerName(),
-                            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId(),
-                            azureStorageSyncRecord.getTenantId())
-          + "?" + destinationSasToken;
-      final ArrayList<String> cmd = Lists.newArrayList("azcopy", "sync", sourcePath, destinationPath, "--recursive");
-      // TODO: Remove below info logging for security reasons
-      log.info("azcopy sync cmd: {}", cmd);
-
+      sourcePathWithToken = sourcePath + "?" + sourceSasToken;
+      destinationPathWithToken = destinationPath + "?" + destinationSasToken;
+      log.info("azcopy sync source {}, destination {}", sourcePath, destinationPath);
+      final ArrayList<String> cmd =
+          Lists.newArrayList("azcopy", "sync", sourcePathWithToken, destinationPathWithToken, "--recursive");
+      log.debug("azcopy sync cmd: {}", cmd);
       // Wrap azcopy sync with a retry mechanism.
       CheckedFunction0<ProcessResult> retryingAzcopySync =
           Retry.decorateCheckedSupplier(retry, () -> trySyncStorage(cmd));
