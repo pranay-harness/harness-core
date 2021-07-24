@@ -71,6 +71,7 @@ public class BudgetServiceImpl implements BudgetService {
     removeEmailDuplicates(budget);
     validatePerspective(budget);
     // Todo : Update costs here
+    log.info("Budget {}", budget);
     budgetDao.update(budgetId, budget);
   }
 
