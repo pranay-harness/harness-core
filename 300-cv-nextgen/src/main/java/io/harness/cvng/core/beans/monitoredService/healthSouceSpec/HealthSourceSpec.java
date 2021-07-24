@@ -23,7 +23,8 @@ import org.hibernate.validator.constraints.NotEmpty;
   , @JsonSubTypes.Type(value = NewRelicHealthSourceSpec.class, name = "NewRelic"),
       @JsonSubTypes.Type(value = StackdriverLogHealthSourceSpec.class, name = "StackdriverLog"),
       @JsonSubTypes.Type(value = SplunkHealthSourceSpec.class, name = "Splunk"),
-      @JsonSubTypes.Type(value = PrometheusHealthSourceSpec.class, name = "Prometheus")
+      @JsonSubTypes.Type(value = PrometheusHealthSourceSpec.class, name = "Prometheus"),
+      @JsonSubTypes.Type(value = StackdriverMetricHealthSourceSpec.class, name = "Stackdriver")
 })
 public abstract class HealthSourceSpec {
   @NotEmpty String connectorRef;
