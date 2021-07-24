@@ -1,22 +1,24 @@
 package software.wings.graphql.schema.type.trigger;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.graphql.schema.type.QLObject;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder;
+import lombok.Value;
 
-@OwnedBy(CDC)
+@Value
+@Builder
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(HarnessTeam.CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public interface QLTriggerAction extends QLObject {
-  List<QLTriggerVariableValue> getVariables();
-  List<QLArtifactSelection> getArtifactSelections();
-  List<QLManifestSelection> getManifestSelections();
+public class QLManifestConditionInput {
+  private String appManifestId;
+  private String versionRegex;
 }

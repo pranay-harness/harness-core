@@ -120,6 +120,8 @@ public class TriggerController {
         triggerBuilder.workflowVariables(resolvedWorkflowVariables);
         validateAndSetArtifactSelectionsWorkflow(
             resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput, workflow, triggerBuilder);
+        triggerActionController.validateAndSetManifestSelectionsWorkflow(
+            resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput, workflow, triggerBuilder);
         triggerBuilder.continueWithDefaultValues(false);
         break;
       case PIPELINE:
@@ -135,6 +137,8 @@ public class TriggerController {
             triggerActionController.validateAndResolvePipelineVariables(variables, pipeline, envId);
         triggerBuilder.workflowVariables(resolvedWorkflowVariables);
         validateAndSetArtifactSelectionsPipeline(
+            resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput, pipeline, triggerBuilder);
+        triggerActionController.validateAndSetManifestSelectionsPipeline(
             resolvedWorkflowVariables, qlCreateOrUpdateTriggerInput, pipeline, triggerBuilder);
         break;
       default:

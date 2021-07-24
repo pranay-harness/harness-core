@@ -10,9 +10,11 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
@@ -56,10 +58,12 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataKeys;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.datafetcher.user.UserController;
@@ -68,12 +72,16 @@ import software.wings.graphql.schema.mutation.execution.input.QLArtifactInputTyp
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLBuildNumberInput;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
+import software.wings.graphql.schema.mutation.execution.input.QLManifestInputType;
+import software.wings.graphql.schema.mutation.execution.input.QLManifestValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
+import software.wings.graphql.schema.mutation.execution.input.QLVersionNumberInput;
 import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
+import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.type.QLExecuteOptions;
 import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLExecutionStatus;
@@ -89,6 +97,7 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.utils.JsonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -100,6 +109,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -122,6 +132,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock ArtifactService artifactService;
   @Mock ArtifactStreamService artifactStreamService;
+  @Mock HelmChartService helmChartService;
   @Inject @InjectMocks PipelineExecutionController pipelineExecutionController = new PipelineExecutionController();
 
   private static final String ENVIRONMENT_DEV_ID = "ENV_DEV_ID";
@@ -980,6 +991,184 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
         pipelineExecutionController.startPipelineExecution(startExecutionInput, mutationContext);
     assertThat(startExecutionPayload).isNotNull();
     assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldPopulateArtifactAndManifestNeededServiceIds() {
+    QLServiceInputsForExecutionParams params = QLServiceInputsForExecutionParams.builder()
+                                                   .executionType(QLExecutionType.PIPELINE)
+                                                   .applicationId(APP_ID)
+                                                   .entityId(PIPELINE_ID)
+                                                   .build();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(pipelineService.fetchDeploymentMetadata(eq(APP_ID), eq(pipeline), any()))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2))
+                        .manifestRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 3))
+                        .build());
+    Map<String, List<String>> requiredServiceMap =
+        pipelineExecutionController.getArtifactAndManifestNeededServices(params);
+    assertThat(requiredServiceMap).isNotNull();
+    assertThat(requiredServiceMap.get(DeploymentMetadataKeys.artifactRequiredServices))
+        .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 2);
+    assertThat(requiredServiceMap.get(DeploymentMetadataKeys.manifestRequiredServiceIds))
+        .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 3);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartPipelineWithManifest() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(
+            DeploymentMetadata.builder().manifestRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2)).build());
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+    when(helmChartService.getByChartVersion(APP_ID, SERVICE_ID, APP_MANIFEST_NAME, "1.0"))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).build());
+    when(helmChartService.get(APP_ID, HELM_CHART_ID + 2))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID + 2).build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+    assertThat(captor.getValue().getHelmCharts().stream().map(HelmChart::getUuid).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(HELM_CHART_ID, HELM_CHART_ID + 2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartPipelineWithoutManifest() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForManifestMissing() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(
+            DeploymentMetadata.builder().manifestRequiredServiceIds(asList(SERVICE_ID + 3, SERVICE_ID + 2)).build());
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("ServiceInput required for service: SERVICE_ID3");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForInvalidHelmChart() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(
+            DeploymentMetadata.builder().manifestRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2)).build());
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+    when(helmChartService.getByChartVersion(APP_ID, SERVICE_ID, APP_MANIFEST_NAME, "2.0"))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).build());
+    when(helmChartService.get(APP_ID, HELM_CHART_ID + 2))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID + 2).build());
+
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Cannot find helm chart for specified version number: 1.0");
+
+    when(helmChartService.getByChartVersion(APP_ID, SERVICE_ID, APP_MANIFEST_NAME, "1.0"))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).build());
+    when(helmChartService.get(APP_ID, HELM_CHART_ID + 2)).thenReturn(null);
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Cannot find helm chart for specified Id: HELM_CHART_ID2. Might be deleted");
+  }
+
+  private QLStartExecutionInput getStartExecutionInput() {
+    return QLStartExecutionInput.builder()
+        .executionType(QLExecutionType.PIPELINE)
+        .applicationId(APP_ID)
+        .entityId(PIPELINE_ID)
+        .serviceInputs(asList(QLServiceInput.builder()
+                                  .name(SERVICE_ID)
+                                  .manifestValueInput(QLManifestValueInput.builder()
+                                                          .valueType(QLManifestInputType.VERSION_NUMBER)
+                                                          .versionNumber(QLVersionNumberInput.builder()
+                                                                             .versionNumber("1.0")
+                                                                             .appManifestName(APP_MANIFEST_NAME)
+                                                                             .build())
+                                                          .build())
+                                  .build(),
+            QLServiceInput.builder()
+                .name(SERVICE_ID + 2)
+                .manifestValueInput(QLManifestValueInput.builder()
+                                        .valueType(QLManifestInputType.HELM_CHART_ID)
+                                        .helmChartId(HELM_CHART_ID + 2)
+                                        .build())
+                .build()))
+        .build();
   }
 
   private Variable buildVariable(String name, EntityType entityType, Boolean isRuntime) {

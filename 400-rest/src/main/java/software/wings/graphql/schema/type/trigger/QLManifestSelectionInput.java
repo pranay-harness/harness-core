@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
+import software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -16,13 +17,12 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 @OwnedBy(HarnessTeam.CDC)
-public class QLTriggerConditionInput {
-  private QLConditionType conditionType;
-  private QLArtifactConditionInput artifactConditionInput;
-  private QLPipelineConditionInput pipelineConditionInput;
-  private QLScheduleConditionInput scheduleConditionInput;
-  private QLWebhookConditionInput webhookConditionInput;
-  private QLManifestConditionInput manifestConditionInput;
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
+public class QLManifestSelectionInput {
+  private String serviceId;
+  private ManifestSelectionType manifestSelectionType;
+  private String versionRegex;
+  private String workflowId;
+  private String pipelineId;
 }
