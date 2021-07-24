@@ -40,4 +40,6 @@ public interface HelmChartService extends OwnedByApplicationManifest {
   HelmChart getLastCollectedManifestMatchingRegex(String accountId, String appManifestId, String versionRegex);
 
   HelmChart getManifestByVersionNumber(String accountId, String appManifestId, String versionNumber);
+
+  HelmChart getByChartVersion(String appId, String serviceId, String appManifestName, String chartVersion);
 }

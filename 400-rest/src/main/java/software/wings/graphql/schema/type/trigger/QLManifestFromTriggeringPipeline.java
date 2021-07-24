@@ -6,17 +6,22 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.graphql.schema.type.QLObject;
+import software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
-import java.util.List;
+import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.FieldNameConstants;
 
 @OwnedBy(CDC)
+@Value
+@Builder
+@FieldNameConstants(innerTypeName = "QLManifestFromTriggeringPipelineKeys")
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public interface QLTriggerAction extends QLObject {
-  List<QLTriggerVariableValue> getVariables();
-  List<QLArtifactSelection> getArtifactSelections();
-  List<QLManifestSelection> getManifestSelections();
+public class QLManifestFromTriggeringPipeline implements QLManifestSelection {
+  String serviceId;
+  String serviceName;
+  ManifestSelectionType manifestSelectionType;
 }
