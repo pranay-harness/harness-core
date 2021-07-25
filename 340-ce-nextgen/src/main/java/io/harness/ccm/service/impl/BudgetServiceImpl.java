@@ -1,15 +1,28 @@
 package io.harness.ccm.service.impl;
 
+import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
+
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.budget.utils.BudgetUtils;
 import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.service.intf.BudgetService;
+import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
+import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
+import io.harness.ccm.views.graphql.ViewCostData;
+import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -21,13 +34,17 @@ import org.apache.commons.lang3.ArrayUtils;
 public class BudgetServiceImpl implements BudgetService {
   @Inject private BudgetDao budgetDao;
   @Inject private CEViewService ceViewService;
+  @Inject ViewsBillingService viewsBillingService;
+  @Inject ViewsQueryHelper viewsQueryHelper;
+  @Inject BigQueryService bigQueryService;
+  @Inject BigQueryHelper bigQueryHelper;
 
   @Override
   public String create(Budget budget) {
     BudgetUtils.validateBudget(budget, budgetDao.list(budget.getAccountId(), budget.getName()));
     removeEmailDuplicates(budget);
     validatePerspective(budget);
-    // Todo : Update costs here
+    updateBudgetCosts(budget);
     return budgetDao.save(budget);
   }
 
@@ -70,8 +87,7 @@ public class BudgetServiceImpl implements BudgetService {
     BudgetUtils.validateBudget(budget, budgetDao.list(budget.getAccountId(), budget.getName()));
     removeEmailDuplicates(budget);
     validatePerspective(budget);
-    // Todo : Update costs here
-    log.info("Budget {}", budget);
+    updateBudgetCosts(budget);
     budgetDao.update(budgetId, budget);
   }
 
@@ -120,5 +136,60 @@ public class BudgetServiceImpl implements BudgetService {
       }
       budget.setAlertThresholds(alertThresholds);
     }
+  }
+
+  // Methods for updating costs for budget
+  private void updateBudgetCosts(Budget budget) {
+    try {
+      Double actualCost = getActualCostForPerspectiveBudget(budget);
+      Double forecastCost = actualCost + getForecastCostForPerspectiveBudget(budget);
+      Double lastMonthCost = getLastMonthCostForPerspectiveBudget(budget);
+
+      budget.setActualCost(actualCost);
+      budget.setForecastCost(forecastCost);
+      budget.setLastMonthCost(lastMonthCost);
+    } catch (Exception e) {
+      log.error("Error occurred while updating costs of budget: {}, Exception : {}", budget.getUuid(), e);
+    }
+  }
+
+  private double getActualCostForPerspectiveBudget(Budget budget) {
+    String viewId = budget.getScope().getEntityIds().get(0);
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonthForCurrentBillingCycle(), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getEndOfMonthForCurrentBillingCycle(), BEFORE));
+    return getCostForPerspectiveBudget(budget, filters);
+  }
+
+  private double getLastMonthCostForPerspectiveBudget(Budget budget) {
+    String viewId = budget.getScope().getEntityIds().get(0);
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonth(true), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(
+        BudgetUtils.getStartOfMonth(false) - BudgetUtils.ONE_DAY_MILLIS, BEFORE));
+    return getCostForPerspectiveBudget(budget, filters);
+  }
+
+  private double getForecastCostForPerspectiveBudget(Budget budget) {
+    String viewId = budget.getScope().getEntityIds().get(0);
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    long endTime = BudgetUtils.getEndOfMonthForCurrentBillingCycle();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartTimeForForecasting(), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(endTime, BEFORE));
+    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(budget.getAccountId(), UNIFIED_TABLE);
+    ViewCostData currentCostData = viewsBillingService.getCostData(bigQueryService.get(), filters,
+        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, budget.getAccountId(), false);
+
+    return viewsQueryHelper.getForecastCost(currentCostData, Instant.ofEpochMilli(endTime));
+  }
+
+  private double getCostForPerspectiveBudget(Budget budget, List<QLCEViewFilterWrapper> filters) {
+    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(budget.getAccountId(), UNIFIED_TABLE);
+    QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
+        bigQueryService.get(), filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable);
+    return trendData.getValue().doubleValue();
   }
 }
