@@ -118,6 +118,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
                 .gitFileChangeDTOList(gitToHarnessGetFilesStepResponse.getGitFileChangeDTOList())
                 .gitDiffResultFileDTOList(gitToHarnessGetFilesStepResponse.getGitDiffResultFileDTOList())
                 .progressRecord(gitToHarnessGetFilesStepResponse.getProgressRecord())
+                .commitId(gitToHarnessGetFilesStepResponse.getCommitId())
                 .build());
       }
 
@@ -150,10 +151,10 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
     List<GitFileChangeDTO> gitFileChangeDTOList = null;
     List<GitDiffResultFileDTO> prFilesTobeProcessed = null;
+    GetFilesInDiffResponseDTO filesFromDiffResponse;
     try {
       Set<String> rootFolderList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOList);
-      GetFilesInDiffResponseDTO filesFromDiffResponse =
-          getFilesFromDiff(yamlGitConfigDTOList, yamlChangeSetDTO, rootFolderList, gitCommitDTO);
+      filesFromDiffResponse = getFilesFromDiff(yamlGitConfigDTOList, yamlChangeSetDTO, rootFolderList, gitCommitDTO);
       gitFileChangeDTOList = filesFromDiffResponse.getGitFileChangeDTOList();
       prFilesTobeProcessed = filesFromDiffResponse.getPrFilesTobeProcessed();
       // TODO adding logs to debug an issue, remove after use
@@ -177,6 +178,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .gitFileChangeDTOList(gitFileChangeDTOList)
         .gitDiffResultFileDTOList(prFilesTobeProcessed)
         .progressRecord(gitToHarnessProgressRecord)
+        .commitId(filesFromDiffResponse.getCommitId())
         .build();
   }
 
@@ -193,10 +195,13 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     for (int i = 0; i < yamlGitConfigsCount; i++) {
       YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigDTOList.get(i);
       try {
+        final String finalCommitId = getCommitIdToBeProcessed(yamlGitConfigDTO, yamlChangeSetDTO.getBranch());
+        log.info("Processing till commitId: [{}]", finalCommitId);
         log.info("Trying to get files using the yaml git config with the identifier {} in project {}",
             yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier());
         // Fetch files that have changed b/w push event commit id and the local commit id
-        List<GitDiffResultFileDTO> prFiles = getDiffFilesUsingSCM(yamlChangeSetDTO, yamlGitConfigDTO, gitCommit);
+        List<GitDiffResultFileDTO> prFiles =
+            getDiffFilesUsingSCM(yamlChangeSetDTO, yamlGitConfigDTO, gitCommit, finalCommitId);
         // We need to process only those files which are in root folders
         List<GitDiffResultFileDTO> prFilesTobeProcessed = getFilePathsToBeProcessed(rootFolderList, prFiles);
 
@@ -207,6 +212,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         return GetFilesInDiffResponseDTO.builder()
             .gitFileChangeDTOList(gitFileChangeDTOList)
             .prFilesTobeProcessed(prFilesTobeProcessed)
+            .commitId(finalCommitId)
             .build();
       } catch (Exception ex) {
         log.error("Error doing get files using the yaml git config with the identifier {} in project {}",
@@ -226,18 +232,16 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         prepareFileProcessingRequests(request.getGitFileChangeDTOList(), request.getGitDiffResultFileDTOList());
     GitToHarnessProgressStatus gitToHarnessProgressStatus =
         gitToHarnessProcessorService.processFiles(request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests,
-            request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO().getRepo(),
-            request.getYamlChangeSetDTO().getGitWebhookRequestAttributes().getHeadCommitId(),
+            request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO().getRepo(), request.getCommitId(),
             request.getProgressRecord().getUuid(), request.getYamlChangeSetDTO().getChangesetId());
     return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 
   // Fetch list of files in the diff b/w last processed commit and new pushed commit, along with their change status
-  private List<GitDiffResultFileDTO> getDiffFilesUsingSCM(
-      YamlChangeSetDTO yamlChangeSetDTO, YamlGitConfigDTO yamlGitConfigDTO, GitCommitDTO gitCommitDTO) {
+  private List<GitDiffResultFileDTO> getDiffFilesUsingSCM(YamlChangeSetDTO yamlChangeSetDTO,
+      YamlGitConfigDTO yamlGitConfigDTO, GitCommitDTO gitCommitDTO, String finalCommitId) {
     // Call to SCM api to find diff files in push event commit id and local commit id
     String initialCommitId = gitCommitDTO.getCommitId();
-    String finalCommitId = getWebhookCommitId(yamlChangeSetDTO);
     GitDiffResultFileListDTO gitDiffResultFileListDTO =
         scmOrchestratorService.processScmRequest(scmClientFacilitatorService
             -> scmClientFacilitatorService.listCommitsDiffFiles(yamlGitConfigDTO, initialCommitId, finalCommitId),
@@ -300,5 +304,14 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
   private String getWebhookCommitId(YamlChangeSetDTO yamlChangeSetDTO) {
     return yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId();
+  }
+
+  private String getCommitIdToBeProcessed(YamlGitConfigDTO yamlGitConfigDTO, String branch) {
+    return scmOrchestratorService
+        .processScmRequest(scmClient
+            -> scmClient.listCommits(yamlGitConfigDTO, branch),
+            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getAccountIdentifier())
+        .get(0);
   }
 }

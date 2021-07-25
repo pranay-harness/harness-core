@@ -12,4 +12,5 @@ import lombok.Value;
 public class GetFilesInDiffResponseDTO {
   List<GitFileChangeDTO> gitFileChangeDTOList;
   List<GitDiffResultFileDTO> prFilesTobeProcessed;
+  String commitId;
 }
