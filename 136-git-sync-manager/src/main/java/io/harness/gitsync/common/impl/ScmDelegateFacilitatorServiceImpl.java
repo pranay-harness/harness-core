@@ -319,7 +319,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
       return new ArrayList<>(
-          ListCommitsResponse.parseFrom(scmGitRefTaskResponseData.getCompareCommitsResponse()).getCommitIdsList());
+          ListCommitsResponse.parseFrom(scmGitRefTaskResponseData.getListCommitsResponse()).getCommitIdsList());
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
     }
