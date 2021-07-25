@@ -11,6 +11,7 @@ import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewTrendData;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
+import io.harness.ccm.views.graphql.ViewCostData;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.TableResult;
@@ -53,6 +54,10 @@ public interface ViewsBillingService {
       String cloudProviderTableName, String accountId, boolean includeOthers, Integer limit, boolean isClusterQuery);
 
   QLCEViewTrendInfo getForecastCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
+      boolean isClusterQuery);
+
+  ViewCostData getCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
       boolean isClusterQuery);
 }

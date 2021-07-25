@@ -355,10 +355,9 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
       boolean isClusterQuery) {
     Instant endInstantForForecastCost = viewsQueryHelper.getEndInstantForForecastCost(filters);
-    ViewCostData currentCostData =
-        getCostData(bigQuery, filters, aggregateFunction, cloudProviderTableName, accountId, isClusterQuery);
+    ViewCostData currentCostData = getCostData(bigQuery, viewsQueryHelper.getFiltersForForecastCost(filters),
+        aggregateFunction, cloudProviderTableName, accountId, isClusterQuery);
     Double forecastCost = getForecastCost(currentCostData, endInstantForForecastCost);
-
     return getForecastCostBillingStats(forecastCost, currentCostData.getCost(), getStartInstantForForecastCost(),
         endInstantForForecastCost.plus(1, ChronoUnit.SECONDS));
   }
@@ -387,6 +386,19 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       }
     }
     return false;
+  }
+
+  @Override
+  public ViewCostData getCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
+      boolean isClusterQuery) {
+    boolean isClusterTableQuery = isClusterTableQuery(filters, accountId, isClusterQuery);
+    List<ViewRule> viewRuleList = new ArrayList<>();
+    List<QLCEViewFilter> idFilters = getIdFilters(filters);
+    List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
+    SelectQuery query = getTrendStatsQuery(filters, idFilters, timeFilters, aggregateFunction, viewRuleList,
+        cloudProviderTableName, accountId, isClusterQuery);
+    return getViewTrendStatsCostData(bigQuery, query, isClusterTableQuery);
   }
 
   private boolean isClusterTableQuery(List<QLCEViewFilterWrapper> filters, String accountId, boolean isClusterQuery) {
@@ -1425,11 +1437,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     }
 
     double totalCost = costData.getCost();
-    long actualTimeDiffMillis = (endInstant.plus(1, ChronoUnit.SECONDS).toEpochMilli()) - costData.getMaxStartTime();
+    long actualTimeDiffMillis =
+        (endInstant.plus(1, ChronoUnit.SECONDS).toEpochMilli()) - (costData.getMaxStartTime() / 1000);
 
     long billingTimeDiffMillis = ONE_DAY_MILLIS;
     if (costData.getMaxStartTime() != costData.getMinStartTime()) {
-      billingTimeDiffMillis = costData.getMaxStartTime() - costData.getMinStartTime() + ONE_DAY_MILLIS;
+      billingTimeDiffMillis = (costData.getMaxStartTime() - costData.getMinStartTime()) / 1000 + ONE_DAY_MILLIS;
     }
     if (billingTimeDiffMillis < OBSERVATION_PERIOD) {
       return null;
@@ -1438,18 +1451,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return totalCost
         * (new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP))
               .doubleValue();
-  }
-
-  private ViewCostData getCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
-      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
-      boolean isClusterQuery) {
-    boolean isClusterTableQuery = isClusterTableQuery(filters, accountId, isClusterQuery);
-    List<ViewRule> viewRuleList = new ArrayList<>();
-    List<QLCEViewFilter> idFilters = getIdFilters(filters);
-    List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
-    SelectQuery query = getTrendStatsQuery(filters, idFilters, timeFilters, aggregateFunction, viewRuleList,
-        cloudProviderTableName, accountId, isClusterQuery);
-    return getViewTrendStatsCostData(bigQuery, query, isClusterTableQuery);
   }
 
   private Instant getStartInstantForForecastCost() {
