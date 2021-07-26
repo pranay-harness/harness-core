@@ -24,6 +24,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
@@ -1231,35 +1232,71 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public PageResponse<CompareEnvironmentAggregationInfo> getCompareEnvironment(
       String appId, String envId1, String envId2, int offset, int limit) {
+    Query<Instance> query;
+    try {
+      query = getQueryForCompareEnvironment(appId, envId1, envId2);
+    } catch (NoResultFoundException nre) {
+      return getEmptyPageResponse();
+    } catch (Exception e) {
+      log.error("Error while compiling query for compare environment", e);
+      return getEmptyPageResponse();
+    }
     List<CompareEnvironmentAggregationInfo> instanceInfoList = new ArrayList<>();
-    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.and(query.criteria("appId").equal(appId),
-        query.or(query.criteria("envId").equal(envId1), query.criteria("envId").equal(envId2)));
     AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(query.getEntityClass())
             .createAggregation(Instance.class)
             .match(query)
             .group(Group.id(grouping("serviceId"), grouping("serviceName"), grouping("envId"),
-                grouping("lastArtifactBuildNum"), grouping("infraMappingId"),grouping("lastDeployedAt")))
-            .group(Group.id(grouping("serviceId", "_id.serviceId")),
+                grouping("lastArtifactBuildNum"), grouping("infraMappingId"), grouping("lastWorkflowExecutionId"),
+                grouping("lastWorkflowExecutionName"), grouping("infraMappingName")))
+            .group(Group.id(grouping("serviceId", "_id.serviceId")), grouping("serviceId", first("_id.serviceId")),
                 grouping("serviceInfoSummaries",
-                    grouping("$push", projection("serviceId", "_id.serviceId"),
-                        projection("serviceName", "_id.serviceName"), projection("envId", "_id.envId"),
-                        projection("lastDeployedAt", "lastDeployedAt"),
-                        projection("lastWorkflowExecutionId", "lastWorkflowExecutionId"),
-                        projection("lastPipelineExecutionId", "lastPipelineExecutionId"),
+                    grouping("$push", projection("serviceName", "_id.serviceName"), projection("envId", "_id.envId"),
+                        projection("lastArtifactBuildNum", "_id.lastArtifactBuildNum"),
+                        projection("lastWorkflowExecutionId", "_id.lastWorkflowExecutionId"),
+                        projection("lastWorkflowExecutionName", "_id.lastWorkflowExecutionName"),
                         projection("infraMappingId", "_id.infraMappingId"),
-                        projection("lastArtifactBuildNum", "_id.lastArtifactBuildNum"))));
+                        projection("infraMappingName", "_id.infraMappingName"))));
 
+    aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
 
     final Iterator<CompareEnvironmentAggregationInfo> aggregate =
         HPersistence.retry(() -> aggregationPipeline.aggregate(CompareEnvironmentAggregationInfo.class));
     aggregate.forEachRemaining(instanceInfoList::add);
+
+    List<CompareEnvironmentAggregationResponseInfo> responseList = new ArrayList<>();
+    for (CompareEnvironmentAggregationInfo instanceInfo : instanceInfoList) {
+      responseList.add(CompareEnvironmentAggregationResponseInfo.builder()
+                           .serviceId(instanceInfo.getServiceId())
+                           .envInfo(instanceInfo.getServiceInfoSummaries().stream().collect(
+                               Collectors.groupingBy(ServiceInfoSummary::getEnvId,
+                                   Collectors.mapping(item
+                                       -> ServiceInfoSummary.builder()
+                                              .envId(item.getEnvId())
+                                              .serviceName(item.getServiceName())
+                                              .lastArtifactBuildNum(item.getLastArtifactBuildNum())
+                                              .lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
+                                              .lastWorkflowExecutionName(item.getLastWorkflowExecutionName())
+                                              .infraMappingName(item.getInfraMappingName())
+                                              .infraMappingId(item.getInfraMappingId())
+                                              .build(),
+                                       toList()))))
+                           .build());
+    }
+
     return aPageResponse()
-        .withResponse(instanceInfoList)
+        .withResponse(responseList)
         .withOffset(Integer.toString(offset))
         .withLimit(Integer.toString(limit))
         .build();
+  }
+
+  private Query<Instance> getQueryForCompareEnvironment(String appId, String envId1, String envId2) {
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.and(query.criteria("appId").equal(appId),
+        query.or(query.criteria("envId").equal(envId1), query.criteria("envId").equal(envId2)));
+    query.filter("isDeleted", false);
+    return query;
   }
 }

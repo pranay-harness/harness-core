@@ -14,28 +14,19 @@ import org.mongodb.morphia.annotations.Id;
 @OwnedBy(DX)
 public class CompareEnvironmentAggregationInfo {
   @Id private ID _id;
+  private String serviceId;
   private List<ServiceInfoSummary> serviceInfoSummaries;
-
-  @Data
-  @NoArgsConstructor
-  public static final class ServiceInfoSummary {
-    private String serviceId;
-    private String envId;
-    private String lastArtifactBuildNum;
-    private String serviceName;
-    private String lastDeployedAt;
-    private String lastWorkflowExecutionId;
-    private String lastPipelineExecutionId;
-    private String infraMappingId;
-  }
 
   @Data
   @NoArgsConstructor
   public static final class ID {
     private String serviceId;
-    private String serviceName;
-    private String infraMappingId;
     private String envId;
     private String lastArtifactBuildNum;
+    private String serviceName;
+    private String lastWorkflowExecutionId;
+    private String lastWorkflowExecutionName;
+    private String infraMappingId;
+    private String infraMappingName;
   }
 }
