@@ -10,8 +10,11 @@ login ${DRONE_NETRC_USERNAME}
 password ${DRONE_NETRC_PASSWORD}
 EOF
 
-git fetch --all
+
 git fetch --unshallow
+
+git fetch --all
+
 
 for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -${PREV_BRANCHES_COUNT}`;
 	do
