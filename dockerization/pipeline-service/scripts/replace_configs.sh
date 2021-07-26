@@ -192,10 +192,6 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
 
-if [[ "" != "$AUTH_ENABLED" ]]; then
-  yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
-fi
-
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
