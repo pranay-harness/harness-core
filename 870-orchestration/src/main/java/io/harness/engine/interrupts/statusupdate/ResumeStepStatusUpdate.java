@@ -27,7 +27,7 @@ public class ResumeStepStatusUpdate implements NodeStatusUpdateHandler {
     if (resumePlan) {
       Status planStatus = planExecutionService.calculateStatusExcluding(
           nodeStatusUpdateInfo.getPlanExecutionId(), nodeStatusUpdateInfo.getNodeExecutionId());
-      if (!StatusUtils.isFinalStatus(planStatus)) {
+      if (!StatusUtils.isFinalStatus(planStatus) && Status.QUEUED != planStatus) {
         planExecutionService.updateStatus(nodeStatusUpdateInfo.getPlanExecutionId(), planStatus);
       }
     }
