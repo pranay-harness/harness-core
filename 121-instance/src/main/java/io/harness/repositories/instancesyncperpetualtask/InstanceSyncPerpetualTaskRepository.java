@@ -14,6 +14,9 @@ public interface InstanceSyncPerpetualTaskRepository
     extends CrudRepository<InstanceSyncPerpetualTaskInfo, String>, InstanceSyncPerpetualTaskRepositoryCustom {
   Optional<InstanceSyncPerpetualTaskInfo> findByInfrastructureMappingId(String infrastructureMappingId);
 
+  Optional<InstanceSyncPerpetualTaskInfo> findByAccountIdentifierAndPerpetualTaskId(
+      String accountIdentifier, String perpetualTaskId);
+
   void deleteByInfrastructureMappingId(String infrastructureMappingId);
 
   void deleteByAccountIdentifierAndId(String accountIdentifier, String id);

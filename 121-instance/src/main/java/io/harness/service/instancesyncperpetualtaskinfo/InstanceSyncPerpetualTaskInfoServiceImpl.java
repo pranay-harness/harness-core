@@ -25,6 +25,15 @@ public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPer
   }
 
   @Override
+  public Optional<InstanceSyncPerpetualTaskInfoDTO> findByPerpetualTaskId(
+      String accountIdentifier, String perpetualTaskId) {
+    Optional<InstanceSyncPerpetualTaskInfo> instanceSyncPerpetualTaskInfoOptional =
+        instanceSyncPerpetualTaskRepository.findByAccountIdentifierAndPerpetualTaskId(
+            accountIdentifier, perpetualTaskId);
+    return instanceSyncPerpetualTaskInfoOptional.map(InstanceSyncPerpetualTaskInfoMapper::toDTO);
+  }
+
+  @Override
   public InstanceSyncPerpetualTaskInfoDTO save(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO) {
     InstanceSyncPerpetualTaskInfo instanceSyncPerpetualTaskInfo =
         InstanceSyncPerpetualTaskInfoMapper.toEntity(instanceSyncPerpetualTaskInfoDTO);
