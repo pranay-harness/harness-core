@@ -754,7 +754,8 @@ public class K8sTaskHelperBase {
     final ApplyCommand applyCommand = overriddenClient.apply().filename("manifests.yaml").record(recordCommand);
     ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, applyCommand);
     if (result.getExitValue() != 0) {
-      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+      log.error(format("\nFailed. Process terminated with exit value: [%s] and output: [%s]", result.getExitValue(),
+          result.getOutput()));
       return false;
     }
 
