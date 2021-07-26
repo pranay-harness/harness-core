@@ -28,5 +28,7 @@ public interface NGSecretServiceV2 {
   SecretValidationResultDTO validateSecret(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, SecretValidationMetaData metadata);
 
+  long count(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
   Page<Secret> list(Criteria criteria, int page, int size);
 }

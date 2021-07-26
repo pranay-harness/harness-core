@@ -1,12 +1,15 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.connector.services.ConnectorService;
 import io.harness.ng.core.api.AggregateOrganizationService;
+import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
@@ -41,14 +44,19 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private static final String ORG_ADMIN_ROLE = "_organization_admin";
   private final OrganizationService organizationService;
   private final ProjectService projectService;
+  private final NGSecretServiceV2 secretServiceV2;
+  private final ConnectorService defaultConnectorService;
   private final NgUserService ngUserService;
   private final ExecutorService executorService;
 
   @Inject
   public AggregateOrganizationServiceImpl(OrganizationService organizationService, ProjectService projectService,
+      NGSecretServiceV2 secretService, @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       NgUserService ngUserService, @Named("aggregate-orgs") ExecutorService executorService) {
     this.organizationService = organizationService;
     this.projectService = projectService;
+    this.secretServiceV2 = secretService;
+    this.defaultConnectorService = defaultConnectorService;
     this.ngUserService = ngUserService;
     this.executorService = executorService;
   }
@@ -67,6 +75,9 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
                             .getProjectsCountPerOrganization(
                                 organization.getAccountIdentifier(), singletonList(organization.getIdentifier()))
                             .getOrDefault(organization.getIdentifier(), 0);
+    long secretsCount = secretServiceV2.count(organization.getAccountIdentifier(), organization.getIdentifier(), null);
+    long connectorsCount =
+        defaultConnectorService.count(organization.getAccountIdentifier(), organization.getIdentifier(), null);
 
     Scope scope = Scope.builder()
                       .accountIdentifier(organization.getAccountIdentifier())
@@ -80,6 +91,8 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
         .organizationResponse(OrganizationMapper.toResponseWrapper(organization))
         .projectsCount(projectsCount)
         .admins(orgAdmins)
+        .secretsCount(secretsCount)
+        .connectorsCount(connectorsCount)
         .collaborators(collaborators)
         .build();
   }
