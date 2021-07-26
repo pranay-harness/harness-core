@@ -12,7 +12,8 @@ import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGServiceConstants;
-import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
+import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
@@ -202,14 +203,27 @@ public class CDDashboardOverviewResource {
   @Path("/getInstanceCountDetailsByService")
   @ApiOperation(value = "Get active service instance count breakdown by env type",
       nickname = "getActiveServiceInstanceCountBreakdown")
-  public ResponseDTO<InstanceCountDetailsByEnvTypeBase>
+  public ResponseDTO<InstanceCountDetailsByEnvTypeAndServiceId>
   getActiveServiceInstanceCountBreakdown(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId) {
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) List<String> serviceId) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId));
+  }
+
+  @GET
+  @Path("/getActiveServiceInstanceSummary")
+  @ApiOperation(value = "Get active service instance summary", nickname = "getActiveServiceInstanceSummary")
+  public ResponseDTO<ActiveServiceInstanceSummary> getActiveServiceInstanceSummary(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId,
+      @NotNull @QueryParam(NGCommonEntityConstants.TIMESTAMP) long timestampInMs) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getActiveServiceInstanceSummary(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs));
   }
 
   @GET

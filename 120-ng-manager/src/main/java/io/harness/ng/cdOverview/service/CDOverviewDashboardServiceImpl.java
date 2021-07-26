@@ -18,7 +18,9 @@ import io.harness.cd.NGServiceConstants;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
+import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
 import io.harness.ng.cdOverview.dto.BuildIdAndInstanceCount;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
@@ -1164,11 +1166,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
 
   /*
-    Returns break down of instance count for various environment type for given account+org+project+service
+    Returns break down of instance count for various environment type for given account+org+project+serviceIds
   */
   @Override
-  public InstanceCountDetailsByEnvTypeBase getActiveServiceInstanceCountBreakdown(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+  public InstanceCountDetailsByEnvTypeAndServiceId getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> serviceId) {
     return instanceDashboardService.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
   }
@@ -1225,5 +1227,32 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
             accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds, getCurrentTime());
     return InstancesByBuildIdList.builder().instancesByBuildIdList(instancesByBuildIdList).build();
+  }
+
+  /*
+    Returns instance count summary for given account+org+project+serviceId, includes rate of change in count since
+    provided timestamp
+  */
+  @Override
+  public ActiveServiceInstanceSummary getActiveServiceInstanceSummary(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    final long currentTime = getCurrentTime();
+    InstanceCountDetailsByEnvTypeBase currentCountDetails =
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), currentTime)
+            .getInstanceCountDetailsByEnvTypeBaseMap()
+            .get(serviceId);
+    InstanceCountDetailsByEnvTypeBase prevCountDetails =
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), timestampInMs)
+            .getInstanceCountDetailsByEnvTypeBaseMap()
+            .get(serviceId);
+
+    double changeRate =
+        calculateChangeRate(prevCountDetails.getTotalInstances(), currentCountDetails.getTotalInstances());
+
+    return ActiveServiceInstanceSummary.builder().countDetails(currentCountDetails).changeRate(changeRate).build();
   }
 }

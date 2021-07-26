@@ -2,7 +2,8 @@ package io.harness.ng.cdOverview.service;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
+import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
@@ -46,8 +47,11 @@ public interface CDOverviewDashboardService {
   TimeValuePairListDTO<Integer> getServicesGrowthTrend(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startTimeInMs, long endTimeInMs, TimeGroupType timeGroupType);
 
-  InstanceCountDetailsByEnvTypeBase getActiveServiceInstanceCountBreakdown(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId);
+  InstanceCountDetailsByEnvTypeAndServiceId getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> serviceId);
+
+  ActiveServiceInstanceSummary getActiveServiceInstanceSummary(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
 
   EnvBuildIdAndInstanceCountInfoList getEnvBuildInstanceCountByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId);

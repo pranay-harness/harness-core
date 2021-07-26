@@ -10,7 +10,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @OwnedBy(HarnessTeam.DX)
-public class CountByEnvType {
+public class CountByServiceIdAndEnvType {
+  private String serviceId;
   private EnvironmentType envType;
   private int count;
 }
