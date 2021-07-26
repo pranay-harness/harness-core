@@ -2864,6 +2864,12 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public boolean checkMismatch(String accountId, String delegateId, boolean isNg) {
+    Delegate delegate = delegateCache.get(accountId, delegateId, false);
+    return delegate != null && delegate.isNg() != isNg;
+  }
+
+  @Override
   public void deleteByAccountId(String accountId) {
     persistence.delete(persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId));
   }
