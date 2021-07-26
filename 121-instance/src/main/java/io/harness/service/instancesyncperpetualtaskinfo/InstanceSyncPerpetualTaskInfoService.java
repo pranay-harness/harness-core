@@ -12,4 +12,6 @@ public interface InstanceSyncPerpetualTaskInfoService {
   Optional<InstanceSyncPerpetualTaskInfoDTO> findByInfrastructureMappingId(String infrastructureMappingId);
 
   InstanceSyncPerpetualTaskInfoDTO save(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO);
+
+  void deleteById(String accountIdentifier, String instanceSyncPerpetualTaskInfoId);
 }

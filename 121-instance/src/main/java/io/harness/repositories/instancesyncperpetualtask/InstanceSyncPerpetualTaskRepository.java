@@ -15,4 +15,6 @@ public interface InstanceSyncPerpetualTaskRepository
   Optional<InstanceSyncPerpetualTaskInfo> findByInfrastructureMappingId(String infrastructureMappingId);
 
   void deleteByInfrastructureMappingId(String infrastructureMappingId);
+
+  void deleteByAccountIdentifierAndId(String accountIdentifier, String id);
 }
