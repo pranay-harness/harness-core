@@ -26,6 +26,9 @@ const (
 	tailMaxTime   = 1 * time.Hour // maximum duration a tail can last
 	bufferSize    = 50            // buffer for slow consumers
 	maxStreamSize = 5000          // Maximum number of entries in each stream (ring buffer)
+	// Maximum number of keys that we will return with a given prefix. If there are more than maxPrefixes keys with a given prefix,
+	// only the first maxPrefixes keys will be returned.
+	maxPrefixes = 200
 	// max. number of concurrent connections that Redis can handle. This limit is set to 10k by default on the latest
 	// Redis servers. To increase it, make sure it gets increased on the server side as well.
 	connectionPool = 5000
@@ -183,6 +186,41 @@ func (r *Redis) Exists(ctx context.Context, key string) error {
 		return stream.ErrNotFound
 	}
 	return nil
+}
+
+func (r *Redis) ListPrefix(ctx context.Context, prefix string) ([]string, error) {
+	// Return all the keys with the given prefix
+	l := []string{}
+	if len(prefix) == 0 {
+		return l, nil
+	}
+	if prefix[len(prefix)-1] != '*' {
+		prefix = prefix + "*"
+	}
+
+	var cursor uint64
+	keyM := make(map[string]struct{})
+	for {
+		var keys []string
+		var err error
+		// Scan upto 10 keys at a time
+		keys, cursor, err = r.Client.Scan(cursor, prefix, 10).Result()
+		if err != nil {
+			return l, err
+		}
+		for _, k := range keys {
+			if _, ok := keyM[k]; ok {
+				continue
+			}
+			keyM[k] = struct{}{}
+			l = append(l, k)
+		}
+		if cursor == 0 || len(l) > maxPrefixes {
+			break
+		}
+	}
+
+	return l, nil
 }
 
 // CopyTo copies the contents from the redis stream to the writer
