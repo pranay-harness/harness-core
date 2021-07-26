@@ -4,6 +4,15 @@ set -e
 
 PROJECTS="ART|BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PL|SEC|SWAT|GTM|ONP"
 
+cat <<EOF > ${HOME}/.netrc
+machine ${DRONE_NETRC_MACHINE}
+login ${DRONE_NETRC_USERNAME}
+password ${DRONE_NETRC_PASSWORD}
+EOF
+
+git fetch --all
+git fetch --unshallow
+
 
 for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -5`;
 	do
@@ -30,3 +39,7 @@ then
       echo "These are the not merged JIRA tickets : ${NOT_MERGED} , Please merge them into ${SAAS_BRANCH} branch"
       exit 1
 fi
+
+
+
+
