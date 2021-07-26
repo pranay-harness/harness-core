@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface InstanceSyncPerpetualTaskInfoService {
   Optional<InstanceSyncPerpetualTaskInfoDTO> findByInfrastructureMappingId(String infrastructureMappingId);
 
+  Optional<InstanceSyncPerpetualTaskInfoDTO> findByPerpetualTaskId(String accountIdentifier, String perpetualTaskId);
+
   InstanceSyncPerpetualTaskInfoDTO save(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO);
 
   void deleteById(String accountIdentifier, String instanceSyncPerpetualTaskInfoId);
