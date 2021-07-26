@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.manifest;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

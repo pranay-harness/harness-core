@@ -4,11 +4,11 @@ import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.Store
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.manifest.OpenshiftParamManifestVisitorHelper;
+import io.harness.manifest.ManifestType;
+import io.harness.manifest.storeConfig.StoreConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;

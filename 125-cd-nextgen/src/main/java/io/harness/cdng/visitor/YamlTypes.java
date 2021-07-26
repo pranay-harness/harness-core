@@ -3,8 +3,8 @@ package io.harness.cdng.visitor;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.ManifestType;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.manifest.ManifestType;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 

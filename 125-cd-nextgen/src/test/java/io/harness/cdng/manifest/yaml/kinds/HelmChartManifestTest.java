@@ -1,8 +1,8 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
-import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Fetch;
-import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Template;
-import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Version;
+import static io.harness.manifest.HelmCommandFlagType.Fetch;
+import static io.harness.manifest.HelmCommandFlagType.Template;
+import static io.harness.manifest.HelmCommandFlagType.Version;
 import static io.harness.rule.OwnerRule.ABOSII;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,9 +12,9 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.manifest.HelmManifestCommandFlag;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 

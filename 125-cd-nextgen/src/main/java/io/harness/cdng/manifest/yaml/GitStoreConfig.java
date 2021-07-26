@@ -1,7 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
-import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.manifest.storeConfig.StoreConfig;
 import io.harness.pms.yaml.ParameterField;
 
 import java.util.List;

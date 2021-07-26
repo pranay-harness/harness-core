@@ -2,7 +2,7 @@ package io.harness.cdng.artifact.steps;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.artifact.bean.ArtifactConfig;
+import io.harness.artifact.ArtifactConfig;
 import io.harness.cdng.artifact.mappers.ArtifactResponseToOutcomeMapper;
 import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.cdng.artifact.utils.ArtifactUtils;

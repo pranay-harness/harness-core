@@ -2,11 +2,11 @@ package io.harness.cdng.manifest.steps;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.service.steps.ServiceStepsHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.manifest.ManifestOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;

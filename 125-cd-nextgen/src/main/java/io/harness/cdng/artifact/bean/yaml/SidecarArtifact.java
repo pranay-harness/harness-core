@@ -5,7 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.artifact.bean.ArtifactConfig;
+import io.harness.artifact.ArtifactConfig;
 import io.harness.cdng.visitor.helpers.artifact.SidecarArtifactVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;

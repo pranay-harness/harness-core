@@ -6,7 +6,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WithIdentifier;
-import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.manifest.storeConfig.StoreConfig;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

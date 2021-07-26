@@ -1,10 +1,9 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.manifest;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.ManifestType;
-import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.manifest.storeConfig.StoreConfig;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

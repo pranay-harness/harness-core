@@ -1,24 +1,24 @@
 package io.harness.cdng.manifest.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.cdng.manifest.ManifestType.HelmChart;
-import static io.harness.cdng.manifest.ManifestType.Kustomize;
 import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.manifest.ManifestType.HelmChart;
+import static io.harness.manifest.ManifestType.Kustomize;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
-import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
-import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.manifest.HelmChartManifestOutcome;
+import io.harness.manifest.ManifestOutcome;
+import io.harness.manifest.ManifestType;
+import io.harness.manifest.storeConfig.StoreConfig;
 import io.harness.pms.yaml.ParameterField;
 
 import java.util.List;

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ToBeDeleted;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.manifest.ManifestOutcome;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.yaml.ParameterField;

@@ -3,6 +3,7 @@ package io.harness.cdng.manifest.yaml;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.manifest.ManifestOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -20,8 +21,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("manifestsOutcome")
 @OwnedBy(CDC)
 public class ManifestsOutcome implements Outcome {
-  @NotEmpty List<ManifestOutcome> manifestOutcomeList;
-  @NotEmpty List<ManifestOutcome> manifestOriginalList;
-  @NotEmpty List<ManifestOutcome> manifestStageOverridesList;
+  @NotEmpty List<io.harness.manifest.ManifestOutcome> manifestOutcomeList;
+  @NotEmpty List<io.harness.manifest.ManifestOutcome> manifestOriginalList;
+  @NotEmpty List<io.harness.manifest.ManifestOutcome> manifestStageOverridesList;
   @Singular Map<String, List<ManifestOutcome>> manifestOverrideSets;
 }

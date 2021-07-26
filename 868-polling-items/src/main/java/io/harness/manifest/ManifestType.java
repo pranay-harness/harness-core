@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest;
+package io.harness.manifest;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

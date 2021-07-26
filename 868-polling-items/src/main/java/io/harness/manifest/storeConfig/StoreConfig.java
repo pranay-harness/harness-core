@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest.yaml.storeConfig;
+package io.harness.manifest.storeConfig;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 

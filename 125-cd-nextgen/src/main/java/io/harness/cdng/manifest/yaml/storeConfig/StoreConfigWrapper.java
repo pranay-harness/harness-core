@@ -8,6 +8,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
 import io.harness.exception.UnexpectedTypeException;
+import io.harness.manifest.storeConfig.StoreConfig;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.Validator;
 import io.harness.walktree.beans.VisitableChildren;
@@ -38,10 +39,10 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
   @NotNull
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   @Wither
-  StoreConfig spec;
+  io.harness.manifest.storeConfig.StoreConfig spec;
 
   @Builder
-  public StoreConfigWrapper(StoreConfigType type, StoreConfig spec) {
+  public StoreConfigWrapper(StoreConfigType type, io.harness.manifest.storeConfig.StoreConfig spec) {
     this.type = type;
     this.spec = spec;
   }

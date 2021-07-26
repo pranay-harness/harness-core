@@ -2,7 +2,7 @@ package io.harness.cdng.manifest.steps;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.manifest.ManifestOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

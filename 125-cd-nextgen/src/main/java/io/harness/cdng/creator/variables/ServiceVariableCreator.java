@@ -5,10 +5,10 @@ import static io.harness.cdng.manifest.ManifestStoreType.isInStorageRepository;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
+import io.harness.manifest.ManifestType;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;

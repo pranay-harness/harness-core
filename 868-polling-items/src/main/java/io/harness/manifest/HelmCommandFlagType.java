@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.manifest;
 
 import io.harness.helm.HelmSubCommandType;
 

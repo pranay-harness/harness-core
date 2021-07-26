@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
-import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
+import io.harness.manifest.ManifestOutcome;
+import io.harness.manifest.OpenshiftParamManifestOutcome;
+import io.harness.manifest.ValuesManifestOutcome;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 
 import java.util.List;
