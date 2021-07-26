@@ -132,7 +132,7 @@ public class InfrastructurePmsPlanCreator {
   private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
     final String resourceUnit = "<+INFRA_KEY>";
     JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
-    return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
+    return new YamlField(new YamlNode("step", resourceConstraintJsonNode, infraNode.getParentNode()));
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaDataToExecution(
