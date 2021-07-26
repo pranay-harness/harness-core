@@ -78,11 +78,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Created by anubhaw on 4/4/16.
  */
-@OwnedBy(HarnessTeam.CDC)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
