@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -11,13 +12,15 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.ImagePullPolicy;
+import io.harness.beans.yaml.extended.TIBuildTool;
+import io.harness.beans.yaml.extended.TILanguage;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
-import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.core.variables.OutputNGVariable;
 import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -32,6 +35,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
@@ -51,23 +55,32 @@ public class RunTestsStepInfo implements CIStepInfo {
                                                .setStepCategory(StepCategory.STEP)
                                                .build();
 
-  @NotNull @EntityIdentifier private String identifier;
-  private String name;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String identifier;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private String args;
-  @NotNull private String language;
-  @NotNull private String buildTool;
-  @NotNull private String packages;
-  private String testAnnotations;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> args;
+  @NotNull
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.TILanguage")
+  private ParameterField<TILanguage> language;
+  @NotNull
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.TIBuildTool")
+  private ParameterField<TIBuildTool> buildTool;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> packages;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> testAnnotations;
   private UnitTestReport reports;
-  private boolean runOnlySelectedTests;
+  @YamlSchemaTypes({string})
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH)
+  private ParameterField<Boolean> runOnlySelectedTests;
 
-  @NotNull private String image;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
-  private ParameterField<List<String>> outputVariables;
+  private List<OutputNGVariable> outputVariables;
+  @YamlSchemaTypes(value = {string})
+  @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> envVariables;
+
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> preCommand;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> postCommand;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
@@ -79,13 +92,14 @@ public class RunTestsStepInfo implements CIStepInfo {
   @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connectorRef",
       "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests", "preCommand", "postCommand",
       "outputVariables", "envVariables", "privileged", "runAsUser", "imagePullPolicy"})
-  public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language, String buildTool,
-      String image, ParameterField<String> connectorRef, ContainerResource resources, UnitTestReport reports,
-      String testAnnotations, String packages, boolean runOnlySelectedTests,
-      io.harness.pms.yaml.ParameterField<String> preCommand, io.harness.pms.yaml.ParameterField<String> postCommand,
-      ParameterField<List<String>> outputVariables, ParameterField<Map<String, String>> envVariables,
-      ParameterField<Boolean> privileged, ParameterField<Integer> runAsUser,
-      ParameterField<ImagePullPolicy> imagePullPolicy) {
+  public RunTestsStepInfo(String identifier, String name, Integer retry, ParameterField<String> args,
+      ParameterField<TILanguage> language, ParameterField<TIBuildTool> buildTool, ParameterField<String> image,
+      ParameterField<String> connectorRef, ContainerResource resources, UnitTestReport reports,
+      ParameterField<String> testAnnotations, ParameterField<String> packages,
+      ParameterField<Boolean> runOnlySelectedTests, io.harness.pms.yaml.ParameterField<String> preCommand,
+      io.harness.pms.yaml.ParameterField<String> postCommand, List<OutputNGVariable> outputVariables,
+      ParameterField<Map<String, String>> envVariables, ParameterField<Boolean> privileged,
+      ParameterField<Integer> runAsUser, ParameterField<ImagePullPolicy> imagePullPolicy) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

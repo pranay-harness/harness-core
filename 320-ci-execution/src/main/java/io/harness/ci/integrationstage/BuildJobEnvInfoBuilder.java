@@ -378,7 +378,8 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(IntegrationStageUtils.getImageInfo(runTestsStepInfo.getImage()))
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(resolveStringParameter(
+                                       "Image", "RunTest", identifier, runTestsStepInfo.getImage(), true)))
                                    .connectorIdentifier(resolveStringParameter(
                                        "connectorRef", "RunTest", identifier, runTestsStepInfo.getConnectorRef(), true))
                                    .build())
