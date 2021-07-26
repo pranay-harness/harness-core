@@ -11,6 +11,8 @@ import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
@@ -56,6 +58,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(APPLICATION)
 @AuthRule(permissionType = PermissionType.PIPELINE)
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineResource {
   private WorkflowService workflowService;
   private PipelineService pipelineService;

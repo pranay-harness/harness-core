@@ -5,6 +5,8 @@ import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -58,6 +60,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(ResourceType.APPLICATION)
+@OwnedBy(HarnessTeam.CDC)
 public class InfrastructureDefinitionResource {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 

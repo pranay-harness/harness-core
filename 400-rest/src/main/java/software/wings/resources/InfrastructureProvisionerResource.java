@@ -11,6 +11,8 @@ import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -55,6 +57,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(ResourceType.APPLICATION)
+@OwnedBy(HarnessTeam.CDC)
 public class InfrastructureProvisionerResource {
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 

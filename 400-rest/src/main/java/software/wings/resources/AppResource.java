@@ -5,6 +5,8 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.limits.LimitCheckerFactory;
@@ -42,6 +44,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("/apps")
 @Produces("application/json")
 @Scope(APPLICATION)
+@OwnedBy(HarnessTeam.CDC)
 public class AppResource {
   private AppService appService;
   private LimitCheckerFactory limitCheckerFactory;

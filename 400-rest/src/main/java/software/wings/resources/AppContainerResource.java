@@ -8,6 +8,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.APP_STACK
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -50,6 +52,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("/app-containers")
 @Produces("application/json")
 @Scope(APP_STACK)
+@OwnedBy(HarnessTeam.CDC)
 public class AppContainerResource {
   @Inject private AppContainerService appContainerService;
   @Inject private MainConfiguration configuration;

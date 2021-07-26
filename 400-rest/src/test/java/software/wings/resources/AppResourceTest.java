@@ -13,6 +13,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rest.RestResponse;
@@ -36,6 +38,7 @@ import org.junit.experimental.categories.Category;
  * The Class AppResourceTest.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class AppResourceTest extends CategoryTest {
   private static final AppService appService = mock(AppService.class);
   private static final LimitCheckerFactory limitCheckerFactory = mock(LimitCheckerFactory.class);

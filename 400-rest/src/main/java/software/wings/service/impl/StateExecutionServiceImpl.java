@@ -6,6 +6,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.ContextElementType;
@@ -53,6 +55,7 @@ import org.mongodb.morphia.query.Sort;
 
 @Singleton
 @ValidateOnExecution
+@OwnedBy(HarnessTeam.CDC)
 public class StateExecutionServiceImpl implements StateExecutionService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;

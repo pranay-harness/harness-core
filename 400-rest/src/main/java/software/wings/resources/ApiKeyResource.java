@@ -6,6 +6,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -44,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Scope(ResourceType.API_KEY)
 @AuthRule(permissionType = MANAGE_API_KEYS)
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ApiKeyResource {
   private ApiKeyService apiKeyService;
 

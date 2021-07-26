@@ -8,6 +8,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.APPLICATI
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -55,6 +57,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(APPLICATION)
+@OwnedBy(HarnessTeam.CDC)
 public class InfrastructureMappingResource {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private AppService appService;

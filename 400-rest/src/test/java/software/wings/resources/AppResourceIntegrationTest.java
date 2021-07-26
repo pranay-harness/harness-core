@@ -8,6 +8,8 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -45,6 +47,7 @@ import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class AppResourceIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationService limitConfigurationService;
   @Inject private HPersistence persistence;
