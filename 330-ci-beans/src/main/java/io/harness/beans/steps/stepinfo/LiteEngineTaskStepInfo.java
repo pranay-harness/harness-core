@@ -68,7 +68,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   @NotNull Infrastructure infrastructure;
 
   @Builder
-  @ConstructorProperties({"accountId", "timeout", "identifier", "name", "retry", "buildJobEnvInfo", "steps",
+  @ConstructorProperties({"accountId", "timeout", "identifier", "name", "retry", "buildJobEnvInfo",
       "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone", "infrastructure", "runAsUser"})
   public LiteEngineTaskStepInfo(String accountId, int timeout, String identifier, String name, Integer retry,
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElementConfig executionElementConfig, boolean usePVC,

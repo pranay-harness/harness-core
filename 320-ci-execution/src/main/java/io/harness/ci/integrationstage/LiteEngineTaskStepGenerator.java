@@ -44,6 +44,7 @@ public class LiteEngineTaskStepGenerator {
     if (isFirstPod) {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+          .name(LITE_ENGINE_TASK + liteEngineCounter)
           .infrastructure(infrastructure)
           .ciCodebase(ciCodebase)
           .skipGitClone(!gitClone)
@@ -55,6 +56,7 @@ public class LiteEngineTaskStepGenerator {
     } else {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+          .name(LITE_ENGINE_TASK + liteEngineCounter)
           .buildJobEnvInfo(buildJobEnvInfo)
           .infrastructure(infrastructure)
           .usePVC(usePVC)
