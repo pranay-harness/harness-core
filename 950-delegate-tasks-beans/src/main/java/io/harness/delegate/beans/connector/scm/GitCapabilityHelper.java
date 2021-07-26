@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.scm;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -13,8 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(DX)
 @UtilityClass
 public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
+  private final String SSH_GIT_SCHEME = "ssh";
+
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
       ExpressionEvaluator maskingEvaluator, GitConfigDTO gitConfig) {
     List<ExecutionCapability> capabilityList = new ArrayList<>();
@@ -27,6 +33,7 @@ public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
         capabilityList.add(SocketConnectivityExecutionCapability.builder()
                                .hostName(getGitSSHHostname(gitConfig))
                                .port(getGitSSHPort(gitConfig))
+                               .scheme(SSH_GIT_SCHEME)
                                .build());
         break;
       default:
