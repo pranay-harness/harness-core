@@ -18,6 +18,10 @@ echo "Saas branch is ${SAAS_BRANCH}"
 
 git log --remotes=origin/${SAAS_BRANCH}* --pretty=oneline --abbrev-commit | grep -iE "\[(${PROJECTS})-[0-9]+]:" -o | sort | uniq | tr '[:lower:]' '[:upper:]' > release_saas.txt
 
+cat release_onprem.txt | wc -l
+cat release_saas.txt | wc -l
+
+
 NOT_MERGED=`comm -23 release_onprem.txt release_saas.txt | tr '\n' ' '`
 
 
