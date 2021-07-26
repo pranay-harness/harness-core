@@ -12,4 +12,6 @@ public interface InstanceSyncPerpetualTaskService {
       InfrastructureMappingDTO infrastructureMappingDTO, AbstractInstanceSyncHandler abstractInstanceSyncHandler);
 
   void resetPerpetualTask(String accountIdentifier, String perpetualTaskId);
+
+  void deletePerpetualTask(String accountIdentifier, String perpetualTaskId);
 }
