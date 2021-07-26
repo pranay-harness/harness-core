@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "client",
     srcs = [
         "engine_client.go",
         "logproxy_client.go",
@@ -10,24 +10,24 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/engine/grpc/client",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/engine/proto:go_default_library",
-        "@com_github_grpc_ecosystem_go_grpc_middleware//retry:go_default_library",
+        "//product/ci/engine/proto",
+        "@com_github_grpc_ecosystem_go_grpc_middleware//retry",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_google_grpc//codes:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "@org_golang_google_grpc//codes",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "client_test",
     srcs = [
         "engine_client_test.go",
         "logproxy_client_test.go",
     ],
-    embed = [":go_default_library"],
+    embed = [":client"],
     deps = [
-        "//commons/go/lib/logs:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//commons/go/lib/logs",
+        "@com_github_stretchr_testify//assert",
+        "@org_uber_go_zap//:zap",
     ],
 )

@@ -1,28 +1,28 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "junit",
     srcs = ["junit.go"],
     importpath = "github.com/wings-software/portal/product/ci/addon/testreports/junit",
     visibility = ["//visibility:public"],
     deps = [
-        "//commons/go/lib/filesystem:go_default_library",
-        "//product/ci/addon/gojunit:go_default_library",
-        "//product/ci/addon/testreports:go_default_library",
-        "//product/ci/ti-service/types:go_default_library",
-        "@com_github_mattn_go_zglob//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//commons/go/lib/filesystem",
+        "//product/ci/addon/gojunit",
+        "//product/ci/addon/testreports",
+        "//product/ci/ti-service/types",
+        "@com_github_mattn_go_zglob//:go-zglob",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "junit_test",
     srcs = ["junit_test.go"],
     data = glob(["testdata/**"]),
-    embed = [":go_default_library"],
+    embed = [":junit"],
     deps = [
-        "//product/ci/ti-service/types:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//product/ci/ti-service/types",
+        "@com_github_stretchr_testify//assert",
+        "@org_uber_go_zap//:zap",
     ],
 )

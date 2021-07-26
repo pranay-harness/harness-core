@@ -19,11 +19,11 @@ go_proto_library(
     importpath = "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/entitysetupusage",
     proto = ":953_events_api_proto",
     visibility = ["//visibility:public"],
-    deps = ["//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:go_default_library"],
+    deps = ["//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity"],
 )
 
 go_library(
-    name = "go_default_library",
+    name = "entitysetupusage",
     embed = [":953_events_api_go_proto"],
     importpath = "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/entitysetupusage",
     visibility = ["//visibility:public"],
