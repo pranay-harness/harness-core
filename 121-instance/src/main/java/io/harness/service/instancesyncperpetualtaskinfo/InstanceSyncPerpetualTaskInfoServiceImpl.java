@@ -31,4 +31,10 @@ public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPer
     instanceSyncPerpetualTaskInfo = instanceSyncPerpetualTaskRepository.save(instanceSyncPerpetualTaskInfo);
     return InstanceSyncPerpetualTaskInfoMapper.toDTO(instanceSyncPerpetualTaskInfo);
   }
+
+  @Override
+  public void deleteById(String accountIdentifier, String instanceSyncPerpetualTaskInfoId) {
+    instanceSyncPerpetualTaskRepository.deleteByAccountIdentifierAndId(
+        accountIdentifier, instanceSyncPerpetualTaskInfoId);
+  }
 }
