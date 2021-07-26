@@ -16,6 +16,7 @@ public final class InstanceSyncConstants {
   public static final String HARNESS_PROJECT_IDENTIFIER = "projectIdentifier";
   public static final String HARNESS_ENV_ID = "environmentId";
   public static final String INFRASTRUCTURE_MAPPING_ID = "infrastructureMappingId";
+  public static final String SERVICE_ID = "serviceId";
   public static final String INFRASTRUCTURE_MAPPING_DETAILS = "infrastructureMappingDetails";
   public static final String NAMESPACE = "namespace";
   public static final String RELEASE_NAME = "releaseName";
@@ -30,6 +31,7 @@ public final class InstanceSyncConstants {
   public static final String INSTANCES = "instances";
   public static final int INSTANCE_LIMIT = 20;
   public static final String buildId = "buildId";
+  public static final String ENV_TYPE = "envType";
 
   // Lock key prefixes and timeouts
   public static final String INSTANCE_SYNC_PREFIX = "INSTANCE_SYNC:";

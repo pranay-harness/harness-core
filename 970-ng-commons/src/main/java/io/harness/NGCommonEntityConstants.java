@@ -15,6 +15,7 @@ public class NGCommonEntityConstants {
   public static final String SERVICE_KEY = "serviceId";
   public static final String ENVIRONMENT_KEY = "envId";
   public static final String BUILDS_KEY = "buildIds";
+  public static final String TIMESTAMP = "timestamp";
   public static final String IDENTIFIER_KEY = "identifier";
   public static final String GROUP_IDENTIFIER_KEY = "groupIdentifier";
   public static final String GROUP_IDENTIFIERS_KEY = "groupIdentifiers";

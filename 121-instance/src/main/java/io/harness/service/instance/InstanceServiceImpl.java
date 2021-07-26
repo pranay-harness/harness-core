@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
 import io.harness.entities.Instance;
 import io.harness.mappers.InstanceMapper;
-import io.harness.models.CountByEnvType;
+import io.harness.models.CountByServiceIdAndEnvType;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.repositories.instance.InstanceRepository;
@@ -113,11 +113,11 @@ public class InstanceServiceImpl implements InstanceService {
 
   /*
     Returns breakup of active instances by envType at a given timestamp for specified accountIdentifier,
-    projectIdentifier, orgIdentifier and serviceId
+    projectIdentifier, orgIdentifier and serviceIds
   */
   @Override
-  public AggregationResults<CountByEnvType> getActiveServiceInstanceCountBreakdown(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+  public AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs) {
     return instanceRepository.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
   }
