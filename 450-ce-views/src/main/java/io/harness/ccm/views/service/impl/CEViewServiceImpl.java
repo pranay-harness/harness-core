@@ -64,8 +64,8 @@ public class CEViewServiceImpl implements CEViewService {
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(100) has been reached";
   private static final String DEFAULT_AZURE_VIEW_NAME = "Azure";
-  private static final String DEFAULT_AZURE_FIELD_ID = "azureServiceName";
-  private static final String DEFAULT_AZURE_FIELD_NAME = "Service name";
+  private static final String DEFAULT_AZURE_FIELD_ID = "azureSubscriptionGuid";
+  private static final String DEFAULT_AZURE_FIELD_NAME = "Subscription id";
 
   private static final String DEFAULT_AWS_VIEW_NAME = "Aws";
   private static final String DEFAULT_AWS_FIELD_ID = "awsUsageAccountId";
