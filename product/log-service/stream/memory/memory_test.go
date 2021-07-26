@@ -173,3 +173,22 @@ func TestStreamKeyExists(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestStreamListPrefixes(t *testing.T) {
+	ctx := context.Background()
+	s := New()
+	key1 := "key1"
+	key2 := "key2"
+	key3 := "differentKey"
+	err := s.Create(ctx, key1)
+	assert.Nil(t, err)
+	err = s.Create(ctx, key2)
+	assert.Nil(t, err)
+	err = s.Create(ctx, key3)
+	assert.Nil(t, err)
+	l, err := s.ListPrefix(ctx, "key")
+	assert.Nil(t, err)
+	assert.Contains(t, l, "key1")
+	assert.Contains(t, l, "key2")
+	assert.Equal(t, len(l), 2)
+}
