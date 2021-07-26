@@ -3,12 +3,14 @@ package io.harness.ng.core.event;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVITY;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
+import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP;
 import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP_MAX_PROCESSING_TIME;
 
@@ -72,8 +74,8 @@ public class NGEventConsumerService implements Managed {
     samlAuthorizationConsumerService.shutdown();
     entityCRUDConsumerService.awaitTermination(ENTITY_CRUD_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     featureFlagConsumerService.awaitTermination(FEATURE_FLAG_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
-    setupUsageConsumerService.awaitTermination(FEATURE_FLAG_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
-    entityActivityConsumerService.awaitTermination(FEATURE_FLAG_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+    setupUsageConsumerService.awaitTermination(SETUP_USAGE_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+    entityActivityConsumerService.awaitTermination(ENTITY_ACTIVITY_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     userMembershipConsumerService.awaitTermination(USERMEMBERSHIP_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     samlAuthorizationConsumerService.awaitTermination(DEFAULT_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }
