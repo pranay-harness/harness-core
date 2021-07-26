@@ -1117,6 +1117,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             .status(FileOperationStatus.Status.SUCCESS)
             .errorMssg("")
             .yamlFilePath(changeContext.getChange().getFilePath())
+            .entityId(changeContext.getEntity() != null ? ((Base) changeContext.getEntity()).getUuid() : null)
             .build();
       }
     } catch (YamlProcessingException ex) {
@@ -1168,11 +1169,33 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         processedChangesWithContext.stream().map(result -> result.getChange()).collect(toList());
     List<FileOperationStatus> fileOperationStatusList =
         prepareFileOperationStatusListFromChangeList(Collections.EMPTY_LIST, processedChangeList, originalChangeList);
+    fileOperationStatusList = addEntityIdToFileOperationResponse(fileOperationStatusList, processedChangesWithContext);
 
     return yamlOperationResponseBuilder.responseStatus(YamlOperationResponse.Status.SUCCESS)
         .filesStatus(fileOperationStatusList)
         .errorMessage("")
         .build();
+  }
+
+  private List<FileOperationStatus> addEntityIdToFileOperationResponse(
+      List<FileOperationStatus> fileOperationStatusList, List<ChangeContext> processedChangesWithContext) {
+    if (CollectionUtils.isEmpty(processedChangesWithContext)) {
+      return fileOperationStatusList;
+    }
+    Map<String, String> filePathToEntityIdMap = processedChangesWithContext.stream().collect(HashMap::new,
+        (mapping, changeContext)
+            -> mapping.put(changeContext.getChange().getFilePath(),
+                changeContext.getEntity() != null ? ((Base) changeContext.getEntity()).getUuid() : null),
+        (mapping, changeContext) -> {});
+    return fileOperationStatusList.stream()
+        .map(item
+            -> FileOperationStatus.builder()
+                   .yamlFilePath(item.getYamlFilePath())
+                   .status(item.getStatus())
+                   .errorMssg(item.getErrorMssg())
+                   .entityId(filePathToEntityIdMap.getOrDefault(item.getYamlFilePath(), ""))
+                   .build())
+        .collect(toList());
   }
 
   private List<Change> getSkippedChangeList(final List<Change> originalChangeList,
