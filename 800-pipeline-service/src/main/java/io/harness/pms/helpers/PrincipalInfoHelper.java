@@ -22,9 +22,6 @@ public class PrincipalInfoHelper {
   @Inject PipelineServiceConfiguration configuration;
 
   public ExecutionPrincipalInfo getPrincipalInfoFromSecurityContext() {
-    if (!configuration.isEnableAuth()) {
-      return ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build();
-    }
     io.harness.security.dto.Principal principalInContext = SecurityContextBuilder.getPrincipal();
     if (principalInContext == null || principalInContext.getName() == null || principalInContext.getType() == null) {
       throw new AccessDeniedException("Principal cannot be null", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
