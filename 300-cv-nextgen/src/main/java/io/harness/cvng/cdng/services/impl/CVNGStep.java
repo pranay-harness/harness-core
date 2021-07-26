@@ -82,7 +82,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     } else {
       MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
           accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
-      if (monitoredServiceDTO == null) {
+      if (monitoredServiceDTO == null || monitoredServiceDTO.getSources().getHealthSources().isEmpty()) {
         cvngStepTaskBuilder.skip(true);
         cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());
       } else {
