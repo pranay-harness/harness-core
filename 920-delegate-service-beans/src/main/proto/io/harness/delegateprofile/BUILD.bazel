@@ -13,7 +13,7 @@ proto_library(
         "//920-delegate-service-beans/src/main/proto/io/harness/owner:920_delegate_service_beans_proto",
         "//920-delegate-service-beans/src/main/proto/io/harness/paging:920_delegate_service_beans_proto",
         "//955-delegate-beans/src/main/proto/io/harness/delegate:955_delegate_beans_proto",
-        "//980-commons/src/main/proto/io/harness/virtualstack:virtualstack_proto",
+        "//980-commons/src/main/proto/io/harness/virtualstack:980_commons_proto",
     ],
 )
 
@@ -27,7 +27,7 @@ go_proto_library(
         "//920-delegate-service-beans/src/main/proto/io/harness/owner",
         "//920-delegate-service-beans/src/main/proto/io/harness/paging",
         "//955-delegate-beans/src/main/proto/io/harness/delegate",
-        "//980-commons/src/main/proto/io/harness/virtualstack:virtual_stack_proto",
+        "//980-commons/src/main/proto/io/harness/virtualstack",
     ],
 )
 
