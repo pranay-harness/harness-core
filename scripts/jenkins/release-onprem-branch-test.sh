@@ -44,7 +44,3 @@ else
       echo "These are the not merged JIRA tickets : ${NOT_MERGED} , Please merge them into ${SAAS_BRANCH} branch"
       exit 1
 fi
-
-
-
-
