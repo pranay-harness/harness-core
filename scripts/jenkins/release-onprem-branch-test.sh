@@ -19,7 +19,7 @@ git fetch --all
 for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -${PREV_BRANCHES_COUNT}`;
 	do
 	       echo "Onprem branch is $line"
-         git log --remotes=$line* --pretty=oneline --abbrev-commit | grep -iE "\[(${PROJECTS})-[0-9]+]:" -o | sort | uniq | tr '[:lower:]' '[:upper:]' > release_onprem_temp.txt
+         git log --remotes=$line* --pretty=oneline --abbrev-commit | grep -iE "\[(${PROJECTS})-[0-9]+]:" -o | sort | uniq | tr '[:lower:]' '[:upper:]' >> release_onprem_temp.txt
 done
 
 cat release_onprem_temp.txt | sort | uniq >release_onprem.txt
