@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.NgSetupFields.NG;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.MARKO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,5 +111,88 @@ public class DelegateTaskBroadcastHelperTest extends WingsBaseTest {
     assertThat(delegateTaskBroadcast.isAsync()).isEqualTo(delegateTask.getData().isAsync());
     assertThat(delegateTaskBroadcast.getPreAssignedDelegateId()).isEqualTo(delegateTask.getPreAssignedDelegateId());
     assertThat(delegateTaskBroadcast.getAlreadyTriedDelegates()).isEqualTo(delegateTask.getAlreadyTriedDelegates());
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testRebroadcastNgDelegateTaskNgFlagMatch() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .version(generateUuid())
+                                    .accountId(generateUuid())
+                                    .uuid(generateUuid())
+                                    .data(TaskData.builder().async(true).build())
+                                    .alreadyTriedDelegates(Collections.singleton(generateUuid()))
+                                    .setupAbstraction(NG, "true")
+                                    .build();
+
+    // Test with FF enabled and no pre assigned delegate
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())).thenReturn(false);
+
+    Broadcaster broadcaster = mock(Broadcaster.class);
+    when(broadcasterFactory.lookup(anyString(), eq(true))).thenReturn(broadcaster);
+
+    broadcastHelper.rebroadcastDelegateTask(delegateTask);
+
+    ArgumentCaptor<DelegateTaskBroadcast> argumentCaptor = ArgumentCaptor.forClass(DelegateTaskBroadcast.class);
+    verify(broadcaster).broadcast(argumentCaptor.capture());
+
+    DelegateTaskBroadcast delegateTaskBroadcast = argumentCaptor.getValue();
+    assertThat(delegateTaskBroadcast.isNg()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testRebroadcastCgDelegateTaskNgFlagMismatch() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .version(generateUuid())
+                                    .accountId(generateUuid())
+                                    .uuid(generateUuid())
+                                    .data(TaskData.builder().async(true).build())
+                                    .alreadyTriedDelegates(Collections.singleton(generateUuid()))
+                                    .setupAbstraction(NG, "false")
+                                    .build();
+
+    // Test with FF enabled and no pre assigned delegate
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())).thenReturn(false);
+
+    Broadcaster broadcaster = mock(Broadcaster.class);
+    when(broadcasterFactory.lookup(anyString(), eq(true))).thenReturn(broadcaster);
+
+    broadcastHelper.rebroadcastDelegateTask(delegateTask);
+
+    ArgumentCaptor<DelegateTaskBroadcast> argumentCaptor = ArgumentCaptor.forClass(DelegateTaskBroadcast.class);
+    verify(broadcaster).broadcast(argumentCaptor.capture());
+
+    DelegateTaskBroadcast delegateTaskBroadcast = argumentCaptor.getValue();
+    assertThat(delegateTaskBroadcast.isNg()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void testRebroadcastCgDelegateTaskMissingSetupAbstractions() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .version(generateUuid())
+                                    .accountId(generateUuid())
+                                    .uuid(generateUuid())
+                                    .data(TaskData.builder().async(true).build())
+                                    .alreadyTriedDelegates(Collections.singleton(generateUuid()))
+                                    .build();
+
+    // Test with FF enabled and no pre assigned delegate
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateTask.getAccountId())).thenReturn(false);
+
+    Broadcaster broadcaster = mock(Broadcaster.class);
+    when(broadcasterFactory.lookup(anyString(), eq(true))).thenReturn(broadcaster);
+
+    broadcastHelper.rebroadcastDelegateTask(delegateTask);
+
+    ArgumentCaptor<DelegateTaskBroadcast> argumentCaptor = ArgumentCaptor.forClass(DelegateTaskBroadcast.class);
+    verify(broadcaster).broadcast(argumentCaptor.capture());
+
+    DelegateTaskBroadcast delegateTaskBroadcast = argumentCaptor.getValue();
+    assertThat(delegateTaskBroadcast.isNg()).isFalse();
   }
 }
