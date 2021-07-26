@@ -1,9 +1,9 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
-import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
+import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineComponent;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
+import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -13,18 +13,16 @@ import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
-import io.harness.pms.inputset.helpers.MergeUtils;
+import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +41,7 @@ public class ValidateAndMergeHelper {
 
   public InputSetErrorWrapperDTOPMS validateInputSet(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, String yaml, String pipelineBranch, String pipelineRepoID) {
-    String identifier = PMSInputSetElementMapper.getStringField(yaml, "identifier", "inputSet");
+    String identifier = InputSetYamlHelper.getStringField(yaml, "identifier", "inputSet");
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
@@ -53,15 +51,7 @@ public class ValidateAndMergeHelper {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
 
-    return validateInputSet(pipelineYaml, yaml);
-  }
-
-  public static InputSetErrorWrapperDTOPMS validateInputSet(String pipelineYaml, String inputSetYaml) {
-    try {
-      return MergeUtils.getErrorMap(pipelineYaml, inputSetYaml);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Invalid input set yaml");
-    }
+    return InputSetErrorsHelper.getErrorMap(pipelineYaml, yaml);
   }
 
   private String getPipelineYaml(String accountId, String orgIdentifier, String projectIdentifier,
@@ -109,7 +99,7 @@ public class ValidateAndMergeHelper {
       inputSets =
           findAllReferredInputSets(inputSetReferences, accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     }
-    return MergeUtils.getInvalidInputSetReferences(inputSets, inputSetReferences);
+    return InputSetErrorsHelper.getInvalidInputSetReferences(inputSets, inputSetReferences);
   }
 
   private List<Optional<InputSetEntity>> findAllReferredInputSets(List<String> referencesInOverlay, String accountId,
@@ -170,11 +160,7 @@ public class ValidateAndMergeHelper {
         });
       }
     });
-    try {
-      return mergeInputSets(pipelineTemplate, inputSetYamlList, false);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
-    }
+    return mergeInputSets(pipelineTemplate, inputSetYamlList, false);
   }
 
   public String mergeInputSetIntoPipeline(String accountId, String orgIdentifier, String projectIdentifier,
@@ -185,20 +171,20 @@ public class ValidateAndMergeHelper {
   }
 
   private void confirmPipelineIdentifier(String inputSetYaml, String pipelineIdentifier) {
-    if (PMSInputSetElementMapper.isPipelineAbsent(inputSetYaml)) {
+    if (InputSetYamlHelper.isPipelineAbsent(inputSetYaml)) {
       throw new InvalidRequestException(
           "Input Set provides no values for any runtime input, or the pipeline has no runtime input");
     }
     String pipelineComponent = getPipelineComponent(inputSetYaml);
-    String identifierInYaml = PMSInputSetElementMapper.getStringField(pipelineComponent, "identifier", "pipeline");
+    String identifierInYaml = InputSetYamlHelper.getStringField(pipelineComponent, "identifier", "pipeline");
     if (!pipelineIdentifier.equals(identifierInYaml)) {
       throw new InvalidRequestException("Pipeline identifier in input set does not match");
     }
   }
 
   private void confirmOrgAndProjectIdentifier(String yaml, String orgIdentifier, String projectIdentifier) {
-    String orgIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "orgIdentifier", "inputSet");
-    String projectIdInYaml = PMSInputSetElementMapper.getStringField(yaml, "projectIdentifier", "inputSet");
+    String orgIdInYaml = InputSetYamlHelper.getStringField(yaml, "orgIdentifier", "inputSet");
+    String projectIdInYaml = InputSetYamlHelper.getStringField(yaml, "projectIdentifier", "inputSet");
 
     if (!orgIdentifier.equals(orgIdInYaml)) {
       throw new InvalidRequestException("Org identifier in input set does not match");
