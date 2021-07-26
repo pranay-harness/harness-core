@@ -408,18 +408,17 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 
 	avgQuery := fmt.Sprintf(
 		`
-				SELECT AVG(time_taken_ms/test_selected) FROM (SELECT test_selected, time_taken_ms FROM %s
+				SELECT AVG(time_taken_ms) FROM (SELECT time_taken_ms FROM %s
 				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 AND test_count = test_selected LIMIT 10000)
 				AS avg`, table)
 	avgQuery = regexp.QuoteMeta(avgQuery)
-	rows = sqlmock.NewRows([]string{"avg"}).AddRow(15)
+	rows = sqlmock.NewRows([]string{"avg"}).AddRow(150)
 	mock.ExpectQuery(avgQuery).WithArgs(account, org, project, pipeline, stage, step).WillReturnRows(rows)
 
 	// Calculation of time saved:
-	// Get average = 15
-	// Get total test count = 300
-	// Get skipped tests = 280
-	// Time saved = 280 * 15 ms
+	// Get average = 150 ms
+	// Time taken = 30 ms
+	// Time saved = 120 ms
 
 	stmt := fmt.Sprintf(
 		`
@@ -430,7 +429,7 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 				`, table)
 	stmt = regexp.QuoteMeta(stmt)
 	mock.ExpectExec(stmt).
-		WithArgs(total, selected, src, new, updated, 30, 280*15,
+		WithArgs(total, selected, src, new, updated, 30, 120,
 			account, org, project, pipeline, build, step, stage).WillReturnResult(sqlmock.NewResult(0, 1))
 	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
 	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, 30, true)
