@@ -24,6 +24,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -80,6 +82,7 @@ import org.mockito.Mockito;
  * @author rktummala
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 @Listeners(GeneralNotifyEventListener.class)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WorkflowExecutionUpdateTest extends WingsBaseTest {
