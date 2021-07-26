@@ -1,6 +1,6 @@
 #!/bin/bash
-PROJECTS="ART|BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PL|SEC|SWAT|GTM|ONP"
 
+PROJECTS="ART|BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PL|SEC|SWAT|GTM|ONP"
 
 for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -5`;
 	do
@@ -17,9 +17,6 @@ git log --remotes=origin/${SAAS_BRANCH}* --pretty=oneline --abbrev-commit | grep
 
 NOT_MERGED=`comm -23 release_onprem.txt release_saas.txt | tr '\n' ' '`
 
-cat release_onprem.txt | wc -l
-
-cat release_saas.txt | wc -l
 
 if [ -z "$NOT_MERGED" ]
 then
