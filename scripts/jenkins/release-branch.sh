@@ -29,6 +29,7 @@ export SHA=`git rev-parse HEAD`
 
 # Update jira issues
 scripts/jenkins/release-branch-update-jiras.sh
+scripts/jenkins/release-branch-update-jira_status.sh
 
 # Prepare new release commit
 git checkout ${BRANCH}

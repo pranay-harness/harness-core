@@ -9,15 +9,37 @@ fi
 
 echo $KEY
 
-status=`curl -X GET -H "Content-Type: application/json" https://harness.atlassian.net/rest/api/2/issue/${KEY}?fields=status --user $JIRA_USERNAME:$JIRA_PASSWORD | jq ".fields.status.name" | tr -d '"'`
+jira_response=`curl -X GET -H "Content-Type: application/json" https://harness.atlassian.net/rest/api/2/issue/${KEY}?fields=issuetype,customfield_10687,customfield_10709,customfield_10748,customfield_10763 --user $JIRA_USERNAME:$JIRA_PASSWORD`
 
-echo $status
+issuetype=`echo "${jira_response}" | jq ".fields.issuetype.name" | tr -d '"'`
+bug_resolution=`echo "${jira_response}" | jq ".fields.customfield_10687" | tr -d '"'`
+jirs_resolved_as=`echo "${jira_response}" | jq ".fields.customfield_10709" | tr -d '"'`
+phase_injected=`echo "${jira_response}" | jq ".fields.customfield_10748" | tr -d '"'`
+what_changed=`echo "${jira_response}" | jq ".fields.customfield_10763" | tr -d '"'`
 
-if [[ "${status}" = "QA Test" || "${status}" = "Done" ]]
-        then
-           echo "status is in done or qa test status"
-        else
-           echo "jira not in done or qa test status, Hence failing, current status is : ${status} "
-	         exit 1
+echo "issueType is ${issuetype}"
+
+if [[ "${issuetype}" = "Bug" && ( "${bug_resolution}" = "" || "${jirs_resolved_as}" = "null" || "${phase_injected}" = "null" || "${what_changed}" = "null" ) ]]
+then
+      if [[ -z ${bug_resolution} ]]
+      then
+        echo "bug resolution is empty"
+      fi
+
+      if [[ "${jirs_resolved_as}" = "null" ]]
+      then
+        echo "jira resolved is not selected"
+      fi
+
+      if [[ "${phase_injected}" = "null" ]]
+      then
+        echo "phase_injected is not selected"
+      fi
+
+      if [[ "${what_changed}" = "null" ]]
+      then
+        echo "what_changed is not updated"
+      fi
+      exit 1
 fi
 
