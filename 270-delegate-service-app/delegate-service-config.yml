@@ -9,11 +9,11 @@ xxxxxxxx
       validateCerts: false
       maxRequestHeaderSize: 100KiB
     - type: http
-      port: 3457
+      port: 3458
       maxRequestHeaderSize: 100KiB
   adminConnectors:
     - type: h2
-      port: 9081
+      port: 9092
       keyStorePath: keystore.jks
       keyStorePassword: password
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
@@ -218,7 +218,7 @@ logging:
       threshold: TRACE
       currentLogFilename: portal.log
       archive: true
-      archivedFileCount: 5
+      archivedFileCount: 15
       maxFileSize: 150MB
       archivedLogFilenamePattern: portal.%d.%i.log
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
@@ -616,3 +616,18 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+grpcServerClassicConfig:
+  connectors:
+    - port: 15011
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 15022
+
+#grpcDelegateServiceClientConfig:
+ # target: localhost:14011
+  #authority: localhost
+
+delegateServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
