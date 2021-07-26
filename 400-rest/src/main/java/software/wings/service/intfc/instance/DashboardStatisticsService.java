@@ -91,6 +91,6 @@ public interface DashboardStatisticsService {
 
   Set<String> getDeletedAppIds(String accountId, long fromTimestamp, long toTimestamp);
 
-  PageResponse<CompareEnvironmentAggregationInfo> getCompareEnvironment(String appId, String envId1, String envId2, int offset, int limit);
+  PageResponse<CompareEnvironmentAggregationInfo> getCompareServicesByEnvironment(String appId, String envId1, String envId2, int offset, int limit);
 
 }

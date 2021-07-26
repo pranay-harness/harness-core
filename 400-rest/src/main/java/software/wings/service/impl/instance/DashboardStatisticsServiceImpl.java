@@ -1230,11 +1230,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public PageResponse<CompareEnvironmentAggregationInfo> getCompareEnvironment(
+  public PageResponse<CompareEnvironmentAggregationInfo> getCompareServicesByEnvironment(
       String appId, String envId1, String envId2, int offset, int limit) {
     Query<Instance> query;
     try {
-      query = getQueryForCompareEnvironment(appId, envId1, envId2);
+      query = getQueryForCompareServicesByEnvironment(appId, envId1, envId2);
     } catch (NoResultFoundException nre) {
       return getEmptyPageResponse();
     } catch (Exception e) {
@@ -1292,7 +1292,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .build();
   }
 
-  private Query<Instance> getQueryForCompareEnvironment(String appId, String envId1, String envId2) {
+  private Query<Instance> getQueryForCompareServicesByEnvironment(String appId, String envId1, String envId2) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.and(query.criteria("appId").equal(appId),
         query.or(query.criteria("envId").equal(envId1), query.criteria("envId").equal(envId2)));
