@@ -121,6 +121,10 @@ if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
 fi
 
+if [[ "" != "$SMTP_USE_SSL" ]]; then
+  yq write -i $CONFIG_FILE smtp.useSSL "$SMTP_USE_SSL"
+fi
+
 if [[ "" != "$UI_SERVER_URL" ]]; then
   yq write -i $CONFIG_FILE baseUrl "$UI_SERVER_URL"
 fi
