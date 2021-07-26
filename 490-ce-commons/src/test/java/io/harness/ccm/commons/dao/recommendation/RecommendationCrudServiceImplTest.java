@@ -2,8 +2,6 @@ package io.harness.ccm.commons.dao.recommendation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -19,9 +17,7 @@ import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
-import io.harness.ccm.commons.entities.ClusterRecord;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
-import io.harness.ccm.commons.service.intf.ClusterRecordService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -42,7 +38,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 @OwnedBy(HarnessTeam.CE)
 public class RecommendationCrudServiceImplTest extends CategoryTest {
   @Mock private K8sRecommendationDAO k8sRecommendationDAO;
-  @Mock private ClusterRecordService clusterRecordService;
   @InjectMocks private RecommendationCrudServiceImpl recommendationCrudService;
 
   private static final String CLUSTER_ID = "clusterId";
@@ -59,8 +54,6 @@ public class RecommendationCrudServiceImplTest extends CategoryTest {
   public void setUp() throws Exception {
     monthlyCostCaptor = ArgumentCaptor.forClass(Double.class);
     monthlySavingCaptor = ArgumentCaptor.forClass(Double.class);
-
-    when(clusterRecordService.get(CLUSTER_ID)).thenReturn(ClusterRecord.builder().clusterName(CLUSTER_NAME).build());
   }
 
   @Test
@@ -72,28 +65,13 @@ public class RecommendationCrudServiceImplTest extends CategoryTest {
         .upsertCeRecommendation(eq(UUID), eq(RESOURCE_ID), eq(CLUSTER_NAME), monthlyCostCaptor.capture(),
             monthlySavingCaptor.capture(), eq(true), eq(NOW));
 
-    recommendationCrudService.upsertWorkloadRecommendation(UUID, RESOURCE_ID, createValidRecommendation());
+    recommendationCrudService.upsertWorkloadRecommendation(
+        UUID, RESOURCE_ID, CLUSTER_NAME, createValidRecommendation());
 
-    verify(clusterRecordService, times(1)).get(eq(CLUSTER_ID));
     verify(k8sRecommendationDAO, times(1));
 
     assertThat(monthlyCostCaptor.getValue()).isEqualTo(330D);
     assertThat(monthlySavingCaptor.getValue()).isEqualTo(10D);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.UTSAV)
-  @Category(UnitTests.class)
-  public void testUpsertWorkloadRecommendationClusterIdNotFound() throws Exception {
-    when(clusterRecordService.get(CLUSTER_ID)).thenReturn(null);
-    doNothing()
-        .when(k8sRecommendationDAO)
-        .upsertCeRecommendation(anyString(), any(), anyString(), any(), any(), anyBoolean(), any());
-
-    recommendationCrudService.upsertWorkloadRecommendation(UUID, RESOURCE_ID, createValidRecommendation());
-
-    verify(k8sRecommendationDAO, times(1))
-        .upsertCeRecommendation(anyString(), any(), eq(CLUSTER_ID), any(), any(), anyBoolean(), any());
   }
 
   @Test
@@ -106,9 +84,8 @@ public class RecommendationCrudServiceImplTest extends CategoryTest {
             monthlySavingCaptor.capture(), eq(false), eq(Instant.EPOCH));
 
     recommendationCrudService.upsertWorkloadRecommendation(
-        UUID, RESOURCE_ID, K8sWorkloadRecommendation.builder().lastDayCostAvailable(false).build());
+        UUID, RESOURCE_ID, CLUSTER_NAME, K8sWorkloadRecommendation.builder().lastDayCostAvailable(false).build());
 
-    verify(clusterRecordService, times(1)).get(eq(CLUSTER_ID));
     verify(k8sRecommendationDAO, times(1));
 
     assertThat(monthlyCostCaptor.getValue()).isNull();
@@ -132,7 +109,7 @@ public class RecommendationCrudServiceImplTest extends CategoryTest {
     JobConstants jobConstants = mock(JobConstants.class);
     when(jobConstants.getJobEndTime()).thenReturn(NOW.toEpochMilli());
 
-    recommendationCrudService.upsertNodeRecommendation(UUID, jobConstants, nodePoolId, stats);
+    recommendationCrudService.upsertNodeRecommendation(UUID, jobConstants, nodePoolId, CLUSTER_NAME, stats);
 
     assertThat(stringCaptor.getValue()).isNotNull().isEqualTo(CLUSTER_NAME);
   }
