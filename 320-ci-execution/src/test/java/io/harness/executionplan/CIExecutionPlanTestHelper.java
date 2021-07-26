@@ -229,6 +229,7 @@ public class CIExecutionPlanTestHelper {
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPod() {
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
+        .name("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
@@ -242,6 +243,7 @@ public class CIExecutionPlanTestHelper {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
+        .name("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
         .accountId("accountId")
@@ -254,6 +256,7 @@ public class CIExecutionPlanTestHelper {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
+        .name("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
         .accountId("accountId")
@@ -265,6 +268,7 @@ public class CIExecutionPlanTestHelper {
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnOtherPods() {
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask2")
+        .name("liteEngineTask2")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
         .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
