@@ -4,14 +4,14 @@ PROJECTS="ART|BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PL|SEC
 
 for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -5`;
 	do
-	       echo "Onprem branch is $line"
+	       #echo "Onprem branch is $line"
          git log --remotes=$line* --pretty=oneline --abbrev-commit | grep -iE "\[(${PROJECTS})-[0-9]+]:" -o | sort | uniq | tr '[:lower:]' '[:upper:]' > release_onprem_temp.txt
 done
 
 cat release_onprem_temp.txt | sort | uniq >release_onprem.txt
 
 
-echo "Saas branch is ${SAAS_BRANCH}"
+#echo "Saas branch is ${SAAS_BRANCH}"
 
 git log --remotes=origin/${SAAS_BRANCH}* --pretty=oneline --abbrev-commit | grep -iE "\[(${PROJECTS})-[0-9]+]:" -o | sort | uniq | tr '[:lower:]' '[:upper:]' > release_saas.txt
 
