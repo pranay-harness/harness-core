@@ -465,7 +465,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                              .createdAt(0)
                                              .lastUpdatedBy(null)
                                              .lastUpdatedAt(0)
-                                             .entityYamlPath(null)
                                              .name("Stored")
                                              .description("Desc")
                                              .accountId(ACCOUNT_ID)

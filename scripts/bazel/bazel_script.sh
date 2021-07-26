@@ -80,6 +80,7 @@ BAZEL_MODULES="\
   //820-platform-service:module_deploy.jar \
   //830-notification-service:module \
   //830-resource-group:module \
+  //834-user-service:module \
   //835-notification-senders:module \
   //835-notification-senders:module \
   //840-template-service:module \
@@ -353,6 +354,7 @@ build_bazel_module 810-ng-triggers
 build_bazel_module 815-cg-triggers
 build_bazel_module 830-notification-service
 build_bazel_module 830-resource-group
+build_bazel_module 834-user-service
 build_bazel_module 835-notification-senders
 build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 865-cg-events

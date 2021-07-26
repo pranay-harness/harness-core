@@ -180,6 +180,8 @@ aeriform("//830-resource-group:module")
 
 aeriform("//830-resource-group:tests")
 
+aeriform("//834-user-service:module")
+
 aeriform("//835-notification-senders:module")
 
 aeriform("//840-template-service:module")

@@ -102,6 +102,7 @@ modules = [
     "//820-platform-service",
     "//830-notification-service",
     "//830-resource-group",
+    "//834-user-service",
     "//835-notification-senders",
     #"//850-execution-plan",
     "//850-ng-pipeline-commons",
