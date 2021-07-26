@@ -13,8 +13,7 @@ EOF
 git fetch --all
 git fetch --unshallow
 
-
-for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -5`;
+for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -${PREV_BRANCHES_COUNT}`;
 	do
 	       echo "Onprem branch is $line"
          git log --remotes=$line* --pretty=oneline --abbrev-commit | grep -iE "\[(${PROJECTS})-[0-9]+]:" -o | sort | uniq | tr '[:lower:]' '[:upper:]' > release_onprem_temp.txt
