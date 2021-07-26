@@ -88,6 +88,10 @@ if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.password "$SMTP_PASSWORD"
 fi
 
+if [[ "" != "$SMTP_USE_SSL" ]]; then
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.useSSL "$SMTP_USE_SSL"
+fi
+
 if [[ "" != "$OVERRIDE_PREDEFINED_TEMPLATES" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.seedDataConfiguration.shouldOverrideAllPredefinedTemplates "$OVERRIDE_PREDEFINED_TEMPLATES"
 fi
