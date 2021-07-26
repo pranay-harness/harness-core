@@ -12,6 +12,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
@@ -29,6 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactCleanupServiceAsyncImplTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;

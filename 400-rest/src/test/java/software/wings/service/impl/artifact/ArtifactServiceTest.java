@@ -40,6 +40,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.FileBucket;
@@ -100,6 +102,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 
 @SetupScheduler
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactServiceTest extends WingsBaseTest {
   private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   private static final String SETTING_ID = "SETTING_ID";

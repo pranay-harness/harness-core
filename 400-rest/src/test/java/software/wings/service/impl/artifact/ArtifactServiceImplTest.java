@@ -23,6 +23,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -46,6 +48,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactServiceImplTest extends WingsBaseTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Inject @InjectMocks ArtifactServiceImpl artifactService;

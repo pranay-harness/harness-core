@@ -41,6 +41,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.EntityType;
@@ -82,6 +85,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDC)
 public class TriggerServiceTestHelper {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   public static Artifact artifact = anArtifact()

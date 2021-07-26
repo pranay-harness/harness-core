@@ -7,6 +7,8 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.shell.ScriptType;
 
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
   @Inject private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
   @Inject private EncryptionService encryptionService;

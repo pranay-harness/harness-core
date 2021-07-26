@@ -17,6 +17,8 @@ import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ff.FeatureFlagService;
@@ -77,6 +79,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;

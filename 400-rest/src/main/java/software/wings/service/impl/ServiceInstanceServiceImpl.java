@@ -6,6 +6,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -33,6 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @ValidateOnExecution
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;

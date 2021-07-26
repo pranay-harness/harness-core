@@ -16,6 +16,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -37,6 +39,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactCollectionServiceAsyncImplTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
 

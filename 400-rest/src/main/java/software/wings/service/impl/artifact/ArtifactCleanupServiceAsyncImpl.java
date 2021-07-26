@@ -7,6 +7,8 @@ import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
   @Inject private SettingsService settingsService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
