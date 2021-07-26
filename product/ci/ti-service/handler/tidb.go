@@ -214,7 +214,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
 		timeMsStr := r.FormValue(timeMsParam)
-		timeMs, err := strconv.ParseInt(timeMsStr, 10, 64)
+		timeMs, err := strconv.ParseInt(timeMsStr, 10, 32)
 		if err != nil {
 			log.Errorw("could not parse time taken", zap.Error(err))
 			timeMs = 0
@@ -260,7 +260,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
 		log.Infow("completed partial CG upload to mongo", "account", acc, "org", org, "project", proj, "build", buildId, "stage", stageId, "step", stepId, "time_taken", time.Since(st).String())
 		// Try to update counts even if uploading partial CG failed
-		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, timeMs, true)
+		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, int(timeMs), true)
 		if err != nil {
 			log.Errorw("failed to write partial cg to mongo", accountIDParam, acc, orgIdParam, org, projectIdParam, proj, buildIdParam, buildId, repoParam, info.Repo,
 				sourceBranchParam, info.Branch, stepIdParam, stepId, stageIdParam, stageId, zap.Error(err))

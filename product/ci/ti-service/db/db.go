@@ -28,7 +28,7 @@ type Db interface {
 
 	// WriteSelectedTests writes selected test information to the underlying DB.
 	WriteSelectedTests(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId,
-		stageId, stepId string, selected types.SelectTestsResp, timeMs int64, upsert bool) error
+		stageId, stepId string, selected types.SelectTestsResp, timeMs int, upsert bool) error
 
 	// GetSelectionOverview retrieves an overview of the selected tests for the corresponding build.
 	GetSelectionOverview(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId string) (types.SelectionOverview, error)
