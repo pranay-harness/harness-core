@@ -13,20 +13,20 @@ jira_response=`curl -X GET -H "Content-Type: application/json" https://harness.a
 
 issuetype=`echo "${jira_response}" | jq ".fields.issuetype.name" | tr -d '"'`
 bug_resolution=`echo "${jira_response}" | jq ".fields.customfield_10687" | tr -d '"'`
-jirs_resolved_as=`echo "${jira_response}" | jq ".fields.customfield_10709" | tr -d '"'`
+jira_resolved_as=`echo "${jira_response}" | jq ".fields.customfield_10709" | tr -d '"'`
 phase_injected=`echo "${jira_response}" | jq ".fields.customfield_10748" | tr -d '"'`
 what_changed=`echo "${jira_response}" | jq ".fields.customfield_10763" | tr -d '"'`
 
 echo "issueType is ${issuetype}"
 
-if [[ "${issuetype}" = "Bug" && ( "${bug_resolution}" = "" || "${jirs_resolved_as}" = "null" || "${phase_injected}" = "null" || "${what_changed}" = "null" ) ]]
+if [[ "${issuetype}" = "Bug" && ( "${bug_resolution}" = "" || "${jira_resolved_as}" = "null" || "${phase_injected}" = "null" || "${what_changed}" = "null" ) ]]
 then
       if [[ -z ${bug_resolution} ]]
       then
         echo "bug resolution is empty"
       fi
 
-      if [[ "${jirs_resolved_as}" = "null" ]]
+      if [[ "${jira_resolved_as}" = "null" ]]
       then
         echo "jira resolved is not selected"
       fi
@@ -43,3 +43,11 @@ then
       exit 1
 fi
 
+if [[ "${issuetype}" = "Story" && ( "${what_changed}" = "null" ) ]]
+then
+      if [[ "${what_changed}" = "null" ]]
+      then
+        echo "what_changed is not updated"
+      fi
+      exit 1
+fi
