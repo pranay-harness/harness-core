@@ -8,6 +8,10 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
+
 import static java.util.Collections.emptySet;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -91,6 +95,8 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
   private boolean init(K8sRollingRollbackDeployRequest rollbackRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
       LogCallback logCallback) throws IOException {
     logCallback.saveExecutionLog("Initializing..\n");
+    logCallback.saveExecutionLog(
+        color(String.format("Release Name: [%s]", rollbackRequest.getReleaseName()), Yellow, Bold));
 
     rollbackHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(rollbackRequest.getK8sInfraDelegateConfig()));

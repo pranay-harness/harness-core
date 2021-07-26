@@ -15,4 +15,5 @@ public class PlatformResourceTypes {
   public static final String USERGROUP = "USERGROUP";
   public static final String USER = "USER";
   public static final String AUTHSETTING = "AUTHSETTING";
+  public static final String SERVICEACCOUNT = "SERVICEACCOUNT";
 }

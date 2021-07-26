@@ -274,13 +274,13 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
         byte[] logSerialized = kryoSerializer.asBytes(logObject);
 
-        log.info("Dispatched logObject status- [{}] [{}]", logObject.getCommandUnitName(),
-            logObject.getCommandExecutionStatus());
+        log.info("Dispatched logObject status- [{}] [{}] for activityId [{}]", logObject.getCommandUnitName(),
+            logObject.getCommandExecutionStatus(), activityId);
         RestResponse restResponse = execute(delegateAgentManagerClient.saveCommandUnitLogs(activityId,
             URLEncoder.encode(unitName, StandardCharsets.UTF_8.toString()), accountId,
             RequestBody.create(MediaType.parse("application/octet-stream"), logSerialized)));
-        log.info("{} logObject lines dispatched for accountId: {}",
-            restResponse.getResource() != null ? logBatch.size() : 0, accountId);
+        log.info("{} logObject lines dispatched for accountId: {}, activityId: {}",
+            restResponse.getResource() != null ? logBatch.size() : 0, accountId, activityId);
       } catch (Exception e) {
         log.error("Dispatch log failed. printing lost logs[{}]", logBatch.size(), e);
         logBatch.forEach(logObject -> log.error(logObject.toString()));

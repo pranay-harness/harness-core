@@ -11,9 +11,20 @@ message EntityDetailWithSetupUsageDetailProtoDTO {
   string type = 2;
   oneof setupUsageDetail {
     SecretReferredByConnectorSetupUsageDetailProtoDTO secretConnectorDetail = 3;
+    EntityReferredByPipelineDetailProtoDTO entityInPipelineDetail = 4;
   }
 
   message SecretReferredByConnectorSetupUsageDetailProtoDTO {
     string fieldName = 1;
+  }
+
+  message EntityReferredByPipelineDetailProtoDTO {
+    string identifier = 1;
+    PipelineDetailType type = 2;
+  }
+
+  enum PipelineDetailType {
+    STAGE_IDENTIFIER = 0;
+    VARIABLE_NAME = 1;
   }
 }

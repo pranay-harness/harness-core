@@ -26,6 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class RoleAssignment {
   @EntityIdentifier final String identifier;
   @NotEmpty final String scopeIdentifier;
+  final String scopeLevel;
   @NotEmpty final String resourceGroupIdentifier;
   @NotEmpty final String roleIdentifier;
   @NotEmpty final String principalIdentifier;

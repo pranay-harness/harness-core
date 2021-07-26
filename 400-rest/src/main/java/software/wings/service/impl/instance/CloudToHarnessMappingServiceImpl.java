@@ -286,14 +286,9 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     return settingAttributes;
   }
 
-  public List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(
-      String accountId, long startTime, long endTime) {
+  public List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(String accountId) {
     Query<GcpBillingAccount> query = persistence.createQuery(GcpBillingAccount.class, excludeAuthority)
-                                         .filter(GcpBillingAccountKeys.accountId, accountId)
-                                         .field(GcpBillingAccountKeys.lastUpdatedAt)
-                                         .greaterThanOrEq(startTime)
-                                         .field(GcpBillingAccountKeys.lastUpdatedAt)
-                                         .lessThan(endTime);
+                                         .filter(GcpBillingAccountKeys.accountId, accountId);
     log.info("Query listGcpBillingAccountUpdatedInDuration {}", query.toString());
     return query.asList();
   }

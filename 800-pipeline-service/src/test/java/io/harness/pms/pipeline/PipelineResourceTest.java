@@ -145,7 +145,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void testCreatePipelineWithSchemaErrors() {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
-        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+        .validateYamlSchema(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
 
     assertThatThrownBy(() -> pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml))
         .isInstanceOf(JsonSchemaValidationException.class);
@@ -211,7 +211,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void testUpdatePipelineWithSchemaErrors() {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
-        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+        .validateYamlSchema(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
 
     assertThatThrownBy(()
                            -> pipelineResource.updatePipeline(
@@ -273,12 +273,12 @@ public class PipelineResourceTest extends CategoryTest {
   public void testGetListOfPipelines() {
     Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
     Page<PipelineEntity> pipelineEntities = new PageImpl<>(Collections.singletonList(entityWithVersion), pageable, 1);
-    doReturn(pipelineEntities).when(pmsPipelineService).list(any(), any(), any(), any(), any());
-    List<PMSPipelineSummaryResponseDTO> content =
-        pipelineResource
-            .getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, 0, 25, null, null, null, null, null, null)
-            .getData()
-            .getContent();
+    doReturn(pipelineEntities).when(pmsPipelineService).list(any(), any(), any(), any(), any(), anyBoolean());
+    List<PMSPipelineSummaryResponseDTO> content = pipelineResource
+                                                      .getListOfPipelines(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
+                                                          0, 25, null, null, null, null, null, null, null)
+                                                      .getData()
+                                                      .getContent();
     assertThat(content).isNotEmpty();
     assertThat(content.size()).isEqualTo(1);
 

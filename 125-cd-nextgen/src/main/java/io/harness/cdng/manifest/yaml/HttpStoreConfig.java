@@ -30,8 +30,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.HTTP)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("httpStore")
-public class HttpStoreConfig
-    implements io.harness.cdng.manifest.yaml.storeConfig.StoreConfig, Visitable, WithConnectorRef {
+public class HttpStoreConfig implements StoreConfig, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 
   @Override
@@ -40,12 +39,16 @@ public class HttpStoreConfig
   }
 
   @Override
-  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig cloneInternal() {
+  public StoreConfig cloneInternal() {
     return HttpStoreConfig.builder().connectorRef(connectorRef).build();
   }
 
   @Override
-  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     HttpStoreConfig helmHttpStore = (HttpStoreConfig) overrideConfig;
     HttpStoreConfig resultantHelmHttpStore = this;
     if (!ParameterField.isNull(helmHttpStore.getConnectorRef())) {

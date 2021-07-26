@@ -7,8 +7,9 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 
 public class VersionConverter extends ClassicConverter {
   static VersionInfoManager versionInfoManager = new VersionInfoManager();
+
   @Override
   public String convert(final ILoggingEvent event) {
-    return versionInfoManager.getVersionInfo().getBuildNo() + "-" + versionInfoManager.getVersionInfo().getPatch();
+    return versionInfoManager.getFullVersion();
   }
 }

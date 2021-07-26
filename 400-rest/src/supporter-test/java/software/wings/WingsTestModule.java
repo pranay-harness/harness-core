@@ -1,7 +1,10 @@
 package software.wings;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.artifacts.docker.service.DockerRegistryService;
@@ -17,7 +20,6 @@ import io.harness.azure.impl.AzureComputeClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
 import io.harness.cache.HarnessCacheManager;
-import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.exception.WingsException;
@@ -31,6 +33,11 @@ import io.harness.manifest.CustomManifestService;
 import io.harness.manifest.CustomManifestServiceImpl;
 import io.harness.openshift.OpenShiftClient;
 import io.harness.openshift.OpenShiftClientImpl;
+import io.harness.pcf.CfCliClient;
+import io.harness.pcf.CfDeploymentManagerImpl;
+import io.harness.pcf.CfSdkClient;
+import io.harness.pcf.cfcli.client.CfCliClientImpl;
+import io.harness.pcf.cfsdk.CfSdkClientImpl;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
@@ -56,9 +63,6 @@ import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClientImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
-import software.wings.helpers.ext.pcf.PcfClient;
-import software.wings.helpers.ext.pcf.PcfClientImpl;
-import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
 import software.wings.provider.NoopDelegateConfigurationServiceProviderImpl;
 import software.wings.provider.NoopDelegatePropertiesServiceProviderImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
@@ -142,6 +146,7 @@ import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PL)
 public class WingsTestModule extends AbstractModule {
   @Provides
   @Named("TestCache")
@@ -162,8 +167,6 @@ public class WingsTestModule extends AbstractModule {
   @Override
   protected void configure() {
     DelegateFileManager mockDelegateFileManager = mock(DelegateFileManager.class);
-    CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-    bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
     bind(DelegateFileManager.class).toInstance(mockDelegateFileManager);
     bind(AmazonS3BuildService.class).to(AmazonS3BuildServiceImpl.class);
     bind(AmazonS3Service.class).to(AmazonS3ServiceImpl.class);
@@ -206,14 +209,15 @@ public class WingsTestModule extends AbstractModule {
     bind(KustomizeClient.class).to(KustomizeClientImpl.class);
     bind(OpenShiftClient.class).to(OpenShiftClientImpl.class);
     bind(ChartMuseumClient.class).to(ChartMuseumClientImpl.class);
-    bind(PcfClient.class).to(PcfClientImpl.class);
+    bind(CfCliClient.class).to(CfCliClientImpl.class);
+    bind(CfSdkClient.class).to(CfSdkClientImpl.class);
     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
     DelegateCVActivityLogService mockDelegateCVActivityLogService = mock(DelegateCVActivityLogService.class);
     bind(DelegateCVActivityLogService.class).toInstance(mockDelegateCVActivityLogService);
     GitClientHelper gitClientHelper = mock(GitClientHelper.class);
     bind(GitClientImpl.class);
-    bind(PcfDeploymentManagerImpl.class);
+    bind(CfDeploymentManagerImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceManager.class).to(AwsS3HelperServiceManagerImpl.class);

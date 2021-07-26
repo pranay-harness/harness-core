@@ -1,18 +1,18 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: harness-delegate
+  name: harness-delegate-ng
 
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: harness-delegate-cluster-admin
+  name: harness-delegate-ng-cluster-admin
 subjects:
   - kind: ServiceAccount
     name: default
-    namespace: harness-delegate
+    namespace: harness-delegate-ng
 roleRef:
   kind: ClusterRole
   name: cluster-admin
@@ -24,7 +24,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: ${delegateName}-proxy
-  namespace: harness-delegate
+  namespace: harness-delegate-ng
 type: Opaque
 data:
   # Enter base64 encoded username and password, if needed
@@ -42,9 +42,10 @@ metadata:
     harness.io/name: ${delegateName}
   # Name must contain the six letter account identifier: ${kubernetesAccountLabel}
   name: ${delegateName}-${kubernetesAccountLabel}
-  namespace: harness-delegate
+  namespace: harness-delegate-ng
 spec:
   replicas: ${delegateReplicas}
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       harness.io/app: harness-delegate
@@ -70,6 +71,9 @@ spec:
           limits:
             cpu: "${delegateCpu}"
             memory: "${delegateRam}Mi"
+          requests:
+            cpu: "${delegateRequestsCpu}"
+            memory: "${delegateRequestsRam}Mi"
         readinessProbe:
           exec:
             command:
@@ -178,6 +182,8 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
+        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
+          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
@@ -191,7 +197,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: delegate-service
-  namespace: harness-delegate
+  namespace: harness-delegate-ng
 spec:
   type: ClusterIP
   selector:

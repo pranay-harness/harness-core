@@ -17,13 +17,13 @@ public class ManifestVariable extends Variable {
   private List<String> workflowIds;
   private String serviceId;
   private String serviceName;
-  private ApplicationManifestSummary applicationManifestSummary;
+  private List<ApplicationManifestSummary> applicationManifestSummary;
   private LastDeployedHelmChartInformation lastDeployedHelmChartInfo;
 
   @Builder
   public ManifestVariable(String name, String description, boolean mandatory, String value, boolean fixed,
       String allowedValues, List<String> allowedList, Map<String, Object> metadata, VariableType type, String serviceId,
-      ApplicationManifestSummary applicationManifestSummary, String serviceName, List<String> workflowIds,
+      List<ApplicationManifestSummary> applicationManifestSummary, String serviceName, List<String> workflowIds,
       LastDeployedHelmChartInformation lastDeployedHelmChartInformation) {
     super(name, description, mandatory, value, fixed, allowedValues, allowedList, metadata, type);
     this.serviceId = serviceId;

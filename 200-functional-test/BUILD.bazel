@@ -7,7 +7,7 @@ java_library(
     name = "module",
     testonly = True,
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     data = ["//:resource"],
     visibility = ["//visibility:public"],
@@ -20,14 +20,16 @@ java_library(
         "//230-model-test:module",
         "//280-batch-processing:module",
         "//350-event-xxxxxxxxmodule",
+        "//380-cg-graphql:module",
         "//400-rest:module",
         "//910-delegate-service-driver:module",
         "//950-delegate-tasks-beans:module",
         "//955-delegate-beans:module",
         "//960-persistence:supporter-test",
         "//970-grpc:module",
-        "@jira_client//jar",
         "@maven//:com_google_guava_guava",
+        "@maven//:net_rcarz_jira_client",
+        "@maven//:org_awaitility_awaitility",
     ],
 )
 
@@ -46,7 +48,7 @@ test_dependencies = [
     "//950-delegate-tasks-beans:module",
     "//955-delegate-beans:module",
     "//970-grpc:module",
-    "@jira_client//jar",
+    "@maven//:net_rcarz_jira_client",
     ":module",
     "//990-commons-test:module",
     "@maven//:com_bertramlabs_plugins_hcl4j",
@@ -61,18 +63,6 @@ test_dependencies = [
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
 ]
-
-#run_package_tests(
-#    data = [
-#        "//200-functional-test/src/test/resources:resource",
-#    ],
-#    resources = [
-#        "//200-functional-test/src/test/resources:resource",
-#    ],
-#    deps = test_dependencies,
-#)
-
-run_tests()
 
 java_library(
     name = "tests",
@@ -98,6 +88,9 @@ java_library(
     deps = test_dependencies,
 )
 
+run_tests()
+
 run_analysis(
+    run_duplicated = False,
     run_sonar = False,
 )

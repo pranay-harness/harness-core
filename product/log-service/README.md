@@ -29,7 +29,13 @@ $ $(bazel info bazel-bin)/product/log-service/linux_amd64_pure_stripped/log-serv
 
 # Env variables for auth
 
-The values for the below can be anything (as long as they are consistent with the next steps). These values are used for authentication/token generation with the log server.
+If you're running log service locally, chances are you don't want to worry about auth. In that case, set
+```
+$ export LOG_SERVICE_DISABLE_AUTH=true
+```
+
+If you are enthusiastic and want to try out auth, please add the below variables. These are used for token generation
+and authentication with the log server.
 ```
 $ export LOG_SERVICE_GLOBAL_TOKEN=token
 $ export LOG_SERVICE_SECRET=secret

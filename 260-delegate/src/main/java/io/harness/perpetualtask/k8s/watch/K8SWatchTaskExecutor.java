@@ -233,9 +233,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     K8sClusterInfo k8sClusterInfo =
         (K8sClusterInfo) kryoSerializer.asObject(watchTaskParams.getK8SClusterInfo().toByteArray());
 
-    KubernetesConfig kubernetesConfig = k8sConnectorHelper.getKubernetesConfig(
+    return k8sConnectorHelper.getKubernetesConfig(
         (KubernetesClusterConfigDTO) k8sClusterInfo.getConnectorConfigDTO(), k8sClusterInfo.getEncryptedDataDetails());
-
-    return kubernetesConfig;
   }
 }

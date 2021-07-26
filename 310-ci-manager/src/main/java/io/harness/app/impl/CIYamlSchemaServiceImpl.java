@@ -4,6 +4,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.intfc.CIYamlSchemaService;
@@ -91,6 +92,7 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
         .nodeName(INTEGRATION_STAGE_CONFIG)
         .schema(partialCiSchema)
         .nodeType(getIntegrationStageTypeName())
+        .moduleType(ModuleType.CI)
         .build();
   }
 

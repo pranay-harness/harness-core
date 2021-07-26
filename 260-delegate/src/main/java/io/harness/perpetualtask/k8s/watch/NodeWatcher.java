@@ -45,7 +45,6 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
 
   private static final String NODE_EVENT_MSG = "Node: {}, action: {}";
   private static final String ERROR_PUBLISH_MSG = "Error publishing V1Node.{} event.";
-  private static final String AZURE_SEARCH_STRING = "azure:";
 
   @Inject
   public NodeWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -103,10 +102,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
       log.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.ADDED);
 
       DateTime creationTimestamp = node.getMetadata().getCreationTimestamp();
-      // Interim fix to back fill data for existing Azure clusters
-      Boolean isAzure = node.getSpec().getProviderID().startsWith(AZURE_SEARCH_STRING);
-      if (isAzure || !isClusterSeen || creationTimestamp == null
-          || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
         publishNodeInfo(node);
       } else {
         publishedNodes.add(node.getMetadata().getUid());

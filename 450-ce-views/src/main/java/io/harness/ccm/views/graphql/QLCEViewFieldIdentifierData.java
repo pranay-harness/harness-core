@@ -2,6 +2,7 @@ package io.harness.ccm.views.graphql;
 
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLCEViewFieldIdentifierData {
-  List<QLCEViewField> values;
-  ViewFieldIdentifier identifier;
-  String identifierName;
+  @GraphQLNonNull List<QLCEViewField> values;
+  @GraphQLNonNull ViewFieldIdentifier identifier;
+  @GraphQLNonNull String identifierName;
 }

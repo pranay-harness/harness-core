@@ -390,6 +390,7 @@ public interface WingsTestConstants {
 
   String HELM_CHART_ID = "HELM_CHART_ID";
   String FREEZE_WINDOW_ID = "FREEZE_WINDOW_ID";
+  String APP_MANIFEST_NAME = "APP_MANIFEST_NAME";
 
   /**
    * The constant URL.

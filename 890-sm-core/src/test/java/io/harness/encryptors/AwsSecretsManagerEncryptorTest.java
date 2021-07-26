@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.clients.AwsSecretsManagerEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
@@ -36,7 +37,6 @@ import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.amazonaws.services.secretsmanager.model.Tag;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretRequest;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretResult;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,7 +48,7 @@ public class AwsSecretsManagerEncryptorTest extends CategoryTest {
 
   @Before
   public void setup() {
-    awsSecretsManagerEncryptor = spy(new AwsSecretsManagerEncryptor(new SimpleTimeLimiter()));
+    awsSecretsManagerEncryptor = spy(new AwsSecretsManagerEncryptor(HTimeLimiter.create()));
     awsSecretsManagerConfig = AwsSecretsManagerConfig.builder()
                                   .accountId(UUIDGenerator.generateUuid())
                                   .name(UUIDGenerator.generateUuid())

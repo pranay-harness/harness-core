@@ -63,4 +63,8 @@ public interface TerraformBaseHelper {
   EncryptedRecordData encryptPlan(byte[] content, String planName, EncryptionConfig encryptionConfig);
 
   String getPlanName(TerraformCommand terraformCommand);
+
+  void performCleanupOfTfDirs(TerraformTaskNGParameters parameters, LogCallback logCallback);
+
+  String getBaseDir(String entityId);
 }

@@ -186,12 +186,24 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testHasVariables() {
-    assertThat(EngineExpressionEvaluator.hasVariables(null)).isFalse();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc <+")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc <+>")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc <+ab>")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc <+ab> <+cd>")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasExpressions(null)).isFalse();
+    assertThat(EngineExpressionEvaluator.hasExpressions("abc")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasExpressions("abc <+")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasExpressions("abc <+>")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasExpressions("abc <+ab>")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasExpressions("abc <+ab> <+cd>")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testFindExpressions() {
+    assertThat(EngineExpressionEvaluator.findExpressions(null)).isEmpty();
+    assertThat(EngineExpressionEvaluator.findExpressions("abc")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findExpressions("abc <+")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findExpressions("abc <+>")).containsExactly("<+>");
+    assertThat(EngineExpressionEvaluator.findExpressions("abc <+ab>")).containsExactly("<+ab>");
+    assertThat(EngineExpressionEvaluator.findExpressions("abc <+<+ab> <+cd>>")).containsExactly("<+<+ab> <+cd>>");
   }
 
   @Test
@@ -204,38 +216,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     assertThat(EngineExpressionEvaluator.findVariables("abc <+>")).containsExactly("<+>");
     assertThat(EngineExpressionEvaluator.findVariables("abc <+ab>")).containsExactly("<+ab>");
     assertThat(EngineExpressionEvaluator.findVariables("abc <+ab> <+cd>")).containsExactly("<+ab>", "<+cd>");
-  }
-
-  @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void testHasSecretVariables() {
-    assertThat(EngineExpressionEvaluator.hasSecretVariables(null)).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+>")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+ab}")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+secretManager.ab> <+cd>")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+ab> <+secretManager.cd>")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+secretManager.ab> <+secretManager.cd>")).isTrue();
-  }
-
-  @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void testFindSecretVariables() {
-    assertThat(EngineExpressionEvaluator.findSecretVariables(null)).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+>")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+ab>")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+ab> <+cd>")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+secretManager.ab> <+cd>"))
-        .containsExactly("<+secretManager.ab>");
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+ab> <+secretManager.cd>"))
-        .containsExactly("<+secretManager.cd>");
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+secretManager.ab> <+secretManager.cd>"))
-        .containsExactly("<+secretManager.ab>", "<+secretManager.cd>");
+    assertThat(EngineExpressionEvaluator.findVariables("abc <+<+ab> <+cd>>")).containsExactly("<+ab>", "<+cd>");
   }
 
   @Test

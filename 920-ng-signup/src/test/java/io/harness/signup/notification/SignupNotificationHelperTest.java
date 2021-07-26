@@ -39,7 +39,6 @@ public class SignupNotificationHelperTest extends CategoryTest {
   private static final String EMAIL = "1@1";
   private static final String ID = "id";
   private static final String ACCOUNT_ID = "account";
-  private static final String NAME = "1";
   private static final String URL = "/test";
   private static final String VERIFY_TEMPLATE_ID = "verify_email";
   private static final String CONFIRM_TEMPLATE_ID = "signup_confirmation";
@@ -48,13 +47,7 @@ public class SignupNotificationHelperTest extends CategoryTest {
   @Before
   public void setup() throws IOException {
     initMocks(this);
-    userInfo = UserInfo.builder()
-                   .uuid(ID)
-                   .defaultAccountId(ACCOUNT_ID)
-                   .email(DEFAULT_TEMPLATE_ID)
-                   .name(NAME)
-                   .email(EMAIL)
-                   .build();
+    userInfo = UserInfo.builder().uuid(ID).defaultAccountId(ACCOUNT_ID).email(DEFAULT_TEMPLATE_ID).email(EMAIL).build();
 
     EmailInfo veriyEmailInfo = EmailInfo.builder().templateId(VERIFY_TEMPLATE_ID).gcsFileName(GCS_FILE_NAME).build();
     EmailInfo confirmEmailInfo = EmailInfo.builder().templateId(CONFIRM_TEMPLATE_ID).gcsFileName(GCS_FILE_NAME).build();
@@ -77,7 +70,6 @@ public class SignupNotificationHelperTest extends CategoryTest {
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();
     assertThat(value.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(value.getTemplateData().get("name")).isEqualTo(NAME);
     assertThat(value.getTemplateData().get("url")).isEqualTo(URL);
     assertThat(value.getTemplateId()).isEqualTo(VERIFY_TEMPLATE_ID);
     assertThat(value.getRecipients()).contains(EMAIL);
@@ -94,7 +86,6 @@ public class SignupNotificationHelperTest extends CategoryTest {
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();
     assertThat(value.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(value.getTemplateData().get("name")).isEqualTo(NAME);
     assertThat(value.getTemplateData().get("url")).isEqualTo(URL);
     assertThat(value.getTemplateId()).isEqualTo(CONFIRM_TEMPLATE_ID);
     assertThat(value.getRecipients()).contains(EMAIL);
@@ -111,7 +102,6 @@ public class SignupNotificationHelperTest extends CategoryTest {
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();
     assertThat(value.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(value.getTemplateData().get("name")).isEqualTo(NAME);
     assertThat(value.getTemplateData().get("url")).isEqualTo(URL);
     assertThat(value.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
     assertThat(value.getRecipients()).contains(EMAIL);
@@ -128,7 +118,6 @@ public class SignupNotificationHelperTest extends CategoryTest {
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();
     assertThat(value.getAccountId()).isEqualTo(ACCOUNT_ID);
-    assertThat(value.getTemplateData().get("name")).isEqualTo(NAME);
     assertThat(value.getTemplateData().get("url")).isEqualTo(URL);
     assertThat(value.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
     assertThat(value.getRecipients()).contains(EMAIL);

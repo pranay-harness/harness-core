@@ -2,7 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.logging.Misc.*;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -19,8 +19,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
-import io.harness.logging.Misc;
-import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
 import io.harness.service.intfc.LearningEngineService;

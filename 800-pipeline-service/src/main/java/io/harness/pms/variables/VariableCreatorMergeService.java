@@ -87,11 +87,13 @@ public class VariableCreatorMergeService {
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
         VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
+        VariableCreationBlobResponseUtils.mergeYamlOutputProperties(responseBuilder, variablesCreationBlobResponse);
         VariableCreationBlobResponseUtils.mergeErrorResponses(responseBuilder, variablesCreationBlobResponse);
         return responseBuilder.build();
       }
       VariableCreationBlobResponseUtils.mergeDependencies(responseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);
+      VariableCreationBlobResponseUtils.mergeYamlOutputProperties(responseBuilder, variablesCreationBlobResponse);
     }
 
     return responseBuilder.build();

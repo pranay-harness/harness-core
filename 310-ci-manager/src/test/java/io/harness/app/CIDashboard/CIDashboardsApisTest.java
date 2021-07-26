@@ -201,17 +201,19 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildFailureInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, author_name, author_avatar, startts, endts  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, endts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
     buildFailureInfos.add(BuildFailureInfo.builder()
                               .piplineName("pip")
+                              .pipelineIdentifier("pip")
                               .branch("branch")
                               .commit("commit")
                               .commitID("commitId")
                               .author(AuthorInfo.builder().name(null).url(null).build())
                               .startTs(20L)
                               .endTs(30L)
+                              .status("status")
                               .build());
 
     doReturn(buildFailureInfos).when(ciOverviewDashboardServiceImpl).queryCalculatorBuildFailureInfo(queryRequired);
@@ -225,11 +227,12 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildActiveInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, author_name, author_avatar, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED') ORDER BY startts DESC LIMIT 5;";
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED','PAUSING') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
     buildActiveInfos.add(BuildActiveInfo.builder()
                              .piplineName("pip")
+                             .pipelineIdentifier("pip")
                              .branch("branch")
                              .commit("commit")
                              .commitID("commitId")
@@ -327,7 +330,7 @@ public class CIDashboardsApisTest {
     authorInfoList.add(AuthorInfo.builder().name("name9").url("url9").build());
 
     String queryRequired =
-        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message, author_name, author_avatar  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and moduleinfo_repository IS NOT NULL and startts>="
+        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message, moduleinfo_author_id, author_avatar  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and moduleinfo_repository IS NOT NULL and startts>="
         + previousInterval + " and startts<1619827200000;";
 
     RepositoryInformation repositoryInformation = RepositoryInformation.builder()
@@ -482,14 +485,17 @@ public class CIDashboardsApisTest {
   public void testGetActiveAndFailedBuild() {
     BuildFailureInfo failureBuild = BuildFailureInfo.builder()
                                         .piplineName("pip1")
+                                        .pipelineIdentifier("pip1")
                                         .commit("commit1")
                                         .endTs(13L)
                                         .startTs(10L)
                                         .commitID("id1")
                                         .branch("branch1")
+                                        .status("status")
                                         .build();
     BuildActiveInfo activeInfo = BuildActiveInfo.builder()
                                      .piplineName("pip2")
+                                     .pipelineIdentifier("pip2")
                                      .commit("commit2")
                                      .branch("branch2")
                                      .commitID("id2")
@@ -499,10 +505,10 @@ public class CIDashboardsApisTest {
                                      .build();
 
     assertThat(failureBuild)
-        .isEqualTo(
-            ciOverviewDashboardServiceImpl.getBuildFailureInfo("pip1", "branch1", "commit1", "id1", 10, 13, null));
+        .isEqualTo(ciOverviewDashboardServiceImpl.getBuildFailureInfo(
+            "pip1", "pip1", "branch1", "commit1", "id1", 10, 13, null, "status"));
     assertThat(activeInfo)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildActiveInfo(
-            "pip2", "branch2", "commit2", "id2", null, 10, ExecutionStatus.RUNNING.name(), 13));
+            "pip2", "pip2", "branch2", "commit2", "id2", null, 10, ExecutionStatus.RUNNING.name(), 13));
   }
 }

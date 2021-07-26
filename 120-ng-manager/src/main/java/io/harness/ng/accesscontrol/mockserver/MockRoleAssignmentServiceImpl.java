@@ -84,6 +84,13 @@ public class MockRoleAssignmentServiceImpl implements MockRoleAssignmentService 
   }
 
   @Override
+  public Page<RoleAssignmentResponseDTO> list(Criteria criteria, Pageable pageable) {
+    return mockRoleAssignmentRepository.findAll(criteria, pageable)
+        .map(mockRoleAssignment
+            -> RoleAssignmentResponseDTO.builder().roleAssignment(mockRoleAssignment.getRoleAssignment()).build());
+  }
+
+  @Override
   public RoleAssignmentResponseDTO create(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, RoleAssignmentDTO roleAssignmentDTO) {
     MockRoleAssignment mockRoleAssignment = MockRoleAssignment.builder()

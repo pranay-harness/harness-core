@@ -8,6 +8,7 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.SidecarsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -23,7 +24,8 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class SidecarsStep extends NGForkStep {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SIDECARS.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.SIDECARS.getName()).setStepCategory(StepCategory.STEP).build();
 
   @Inject private ServiceStepsHelper serviceStepsHelper;
 

@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.type.trigger;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
@@ -18,11 +20,13 @@ import lombok.Value;
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.CDC)
 public class QLTriggerActionInput {
   QLExecutionType executionType;
   String entityId;
   List<QLVariableInput> variables;
   List<QLArtifactSelectionInput> artifactSelections;
+  List<QLManifestSelectionInput> manifestSelections;
   Boolean excludeHostsWithSameArtifact;
   private Boolean continueWithDefaultValues;
 }

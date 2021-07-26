@@ -3,9 +3,10 @@ package io.harness.licensing.mappers.modules;
 import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.licensing.LicenseTestBase;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.entities.modules.CEModuleLicense;
@@ -17,7 +18,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-public class CELicenseObjectMapperTest extends LicenseTestBase {
+public class CELicenseObjectMapperTest extends CategoryTest {
   @InjectMocks CELicenseObjectMapper objectMapper;
   private CEModuleLicense moduleLicense;
   private CEModuleLicenseDTO moduleLicenseDTO;
@@ -27,6 +28,7 @@ public class CELicenseObjectMapperTest extends LicenseTestBase {
 
   @Before
   public void setUp() {
+    initMocks(this);
     moduleLicense = CEModuleLicense.builder()
                         .numberOfCluster(DEFAULT_CLUSTERS)
                         .spendLimit(DEFAULT_SPEND)

@@ -661,7 +661,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		collectCgFn = oldCollectCg
 	}()
-	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, log *zap.SugaredLogger) error {
+	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		called += 1
 		return nil
 	}
@@ -763,7 +763,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		collectCgFn = oldCollectCg
 	}()
-	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, log *zap.SugaredLogger) error {
+	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		called += 1
 		return nil
 	}
@@ -864,7 +864,7 @@ instrPackages: p1, p2, p3`
 		collectCgFn = oldCollectCg
 	}()
 	errCg := errors.New("could not collect CG")
-	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, log *zap.SugaredLogger) error {
+	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		return errCg
 	}
 
@@ -961,7 +961,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		collectCgFn = oldCollectCg
 	}()
-	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, log *zap.SugaredLogger) error {
+	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		return nil
 	}
 

@@ -97,7 +97,7 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
         objectMapper.readValue(outboxEvent.getEventData(), ServiceUpdateEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
-            .action(Action.UPSERT)
+            .action(Action.UPDATE)
             .module(ModuleType.CORE)
             .insertId(outboxEvent.getId())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))

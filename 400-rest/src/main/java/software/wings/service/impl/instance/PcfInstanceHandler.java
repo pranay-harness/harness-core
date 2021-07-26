@@ -17,6 +17,8 @@ import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.NoDelegatesException;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfInstanceSyncResponse;
 import io.harness.exception.WingsException;
 import io.harness.pcf.PcfAppNotFoundException;
 
@@ -39,8 +41,6 @@ import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.PCFInstanceSyncPerpetualTaskCreator;
 import software.wings.service.impl.PcfHelperService;
@@ -87,13 +87,13 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
 
     syncInstancesInternal(infrastructureMapping.getAppId(), infrastructureMapping.getUuid(), pcfAppNameInstanceMap,
         null, false, OnDemandRollbackInfo.builder().onDemandRollback(false).build(),
-        (PcfCommandExecutionResponse) response, PERPETUAL_TASK);
+        (CfCommandExecutionResponse) response, PERPETUAL_TASK);
   }
 
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<String, Instance> pcfAppNameInstanceMap, List<DeploymentSummary> newDeploymentSummaries,
       boolean rollback, OnDemandRollbackInfo onDemandRollbackInfo,
-      PcfCommandExecutionResponse pcfCommandExecutionResponse, InstanceSyncFlow instanceSyncFlow) {
+      CfCommandExecutionResponse cfCommandExecutionResponse, InstanceSyncFlow instanceSyncFlow) {
     log.info("Performing PCF Instance sync via [{}], Infrastructure Mapping : [{}]", instanceSyncFlow, infraMappingId);
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Objects.requireNonNull(infrastructureMapping);
@@ -107,10 +107,10 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
 
     Map<String, DeploymentSummary> pcfAppNamesNewDeploymentSummaryMap = getDeploymentSummaryMap(newDeploymentSummaries);
 
-    PcfInstanceSyncResponse pcfInstanceSyncResponse = pcfCommandExecutionResponse == null
+    CfInstanceSyncResponse cfInstanceSyncResponse = cfCommandExecutionResponse == null
         ? null
-        : (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
-    String applicationNameIfSupplied = (pcfInstanceSyncResponse == null) ? null : pcfInstanceSyncResponse.getName();
+        : (CfInstanceSyncResponse) cfCommandExecutionResponse.getPcfCommandResponse();
+    String applicationNameIfSupplied = (cfInstanceSyncResponse == null) ? null : cfInstanceSyncResponse.getName();
     loadPcfAppNameInstanceMap(appId, infraMappingId, pcfAppNameInstanceMap, applicationNameIfSupplied);
 
     PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
@@ -129,7 +129,7 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
         try {
           latestpcfInstanceInfoList =
               pcfHelperService.getApplicationDetails(pcfApplicationName, pcfInfrastructureMapping.getOrganization(),
-                  pcfInfrastructureMapping.getSpace(), pcfConfig, pcfCommandExecutionResponse);
+                  pcfInfrastructureMapping.getSpace(), pcfConfig, cfCommandExecutionResponse);
         } catch (NoDelegatesException e) {
           log.warn("Delegates are not available", e.getMessage());
           failedToRetrieveData = true;
@@ -373,31 +373,31 @@ public class PcfInstanceHandler extends InstanceHandler implements InstanceSyncB
   }
 
   public int getInstanceCount(DelegateResponseData response) {
-    return pcfHelperService.getInstanceCount((PcfCommandExecutionResponse) response);
+    return pcfHelperService.getInstanceCount((CfCommandExecutionResponse) response);
   }
 
   @Override
   public Status getStatus(InfrastructureMapping infrastructureMapping, DelegateResponseData response) {
-    PcfCommandExecutionResponse pcfCommandExecutionResponse = (PcfCommandExecutionResponse) response;
-    boolean isSuccess = pcfCommandExecutionResponse.getCommandExecutionStatus() == SUCCESS;
-    String errorMsg = isSuccess ? null : pcfCommandExecutionResponse.getErrorMessage();
+    CfCommandExecutionResponse cfCommandExecutionResponse = (CfCommandExecutionResponse) response;
+    boolean isSuccess = cfCommandExecutionResponse.getCommandExecutionStatus() == SUCCESS;
+    String errorMsg = isSuccess ? null : cfCommandExecutionResponse.getErrorMessage();
     boolean canRetry = true;
 
-    PcfInstanceSyncResponse pcfInstanceSyncResponse =
-        (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+    CfInstanceSyncResponse cfInstanceSyncResponse =
+        (CfInstanceSyncResponse) cfCommandExecutionResponse.getPcfCommandResponse();
     if (isSuccess && getInstanceCount(response) == 0) {
       log.info("Got 0 instances. Infrastructure Mapping : [{}]. Application Name : [{}]",
-          infrastructureMapping.getUuid(), pcfInstanceSyncResponse.getName());
+          infrastructureMapping.getUuid(), cfInstanceSyncResponse.getName());
       canRetry = false;
     } else {
       try {
-        pcfHelperService.validatePcfInstanceSyncResponse(pcfInstanceSyncResponse.getName(),
-            pcfInstanceSyncResponse.getOrganization(), pcfInstanceSyncResponse.getSpace(), pcfCommandExecutionResponse);
+        pcfHelperService.validatePcfInstanceSyncResponse(cfInstanceSyncResponse.getName(),
+            cfInstanceSyncResponse.getOrganization(), cfInstanceSyncResponse.getSpace(), cfCommandExecutionResponse);
       } catch (PcfAppNotFoundException ex) {
-        log.info(String.format("PCF Application : [%s] not found", pcfInstanceSyncResponse.getName()), ex);
+        log.info(String.format("PCF Application : [%s] not found", cfInstanceSyncResponse.getName()), ex);
         canRetry = false;
       } catch (Exception ex) {
-        log.info(String.format("Unexpected Error. PCF Application : [%s]", pcfInstanceSyncResponse.getName()), ex);
+        log.info(String.format("Unexpected Error. PCF Application : [%s]", cfInstanceSyncResponse.getName()), ex);
       }
     }
 

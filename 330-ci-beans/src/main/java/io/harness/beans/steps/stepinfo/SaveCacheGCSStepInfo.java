@@ -13,6 +13,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.filters.WithConnectorRef;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -49,8 +50,10 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep, WithConnector
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SAVE_CACHE_GCS).build();
 
   @JsonIgnore
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_GCS.getDisplayName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(CIStepInfoType.SAVE_CACHE_GCS.getDisplayName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String identifier;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
@@ -67,7 +70,8 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep, WithConnector
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> sourcePaths;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ArchiveFormat")
+  private ParameterField<ArchiveFormat> archiveFormat;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder

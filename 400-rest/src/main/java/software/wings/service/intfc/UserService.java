@@ -10,11 +10,13 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
-import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
+import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -33,7 +35,6 @@ import software.wings.beans.security.UserGroup;
 import software.wings.resources.UserResource;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
@@ -45,6 +46,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
@@ -89,6 +91,16 @@ public interface UserService extends OwnedByAccount {
    * Used for NG signup to create a new oauth user and login from an NG user object
    */
   User createNewOAuthUser(User user, String accountId);
+
+  /**
+   * Used for NG signup to create a new user invite
+   */
+  UserInvite createNewSignupInvite(SignupInviteDTO user);
+
+  /**
+   * Used for NG signup to finish provisioning of account, user etc.
+   */
+  User completeNewSignupInvite(UserInvite userInvite);
 
   UserInvite createUserInviteForMarketPlace();
 
@@ -176,7 +188,7 @@ public interface UserService extends OwnedByAccount {
 
   boolean isTwoFactorEnabled(String accountId, String usedId);
 
-  User updateUser(User oldUser, UpdateOperations<User> updateOperations);
+  User updateUser(String userId, UpdateOperations<User> updateOperations);
 
   /**
    * Gets the.
@@ -185,6 +197,8 @@ public interface UserService extends OwnedByAccount {
    * @return the user
    */
   User get(@NotEmpty String userId);
+
+  List<User> getUsers(Set<String> userIds);
 
   /**
    * Gets the user and loads the user groups for the given account.
@@ -351,6 +365,13 @@ public interface UserService extends OwnedByAccount {
    * @return the user invite
    */
   InviteOperationResponse completeInvite(UserInvite userInvite);
+
+  /**
+   * Complete NG invite and create user
+   *
+   * @param userInvite the user invite DTO
+   */
+  void completeNGInvite(UserInviteDTO userInvite);
 
   /**
    * Complete the user invite and login the user in one call.

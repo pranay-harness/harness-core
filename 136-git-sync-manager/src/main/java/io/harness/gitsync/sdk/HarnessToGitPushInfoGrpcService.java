@@ -16,6 +16,7 @@ import io.harness.gitsync.PushResponse;
 import io.harness.gitsync.RepoDetails;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.logging.MdcContextSetter;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
@@ -42,16 +43,22 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
 
   @Override
   public void pushFromHarness(PushInfo request, StreamObserver<PushResponse> responseObserver) {
-    harnessToGitHelperService.postPushOperation(request);
-    responseObserver.onNext(PushResponse.newBuilder().build());
-    responseObserver.onCompleted();
+    try (MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
+      log.debug("Grpc request received for pushFromHarness");
+      harnessToGitHelperService.postPushOperation(request);
+      responseObserver.onNext(PushResponse.newBuilder().build());
+      responseObserver.onCompleted();
+      log.debug("Grpc request completed for pushFromHarness");
+    }
   }
 
   @Override
   public void getConnectorInfo(FileInfo request, StreamObserver<InfoForPush> responseObserver) {
     final EntityDetail entityDetailDTO = entityDetailProtoToRestMapper.createEntityDetailDTO(request.getEntityDetail());
     final InfoForPush.Builder pushInfoBuilder = InfoForPush.newBuilder().setStatus(true);
-    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
+         MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
+      log.debug("Grpc request received for getConnectorInfo");
       setUserPrincipal(request);
 
       InfoForGitPush infoForPush =
@@ -73,6 +80,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
         pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encryptedDataDetails));
       }
     } catch (Exception e) {
+      log.info("Encountered exception while getting connector info", e);
       // Using exception Manager to get kryo serializable wings exception out of catched exception.
       final WingsException wingsException = exceptionManager.processException(e);
       final ByteString exceptionBytesString = ByteString.copyFrom(kryoSerializer.asBytes(wingsException));
@@ -81,6 +89,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     }
     responseObserver.onNext(pushInfoBuilder.build());
     responseObserver.onCompleted();
+    log.debug("Grpc request completed for getConnectorInfo");
   }
 
   private void setUserPrincipal(FileInfo request) {
@@ -96,15 +105,21 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
 
   @Override
   public void isGitSyncEnabledForScope(EntityScopeInfo request, StreamObserver<IsGitSyncEnabled> responseObserver) {
+    log.debug("Grpc request received for isGitSyncEnabledForScope");
     final Boolean gitSyncEnabled = harnessToGitHelperService.isGitSyncEnabled(request);
     responseObserver.onNext(IsGitSyncEnabled.newBuilder().setEnabled(gitSyncEnabled).build());
     responseObserver.onCompleted();
+    log.debug("Grpc request completed for isGitSyncEnabledForScope");
   }
 
   @Override
   public void getDefaultBranch(RepoDetails request, StreamObserver<BranchDetails> responseObserver) {
-    final BranchDetails branchDetails = harnessToGitHelperService.getBranchDetails(request);
-    responseObserver.onNext(branchDetails);
-    responseObserver.onCompleted();
+    try (MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
+      log.debug("Grpc request received for getDefaultBranch");
+      final BranchDetails branchDetails = harnessToGitHelperService.getBranchDetails(request);
+      responseObserver.onNext(branchDetails);
+      responseObserver.onCompleted();
+      log.debug("Grpc request completed for getDefaultBranch");
+    }
   }
 }

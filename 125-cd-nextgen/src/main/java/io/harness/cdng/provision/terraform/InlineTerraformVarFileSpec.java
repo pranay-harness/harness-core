@@ -18,6 +18,6 @@ public class InlineTerraformVarFileSpec implements TerraformVarFileSpec {
 
   @Override
   public String getType() {
-    return "Inline";
+    return TerraformVarFileTypes.Inline;
   }
 }

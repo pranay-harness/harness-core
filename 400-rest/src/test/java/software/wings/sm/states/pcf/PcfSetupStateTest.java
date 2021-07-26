@@ -4,6 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
+import static io.harness.pcf.CfCommandUnitConstants.CheckExistingApps;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
+import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -12,7 +17,6 @@ import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
@@ -21,10 +25,6 @@ import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
-import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
-import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -80,7 +80,10 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfSetupCommandResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
@@ -125,10 +128,7 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
@@ -402,14 +402,14 @@ public class PcfSetupStateTest extends WingsBaseTest {
     PcfSetupStateExecutionData stateExecutionData =
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
-    PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("appName");
-    assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
-    assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
-    assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
-    assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(3);
+    CfCommandSetupRequest cfCommandSetupRequest = (CfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(cfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("appName");
+    assertThat(cfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
+    assertThat(cfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
+    assertThat(cfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
+    assertThat(cfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
+    assertThat(cfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
+    assertThat(cfCommandSetupRequest.getMaxCount()).isEqualTo(3);
     assertThat(stateExecutionData.getTags()).isEqualTo(singletonList("tag1"));
   }
 
@@ -460,8 +460,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     PcfSetupStateExecutionData stateExecutionData =
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
-    PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertThat(pcfCommandSetupRequest.getArtifactProcessingScript()).isEqualTo("script");
+    CfCommandSetupRequest cfCommandSetupRequest = (CfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(cfCommandSetupRequest.getArtifactProcessingScript()).isEqualTo("script");
   }
 
   @Test
@@ -548,11 +548,11 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForPcfTaskInErrorCase() {
-    PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        PcfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        CfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
 
     Map<String, ResponseData> response = new HashMap<>();
-    response.put("activityId", pcfCommandExecutionResponse);
+    response.put("activityId", cfCommandExecutionResponse);
 
     PcfSetupStateExecutionData pcfSetupStateExecutionData =
         (PcfSetupStateExecutionData) context.getStateExecutionData();
@@ -586,15 +586,15 @@ public class PcfSetupStateTest extends WingsBaseTest {
   public void testGenerateCurrentRunningCount() {
     pcfSetupState.setMaxInstances(2);
     assertThat(pcfSetupState.generateCurrentRunningCount(
-                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(3).build()))
+                   CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(3).build()))
         .isEqualTo(3);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(
-                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(0).build()))
+                   CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(0).build()))
         .isEqualTo(0);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(
-                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build()))
+                   CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build()))
         .isEqualTo(0);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(null)).isEqualTo(0);
@@ -604,22 +604,22 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetActualDesiredCount() {
-    PcfSetupCommandResponse pcfSetupCommandResponse =
-        PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build();
+    CfSetupCommandResponse cfSetupCommandResponse =
+        CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build();
 
     PcfSetupStateExecutionData stateExecutionData =
         PcfSetupStateExecutionData.builder().useCurrentRunningInstanceCount(true).maxInstanceCount(2).build();
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(2);
 
-    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(0);
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+    cfSetupCommandResponse.setInstanceCountForMostRecentVersion(0);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(2);
 
-    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(3);
+    cfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(3);
 
-    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
+    cfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
     stateExecutionData.setUseCurrentRunningInstanceCount(false);
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(2);
   }
 
   @Test

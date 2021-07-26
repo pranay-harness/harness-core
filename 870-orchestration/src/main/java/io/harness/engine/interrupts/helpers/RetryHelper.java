@@ -9,8 +9,10 @@ import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.plan.PlanNodeUtils;
+import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
@@ -27,6 +29,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
@@ -43,17 +47,48 @@ public class RetryHelper {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNodeProto node = nodeExecution.getNode();
     String newUuid = generateUuid();
+
     Ambiance oldAmbiance = nodeExecution.getAmbiance();
+    NodeExecution updatedRetriedNode = updateRetriedNodeMetadata(nodeExecution);
+
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(oldAmbiance);
     Ambiance ambiance = AmbianceUtils.cloneForFinish(oldAmbiance);
     int newRetryIndex = currentLevel != null ? currentLevel.getRetryIndex() + 1 : 0;
     ambiance = ambiance.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(newUuid, newRetryIndex, node)).build();
     NodeExecution newNodeExecution =
-        cloneForRetry(nodeExecution, parameters, newUuid, ambiance, interruptConfig, interruptId);
+        cloneForRetry(updatedRetriedNode, parameters, newUuid, ambiance, interruptConfig, interruptId);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
-    nodeExecutionService.updateRelationShipsForRetryNode(nodeExecution.getUuid(), savedNodeExecution.getUuid());
-    nodeExecutionService.markRetried(nodeExecution.getUuid());
+
+    nodeExecutionService.updateRelationShipsForRetryNode(updatedRetriedNode.getUuid(), savedNodeExecution.getUuid());
+    nodeExecutionService.markRetried(updatedRetriedNode.getUuid());
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
+  }
+
+  private NodeExecution updateRetriedNodeMetadata(NodeExecution nodeExecution) {
+    NodeExecution updatedNodeExecution = updateRetriedNodeStatusIfInterventionWaiting(nodeExecution);
+    if (updatedNodeExecution != null && updatedNodeExecution.getEndTs() == null) {
+      updatedNodeExecution = nodeExecutionService.update(
+          updatedNodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+    }
+    return updatedNodeExecution == null ? nodeExecution : updatedNodeExecution;
+  }
+
+  // Update the status of older retried node to true status from interventionWaiting if retry is on intervention waiting
+  // node.
+  private NodeExecution updateRetriedNodeStatusIfInterventionWaiting(NodeExecution nodeExecution) {
+    if (nodeExecution.getStatus() == Status.INTERVENTION_WAITING
+        && nodeExecution.getAdviserResponse().hasInterventionWaitAdvise()) {
+      InterventionWaitAdvise interventionWaitAdvise = nodeExecution.getAdviserResponse().getInterventionWaitAdvise();
+      NodeExecution updatedNodeExecution =
+          nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), interventionWaitAdvise.getFromStatus(),
+              ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), EnumSet.noneOf(Status.class));
+      if (updatedNodeExecution == null) {
+        log.warn("Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(),
+            interventionWaitAdvise.getFromStatus());
+      }
+      return updatedNodeExecution;
+    }
+    return nodeExecution;
   }
 
   @VisibleForTesting
@@ -63,8 +98,8 @@ public class RetryHelper {
     if (parameters != null) {
       newPlanNode = PlanNodeUtils.cloneForRetry(nodeExecution.getNode(), parameters);
     }
-    List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
-    retryIds.add(0, nodeExecution.getUuid());
+    List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new LinkedList<>() : nodeExecution.getRetryIds();
+    retryIds.add(nodeExecution.getUuid());
     InterruptConfig newInterruptConfig =
         InterruptConfig.newBuilder()
             .setIssuedBy(interruptConfig.getIssuedBy())
@@ -78,14 +113,14 @@ public class RetryHelper {
                                           .build();
 
     List<InterruptEffect> interruptHistories =
-        isEmpty(nodeExecution.getInterruptHistories()) ? new ArrayList<>() : nodeExecution.getInterruptHistories();
-    interruptHistories.add(0, interruptEffect);
+        isEmpty(nodeExecution.getInterruptHistories()) ? new LinkedList<>() : nodeExecution.getInterruptHistories();
+    interruptHistories.add(interruptEffect);
     return NodeExecution.builder()
         .uuid(newUuid)
         .ambiance(ambiance)
         .node(newPlanNode)
         .mode(null)
-        .startTs(null)
+        .startTs(AmbianceUtils.getCurrentLevelStartTs(ambiance))
         .endTs(null)
         .initialWaitDuration(null)
         .resolvedStepParameters((StepParameters) null)

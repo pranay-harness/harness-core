@@ -5,7 +5,6 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;

@@ -1,6 +1,5 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.timescaledb.data.MigrateWorkflowsToTimeScaleDB;
 import io.harness.migrations.timescaledb.data.SetInstancesDeployedInDeployment;
 import io.harness.migrations.timescaledb.data.SetRollbackDurationInDeployment;

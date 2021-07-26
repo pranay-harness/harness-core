@@ -9,11 +9,11 @@ import java.io.IOException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface PMSYamlSchemaService {
-  JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
-
-  void validateYamlSchema(String orgId, String projectId, String yaml);
+  JsonNode getPipelineYamlSchema(String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope);
 
   void validateYamlSchema(String accountId, String orgId, String projectId, String yaml);
 
   void validateUniqueFqn(String yaml) throws IOException;
+
+  void invalidateAllCache();
 }

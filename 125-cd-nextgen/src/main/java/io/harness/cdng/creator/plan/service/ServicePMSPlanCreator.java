@@ -227,8 +227,13 @@ public class ServicePMSPlanCreator {
   /** Method returns actual Service object by resolving useFromStage if present. */
   private ServiceConfig getActualServiceConfig(ServiceConfig serviceConfig, YamlField serviceField) {
     if (serviceConfig.getUseFromStage() == null) {
+      if (serviceConfig.getServiceDefinition() == null) {
+        throw new InvalidArgumentsException(
+            "Either Service Definition or useFromStage should be present in the given stage");
+      }
       return serviceConfig;
     }
+
     if (serviceConfig.getServiceDefinition() != null) {
       throw new InvalidArgumentsException("Service definition should not exist along with useFromStage");
     }

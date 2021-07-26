@@ -1,12 +1,13 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -19,12 +20,12 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
 
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -50,12 +51,13 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-@OwnedBy(PL)
+@OwnedBy(DX)
 @TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@ChangeDataCapture(table = "accounts", fields = {}, handler = "Account")
 public class Account extends Base implements PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -159,7 +161,7 @@ public class Account extends Base implements PersistentRegularIterable {
   /**
    * Default mechanism is USER_PASSWORD
    */
-  @JsonIgnore private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+  private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
 
   public Map<String, String> getDefaults() {
     return defaults;
@@ -762,6 +764,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
     public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";
+    public static final String instanceStatsMetricsPublisherInteration = "instanceStatsMetricsPublisherIteration";
     public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
         delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
   }

@@ -14,6 +14,7 @@ import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditEventDTO.AuditEventDTOBuilder;
 import io.harness.audit.beans.AuthenticationInfoDTO;
+import io.harness.audit.beans.PrincipalType;
 import io.harness.audit.beans.YamlDiffRecordDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.audit.client.remote.AuditClient;
@@ -24,10 +25,13 @@ import io.harness.request.RequestContextData;
 import io.harness.request.RequestMetadata;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.Principal;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(PL)
 public class AuditClientServiceImpl implements AuditClientService {
   private final AuditClient auditClient;
@@ -88,6 +92,12 @@ public class AuditClientServiceImpl implements AuditClientService {
 
     if (principal != null) {
       auditEventDTOBuilder.authenticationInfo(fromSecurityPrincipal(principal));
+    } else {
+      log.error(String.format(
+          "[AUDIT_ERROR]: Principal not found for audit entry with insertId %s, this should not happen. Please check!!",
+          auditEntry.getInsertId()));
+      auditEventDTOBuilder.authenticationInfo(
+          fromSecurityPrincipal(new ServicePrincipal(String.valueOf(PrincipalType.SYSTEM))));
     }
     if (requestMetadata != null) {
       auditEventDTOBuilder.requestMetadata(requestMetadata);

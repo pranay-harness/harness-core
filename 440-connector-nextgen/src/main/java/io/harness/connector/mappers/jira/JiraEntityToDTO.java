@@ -14,6 +14,7 @@ public class JiraEntityToDTO implements ConnectorEntityToDTOMapper<JiraConnector
     return JiraConnectorDTO.builder()
         .jiraUrl(jiraConnector.getJiraUrl())
         .username(jiraConnector.getUsername())
+        .usernameRef(SecretRefHelper.createSecretRef(jiraConnector.getUsernameRef()))
         .passwordRef(SecretRefHelper.createSecretRef(jiraConnector.getPasswordRef()))
         .build();
   }

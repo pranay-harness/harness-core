@@ -1,5 +1,7 @@
 package io.harness.ng.core.artifacts.resources.util;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.evaluators.YamlExpressionEvaluator;
@@ -14,6 +16,7 @@ import io.harness.remote.client.NGRestUtils;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 @Slf4j
 public class ArtifactResourceUtils {
@@ -47,7 +50,7 @@ public class ArtifactResourceUtils {
   public String getResolvedImagePath(PipelineServiceClient pipelineServiceClient, String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String runtimeInputYaml,
       String imagePath, String fqnPath, GitEntityFindInfoDTO gitEntityBasicInfo) {
-    if (EngineExpressionEvaluator.hasVariables(imagePath)) {
+    if (EngineExpressionEvaluator.hasExpressions(imagePath)) {
       String mergedCompleteYaml = getMergedCompleteYaml(pipelineServiceClient, accountId, orgIdentifier,
           projectIdentifier, pipelineIdentifier, runtimeInputYaml, gitEntityBasicInfo);
       YamlExpressionEvaluator yamlExpressionEvaluator = new YamlExpressionEvaluator(mergedCompleteYaml, fqnPath);

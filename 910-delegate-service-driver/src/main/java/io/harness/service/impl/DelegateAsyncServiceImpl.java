@@ -21,6 +21,9 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Getter;
@@ -68,7 +71,8 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
             : (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData());
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(), responseData);
 
-        if (lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
+        if (lockedAsyncTaskResponse.getHoldUntil() == null
+            || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {
           responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
           if (responsesToBeDeleted.size() >= DELETE_THRESHOLD) {
             deleteProcessedResponses(responsesToBeDeleted);
@@ -119,11 +123,17 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
 
   @Override
   public void setupTimeoutForTask(String taskId, long expiry, long holdUntil) {
-    persistence.save(DelegateAsyncTaskResponse.builder()
-                         .uuid(taskId)
-                         .responseData(getTimeoutMessage())
-                         .processAfter(expiry)
-                         .holdUntil(holdUntil)
-                         .build());
+    Instant validUntilInstant = Instant.ofEpochMilli(expiry).plusSeconds(Duration.ofHours(1).getSeconds());
+    UpdateOperations<DelegateAsyncTaskResponse> updateOperations =
+        persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
+            .setOnInsert(DelegateAsyncTaskResponseKeys.responseData, getTimeoutMessage())
+            .setOnInsert(DelegateAsyncTaskResponseKeys.processAfter, expiry)
+            .setOnInsert(DelegateAsyncTaskResponseKeys.validUntil, Date.from(validUntilInstant))
+            .set(DelegateAsyncTaskResponseKeys.holdUntil, holdUntil);
+
+    Query<DelegateAsyncTaskResponse> upsertQuery =
+        persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
+            .filter(DelegateAsyncTaskResponseKeys.uuid, taskId);
+    persistence.upsert(upsertQuery, updateOperations);
   }
 }

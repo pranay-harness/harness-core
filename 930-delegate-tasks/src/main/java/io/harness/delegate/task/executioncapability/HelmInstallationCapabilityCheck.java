@@ -5,6 +5,8 @@ import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.executeCommand;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
@@ -21,7 +23,10 @@ import io.harness.k8s.model.HelmVersion;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(HarnessTeam.CDP)
 public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
+  private static final String CLIENT_ONLY_COMMAND_FLAG = "--client";
+
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
@@ -32,9 +37,11 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCa
       return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
     String helmVersionCommand =
-        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, HelmVersion.V3)
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, capability.getVersion())
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
-            .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
+            .replace("${COMMAND_FLAGS}",
+                HelmVersion.V2 == capability.getVersion() ? CLIENT_ONLY_COMMAND_FLAG : StringUtils.EMPTY)
+            .replace("KUBECONFIG=${KUBECONFIG_PATH} ", StringUtils.EMPTY);
     return CapabilityResponse.builder()
         .validated(executeCommand(helmVersionCommand, 2))
         .delegateCapability(capability)
@@ -47,15 +54,17 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCa
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.HELM_INSTALLATION_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
-    String helmPath = k8sGlobalConfigService.getHelmPath(
-        convertHelmVersion(parameters.getHelmInstallationParameters().getHelmVersion()));
+
+    HelmVersion helmVersion = convertHelmVersion(parameters.getHelmInstallationParameters().getHelmVersion());
+    String helmPath = k8sGlobalConfigService.getHelmPath(helmVersion);
     if (isEmpty(helmPath)) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
     String helmVersionCommand =
-        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, HelmVersion.V3)
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, helmVersion)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
-            .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
+            .replace("${COMMAND_FLAGS}", HelmVersion.V2 == helmVersion ? CLIENT_ONLY_COMMAND_FLAG : StringUtils.EMPTY)
+            .replace("KUBECONFIG=${KUBECONFIG_PATH} ", StringUtils.EMPTY);
     return builder
         .permissionResult(executeCommand(helmVersionCommand, 2) ? PermissionResult.ALLOWED : PermissionResult.DENIED)
         .build();

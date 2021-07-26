@@ -857,4 +857,13 @@ public class TerragruntProvisionStateTest extends WingsBaseTest {
     assertThat(activity.getEnvironmentId()).isEqualTo(envId);
     assertThat(activity.getEnvironmentType()).isEqualTo(envType);
   }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    assertThat(state.validateFields().size()).isNotEqualTo(0);
+    state.setProvisionerId("test provisioner");
+    assertThat(state.validateFields().size()).isEqualTo(0);
+  }
 }

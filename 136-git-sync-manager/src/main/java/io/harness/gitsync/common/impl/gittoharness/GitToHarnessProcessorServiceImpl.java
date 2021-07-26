@@ -61,14 +61,15 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   GitToHarnessProgressService gitToHarnessProgressService;
   GitCommitService gitCommitService;
   YamlGitConfigService yamlGitConfigService;
+  GitChangeSetMapper gitChangeSetMapper;
 
   @Override
-  public List<GitToHarnessProcessingResponse> processFiles(String accountId,
+  public GitToHarnessProgressStatus processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, String repoUrl, String commitId,
-      String gitToHarnessProgressRecordId) {
+      String gitToHarnessProgressRecordId, String changeSetId) {
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
     List<ChangeSetWithYamlStatusDTO> changeSetsWithYamlStatus =
-        GitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs);
+        gitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId, branchName);
     final List<ChangeSet> invalidChangeSets = markSkippedFiles(changeSetsWithYamlStatus);
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent =
         createMapOfEntityTypeAndFileContent(changeSetsWithYamlStatus);
@@ -90,7 +91,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
                                                                   .setAccountId(accountId)
                                                                   .setCommitId(StringValue.of(commitId))
                                                                   .build();
-      log.info("Sending to microservice {}", entry.getKey());
+      // TODO log for debug purpose, remove after use
+      log.info("Sending to microservice {}, request : {}", entry.getKey(), gitToHarnessProcessRequest);
       GitToHarnessProcessingResponseDTO gitToHarnessProcessingResponseDTO = null;
       try {
         ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
@@ -99,7 +101,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
             "Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);
       } catch (Exception ex) {
         // This exception happens in the case when we are not able to connect to the microservice
-        log.info("Exception in file processing for the microservice {}", entry.getKey(), ex);
+        log.error("Exception in file processing for the microservice {}", entry.getKey(), ex);
         gitToHarnessProcessingResponseDTO = GitToHarnessProcessingResponseDTO.builder()
                                                 .msvcProcessingFailureStage(MsvcProcessingFailureStage.RECEIVE_STAGE)
                                                 .build();
@@ -114,8 +116,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       log.info("Completed for microservice {}", entry.getKey());
     }
     updateCommit(commitId, accountId, branchName, repoUrl, gitToHarnessProcessingResponses, invalidChangeSets);
-    updateTheGitToHarnessStatus(gitToHarnessProgressRecordId, gitToHarnessProcessingResponses);
-    return gitToHarnessProcessingResponses;
+    return updateTheGitToHarnessStatus(gitToHarnessProgressRecordId, gitToHarnessProcessingResponses);
   }
 
   private List<ChangeSet> markSkippedFiles(List<ChangeSetWithYamlStatusDTO> changeSets) {
@@ -134,15 +135,17 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         .collect(toList());
   }
 
-  private void updateTheGitToHarnessStatus(
+  private GitToHarnessProgressStatus updateTheGitToHarnessStatus(
       String gitToHarnessProgressRecordId, List<GitToHarnessProcessingResponse> gitToHarnessProcessingResponses) {
     GitToHarnessProcessingStepStatus status = getStatus(gitToHarnessProcessingResponses);
     gitToHarnessProgressService.updateStepStatus(gitToHarnessProgressRecordId, status);
     // mark end of the progress for this record
     if (ERROR == status) {
       gitToHarnessProgressService.updateProgressStatus(gitToHarnessProgressRecordId, GitToHarnessProgressStatus.ERROR);
+      return GitToHarnessProgressStatus.ERROR;
     } else {
       gitToHarnessProgressService.updateProgressStatus(gitToHarnessProgressRecordId, GitToHarnessProgressStatus.DONE);
+      return GitToHarnessProgressStatus.DONE;
     }
   }
 

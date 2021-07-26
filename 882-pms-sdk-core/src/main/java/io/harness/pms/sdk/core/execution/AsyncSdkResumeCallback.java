@@ -10,22 +10,27 @@ import com.google.inject.Inject;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
 @Value
 @Builder
+@Slf4j
 public class AsyncSdkResumeCallback implements OldNotifyCallback {
   @Inject SdkNodeExecutionService sdkNodeExecutionService;
 
   String nodeExecutionId;
+  String planExecutionId;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    sdkNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, false);
+    log.info("AsyncSdkResumeCallback notify is called for nodeExecutionId {}", nodeExecutionId);
+    sdkNodeExecutionService.resumeNodeExecution(planExecutionId, nodeExecutionId, response, false);
   }
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    sdkNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, true);
+    log.info("AsyncSdkResumeCallback notifyError is called for nodeExecutionId {}", nodeExecutionId);
+    sdkNodeExecutionService.resumeNodeExecution(planExecutionId, nodeExecutionId, response, true);
   }
 }

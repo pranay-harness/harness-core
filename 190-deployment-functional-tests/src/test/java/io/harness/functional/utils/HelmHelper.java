@@ -35,6 +35,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -183,7 +185,7 @@ public class HelmHelper {
     return format(RELEASE_NAME_FORMAT, baseName);
   }
 
-  private GraphNode createShellScriptNode(String name, String script) {
+  public GraphNode createShellScriptNode(String name, String script) {
     return GraphNode.builder()
         .name(name)
         .type("SHELL_SCRIPT")
@@ -192,7 +194,7 @@ public class HelmHelper {
         .build();
   }
 
-  private String getCleanupScript(HelmVersion helmVersion, String releaseName) {
+  public String getCleanupScript(HelmVersion helmVersion, String releaseName) {
     String helmCliPath = "helm";
     String helmPurgeAction = "delete";
     String opts = "--purge";
@@ -209,17 +211,15 @@ public class HelmHelper {
   }
 
   private String getHelm3ClientToolsPath() {
-    File relativeToCurrentLocation =
-        new File("/home/jenkins/workspace/" + JENKINS_WORKSPACE + "/" + HELM3_CLIENT_TOOLS_PATH);
-    // Checks for path on jenkins
-    if (relativeToCurrentLocation.exists()) {
-      return relativeToCurrentLocation.getAbsolutePath();
+    String home = System.getProperty("user.home");
+    if (home.contains("root")) {
+      home = "/home/jenkins";
     }
 
-    // Checks for path locally
-    File localDelegateModuleLocation = new File("../260-delegate/" + HELM3_CLIENT_TOOLS_PATH);
-    if (localDelegateModuleLocation.exists()) {
-      return localDelegateModuleLocation.getAbsolutePath();
+    Path path = Paths.get(home, "/.bazel-dirs/bin/260-delegate/" + HELM3_CLIENT_TOOLS_PATH);
+    File delegateModuleLocation = new File(path.toString());
+    if (delegateModuleLocation.exists()) {
+      return path.toString();
     }
 
     throw new IllegalStateException("Unable to get Helm v3 client tools path");

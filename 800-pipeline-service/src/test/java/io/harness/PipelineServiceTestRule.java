@@ -1,12 +1,17 @@
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Mockito.mock;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
@@ -30,6 +35,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.repositories.outbox.OutboxEventRepository;
+import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -59,6 +65,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -157,6 +164,15 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
       }
     });
 
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
     modules.add(PrimaryVersionManagerModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());

@@ -45,15 +45,25 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
           format(DUP_KEY_EXP_FORMAT_STRING, inputSetEntity.getIdentifier(), inputSetEntity.getProjectIdentifier(),
               inputSetEntity.getOrgIdentifier(), inputSetEntity.getPipelineIdentifier()),
           USER_SRE, ex);
+    } catch (Exception e) {
+      log.error(String.format("Error while saving input set [%s]", inputSetEntity.getIdentifier()), e);
+      throw new InvalidRequestException(
+          String.format("Error while saving input set [%s]: %s", inputSetEntity.getIdentifier(), e.getMessage()));
     }
   }
 
   @Override
   public Optional<InputSetEntity> get(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, String identifier, boolean deleted) {
-    return inputSetRepository
-        .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPipelineIdentifierAndIdentifierAndDeletedNot(
-            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, !deleted);
+    try {
+      return inputSetRepository
+          .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPipelineIdentifierAndIdentifierAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, !deleted);
+    } catch (Exception e) {
+      log.error(String.format("Error while retrieving input set [%s]", identifier), e);
+      throw new InvalidRequestException(
+          String.format("Error while retrieving input set [%s]: %s", identifier, e.getMessage()));
+    }
   }
 
   @Override
@@ -87,16 +97,48 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
     return makeInputSetUpdateCall(entityToUpdate);
   }
 
-  private InputSetEntity makeInputSetUpdateCall(InputSetEntity entity) {
-    InputSetEntity updatedEntity = inputSetRepository.update(entity, InputSetYamlDTOMapper.toDTO(entity));
-
-    if (updatedEntity == null) {
-      throw new InvalidRequestException(
-          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] could not be updated.",
-              entity.getIdentifier(), entity.getPipelineIdentifier(), entity.getProjectIdentifier(),
-              entity.getOrgIdentifier()));
+  @Override
+  public boolean switchValidationFlag(InputSetEntity entity, boolean isInvalid) {
+    Criteria criteria = new Criteria();
+    criteria.and(InputSetEntityKeys.accountId)
+        .is(entity.getAccountId())
+        .and(InputSetEntityKeys.orgIdentifier)
+        .is(entity.getOrgIdentifier())
+        .and(InputSetEntityKeys.projectIdentifier)
+        .is(entity.getProjectIdentifier())
+        .and(InputSetEntityKeys.pipelineIdentifier)
+        .is(entity.getPipelineIdentifier())
+        .and(InputSetEntityKeys.identifier)
+        .is(entity.getIdentifier());
+    if (entity.getYamlGitConfigRef() != null) {
+      criteria.and(InputSetEntityKeys.yamlGitConfigRef)
+          .is(entity.getYamlGitConfigRef())
+          .and(InputSetEntityKeys.branch)
+          .is(entity.getBranch());
     }
-    return updatedEntity;
+
+    Update update = new Update();
+    update.set(InputSetEntityKeys.isInvalid, isInvalid);
+    InputSetEntity inputSetEntity = inputSetRepository.switchValidationFlag(criteria, update);
+    return inputSetEntity != null;
+  }
+
+  private InputSetEntity makeInputSetUpdateCall(InputSetEntity entity) {
+    try {
+      InputSetEntity updatedEntity = inputSetRepository.update(entity, InputSetYamlDTOMapper.toDTO(entity));
+
+      if (updatedEntity == null) {
+        throw new InvalidRequestException(
+            format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] could not be updated.",
+                entity.getIdentifier(), entity.getPipelineIdentifier(), entity.getProjectIdentifier(),
+                entity.getOrgIdentifier()));
+      }
+      return updatedEntity;
+    } catch (Exception e) {
+      log.error(String.format("Error while updating input set [%s]", entity.getIdentifier()), e);
+      throw new InvalidRequestException(
+          String.format("Error while updating input set [%s]: %s", entity.getIdentifier(), e.getMessage()));
+    }
   }
 
   @Override
@@ -116,15 +158,21 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
           identifier, pipelineIdentifier, projectIdentifier, orgIdentifier));
     }
     InputSetEntity entityWithDelete = existingEntity.withDeleted(true);
-    InputSetEntity deletedEntity =
-        inputSetRepository.delete(entityWithDelete, InputSetYamlDTOMapper.toDTO(entityWithDelete));
+    try {
+      InputSetEntity deletedEntity =
+          inputSetRepository.delete(entityWithDelete, InputSetYamlDTOMapper.toDTO(entityWithDelete));
 
-    if (deletedEntity.getDeleted()) {
-      return true;
-    } else {
+      if (deletedEntity.getDeleted()) {
+        return true;
+      } else {
+        throw new InvalidRequestException(
+            format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] couldn't be deleted.",
+                identifier, pipelineIdentifier, projectIdentifier, orgIdentifier));
+      }
+    } catch (Exception e) {
+      log.error(String.format("Error while deleting input set [%s]", identifier), e);
       throw new InvalidRequestException(
-          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] couldn't be deleted.",
-              identifier, pipelineIdentifier, projectIdentifier, orgIdentifier));
+          String.format("Error while deleting input set [%s]: %s", identifier, e.getMessage()));
     }
   }
 

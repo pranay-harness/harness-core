@@ -41,6 +41,7 @@ public class ManualInterventionAdviser implements Adviser {
             InterventionWaitAdvise.newBuilder()
                 .setTimeout(timeout)
                 .setRepairActionCode(repairActionCode == null ? RepairActionCode.UNKNOWN : repairActionCode)
+                .setFromStatus(advisingEvent.getToStatus())
                 .build())
         .setType(AdviseType.INTERVENTION_WAIT)
         .build();

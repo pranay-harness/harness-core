@@ -4,16 +4,19 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.instance.Instance;
+import io.harness.dtos.InstanceDTO;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
-import io.harness.models.InstancesByBuild;
+import io.harness.models.InstancesByBuildId;
+import io.harness.models.constants.InstanceSyncConstants;
 import io.harness.models.dashboard.InstanceCountDetails;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.models.dashboard.InstanceCountDetailsByService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import io.harness.repositories.instance.InstanceRepository;
+import io.harness.service.instance.InstanceService;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,11 +24,11 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
+@Singleton
 @OwnedBy(HarnessTeam.DX)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceDashboardServiceImpl implements InstanceDashboardService {
-  private InstanceRepository instanceRepository;
-
+  private InstanceService instanceService;
   /**
    * API to fetch active instance count overview for given account+org+project group by env type
    * @param accountIdentifier
@@ -36,8 +39,8 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   @Override
   public InstanceCountDetails getActiveInstanceCountDetailsByEnvType(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    List<Instance> instances =
-        instanceRepository.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, currentTimeMillis());
+    List<InstanceDTO> instances =
+        instanceService.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, currentTimeMillis());
 
     Map<String, Map<EnvironmentType, Integer>> serviceVsInstanceCountMap = new HashMap<>();
     instances.forEach(instance -> {
@@ -62,11 +65,11 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   @Override
   public List<BuildsByEnvironment> getActiveInstancesByServiceIdGroupedByEnvironmentAndBuild(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
-    List<Instance> instances = instanceRepository.getActiveInstancesByServiceId(
+    List<InstanceDTO> instances = instanceService.getActiveInstancesByServiceId(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
 
     // used to map a list of instances to build and map it further to environment
-    Map<String, Map<String, List<Instance>>> instanceGroupMap = new HashMap<>();
+    Map<String, Map<String, List<InstanceDTO>>> instanceGroupMap = new HashMap<>();
     instances.forEach(instance -> {
       String envId = instance.getEnvId();
       String buildId = instance.getPrimaryArtifact().getTag();
@@ -95,7 +98,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   public List<EnvBuildInstanceCount> getEnvBuildInstanceCountByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     AggregationResults<EnvBuildInstanceCount> envBuildInstanceCountAggregationResults =
-        instanceRepository.getEnvBuildInstanceCountByServiceId(
+        instanceService.getEnvBuildInstanceCountByServiceId(
             accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
     List<EnvBuildInstanceCount> envBuildInstanceCounts = new ArrayList<>();
 
@@ -108,6 +111,53 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
     });
 
     return envBuildInstanceCounts;
+  }
+
+  /**
+   * API to fetch all active instances for given account+org+project+service+env and list of buildIds at a given time
+   * @param accountIdentifier
+   * @param orgIdentifier
+   * @param projectIdentifier
+   * @param serviceId
+   * @param envId
+   * @param buildIds
+   * @param timestampInMs
+   * @return List of buildId and instances
+   */
+  @Override
+  public List<InstancesByBuildId> getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String serviceId, String envId, List<String> buildIds,
+      long timestampInMs) {
+    AggregationResults<InstancesByBuildId> buildIdAndInstancesAggregationResults =
+        instanceService.getActiveInstancesByServiceIdEnvIdAndBuildIds(accountIdentifier, orgIdentifier,
+            projectIdentifier, serviceId, envId, buildIds, timestampInMs, InstanceSyncConstants.INSTANCE_LIMIT);
+    List<InstancesByBuildId> buildIdAndInstancesList = new ArrayList<>();
+
+    buildIdAndInstancesAggregationResults.getMappedResults().forEach(buildIdAndInstances -> {
+      String buildId = buildIdAndInstances.getBuildId();
+      List<InstanceDTO> instances = buildIdAndInstances.getInstances();
+      buildIdAndInstancesList.add(new InstancesByBuildId(buildId, instances));
+    });
+
+    return buildIdAndInstancesList;
+  }
+
+  /*
+    Returns breakup of active instances by envType at a given timestamp for specified accountIdentifier,
+    projectIdentifier, orgIdentifier and serviceId
+  */
+  @Override
+  public InstanceCountDetailsByEnvTypeBase getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    Map<EnvironmentType, Integer> envTypeVsInstanceCountMap = new HashMap<>();
+    instanceService
+        .getActiveServiceInstanceCountBreakdown(
+            accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs)
+        .getMappedResults()
+        .forEach(countByEnvType -> {
+          envTypeVsInstanceCountMap.put(countByEnvType.getEnvType(), countByEnvType.getCount());
+        });
+    return InstanceCountDetailsByEnvTypeBase.builder().envTypeVsInstanceCountMap(envTypeVsInstanceCountMap).build();
   }
 
   // ----------------------------- PRIVATE METHODS -----------------------------
@@ -135,12 +185,12 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   }
 
   private List<BuildsByEnvironment> prepareInstanceGroupedByEnvironmentAndBuildData(
-      Map<String, Map<String, List<Instance>>> instanceGroupMap) {
+      Map<String, Map<String, List<InstanceDTO>>> instanceGroupMap) {
     List<BuildsByEnvironment> buildsByEnvironment = new ArrayList<>();
     for (String envId : instanceGroupMap.keySet()) {
-      List<InstancesByBuild> instancesByBuilds = new ArrayList<>();
+      List<InstancesByBuildId> instancesByBuilds = new ArrayList<>();
       for (String buildId : instanceGroupMap.get(envId).keySet()) {
-        instancesByBuilds.add(new InstancesByBuild(buildId, instanceGroupMap.get(envId).get(buildId)));
+        instancesByBuilds.add(new InstancesByBuildId(buildId, instanceGroupMap.get(envId).get(buildId)));
       }
       buildsByEnvironment.add(new BuildsByEnvironment(envId, instancesByBuilds));
     }

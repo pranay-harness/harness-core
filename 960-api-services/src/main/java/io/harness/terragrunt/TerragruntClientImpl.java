@@ -19,7 +19,6 @@ import static io.harness.provision.TerragruntConstants.TERRAGRUNT_WORKSPACE_LIST
 import static software.wings.beans.LogHelper.color;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cli.CliResponse;
@@ -30,6 +29,7 @@ import software.wings.beans.LogColor;
 import software.wings.beans.LogWeight;
 
 import com.google.inject.Singleton;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -387,14 +387,16 @@ public class TerragruntClientImpl implements TerragruntClient {
     return "terragrunt apply -input=false tfdestroyplan";
   }
 
-  private String getInitCommand(String backendConfigFilePath) {
-    return format("terragrunt init %s",
-        isNotBlank(backendConfigFilePath) ? format("-backend-config=%s", backendConfigFilePath) : "");
+  private String getInitCommand(String absoluteBackendConfigFilePath) {
+    File backendConfigFile = new File(absoluteBackendConfigFilePath);
+    return format("terragrunt init%s",
+        backendConfigFile.exists() ? format(" -backend-config=%s", absoluteBackendConfigFilePath) : "");
   }
 
-  private String getRunAllInitCommand(String backendConfigFilePath) {
-    return format("terragrunt run-all init %s",
-        isNotBlank(backendConfigFilePath) ? format("-backend-config=%s", backendConfigFilePath) : "");
+  private String getRunAllInitCommand(String absoluteBackendConfigFilePath) {
+    File backendConfigFile = new File(absoluteBackendConfigFilePath);
+    return format("terragrunt run-all init%s",
+        backendConfigFile.exists() ? format(" -backend-config=%s", absoluteBackendConfigFilePath) : "");
   }
 
   private String getWorkspaceCommand(String workspaceCommand, String workspace) {

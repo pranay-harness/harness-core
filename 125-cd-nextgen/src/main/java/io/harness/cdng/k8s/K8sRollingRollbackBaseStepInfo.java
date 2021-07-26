@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -10,6 +11,7 @@ import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -24,6 +26,8 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("K8sRollingRollbackBaseStepInfo")
 public class K8sRollingRollbackBaseStepInfo {
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
+  @YamlSchemaTypes({runtime})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
+  @JsonIgnore String rollingStepFqn;
 }

@@ -41,15 +41,19 @@ public class WebhookEventStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for Webhook event stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error("Webhook event stream consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {

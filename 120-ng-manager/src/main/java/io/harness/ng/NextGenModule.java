@@ -1,6 +1,7 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.audit.ResourceTypeConstants.API_KEY;
 import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
 import static io.harness.audit.ResourceTypeConstants.DELEGATE_CONFIGURATION;
 import static io.harness.audit.ResourceTypeConstants.ENVIRONMENT;
@@ -9,8 +10,8 @@ import static io.harness.audit.ResourceTypeConstants.PROJECT;
 import static io.harness.audit.ResourceTypeConstants.SECRET;
 import static io.harness.audit.ResourceTypeConstants.SERVICE;
 import static io.harness.audit.ResourceTypeConstants.SERVICE_ACCOUNT;
+import static io.harness.audit.ResourceTypeConstants.TOKEN;
 import static io.harness.audit.ResourceTypeConstants.USER;
-import static io.harness.audit.ResourceTypeConstants.USER_GROUP;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
@@ -19,6 +20,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_SCOPE_RECONCILIATION;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import static java.lang.Boolean.TRUE;
@@ -37,6 +39,7 @@ import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.audit.ResourceTypeConstants;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -51,6 +54,12 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.encryptors.Encryptors;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.clients.AwsKmsEncryptor;
+import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -58,7 +67,7 @@ import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.file.NGFileServiceModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
-import io.harness.gitsync.core.webhook.createbranchevent.GitCreateBranchEventStreamListener;
+import io.harness.gitsync.core.webhook.createbranchevent.GitBranchHookEventStreamListener;
 import io.harness.gitsync.core.webhook.pushevent.GitPushEventStreamListener;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
@@ -87,14 +96,20 @@ import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
+import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.api.UserGroupService;
+import io.harness.ng.core.api.impl.ApiKeyServiceImpl;
 import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
+import io.harness.ng.core.api.impl.TokenServiceImpl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
+import io.harness.ng.core.encryptors.NGManagerKmsEncryptor;
+import io.harness.ng.core.encryptors.NGManagerVaultEncryptor;
 import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageListener;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageListener;
@@ -107,9 +122,12 @@ import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
 import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
 import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
 import io.harness.ng.core.event.SecretEntityCRUDStreamListener;
+import io.harness.ng.core.event.UserGroupEntityCRUDStreamListener;
+import io.harness.ng.core.event.UserMembershipReconciliationMessageProcessor;
 import io.harness.ng.core.event.UserMembershipStreamListener;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
+import io.harness.ng.core.outbox.ApiKeyEventHandler;
 import io.harness.ng.core.outbox.DelegateProfileEventHandler;
 import io.harness.ng.core.outbox.EnvironmentEventHandler;
 import io.harness.ng.core.outbox.NextGenOutboxEventHandler;
@@ -118,6 +136,7 @@ import io.harness.ng.core.outbox.ProjectEventHandler;
 import io.harness.ng.core.outbox.SecretEventHandler;
 import io.harness.ng.core.outbox.ServiceAccountEventHandler;
 import io.harness.ng.core.outbox.ServiceOutBoxEventHandler;
+import io.harness.ng.core.outbox.TokenEventHandler;
 import io.harness.ng.core.outbox.UserEventHandler;
 import io.harness.ng.core.outbox.UserGroupEventHandler;
 import io.harness.ng.core.schema.YamlBaseUrlService;
@@ -127,6 +146,8 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
+import io.harness.ng.feedback.services.FeedbackService;
+import io.harness.ng.feedback.services.impls.FeedbackServiceImpl;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
@@ -146,7 +167,6 @@ import io.harness.ng.webhook.services.api.WebhookService;
 import io.harness.ng.webhook.services.impl.WebhookEventProcessingServiceImpl;
 import io.harness.ng.webhook.services.impl.WebhookServiceImpl;
 import io.harness.notification.module.NotificationClientModule;
-import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
@@ -166,6 +186,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.InstanceModule;
 import io.harness.signup.SignupModule;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
@@ -174,12 +195,12 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.tracing.AbstractPersistenceTracerModule;
+import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
-import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
 import software.wings.security.ThreadLocalUserProvider;
 
@@ -308,12 +329,6 @@ public class NextGenModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    return appConfig.getOutboxPollConfig();
-  }
-
-  @Provides
-  @Singleton
   @Named("GitSyncGrpcClientConfigs")
   public Map<Microservice, GrpcClientConfig> grpcClientConfigs() {
     return appConfig.getGitGrpcClientConfigs();
@@ -398,11 +413,10 @@ public class NextGenModule extends AbstractModule {
     install(AccessControlMigrationModule.getInstance());
     install(UserClientModule.getInstance(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(new InviteModule(appConfig.getBaseUrls(), appConfig.isNGAuthUIEnabled()));
+    install(new InviteModule(appConfig.isNGAuthUIEnabled()));
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
-        appConfig.getSignupNotificationConfiguration(), appConfig.getBaseUrls().getNextGenUiUrl(),
-        appConfig.getBaseUrls().getNextGenAuthUiUrl()));
+        appConfig.getSignupNotificationConfiguration()));
     install(ConnectorModule.getInstance());
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
@@ -431,7 +445,9 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
     install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
-    install(YamlSchemaClientModule.getInstance(this.appConfig.getYamlSchemaClientConfig(), NG_MANAGER.getServiceId()));
+    install(new InstanceModule());
+    install(new TokenClientModule(this.appConfig.getNgManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
 
     install(new ProviderModule() {
       @Provides
@@ -490,7 +506,8 @@ public class NextGenModule extends AbstractModule {
     });
     install(EntitySetupUsageModule.getInstance());
     install(PersistentLockModule.getInstance());
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(
+        appConfig.getOutboxPollConfig(), NG_MANAGER.getServiceId(), appConfig.isExportMetricsToStackDriver()));
     install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
         appConfig.getResourceGroupClientConfig().getSecret(), NG_MANAGER.getServiceId()));
     install(new NGFileServiceModule(appConfig.getFileServiceConfiguration().getFileStorageMode(),
@@ -552,6 +569,9 @@ public class NextGenModule extends AbstractModule {
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
 
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
+    bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
+    bind(TokenService.class).to(TokenServiceImpl.class);
+    bind(FeedbackService.class).to(FeedbackServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
@@ -562,6 +582,44 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
+    registerEncryptors();
+  }
+
+  void registerEncryptors() {
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
+        .to(NGManagerVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
+        .to(NGManagerVaultEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AWS_KMS_ENCRYPTOR.getName()))
+        .to(NGManagerKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GCP_KMS_ENCRYPTOR.getName()))
+        .to(NGManagerKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.LOCAL_ENCRYPTOR.getName()))
+        .to(LocalEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GLOBAL_AWS_KMS_ENCRYPTOR.getName()))
+        .to(AwsKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GLOBAL_GCP_KMS_ENCRYPTOR.getName()))
+        .to(GcpKmsEncryptor.class);
   }
 
   private void registerOutboxEventHandlers() {
@@ -569,7 +627,7 @@ public class NextGenModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, OutboxEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(ORGANIZATION).to(OrganizationEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(PROJECT).to(ProjectEventHandler.class);
-    outboxEventHandlerMapBinder.addBinding(USER_GROUP).to(UserGroupEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ResourceTypeConstants.USER_GROUP).to(UserGroupEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(SECRET).to(SecretEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(USER).to(UserEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(DELEGATE_CONFIGURATION).to(DelegateProfileEventHandler.class);
@@ -577,6 +635,8 @@ public class NextGenModule extends AbstractModule {
     outboxEventHandlerMapBinder.addBinding(CONNECTOR).to(ConnectorEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(SERVICE).to(ServiceOutBoxEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(ENVIRONMENT).to(EnvironmentEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(API_KEY).to(ApiKeyEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(TOKEN).to(TokenEventHandler.class);
   }
 
   private void registerEventsFrameworkMessageListeners() {
@@ -592,6 +652,12 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(SECRET_ENTITY + ENTITY_CRUD))
         .to(SecretEntityCRUDStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.USER_GROUP + ENTITY_CRUD))
+        .to(UserGroupEntityCRUDStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(USER_SCOPE_RECONCILIATION))
+        .to(UserMembershipReconciliationMessageProcessor.class);
 
     bind(MessageListener.class)
         .annotatedWith(Names.named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM))
@@ -616,8 +682,8 @@ public class NextGenModule extends AbstractModule {
         .annotatedWith(Names.named(EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM))
         .to(GitPushEventStreamListener.class);
     bind(MessageListener.class)
-        .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM))
-        .to(GitCreateBranchEventStreamListener.class);
+        .annotatedWith(Names.named(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM))
+        .to(GitBranchHookEventStreamListener.class);
     bind(ServiceAccountService.class).to(ServiceAccountServiceImpl.class);
   }
 

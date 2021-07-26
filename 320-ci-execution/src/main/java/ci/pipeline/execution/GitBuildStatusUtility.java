@@ -28,8 +28,8 @@ import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 
@@ -38,7 +38,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -64,8 +63,8 @@ public class GitBuildStatusUtility {
   @Inject @Named("ngBaseUrl") private String ngBaseUrl;
   @Inject private PipelineUtils pipelineUtils;
 
-  public boolean shouldSendStatus(String group) {
-    return Objects.equals(group, StepOutcomeGroup.STAGE.name());
+  public boolean shouldSendStatus(StepCategory stepCategory) {
+    return stepCategory == StepCategory.STAGE;
   }
 
   /**
@@ -74,9 +73,8 @@ public class GitBuildStatusUtility {
    * @param ambiance
    * @param accountId
    */
-  public void sendStatusToGit(Status status, String resolvedStepParamters, Ambiance ambiance, String accountId) {
-    StageElementParameters stageElementParameters =
-        RecastOrchestrationUtils.fromDocumentJson(resolvedStepParamters, StageElementParameters.class);
+  public void sendStatusToGit(Status status, StepParameters stepParameters, Ambiance ambiance, String accountId) {
+    StageElementParameters stageElementParameters = (StageElementParameters) stepParameters;
 
     IntegrationStageStepParametersPMS integrationStageStepParameters =
         (IntegrationStageStepParametersPMS) stageElementParameters.getSpecConfig();
@@ -146,7 +144,7 @@ public class GitBuildStatusUtility {
         .gitSCMType(gitSCMType)
         .connectorDetails(gitConnector)
         .userName(connectorUtils.fetchUserName(gitConnector))
-        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
+        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector), isAccountLevelConnector))
         .repo(repoName)
         .identifier(buildStatusUpdateParameter.getIdentifier())
         .state(retrieveBuildStatusState(gitSCMType, status))
@@ -228,7 +226,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
       return GITHUB_FAILED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return GITHUB_SUCCESS;
     }
     if (status == Status.RUNNING) {
@@ -248,7 +246,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED) {
       return GITLAB_CANCELED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return GITLAB_SUCCESS;
     }
     if (status == Status.RUNNING) {
@@ -268,7 +266,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
       return BITBUCKET_FAILED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return BITBUCKET_SUCCESS;
     }
     if (status == Status.RUNNING) {

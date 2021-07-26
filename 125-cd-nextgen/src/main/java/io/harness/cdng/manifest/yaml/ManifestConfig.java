@@ -1,5 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
+import static io.harness.cdng.manifest.yaml.ManifestAttributes.ManifestAttributeStepParameters;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
@@ -22,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -72,5 +75,21 @@ public class ManifestConfig implements Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.SPEC, spec);
     return children;
+  }
+
+  @Value
+  public static class ManifestConfigStepParameters {
+    String identifier;
+    String type;
+    ManifestAttributeStepParameters spec;
+
+    public static ManifestConfigStepParameters fromManifestConfig(ManifestConfig manifestConfig) {
+      if (manifestConfig == null) {
+        return null;
+      }
+      return new ManifestConfigStepParameters(manifestConfig.getIdentifier(),
+          manifestConfig.getType() == null ? null : manifestConfig.getType().getDisplayName(),
+          manifestConfig.getSpec().getManifestAttributeStepParameters());
+    }
   }
 }

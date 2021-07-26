@@ -50,6 +50,7 @@ public class VariableCreationBlobResponseUtils {
     }
 
     mergeYamlProperties(builder, otherResponse);
+    mergeYamlOutputProperties(builder, otherResponse);
     mergeResolvedDependencies(builder, otherResponse);
     mergeDependencies(builder, otherResponse);
     mergeErrorResponses(builder, otherResponse);

@@ -50,6 +50,8 @@ public class CVNGStepTask
   private long createdAt;
   private long lastUpdatedAt;
   private String activityId;
+  private String callbackId;
+  private boolean skip;
   private Status status;
   @EqualsAndHashCode.Exclude
   @FdTtlIndex
@@ -80,7 +82,10 @@ public class CVNGStepTask
   }
   public void validate() {
     Preconditions.checkNotNull(accountId);
-    Preconditions.checkNotNull(activityId);
+    if (!skip) {
+      Preconditions.checkNotNull(activityId);
+    }
+    Preconditions.checkNotNull(callbackId);
     Preconditions.checkNotNull(status);
   }
   public enum Status { IN_PROGRESS, DONE }

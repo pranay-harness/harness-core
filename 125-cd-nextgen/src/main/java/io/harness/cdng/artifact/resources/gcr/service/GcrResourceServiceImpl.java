@@ -3,6 +3,8 @@ package io.harness.cdng.artifact.resources.gcr.service;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrBuildDetailsDTO;
@@ -47,6 +49,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class GcrResourceServiceImpl implements GcrResourceService {
   private final ConnectorService connectorService;
   private final SecretManagerClientService secretManagerClientService;
@@ -177,9 +180,13 @@ public class GcrResourceServiceImpl implements GcrResourceService {
             .taskType(NGTaskType.GCR_ARTIFACT_TASK_NG.name())
             .taskParameters(artifactTaskParameters)
             .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
+            .taskSetupAbstraction("ng", "true")
+            .taskSetupAbstraction("owner", ngAccess.getOrgIdentifier() + "/" + ngAccess.getProjectIdentifier())
             .taskSetupAbstraction("orgIdentifier", ngAccess.getOrgIdentifier())
             .taskSetupAbstraction("projectIdentifier", ngAccess.getProjectIdentifier())
+            .taskSelectors(gcrRequest.getGcpConnectorDTO().getDelegateSelectors())
             .build();
+
     return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
   }
 

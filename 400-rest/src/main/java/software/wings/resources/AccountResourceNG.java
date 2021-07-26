@@ -62,8 +62,11 @@ public class AccountResourceNG {
     Account account = AccountMapper.fromAccountDTO(dto);
     account.setCreatedFromNG(true);
 
-    account.setLicenseInfo(
-        LicenseInfo.builder().accountType(AccountType.TRIAL).accountStatus(AccountStatus.ACTIVE).build());
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.TRIAL)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(50)
+                               .build());
 
     return new RestResponse<>(AccountMapper.toAccountDTO(accountService.save(account, false)));
   }
@@ -98,7 +101,7 @@ public class AccountResourceNG {
   @GET
   @Path("/baseUrl")
   public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId, null));
+    return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId));
   }
 
   @GET

@@ -1,5 +1,8 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.SMCoreKryoRegistrar;
@@ -8,6 +11,7 @@ import io.harness.serializer.morphia.SMCoreMorphiaRegistrar;
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class SMCoreRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =

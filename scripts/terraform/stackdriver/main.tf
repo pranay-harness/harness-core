@@ -58,3 +58,9 @@ module "cvng" {
   deployment = var.deployment
   projectId = var.projectId
 }
+
+module "ccm-cloudfunctions" {
+  source = "./ccm-cloudfunctions"
+  deployment = var.deployment
+  projectId = var.projectId
+}

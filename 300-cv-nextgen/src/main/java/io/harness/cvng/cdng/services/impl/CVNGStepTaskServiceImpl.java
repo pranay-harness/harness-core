@@ -27,15 +27,20 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
 
   @Override
   public void notifyCVNGStep(CVNGStepTask entity) {
-    ActivityStatusDTO activityStatusDTO =
-        activityService.getActivityStatus(entity.getAccountId(), entity.getActivityId());
-    // send final progress even if the status is a final status.
-    waitNotifyEngine.progressOn(entity.getActivityId(),
-        CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
-    if (ActivityVerificationStatus.getFinalStates().contains(activityStatusDTO.getStatus())) {
-      waitNotifyEngine.doneWith(entity.getActivityId(),
-          CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
+    if (entity.isSkip()) {
+      waitNotifyEngine.doneWith(entity.getCallbackId(), CVNGResponseData.builder().skip(true).build());
       markDone(entity.getUuid());
+    } else {
+      ActivityStatusDTO activityStatusDTO =
+          activityService.getActivityStatus(entity.getAccountId(), entity.getActivityId());
+      // send final progress even if the status is a final status.
+      waitNotifyEngine.progressOn(entity.getCallbackId(),
+          CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
+      if (ActivityVerificationStatus.getFinalStates().contains(activityStatusDTO.getStatus())) {
+        waitNotifyEngine.doneWith(entity.getCallbackId(),
+            CVNGResponseData.builder().activityId(entity.getActivityId()).activityStatusDTO(activityStatusDTO).build());
+        markDone(entity.getUuid());
+      }
     }
   }
 

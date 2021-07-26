@@ -2,6 +2,7 @@ package io.harness.cdng.manifest.yaml;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.manifest.yaml.ManifestConfig.ManifestConfigStepParameters;
 import io.harness.cdng.visitor.helpers.manifest.ManifestOverridesVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.walktree.beans.VisitableChildren;
@@ -50,15 +51,16 @@ public class ManifestOverrideSets implements Visitable {
     }
   }
 
-  public static class ManifestOverrideSetsStepParameters extends HashMap<String, ManifestConfig> {
+  public static class ManifestOverrideSetsStepParameters extends HashMap<String, ManifestConfigStepParameters> {
     public static ManifestOverrideSetsStepParameters fromManifestOverrideSets(
         ManifestOverrideSets manifestOverrideSets) {
       if (manifestOverrideSets == null || manifestOverrideSets.getManifests() == null) {
         return null;
       }
       ManifestOverrideSetsStepParameters stepParameters = new ManifestOverrideSetsStepParameters();
-      manifestOverrideSets.getManifests().forEach(
-          m -> stepParameters.put(m.getManifest().getIdentifier(), m.getManifest()));
+      manifestOverrideSets.getManifests().forEach(m
+          -> stepParameters.put(
+              m.getManifest().getIdentifier(), ManifestConfigStepParameters.fromManifestConfig(m.getManifest())));
       return stepParameters;
     }
   }

@@ -27,6 +27,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -90,7 +91,7 @@ public class AuthenticationManager {
   private static final List<ErrorCode> NON_INVALID_CREDENTIALS_ERROR_CODES =
       Arrays.asList(USER_LOCKED, PASSWORD_EXPIRED, MAX_FAILED_ATTEMPT_COUNT_EXCEEDED);
 
-  public AuthHandler getAuthHandler(AuthenticationMechanism mechanism) {
+  public AuthHandler getAuthHandler(io.harness.ng.core.account.AuthenticationMechanism mechanism) {
     switch (mechanism) {
       case SAML:
         return samlBasedAuthHandler;
@@ -103,11 +104,11 @@ public class AuthenticationManager {
     }
   }
 
-  private AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
+  private io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism(User user, String accountId) {
     if (user.isDisabled()) {
       throw new WingsException(USER_DISABLED, USER);
     }
-    AuthenticationMechanism authenticationMechanism;
+    io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism;
     if (isNotEmpty(accountId)) {
       // First check if the user is associated with the account.
       if (!userService.isUserAssignedToAccount(user, accountId)) {
@@ -134,12 +135,12 @@ public class AuthenticationManager {
     }
 
     if (authenticationMechanism == null) {
-      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+      authenticationMechanism = io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
     }
     return authenticationMechanism;
   }
 
-  public AuthenticationMechanism getAuthenticationMechanism(String userName) {
+  public io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism(String userName) {
     return getAuthenticationMechanism(authenticationUtils.getUser(userName, USER), null);
   }
 
@@ -179,7 +180,8 @@ public class AuthenticationManager {
     } catch (WingsException ex) {
       if (ex.getCode() == ErrorCode.USER_DOES_NOT_EXIST && mainConfiguration.getDeployMode() != null
           && DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
-        return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+        return builder.authenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD)
+            .build();
       }
       throw ex;
     }
@@ -195,14 +197,14 @@ public class AuthenticationManager {
     builder.showCaptcha(showCaptcha);
 
     if (user.getAccounts().isEmpty()) {
-      return builder.authenticationMechanism(AuthenticationMechanism.USER_PASSWORD).build();
+      return builder.authenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD).build();
     }
 
     Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
         user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
-    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
     if (null == authenticationMechanism) {
-      authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+      authenticationMechanism = io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
     }
     builder.isOauthEnabled(account.isOauthEnabled());
     if (account.isOauthEnabled()) {
@@ -307,7 +309,8 @@ public class AuthenticationManager {
 
       if (isNotEmpty(accountId)) {
         User user = authenticationUtils.getUser(userName, USER);
-        AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user, accountId);
+        io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism =
+            getAuthenticationMechanism(user, accountId);
         return defaultLoginInternal(userName, password, false, authenticationMechanism);
       } else {
         return defaultLogin(userName, password);
@@ -336,8 +339,8 @@ public class AuthenticationManager {
     return defaultLoginInternal(userName, passwordHash, true, getAuthenticationMechanism(userName));
   }
 
-  private User defaultLoginInternal(
-      String userName, String password, boolean isPasswordHash, AuthenticationMechanism authenticationMechanism) {
+  private User defaultLoginInternal(String userName, String password, boolean isPasswordHash,
+      io.harness.ng.core.account.AuthenticationMechanism authenticationMechanism) {
     try {
       AuthHandler authHandler = getAuthHandler(authenticationMechanism);
       if (authHandler == null) {

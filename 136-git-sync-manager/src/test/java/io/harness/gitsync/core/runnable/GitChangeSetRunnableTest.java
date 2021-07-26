@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -39,6 +40,7 @@ public class GitChangeSetRunnableTest extends GitSyncTestBase {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    doReturn(true).when(gitChangeSetRunnable).shouldRun();
   }
 
   @Test

@@ -111,7 +111,8 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
         log.error("Error while evaluating approval/rejection criteria", ex);
         String errorMessage =
             String.format("Fatal error evaluating approval/rejection criteria: %s", ExceptionUtils.getMessage(ex));
-        logCallback.saveExecutionLog(LogHelper.color(errorMessage, LogColor.Red));
+        logCallback.saveExecutionLog(
+            LogHelper.color(errorMessage, LogColor.Red), LogLevel.INFO, CommandExecutionStatus.FAILURE);
         approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.FAILED, errorMessage);
         return;
       }

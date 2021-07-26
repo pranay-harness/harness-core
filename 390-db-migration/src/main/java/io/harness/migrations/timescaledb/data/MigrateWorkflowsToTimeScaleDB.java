@@ -2,7 +2,6 @@ package io.harness.migrations.timescaledb.data;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.migrations.TimeScaleDBDataMigration;
 import io.harness.persistence.HIterator;

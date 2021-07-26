@@ -1,6 +1,5 @@
 package io.harness.migrations.timescaledb.data;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.TimeScaleDBDataMigration;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;

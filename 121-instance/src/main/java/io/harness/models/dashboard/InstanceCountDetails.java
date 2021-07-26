@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @OwnedBy(HarnessTeam.DX)
-public class InstanceCountDetails extends InstanceCountDetailsBase {
+public class InstanceCountDetails extends InstanceCountDetailsByEnvTypeBase {
   private List<InstanceCountDetailsByService> instanceCountDetailsByServiceList;
 
   public InstanceCountDetails(Map<EnvironmentType, Integer> envTypeVsInstanceCountMap,

@@ -264,11 +264,11 @@ public class PluginSettingUtils {
     }
     setOptionalEnvironmentVariable(map, PLUGIN_ARTIFACT_FILE, PLUGIN_ARTIFACT_FILE_VALUE);
 
-    String remoteCacheImage = resolveStringParameter(
-        "remoteCacheImage", "BuildAndPushDockerRegistry", identifier, stepInfo.getRemoteCacheImage(), false);
-    if (remoteCacheImage != null && !remoteCacheImage.equals(UNRESOLVED_PARAMETER)) {
+    String remoteCacheRepo = resolveStringParameter(
+        "remoteCacheRepo", "BuildAndPushDockerRegistry", identifier, stepInfo.getRemoteCacheRepo(), false);
+    if (remoteCacheRepo != null && !remoteCacheRepo.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_ENABLE_CACHE, "true");
-      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheImage);
+      setOptionalEnvironmentVariable(map, PLUGIN_CACHE_REPO, remoteCacheRepo);
     }
 
     return map;

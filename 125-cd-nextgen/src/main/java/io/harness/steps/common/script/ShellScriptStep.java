@@ -7,6 +7,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -39,6 +40,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -72,14 +74,17 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskResponseNG> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private SecretCrudService secretCrudService;
   @Inject private SshKeySpecDTOHelper sshKeySpecDTOHelper;
   @Inject private OutcomeService outcomeService;
   @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private StepHelper stepHelper;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -158,9 +163,10 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
             .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
             .build();
     String taskName = TaskType.SHELL_SCRIPT_TASK_NG.getDisplayName();
-    return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    return StepUtils.prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName,
-        TaskSelectorYaml.toTaskSelector(shellScriptStepParameters.delegateSelectors.getValue()));
+        TaskSelectorYaml.toTaskSelector(shellScriptStepParameters.delegateSelectors.getValue()),
+        stepHelper.getEnvironmentType(ambiance));
   }
 
   private String getShellScript(ShellScriptStepParameters stepParameters) {
@@ -168,7 +174,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     if (shellScriptInlineSource.getScript().isExpression()) {
       final long maxLimit = 10;
       List<String> variables =
-          EngineExpressionEvaluator.findVariables(shellScriptInlineSource.getScript().getExpressionValue())
+          EngineExpressionEvaluator.findExpressions(shellScriptInlineSource.getScript().getExpressionValue())
               .stream()
               .limit(maxLimit)
               .collect(Collectors.toList());

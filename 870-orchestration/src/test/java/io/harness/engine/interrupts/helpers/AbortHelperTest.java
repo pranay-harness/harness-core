@@ -28,6 +28,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.waiter.NotifyCallback;
@@ -67,17 +68,18 @@ public class AbortHelperTest extends OrchestrationTestBase {
                               .build();
     mongoTemplate.save(interrupt);
 
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(nodeExecutionId)
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(DISCONTINUING)
-                                      .mode(ExecutionMode.ASYNC)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId)
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(DISCONTINUING)
+            .mode(ExecutionMode.ASYNC)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
 
     when(interruptEventPublisher.publishEvent(nodeExecutionId, interrupt, InterruptType.ABORT)).thenReturn(notifyId);
     abortHelper.discontinueMarkedInstance(nodeExecution, interrupt);
@@ -109,17 +111,18 @@ public class AbortHelperTest extends OrchestrationTestBase {
                               .build();
     mongoTemplate.save(interrupt);
 
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(nodeExecutionId)
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(ABORTED)
-                                      .mode(ExecutionMode.SYNC)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId)
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(ABORTED)
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
 
     when(nodeExecutionService.updateStatusWithOps(eq(nodeExecutionId), eq(ABORTED), any(), any()))
         .thenReturn(nodeExecution);

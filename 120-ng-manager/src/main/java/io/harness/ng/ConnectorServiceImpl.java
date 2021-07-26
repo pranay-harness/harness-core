@@ -214,6 +214,11 @@ public class ConnectorServiceImpl implements ConnectorService {
    ***/
   @Override
   public ConnectorResponseDTO update(@NotNull ConnectorDTO connector, String accountIdentifier) {
+    return update(connector, accountIdentifier, ChangeType.MODIFY);
+  }
+
+  @Override
+  public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
     try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
              connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 =
@@ -616,14 +621,21 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category,
+      ConnectorCategory sourceCategory) {
     return defaultConnectorService.list(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category, sourceCategory);
   }
 
   @Override
   public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
     return defaultConnectorService.listbyFQN(accountIdentifier, connectorFQN);
+  }
+
+  @Override
+  public void deleteBatch(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList) {
+    defaultConnectorService.deleteBatch(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifiersList);
   }
 
   private ConnectorValidationResult createValidationResultWithGenericError(Exception ex) {

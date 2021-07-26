@@ -2,6 +2,10 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
+import static io.harness.pcf.CfCommandUnitConstants.Downsize;
+import static io.harness.pcf.CfCommandUnitConstants.Upsize;
+import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
@@ -12,14 +16,10 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
-import static software.wings.beans.command.PcfDummyCommandUnit.Upsize;
-import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 import static software.wings.sm.states.pcf.PcfStateTestHelper.PHASE_NAME;
@@ -64,6 +64,13 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.beans.pcf.CfInternalInstanceElement;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
+import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfDeployCommandResponse;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
@@ -86,7 +93,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.PcfConfig;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -96,11 +102,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -201,8 +203,8 @@ public class PcfDeployStateTest extends WingsBaseTest {
           .maxInstanceCount(10)
           .serviceId(serviceElement.getUuid())
           .desiredActualFinalCount(10)
-          .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
-          .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+          .pcfCommandRequest(CfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
+          .newPcfApplicationDetails(CfAppSetupTimeDetails.builder()
                                         .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
                                         .applicationGuid("1")
                                         .build())
@@ -299,17 +301,17 @@ public class PcfDeployStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    PcfCommandDeployRequest pcfCommandRequest = (PcfCommandDeployRequest) delegateTask.getData().getParameters()[0];
-    assertThat(5 == pcfCommandRequest.getUpdateCount()).isTrue();
-    assertThat(pcfCommandRequest.getNewReleaseName()).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
-    assertThat(pcfCommandRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
-    assertThat(pcfCommandRequest.getOrganization()).isEqualTo(ORG);
-    assertThat(pcfCommandRequest.getSpace()).isEqualTo(SPACE);
-    assertThat(pcfCommandRequest.getRouteMaps()).hasSize(2);
-    assertThat(pcfCommandRequest.getRouteMaps().contains("R1")).isTrue();
-    assertThat(pcfCommandRequest.getRouteMaps().contains("R2")).isTrue();
-    assertThat(pcfCommandRequest.getCfCliVersion()).isEqualTo(CfCliVersion.V7);
+    CfCommandDeployRequest cfCommandRequest = (CfCommandDeployRequest) delegateTask.getData().getParameters()[0];
+    assertThat(5 == cfCommandRequest.getUpdateCount()).isTrue();
+    assertThat(cfCommandRequest.getNewReleaseName()).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
+    assertThat(cfCommandRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
+    assertThat(cfCommandRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
+    assertThat(cfCommandRequest.getOrganization()).isEqualTo(ORG);
+    assertThat(cfCommandRequest.getSpace()).isEqualTo(SPACE);
+    assertThat(cfCommandRequest.getRouteMaps()).hasSize(2);
+    assertThat(cfCommandRequest.getRouteMaps().contains("R1")).isTrue();
+    assertThat(cfCommandRequest.getRouteMaps().contains("R2")).isTrue();
+    assertThat(cfCommandRequest.getCfCliVersion()).isEqualTo(CfCliVersion.V7);
   }
 
   @Test
@@ -350,7 +352,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
                                                         .maxInstanceCount(10)
                                                         .desiredActualFinalCount(10)
                                                         .build();
-    PcfConfig pcfConfig = PcfConfig.builder().accountId("accountId").build();
+    CfInternalConfig pcfConfig = CfInternalConfig.builder().accountId("accountId").build();
     doReturn(false).when(featureFlagService).isEnabled(eq(FeatureName.PCF_OLD_APP_RESIZE), eq("accountId"));
 
     Integer answer = pcfDeployState.getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
@@ -400,7 +402,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
                                            .maxInstanceCount(10)
                                            .desiredActualFinalCount(10)
                                            .build();
-    PcfConfig pcfConfig = PcfConfig.builder().accountId("accountId").build();
+    CfInternalConfig pcfConfig = CfInternalConfig.builder().accountId("accountId").build();
     doReturn(true).when(featureFlagService).isEnabled(eq(FeatureName.PCF_OLD_APP_RESIZE), eq("accountId"));
 
     int answer = pcfDeployState.getDownsizeUpdateCount(outputPcf, pcfConfig);
@@ -459,17 +461,17 @@ public class PcfDeployStateTest extends WingsBaseTest {
     doReturn(PhaseElement.builder().phaseName("name").build()).when(context).getContextElement(any(), any());
 
     response.put("1",
-        PcfCommandExecutionResponse.builder()
+        CfCommandExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .pcfCommandResponse(PcfDeployCommandResponse.builder()
+            .pcfCommandResponse(CfDeployCommandResponse.builder()
                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                    .pcfInstanceElements(Arrays.asList(PcfInstanceElement.builder()
+                                    .pcfInstanceElements(Arrays.asList(CfInternalInstanceElement.builder()
                                                                            .applicationId("1")
                                                                            .displayName("app1")
                                                                            .isUpsize(true)
                                                                            .instanceIndex("4")
                                                                            .build(),
-                                        PcfInstanceElement.builder()
+                                        CfInternalInstanceElement.builder()
                                             .isUpsize(false)
                                             .displayName("app0")
                                             .applicationId("0")
@@ -533,18 +535,18 @@ public class PcfDeployStateTest extends WingsBaseTest {
     doReturn(PhaseElement.builder().phaseName("name").build()).when(context).getContextElement(any(), any());
 
     response.put("1",
-        PcfCommandExecutionResponse.builder()
+        CfCommandExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-            .pcfCommandResponse(PcfDeployCommandResponse.builder()
+            .pcfCommandResponse(CfDeployCommandResponse.builder()
                                     .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                    .pcfInstanceElements(Arrays.asList(PcfInstanceElement.builder()
+                                    .pcfInstanceElements(Arrays.asList(CfInternalInstanceElement.builder()
                                                                            .uuid("uuid1")
                                                                            .applicationId("1")
                                                                            .displayName("app1")
                                                                            .isUpsize(true)
                                                                            .instanceIndex("4")
                                                                            .build(),
-                                        PcfInstanceElement.builder()
+                                        CfInternalInstanceElement.builder()
                                             .uuid("uuid2")
                                             .isUpsize(true)
                                             .displayName("app0")

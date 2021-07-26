@@ -7,6 +7,9 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.serializer.KryoSerializer;
@@ -39,6 +42,11 @@ public class DelegateGrpcClientWrapper {
         // if task registered to error handling framework on delegate, then exception won't be null
         if (exception != null) {
           throw exception;
+        }
+      } else if (delegateResponseData instanceof RemoteMethodReturnValueData) {
+        Throwable throwable = ((RemoteMethodReturnValueData) delegateResponseData).getException();
+        if (throwable != null) {
+          throw new InvalidRequestException(ExceptionUtils.getMessage(throwable), throwable);
         }
       }
     } else {

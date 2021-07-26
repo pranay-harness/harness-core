@@ -10,6 +10,7 @@
         <blaze-user-flag>
             --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"
         </blaze-user-flag>
+        <blaze-user-exe-flag>server</blaze-user-exe-flag>
         <blaze-user-exe-flag>$PROJECT_DIR$/../270-delegate-service-app/config.yml</blaze-user-exe-flag>
     </blaze-settings>
     <method v="2">

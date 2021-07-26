@@ -1,6 +1,7 @@
 package io.harness.pms.variables;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
@@ -22,7 +23,8 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
   }
 
   @Override
-  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
+  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap,
+      Map<String, YamlOutputProperties> yamlOutputPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
     complexFields.add(YAMLFieldNameConstants.OUTPUT_VARIABLES);
     complexFields.add(YAMLFieldNameConstants.HEADERS);

@@ -48,6 +48,15 @@ import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.cf.PcfApplicationDetailsCommandTaskHandler;
+import io.harness.delegate.cf.PcfCommandTaskHandler;
+import io.harness.delegate.cf.PcfCreatePcfResourceCommandTaskHandler;
+import io.harness.delegate.cf.PcfDataFetchCommandTaskHandler;
+import io.harness.delegate.cf.PcfDeployCommandTaskHandler;
+import io.harness.delegate.cf.PcfRollbackCommandTaskHandler;
+import io.harness.delegate.cf.PcfRouteUpdateCommandTaskHandler;
+import io.harness.delegate.cf.PcfRunPluginCommandTaskHandler;
+import io.harness.delegate.cf.PcfValidationCommandTaskHandler;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
@@ -56,6 +65,7 @@ import io.harness.delegate.exceptionhandler.handler.AuthenticationExceptionHandl
 import io.harness.delegate.exceptionhandler.handler.CVConnectorExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.DockerServerExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.GcpClientExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.HelmClientRuntimeExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.InterruptedIOExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.JGitExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SCMExceptionHandler;
@@ -113,6 +123,7 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.A
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.cek8s.CEKubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.cek8s.CEKubernetesValidationHandler;
+import io.harness.delegate.task.cf.PcfCommandTask;
 import io.harness.delegate.task.ci.CIBuildStatusPushTask;
 import io.harness.delegate.task.citasks.CIBuildCommandTask;
 import io.harness.delegate.task.citasks.CICleanupTask;
@@ -138,6 +149,7 @@ import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
+import io.harness.delegate.task.k8s.K8sFetchServiceAccountTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
@@ -146,6 +158,7 @@ import io.harness.delegate.task.manifests.CustomManifestFetchTask;
 import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.scm.ScmDelegateClient;
 import io.harness.delegate.task.scm.ScmDelegateClientImpl;
 import io.harness.delegate.task.scm.ScmGitFileTask;
@@ -168,6 +181,10 @@ import io.harness.delegatetasks.DeleteSecretTask;
 import io.harness.delegatetasks.EncryptSecretTask;
 import io.harness.delegatetasks.EncryptSecretTaskValidationHandler;
 import io.harness.delegatetasks.FetchSecretTask;
+import io.harness.delegatetasks.NGAzureKeyVaultFetchEngineTask;
+import io.harness.delegatetasks.NGVaultFetchEngineTask;
+import io.harness.delegatetasks.NGVaultRenewalAppRoleTask;
+import io.harness.delegatetasks.NGVaultRenewalTask;
 import io.harness.delegatetasks.UpsertSecretTask;
 import io.harness.delegatetasks.UpsertSecretTaskValidationHandler;
 import io.harness.delegatetasks.ValidateSecretManagerConfigurationTask;
@@ -185,6 +202,7 @@ import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.exception.DelegateServiceDriverExceptionHandler;
 import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.gcp.client.GcpClient;
@@ -204,6 +222,12 @@ import io.harness.manifest.CustomManifestService;
 import io.harness.manifest.CustomManifestServiceImpl;
 import io.harness.openshift.OpenShiftClient;
 import io.harness.openshift.OpenShiftClientImpl;
+import io.harness.pcf.CfCliClient;
+import io.harness.pcf.CfDeploymentManager;
+import io.harness.pcf.CfDeploymentManagerImpl;
+import io.harness.pcf.CfSdkClient;
+import io.harness.pcf.cfcli.client.CfCliClientImpl;
+import io.harness.pcf.cfsdk.CfSdkClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
@@ -355,17 +379,7 @@ import software.wings.delegatetasks.k8s.taskhandler.K8sScaleTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sTrafficSplitTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sVersionTaskHandler;
-import software.wings.delegatetasks.pcf.PcfCommandTask;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCreatePcfResourceCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDataFetchCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDeployCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRollbackCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRouteUpdateCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfRunPluginCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfSetupCommandTaskHandler;
-import software.wings.delegatetasks.pcf.pcftaskhandler.PcfValidationCommandTaskHandler;
 import software.wings.delegatetasks.s3.S3FetchFilesTask;
 import software.wings.delegatetasks.servicenow.ServicenowTask;
 import software.wings.delegatetasks.shellscript.provisioner.ShellScriptProvisionTask;
@@ -408,11 +422,6 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
-import software.wings.helpers.ext.pcf.PcfClient;
-import software.wings.helpers.ext.pcf.PcfClientImpl;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
-import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.sftp.SftpService;
 import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
@@ -736,7 +745,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("taskPollExecutor")
   public ExecutorService taskPollExecutor() {
-    ExecutorService taskPollExecutorService = ThreadPool.create(4, 4, 3, TimeUnit.SECONDS,
+    ExecutorService taskPollExecutorService = ThreadPool.create(4, 10, 3, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("task-poll-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskPollExecutorService.shutdownNow(); }));
     return taskPollExecutorService;
@@ -874,8 +883,9 @@ public class DelegateModule extends AbstractModule {
     bind(MessageService.class)
         .toInstance(
             new MessageServiceImpl("", Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
-    bind(PcfClient.class).to(PcfClientImpl.class);
-    bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
+    bind(CfCliClient.class).to(CfCliClientImpl.class);
+    bind(CfSdkClient.class).to(CfSdkClientImpl.class);
+    bind(CfDeploymentManager.class).to(CfDeploymentManagerImpl.class);
     bind(AwsEcrHelperServiceDelegate.class).to(AwsEcrHelperServiceDelegateImpl.class);
     bind(AwsElbHelperServiceDelegate.class).to(AwsElbHelperServiceDelegateImpl.class);
     bind(AwsEcsHelperServiceDelegate.class).to(AwsEcsHelperServiceDelegateImpl.class);
@@ -1141,6 +1151,9 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.ACR_VALIDATE_ARTIFACT_STREAM).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.ACR_GET_PLANS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.ACR_GET_ARTIFACT_PATHS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REGISTRIES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REGISTRY_NAMES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REPOSITORIES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_JOBS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_PLANS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_ARTIFACT_PATHS).toInstance(ServiceImplDelegateTask.class);
@@ -1280,6 +1293,10 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.UPSERT_SECRET).toInstance(UpsertSecretTask.class);
     mapBinder.addBinding(TaskType.FETCH_SECRET).toInstance(FetchSecretTask.class);
     mapBinder.addBinding(TaskType.ENCRYPT_SECRET).toInstance(EncryptSecretTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_RENEW_TOKEN).toInstance(NGVaultRenewalTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_RENEW_APP_ROLE_TOKEN).toInstance(NGVaultRenewalAppRoleTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_FETCHING_TASK).toInstance(NGVaultFetchEngineTask.class);
+    mapBinder.addBinding(TaskType.NG_AZURE_VAULT_FETCH_ENGINES).toInstance(NGAzureKeyVaultFetchEngineTask.class);
     mapBinder.addBinding(TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION)
         .toInstance(ValidateSecretManagerConfigurationTask.class);
 
@@ -1388,6 +1405,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AWS_CODECOMMIT_API_TASK).toInstance(AwsCodeCommitApiDelegateTask.class);
     mapBinder.addBinding(TaskType.CE_VALIDATE_KUBERNETES_CONFIG)
         .toInstance(CEKubernetesTestConnectionDelegateTask.class);
+    mapBinder.addBinding(TaskType.K8S_SERVICE_ACCOUNT_INFO).toInstance(K8sFetchServiceAccountTask.class);
     mapBinder.addBinding(TaskType.HTTP_HELM_CONNECTIVITY_TASK).toInstance(HttpHelmConnectivityDelegateTask.class);
 
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
@@ -1553,5 +1571,9 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(SCMExceptionHandler.class));
     AuthenticationExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(AuthenticationExceptionHandler.class));
+    DelegateServiceDriverExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(DelegateServiceDriverExceptionHandler.class));
+    HelmClientRuntimeExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(HelmClientRuntimeExceptionHandler.class));
   }
 }

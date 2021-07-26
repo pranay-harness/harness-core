@@ -5,8 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.interfaces.ModuleLicenseInterfaceImpl;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
+import io.harness.licensing.mappers.LicenseObjectConverter;
 import io.harness.licensing.mappers.LicenseObjectMapper;
-import io.harness.licensing.mappers.LicenseObjectMapperImpl;
 import io.harness.licensing.services.DefaultLicenseServiceImpl;
 import io.harness.licensing.services.LicenseService;
 
@@ -38,7 +38,7 @@ public class LicenseModule extends AbstractModule {
       interfaceMapBinder.addBinding(moduleType).to(ModuleLicenseRegistrarFactory.getModuleLicenseClient(moduleType));
     }
 
-    bind(LicenseObjectMapper.class).to(LicenseObjectMapperImpl.class);
+    bind(LicenseObjectConverter.class);
     bind(ModuleLicenseInterface.class).to(ModuleLicenseInterfaceImpl.class);
     bind(LicenseService.class).to(DefaultLicenseServiceImpl.class);
   }

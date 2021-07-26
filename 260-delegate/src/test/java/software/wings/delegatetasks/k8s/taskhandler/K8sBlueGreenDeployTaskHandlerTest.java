@@ -5,6 +5,7 @@ import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -12,11 +13,11 @@ import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.delegatetasks.k8s.K8sTestConstants.DAEMON_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.PRIMARY_SERVICE_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.SERVICE_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestConstants.STAGE_SERVICE_YAML;
-import static software.wings.delegatetasks.k8s.K8sTestConstants.STATEFUL_SET_YAML;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.configMap;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.deployment;
 import static software.wings.delegatetasks.k8s.K8sTestHelper.primaryService;
@@ -48,6 +49,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -74,7 +76,6 @@ import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
@@ -98,15 +99,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Data;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
-public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
+public class K8sBlueGreenDeployTaskHandlerTest extends CategoryTest {
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private K8sTaskHelper k8sTaskHelper;
@@ -118,6 +121,12 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
   @InjectMocks private K8sBGBaseHandler k8sBGBaseHandler;
   @InjectMocks private K8sBlueGreenDeployTaskHandler k8sBlueGreenDeployTaskHandler;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+    initializeLogging();
+  }
 
   @Test
   @Owner(developers = YOGESH)
@@ -375,7 +384,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
 
     List<KubernetesResource> kubernetesResources = new ArrayList<>();
-    kubernetesResources.addAll(ManifestHelper.processYaml(STATEFUL_SET_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DAEMON_SET_YAML));
 
     on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
 
@@ -385,7 +394,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     verify(executionLogCallback, times(1))
         .saveExecutionLog(
-            "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+            "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green workflow type.",
             ERROR, FAILURE);
   }
 
@@ -554,7 +563,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     verify(executionLogCallback, times(1))
         .saveExecutionLog(
-            "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with harness.io/direct-apply: true",
+            "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only. To deploy additional workloads in Manifests, annotate them with harness.io/direct-apply: true",
             ERROR, FAILURE);
   }
 

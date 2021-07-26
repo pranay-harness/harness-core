@@ -84,6 +84,8 @@ public interface HarnessUserGroupService {
 
   List<User> listAllHarnessSupportUsers();
 
+  List<User> listAllHarnessSupportUserInternal();
+
   HarnessSupportUserDTO toHarnessSupportUser(User user);
 
   List<HarnessSupportUserDTO> toHarnessSupportUser(List<User> userList);

@@ -1,13 +1,17 @@
 package io.harness.accesscontrol.principals.usergroups.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
+
+import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeParams.HarnessScopeParamsBuilder;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -15,6 +19,7 @@ import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,22 +48,26 @@ public class UserGroupEventHandler implements EventHandler {
       return true;
     }
     try {
-      HarnessScopeParamsBuilder builder =
-          HarnessScopeParams.builder().accountIdentifier(entityChangeDTO.getAccountIdentifier().getValue());
-
-      if (entityChangeDTO.getOrgIdentifier() != null) {
-        builder.orgIdentifier(entityChangeDTO.getOrgIdentifier().getValue());
+      ScopeParams params = HarnessScopeParams.builder()
+                               .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier().getValue()))
+                               .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier().getValue()))
+                               .projectIdentifier(stripToNull(entityChangeDTO.getProjectIdentifier().getValue()))
+                               .build();
+      Scope scope = scopeService.buildScopeFromParams(params);
+      if (getEventType(message).equals(DELETE_ACTION)) {
+        harnessUserGroupService.deleteIfPresent(stripToNull(entityChangeDTO.getIdentifier().getValue()), scope);
+      } else {
+        harnessUserGroupService.sync(stripToNull(entityChangeDTO.getIdentifier().getValue()), scope);
       }
-      if (entityChangeDTO.getProjectIdentifier() != null) {
-        builder.projectIdentifier(entityChangeDTO.getProjectIdentifier().getValue());
-      }
-
-      Scope scope = scopeService.buildScopeFromParams(builder.build());
-      harnessUserGroupService.sync(entityChangeDTO.getIdentifier().getValue(), scope);
     } catch (Exception e) {
       log.error("Could not process the resource group change event {} due to error", entityChangeDTO, e);
       return false;
     }
     return true;
+  }
+
+  private String getEventType(Message message) {
+    Map<String, String> metadataMap = message.getMessage().getMetadataMap();
+    return metadataMap.get(ACTION);
   }
 }

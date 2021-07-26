@@ -1,5 +1,7 @@
 package io.harness.logging;
 
+import static io.harness.configuration.DeployMode.DEPLOY_MODE;
+import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -77,6 +79,10 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   public void start() {
     synchronized (this) {
       if (started) {
+        return;
+      }
+      if (isOnPrem(System.getenv().get(DEPLOY_MODE))) {
+        log.info("Log will not be initiated for mode ONPREM");
         return;
       }
 
@@ -307,16 +313,13 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private Map<String, String> getLogLabels() {
     String delegateId = getDelegateId();
     if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
-      ImmutableMap.Builder<String, String> labelsBuilder =
-          ImmutableMap.<String, String>builder()
-              .put("source", localhostName)
-              .put("processId", processId)
-              .put("version",
-                  versionInfoManager.getVersionInfo().getBuildNo() + "-"
-                      + versionInfoManager.getVersionInfo().getPatch())
-              .put("app", getAppName())
-              .put("accountId", getAccountId())
-              .put("managerHost", getManagerHost());
+      ImmutableMap.Builder<String, String> labelsBuilder = ImmutableMap.<String, String>builder()
+                                                               .put("source", localhostName)
+                                                               .put("processId", processId)
+                                                               .put("version", versionInfoManager.getFullVersion())
+                                                               .put("app", getAppName())
+                                                               .put("accountId", getAccountId())
+                                                               .put("managerHost", getManagerHost());
       if (isNotBlank(delegateId)) {
         labelsBuilder.put("delegateId", delegateId);
       }

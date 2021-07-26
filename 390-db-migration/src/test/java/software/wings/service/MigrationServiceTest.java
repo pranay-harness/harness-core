@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.BRETT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.category.element.UnitTests;
 import io.harness.migrations.MigrationList;
 import io.harness.rule.Owner;

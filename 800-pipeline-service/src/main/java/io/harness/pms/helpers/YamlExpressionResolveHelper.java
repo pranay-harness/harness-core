@@ -93,7 +93,7 @@ public class YamlExpressionResolveHelper {
   private void resolveExpressionInValueNode(
       YamlField parentField, String childName, String childValue, EngineExpressionEvaluator engineExpressionEvaluator) {
     ObjectNode objectNode = (ObjectNode) parentField.getNode().getCurrJsonNode();
-    if (EngineExpressionEvaluator.hasVariables(childValue)) {
+    if (EngineExpressionEvaluator.hasExpressions(childValue)) {
       String expression = "<+" + YamlUtils.getFullyQualifiedName(parentField.getNode()) + "." + childName + ">";
       String resolvedExpression = engineExpressionEvaluator.renderExpression(expression, true);
       // Update node value only if expression was successfully resolved

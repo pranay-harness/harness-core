@@ -10,8 +10,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
-import io.harness.cvng.core.beans.PrometheusDSConfig.PrometheusFilter;
-import io.harness.cvng.core.beans.PrometheusDSConfig.PrometheusMetricDefinition;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition.PrometheusFilter;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
 import io.harness.rule.Owner;
@@ -20,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -39,6 +39,7 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenNoConfigExists() {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
@@ -85,6 +86,7 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenNoConfigExists2ItemsSameGroup() {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
@@ -159,6 +161,7 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenUpdated() {
     PrometheusCVConfig cvConfig = PrometheusCVConfig.builder().groupName("groupName").build();
     cvConfig.setEnvIdentifier(envIdentifier);
@@ -197,6 +200,7 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenDeleted() {
     PrometheusCVConfig cvConfig = PrometheusCVConfig.builder().groupName("groupName").build();
     cvConfig.setEnvIdentifier(envIdentifier);

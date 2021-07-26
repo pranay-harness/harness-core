@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
+	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
@@ -21,7 +25,7 @@ const (
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
 // based on the files provided.
-func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
@@ -59,7 +63,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 			"repo", repo, "source", source, "target", target, "sha", sha)
 
 		// Make call to Mongo DB to get the tests to run
-		selected, err := tidb.GetTestsToRun(ctx, req)
+		selected, err := tidb.GetTestsToRun(ctx, req, accountId, config.MongoDb.EnableReflection)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not select tests", "account_id", accountId,
@@ -67,17 +71,8 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 			return
 		}
 
-		//// Write changed file information to timescaleDB
-		//err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
-		//	stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
-		//if err != nil {
-		//	WriteInternalError(w, err)
-		//	log.Errorw("api: could not write changed file information", "account_id", accountId,
-		//		"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
-		//}
-
 		// Classify and write the test selection stats to timescaleDB
-		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, false)
+		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, 0, false)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write selected tests", "account_id", accountId,
@@ -152,6 +147,24 @@ func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
+// HandlePing returns an http.HandlerFunc that pings
+// the backends to ensure smooth working of TI service.
+func HandlePing(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, _ := context.WithTimeout(r.Context(), 5*time.Second) // 5 second timeout for pings
+
+		if err := db.Ping(ctx); err != nil {
+			if err != nil {
+				log.Errorw("could not ping the data DB", zap.Error(err))
+				WriteInternalError(w, err)
+				return
+			}
+		}
+
+		io.WriteString(w, "OK")
+	}
+}
+
 func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
@@ -200,6 +213,12 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		buildId := r.FormValue(buildIdParam)
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
+		timeMsStr := r.FormValue(timeMsParam)
+		timeMs, err := strconv.ParseInt(timeMsStr, 10, 64)
+		if err != nil {
+			log.Errorw("could not parse time taken", zap.Error(err))
+			timeMs = 0
+		}
 		info := mongodb.VCSInfo{
 			Repo:     r.FormValue(repoParam),
 			Branch:   r.FormValue(sourceBranchParam),
@@ -210,6 +229,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			log.Errorw("could not unmarshal request body")
 			WriteBadRequest(w, err)
 		}
+
 		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 		if err != nil {
 			log.Errorw("failed to create callgraph serializer instance", accountIDParam, acc,
@@ -217,6 +237,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteBadRequest(w, err)
 			return
 		}
+
 		cgString, err := cgSer.Deserialize(data)
 		if err != nil {
 			log.Errorw("failed to deserialize callgraph", accountIDParam, acc, repoParam, info.Repo,
@@ -224,6 +245,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteBadRequest(w, err)
 			return
 		}
+
 		cg, err := ti.FromStringMap(cgString.(map[string]interface{}))
 		if err != nil {
 			log.Errorw("failed to construct callgraph object from interface object",
@@ -233,17 +255,20 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		}
 		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)),
 			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
+
+		st := time.Now()
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
+		log.Infow("completed partial CG upload to mongo", "account", acc, "org", org, "project", proj, "build", buildId, "stage", stageId, "step", stepId, "time_taken", time.Since(st).String())
 		// Try to update counts even if uploading partial CG failed
-		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, true)
+		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, timeMs, true)
 		if err != nil {
-			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo,
-				sourceBranchParam, info.Branch, zap.Error(err))
+			log.Errorw("failed to write partial cg to mongo", accountIDParam, acc, orgIdParam, org, projectIdParam, proj, buildIdParam, buildId, repoParam, info.Repo,
+				sourceBranchParam, info.Branch, stepIdParam, stepId, stageIdParam, stageId, zap.Error(err))
 			WriteBadRequest(w, err)
 			return
 		} else if werr != nil {
 			log.Errorw("failed to update test counts in stats DB", accountIDParam, acc, orgIdParam, org, repoParam, info.Repo,
-				buildIdParam, buildId, zap.Error(werr))
+				buildIdParam, buildId, stepIdParam, stepId, stageIdParam, stageId, zap.Error(werr))
 			WriteBadRequest(w, werr)
 			return
 		}

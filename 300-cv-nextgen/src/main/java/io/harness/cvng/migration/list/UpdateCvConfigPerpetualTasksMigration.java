@@ -51,7 +51,7 @@ public class UpdateCvConfigPerpetualTasksMigration implements CVNGMigration {
         }
         hPersistence.update(cvConfig,
             hPersistence.createUpdateOperations(CVConfig.class)
-                .set(CVConfigKeys.firstTaskQueued, true)
+                .set("firstTaskQueued", true) // This flag is removed now.
                 .unset(CVConfigKeys.perpetualTaskId));
         cvConfigKeys.add(CVConfigKey.builder()
                              .accountId(cvConfig.getAccountId())

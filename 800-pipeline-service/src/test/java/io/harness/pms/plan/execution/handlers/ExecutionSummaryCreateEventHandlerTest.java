@@ -69,6 +69,7 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
     PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder()
                                                       .planExecutionId(ambiance.getPlanExecutionId())
                                                       .inputSetYaml("some-yaml")
+                                                      .yaml("pipeline :\n  identifier: pipelineId")
                                                       .build();
     PlanExecution planExecution =
         PlanExecution.builder()
@@ -77,6 +78,7 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
 
     PipelineEntity pipelineEntity = PipelineEntity.builder()
                                         .uuid(generateUuid())
+                                        .yaml("pipeline :\n  identifier: pipelineId")
                                         .executionSummaryInfo(ExecutionSummaryInfo.builder()
                                                                   .lastExecutionStatus(ExecutionStatus.RUNNING)
                                                                   .numOfErrors(new HashMap<>())

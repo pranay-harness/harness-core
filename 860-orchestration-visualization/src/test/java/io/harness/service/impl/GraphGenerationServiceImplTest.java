@@ -58,6 +58,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
   @Inject @InjectMocks private PlanExecutionService planExecutionService;
   @Inject @InjectMocks private NodeExecutionService nodeExecutionService;
   @Inject @InjectMocks private SpringMongoStore mongoStore;
+  @Inject private GraphVertexConverter graphVertexConverter;
   @InjectMocks @Inject private GraphGenerationService graphGenerationService;
   @Mock private OrchestrationEventEmitter eventEmitter;
 
@@ -129,7 +130,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
 
     OrchestrationAdjacencyListInternal adjacencyListInternal =
         OrchestrationAdjacencyListInternal.builder()
-            .graphVertexMap(ImmutableMap.of(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart)))
+            .graphVertexMap(ImmutableMap.of(dummyStart.getUuid(), graphVertexConverter.convertFrom(dummyStart)))
             .adjacencyMap(ImmutableMap.of(dummyStart.getUuid(),
                 EdgeListInternal.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build()))
             .build();
@@ -236,7 +237,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     nodeExecutionService.save(dummyEnd);
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
-    graphVertexMap.put(dummyStart.getUuid(), GraphVertexConverter.convertFrom(dummyStart));
+    graphVertexMap.put(dummyStart.getUuid(), graphVertexConverter.convertFrom(dummyStart));
     Map<String, EdgeListInternal> adjacencyMap = new HashMap<>();
     adjacencyMap.put(
         dummyStart.getUuid(), EdgeListInternal.builder().edges(new ArrayList<>()).nextIds(new ArrayList<>()).build());

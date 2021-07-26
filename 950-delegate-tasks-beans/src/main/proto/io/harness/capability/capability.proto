@@ -55,6 +55,13 @@ message GitInstallationParameters {}
 // Testing whether a delegate can connect to a given HTTP resource
 message HttpConnectionParameters {
   string url = 1;
+
+  message Header {
+    string key = 1;
+    string value = 2;
+  }
+
+  repeated Header headers = 2;
 }
 
 // Testing whether the delegate can execute a given command -- a quick catch all for

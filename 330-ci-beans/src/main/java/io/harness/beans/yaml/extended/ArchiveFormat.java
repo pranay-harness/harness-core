@@ -5,32 +5,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ArchiveFormat {
-  @JsonProperty("tar") TAR("tar"),
-  @JsonProperty("gzip") GZIP("gzip");
-  private final String displayName;
+  @JsonProperty("Tar") TAR("tar"),
+  @JsonProperty("Gzip") GZIP("gzip");
+  private final String yamlName;
 
   @JsonCreator
-  public static ArchiveFormat getArchiveFormat(@JsonProperty("archiveFormat") String displayName) {
+  public static ArchiveFormat getArchiveFormat(@JsonProperty("archiveFormat") String yamlName) {
     for (ArchiveFormat archiveFormat : ArchiveFormat.values()) {
-      if (archiveFormat.displayName.equalsIgnoreCase(displayName)) {
+      if (archiveFormat.yamlName.equalsIgnoreCase(yamlName)) {
         return archiveFormat;
       }
     }
-    throw new IllegalArgumentException("Invalid value: " + displayName);
+    throw new IllegalArgumentException("Invalid value: " + yamlName);
   }
 
-  ArchiveFormat(String displayName) {
-    this.displayName = displayName;
+  ArchiveFormat(String yamlName) {
+    this.yamlName = yamlName;
   }
 
   @JsonValue
-  public String getDisplayName() {
-    return displayName;
+  public String getYamlName() {
+    return yamlName;
   }
 
   @Override
   public String toString() {
-    return displayName;
+    return yamlName;
   }
 
   public static ArchiveFormat fromString(final String s) {

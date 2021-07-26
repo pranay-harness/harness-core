@@ -14,7 +14,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: unit-tests-0
+          context: unittest0
           description: 'Mark unit-tests-0 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -23,7 +23,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: unit-tests-1
+          context: unittest1
           description: 'Mark unit-tests-1 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -32,7 +32,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: unit-tests-2
+          context: unittest2
           description: 'Mark unit-tests-2 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -41,7 +41,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: unit-tests-3
+          context: unittest3
           description: 'Mark unit-tests-3 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -50,7 +50,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: unit-tests-4
+          context: unittest4
           description: 'Mark unit-tests-4 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -59,7 +59,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: functional-tests
+          context: FunctionalTests
           description: 'Mark functional-tests as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -68,7 +68,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: pmd-checks
+          context: PMDCheck
           description: 'Mark pmd-checks as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -86,7 +86,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: check-style
+          context: checkstylecheck
           description: 'Mark check-style as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}

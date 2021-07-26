@@ -7,7 +7,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.service.impl.artifact.ArtifactCollectionUtils.getArtifactKeyFn;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

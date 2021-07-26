@@ -94,8 +94,8 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
             .commandUnitsProgress(UnitProgressData.builder().build())
             .commandExecutionStatus(SUCCESS)
             .build();
-    when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
-    StepResponse response = k8sBlueGreenStep.finalizeExecution(
+    when(k8sStepHelper.getReleaseName(any(), any())).thenReturn("releaseName");
+    StepResponse response = k8sBlueGreenStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
@@ -108,7 +108,7 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     ArgumentCaptor<K8sBlueGreenOutcome> argumentCaptor = ArgumentCaptor.forClass(K8sBlueGreenOutcome.class);
     verify(executionSweepingOutputService, times(1))
         .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME), argumentCaptor.capture(),
-            eq(StepOutcomeGroup.STAGE.name()));
+            eq(StepOutcomeGroup.STEP.name()));
     assertThat(argumentCaptor.getValue().getReleaseName()).isEqualTo("releaseName");
     assertThat(argumentCaptor.getValue().getPrimaryColor()).isEqualTo("blue");
     assertThat(argumentCaptor.getValue().getStageColor()).isEqualTo("green");
@@ -125,7 +125,7 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
 
     doReturn(stepResponse).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, thrownException);
 
-    StepResponse response = k8sBlueGreenStep.finalizeExecution(
+    StepResponse response = k8sBlueGreenStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, executionPassThroughData, () -> { throw thrownException; });
 
     assertThat(response).isEqualTo(stepResponse);

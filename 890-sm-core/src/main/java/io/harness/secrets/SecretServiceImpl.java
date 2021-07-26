@@ -519,6 +519,7 @@ public class SecretServiceImpl implements SecretService {
     if (!encryptedData.isInlineSecret()) {
       log.info("Secret in account {} with id {} cannot be migrated as it is not an inline secret",
           migrateSecretTask.getAccountId(), migrateSecretTask.getSecretId());
+      return;
     }
     String value = String.valueOf(
         fetchSecretValue(migrateSecretTask.getAccountId(), encryptedData, migrateSecretTask.getFromConfig()));

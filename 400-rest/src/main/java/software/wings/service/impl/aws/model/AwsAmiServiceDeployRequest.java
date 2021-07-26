@@ -49,8 +49,9 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
       Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, int minInstances,
       List<AwsAmiResizeData> asgDesiredCounts, int maxInstances, AwsAmiPreDeploymentData preDeploymentData,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, boolean rollback,
-      List<String> baseScalingPolicyJSONs, int desiredInstances, List<String> existingInstanceIds) {
-    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region);
+      List<String> baseScalingPolicyJSONs, int desiredInstances, List<String> existingInstanceIds,
+      boolean amiInServiceHealthyStateFFEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region, amiInServiceHealthyStateFFEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.activityId = activityId;

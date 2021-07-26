@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.DelegateInfoHelper;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
-import io.harness.beans.converter.GraphVertexConverter;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
@@ -14,7 +14,7 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
-import io.harness.service.GraphGenerationService;
+import io.harness.pms.utils.PmsExecutionUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GraphStatusUpdateHelper {
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private GraphGenerationService graphGenerationService;
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject private DelegateInfoHelper delegateInfoHelper;
@@ -73,9 +72,9 @@ public class GraphStatusUpdateHelper {
     log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
         nodeExecution.getStatus(), planExecutionId);
     graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
-      GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
+      GraphVertex newValue = convertFromNodeExecution(prevValue, nodeExecution);
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
-        newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
+        newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToOrchestrationMap(
             pmsOutcomeService.findAllOutcomesMapByRuntimeId(planExecutionId, nodeExecutionId)));
         newValue.setGraphDelegateSelectionLogParams(
             delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
@@ -83,5 +82,32 @@ public class GraphStatusUpdateHelper {
       }
       return newValue;
     });
+  }
+
+  public GraphVertex convertFromNodeExecution(GraphVertex prevValue, NodeExecution nodeExecution) {
+    return GraphVertex.builder()
+        .uuid(nodeExecution.getUuid())
+        .ambiance(nodeExecution.getAmbiance())
+        .planNodeId(nodeExecution.getNode().getUuid())
+        .identifier(nodeExecution.getNode().getIdentifier())
+        .name(nodeExecution.getNode().getName())
+        .startTs(nodeExecution.getStartTs())
+        .endTs(nodeExecution.getEndTs())
+        .initialWaitDuration(nodeExecution.getInitialWaitDuration())
+        .lastUpdatedAt(nodeExecution.getLastUpdatedAt())
+        .stepType(nodeExecution.getNode().getStepType().getType())
+        .status(nodeExecution.getStatus())
+        .failureInfo(nodeExecution.getFailureInfo())
+        .skipInfo(nodeExecution.getSkipInfo())
+        .nodeRunInfo(nodeExecution.getNodeRunInfo())
+        .stepParameters(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getResolvedStepInputs()))
+        .mode(nodeExecution.getMode())
+        .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
+        .interruptHistories(nodeExecution.getInterruptHistories())
+        .retryIds(nodeExecution.getRetryIds())
+        .skipType(nodeExecution.getNode().getSkipType())
+        .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
+        .build();
   }
 }

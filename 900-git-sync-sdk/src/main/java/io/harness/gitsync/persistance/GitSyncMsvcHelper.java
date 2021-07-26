@@ -14,6 +14,7 @@ import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 @Singleton
 @Slf4j
@@ -34,6 +35,7 @@ public class GitSyncMsvcHelper {
             .setYamlGitConfigId(scmResponse.getYamlGitConfigId())
             .setBranchName(gitBranchInfo.getBranch())
             .setIsNewBranch(checkIfItsANewBranch(gitBranchInfo))
+            .putAllContextMap(MDC.getCopyOfContextMap())
             .build());
     log.info("Posted information to git sync manager for commit id: [{}], entity detail: [{}]",
         scmResponse.getCommitId(), entityDetail);

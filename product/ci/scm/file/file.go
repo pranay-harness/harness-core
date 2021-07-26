@@ -22,7 +22,7 @@ func FindFile(ctx context.Context, fileRequest *pb.GetFileRequest, log *zap.Suga
 
 	client, err := gitclient.GetGitClient(*fileRequest.GetProvider(), log)
 	if err != nil {
-		log.Errorw("FindFile failure", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFile failure", "provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func BatchFindFile(ctx context.Context, fileRequests *pb.GetBatchFileRequest, lo
 	for _, request := range fileRequests.FindRequest {
 		file, err := FindFile(ctx, request, log)
 		if err != nil {
-			log.Errorw("BatchFindFile failure. Unable to get this file", "provider", request.GetProvider(), "slug", request.GetSlug(), "path", request.GetPath(),
+			log.Errorw("BatchFindFile failure. Unable to get this file", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "path", request.GetPath(),
 				"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 			file = &pb.FileContent{
 				Path:  request.GetPath(),
@@ -90,7 +90,7 @@ func DeleteFile(ctx context.Context, fileRequest *pb.DeleteFileRequest, log *zap
 
 	client, err := gitclient.GetGitClient(*fileRequest.GetProvider(), log)
 	if err != nil {
-		log.Errorw("DeleteFile failure", "bad provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("DeleteFile failure", "bad provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
@@ -142,7 +142,7 @@ func UpdateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 
 	client, err := gitclient.GetGitClient(*fileRequest.GetProvider(), log)
 	if err != nil {
-		log.Errorw("UpdateFile failure", "bad provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("UpdateFile failure", "bad provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
@@ -198,7 +198,7 @@ func PushFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap.S
 
 	client, err := gitclient.GetGitClient(*fileRequest.GetProvider(), log)
 	if err != nil {
-		log.Errorw("PushFile failure", "bad provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("PushFile failure", "bad provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
@@ -220,7 +220,7 @@ func PushFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap.S
 		}
 		updateResponse, updateErr := UpdateFile(ctx, fileRequest, log)
 		if updateErr != nil {
-			log.Errorw("PushFile failure, UpdateFile failed", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(),
+			log.Errorw("PushFile failure, UpdateFile failed", "provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(),
 				"elapsed_time_ms", utils.TimeSince(start), zap.Error(updateErr))
 			return nil, updateErr
 		}
@@ -229,7 +229,7 @@ func PushFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap.S
 		log.Infow("PushFile calling CreateFile", "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath())
 		createResponse, createErr := CreateFile(ctx, fileRequest, log)
 		if createErr != nil {
-			log.Errorw("PushFile failure, CreateFile failed", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(),
+			log.Errorw("PushFile failure, CreateFile failed", "provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(),
 				"elapsed_time_ms", utils.TimeSince(start), zap.Error(createErr))
 			return nil, createErr
 		}
@@ -256,7 +256,7 @@ func CreateFile(ctx context.Context, fileRequest *pb.FileModifyRequest, log *zap
 
 	client, err := gitclient.GetGitClient(*fileRequest.GetProvider(), log)
 	if err != nil {
-		log.Errorw("CreateFile failure", "bad provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("CreateFile failure", "bad provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "path", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
@@ -299,19 +299,19 @@ func FindFilesInBranch(ctx context.Context, fileRequest *pb.FindFilesInBranchReq
 
 	client, err := gitclient.GetGitClient(*fileRequest.GetProvider(), log)
 	if err != nil {
-		log.Errorw("FindFilesInBranch failure", "bad provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInBranch failure", "bad provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	ref, err := gitclient.GetValidRef(*fileRequest.GetProvider(), fileRequest.GetRef(), fileRequest.GetBranch())
 	if err != nil {
-		log.Errorw("FindFilesInBranch failure, bad ref/branch", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInBranch failure, bad ref/branch", "provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	files, response, err := client.Contents.List(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref, scm.ListOptions{Page: int(fileRequest.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("FindFilesInBranch failure", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInBranch failure", "provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("FindFilesInBranch success", "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start))
@@ -330,13 +330,13 @@ func FindFilesInCommit(ctx context.Context, fileRequest *pb.FindFilesInCommitReq
 
 	client, err := gitclient.GetGitClient(*fileRequest.GetProvider(), log)
 	if err != nil {
-		log.Errorw("FindFilesInCommit failure", "bad provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInCommit failure", "bad provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	ref := fileRequest.GetRef()
 	files, response, err := client.Contents.List(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref, scm.ListOptions{Page: int(fileRequest.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("FindFilesInCommit failure", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInCommit failure", "provider", gitclient.GetProvider(*fileRequest.GetProvider()), "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("FindFilesInCommit success", "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
@@ -382,7 +382,7 @@ func convertContent(from *scm.ContentInfo) *pb.FileChange {
 func parseCrudResponse(body io.Reader, p pb.Provider, log *zap.SugaredLogger) (commitID, blobID string) {
 	bodyBytes, readErr := ioutil.ReadAll(body)
 	if readErr != nil {
-		log.Errorw("parseCrudResponse unable to read response from provider %p", p.GetEndpoint(), zap.Error(readErr))
+		log.Errorw("parseCrudResponse unable to read response from provider %p", gitclient.GetProvider(p), zap.Error(readErr))
 		return "", ""
 	}
 	bodyStr := string(bodyBytes)

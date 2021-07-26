@@ -8,6 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -328,6 +330,21 @@ public interface BuildService<T> {
    * */
   default ArtifactStreamAttributes validateThenInferAttributes(
       T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureContainerRegistry> listContainerRegistries(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listContainerRegistryNames(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listRepositories(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName) {
     throw new UnsupportedOperationException();
   }
 }

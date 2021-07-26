@@ -34,6 +34,7 @@ public class GcpValidationParamsProvider implements ConnectorValidationParamsPro
         .gcpConnectorDTO(connectorConfig)
         .connectorName(connectorName)
         .encryptionDetails(encryptionDetail)
+        .delegateSelectors(connectorConfig.getDelegateSelectors())
         .build();
   }
 }

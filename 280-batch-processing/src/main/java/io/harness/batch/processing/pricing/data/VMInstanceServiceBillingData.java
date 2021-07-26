@@ -13,6 +13,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VMInstanceServiceBillingData {
   private double cost;
+  private double rate;
   private Double effectiveCost;
   private String resourceId; // ProviderId for Azure
   private String serviceCode;

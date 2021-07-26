@@ -18,12 +18,13 @@ shared_dependencies = [
     "@maven//:javax_validation_validation_api",
     "@maven//:org_hibernate_hibernate_validator",
     "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:com_hazelcast_hazelcast",
     "//:lombok",
 ]
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [
         "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
     ],

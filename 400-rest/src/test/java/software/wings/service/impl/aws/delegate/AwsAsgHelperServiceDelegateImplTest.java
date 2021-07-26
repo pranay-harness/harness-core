@@ -320,7 +320,6 @@ public class AwsAsgHelperServiceDelegateImplTest extends CategoryTest {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     LogCallback mockCallback = mock(LogCallback.class);
     doNothing().when(mockTracker).trackASGCall(anyString());
-    //    doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
     HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(true);
 
     return Mocks.builder()
@@ -400,10 +399,9 @@ public class AwsAsgHelperServiceDelegateImplTest extends CategoryTest {
     doReturn(new SetDesiredCapacityResult()).when(mockClient).setDesiredCapacity(any());
     doNothing().when(mockTracker).trackASGCall(anyString());
     try {
-      //      doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
       HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(true);
       awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
+          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10, false);
       verify(mockClient).setDesiredCapacity(any());
       HTimeLimiterMocker.verifyTimeLimiterCalled(mockTimeLimiter);
     } catch (Exception ex) {

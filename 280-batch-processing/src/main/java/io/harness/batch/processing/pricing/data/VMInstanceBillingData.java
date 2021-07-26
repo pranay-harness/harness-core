@@ -13,4 +13,5 @@ public class VMInstanceBillingData {
   private double networkCost;
   private double cpuCost;
   private double memoryCost;
+  private double rate;
 }

@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

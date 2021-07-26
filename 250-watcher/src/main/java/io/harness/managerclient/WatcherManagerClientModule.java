@@ -19,6 +19,6 @@ public class WatcherManagerClientModule extends AbstractModule {
   protected void configure() {
     TokenGenerator tokenGenerator = new TokenGenerator(accountId, accountSecret);
     bind(TokenGenerator.class).toInstance(tokenGenerator);
-    bind(ManagerClientV2.class).toProvider(new ManagerClientV2Factory(managerBaseUrl, tokenGenerator));
+    bind(ManagerClientV2.class).toProvider(new WatcherManagerClientV2Factory(managerBaseUrl, tokenGenerator));
   }
 }

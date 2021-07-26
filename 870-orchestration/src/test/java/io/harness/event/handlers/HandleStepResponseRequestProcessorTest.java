@@ -1,5 +1,6 @@
 package io.harness.event.handlers;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Mockito.verify;
@@ -11,7 +12,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.rule.Owner;
 
@@ -43,14 +43,13 @@ public class HandleStepResponseRequestProcessorTest extends OrchestrationTestBas
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testHandleEvent() {
+    String nodeExecutionId = generateUuid();
     HandleStepResponseRequest handleStepResponseRequest = HandleStepResponseRequest.newBuilder().build();
-    handleStepResponseEventHandler.handleEvent(
-        SdkResponseEventProto.newBuilder()
-            .setSdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(handleStepResponseRequest).build())
-            .setSdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
-            .build());
-    verify(engine).handleStepResponse(
-        handleStepResponseRequest.getNodeExecutionId(), handleStepResponseRequest.getStepResponse());
+    handleStepResponseEventHandler.handleEvent(SdkResponseEventProto.newBuilder()
+                                                   .setNodeExecutionId(nodeExecutionId)
+                                                   .setHandleStepResponseRequest(handleStepResponseRequest)
+                                                   .setSdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
+                                                   .build());
+    verify(engine).handleStepResponse(nodeExecutionId, handleStepResponseRequest.getStepResponse());
   }
 }

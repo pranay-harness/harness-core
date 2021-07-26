@@ -483,12 +483,22 @@
         },
         {
           "type": "object",
+          "required": [
+            "kmsArn"
+          ],
           "properties": {
             "credential": {
               "$ref": "#/definitions/AwsKmsConnectorCredential"
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "kmsArn": {
               "type": "string"
@@ -637,6 +647,7 @@
           "type": "object",
           "required": [
             "clientId",
+            "secretKey",
             "subscription",
             "tenantId",
             "vaultName"
@@ -654,6 +665,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "secretKey": {
               "type": "string"
@@ -1006,7 +1024,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             }
           }
         }
@@ -1037,7 +1056,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             },
             "subscriptionId": {
               "type": "string"
@@ -1073,7 +1093,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             }
           }
         }
@@ -1856,7 +1877,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             },
             "projectId": {
               "type": "string"
@@ -1934,15 +1956,22 @@
         },
         {
           "type": "object",
+          "required": [
+            "credentials"
+          ],
           "properties": {
             "credentials": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "type": "string"
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "keyName": {
               "type": "string"
@@ -2933,8 +2962,25 @@
             },
             "username": {
               "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -3540,6 +3586,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "readOnly": {
               "type": "boolean"

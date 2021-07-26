@@ -123,6 +123,7 @@ public abstract class BaseContainerSpecBuilder {
                                               .withEnv(envVars)
                                               .withResources(resourceRequirements)
                                               .withPorts(containerPorts)
+                                              .withImagePullPolicy(containerParams.getImagePullPolicy())
                                               .withVolumeMounts(volumeMounts);
 
     boolean isPrivilegedImage = isPrivilegedImage(imageDetails);

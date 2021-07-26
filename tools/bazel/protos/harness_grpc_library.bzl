@@ -1,4 +1,26 @@
-load("@rules_proto_grpc//java:defs.bzl", "java_grpc_compile")
+load("@rules_proto_grpc//java:defs.bzl", "java_grpc_compile", "java_proto_compile")
+
+def harness_proto_library(**kwargs):
+    # Compile protos
+    name_pb = kwargs.get("name") + "_pb"
+    java_proto_compile(
+        name = name_pb,
+        **{k: v for (k, v) in kwargs.items() if k in ("deps", "verbose")}  # Forward args
+    )
+
+    # Create java library
+    native.java_library(
+        name = kwargs.get("name"),
+        srcs = [name_pb],
+        deps = PROTO_DEPS,
+        visibility = kwargs.get("visibility"),
+    )
+
+PROTO_DEPS = [
+    "@maven//:com_google_guava_guava",
+    "@maven//:com_google_protobuf_protobuf_java",
+    "@maven//:javax_annotation_javax_annotation_api",
+]
 
 def harness_grpc_library(**kwargs):
     # Compile protos
@@ -8,21 +30,14 @@ def harness_grpc_library(**kwargs):
         **{k: v for (k, v) in kwargs.items() if k in ("deps", "verbose")}  # Forward args
     )
 
-    java_sources = []
-    java_deps = []
-
     if kwargs.get("java_sources") != None:
-        java_sources = kwargs.get("java_sources")
-
-    if kwargs.get("java_deps") != None:
-        java_deps = kwargs.get("java_deps")
+        fail("do not use java_sources for the grpc library")
 
     native.java_library(
         name = kwargs.get("name"),
-        srcs = [name_pb] + java_sources,
-        deps = GRPC_DEPS + java_deps,
-        runtime_deps = ["@io_grpc_grpc_java//netty"],
-        exports = GRPC_DEPS + java_deps,
+        srcs = [name_pb],
+        deps = GRPC_DEPS,
+        runtime_deps = ["@maven//:io_grpc_grpc_netty"],
         visibility = kwargs.get("visibility"),
     )
 

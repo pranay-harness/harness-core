@@ -1,7 +1,9 @@
 package software.wings.scim;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
@@ -35,6 +37,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(PL)
 @Slf4j
 public class ScimUserServiceImpl implements ScimUserService {
   @Inject private UserService userService;
@@ -230,26 +233,26 @@ public class ScimUserServiceImpl implements ScimUserService {
     if ("displayName".equals(patchOperation.getPath())) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       updateOperation.set(UserKeys.name, patchOperation.getValue(String.class));
-      userService.updateUser(user, updateOperation);
+      userService.updateUser(user.getUuid(), updateOperation);
     }
     if (patchOperation.getValue(ScimMultiValuedObject.class) != null
         && patchOperation.getValue(ScimMultiValuedObject.class).getDisplayName() != null) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       updateOperation.set(UserKeys.name, patchOperation.getValue(String.class));
-      userService.updateUser(user, updateOperation);
+      userService.updateUser(user.getUuid(), updateOperation);
     }
     if ("active".equals(patchOperation.getPath())) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       if (patchOperation.getValue(Boolean.class) != null) {
         updateOperation.set(UserKeys.disabled, !(patchOperation.getValue(Boolean.class)));
       }
-      userService.updateUser(user, updateOperation);
+      userService.updateUser(user.getUuid(), updateOperation);
     }
     if (patchOperation.getValue(ScimUserValuedObject.class) != null) {
       UpdateOperations<User> updateOperation = wingsPersistence.createUpdateOperations(User.class);
       updateOperation.set(UserKeys.disabled, !(patchOperation.getValue(ScimUserValuedObject.class)).isActive());
       removeUserFromAllScimGroups(accountId, userId);
-      userService.updateUser(user, updateOperation);
+      userService.updateUser(user.getUuid(), updateOperation);
     } else {
       // Not supporting any other updates as of now.
       log.error("SCIM: Unexpected patch operation received: accountId: {}, userId: {}, patchOperation: {}", accountId,
@@ -326,7 +329,7 @@ public class ScimUserServiceImpl implements ScimUserService {
       }
       if (userUpdate) {
         updateOperations.set(UserKeys.imported, true);
-        userService.updateUser(user, updateOperations);
+        userService.updateUser(user.getUuid(), updateOperations);
       }
       return Response.status(Status.OK).entity(getUser(user.getUuid(), accountId)).build();
     }

@@ -5,15 +5,18 @@ import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGe
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.KeyValuePair;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.rule.Owner;
 
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -111,5 +114,37 @@ public class HttpConnectionExecutionCapabilityGeneratorTest extends CategoryTest
     assertThat(capability.getPath()).isEqualTo("path/1/2/3");
     assertThat(capability.getUrl()).isNull();
     assertThat(capability.getQuery()).isEqualTo("q1=1&q2=2");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testBuildHttpConnectionExecutionCapabilityWithHeaders_WithoutHeaders() {
+    HttpConnectionExecutionCapability capability =
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2", null, QUERY, null);
+    assertThat(capability.getHost()).isEqualTo("domain.com");
+    assertThat(capability.getScheme()).isEqualTo("http");
+    assertThat(capability.getPort()).isEqualTo(8080);
+    assertThat(capability.getPath()).isEqualTo("path/1/2/3");
+    assertThat(capability.getUrl()).isNull();
+    assertThat(capability.getQuery()).isEqualTo("q1=1&q2=2");
+    assertThat(capability.getHeaders()).isNull();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testBuildHttpConnectionExecutionCapabilityWithHeaders_WithHeaders() {
+    HttpConnectionExecutionCapability capability =
+        buildHttpConnectionExecutionCapability("http://domain.com:8080/path/1/2/3?q1=1&q2=2",
+            Collections.singletonList(KeyValuePair.builder().key("x-api-key").value("1234").build()), QUERY, null);
+    assertThat(capability.getHost()).isEqualTo("domain.com");
+    assertThat(capability.getScheme()).isEqualTo("http");
+    assertThat(capability.getPort()).isEqualTo(8080);
+    assertThat(capability.getPath()).isEqualTo("path/1/2/3");
+    assertThat(capability.getUrl()).isNull();
+    assertThat(capability.getQuery()).isEqualTo("q1=1&q2=2");
+    assertThat(capability.getHeaders().get(0).getKey()).isEqualTo("x-api-key");
+    assertThat(capability.getHeaders().get(0).getValue()).isEqualTo("1234");
   }
 }

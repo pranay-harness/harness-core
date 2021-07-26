@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
@@ -36,12 +37,11 @@ import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.beans.TaskType;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +90,7 @@ public class WebhookServiceImpl implements WebhookService, WebhookEventService {
     final List<EncryptedDataDetail> encryptionDetails =
         getEncryptedDataDetails(upsertWebhookRequestDTO.getAccountIdentifier(),
             upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(), scmConnector);
-    String target = getTargetUrl();
+    String target = getTargetUrl(upsertWebhookRequestDTO.getAccountIdentifier());
     final ScmGitWebhookTaskParams gitWebhookTaskParams =
         ScmGitWebhookTaskParams.builder()
             .gitWebhookTaskType(GitWebhookTaskType.UPSERT)
@@ -126,18 +126,24 @@ public class WebhookServiceImpl implements WebhookService, WebhookEventService {
     }
   }
 
-  public String getTargetUrl() {
-    try {
-      String webhookBaseUrl = baseUrls.getWebhookBaseUrl();
-      if (!webhookBaseUrl.endsWith("/")) {
-        webhookBaseUrl += "/";
-      }
-      URL baseUrl = new URL(webhookBaseUrl);
-      URL targetURL = new URL(baseUrl, WebhookConstants.WEBHOOK_ENDPOINT);
-      return targetURL.toString();
-    } catch (MalformedURLException e) {
-      throw new InvalidRequestException("Failed to generate Target Url", e);
+  @VisibleForTesting
+  String getTargetUrl(String accountIdentifier) {
+    String webhookBaseUrl = getWebhookBaseUrl();
+    if (!webhookBaseUrl.endsWith("/")) {
+      webhookBaseUrl += "/";
     }
+    StringBuilder webhookUrl = new StringBuilder(webhookBaseUrl)
+                                   .append(WebhookConstants.WEBHOOK_ENDPOINT)
+                                   .append('?')
+                                   .append(NGCommonEntityConstants.ACCOUNT_KEY)
+                                   .append('=')
+                                   .append(accountIdentifier);
+    return webhookUrl.toString();
+  }
+
+  @VisibleForTesting
+  String getWebhookBaseUrl() {
+    return baseUrls.getWebhookBaseUrl();
   }
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(

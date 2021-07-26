@@ -197,7 +197,8 @@ public class K8sTaskHelper {
   public List<FileData> renderTemplateForGivenFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory,
       @NotEmpty List<String> filesList, List<String> valuesFiles, String releaseName, String namespace,
-      ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
+      ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters, boolean skipRendering)
+      throws Exception {
     StoreType storeType = k8sDelegateManifestConfig.getManifestStoreTypes();
     long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
     HelmCommandFlag helmCommandFlag = k8sDelegateManifestConfig.getHelmCommandFlag();
@@ -207,6 +208,9 @@ public class K8sTaskHelper {
       case Remote:
         List<FileData> manifestFiles =
             k8sTaskHelperBase.readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
+        if (skipRendering) {
+          return manifestFiles;
+        }
         return k8sTaskHelperBase.renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
 
@@ -238,10 +242,11 @@ public class K8sTaskHelper {
   public List<KubernetesResource> getResourcesFromManifests(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sDelegateManifestConfig k8sDelegateManifestConfig, String manifestFilesDirectory,
       @NotEmpty List<String> filesList, List<String> valuesFiles, String releaseName, String namespace,
-      ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters) throws Exception {
+      ExecutionLogCallback executionLogCallback, K8sTaskParameters k8sTaskParameters, boolean skipRendering)
+      throws Exception {
     List<FileData> manifestFiles =
         renderTemplateForGivenFiles(k8sDelegateTaskParams, k8sDelegateManifestConfig, manifestFilesDirectory, filesList,
-            valuesFiles, releaseName, namespace, executionLogCallback, k8sTaskParameters);
+            valuesFiles, releaseName, namespace, executionLogCallback, k8sTaskParameters, skipRendering);
     if (isEmpty(manifestFiles)) {
       return new ArrayList<>();
     }

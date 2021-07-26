@@ -21,6 +21,7 @@ import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.exception.HelmClientException;
 import io.harness.git.UsernamePasswordAuthRequest;
 import io.harness.git.model.AuthInfo;
 import io.harness.git.model.ChangeType;
@@ -35,6 +36,7 @@ import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraActionNG;
@@ -141,7 +143,6 @@ import com.google.api.services.monitoring.v3.model.Point;
 import com.google.api.services.monitoring.v3.model.TimeInterval;
 import com.google.api.services.monitoring.v3.model.TimeSeries;
 import com.google.api.services.monitoring.v3.model.TypedValue;
-import com.hazelcast.spi.exception.TargetNotMemberException;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
@@ -178,7 +179,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(CapacityReservationTargetResponse.class, 1024);
     kryo.register(KubernetesClientException.class, 2000);
     kryo.register(JSONException.class, 2001);
-    kryo.register(TargetNotMemberException.class, 2002);
     kryo.register(SumoServerException.class, 2003);
     kryo.register(ListTimeSeriesResponse.class, 2004);
     kryo.register(TimeSeries.class, 2005);
@@ -318,7 +318,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EntityOperationIdentifier.class, 97021);
     kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
     kryo.register(CfCliVersion.class, 97023);
-
     kryo.register(KubernetesResourceId.class, 97031);
+    kryo.register(HelmClientException.class, 97032);
+    kryo.register(HelmCliCommandType.class, 97033);
   }
 }

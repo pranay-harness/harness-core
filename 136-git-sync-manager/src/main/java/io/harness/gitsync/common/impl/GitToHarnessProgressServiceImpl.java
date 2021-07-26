@@ -42,6 +42,9 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
 
   @Override
   public GitToHarnessProgressDTO update(String uuid, Update update) {
+    // Ideally the JPA should have updated the lastUpdatedAt, but due to some limitations
+    // they don't update this field. https://github.com/spring-projects/spring-data-mongodb/issues/1797
+    update.set(GitToHarnessProgressKeys.lastUpdatedAt, System.currentTimeMillis());
     Criteria criteria = Criteria.where(GitToHarnessProgressKeys.uuid).is(uuid);
     return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgressRepository.findAndModify(criteria, update));
   }
@@ -111,19 +114,26 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   @Override
   public GitToHarnessProgressDTO initProgress(YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType,
       GitToHarnessProcessingStepType stepType, String commitId) {
-    GitToHarnessProgressDTO gitToHarnessProgress = GitToHarnessProgressDTO.builder()
-                                                       .accountIdentifier(yamlChangeSetDTO.getAccountId())
-                                                       .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
-                                                       .repoUrl(yamlChangeSetDTO.getRepoUrl())
-                                                       .branch(yamlChangeSetDTO.getBranch())
-                                                       .eventType(eventType)
-                                                       .stepType(stepType)
-                                                       .stepStatus(GitToHarnessProcessingStepStatus.TO_DO)
-                                                       .stepStartingTime(System.currentTimeMillis())
-                                                       .commitId(commitId)
-                                                       .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
-                                                       .build();
-    return save(gitToHarnessProgress);
+    // TODO change it to upsert query
+    GitToHarnessProgress gitToHarnessProgress =
+        gitToHarnessProgressRepository.findByYamlChangeSetId(yamlChangeSetDTO.getChangesetId());
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
+    }
+    GitToHarnessProgressDTO gitToHarnessProgressToBeSaved =
+        GitToHarnessProgressDTO.builder()
+            .accountIdentifier(yamlChangeSetDTO.getAccountId())
+            .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
+            .repoUrl(yamlChangeSetDTO.getRepoUrl())
+            .branch(yamlChangeSetDTO.getBranch())
+            .eventType(eventType)
+            .stepType(stepType)
+            .stepStatus(GitToHarnessProcessingStepStatus.TO_DO)
+            .stepStartingTime(System.currentTimeMillis())
+            .commitId(commitId)
+            .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
+            .build();
+    return save(gitToHarnessProgressToBeSaved);
   }
 
   @Override
@@ -135,14 +145,13 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   }
 
   @Override
-  public boolean isBranchSyncAlreadyInProgressOrSynced(String repoURL, String branch) {
+  public GitToHarnessProgressDTO getBranchSyncStatus(String repoURL, String branch) {
     GitToHarnessProgress gitToHarnessProgress =
         gitToHarnessProgressRepository.findByRepoUrlAndBranchAndEventType(repoURL, branch, BRANCH_SYNC);
-    if (gitToHarnessProgress == null) {
-      return false;
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
     }
-    GitToHarnessProgressStatus gitToHarnessProgressStatus = gitToHarnessProgress.getGitToHarnessProgressStatus();
-    return !gitToHarnessProgressStatus.isFailureStatus();
+    return null;
   }
 
   @Override
@@ -150,6 +159,15 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
       String repoURL, String commitId, YamlChangeSetEventType eventType) {
     GitToHarnessProgress gitToHarnessProgress =
         gitToHarnessProgressRepository.findByRepoUrlAndCommitIdAndEventType(repoURL, commitId, eventType);
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
+    }
+    return null;
+  }
+
+  @Override
+  public GitToHarnessProgressDTO getByYamlChangeSetId(String yamlChangeSetId) {
+    GitToHarnessProgress gitToHarnessProgress = gitToHarnessProgressRepository.findByYamlChangeSetId(yamlChangeSetId);
     if (gitToHarnessProgress != null) {
       return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
     }

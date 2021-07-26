@@ -43,6 +43,7 @@ public class GitToHarnessProgressMapper {
         .stepType(gitToHarnessProgress.getStepType())
         .yamlChangeSetId(gitToHarnessProgress.getYamlChangeSetId())
         .gitToHarnessProgressStatus(gitToHarnessProgress.getGitToHarnessProgressStatus())
+        .lastUpdatedAt(gitToHarnessProgress.getLastUpdatedAt())
         .build();
   }
 }

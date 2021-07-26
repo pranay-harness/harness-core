@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
@@ -19,6 +20,6 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "NodePoolIdKeys")
 public class NodePoolId {
   // nodepoolname can be null for some nodes
-  String nodepoolname;
-  @NonNull String clusterid;
+  @GraphQLNonNull String nodepoolname;
+  @GraphQLNonNull @NonNull String clusterid;
 }

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.pcf.CfServiceData;
 
 import software.wings.api.ExecutionDataValue;
 import software.wings.sm.InstanceStatusSummary;
@@ -28,7 +29,7 @@ public class PcfDeployStateExecutionData extends StateExecutionData implements D
   private String activityId;
   private String releaseName;
   private String commandName;
-  private List<PcfServiceData> instanceData;
+  private List<CfServiceData> instanceData;
   private String updateDetails;
   private SetupSweepingOutputPcf setupSweepingOutputPcf;
   private List<InstanceStatusSummary> newInstanceStatusSummaries;

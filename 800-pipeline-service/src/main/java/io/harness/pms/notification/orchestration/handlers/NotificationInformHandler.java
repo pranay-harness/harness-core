@@ -21,17 +21,17 @@ public class NotificationInformHandler implements AsyncInformObserver, Notificat
 
   @Override
   public void onSuccess(Ambiance ambiance) {
-    notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_SUCCESS, null);
+    notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_SUCCESS, null, null);
   }
 
   @Override
   public void onPause(Ambiance ambiance) {
-    notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_PAUSED, null);
+    notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_PAUSED, null, null);
   }
 
   @Override
   public void onFailure(Ambiance ambiance) {
-    notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_FAILED, null);
+    notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_FAILED, null, null);
   }
 
   @Override

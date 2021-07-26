@@ -61,4 +61,6 @@ public interface NodeExecutionService {
   List<NodeExecution> fetchNodeExecutionsByParentId(String nodeExecutionId, boolean oldRetry);
 
   boolean errorOutActiveNodes(String planExecutionId);
+
+  boolean removeTimeoutInstances(String nodeExecutionId);
 }

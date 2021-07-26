@@ -64,6 +64,7 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
           executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
       return ShellScriptTaskResponseNG.builder()
           .executeCommandResponse(executeCommandResponse)
+          .errorMessage(getErrorMessage(executeCommandResponse.getStatus()))
           .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
     } else {
@@ -75,6 +76,7 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
             executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
         return ShellScriptTaskResponseNG.builder()
             .executeCommandResponse(executeCommandResponse)
+            .errorMessage(getErrorMessage(executeCommandResponse.getStatus()))
             .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
             .build();
       } catch (Exception e) {
@@ -87,6 +89,22 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
       } finally {
         SshSessionManager.evictAndDisconnectCachedSession(taskParameters.getExecutionId(), taskParameters.getHost());
       }
+    }
+  }
+
+  private String getErrorMessage(CommandExecutionStatus status) {
+    switch (status) {
+      case QUEUED:
+        return "Shell Script execution queued.";
+      case FAILURE:
+        return "Shell Script execution failed. Please check execution logs.";
+      case RUNNING:
+        return "Shell Script execution running.";
+      case SKIPPED:
+        return "Shell Script execution skipped.";
+      case SUCCESS:
+      default:
+        return "";
     }
   }
 

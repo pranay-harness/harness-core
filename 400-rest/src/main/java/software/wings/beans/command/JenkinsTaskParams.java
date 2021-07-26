@@ -34,6 +34,8 @@ public class JenkinsTaskParams implements ExecutionCapabilityDemander {
   private long timeout;
   private long startTs;
   private String appId;
+  private List<String> artifactPaths;
+  private Map<String, String> metaData;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

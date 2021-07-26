@@ -2,6 +2,11 @@ package io.harness.accesscontrol.principals;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountService;
+import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountServiceImpl;
+import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountDao;
+import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountDaoImpl;
+import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountMorphiaRegistrar;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.usergroups.UserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupDao;
@@ -44,6 +49,10 @@ public class PrincipalModule extends AbstractModule {
     morphiaRegistrars.addBinding().toInstance(UserMorphiaRegistrar.class);
     bind(UserDao.class).to(UserDaoImpl.class);
     bind(UserService.class).to(UserServiceImpl.class);
+
+    morphiaRegistrars.addBinding().toInstance(ServiceAccountMorphiaRegistrar.class);
+    bind(ServiceAccountDao.class).to(ServiceAccountDaoImpl.class);
+    bind(ServiceAccountService.class).to(ServiceAccountServiceImpl.class);
 
     registerRequiredBindings();
   }

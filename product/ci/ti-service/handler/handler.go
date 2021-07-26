@@ -55,7 +55,7 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 		}
 
 		sr.Get("/info", HandleIntelligenceInfo(db, log))
-		sr.Post("/select", HandleSelect(tidb, db, log))
+		sr.Post("/select", HandleSelect(tidb, db, config, log))
 		sr.Get("/overview", HandleOverview(db, log))
 		sr.Post("/uploadcg", HandleUploadCg(tidb, db, log))
 		return sr
@@ -65,6 +65,14 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "OK")
 	})
+
+	// Readiness check
+	r.Mount("/ready/healthz", func() http.Handler {
+		sr := chi.NewRouter()
+		sr.Get("/", HandlePing(db, log))
+
+		return sr
+	}())
 
 	return r
 }

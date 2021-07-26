@@ -3,7 +3,6 @@ package io.harness.ff;
 import static io.harness.beans.FeatureName.CV_DEMO;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.beans.FeatureName.SEARCH_REQUEST;
-import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -12,6 +11,8 @@ import static io.harness.rule.OwnerRule.VIKAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.FeatureFlagTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -33,6 +34,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(HarnessTeam.PL)
 public class FeatureFlagServiceTest extends FeatureFlagTestBase {
   @Inject HPersistence persistence;
   @Inject FeatureFlagService featureFlagService;
@@ -203,34 +205,5 @@ public class FeatureFlagServiceTest extends FeatureFlagTestBase {
     FeatureFlag updatedFeatureFlag = featureFlagService.updateFeatureFlagForAccount(featureName.name(), "abcde", false);
     assertThat(updatedFeatureFlag).isNotNull();
     assertThat(updatedFeatureFlag.getAccountIds()).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = MEHUL)
-  @Category(UnitTests.class)
-  public void testRemoveAccountReferenceFromAllFeatureFlags() {
-    FeatureName featureName1 = CV_DEMO;
-    FeatureName featureName2 = SEARCH_REQUEST;
-    FeatureFlag featureFlag1 = FeatureFlag.builder()
-                                   .name(featureName1.name())
-                                   .enabled(false)
-                                   .accountIds(Sets.newHashSet("accountId", "abc", "def", "ghi"))
-                                   .obsolete(false)
-                                   .build();
-    FeatureFlag featureFlag2 = FeatureFlag.builder()
-                                   .name(featureName2.name())
-                                   .enabled(false)
-                                   .accountIds(Sets.newHashSet("accountId", "jkl", "mno", "pqr"))
-                                   .obsolete(false)
-                                   .build();
-    persistence.save(featureFlag1);
-    persistence.save(featureFlag2);
-    featureFlagService.removeAccountReferenceFromAllFeatureFlags("accountId");
-    FeatureFlag updatedFeatureFlag1 = featureFlagService.getFeatureFlag(featureName1).get();
-    assertThat(updatedFeatureFlag1).isNotNull();
-    assertThat(updatedFeatureFlag1.getAccountIds()).containsExactlyInAnyOrder("abc", "def", "ghi");
-    FeatureFlag updatedFeatureFlag2 = featureFlagService.getFeatureFlag(featureName2).get();
-    assertThat(updatedFeatureFlag2).isNotNull();
-    assertThat(updatedFeatureFlag2.getAccountIds()).containsExactlyInAnyOrder("jkl", "mno", "pqr");
   }
 }

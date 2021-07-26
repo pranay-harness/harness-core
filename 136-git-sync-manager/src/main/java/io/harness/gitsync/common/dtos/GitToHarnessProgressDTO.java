@@ -30,6 +30,7 @@ public class GitToHarnessProgressDTO {
   @NotNull private GitToHarnessProcessingStepStatus stepStatus;
   @NotNull private Long stepStartingTime;
   @NotNull private GitToHarnessProgressStatus gitToHarnessProgressStatus;
+  @NotNull private Long lastUpdatedAt;
   List<GitToHarnessFileProcessingRequest> gitFileChanges;
   List<GitToHarnessProcessingResponseDTO> processingResponse;
 }

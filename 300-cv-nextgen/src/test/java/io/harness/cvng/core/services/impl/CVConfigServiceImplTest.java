@@ -405,18 +405,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void setCollectionTaskId() {
-    CVConfig cvConfig = createCVConfig();
-    save(cvConfig);
-    assertThat(cvConfig.getFirstTaskQueued()).isNull();
-    cvConfigService.markFirstTaskCollected(cvConfig);
-    CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    assertThat(updated.getFirstTaskQueued()).isTrue();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
   public void testGetEnvToServicesList() {
     int numOfEnv = 3;
     for (int i = 0; i < numOfEnv; i++) {

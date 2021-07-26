@@ -1,5 +1,6 @@
 package io.harness.pms.inputset.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.getInvalidFQNsInInputSet;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
@@ -11,6 +12,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PIPELINE)
 public class MergeHelperTest extends CategoryTest {
   private String readFile(String filename) {
     ClassLoader classLoader = getClass().getClassLoader();
@@ -56,7 +59,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeInputSetIntoPipeline() throws IOException {
+  public void testMergeInputSetIntoPipeline() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
 
@@ -67,6 +70,25 @@ public class MergeHelperTest extends CategoryTest {
     String resYaml = res.replace("\"", "");
 
     String mergedYamlFile = "pipeline-extensive-merged.yml";
+    String mergedYaml = readFile(mergedYamlFile);
+
+    assertThat(resYaml).isEqualTo(mergedYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeInputSetIntoServiceDependenciesPipeline() {
+    String filename = "service-dependencies-pipeline.yaml";
+    String yaml = readFile(filename);
+
+    String inputSet = "service-dependencies-runtime-input.yaml";
+    String inputSetYaml = readFile(inputSet);
+
+    String res = mergeInputSetIntoPipeline(yaml, inputSetYaml, false);
+    String resYaml = res.replace("\"", "");
+
+    String mergedYamlFile = "service-dependencies-pipeline-merged.yaml";
     String mergedYaml = readFile(mergedYamlFile);
 
     assertThat(resYaml).isEqualTo(mergedYaml);
@@ -185,7 +207,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnYamlWithFailureStrategies() throws IOException {
+  public void testMergeOnYamlWithFailureStrategies() {
     String fullYamlFile = "failure-strategy.yaml";
     String fullYaml = readFile(fullYamlFile);
     String templateOfFull = createTemplateFromPipeline(fullYaml);
@@ -208,7 +230,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnCIPipelineYaml() throws IOException {
+  public void testMergeOnCIPipelineYaml() {
     String fullYamlFile = "ci-pipeline-with-reports.yaml";
     String fullYaml = readFile(fullYamlFile);
     String templateOfFull = createTemplateFromPipeline(fullYaml);
@@ -231,7 +253,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnPipelineWithEmptyListAndObject() throws IOException {
+  public void testMergeOnPipelineWithEmptyListAndObject() {
     String yamlFile = "empty-object-and-list-with-runtime.yaml";
     String yaml = readFile(yamlFile);
     String template = createTemplateFromPipeline(yaml);
@@ -242,6 +264,23 @@ public class MergeHelperTest extends CategoryTest {
     String mergedYaml = mergeInputSetIntoPipeline(yaml, runtimeInput, false);
 
     String fullYamlFile = "empty-object-and-list.yaml";
+    String fullYaml = readFile(fullYamlFile);
+    assertThat(mergedYaml).isEqualTo(fullYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeOnPipelineWithHelmCommandFlags() throws IOException {
+    String yamlFile = "helm-command-flags-pipeline.yaml";
+    String yaml = readFile(yamlFile);
+    String template = createTemplateFromPipeline(yaml);
+    assertThat(template).isNotNull();
+
+    String runtimeInputFile = "helm-command-flags-runtime-input.yaml";
+    String runtimeInput = readFile(runtimeInputFile);
+    String mergedYaml = mergeInputSetIntoPipeline(yaml, runtimeInput, false);
+    String fullYamlFile = "helm-command-flags-merged-pipeline.yaml";
     String fullYaml = readFile(fullYamlFile);
     assertThat(mergedYaml).isEqualTo(fullYaml);
   }

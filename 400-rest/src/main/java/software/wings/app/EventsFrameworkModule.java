@@ -3,7 +3,6 @@ package software.wings.app;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.eventsframework.EventsFrameworkConstants.DEFAULT_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_GROUP_NAME;
-import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_REDIS_URL;
 import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_TOPIC_NAME;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVITY;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE;
@@ -32,13 +31,15 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class EventsFrameworkModule extends AbstractModule {
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  private final boolean isEventsFrameworkAvailableInOnPrem;
 
   @Override
   protected void configure() {
     final RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
 
     final String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
-    if (DeployMode.isOnPrem(deployMode) || redisConfig.getRedisUrl().equals(DUMMY_REDIS_URL)) {
+    if ((DeployMode.isOnPrem(deployMode) && !isEventsFrameworkAvailableInOnPrem)
+        || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       bind(Producer.class).annotatedWith(Names.named(ENTITY_CRUD)).toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
       bind(Consumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))

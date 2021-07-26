@@ -6,13 +6,11 @@ option java_multiple_files = true;
 
 import "io/harness/pms/contracts/plan/trigger_info.proto";
 import "io/harness/pms/contracts/plan/principal_info.proto";
-import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 
 // next ID: 12
 message ExecutionMetadata {
   int32 runSequence = 1;
   ExecutionTriggerInfo triggerInfo = 2;
-  io.harness.pms.contracts.triggers.TriggerPayload triggerPayload = 3 [deprecated = true];
   string pipelineIdentifier = 4;
   string executionUuid = 6;
   ExecutionPrincipalInfo principalInfo = 8;

@@ -6,10 +6,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.SecretManagementException;
-import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptionType;
@@ -72,22 +68,17 @@ public class GcpSecretsManagerResourceV2 {
       @FormDataParam("name") String name, @FormDataParam("encryptionType") EncryptionType encryptionType,
       @FormDataParam("isDefault") boolean isDefault, @FormDataParam("usageRestrictions") String usageRestrictionsString,
       @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
-    if (featureFlagService.isEnabled(FeatureName.GCP_SECRETS_MANAGER, accountId)) {
-      UsageRestrictions usageRestrictions =
-          usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
-      BoundedInputStream boundedInputStream =
-          new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
-      char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials);
-      gcpSecretsManagerConfig.setDefault(isDefault);
-      gcpSecretsManagerConfig.setEncryptionType(encryptionType);
-      gcpSecretsManagerConfig.setUsageRestrictions(usageRestrictions);
-      return new RestResponse<>(
-          gcpSecretsManagerService.saveGcpSecretsManagerConfig(accountId, gcpSecretsManagerConfig, true));
-    }
-    throw new SecretManagementException(ErrorCode.GCP_SECRET_MANAGER_OPERATION_ERROR,
-        "Feature flag " + FeatureName.GCP_SECRETS_MANAGER + " is not enabled for account:" + accountId,
-        WingsException.USER_ADMIN);
+    UsageRestrictions usageRestrictions =
+        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
+    BoundedInputStream boundedInputStream =
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
+    char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
+    GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials);
+    gcpSecretsManagerConfig.setDefault(isDefault);
+    gcpSecretsManagerConfig.setEncryptionType(encryptionType);
+    gcpSecretsManagerConfig.setUsageRestrictions(usageRestrictions);
+    return new RestResponse<>(
+        gcpSecretsManagerService.saveGcpSecretsManagerConfig(accountId, gcpSecretsManagerConfig, true));
   }
 
   @POST
@@ -99,23 +90,18 @@ public class GcpSecretsManagerResourceV2 {
       @FormDataParam("encryptionType") EncryptionType encryptionType, @FormDataParam("isDefault") boolean isDefault,
       @FormDataParam("usageRestrictions") String usageRestrictionsString,
       @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
-    if (featureFlagService.isEnabled(FeatureName.GCP_SECRETS_MANAGER, accountId)) {
-      UsageRestrictions usageRestrictions =
-          usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
-      BoundedInputStream boundedInputStream =
-          new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
-      char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials);
-      gcpSecretsManagerConfig.setUuid(secretManagerId);
-      gcpSecretsManagerConfig.setDefault(isDefault);
-      gcpSecretsManagerConfig.setEncryptionType(encryptionType);
-      gcpSecretsManagerConfig.setUsageRestrictions(usageRestrictions);
-      return new RestResponse<>(
-          gcpSecretsManagerService.updateGcpSecretsManagerConfig(accountId, gcpSecretsManagerConfig));
-    }
-    throw new SecretManagementException(ErrorCode.GCP_SECRET_MANAGER_OPERATION_ERROR,
-        "Feature flag " + FeatureName.GCP_SECRETS_MANAGER + " is not enabled for account:" + accountId,
-        WingsException.USER_ADMIN);
+    UsageRestrictions usageRestrictions =
+        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
+    BoundedInputStream boundedInputStream =
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
+    char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
+    GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials);
+    gcpSecretsManagerConfig.setUuid(secretManagerId);
+    gcpSecretsManagerConfig.setDefault(isDefault);
+    gcpSecretsManagerConfig.setEncryptionType(encryptionType);
+    gcpSecretsManagerConfig.setUsageRestrictions(usageRestrictions);
+    return new RestResponse<>(
+        gcpSecretsManagerService.updateGcpSecretsManagerConfig(accountId, gcpSecretsManagerConfig));
   }
 
   @DELETE
@@ -123,13 +109,8 @@ public class GcpSecretsManagerResourceV2 {
   @ExceptionMetered
   public RestResponse<Boolean> deleteGcpSecretsManagerConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String secretsManagerConfigId) {
-    if (featureFlagService.isEnabled(FeatureName.GCP_SECRETS_MANAGER, accountId)) {
-      return new RestResponse<>(
-          gcpSecretsManagerService.deleteGcpSecretsManagerConfig(accountId, secretsManagerConfigId));
-    }
-    throw new SecretManagementException(ErrorCode.GCP_SECRET_MANAGER_OPERATION_ERROR,
-        "Feature flag " + FeatureName.GCP_SECRETS_MANAGER + " is not enabled for account:" + accountId,
-        WingsException.USER_ADMIN);
+    return new RestResponse<>(
+        gcpSecretsManagerService.deleteGcpSecretsManagerConfig(accountId, secretsManagerConfigId));
   }
 
   @GET
@@ -138,11 +119,6 @@ public class GcpSecretsManagerResourceV2 {
   @ExceptionMetered
   public RestResponse<List<String>> regions(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String secretsManagerConfigId) {
-    if (featureFlagService.isEnabled(FeatureName.GCP_SECRETS_MANAGER, accountId)) {
-      return new RestResponse<>(gcpSecretsManagerService.getAllAvailableRegions(accountId, secretsManagerConfigId));
-    }
-    throw new SecretManagementException(ErrorCode.GCP_SECRET_MANAGER_OPERATION_ERROR,
-        "Feature flag " + FeatureName.GCP_SECRETS_MANAGER + " is not enabled for account:" + accountId,
-        WingsException.USER_ADMIN);
+    return new RestResponse<>(gcpSecretsManagerService.getAllAvailableRegions(accountId, secretsManagerConfigId));
   }
 }

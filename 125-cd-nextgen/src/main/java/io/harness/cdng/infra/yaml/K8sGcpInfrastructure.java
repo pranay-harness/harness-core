@@ -8,6 +8,7 @@ import io.harness.cdng.infra.beans.K8sGcpInfraMapping;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -20,6 +21,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @Value
@@ -29,10 +31,27 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sGcpInfrastructure")
 @OwnedBy(HarnessTeam.CDP)
 public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> cluster;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> connectorRef;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> namespace;
+  @NotNull
+  @NotEmpty
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> releaseName;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> cluster;
 
   @Override
   public InfraMapping getInfraMapping() {
@@ -41,6 +60,16 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConn
         .namespace(namespace.getValue())
         .cluster(cluster.getValue())
         .build();
+  }
+
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  @Override
+  public String[] getInfrastructureKeyValues() {
+    return new String[] {connectorRef.getValue(), cluster.getValue(), namespace.getValue()};
   }
 
   @Override

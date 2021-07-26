@@ -4,6 +4,7 @@ import io.harness.ChangeHandler;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import com.google.inject.Inject;
@@ -26,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements ChangeHandler {
   private static final int MAX_RETRY_COUNT = 5;
   @Inject private TimeScaleDBService timeScaleDBService;
+  private static String SERVICE_STARTTS = "service_startts";
+  private static String SERVICE_ENDTS = "service_endts";
 
   @Override
   public boolean handleChange(ChangeEvent<?> changeEvent, String tableName, String[] fields) {
@@ -33,45 +36,54 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
     Map<String, List<String>> columnValueMapping = null;
     try {
       columnValueMapping = getColumnValueMapping(changeEvent, fields);
+      switch (changeEvent.getChangeType()) {
+        case INSERT:
+          if (columnValueMapping != null && columnValueMapping.size() > 0) {
+            List<String> idList = columnValueMapping.get("id");
+            Set<String> keyObject = columnValueMapping.keySet();
+            Map<String, String> newColumnValueMapping = new HashMap<>();
+            for (int i = 0; i < idList.size(); i++) {
+              for (String entry : keyObject) {
+                if (columnValueMapping.get(entry).size() > i) {
+                  newColumnValueMapping.put(entry, columnValueMapping.get(entry).get(i));
+                } else {
+                  newColumnValueMapping.put(entry, "");
+                }
+              }
+              if (newColumnValueMapping.containsKey(SERVICE_STARTTS)
+                  && !newColumnValueMapping.get(SERVICE_STARTTS).equals("")) {
+                dbOperation(insertSQL(tableName, newColumnValueMapping));
+              }
+            }
+          }
+          break;
+        case UPDATE:
+          if (columnValueMapping != null && columnValueMapping.size() > 0) {
+            List<String> idList = columnValueMapping.get("id");
+            Set<String> keyObject = columnValueMapping.keySet();
+            Map<String, String> newColumnValueMapping = new HashMap<>();
+            for (int i = 0; i < idList.size(); i++) {
+              for (String entry : keyObject) {
+                if (columnValueMapping.get(entry).size() > i) {
+                  newColumnValueMapping.put(entry, columnValueMapping.get(entry).get(i));
+                } else {
+                  newColumnValueMapping.put(entry, "");
+                }
+              }
+              if (newColumnValueMapping.containsKey(SERVICE_STARTTS)
+                  && !newColumnValueMapping.get(SERVICE_STARTTS).equals("")) {
+                dbOperation(
+                    updateSQL(tableName, newColumnValueMapping, Collections.singletonMap("id", changeEvent.getUuid())));
+              }
+              newColumnValueMapping.clear();
+            }
+          }
+          break;
+        default:
+          log.info("Change Event Type not Handled: {}", changeEvent.getChangeType());
+      }
     } catch (Exception e) {
       log.info(String.format("Not able to parse this event %s", changeEvent));
-    }
-    switch (changeEvent.getChangeType()) {
-      case INSERT:
-        if (columnValueMapping != null) {
-          List<String> idList = columnValueMapping.get("id");
-          Set<String> keyObject = columnValueMapping.keySet();
-          Map<String, String> newColumnValueMapping = new HashMap<>();
-          for (int i = 0; i < idList.size(); i++) {
-            for (String entry : keyObject) {
-              if (columnValueMapping.get(entry).size() > i) {
-                newColumnValueMapping.put(entry, columnValueMapping.get(entry).get(i));
-              }
-            }
-            dbOperation(insertSQL(tableName, newColumnValueMapping));
-            newColumnValueMapping.clear();
-          }
-        }
-        break;
-      case UPDATE:
-        if (columnValueMapping != null) {
-          List<String> idList = columnValueMapping.get("id");
-          Set<String> keyObject = columnValueMapping.keySet();
-          Map<String, String> newColumnValueMapping = new HashMap<>();
-          for (int i = 0; i < idList.size(); i++) {
-            for (String entry : keyObject) {
-              if (columnValueMapping.get(entry).size() > i) {
-                newColumnValueMapping.put(entry, columnValueMapping.get(entry).get(i));
-              }
-            }
-            dbOperation(
-                updateSQL(tableName, newColumnValueMapping, Collections.singletonMap("id", changeEvent.getUuid())));
-            newColumnValueMapping.clear();
-          }
-        }
-        break;
-      default:
-        log.info("Change Event Type not Handled: {}", changeEvent.getChangeType());
     }
     return true;
   }
@@ -91,28 +103,41 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
     }
 
     if (dbObject.get("accountId") != null) {
-      accountId = dbObject.get("accountId").toString();
+      accountId = dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.accountId).toString();
     }
     if (dbObject.get("orgIdentifier") != null) {
-      orgIdentifier = dbObject.get("orgIdentifier").toString();
+      orgIdentifier = dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.orgIdentifier).toString();
     }
     if (dbObject.get("projectIdentifier") != null) {
-      projectIdentifier = dbObject.get("projectIdentifier").toString();
+      projectIdentifier =
+          dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.projectIdentifier).toString();
     }
 
-    // if moduleInfo is null, not sure whether needs to be pushed to this table
-    if (dbObject.get("moduleInfo") == null) {
+    // if moduleInfo is null, no need to push data in this table
+    if (dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.moduleInfo) == null) {
       return null;
     }
 
-    if (dbObject.get("layoutNodeMap") == null) {
+    if (dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap) == null) {
       return null;
     }
 
-    Set<Map.Entry<String, Object>> layoutNodeMap = ((BasicDBObject) dbObject.get("layoutNodeMap")).entrySet();
+    Set<Map.Entry<String, Object>> layoutNodeMap =
+        ((BasicDBObject) dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap))
+            .entrySet();
 
     Iterator<Map.Entry<String, Object>> iterator = layoutNodeMap.iterator();
     while (iterator.hasNext()) {
+      Map.Entry<String, Object> iteratorObject = iterator.next();
+      String id = iteratorObject.getKey();
+      if (((BasicDBObject) iteratorObject.getValue())
+                  .get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.moduleInfo)
+              == null
+          || ((BasicDBObject) iteratorObject.getValue())
+                  .get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.startTs)
+              == null) {
+        continue;
+      }
       if (columnValueMapping.containsKey("pipeline_execution_summary_cd_id")) {
         columnValueMapping.get("pipeline_execution_summary_cd_id").add(changeEvent.getUuid());
       } else {
@@ -121,8 +146,6 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
         columnValueMapping.put("pipeline_execution_summary_cd_id", executionIdList);
       }
 
-      Map.Entry<String, Object> iteratorObject = iterator.next();
-      String id = iteratorObject.getKey();
       if (columnValueMapping.containsKey("id")) {
         columnValueMapping.get("id").add(id);
       } else {
@@ -157,6 +180,14 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
             columnValueMapping.put("service_startts", service_startts_list);
           }
         }
+      } else {
+        if (columnValueMapping.containsKey(SERVICE_STARTTS)) {
+          columnValueMapping.get(SERVICE_STARTTS).add("");
+        } else {
+          List<String> service_startts_list = new ArrayList<>();
+          service_startts_list.add("");
+          columnValueMapping.put(SERVICE_STARTTS, service_startts_list);
+        }
       }
       // service_endts
       if (((BasicDBObject) iteratorObject.getValue()).get("endTs") != null) {
@@ -170,6 +201,14 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
             service_endts_list.add(service_endts);
             columnValueMapping.put("service_endts", service_endts_list);
           }
+        }
+      } else {
+        if (columnValueMapping.containsKey(SERVICE_ENDTS)) {
+          columnValueMapping.get(SERVICE_ENDTS).add("");
+        } else {
+          List<String> service_startts_list = new ArrayList<>();
+          service_startts_list.add("");
+          columnValueMapping.put(SERVICE_ENDTS, service_startts_list);
         }
       }
       DBObject moduleInfoObject = (DBObject) ((DBObject) iteratorObject.getValue()).get("moduleInfo");
@@ -239,6 +278,7 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
             // artifact - tag
             if (serviceInfoObject.get("artifacts") != null) {
               DBObject artifacts = (DBObject) serviceInfoObject.get("artifacts");
+              // Add artifacts here
               if (artifacts.get("primary") != null) {
                 DBObject primary = (DBObject) artifacts.get("primary");
                 if (primary.get("tag") != null) {
@@ -249,6 +289,16 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
                     List<String> tagList = new ArrayList<>();
                     tagList.add(tag);
                     columnValueMapping.put("tag", tagList);
+                  }
+                }
+                if (primary.get("imagePath") != null) {
+                  String imagePath = primary.get("imagePath").toString();
+                  if (columnValueMapping.containsKey("artifact_image")) {
+                    columnValueMapping.get("artifact_image").add(imagePath);
+                  } else {
+                    List<String> tagList = new ArrayList<>();
+                    tagList.add(imagePath);
+                    columnValueMapping.put("artifact_image", tagList);
                   }
                 }
               }
@@ -305,10 +355,10 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
           }
 
         } else {
-          return null;
+          continue;
         }
       } else {
-        return columnValueMapping;
+        continue;
       }
     }
 
@@ -343,9 +393,13 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
      * Removing column that holds NULL value or Blank value...
      */
     if (!columnValueMappingForInsert.isEmpty()) {
-      for (Map.Entry<String, String> entry : columnValueMappingForInsert.entrySet()) {
-        if (entry.getValue() == null || entry.getValue().equals("")) {
-          columnValueMappingForInsert.remove(entry.getKey());
+      Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForInsert.entrySet();
+      Iterator<Map.Entry<String, String>> iterator = setOfEntries.iterator();
+      while (iterator.hasNext()) {
+        Map.Entry<String, String> entry = iterator.next();
+        String value = entry.getValue();
+        if (value == null || value.equals("")) {
+          iterator.remove();
         }
       }
     }
@@ -386,7 +440,7 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       updateQueryBuilder.append(insertSQL(tableName, columnValueMappingForSet));
     }
     // On conflict condition
-    updateQueryBuilder.append(" ON CONFLICT (id) Do ");
+    updateQueryBuilder.append(" ON CONFLICT (id,service_startts) Do ");
 
     if (!columnValueMappingForSet.isEmpty()) {
       Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForSet.entrySet();
@@ -405,9 +459,14 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
      * Removing column that holds NULL value or Blank value...
      */
     if (!columnValueMappingForCondition.isEmpty()) {
-      for (Map.Entry<String, String> entry : columnValueMappingForCondition.entrySet()) {
-        if (entry.getValue() == null || entry.getValue().equals("")) {
-          columnValueMappingForCondition.remove(entry.getKey());
+      Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForCondition.entrySet();
+      Iterator<Map.Entry<String, String>> iterator = setOfEntries.iterator();
+
+      while (iterator.hasNext()) {
+        Map.Entry<String, String> entry = iterator.next();
+        String value = entry.getValue();
+        if (value == null || value.equals("")) {
+          iterator.remove();
         }
       }
     }

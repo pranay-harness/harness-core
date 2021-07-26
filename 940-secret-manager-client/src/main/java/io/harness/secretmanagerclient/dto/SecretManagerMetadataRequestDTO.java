@@ -1,5 +1,9 @@
 package io.harness.secretmanagerclient.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.security.encryption.EncryptionType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -10,9 +14,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
-public class SecretManagerMetadataRequestDTO {
+public class SecretManagerMetadataRequestDTO implements DecryptableEntity {
   @NotNull private EncryptionType encryptionType;
   private String orgIdentifier;
   private String projectIdentifier;

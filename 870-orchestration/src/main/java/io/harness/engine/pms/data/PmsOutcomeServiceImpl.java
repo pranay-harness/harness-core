@@ -17,6 +17,7 @@ import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -34,7 +35,6 @@ import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
-import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -58,7 +58,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.OUTCOME), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? null : ((Document) value).toJson();
+    return value == null ? null : RecastOrchestrationUtils.toJson(value);
   }
 
   @Override
@@ -76,7 +76,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
-                                   .outcome(RecastOrchestrationUtils.toDocumentFromJson(value))
+                                   .outcomeValue(OrchestrationMap.parse(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
@@ -106,7 +106,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     }
 
     Map<String, String> outcomesMap = new LinkedHashMap<>();
-    outcomeInstances.forEach(oi -> outcomesMap.put(oi.getName(), oi.getOutcome().toJson()));
+    outcomeInstances.forEach(oi -> outcomesMap.put(oi.getName(), oi.getOutcomeJsonValue()));
     return outcomesMap;
   }
 
@@ -119,7 +119,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     Query query = query(where(OutcomeInstanceKeys.uuid).in(outcomeInstanceIds));
     Iterable<OutcomeInstance> outcomesInstances = mongoTemplate.find(query, OutcomeInstance.class);
     for (OutcomeInstance instance : outcomesInstances) {
-      outcomes.add(instance.getOutcome().toJson());
+      outcomes.add(instance.getOutcomeJsonValue());
     }
     return outcomes;
   }
@@ -129,7 +129,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     Query query = query(where(OutcomeInstanceKeys.uuid).is(outcomeInstanceId));
     Optional<OutcomeInstance> outcomeInstance =
         Optional.ofNullable(mongoTemplate.findOne(query, OutcomeInstance.class));
-    return outcomeInstance.map(oi -> oi.getOutcome().toJson()).orElse(null);
+    return outcomeInstance.map(OutcomeInstance::getOutcomeJsonValue).orElse(null);
   }
 
   private String resolveUsingRuntimeId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -149,7 +149,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (instance == null) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instance.getOutcome());
+    return instance.getOutcomeJsonValue();
   }
 
   private String resolveUsingProducerSetupId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -166,7 +166,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (EmptyPredicate.isEmpty(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
+    return instances.get(0).getOutcomeJsonValue();
   }
 
   @Override
@@ -184,7 +184,10 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     injector.injectMembers(evaluator);
     try {
       Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-      return OptionalOutcome.builder().found(true).outcome(value == null ? null : ((Document) value).toJson()).build();
+      return OptionalOutcome.builder()
+          .found(true)
+          .outcome(value == null ? null : RecastOrchestrationUtils.toJson(value))
+          .build();
     } catch (OutcomeException ignore) {
       return OptionalOutcome.builder().found(false).build();
     }

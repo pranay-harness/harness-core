@@ -2,16 +2,23 @@ package io.harness.gitsync.common.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -32,15 +39,45 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("yamlChangeSetNG")
 @TypeAlias("io.harness.gitsync.common.beans.yamlChangeSet")
 @Entity(value = "yamlChangeSetNG", noClassnameStored = true)
+@StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(DX)
 public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static final String MAX_RETRY_COUNT_EXCEEDED_CODE = "MAX_RETRY_COUNT_EXCEEDED";
   public static final String MAX_QUEUE_DURATION_EXCEEDED_CODE = "MAX_QUEUE_DURATION_EXCEEDED";
 
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_status_retryCount_index")
+                 .field(YamlChangeSetKeys.accountId)
+                 .field(YamlChangeSetKeys.status)
+                 .field(YamlChangeSetKeys.retryCount)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_createdAt_index")
+                 .field(YamlChangeSetKeys.accountId)
+                 .descSortField(YamlChangeSetKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_status_createdAt_index")
+                 .field(YamlChangeSetKeys.accountId)
+                 .field(YamlChangeSetKeys.status)
+                 .field(YamlChangeSetKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_queuekey_status_queuedOn_index")
+                 .field(YamlChangeSetKeys.accountId)
+                 .field(YamlChangeSetKeys.queueKey)
+                 .field(YamlChangeSetKeys.status)
+                 .descSortField(YamlChangeSetKeys.queuedOn)
+                 .build())
+        .build();
+  }
+
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   @Trimmed @NotEmpty @NotNull private String accountId;
   @FdIndex @NotNull private String status;
-  @Builder.Default private long queuedOn = System.currentTimeMillis();
+  private long queuedOn = System.currentTimeMillis();
   // todo: replace/modify with whatever comes from webhook svc
   private GitWebhookRequestAttributes gitWebhookRequestAttributes;
   @Default private Integer retryCount = 0;
@@ -49,7 +86,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   private String messageCode;
   private String repoUrl;
   private String branch;
-  @Default private Long cutOffTime = 0L;
+  private Long cutOffTime = 0L;
 
   // Any special event metadata which has to go back from queue as is can be pushed in this interface.
   EventMetadata eventMetadata;

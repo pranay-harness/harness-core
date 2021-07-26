@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
+import io.harness.common.NGExpressionUtils;
 import io.harness.encryption.SecretRefData;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validator.NGRegexValidatorConstants;
@@ -38,11 +39,15 @@ public class SecretNGVariable implements NGVariable {
 
   String description;
   boolean required;
-  @JsonProperty("default") String defaultValue;
+  @JsonProperty("default") @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) SecretRefData defaultValue;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Override
   public ParameterField<?> getCurrentValue() {
-    return value;
+    return ParameterField.isNull(value)
+            || (value.isExpression() && NGExpressionUtils.matchesInputSetPattern(value.getExpressionValue()))
+            || (!value.isExpression() && (value.getValue() == null || value.getValue().isNull()))
+        ? ParameterField.createValueField(defaultValue)
+        : value;
   }
 }

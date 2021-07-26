@@ -177,8 +177,10 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       for (HostSummary hostInfo : deploymentLogAnalysis.getHostSummaries()) {
         // In case multiple analysis for a test node (possible when using multiple providers), use the one with higher
         // risk
-        HostSummaryInfo hostSummaryInfo =
-            HostSummaryInfo.builder().hostName(hostInfo.getHost()).risk(hostInfo.getResultSummary().getRisk()).build();
+        HostSummaryInfo hostSummaryInfo = HostSummaryInfo.builder()
+                                              .hostName(hostInfo.getHost())
+                                              .risk(hostInfo.getResultSummary().getRiskLevel())
+                                              .build();
         if (!testMap.keySet().contains(hostInfo.getHost())
             || testMap.get(hostInfo.getHost()).getRisk().isLessThanEq(hostSummaryInfo.getRisk())) {
           testMap.put(hostInfo.getHost(), hostSummaryInfo);
@@ -213,12 +215,14 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       int anomalousLogClustersCount[] = new int[] {0};
       for (DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis : deploymentTimeSeriesAnalysisList) {
         deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().forEach(transactionMetricHostData
-            -> anomalousMetricsCount[0] += transactionMetricHostData.getHostData()
-                                               .stream()
-                                               .filter(hostData
-                                                   -> hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
-                                                       && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
-                                               .count());
+            -> anomalousMetricsCount[0] +=
+            transactionMetricHostData.getHostData()
+                .stream()
+                .filter(hostData
+                    -> hostData.getHostName().isPresent()
+                        && hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
+                        && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                .count());
       }
       for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalysisList) {
         if (deploymentLogAnalysis.getHostSummaries() != null) {
@@ -230,7 +234,7 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
                   hostSummary.getResultSummary()
                       .getTestClusterSummaries()
                       .stream()
-                      .filter(clusterSummary -> clusterSummary.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                      .filter(clusterSummary -> clusterSummary.getRiskLevel().isGreaterThanEq(Risk.MEDIUM))
                       .count());
         }
       }

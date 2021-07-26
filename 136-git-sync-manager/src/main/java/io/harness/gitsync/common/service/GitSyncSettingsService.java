@@ -12,4 +12,6 @@ public interface GitSyncSettingsService {
   Optional<GitSyncSettingsDTO> get(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   GitSyncSettingsDTO save(GitSyncSettingsDTO request);
+
+  GitSyncSettingsDTO update(GitSyncSettingsDTO request);
 }

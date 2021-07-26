@@ -149,7 +149,7 @@ public class JenkinsImpl implements Jenkins {
   public JobWithDetails getJobWithDetails(String jobname) {
     log.info("Retrieving job {}", jobname);
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           if (jobname == null) {
             sleep(ofSeconds(1L));
@@ -189,7 +189,7 @@ public class JenkinsImpl implements Jenkins {
   public Job getJob(String jobname, JenkinsConfig jenkinsConfig) {
     log.info("Retrieving job {}", jobname);
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           if (jobname == null) {
             sleep(ofSeconds(1L));
@@ -224,7 +224,7 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public List<JobDetails> getJobs(String parentJob) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           List<JobDetails> details = getJobDetails(parentJob);
           if (details != null) {
@@ -601,7 +601,7 @@ public class JenkinsImpl implements Jenkins {
 
     log.info("Retrieving environment variables for job {}", buildUrl);
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(30), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
         while (true) {
           String path = buildUrl;
           if (path.charAt(path.length() - 1) != '/') {

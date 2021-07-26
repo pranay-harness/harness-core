@@ -60,7 +60,7 @@ public class K8sCanaryBaseHandler {
     if (workloads.size() != 1) {
       if (workloads.isEmpty()) {
         logCallback.saveExecutionLog(
-            "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Canary workflow type.",
+            "\nNo workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.",
             ERROR, FAILURE);
       } else {
         logCallback.saveExecutionLog(

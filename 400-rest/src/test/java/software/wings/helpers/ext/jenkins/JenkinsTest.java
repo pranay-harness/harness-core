@@ -69,22 +69,23 @@ import org.junit.experimental.categories.Category;
  * The Class JenkinsTest.
  */
 public class JenkinsTest extends CategoryTest {
-  private static final String JENKINS_URL = "http://localhost:8089/";
+  private static final String JENKINS_URL = "http://localhost:%s/";
   private static final String USERNAME = "wingsbuild";
   private static final String PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2";
 
-  /**
-   * The Wire mock rule.
-   */
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(8089));
-  private Jenkins jenkins = new JenkinsImpl(JENKINS_URL, USERNAME, PASSWORD.toCharArray());
+  public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                          .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                          .disableRequestJournal()
+                                                          .port(8089));
 
-  public JenkinsTest() throws URISyntaxException {}
+  private String rootUrl;
+  private Jenkins jenkins;
 
   @Before
-  public void setupMocks() {
+  public void setup() throws URISyntaxException {
+    rootUrl = String.format(JENKINS_URL, wireMockRule.port());
+    jenkins = new JenkinsImpl(rootUrl, USERNAME, PASSWORD.toCharArray());
     LoggingInitializer.initializeLogging();
     on(jenkins).set("timeLimiter", new FakeTimeLimiter());
   }
@@ -258,7 +259,7 @@ public class JenkinsTest extends CategoryTest {
             tuple("63", "1bfdd1174d41e1f32cbfc287f18c3cc040ca90e3"));
 
     buildDetails.forEach(buildDetails1 -> {
-      String url = "http://localhost:8089/job/scheduler/" + buildDetails1.getNumber()
+      String url = rootUrl + "job/scheduler/" + buildDetails1.getNumber()
           + "/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
       assertThat(buildDetails1.getArtifactFileMetadataList()).isNotEmpty();
       assertThat(buildDetails1.getArtifactFileMetadataList())
@@ -280,7 +281,7 @@ public class JenkinsTest extends CategoryTest {
     assertThat(buildDetails.getArtifactFileMetadataList().get(0).getFileName())
         .isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
     assertThat(buildDetails.getArtifactFileMetadataList().get(0).getUrl())
-        .isEqualTo("http://localhost:8089/job/scheduler/67/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar");
+        .isEqualTo(rootUrl + "job/scheduler/67/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar");
   }
 
   @Test
@@ -303,7 +304,7 @@ public class JenkinsTest extends CategoryTest {
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(tuple("65", "39"), tuple("64", "39"), tuple("63", "39"), tuple("62", "39"));
     buildDetails.forEach(buildDetails1 -> {
-      String url = "http://localhost:8089/job/scheduler-svn/" + buildDetails1.getNumber()
+      String url = rootUrl + "job/scheduler-svn/" + buildDetails1.getNumber()
           + "/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
       assertThat(buildDetails1.getArtifactFileMetadataList()).isNotEmpty();
       assertThat(buildDetails1.getArtifactFileMetadataList())
@@ -318,7 +319,7 @@ public class JenkinsTest extends CategoryTest {
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(tuple("65", "39"), tuple("64", "39"), tuple("63", "39"), tuple("62", "39"), tuple("61", "39"));
     buildDetails.forEach(buildDetails1 -> {
-      String url = "http://localhost:8089/job/scheduler-svn/" + buildDetails1.getNumber()
+      String url = rootUrl + "job/scheduler-svn/" + buildDetails1.getNumber()
           + "/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
       assertThat(buildDetails1.getArtifactFileMetadataList()).isNotEmpty();
       assertThat(buildDetails1.getArtifactFileMetadataList())
@@ -343,8 +344,7 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldFetchBuildFromQueueItem() throws IOException {
-    Build build =
-        jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"), JenkinsConfig.builder().build());
+    Build build = jenkins.getBuild(new QueueReference(rootUrl + "queue/item/27287"), JenkinsConfig.builder().build());
     assertThat(build.getQueueId()).isEqualTo(27287);
   }
 
@@ -411,7 +411,7 @@ public class JenkinsTest extends CategoryTest {
     JenkinsTaskParams jenkinsTaskParams =
         JenkinsTaskParams.builder()
             .parameters(ImmutableMap.of("Test", "Test"))
-            .jenkinsConfig(JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build())
+            .jenkinsConfig(JenkinsConfig.builder().jenkinsUrl(rootUrl).useConnectorUrlForJobExecution(true).build())
             .build();
     QueueReference queueItem = jenkins.trigger("todolist_war", jenkinsTaskParams);
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
@@ -424,7 +424,7 @@ public class JenkinsTest extends CategoryTest {
     JenkinsTaskParams jenkinsTaskParams =
         JenkinsTaskParams.builder()
             .parameters(Collections.emptyMap())
-            .jenkinsConfig(JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build())
+            .jenkinsConfig(JenkinsConfig.builder().jenkinsUrl(rootUrl).useConnectorUrlForJobExecution(true).build())
             .build();
     QueueReference queueItem = jenkins.trigger("todolist_war", jenkinsTaskParams);
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
@@ -434,8 +434,8 @@ public class JenkinsTest extends CategoryTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void fetchBuildFromQueueItemWithConnectorURL() throws IOException {
-    Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"),
-        JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build());
+    Build build = jenkins.getBuild(new QueueReference(rootUrl + "queue/item/27287"),
+        JenkinsConfig.builder().jenkinsUrl(rootUrl).useConnectorUrlForJobExecution(true).build());
     assertThat(build.getNumber()).isEqualTo(21);
   }
 

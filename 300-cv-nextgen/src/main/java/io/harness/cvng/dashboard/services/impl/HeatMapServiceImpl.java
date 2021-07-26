@@ -1,15 +1,19 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.getHeatMapResolution;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
@@ -32,6 +36,7 @@ import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
@@ -56,7 +61,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.UpdateOptions;
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
@@ -401,6 +408,128 @@ public class HeatMapServiceImpl implements HeatMapService {
                 ? roundedDownTime.minus(HeatMapResolution.FIFTEEN_MINUTES.getResolution()).toEpochMilli()
                 : latestAnalysisTime.minus(heatMapResolution.getResolution()).toEpochMilli())
         .build();
+  }
+
+  @Override
+  public List<HistoricalTrend> getHistoricalTrend(String accountId, String orgIdentifier, String projectIdentifier,
+      List<Pair<String, String>> serviceEnvIdentifiers, int hours) {
+    Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
+        "Based on page size, the health score calculation should be done for less than 10 services");
+    int bucketsBasedOn30MinFrame = hours * 2;
+    int size = serviceEnvIdentifiers.size();
+    if (size == 0) {
+      return Collections.emptyList();
+    }
+    List<HistoricalTrend> historicalTrendList = new ArrayList<>();
+    Map<Pair<String, String>, Integer> serviceEnvironmentIndex = new HashMap<>();
+
+    for (int i = 0; i < size; i++) {
+      historicalTrendList.add(HistoricalTrend.builder().size(bucketsBasedOn30MinFrame).build());
+      serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
+    }
+
+    Instant endTime = roundDownToMinBoundary(clock.instant(), 30);
+    Instant startTime = endTime.minus(hours, ChronoUnit.HOURS);
+
+    HeatMapResolution heatMapResolution = HeatMapResolution.THIRTY_MINUTES;
+
+    Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                      .filter(HeatMapKeys.accountId, accountId)
+                                      .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
+                                      .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                      .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                      .field(HeatMapKeys.heatMapBucketEndTime)
+                                      .greaterThan(startTime);
+
+    Criteria criterias[] = new Criteria[size];
+
+    for (int i = 0; i < size; i++) {
+      criterias[i] = heatMapQuery.and(
+          heatMapQuery.criteria(HeatMapKeys.serviceIdentifier).equal(serviceEnvIdentifiers.get(i).getLeft()),
+          heatMapQuery.criteria(HeatMapKeys.envIdentifier).equal(serviceEnvIdentifiers.get(i).getRight()));
+    }
+    heatMapQuery.or(criterias);
+    List<HeatMap> heatMaps = heatMapQuery.asList();
+
+    heatMaps.forEach(heatMap -> {
+      SortedSet<HeatMapRisk> risks = new TreeSet<>(heatMap.getHeatMapRisks());
+      risks.forEach(heatMapRisk -> {
+        int index = getIndex(bucketsBasedOn30MinFrame, heatMapRisk.getEndTime(), endTime);
+        if (index >= 0 && index < bucketsBasedOn30MinFrame) {
+          int indexPosition =
+              serviceEnvironmentIndex.get(Pair.of(heatMap.getServiceIdentifier(), heatMap.getEnvIdentifier()));
+          RiskData riskData = historicalTrendList.get(indexPosition).getHealthScores().get(index);
+          if (riskData.getRiskValue() < heatMapRisk.getRiskValue()) {
+            riskData.setRiskValue(heatMapRisk.getRiskValue());
+            riskData.setRiskStatus(heatMapRisk.getRiskStatus());
+          }
+        }
+      });
+    });
+    return historicalTrendList;
+  }
+
+  private int getIndex(int bucketsBasedOn30MinFrame, Instant timeFrame, Instant endTime) {
+    return bucketsBasedOn30MinFrame - 1 - (int) ChronoUnit.MINUTES.between(timeFrame, endTime) / 30;
+  }
+
+  @Override
+  public List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
+      List<Pair<String, String>> serviceEnvIdentifiers) {
+    Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
+        "Based on page size, the health score calculation should be done for less than 10 services");
+    int size = serviceEnvIdentifiers.size();
+    if (size == 0) {
+      return Collections.emptyList();
+    }
+    List<RiskData> latestRiskScoreList = new ArrayList<>();
+    Map<Pair<String, String>, Integer> serviceEnvironmentIndex = new HashMap<>();
+
+    for (int i = 0; i < size; i++) {
+      latestRiskScoreList.add(RiskData.builder().riskStatus(Risk.NO_DATA).riskValue(-2).build());
+      serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
+    }
+
+    Instant endTime = roundDownTo5MinBoundary(clock.instant().minus(5, ChronoUnit.MINUTES));
+    Instant startTime = endTime.minus(5, ChronoUnit.MINUTES);
+
+    HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
+
+    Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                      .filter(HeatMapKeys.accountId, accountId)
+                                      .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
+                                      .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                      .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                      .field(HeatMapKeys.heatMapBucketStartTime)
+                                      .lessThanOrEq(startTime)
+                                      .field(HeatMapKeys.heatMapBucketEndTime)
+                                      .greaterThan(startTime);
+
+    Criteria criterias[] = new Criteria[size];
+
+    for (int i = 0; i < size; i++) {
+      criterias[i] = heatMapQuery.and(
+          heatMapQuery.criteria(HeatMapKeys.serviceIdentifier).equal(serviceEnvIdentifiers.get(i).getLeft()),
+          heatMapQuery.criteria(HeatMapKeys.envIdentifier).equal(serviceEnvIdentifiers.get(i).getRight()));
+    }
+    heatMapQuery.or(criterias);
+    List<HeatMap> heatMaps = heatMapQuery.asList();
+
+    heatMaps.forEach(heatMap -> {
+      List<HeatMapRisk> heatMapRisks = heatMap.getHeatMapRisks()
+                                           .stream()
+                                           .filter(heatMapRisk -> startTime.compareTo(heatMapRisk.getStartTime()) == 0)
+                                           .collect(Collectors.toList());
+      if (!heatMapRisks.isEmpty()) {
+        int index = serviceEnvironmentIndex.get(Pair.of(heatMap.getServiceIdentifier(), heatMap.getEnvIdentifier()));
+        if (latestRiskScoreList.get(index).getRiskValue() < heatMapRisks.get(0).getRiskValue()) {
+          latestRiskScoreList.get(index).setRiskValue(heatMapRisks.get(0).getRiskValue());
+          latestRiskScoreList.get(index).setRiskStatus(heatMapRisks.get(0).getRiskStatus());
+        }
+      }
+    });
+
+    return latestRiskScoreList;
   }
 
   private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String accountId, String orgIdentifier, String projectIdentifier,

@@ -12,4 +12,6 @@ public interface ScmOrchestratorService {
   //    processScmRequest( c->c.listFiles(params);
   <R> R processScmRequest(Function<ScmClientFacilitatorService, R> scmRequest, String projectIdentifier,
       String orgIdentifier, String accountId);
+
+  boolean isExecuteOnDelegate(String projectIdentifier, String orgIdentifier, String accountId);
 }

@@ -15,6 +15,7 @@ go_library(
         "//product/ci/ti-service/xxxxxxxxgo_default_library",
         "//product/ci/ti-service/tidb:go_default_library",
         "//product/ci/ti-service/tidb/mongodb:go_default_library",
+        "//product/ci/ti-service/types:go_default_library",
         "@com_github_joho_godotenv//:go_default_library",
         "@in_gopkg_alecthomas_kingpin_v2//:go_default_library",
         "@org_uber_go_zap//:go_default_library",

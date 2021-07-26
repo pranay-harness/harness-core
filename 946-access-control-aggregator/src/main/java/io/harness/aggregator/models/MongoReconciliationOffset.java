@@ -1,5 +1,6 @@
 package io.harness.aggregator.models;
 
+import static io.harness.aggregator.models.MongoReconciliationOffset.PRIMARY_COLLECTION;
 import static io.harness.ng.DbAliases.ACCESS_CONTROL;
 
 import io.harness.annotation.StoreIn;
@@ -20,12 +21,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(HarnessTeam.PL)
 @Data
 @Builder
-@Document("mongoReconciliationOffset")
-@Entity(value = "mongoReconciliationOffset", noClassnameStored = true)
+@Document(PRIMARY_COLLECTION)
+@Entity(value = PRIMARY_COLLECTION, noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "keys")
 @StoreIn(ACCESS_CONTROL)
-@TypeAlias("mongoReconciliationOffset")
+@TypeAlias(PRIMARY_COLLECTION)
 public class MongoReconciliationOffset implements PersistentEntity {
+  public static final String PRIMARY_COLLECTION = "mongoReconciliationOffset";
+  public static final String SECONDARY_COLLECTION = "mongoReconciliationOffset_secondary";
+
   @Id @org.mongodb.morphia.annotations.Id private String id;
   private byte[] key;
   private byte[] value;

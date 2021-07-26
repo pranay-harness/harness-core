@@ -35,7 +35,6 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.Pair;
-import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -206,12 +205,12 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
         "d",
         DummyD.builder().strVal("q").strVal2(ParameterField.createExpressionField(true, "<+a>", null, true)).build()));
 
-    Pair<Document, Object> pair = executeResolve(evaluator, dummyD);
+    Pair<Map<String, Object>, Object> pair = executeResolve(evaluator, dummyD);
     Object resp = pair.getRight();
     assertThat(resp).isNotNull();
-    assertThat(resp).isInstanceOf(Document.class);
+    assertThat(resp).isInstanceOf(Map.class);
 
-    DummyD out = RecastOrchestrationUtils.fromDocument(pair.getLeft(), DummyD.class);
+    DummyD out = RecastOrchestrationUtils.fromMap(pair.getLeft(), DummyD.class);
     assertThat(out).isNotNull();
 
     ParameterField<DummyD> innerPF = out.getDummyD();
@@ -234,15 +233,14 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     assertThat(inner.getStrVal2().getValue()).isEqualTo("str1");
   }
 
-  private Pair<Document, Object> executeResolve(EngineExpressionEvaluator evaluator, Object o) {
-    Document docOriginal = RecastOrchestrationUtils.toDocument(o);
+  private Pair<Map<String, Object>, Object> executeResolve(EngineExpressionEvaluator evaluator, Object o) {
+    Map<String, Object> docOriginal = RecastOrchestrationUtils.toMap(o);
     evaluator.resolve(docOriginal, false);
-    Document docCopy = copyDocument(docOriginal);
-    return Pair.of(docOriginal, NodeExecutionUtils.resolveObject(docCopy));
-  }
 
-  private Document copyDocument(Document doc) {
-    return Document.parse(doc.toJson());
+    // using recaster to obtain deep copy of the object
+    Map<String, Object> docCopy = RecastOrchestrationUtils.toMap(o);
+
+    return Pair.of(docOriginal, NodeExecutionUtils.resolveObject(docCopy));
   }
 
   @Value

@@ -42,6 +42,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -71,7 +72,7 @@ public class GcpHelperServiceTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testExecuteSyncTask() {
-    GcpRequest gcpRequest = GcpListBucketsRequest.builder().build();
+    GcpRequest gcpRequest = GcpListBucketsRequest.builder().delegateSelectors(Collections.emptySet()).build();
     GcpListBucketsResponse response =
         GcpListBucketsResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
@@ -94,7 +95,7 @@ public class GcpHelperServiceTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testExecuteSyncTaskFailed() {
-    GcpRequest gcpRequest = GcpListBucketsRequest.builder().build();
+    GcpRequest gcpRequest = GcpListBucketsRequest.builder().delegateSelectors(Collections.emptySet()).build();
     GcpListBucketsResponse response =
         GcpListBucketsResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -113,7 +114,7 @@ public class GcpHelperServiceTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testExecuteSyncTaskDelegateFailed() {
-    GcpRequest gcpRequest = GcpListBucketsRequest.builder().build();
+    GcpRequest gcpRequest = GcpListBucketsRequest.builder().delegateSelectors(Collections.emptySet()).build();
     ErrorNotifyResponseData responseData =
         ErrorNotifyResponseData.builder().errorMessage("Something went wrong").build();
 

@@ -11,6 +11,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -25,8 +26,14 @@ public class UserInfo {
   String email;
   String token;
   String defaultAccountId;
+  String intent;
   List<GatewayAccountRequestDTO> accounts;
   boolean admin;
   boolean twoFactorAuthenticationEnabled;
   boolean emailVerified;
+  @Getter(value = AccessLevel.PRIVATE) boolean locked;
+
+  public boolean isLocked() {
+    return this.locked;
+  }
 }

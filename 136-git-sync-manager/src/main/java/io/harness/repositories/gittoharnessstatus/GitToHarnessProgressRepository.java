@@ -17,4 +17,6 @@ public interface GitToHarnessProgressRepository
 
   GitToHarnessProgress findByRepoUrlAndBranchAndEventType(
       String repoURL, String branch, YamlChangeSetEventType eventType);
+
+  GitToHarnessProgress findByYamlChangeSetId(String yamlChangeSetId);
 }

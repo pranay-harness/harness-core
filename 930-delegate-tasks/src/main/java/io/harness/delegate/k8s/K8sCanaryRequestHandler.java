@@ -40,7 +40,6 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
-import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -130,7 +129,6 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
       k8sCanaryBaseHandler.wrapUp(k8sCanaryHandlerConfig.getClient(), k8sDelegateTaskParams, wrapUpLogCallback);
 
       ReleaseHistory releaseHistory = k8sCanaryHandlerConfig.getReleaseHistory();
-      releaseHistory.setReleaseStatus(Release.Status.Succeeded);
       k8sTaskHelperBase.saveReleaseHistoryInConfigMap(k8sCanaryHandlerConfig.getKubernetesConfig(),
           k8sCanaryDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
       wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
@@ -157,6 +155,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
   boolean init(K8sCanaryDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback)
       throws IOException {
     logCallback.saveExecutionLog("Initializing..\n");
+    logCallback.saveExecutionLog(color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
     k8sCanaryHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig()));
     k8sCanaryHandlerConfig.setClient(

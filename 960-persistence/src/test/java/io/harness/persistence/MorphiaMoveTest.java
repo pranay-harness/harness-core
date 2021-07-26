@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PersistenceTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.HObjectFactory;
 import io.harness.mongo.MorphiaMove;
@@ -13,17 +15,11 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import lombok.Builder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.ObjectFactory;
 
-@Builder
-class HackMorphiaClass implements MorphiaInterface {
-  private String test;
-  private String className;
-}
-
+@OwnedBy(HarnessTeam.PL)
 public class MorphiaMoveTest extends PersistenceTestBase {
   @Inject private ObjectFactory objectFactory;
   @Inject private HPersistence persistence;

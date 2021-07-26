@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDP)
 public interface PcfConstants {
+  char PATH_DELIMITER = '/';
+
   String REPOSITORY_DIR_PATH = "./repository";
   String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
   String PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX = "PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX: ";
@@ -94,6 +96,8 @@ public interface PcfConstants {
   String HARNESS__STATUS__IDENTIFIER = "HARNESS__STATUS__IDENTIFIER";
   String HARNESS__ACTIVE__IDENTIFIER = "ACTIVE";
   String HARNESS__STAGE__IDENTIFIER = "STAGE";
+
+  String HARNESS__INACTIVE__IDENTIFIER = "INACTIVE";
 
   String PCF_CONNECTIVITY_SUCCESS = "SUCCESS";
 }

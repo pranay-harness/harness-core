@@ -2,6 +2,8 @@ package io.harness.cvng.cdng.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
@@ -17,5 +19,10 @@ public class BlueGreenVerificationJobSpec extends BlueGreenCanaryVerificationJob
   @Override
   public String getType() {
     return "Bluegreen";
+  }
+
+  @Override
+  protected VerificationJobBuilder verificationJobBuilder() {
+    return addFieldValues(BlueGreenVerificationJob.builder());
   }
 }

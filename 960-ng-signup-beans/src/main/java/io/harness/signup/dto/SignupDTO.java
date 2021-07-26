@@ -19,4 +19,5 @@ public class SignupDTO {
   String email;
   String password;
   UtmInfo utmInfo;
+  String intent;
 }

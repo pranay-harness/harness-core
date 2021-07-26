@@ -232,7 +232,15 @@ public class DatadogState extends AbstractMetricAnalysisState {
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
             .build();
     waitNotifyEngine.waitForAllOn(ORCHESTRATION,
-        DataCollectionCallback.builder().appId(context.getAppId()).executionData(executionData).build(), waitId);
+        DataCollectionCallback.builder()
+            .appId(context.getAppId())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .dataCollectionStartTime(dataCollectionStartTimeStamp)
+            .dataCollectionEndTime(
+                dataCollectionStartTimeStamp + TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration())))
+            .executionData(executionData)
+            .build(),
+        waitId);
 
     return delegateService.queueTask(delegateTask);
   }

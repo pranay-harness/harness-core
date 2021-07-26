@@ -26,7 +26,7 @@ public class GitSyncUtils {
       String rootNode = jsonNode.fields().next().getKey();
       return EntityType.getEntityTypeFromYamlRootName(rootNode);
     } catch (IOException | NoSuchElementException e) {
-      log.info("Could not process the yaml {}", yaml);
+      log.error("Could not process the yaml {}", yaml, e);
       throw new InvalidRequestException("Unable to parse yaml", e);
     }
   }

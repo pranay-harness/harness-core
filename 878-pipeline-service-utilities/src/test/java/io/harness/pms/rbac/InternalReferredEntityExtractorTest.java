@@ -10,8 +10,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntityReferencesDTO;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.rule.Owner;
-import io.harness.utils.RestCallToNGManagerClientUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({RestCallToNGManagerClientUtils.class})
+@PrepareForTest({NGRestUtils.class})
 @OwnedBy(HarnessTeam.PIPELINE)
 public class InternalReferredEntityExtractorTest {
   private static final String ACCOUNT_ID = "accountId";
@@ -53,8 +53,8 @@ public class InternalReferredEntityExtractorTest {
     String dummy = "dummy";
     List<EntityDetail> entityDetailList = new ArrayList<>();
 
-    PowerMockito.mockStatic(RestCallToNGManagerClientUtils.class);
-    Mockito.when(RestCallToNGManagerClientUtils.execute(Mockito.any()))
+    PowerMockito.mockStatic(NGRestUtils.class);
+    Mockito.when(NGRestUtils.getResponseWithRetry(Mockito.any(), Mockito.any()))
         .thenReturn(EntityReferencesDTO.builder().entitySetupUsageBatchList(new ArrayList<>()).build());
 
     for (int i = 0; i < 20; i++) {

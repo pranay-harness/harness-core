@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -45,7 +46,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;

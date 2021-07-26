@@ -31,6 +31,7 @@ import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,6 +61,8 @@ public class AccessRequestServiceImpl implements AccessRequestService {
           String.format("accountId: %s is not a restricted account and doesn't not require Access Request",
               accessRequestDTO.getAccountId()));
     }
+    Set<String> accessRequestMemberIds = getMemberIds(accessRequestDTO);
+    verifyAccessRequestMembers(accessRequestMemberIds);
 
     if (accessRequestDTO.getHours() != null) {
       accessRequestDTO.setAccessStartAt(Instant.now().toEpochMilli());
@@ -80,15 +83,19 @@ public class AccessRequestServiceImpl implements AccessRequestService {
                                       .accessEndAt(accessRequestDTO.getAccessEndAt())
                                       .accessActive(true)
                                       .build();
-    if (isEmpty(accessRequestDTO.getEmailIds()) && isNotEmpty(accessRequestDTO.getHarnessUserGroupId())) {
+    if (isNotEmpty(accessRequestDTO.getHarnessUserGroupId())) {
       HarnessUserGroup harnessUserGroup = harnessUserGroupService.get(accessRequestDTO.getHarnessUserGroupId());
       notNullCheck("Invalid HarnessUserGroup with harnessUserGroupId: " + accessRequestDTO.getHarnessUserGroupId(),
           harnessUserGroup);
       accessRequest.setHarnessUserGroupId(accessRequestDTO.getHarnessUserGroupId());
       accessRequest.setAccessType(AccessRequest.AccessType.GROUP_ACCESS);
-    } else {
-      accessRequest.setMemberIds(getMemberIds(accessRequestDTO));
+    } else if (isNotEmpty(accessRequestDTO.getEmailIds())) {
+      accessRequest.setMemberIds(accessRequestMemberIds);
       accessRequest.setAccessType(AccessRequest.AccessType.MEMBER_ACCESS);
+    } else {
+      throw new InvalidAccessRequestException(
+          String.format("Cannot create access request for account : %s without members specified for it",
+              accessRequestDTO.getAccountId()));
     }
     String uuid = wingsPersistence.save(accessRequest);
     auditServiceHelper.reportForAuditingUsingAccountId(accessRequest.getAccountId(), null, accessRequest, Type.CREATE);
@@ -198,7 +205,7 @@ public class AccessRequestServiceImpl implements AccessRequestService {
 
   private Set<String> getMemberIds(AccessRequestDTO accessRequestDTO) {
     if (isEmpty(accessRequestDTO.getEmailIds())) {
-      throw new InvalidArgumentsException("No Email Ids specified");
+      return Collections.EMPTY_SET;
     }
 
     // this is for the case of workflow, with multiple emailIds.
@@ -244,5 +251,17 @@ public class AccessRequestServiceImpl implements AccessRequestService {
       }
     });
     return emailIds;
+  }
+
+  private void verifyAccessRequestMembers(Set<String> accessRequestMemberIds) {
+    if (isNotEmpty(accessRequestMemberIds)) {
+      // check all users are part of HarnessSupport User Group
+      boolean invalidMemberInAccessRequest =
+          accessRequestMemberIds.stream().anyMatch(memberId -> !harnessUserGroupService.isHarnessSupportUser(memberId));
+      if (invalidMemberInAccessRequest) {
+        throw new InvalidAccessRequestException(
+            "One of the EmailIds provided in Access request cannot be granted access to your account, Please contact Harness Support to know more");
+      }
+    }
   }
 }

@@ -1,6 +1,8 @@
 package io.harness.ci.integrationstage;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ARGS;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ENTRYPOINT;
@@ -14,6 +16,8 @@ import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
+import io.harness.beans.quantity.unit.DecimalQuantityUnit;
+import io.harness.beans.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -24,8 +28,6 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.stateutils.buildstate.providers.ServiceContainerUtils;
 import io.harness.util.PortFinder;
 import io.harness.yaml.extended.ci.container.ContainerResource;
-import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,6 +78,9 @@ public class CIServiceBuilder {
     String connectorRef = RunTimeInputHandler.resolveStringParameter(
         "connectorRef", "serviceDependency", identifier, service.getConnectorRef(), true);
 
+    boolean privileged = resolveBooleanParameter(service.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(service.getRunAsUser(), null);
+
     List<String> args =
         RunTimeInputHandler.resolveListParameter("args", "serviceDependency", identifier, service.getArgs(), false);
 
@@ -110,6 +115,9 @@ public class CIServiceBuilder {
         .containerType(CIContainerType.SERVICE)
         .stepIdentifier(service.getIdentifier())
         .stepName(service.getName())
+        .privileged(privileged)
+        .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(service.getImagePullPolicy()))
         .build();
   }
 

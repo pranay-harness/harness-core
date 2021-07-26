@@ -52,4 +52,6 @@ if [[ "" != "$GCP_PROJECT_ID" ]]; then
   yq write -i $CONFIG_FILE gcp-project-id "$GCP_PROJECT_ID"
 fi
 
-
+if [[ "" != "$NG_HARNESS_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE ng-harness.uri  "$NG_HARNESS_MONGO_URI"
+fi

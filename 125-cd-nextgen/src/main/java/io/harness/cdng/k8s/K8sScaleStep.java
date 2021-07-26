@@ -14,10 +14,11 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -30,16 +31,23 @@ import com.google.inject.Inject;
 import java.util.Optional;
 
 @OwnedBy(CDP)
-public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();
+public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.K8S_SCALE.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   public static final String K8S_SCALE_COMMAND_NAME = "Scale";
   @Inject private OutcomeService outcomeService;
   @Inject private K8sStepHelper k8sStepHelper;
 
   @Override
-  public TaskRequest obtainTask(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // Noop
+  }
+
+  @Override
+  public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
@@ -53,7 +61,7 @@ public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> 
     K8sScaleRequest request =
         K8sScaleRequest.builder()
             .commandName(K8S_SCALE_COMMAND_NAME)
-            .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+            .releaseName(k8sStepHelper.getReleaseName(ambiance, infrastructure))
             .instances(instances)
             .instanceUnitType(scaleStepParameter.getInstanceSelection().getType().getInstanceUnitType())
             .workload(scaleStepParameter.getWorkload().getValue())
@@ -72,8 +80,9 @@ public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> 
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sDeployResponse> responseSupplier)
+      throws Exception {
     K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
     // do we need to include the newPods with instance details + summaries
     StepResponseBuilder stepResponseBuilder =

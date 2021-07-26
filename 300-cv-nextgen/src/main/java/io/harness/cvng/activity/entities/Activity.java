@@ -9,6 +9,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -91,7 +92,8 @@ public abstract class Activity
   private String activitySourceId;
 
   private String activityName;
-  private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
+  @Deprecated private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
+  private List<VerificationJob> verificationJobs;
   @NotNull private Instant activityStartTime;
   private Instant activityEndTime;
   @FdIndex private List<String> verificationJobInstanceIds;
@@ -124,6 +126,7 @@ public abstract class Activity
     setActivityStartTime(Instant.ofEpochMilli(activityDTO.getActivityStartTime()));
     setActivityEndTime(
         activityDTO.getActivityEndTime() != null ? Instant.ofEpochMilli(activityDTO.getActivityEndTime()) : null);
+    setType(activityDTO.getType());
     setTags(activityDTO.getTags());
   }
 
@@ -135,6 +138,7 @@ public abstract class Activity
     Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(ActivityKeys.orgIdentifier));
     Preconditions.checkNotNull(activityName, generateErrorMessageFromParam(ActivityKeys.activityName));
     Preconditions.checkNotNull(activityStartTime, generateErrorMessageFromParam(ActivityKeys.activityStartTime));
+    Preconditions.checkNotNull(type, generateErrorMessageFromParam(ActivityKeys.type));
     this.validateActivityParams();
   }
 

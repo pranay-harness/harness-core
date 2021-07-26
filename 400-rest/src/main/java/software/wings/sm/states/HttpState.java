@@ -387,6 +387,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     }
 
     boolean isCertValidationRequired = accountService.isCertValidationRequired(context.getAccountId());
+    boolean useHeaderForCapabilityCheck =
+        featureFlagService.isEnabled(FeatureName.HTTP_HEADERS_CAPABILITY_CHECK, context.getAccountId());
 
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .method(finalMethod)
@@ -396,6 +398,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                 .socketTimeoutMillis(taskSocketTimeout)
                                                 .useProxy(useProxy)
                                                 .isCertValidationRequired(isCertValidationRequired)
+                                                .useHeaderForCapabilityCheck(useHeaderForCapabilityCheck)
                                                 .build();
 
     HttpStateExecutionDataBuilder executionDataBuilder =

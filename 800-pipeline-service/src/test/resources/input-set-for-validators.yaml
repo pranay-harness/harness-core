@@ -24,7 +24,7 @@ inputSet:
                           store:
                             type: Git
                             spec:
-                              connectorRef: acc.gitConnDev
+                              connectorRef: account.gitConnDev
             infrastructure:
               environment:
                 identifier: stagingInfra

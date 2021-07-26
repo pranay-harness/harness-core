@@ -19,6 +19,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.execution.ChainDetails;
+import io.harness.pms.sdk.core.execution.ChainDetails.ChainDetailsBuilder;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
@@ -56,20 +57,20 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
   protected Map<String, String> extractMetricContext(NodeResumeEvent message) {
     return ImmutableMap.<String, String>builder()
         .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
         .build();
   }
 
   @Override
   protected String getMetricPrefix(NodeResumeEvent message) {
-    return "progress_event";
+    return "resume_event";
   }
 
   @Override
   @NonNull
   protected Map<String, String> extraLogProperties(NodeResumeEvent event) {
-    return ImmutableMap.<String, String>builder().put("eventType", NodeExecutionEventType.PROGRESS.name()).build();
+    return ImmutableMap.<String, String>builder().put("eventType", NodeExecutionEventType.RESUME.name()).build();
   }
 
   @Override
@@ -90,6 +91,7 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
     Preconditions.checkArgument(isNotBlank(nodeExecutionId), "nodeExecutionId is null or empty");
     try {
       if (event.getAsyncError()) {
+        log.info("Async Error for the Event Sending Error Response");
         ErrorResponseData errorResponseData = (ErrorResponseData) response.values().iterator().next();
         StepResponseProto stepResponse =
             StepResponseProto.newBuilder()
@@ -100,20 +102,22 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
                                     .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
-        sdkNodeExecutionService.handleStepResponse(nodeExecutionId, stepResponse);
+        sdkNodeExecutionService.handleStepResponse(
+            event.getAmbiance().getPlanExecutionId(), nodeExecutionId, stepResponse);
         return;
       }
 
       processor.handleResume(buildResumePackage(event, response));
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeExecutionId, NodeExecutionUtils.constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(
+          event.getAmbiance().getPlanExecutionId(), nodeExecutionId, NodeExecutionUtils.constructStepResponse(ex));
     }
   }
 
   private ResumePackage buildResumePackage(NodeResumeEvent event, Map<String, ResponseData> response) {
     StepParameters stepParameters =
-        RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+        RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
 
     ResumePackageBuilder builder =
         ResumePackage.builder()
@@ -122,12 +126,15 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
             .stepInputPackage(engineObtainmentHelper.obtainInputPackage(event.getAmbiance(), event.getRefObjectsList()))
             .responseDataMap(response);
 
+    // TODO (prashant) : Change ChildChainResponse Pass through data handling
     if (event.hasChainDetails()) {
-      builder.chainDetails(ChainDetails.builder()
-                               .shouldEnd(calculateIsEnd(event, response))
-                               .passThroughData((PassThroughData) kryoSerializer.asObject(
-                                   event.getChainDetails().getPassThroughData().toByteArray()))
-                               .build());
+      io.harness.pms.contracts.resume.ChainDetails chainDetailsProto = event.getChainDetails();
+      ChainDetailsBuilder chainDetailsBuilder = ChainDetails.builder().shouldEnd(calculateIsEnd(event, response));
+      if (EmptyPredicate.isNotEmpty(chainDetailsProto.getPassThroughData())) {
+        chainDetailsBuilder.passThroughData(
+            (PassThroughData) kryoSerializer.asObject(chainDetailsProto.getPassThroughData().toByteArray()));
+      }
+      builder.chainDetails(chainDetailsBuilder.build());
     }
     return builder.build();
   }

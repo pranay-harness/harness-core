@@ -30,8 +30,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.S3)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("s3Store")
-public class S3StoreConfig
-    implements io.harness.cdng.manifest.yaml.storeConfig.StoreConfig, Visitable, WithConnectorRef {
+public class S3StoreConfig implements StoreConfig, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> bucketName;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> region;
@@ -43,7 +42,11 @@ public class S3StoreConfig
   }
 
   @Override
-  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig cloneInternal() {
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  public StoreConfig cloneInternal() {
     return S3StoreConfig.builder()
         .connectorRef(connectorRef)
         .bucketName(bucketName)
@@ -53,7 +56,7 @@ public class S3StoreConfig
   }
 
   @Override
-  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     S3StoreConfig s3StoreConfig = (S3StoreConfig) overrideConfig;
     S3StoreConfig resultantS3Store = this;
     if (!ParameterField.isNull(s3StoreConfig.getConnectorRef())) {

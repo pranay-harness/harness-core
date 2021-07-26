@@ -1,10 +1,12 @@
 package io.harness.pms.merger.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.yaml.validation.InputSetValidatorType.ALLOWED_VALUES;
 import static io.harness.pms.yaml.validation.InputSetValidatorType.REGEX;
 
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -28,11 +30,16 @@ import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 @Slf4j
 public class MergeHelper {
-  public String createTemplateFromPipeline(String pipelineYaml) throws IOException {
-    return createTemplateFromPipeline(pipelineYaml, true);
+  public String createTemplateFromPipeline(String pipelineYaml) {
+    try {
+      return createTemplateFromPipeline(pipelineYaml, true);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not convert pipeline to template");
+    }
   }
 
   public String removeRuntimeInputFromYaml(String runtimeInputYaml) throws IOException {
@@ -56,22 +63,35 @@ public class MergeHelper {
 
   public Map<FQN, String> getInvalidFQNsInInputSet(String templateYaml, String inputSetPipelineCompYaml)
       throws IOException {
-    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
-    PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
-    Set<FQN> inputSetFQNs = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
-
     Map<FQN, String> errorMap = new LinkedHashMap<>();
+    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
+    Set<FQN> inputSetFQNs = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
+    if (EmptyPredicate.isEmpty(templateYaml)) {
+      inputSetFQNs.forEach(fqn -> errorMap.put(fqn, "Pipeline no longer contains any runtime input"));
+      return errorMap;
+    }
+    PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
+
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetFQNs.contains(key)) {
-        String error = validateStaticValues(
-            templateConfig.getFqnToValueMap().get(key), inputSetConfig.getFqnToValueMap().get(key));
-        if (EmptyPredicate.isNotEmpty(error)) {
-          errorMap.put(key, error);
+        Object templateValue = templateConfig.getFqnToValueMap().get(key);
+        Object value = inputSetConfig.getFqnToValueMap().get(key);
+        if (key.isType() || key.isIdentifierOrVariableName()) {
+          if (!value.toString().equals(templateValue.toString())) {
+            errorMap.put(key,
+                "The value for " + key.getExpressionFqn() + " is " + templateValue.toString()
+                    + "in the pipeline yaml, but the input set has it as " + value.toString());
+          }
+        } else {
+          String error = validateStaticValues(templateValue, value);
+          if (EmptyPredicate.isNotEmpty(error)) {
+            errorMap.put(key, error);
+          }
         }
+
         inputSetFQNs.remove(key);
       } else {
-        Map<FQN, Object> subMap =
-            io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
+        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetConfig.getFqnToValueMap(), key);
         subMap.keySet().forEach(inputSetFQNs::remove);
       }
     });
@@ -117,8 +137,12 @@ public class MergeHelper {
   }
 
   public String mergeInputSetIntoPipeline(
-      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) throws IOException {
-    return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
+    try {
+      return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
+    }
   }
 
   private String mergeInputSetIntoPipeline(String pipelineYaml, String inputSetPipelineCompYaml,
@@ -146,10 +170,9 @@ public class MergeHelper {
         }
         res.put(key, value);
       } else {
-        Map<FQN, Object> subMap =
-            io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
+        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetConfig.getFqnToValueMap(), key);
         if (!subMap.isEmpty()) {
-          res.put(key, FQNUtils.getObject(inputSetConfig, key));
+          res.put(key, YamlSubMapExtractor.getNodeForFQN(inputSetConfig, key));
         }
       }
     });

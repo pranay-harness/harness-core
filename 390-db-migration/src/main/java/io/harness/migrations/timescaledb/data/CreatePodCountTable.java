@@ -1,6 +1,5 @@
 package io.harness.migrations.timescaledb.data;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.timescaledb.AbstractTimeScaleDBMigration;
 
 public class CreatePodCountTable extends AbstractTimeScaleDBMigration {

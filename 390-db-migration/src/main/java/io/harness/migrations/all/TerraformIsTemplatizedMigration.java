@@ -3,7 +3,6 @@ package io.harness.migrations.all;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.migrations.Migration;

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -128,12 +129,12 @@ public interface BuildSourceService {
   /**
    * Gets artifact paths.
    *
-   * @param appId     the app id
-   * @param jobName   the job name
-   * @param settingId the setting id
-   * @param groupId   the group id
+   * @param appId              the app id
+   * @param jobName            the job name
+   * @param settingId          the setting id
+   * @param groupId            the group id
    * @param artifactStreamType artifact stream type
-   * @param repositoryFormat repository format
+   * @param repositoryFormat   repository format
    * @return the artifact paths
    */
   default Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId,
@@ -167,6 +168,10 @@ public interface BuildSourceService {
    * @return
    */
   default List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<BuildDetails> getNewBuilds(String appId, String artifactStreamId, String settingId) {
     throw new UnsupportedOperationException();
   }
 
@@ -205,9 +210,9 @@ public interface BuildSourceService {
   /**
    * Gets group Id paths.
    *
-   * @param appId     the app id
-   * @param jobName   the job name
-   * @param settingId the setting id
+   * @param appId            the app id
+   * @param jobName          the job name
+   * @param settingId        the setting id
    * @param repositoryFormat the repositoryFormat
    * @return the groupId paths
    */
@@ -240,8 +245,8 @@ public interface BuildSourceService {
   /**
    * Gets group Id paths.
    *
-   * @param jobName   the job name
-   * @param settingId the setting id
+   * @param jobName          the job name
+   * @param settingId        the setting id
    * @param repositoryFormat the repositoryFormat
    * @return the groupId paths
    */
@@ -474,6 +479,18 @@ public interface BuildSourceService {
   }
 
   default List<String> getGcbTriggers(String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listAcrRepositories(String cloudProviderId, String subscriptionId, String registryName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureContainerRegistry> listAzureContainerRegistries(String cloudProviderId, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listAzureContainerRegistryNames(String cloudProviderId, String subscriptionId) {
     throw new UnsupportedOperationException();
   }
 }

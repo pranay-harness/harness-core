@@ -153,9 +153,13 @@ public class K8sApplyTaskHandler extends K8sTaskHandler {
       k8sApplyHandlerConfig.setResources(k8sTaskHelper.getResourcesFromManifests(k8sDelegateTaskParams,
           k8sApplyTaskParameters.getK8sDelegateManifestConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
           applyFilePaths, k8sApplyTaskParameters.getValuesYamlList(), k8sApplyHandlerConfig.getReleaseName(),
-          k8sApplyHandlerConfig.getKubernetesConfig().getNamespace(), executionLogCallback, k8sApplyTaskParameters));
+          k8sApplyHandlerConfig.getKubernetesConfig().getNamespace(), executionLogCallback, k8sApplyTaskParameters,
+          k8sApplyTaskParameters.isSkipRendering()));
 
-      executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
+      executionLogCallback.saveExecutionLog(
+          color(String.format(
+                    "%nManifests %s:%n", k8sApplyTaskParameters.isSkipRendering() ? "" : "[Post template rendering] "),
+              White, Bold));
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(k8sApplyHandlerConfig.getResources()));
 
       if (k8sApplyTaskParameters.isSkipDryRun()) {

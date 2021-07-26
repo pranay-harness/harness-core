@@ -324,6 +324,8 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     DataFetchingEnvironment dataFetchingEnvironment = mutationContext.getDataFetchingEnvironment();
 
     if (apisToEvictUserPermissionRestrictionCache.contains(dataFetchingEnvironment.getField().getName())) {
+      log.info("Evicting permission cache for [{}] for accountId [{}]", dataFetchingEnvironment.getField().getName(),
+          mutationContext.getAccountId());
       authService.evictUserPermissionAndRestrictionCacheForAccount(mutationContext.getAccountId(), true, true);
     }
   }

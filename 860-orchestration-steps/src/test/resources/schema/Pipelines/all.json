@@ -153,6 +153,13 @@
           "type": "integer",
           "format": "int32"
         },
+        "prCloneStrategy": {
+          "type": "string",
+          "enum": [
+            "MergeCommit",
+            "SourceBranch"
+          ]
+        },
         "repoName": {
           "type": "string"
         },
@@ -297,7 +304,8 @@
           ]
         },
         "memory": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(([0-9]*[.])?[0-9]+)([GM]i?)$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -931,7 +939,9 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1120,7 +1130,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(\\d+[smhwd][\\s]?)+$"
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"

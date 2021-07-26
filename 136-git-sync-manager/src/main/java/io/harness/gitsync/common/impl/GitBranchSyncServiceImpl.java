@@ -10,12 +10,15 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
+import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -80,12 +83,12 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
   }
 
   @Override
-  public void processBranchSyncEvent(YamlGitConfigDTO yamlGitConfig, String branchName, String accountIdentifier,
-      String filePathToBeExcluded, String changeSetId, String gitToHarnessProgressRecordId) {
+  public GitToHarnessProcessMsvcStepResponse processBranchSyncEvent(YamlGitConfigDTO yamlGitConfig, String branchName,
+      String accountIdentifier, String filePathToBeExcluded, String changeSetId, String gitToHarnessProgressRecordId) {
     List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByRepo(yamlGitConfig.getRepo());
     Set<String> foldersList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOS);
     List<GitFileChangeDTO> harnessFilesOfBranch =
-        getFilesBelongingToThisBranch(accountIdentifier, yamlGitConfig, foldersList, branchName);
+        getFilesToBeProcessed(yamlGitConfigDTOS, accountIdentifier, foldersList, branchName);
     log.info("Received file paths: [{}] from git in harness folders.",
         emptyIfNull(harnessFilesOfBranch).stream().map(GitFileChangeDTO::getPath).collect(Collectors.toList()));
     List<GitFileChangeDTO> filteredFileList = getFilteredFiles(harnessFilesOfBranch, filePathToBeExcluded);
@@ -100,8 +103,36 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
             .collect(toList());
     gitToHarnessProgressService.updateFilesInProgressRecord(gitToHarnessProgressRecordId, gitToHarnessFilesToProcess);
     String commitId = getCommitId(harnessFilesOfBranch);
-    gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName,
-        yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId);
+    GitToHarnessProgressStatus gitToHarnessProgressStatus =
+        gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName,
+            yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId, changeSetId);
+    return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
+  }
+
+  // todo deepak: if for loop is removed from here take care of branch push case
+  private List<GitFileChangeDTO> getFilesToBeProcessed(
+      List<YamlGitConfigDTO> yamlGitConfigDTOs, String accountIdentifier, Set<String> foldersList, String branchName) {
+    List<GitFileChangeDTO> filesInBranch = new ArrayList<>();
+    int yamlGitConfigsCount = yamlGitConfigDTOs.size();
+    for (int i = 0; i < yamlGitConfigsCount; i++) {
+      YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigDTOs.get(i);
+      try {
+        log.info("Trying to get files using the yaml git config with the identifier {} in project {}",
+            yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier());
+        filesInBranch = getFilesBelongingToThisBranch(accountIdentifier, yamlGitConfigDTO, foldersList, branchName);
+        log.info("Completed get files using the yaml git config with the identifier {} in project {}",
+            yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier());
+        return filesInBranch;
+      } catch (Exception ex) {
+        log.error("Error doing get files using the yaml git config with the identifier {} in project {}",
+            yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), ex);
+        // If we are getting the exception for the last yaml git config too, then throw the exception
+        if (i == yamlGitConfigsCount - 1) {
+          throw ex;
+        }
+      }
+    }
+    throw new UnexpectedException("Could not get the files to do git branch sync");
   }
 
   private String getCommitId(List<GitFileChangeDTO> harnessFilesOfBranch) {

@@ -94,6 +94,10 @@ public class ChartMuseumClientHelper {
     try {
       if (process != null) {
         process.getProcess().destroyForcibly().waitFor();
+        log.info("Successfully stopped chart museum server");
+      } else {
+        log.info(
+            "Not able to find any process associated with the chart museum server. It may have already been stopped");
       }
     } catch (Exception ex) {
       log.warn("Failed to stop chart museum server " + getMessage(ex));
@@ -217,6 +221,7 @@ public class ChartMuseumClientHelper {
   }
 
   private static String getErrorMessage(String processOutput) {
+    log.warn(String.format("Could not start Chart museum server. Process output: [%s]", processOutput));
     String errorPrefix = "Failed with error: ";
 
     if (processOutput.contains(NO_SUCH_BBUCKET_ERROR_CODE)) {

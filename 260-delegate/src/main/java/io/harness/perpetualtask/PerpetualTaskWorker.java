@@ -7,6 +7,7 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.flow.BackoffScheduler;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.LoggingListener;
@@ -17,7 +18,6 @@ import io.harness.threading.Schedulable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -88,7 +88,7 @@ public class PerpetualTaskWorker {
       @Named("perpetualTaskTimeoutExecutor") ScheduledExecutorService perpetualTaskTimeoutExecutor) {
     this.perpetualTaskServiceGrpcClient = perpetualTaskServiceGrpcClient;
     this.factoryMap = factoryMap;
-    this.perpetualTaskTimeLimiter = new SimpleTimeLimiter(perpetualTaskExecutor);
+    this.perpetualTaskTimeLimiter = HTimeLimiter.create(perpetualTaskExecutor);
     this.perpetualTaskTimeoutExecutor = perpetualTaskTimeoutExecutor;
     backoffScheduler = new BackoffScheduler(getClass().getSimpleName(), Duration.ofMinutes(4), Duration.ofMinutes(14));
   }

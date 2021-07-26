@@ -10,6 +10,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -30,11 +31,14 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
+  private final QueueController queueController;
 
   @Inject
   public EntityCRUDStreamConsumer(@Named(ENTITY_CRUD) Consumer redisConsumer,
-      @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener) {
+      @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener,
+      QueueController queueController) {
     this.redisConsumer = redisConsumer;
+    this.queueController = queueController;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(connectorEntityCRUDStreamListener);
   }
@@ -42,15 +46,24 @@ public class EntityCRUDStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for entity crud stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(CE_NEXT_GEN.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(CE_NEXT_GEN.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info("Entity crud consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error("Entity crud stream consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {

@@ -44,16 +44,15 @@ public class FailureInterruptCallback implements OldNotifyCallback {
   @Override
   public void notify(Map<String, ResponseData> response) {
     try {
-      NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
-        ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
-        ops.addToSet(NodeExecutionKeys.interruptHistories,
-            InterruptEffect.builder()
-                .interruptId(interruptId)
-                .tookEffectAt(System.currentTimeMillis())
-                .interruptType(interruptType)
-                .interruptConfig(interruptConfig)
-                .build());
-      });
+      NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId,
+          ops
+          -> ops.addToSet(NodeExecutionKeys.interruptHistories,
+              InterruptEffect.builder()
+                  .interruptId(interruptId)
+                  .tookEffectAt(System.currentTimeMillis())
+                  .interruptType(interruptType)
+                  .interruptConfig(interruptConfig)
+                  .build()));
       orchestrationEngine.concludeNodeExecution(updatedNodeExecution, Status.FAILED);
     } catch (Exception ex) {
       interruptService.markProcessed(interruptId, PROCESSED_UNSUCCESSFULLY);

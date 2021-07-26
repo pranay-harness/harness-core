@@ -46,6 +46,7 @@ message InterventionWaitAdvise {
   google.protobuf.Duration timeout = 1;
   io.harness.pms.contracts.commons.RepairActionCode repairActionCode = 2;
   map<string, string> metadata = 3;
+  io.harness.pms.contracts.execution.Status fromStatus = 4;
 }
 
 message EndPlanAdvise {

@@ -29,4 +29,7 @@ public class SchemaConstants {
   public static final String OBJECT_TYPE_NODE = "object";
   public static final String ARRAY_TYPE_NODE = "array";
   public static final String ITEMS_NODE = "items";
+  public static final String PATTERN_NODE = "pattern";
+  public static final String MIN_LENGTH_NODE = "minLength";
+  public static final String RUNTIME_INPUT_PATTERN = "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$";
 }

@@ -503,4 +503,16 @@ public class ARMProvisionState extends State {
   public boolean isSelectionLogsTrackingForTasksEnabled() {
     return true;
   }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    if (isEmpty(provisionerId)) {
+      results.put("Provisioner", "Provisioner must be provided.");
+    }
+    if (isEmpty(cloudProviderId)) {
+      results.put("Azure Cloud Provider", "Azure Cloud Provider must be provided.");
+    }
+    return results;
+  }
 }

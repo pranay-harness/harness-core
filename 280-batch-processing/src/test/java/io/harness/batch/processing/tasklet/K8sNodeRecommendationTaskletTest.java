@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.data.ZonePrice;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
@@ -24,6 +25,7 @@ import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterReques
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.rule.Owner;
 import io.harness.testsupport.BaseTaskletTest;
 
@@ -49,6 +51,7 @@ import retrofit2.Response;
 public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   @Mock private K8sRecommendationDAO k8sRecommendationDAO;
   @Mock private VMPricingService vmPricingService;
+  @Mock private RecommendationCrudService recommendationCrudService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private BanzaiRecommenderClient banzaiRecommenderClient;
   @InjectMocks private K8sNodeRecommendationTasklet tasklet;
 
@@ -63,6 +66,9 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   public void setUp() throws Exception {
     TotalResourceUsage resourceUsage =
         TotalResourceUsage.builder().maxcpu(1).maxmemory(3).sumcpu(8).summemory(64).build();
+    RecommendClusterRequest request =
+        RecommendClusterRequest.builder().sumCpu(8D).sumMem(3D).maxNodes(7L).minNodes(3L).build();
+
     nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).nodepoolname(NODE_POOL_NAME).build();
     k8sServiceProvider = K8sServiceProvider.builder()
                              .cloudProvider(CloudProvider.GCP)
@@ -71,7 +77,13 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
                              .region("us-west-1")
                              .instanceFamily("xyz")
                              .build();
-    VMComputePricingInfo pricingInfo = VMComputePricingInfo.builder().onDemandPrice(2D).build();
+    VMComputePricingInfo pricingInfo =
+        VMComputePricingInfo.builder()
+            .onDemandPrice(2D)
+            .cpusPerVm(4D)
+            .memPerVm(64D)
+            .spotPrice(Collections.singletonList(ZonePrice.builder().price(1D).zone("a").build()))
+            .build();
 
     // #execute
     when(k8sRecommendationDAO.getUniqueNodePools(eq(ACCOUNT_ID))).thenReturn(ImmutableList.of(nodePoolId));
@@ -96,9 +108,9 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     String entityUuid = "entityUuid";
     when(k8sRecommendationDAO.getServiceProvider(any(), eq(nodePoolId))).thenReturn(k8sServiceProvider);
     when(k8sRecommendationDAO.insertNodeRecommendationResponse(
-             any(), eq(nodePoolId), eq(resourceUsage), eq(k8sServiceProvider), eq(getRecommendationResponse())))
+             any(), eq(nodePoolId), eq(request), eq(k8sServiceProvider), eq(getRecommendationResponse())))
         .thenReturn(entityUuid);
-    doNothing().when(k8sRecommendationDAO).updateCeRecommendation(eq(entityUuid), any(), eq(nodePoolId), any(), any());
+    doNothing().when(recommendationCrudService).upsertNodeRecommendation(eq(entityUuid), any(), eq(nodePoolId), any());
   }
 
   @Test
@@ -132,7 +144,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // execution.
     verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
     verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
-    verify(k8sRecommendationDAO, times(0)).updateCeRecommendation(any(), any(), any(), any(), any());
+    verify(recommendationCrudService, times(0)).upsertNodeRecommendation(any(), any(), any(), any());
   }
 
   @Test
@@ -150,6 +162,32 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // effectively 0 times
     verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
     verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testJobSuccessOnCurrentPricingInfoNotAvailable() throws Exception {
+    when(vmPricingService.getComputeVMPricingInfo(eq(k8sServiceProvider.getInstanceFamily()),
+             eq(k8sServiceProvider.getRegion()), eq(k8sServiceProvider.getCloudProvider())))
+        .thenReturn(null);
+
+    // job was successful but the recommendation was not generated and skipped
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    // effectively 1 times
+    verify(banzaiRecommenderClient, times(2)).getRecommendation(any(), any(), any(), any());
+    // detailed recommendation saved in mongo DB
+    verify(k8sRecommendationDAO, times(1)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
+    // savings stats as 0 in timescaleDB
+    ArgumentCaptor<RecommendationOverviewStats> statsCaptor =
+        ArgumentCaptor.forClass(RecommendationOverviewStats.class);
+    verify(recommendationCrudService, times(1)).upsertNodeRecommendation(any(), any(), any(), statsCaptor.capture());
+
+    final RecommendationOverviewStats stats = statsCaptor.getValue();
+    assertThat(stats).isNotNull();
+    assertThat(stats.getTotalMonthlyCost()).isEqualTo(0D);
+    assertThat(stats.getTotalMonthlySaving()).isNotZero();
   }
 
   @Test
@@ -208,7 +246,8 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     assertThat(tasklet.execute(null, chunkContext)).isNull();
 
     ArgumentCaptor<RecommendationOverviewStats> captor = ArgumentCaptor.forClass(RecommendationOverviewStats.class);
-    verify(k8sRecommendationDAO, times(1)).updateCeRecommendation(any(), any(), any(), captor.capture(), any());
+
+    verify(recommendationCrudService, times(1)).upsertNodeRecommendation(any(), any(), any(), captor.capture());
 
     RecommendationOverviewStats stats = captor.getValue();
     assertThat(stats).isNotNull();
@@ -228,10 +267,11 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
 
     assertThat(tasklet.execute(null, chunkContext)).isNull();
 
+    ArgumentCaptor<K8sServiceProvider> serviceProviderCaptor = ArgumentCaptor.forClass(K8sServiceProvider.class);
     ArgumentCaptor<RecommendationResponse> captor = ArgumentCaptor.forClass(RecommendationResponse.class);
 
     verify(k8sRecommendationDAO, times(1))
-        .insertNodeRecommendationResponse(any(), any(), any(), any(), captor.capture());
+        .insertNodeRecommendationResponse(any(), any(), any(), serviceProviderCaptor.capture(), captor.capture());
 
     RecommendationResponse recommendation = captor.getValue();
 
@@ -241,6 +281,14 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     assertThat(recommendation.getAccuracy().getTotalPrice())
         .isCloseTo(
             recommendation.getAccuracy().getSpotPrice() + recommendation.getAccuracy().getMasterPrice(), offset(0.05D));
+
+    K8sServiceProvider serviceProvider = serviceProviderCaptor.getValue();
+
+    assertThat(serviceProvider).isNotNull();
+    assertThat(serviceProvider.getSpotCostPerVmPerHr()).isEqualTo(1D);
+    assertThat(serviceProvider.getCategoryAwareCost()).isEqualTo(1D);
+    assertThat(serviceProvider.getCpusPerVm()).isEqualTo(4D);
+    assertThat(serviceProvider.getMemPerVm()).isEqualTo(64D);
   }
 
   @Test
@@ -249,12 +297,14 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   public void testTotalPriceIsCorrectInOnDemandRecommendation() throws Exception {
     assertThat(tasklet.execute(null, chunkContext)).isNull();
 
-    ArgumentCaptor<RecommendationResponse> captor = ArgumentCaptor.forClass(RecommendationResponse.class);
+    ArgumentCaptor<K8sServiceProvider> serviceProviderCaptor = ArgumentCaptor.forClass(K8sServiceProvider.class);
+    ArgumentCaptor<RecommendationResponse> recommendationCaptor = ArgumentCaptor.forClass(RecommendationResponse.class);
 
     verify(k8sRecommendationDAO, times(1))
-        .insertNodeRecommendationResponse(any(), any(), any(), any(), captor.capture());
+        .insertNodeRecommendationResponse(
+            any(), any(), any(), serviceProviderCaptor.capture(), recommendationCaptor.capture());
 
-    RecommendationResponse recommendation = captor.getValue();
+    RecommendationResponse recommendation = recommendationCaptor.getValue();
 
     assertThat(recommendation).isNotNull();
     assertThat(recommendation.getInstanceCategory()).isEqualTo(InstanceCategory.ON_DEMAND);
@@ -262,6 +312,14 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     assertThat(recommendation.getAccuracy().getTotalPrice())
         .isCloseTo(recommendation.getAccuracy().getWorkerPrice() + recommendation.getAccuracy().getMasterPrice(),
             offset(0.05D));
+
+    K8sServiceProvider serviceProvider = serviceProviderCaptor.getValue();
+
+    assertThat(serviceProvider).isNotNull();
+    assertThat(serviceProvider.getCostPerVmPerHr()).isEqualTo(2D);
+    assertThat(serviceProvider.getCategoryAwareCost()).isEqualTo(2D);
+    assertThat(serviceProvider.getCpusPerVm()).isEqualTo(4D);
+    assertThat(serviceProvider.getMemPerVm()).isEqualTo(64D);
   }
 
   private RecommendClusterRequest captureRequest(TotalResourceUsage totalResourceUsage) throws Exception {

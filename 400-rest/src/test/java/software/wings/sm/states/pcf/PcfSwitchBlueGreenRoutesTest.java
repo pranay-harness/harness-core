@@ -16,6 +16,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -24,9 +27,6 @@ import io.harness.tasks.ResponseData;
 import software.wings.WingsBaseTest;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -75,7 +75,7 @@ public class PcfSwitchBlueGreenRoutesTest extends WingsBaseTest {
         .isEqualTo(StringUtils.EMPTY);
     assertThat(pcfSwitchBlueGreenRoutes.getNewApplicationName(
                    SetupSweepingOutputPcf.builder()
-                       .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder().applicationName("name").build())
+                       .newPcfApplicationDetails(CfAppSetupTimeDetails.builder().applicationName("name").build())
                        .build()))
         .isEqualTo("name");
   }
@@ -95,10 +95,10 @@ public class PcfSwitchBlueGreenRoutesTest extends WingsBaseTest {
     Map<String, ResponseData> response = new HashMap<>();
     PcfRouteUpdateStateExecutionData stateExecutionData =
         PcfRouteUpdateStateExecutionData.builder()
-            .pcfRouteUpdateRequestConfigData(PcfRouteUpdateRequestConfigData.builder().build())
+            .pcfRouteUpdateRequestConfigData(CfRouteUpdateRequestConfigData.builder().build())
             .build();
     response.put("1",
-        PcfCommandExecutionResponse.builder()
+        CfCommandExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .errorMessage("ERROR_MESSAGE")
             .build());

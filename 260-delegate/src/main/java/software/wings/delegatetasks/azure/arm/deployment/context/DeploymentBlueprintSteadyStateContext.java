@@ -12,8 +12,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Builder
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)

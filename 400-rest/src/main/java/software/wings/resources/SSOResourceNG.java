@@ -8,12 +8,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.SSOConfig;

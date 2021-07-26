@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.pcf.CfServiceData;
 
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PcfDeploymentInfo;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDP)
 public class PcfDeployExecutionSummary extends StepExecutionSummary implements DeploymentInfoExtractor {
   private String releaseName;
-  private List<PcfServiceData> instaceData;
+  private List<CfServiceData> instaceData;
 
   @Override
   public Optional<List<DeploymentInfo>> extractDeploymentInfo() {
@@ -38,10 +39,10 @@ public class PcfDeployExecutionSummary extends StepExecutionSummary implements D
     }
 
     List<DeploymentInfo> pcfDeploymentInfo = new ArrayList<>();
-    instaceData.forEach(pcfServiceData
+    instaceData.forEach(cfServiceData
         -> pcfDeploymentInfo.add(PcfDeploymentInfo.builder()
-                                     .applicationName(pcfServiceData.getName())
-                                     .applicationGuild(pcfServiceData.getId())
+                                     .applicationName(cfServiceData.getName())
+                                     .applicationGuild(cfServiceData.getId())
                                      .build()));
     return Optional.of(pcfDeploymentInfo);
   }

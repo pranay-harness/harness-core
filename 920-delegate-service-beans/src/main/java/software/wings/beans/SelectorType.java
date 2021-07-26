@@ -9,5 +9,6 @@ public enum SelectorType {
   DELEGATE_NAME,
   HOST_NAME,
   GROUP_NAME,
+  GROUP_SELECTORS,
   PROFILE_SELECTORS
 }

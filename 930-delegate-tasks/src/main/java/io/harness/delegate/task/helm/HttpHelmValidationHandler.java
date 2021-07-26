@@ -20,6 +20,7 @@ import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
@@ -62,7 +63,7 @@ public class HttpHelmValidationHandler implements ConnectorValidationHandler {
       helmTaskHelperBase.removeRepo(repoName, workingDirectory, defaultHelmVersion, DEFAULT_TIMEOUT_IN_MILLIS);
       helmTaskHelperBase.cleanup(workingDirectory);
       validationResultBuilder.status(ConnectivityStatus.SUCCESS);
-    } catch (Exception exception) {
+    } catch (IOException exception) {
       log.warn("HttpHelmValidationHandler execution failed with exception ", exception);
       validationResultBuilder.status(ConnectivityStatus.FAILURE);
       String errorMessage = ExceptionUtils.getMessage(exception);

@@ -17,6 +17,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.cv.api.WorkflowVerificationResultService;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -71,6 +72,7 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
   @Inject protected CVActivityLogService cvActivityLogService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private FeatureTestHelper featureTestHelper;
+  @Inject protected WorkflowVerificationResultService workflowVerificationResultService;
   @Mock private ExecutionContext executionContext;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HPersistence persistence;
@@ -89,6 +91,8 @@ public class AbstractMetricAnalysisStateTest extends WingsBaseTest {
     FieldUtils.writeField(appDynamicsState, "appService", appService, true);
     FieldUtils.writeField(appDynamicsState, "metricAnalysisService", metricAnalysisService, true);
     FieldUtils.writeField(appDynamicsState, "cvActivityLogService", cvActivityLogService, true);
+    FieldUtils.writeField(
+        appDynamicsState, "workflowVerificationResultService", workflowVerificationResultService, true);
     accountId = persistence.save(anAccount().withAccountName(generateUuid()).build());
     appId = persistence.save(anApplication().name("Harness Verification").accountId(accountId).build());
     stateExecutionId = generateUuid();

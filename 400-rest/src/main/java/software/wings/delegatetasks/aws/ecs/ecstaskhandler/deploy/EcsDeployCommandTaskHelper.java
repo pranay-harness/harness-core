@@ -266,6 +266,11 @@ public class EcsDeployCommandTaskHelper {
     executionLogCallback.saveExecutionLog(
         "\nRegistering Scalable Target for Service : " + containerServiceData.getName());
     resizeParams.getAwsAutoScalarConfigForNewService().forEach(awsAutoScalarConfig -> {
+      if (awsAutoScalarConfig == null) {
+        String exceptionMsg =
+            "Aws Auto-scaler config is Invalid.\n Check Aws Autoscaler config, Scalable Target Json and Scaling Policy Json";
+        throw new InvalidRequestException(exceptionMsg);
+      }
       if (StringUtils.isNotBlank(awsAutoScalarConfig.getScalableTargetJson())) {
         ScalableTarget scalableTarget =
             awsAppAutoScalingService.getScalableTargetFromJson(awsAutoScalarConfig.getScalableTargetJson());

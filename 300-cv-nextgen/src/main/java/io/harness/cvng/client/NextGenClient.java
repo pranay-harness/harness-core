@@ -10,6 +10,7 @@ import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
 import java.util.List;
@@ -43,6 +44,16 @@ public interface NextGenClient {
   Call<ResponseDTO<ServiceResponseDTO>> getService(@Path("serviceIdentifier") String serviceIdentifier,
       @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
+
+  @GET("servicesV2")
+  Call<ResponseDTO<PageResponse<ServiceResponse>>> listService(@Query("accountIdentifier") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("serviceIdentifiers") List<String> serviceIdentifiers);
+
+  @GET("environmentsV2")
+  Call<ResponseDTO<PageResponse<EnvironmentResponse>>> listEnvironment(@Query("accountIdentifier") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("envIdentifiers") List<String> environmentIdentifier);
 
   @GET("services")
   Call<ResponseDTO<PageResponse<ServiceResponseDTO>>> listServicesForProject(@Query("page") int page,

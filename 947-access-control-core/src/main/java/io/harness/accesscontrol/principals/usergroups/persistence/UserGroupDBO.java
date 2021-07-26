@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 
 import com.google.common.collect.ImmutableList;
@@ -41,7 +42,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @FieldNameConstants(innerTypeName = "UserGroupDBOKeys")
 @Entity(value = "usergroups", noClassnameStored = true)
 @Document("usergroups")
@@ -49,10 +50,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(ACCESS_CONTROL)
 public class UserGroupDBO implements PersistentRegularIterable, AccessControlEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotEmpty final String scopeIdentifier;
-  @NotEmpty final String identifier;
-  @NotEmpty final String name;
-  @NotNull final Set<String> users;
+  @EqualsAndHashCode.Include @NotEmpty final String scopeIdentifier;
+  @EqualsAndHashCode.Include @NotEmpty final String identifier;
+  @EqualsAndHashCode.Include @NotEmpty final String name;
+  @EqualsAndHashCode.Include @NotNull final Set<String> users;
 
   @Setter @CreatedDate Long createdAt;
   @Setter @LastModifiedDate Long lastModifiedAt;
@@ -60,7 +61,7 @@ public class UserGroupDBO implements PersistentRegularIterable, AccessControlEnt
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Setter @Version Long version;
 
-  @Setter Long nextReconciliationIterationAt;
+  @FdIndex @Setter Long nextReconciliationIterationAt;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

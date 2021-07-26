@@ -8,6 +8,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -50,6 +51,7 @@ import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.managerclient.AccountPreference;
@@ -71,7 +73,6 @@ import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -295,7 +296,7 @@ public class DelegateAgentResourceTest {
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void shouldProcessInstanceSyncResponse() {
-    DelegateResponseData responseData = PcfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
+    DelegateResponseData responseData = CfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
     String perpetualTaskId = "12345679";
 
     RESOURCES.client()
@@ -332,8 +333,8 @@ public class DelegateAgentResourceTest {
     String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
         + httpServletRequest.getServerPort();
     DelegateScripts delegateScripts = DelegateScripts.builder().build();
-    when(delegateService.getDelegateScripts(
-             ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+    when(delegateService.getDelegateScripts(ACCOUNT_ID, version,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null))
         .thenReturn(delegateScripts);
     RestResponse<DelegateScripts> restResponse = RESOURCES.client()
                                                      .target("/agent/delegates/" + DELEGATE_ID + "/upgrade?delegateId="
@@ -343,8 +344,8 @@ public class DelegateAgentResourceTest {
                                                      .get(new GenericType<RestResponse<DelegateScripts>>() {});
 
     verify(delegateService, atLeastOnce())
-        .getDelegateScripts(
-            ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+        .getDelegateScripts(ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID),
+            verificationUrl, null);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
   }
 
@@ -443,7 +444,7 @@ public class DelegateAgentResourceTest {
         + httpServletRequest.getServerPort();
     DelegateScripts delegateScripts = DelegateScripts.builder().build();
     when(delegateService.getDelegateScripts(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
@@ -454,7 +455,33 @@ public class DelegateAgentResourceTest {
 
     verify(delegateService, atLeastOnce())
         .getDelegateScripts(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null);
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void getdelegateScripts() throws IOException {
+    String delegateVersion = "0.0.0";
+    String delegateName = "TEST_DELEGATE";
+    String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
+        + httpServletRequest.getServerPort();
+    DelegateScripts delegateScripts = DelegateScripts.builder().build();
+    when(delegateService.getDelegateScripts(ACCOUNT_ID, delegateVersion,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, delegateName))
+        .thenReturn(delegateScripts);
+
+    RestResponse<DelegateScripts> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/delegateScripts?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion
+                + "&delegateName=" + delegateName)
+            .request()
+            .get(new GenericType<RestResponse<DelegateScripts>>() {});
+
+    verify(delegateService, atLeastOnce())
+        .getDelegateScripts(ACCOUNT_ID, delegateVersion,
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, delegateName);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
   }
 

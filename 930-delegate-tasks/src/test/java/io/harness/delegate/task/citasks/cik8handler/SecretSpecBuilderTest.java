@@ -5,34 +5,25 @@ import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.SECRET_KEY;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.HARSH;
-import static io.harness.rule.OwnerRule.SHUBHAM;
 
 import static java.util.Collections.singletonList;
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
-import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
-import io.harness.delegate.beans.connector.scm.GitAuthType;
-import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
@@ -40,29 +31,19 @@ import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsA
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.encryption.SecretRefHelper;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretDecryptionService;
 
-import io.fabric8.kubernetes.api.model.Secret;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -90,42 +71,6 @@ public class SecretSpecBuilderTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-  }
-
-  private ConnectorDetails getConnectorDetails(ConnectorConfigDTO config, ConnectorType type) {
-    return ConnectorDetails.builder()
-        .connectorType(type)
-        .connectorConfig(config)
-        .encryptedDataDetails(new ArrayList<>())
-        .build();
-  }
-
-  private GitConfigDTO getGitConfigWithSshKeys() {
-    GitSSHAuthenticationDTO gitSSHAuthenticationDTO =
-        GitSSHAuthenticationDTO.builder().encryptedSshKey(SecretRefHelper.createSecretRef(encryptedKey)).build();
-    return GitConfigDTO.builder()
-        .url(gitRepoUrl)
-        .branchName("master")
-        .gitAuth(gitSSHAuthenticationDTO)
-        .gitAuthType(GitAuthType.SSH)
-        .gitConnectionType(GitConnectionType.REPO)
-        .build();
-  }
-
-  private GitConfigDTO getGitConfigWithHttpKeys() {
-    GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO =
-        GitHTTPAuthenticationDTO.builder()
-            .username(userName)
-            .passwordRef(
-                SecretRefData.builder().identifier(passwordRefId).decryptedValue(password.toCharArray()).build())
-            .build();
-    return GitConfigDTO.builder()
-        .url(gitRepoUrl)
-        .branchName("master")
-        .gitAuth(gitHTTPAuthenticationDTO)
-        .gitAuthType(GitAuthType.HTTP)
-        .gitConnectionType(GitConnectionType.REPO)
-        .build();
   }
 
   @Test
@@ -188,92 +133,6 @@ public class SecretSpecBuilderTest extends CategoryTest {
     assertThat(decryptedSecrets.get("abc").getType()).isEqualTo(SecretParams.Type.FILE);
   }
 
-  @Test
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  public void getRegistrySecretSpecWithEmptyCred() {
-    ImageDetails imageDetails1 = ImageDetails.builder().name(imageName).tag(tag).build();
-    ImageDetailsWithConnector imageDetailsWithConnector1 =
-        ImageDetailsWithConnector.builder().imageDetails(imageDetails1).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector1, namespace));
-
-    ImageDetails imageDetails2 = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
-    ImageDetailsWithConnector imageDetailsWithConnector2 =
-        ImageDetailsWithConnector.builder().imageDetails(imageDetails2).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector2, namespace));
-
-    ImageDetails imageDetails3 =
-        ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).username(userName).build();
-    ImageDetailsWithConnector imageDetailsWithConnector3 =
-        ImageDetailsWithConnector.builder().imageDetails(imageDetails3).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector3, namespace));
-
-    ImageDetails imageDetails4 =
-        ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).password(password).build();
-    ImageDetailsWithConnector imageDetailsWithConnector4 =
-        ImageDetailsWithConnector.builder().imageDetails(imageDetails4).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector4, namespace));
-  }
-
-  @Test
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  public void getRegistrySecretSpecWithCred() {
-    String token = "foo";
-    ImageDetailsWithConnector imageDetailsWithConnector = mock(ImageDetailsWithConnector.class);
-
-    when(imageSecretBuilder.getJSONEncodedImageCredentials(imageDetailsWithConnector)).thenReturn(token);
-
-    Secret secret = secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
-    assertEquals(secretName, secret.getMetadata().getName());
-    assertEquals(namespace, secret.getMetadata().getNamespace());
-  }
-
-  @Test()
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  @Ignore("Recreate test object after pms integration")
-  public void getGitSecretSpecWithEmptyCred() {
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    assertThatThrownBy(
-        ()
-            -> secretSpecBuilder.getGitSecretSpec(
-                ConnectorDetails.builder().connectorConfig(GitConfigDTO.builder().build()).build(), namespace),
-        null)
-        .isInstanceOf(InvalidArgumentsException.class);
-  }
-
-  @Test
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  @Ignore("Recreate test object after pms integration")
-  public void getGitSecretSpecWithHttpKeys() throws UnsupportedEncodingException {
-    GitConfigDTO gitConfig = getGitConfigWithHttpKeys();
-    ConnectorDetails connectorDetails = getConnectorDetails(gitConfig, ConnectorType.GIT);
-    when(secretDecryptionService.decrypt(gitConfig.getGitAuth(), connectorDetails.getEncryptedDataDetails()))
-        .thenReturn(gitConfig.getGitAuth());
-
-    Secret secret = secretSpecBuilder.getGitSecretSpec(connectorDetails, namespace);
-    assertEquals(gitSecretName, secret.getMetadata().getName());
-    assertEquals(namespace, secret.getMetadata().getNamespace());
-  }
-
-  @Test
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  @Ignore("Recreate test object after pms integration")
-  public void getGitSecretSpecWithSshKeys() throws UnsupportedEncodingException {
-    GitConfigDTO gitConfig = getGitConfigWithSshKeys();
-    ConnectorDetails connectorDetails = getConnectorDetails(gitConfig, ConnectorType.GIT);
-
-    when(secretDecryptionService.decrypt(gitConfig.getGitAuth(), connectorDetails.getEncryptedDataDetails()))
-        .thenReturn(gitConfig.getGitAuth());
-
-    Secret secret = secretSpecBuilder.getGitSecretSpec(connectorDetails, namespace);
-    assertEquals(gitSecretName, secret.getMetadata().getName());
-    assertEquals(namespace, secret.getMetadata().getNamespace());
-  }
-
   @Test()
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -316,18 +175,6 @@ public class SecretSpecBuilderTest extends CategoryTest {
         .containsEntry("USERNAME_dockerdocker", encodeBase64("username"))
         .containsEntry("PASSWORD_dockerdocker", encodeBase64("password"))
         .containsEntry("ENDPOINT_dockerdocker", encodeBase64("https://index.docker.io/v1/"));
-  }
-
-  @Test()
-  @Owner(developers = ALEKSANDAR)
-  @Category(UnitTests.class)
-  public void shouldCreateSecret() {
-    Map<String, String> map = new HashMap<>();
-    map.put("secret", "secret");
-    Secret secret = secretSpecBuilder.createSecret("name", "namespace", map);
-    assertThat(secret.getData()).isEqualTo(map);
-    assertThat(secret.getMetadata().getName()).isEqualTo("name");
-    assertThat(secret.getMetadata().getNamespace()).isEqualTo("namespace");
   }
 
   @Test()

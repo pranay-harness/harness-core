@@ -1,6 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.migrations.Migration;

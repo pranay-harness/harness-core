@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -16,8 +17,10 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ServiceDefinitionStep implements ChildExecutable<ServiceDefinitionStepParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.SERVICE_DEFINITION.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.SERVICE_DEFINITION.getName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Override
   public Class<ServiceDefinitionStepParameters> getStepParametersClass() {

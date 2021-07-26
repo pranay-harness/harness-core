@@ -5,6 +5,12 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 
+import static software.wings.beans.trigger.WebhookParameters.AZURE_DEVOPS_CODE_PUSH_COMMIT_ID;
+import static software.wings.beans.trigger.WebhookParameters.AZURE_DEVOPS_CODE_PUSH_REF_BRANCH;
+import static software.wings.beans.trigger.WebhookParameters.AZURE_DEVOPS_CODE_PUSH_REPOSITORY_FULL_NAME;
+import static software.wings.beans.trigger.WebhookParameters.AZURE_DEVOPS_PULL_REQUEST_MERGED_COMMIT_ID;
+import static software.wings.beans.trigger.WebhookParameters.AZURE_DEVOPS_PULL_REQUEST_MERGED_REF_BRANCH;
+import static software.wings.beans.trigger.WebhookParameters.AZURE_DEVOPS_PULL_REQUEST_MERGED_REPOSITORY_FULL_NAME;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_COMMIT_ID;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_BRANCH_REF;
 import static software.wings.beans.trigger.WebhookParameters.BIT_BUCKET_ON_PREM_PULL_REPOSITORY_CLONE_HTTP;
@@ -47,6 +53,8 @@ import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.beans.trigger.WebhookSource.AzureDevOpsEventType;
+import software.wings.beans.trigger.WebhookSource.AzureDevopsPullRequestStatus;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
@@ -62,6 +70,7 @@ import java.util.Optional;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
 
 @OwnedBy(CDC)
 @Singleton
@@ -70,13 +79,14 @@ public class WebhookEventUtils {
   public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
   public static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
   public static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
+  public static final String X_AZURE_DEVOPS_UNIQUE_ID = "X-Vss-Subscriptionid";
 
   public static final String X_HUB_SIGNATURE_256 = "X-Hub-Signature-256";
 
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
 
-  public static final List<String> eventHeaders =
-      Collections.unmodifiableList(asList(X_GIT_HUB_EVENT, X_GIT_LAB_EVENT, X_BIT_BUCKET_EVENT));
+  public static final List<String> eventHeaders = Collections.unmodifiableList(
+      asList(X_GIT_HUB_EVENT, X_GIT_LAB_EVENT, X_BIT_BUCKET_EVENT, X_AZURE_DEVOPS_UNIQUE_ID));
 
   public WebhookSource obtainWebhookSource(HttpHeaders httpHeaders) {
     if (httpHeaders == null) {
@@ -88,6 +98,8 @@ public class WebhookEventUtils {
       return WebhookSource.GITLAB;
     } else if (httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT) != null) {
       return WebhookSource.BITBUCKET;
+    } else if (httpHeaders.getHeaderString(X_AZURE_DEVOPS_UNIQUE_ID) != null) {
+      return WebhookSource.AZURE_DEVOPS;
     }
     throw new InvalidRequestException("Unable to resolve the Webhook Source. "
             + "One of the [" + eventHeaders + "] must be present in Headers",
@@ -249,6 +261,16 @@ public class WebhookEventUtils {
             default:
               return Optional.empty();
           }
+        case AZURE_DEVOPS:
+          AzureDevOpsEventType azureDevOpsEventType = AzureDevOpsEventType.find((String) payload.get("eventType"));
+          switch (azureDevOpsEventType) {
+            case PULL_REQUEST_MERGED:
+              return substitute(AZURE_DEVOPS_PULL_REQUEST_MERGED_REPOSITORY_FULL_NAME, payload);
+            case CODE_PUSH:
+              return substitute(AZURE_DEVOPS_CODE_PUSH_REPOSITORY_FULL_NAME, payload);
+            default:
+              return Optional.empty();
+          }
         default:
           unhandled(webhookSource);
           return Optional.empty();
@@ -404,6 +426,19 @@ public class WebhookEventUtils {
             default:
               return null;
           }
+        case AZURE_DEVOPS:
+          AzureDevOpsEventType azureDevOpsEventType = AzureDevOpsEventType.find((String) payload.get("eventType"));
+          if (azureDevOpsEventType == null) {
+            return null;
+          }
+          switch (azureDevOpsEventType) {
+            case PULL_REQUEST_MERGED:
+              return expressionEvaluator.substitute(AZURE_DEVOPS_PULL_REQUEST_MERGED_REF_BRANCH, payload);
+            case CODE_PUSH:
+              return expressionEvaluator.substitute(AZURE_DEVOPS_CODE_PUSH_REF_BRANCH, payload);
+            default:
+              return null;
+          }
         default:
           unhandled(webhookSource);
           return null;
@@ -412,6 +447,11 @@ public class WebhookEventUtils {
       log.error("Failed to resolve the branch name from payload {} and headers {}", payload, httpHeaders);
       return null;
     }
+  }
+
+  private AzureDevOpsEventType getAzureDevOpsEventType(HttpHeaders httpHeaders) {
+    log.info("Azure Devops unique event id {}", httpHeaders.getHeaderString(X_AZURE_DEVOPS_UNIQUE_ID));
+    return AzureDevOpsEventType.find(httpHeaders.getHeaderString(X_AZURE_DEVOPS_UNIQUE_ID));
   }
 
   private GitHubEventType getGitHubEventType(HttpHeaders httpHeaders) {
@@ -454,6 +494,19 @@ public class WebhookEventUtils {
               return expressionEvaluator.substitute(BIT_BUCKET_COMMIT_ID, payload);
             case REFS_CHANGED:
               return expressionEvaluator.substitute(BIT_BUCKET_REF_CHANGE_REQUEST_COMMIT_ID, payload);
+            default:
+              return null;
+          }
+        case AZURE_DEVOPS:
+          AzureDevOpsEventType azureDevOpsEventType = AzureDevOpsEventType.find((String) payload.get("eventType"));
+          if (azureDevOpsEventType == null) {
+            return null;
+          }
+          switch (azureDevOpsEventType) {
+            case PULL_REQUEST_MERGED:
+              return expressionEvaluator.substitute(AZURE_DEVOPS_PULL_REQUEST_MERGED_COMMIT_ID, payload);
+            case CODE_PUSH:
+              return expressionEvaluator.substitute(AZURE_DEVOPS_CODE_PUSH_COMMIT_ID, payload);
             default:
               return null;
           }
@@ -504,6 +557,38 @@ public class WebhookEventUtils {
     }
   }
 
+  private AzureDevOpsEventType getAzureDevopsEventType(String yamlWebHookPayload) {
+    Map<String, Object> payLoadMap = obtainPayloadMap(yamlWebHookPayload, null);
+    return AzureDevOpsEventType.find((String) payLoadMap.get("eventType"));
+  }
+
+  private AzureDevopsPullRequestStatus getAzureDevOpsPullRequestMergeStatus(String yamlWebHookPayload) {
+    Map<String, Object> payLoadMap = obtainPayloadMap(yamlWebHookPayload, null);
+    Map<String, Object> resourceMap = (Map<String, Object>) payLoadMap.get("resource");
+    return AzureDevopsPullRequestStatus.find((String) resourceMap.get("status"));
+  }
+
+  public void validatePushEventForAzureDevOps(String yamlWebHookPayload) {
+    try {
+      AzureDevOpsEventType azureDevOpsEventType = getAzureDevopsEventType(yamlWebHookPayload);
+      if (azureDevOpsEventType == null) {
+        throw new InvalidRequestException(
+            format("event type info not present in webhook payload %s", yamlWebHookPayload), USER);
+      }
+      if (azureDevOpsEventType == AzureDevOpsEventType.CODE_PUSH) {
+        return;
+      } else if (azureDevOpsEventType == AzureDevOpsEventType.PULL_REQUEST_MERGED) {
+        AzureDevopsPullRequestStatus pullRequestStatus = getAzureDevOpsPullRequestMergeStatus(yamlWebHookPayload);
+        if (pullRequestStatus != null
+            && pullRequestStatus.toString().equalsIgnoreCase(AzureDevopsPullRequestStatus.COMPLETED.toString())) {
+          return;
+        }
+      }
+    } catch (JSONException err) {
+      throw new InvalidRequestException(format("Unable to parse webhook payload %s", yamlWebHookPayload), USER);
+    }
+  }
+
   public void validatePushEvent(WebhookSource webhookSource, HttpHeaders httpHeaders) {
     try {
       switch (webhookSource) {
@@ -542,6 +627,14 @@ public class WebhookEventUtils {
     }
   }
 
+  public boolean shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure(String yamlWebHookPayload) {
+    AzureDevopsPullRequestStatus pullRequestStatus = getAzureDevOpsPullRequestMergeStatus(yamlWebHookPayload);
+    AzureDevOpsEventType azureDevOpsEventType = getAzureDevopsEventType(yamlWebHookPayload);
+    return azureDevOpsEventType != null && pullRequestStatus != null
+        && azureDevOpsEventType.equals(AzureDevOpsEventType.PULL_REQUEST_MERGED)
+        && pullRequestStatus.equals(AzureDevopsPullRequestStatus.ACTIVE);
+  }
+
   public boolean isGitPingEvent(HttpHeaders httpHeaders) {
     WebhookSource webhookSource = obtainWebhookSource(httpHeaders);
     WebhookEventType webhookEventType = null;
@@ -558,6 +651,13 @@ public class WebhookEventUtils {
         GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
         if (gitHubEventType != null) {
           webhookEventType = gitHubEventType.getEventType();
+        }
+        break;
+
+      case AZURE_DEVOPS:
+        AzureDevOpsEventType azureDevOpsEventType = getAzureDevOpsEventType(httpHeaders);
+        if (azureDevOpsEventType != null) {
+          webhookEventType = azureDevOpsEventType.getEventType();
         }
         break;
 

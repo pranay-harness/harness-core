@@ -1,11 +1,11 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;

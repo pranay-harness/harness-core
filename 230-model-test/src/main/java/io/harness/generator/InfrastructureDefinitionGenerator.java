@@ -1,5 +1,6 @@
 package io.harness.generator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
@@ -7,6 +8,7 @@ import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PR
 import static io.harness.generator.SettingGenerator.Settings.AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
+import static io.harness.generator.SettingGenerator.Settings.GCP_QA_TARGET;
 import static io.harness.generator.SettingGenerator.Settings.OPENSHIFT_TEST_CLUSTER;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
@@ -40,6 +42,7 @@ import static software.wings.beans.InfrastructureType.PDC;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -101,6 +104,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(CDP)
 @Singleton
 public class InfrastructureDefinitionGenerator {
   private static final String AZURE_HELM_NAME = "Azure Helm";
@@ -173,6 +177,7 @@ public class InfrastructureDefinitionGenerator {
 
   public enum InfrastructureDefinitions {
     AWS_SSH_TEST,
+    AWS_LAMBDA_TEST,
     TERRAFORM_AWS_SSH_TEST,
     AWS_SSH_FUNCTIONAL_TEST,
     AWS_WINRM_FUNCTIONAL_TEST,
@@ -190,6 +195,7 @@ public class InfrastructureDefinitionGenerator {
     MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST,
     AZURE_HELM,
     GCP_HELM,
+    GCP_HELM_CUSTOM_MANIFEST_TEST,
     PIPELINE_RBAC_QA_AWS_SSH_TEST,
     PIPELINE_RBAC_PROD_AWS_SSH_TEST,
     AWS_WINRM_DOWNLOAD,
@@ -200,7 +206,7 @@ public class InfrastructureDefinitionGenerator {
     AZURE_WEB_APP_BLUE_GREEN_TEST,
     AZURE_WEB_APP_BLUE_GREEN_ROLLBACK_TEST,
     AZURE_WEB_APP_CANARY_TEST,
-    AZURE_WEB_APP_API_TEST
+    AZURE_WEB_APP_API_TEST;
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -208,6 +214,8 @@ public class InfrastructureDefinitionGenerator {
     switch (infraType) {
       case AWS_SSH_TEST:
         return ensureAwsSsh(seed, owners);
+      case AWS_LAMBDA_TEST:
+        return ensureAwsLambda(seed, owners);
       case AWS_WINRM_FUNCTIONAL_TEST:
         return ensureAwsWinrmFunctionalTest(seed, owners);
       case AWS_SSH_FUNCTIONAL_TEST:
@@ -242,6 +250,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureAzureHelmInfraDef(seed, owners);
       case GCP_HELM:
         return ensureGcpHelmInfraDef(seed, owners, "fn-test-helm");
+      case GCP_HELM_CUSTOM_MANIFEST_TEST:
+        return ensureGcpHelmCustomManifestInfraDef(seed, owners, "fn-test-helm");
       case PIPELINE_RBAC_QA_AWS_SSH_TEST:
         return ensurePipelineRbacQaK8sTest(seed, owners);
       case PIPELINE_RBAC_PROD_AWS_SSH_TEST:
@@ -310,6 +320,32 @@ public class InfrastructureDefinitionGenerator {
             .infrastructure(GoogleKubernetesEngine.builder()
                                 .cloudProviderId(gcpCloudProvider.getUuid())
                                 .clusterName("us-central1-a/harness-test")
+                                .namespace(namespace)
+                                .build())
+            .deploymentType(DeploymentType.HELM)
+            .cloudProviderType(CloudProviderType.GCP)
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensureGcpHelmCustomManifestInfraDef(Seed seed, Owners owners, String namespace) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
+      owners.add(environment);
+    }
+
+    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_QA_TARGET);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("qa-target-helm-" + namespace)
+            .infrastructure(GoogleKubernetesEngine.builder()
+                                .cloudProviderId(gcpCloudProvider.getUuid())
+                                .clusterName("us-central1-a/qa-target")
                                 .namespace(namespace)
                                 .build())
             .deploymentType(DeploymentType.HELM)
@@ -426,6 +462,31 @@ public class InfrastructureDefinitionGenerator {
             .appId(owners.obtainApplication().getUuid())
             .build();
 
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensureAwsLambda(Randomizer.Seed seed, Owners owners) {
+    Environment environment = ensureEnv(seed, owners);
+    final String region = "us-east-2";
+
+    final SettingAttribute awsCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
+
+    AwsLambdaInfrastructure awsLambdaInfrastructure = AwsLambdaInfrastructure.builder()
+                                                          .cloudProviderId(awsCloudProvider.getUuid())
+                                                          .region(region)
+                                                          .role(GeneratorConstants.AWS_TEST_LAMBDA_ROLE)
+                                                          .build();
+
+    String name = "aws-lamda-infra";
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(name)
+                                                            .cloudProviderType(CloudProviderType.AWS)
+                                                            .deploymentType(DeploymentType.AWS_LAMBDA)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .infrastructure(awsLambdaInfrastructure)
+                                                            .build();
     return ensureInfrastructureDefinition(infrastructureDefinition);
   }
 

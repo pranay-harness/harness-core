@@ -4,12 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.Pcfplugin;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
-import static software.wings.beans.command.PcfDummyCommandUnit.Pcfplugin;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
@@ -26,6 +26,11 @@ import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.ListUtils;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
+import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -62,10 +67,6 @@ import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -74,6 +75,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -333,7 +335,7 @@ public class PcfPluginState extends State {
 
     final PcfInfrastructureMapping pcfInfrastructureMapping = getPcfInfrastructureMapping(context, app);
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
-    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
+    CfInternalConfig pcfConfig = CfConfigToInternalMapper.toCfInternalConfig((PcfConfig) settingAttribute.getValue());
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
@@ -362,8 +364,8 @@ public class PcfPluginState extends State {
     // resolve template variables
     stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
-    PcfCommandRequest commandRequest =
-        PcfRunPluginCommandRequest.builder()
+    CfCommandRequest commandRequest =
+        CfRunPluginCommandRequest.builder()
             .activityId(activityId)
             .appId(app.getUuid())
             .accountId(app.getAccountId())
@@ -597,7 +599,7 @@ public class PcfPluginState extends State {
       ExecutionContext context, Map<String, ResponseData> response) {
     final String activityId = getActivityId(context);
 
-    PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+    CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;

@@ -4,7 +4,6 @@ import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.dl.WingsPersistence;

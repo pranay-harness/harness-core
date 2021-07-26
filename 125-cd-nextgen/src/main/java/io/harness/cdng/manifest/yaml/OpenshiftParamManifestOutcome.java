@@ -1,5 +1,8 @@
 package io.harness.cdng.manifest.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 
@@ -12,8 +15,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("openshiftParamManifestOutcome")
 @JsonTypeName(ManifestType.OpenshiftParam)
+@OwnedBy(CDP)
 public class OpenshiftParamManifestOutcome implements ManifestOutcome {
   String identifier;
   String type = ManifestType.OpenshiftParam;
   StoreConfig store;
+  int order;
 }

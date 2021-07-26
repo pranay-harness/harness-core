@@ -5,12 +5,9 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.beans.RollbackNode;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
-import io.harness.yaml.core.StepGroupElement;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -28,11 +25,6 @@ public class PlanCreatorHelper {
 
     String value = engineExpressionService.renderExpression(
         ambiance, format("<+%s.status>", rollbackNode.getDependentNodeIdentifier()), true);
-    return !EngineExpressionEvaluator.hasVariables(value);
-  }
-
-  public static boolean isStepGroupWithRollbacks(@Nonnull ExecutionWrapper executionWrapper) {
-    return executionWrapper instanceof StepGroupElement
-        && EmptyPredicate.isNotEmpty(((StepGroupElement) executionWrapper).getRollbackSteps());
+    return !EngineExpressionEvaluator.hasExpressions(value);
   }
 }

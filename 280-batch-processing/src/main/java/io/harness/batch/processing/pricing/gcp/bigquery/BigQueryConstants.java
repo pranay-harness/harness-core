@@ -20,7 +20,7 @@ public class BigQueryConstants {
       + "WHERE accountid = '%s' and starttime = %s ; ";
 
   public static final String AZURE_VM_BILLING_QUERY =
-      "SELECT SUM(cost) as cost, azureInstanceId, azureVMProviderId, azureMeterCategory "
+      "SELECT SUM(cost) as cost, MAX(azureResourceRate) as azureRate, azureInstanceId, azureVMProviderId, azureMeterCategory "
       + "FROM `%s` "
       + "WHERE  azureVMProviderId IN ( '%s' )  AND "
       + "startTime  >= '%s' AND startTime < '%s' AND cloudProvider = 'AZURE' "
@@ -42,6 +42,7 @@ public class BigQueryConstants {
       "SELECT count(*) AS count, cloudProvider FROM `%s` GROUP BY cloudProvider";
 
   public static final String cost = "cost";
+  public static final String azureRate = "azureRate";
   public static final String effectiveCost = "effectivecost";
   public static final String resourceId = "resourceid";
   public static final String count = "count";

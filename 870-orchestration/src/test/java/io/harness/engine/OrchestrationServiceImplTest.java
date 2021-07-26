@@ -16,6 +16,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 
@@ -39,7 +40,8 @@ public class OrchestrationServiceImplTest extends OrchestrationTestBase {
 
   @Spy @Inject private OrchestrationServiceImpl orchestrationService;
 
-  private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
+  private static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
 
   @Test
   @Owner(developers = PRASHANT)

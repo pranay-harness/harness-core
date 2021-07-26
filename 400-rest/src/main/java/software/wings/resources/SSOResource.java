@@ -8,6 +8,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.sso.LdapGroupResponse;
@@ -19,7 +20,6 @@ import software.wings.helpers.ext.ldap.LdapResponse.Status;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.authentication.SSOConfig;

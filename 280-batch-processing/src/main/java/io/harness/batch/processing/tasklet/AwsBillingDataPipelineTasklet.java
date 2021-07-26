@@ -46,9 +46,7 @@ public class AwsBillingDataPipelineTasklet implements Tasklet {
     String accountName = account.getAccountName();
 
     List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS,
-        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
-        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
+        accountId, SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS);
 
     boolean awsUseNewPipeline = mainConfig.getBillingDataPipelineConfig().isAwsUseNewPipeline();
     ceConnectorsList.forEach(settingAttribute -> {

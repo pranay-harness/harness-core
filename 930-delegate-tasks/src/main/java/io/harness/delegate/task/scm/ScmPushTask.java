@@ -11,7 +11,6 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
-import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
@@ -57,8 +56,6 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
           return scmServiceClient.createFile(
               scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(), scmBlockingStub);
         });
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-            createFileResponse.getStatus(), createFileResponse.getError());
         return ScmPushTaskResponseData.builder()
             .createFileResponse(createFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
@@ -68,8 +65,6 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         DeleteFileResponse deleteFileResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.deleteFile(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(),
                 SCMGrpc.newBlockingStub(c)));
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-            deleteFileResponse.getStatus(), deleteFileResponse.getError());
         return ScmPushTaskResponseData.builder()
             .deleteFileResponse(deleteFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())
@@ -85,8 +80,6 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
           return scmServiceClient.updateFile(
               scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(), scmBlockingStub);
         });
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
-            updateFileResponse.getStatus(), updateFileResponse.getError());
         return ScmPushTaskResponseData.builder()
             .updateFileResponse(updateFileResponse.toByteArray())
             .changeType(scmPushTaskParams.getChangeType())

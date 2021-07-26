@@ -14,39 +14,33 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHE
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_FACILITATOR_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_FACILITATOR_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_INTERRUPT_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_INTERRUPT_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_ADVISE_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_ADVISE_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_RESUME_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_RESUME_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_START_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_START_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_PROGRESS_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_PROGRESS_LISTENER;
+import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_PROCESSING_TIME_SECONDS;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_ADVISE_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_RESUME_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_CONSUMER;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.ng.core.event.MessageListener;
-import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventMessageListener;
-import io.harness.pms.sdk.execution.events.interrupts.InterruptEventMessageListener;
-import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventMessageListener;
-import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventMessageListener;
-import io.harness.pms.sdk.execution.events.node.start.NodeStartEventMessageListener;
-import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventMessageListener;
-import io.harness.pms.sdk.execution.events.progress.ProgressEventMessageListener;
+import io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants;
 import io.harness.redis.RedisConfig;
+import io.harness.threading.ThreadPool;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PmsSdkEventsFrameworkModule extends AbstractModule {
   private static PmsSdkEventsFrameworkModule instance;
@@ -108,64 +102,46 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
     } else {
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_INTERRUPT_CONSUMER))
-          .toInstance(RedisConsumer.of(PIPELINE_INTERRUPT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10),
-              PIPELINE_INTERRUPT_BATCH_SIZE));
+          .toInstance(RedisConsumer.of(PIPELINE_INTERRUPT_TOPIC, serviceName, redisConfig,
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_INTERRUPT_BATCH_SIZE));
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_ORCHESTRATION_EVENT_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_ORCHESTRATION_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE));
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE));
 
       // facilitator
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_FACILITATOR_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_FACILITATOR_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_FACILITATOR_EVENT_BATCH_SIZE));
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_FACILITATOR_EVENT_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_NODE_START_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_START_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_NODE_START_EVENT_BATCH_SIZE));
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_NODE_START_EVENT_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_PROGRESS_CONSUMER))
-          .toInstance(RedisConsumer.of(PIPELINE_PROGRESS_EVENT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10),
-              PIPELINE_PROGRESS_BATCH_SIZE));
+          .toInstance(RedisConsumer.of(PIPELINE_PROGRESS_EVENT_TOPIC, serviceName, redisConfig,
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_PROGRESS_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_NODE_ADVISE_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_ADVISE_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_NODE_ADVISE_BATCH_SIZE));
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_NODE_ADVISE_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_NODE_RESUME_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_RESUME_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_NODE_RESUME_BATCH_SIZE));
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_NODE_RESUME_BATCH_SIZE));
     }
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_INTERRUPT_LISTENER))
-        .to(InterruptEventMessageListener.class);
+  }
 
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_ORCHESTRATION_EVENT_LISTENER))
-        .to(OrchestrationEventMessageListener.class);
-
-    // facilitator listener
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_FACILITATOR_LISTENER))
-        .to(FacilitatorEventMessageListener.class);
-
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_NODE_START_LISTENER))
-        .to(NodeStartEventMessageListener.class);
-
-    bind(MessageListener.class).annotatedWith(Names.named(PT_PROGRESS_LISTENER)).to(ProgressEventMessageListener.class);
-
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_NODE_ADVISE_LISTENER))
-        .to(NodeAdviseEventMessageListener.class);
-
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_NODE_RESUME_LISTENER))
-        .to(NodeResumeEventMessageListener.class);
+  @Provides
+  @Singleton
+  @Named(PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE)
+  public ExecutorService sdkExecutorService() {
+    return ThreadPool.create(
+        20, 60, 30L, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PmsSdkEventProcessor-%d").build());
   }
 }

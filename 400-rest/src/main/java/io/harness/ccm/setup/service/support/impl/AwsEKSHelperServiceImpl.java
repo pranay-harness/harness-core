@@ -7,6 +7,7 @@ import io.harness.ccm.setup.service.support.AwsCredentialHelper;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
@@ -32,9 +33,9 @@ public class AwsEKSHelperServiceImpl implements AwsEKSHelperService {
 
   @Override
   public List<String> listEKSClusters(String region, AwsCrossAccountAttributes awsCrossAccountAttributes) {
-    try {
-      AmazonEKSClient amazonEKSClient = getAmazonEKSClient(region, awsCrossAccountAttributes);
-      return listEKSClusters(amazonEKSClient);
+    try (CloseableAmazonWebServiceClient<AmazonEKSClient> closeableAmazonEKSClient =
+             new CloseableAmazonWebServiceClient(getAmazonEKSClient(region, awsCrossAccountAttributes))) {
+      return listEKSClusters(closeableAmazonEKSClient.getClient());
     } catch (Exception ex) {
       log.info(exceptionMessage, region, ex);
       return Collections.emptyList();
@@ -43,9 +44,9 @@ public class AwsEKSHelperServiceImpl implements AwsEKSHelperService {
 
   @Override
   public boolean verifyAccess(String region, AwsCrossAccountAttributes awsCrossAccountAttributes) {
-    try {
-      AmazonEKSClient amazonEKSClient = getAmazonEKSClient(region, awsCrossAccountAttributes);
-      listEKSClusters(amazonEKSClient);
+    try (CloseableAmazonWebServiceClient<AmazonEKSClient> closeableAmazonEKSClient =
+             new CloseableAmazonWebServiceClient(getAmazonEKSClient(region, awsCrossAccountAttributes))) {
+      listEKSClusters(closeableAmazonEKSClient.getClient());
     } catch (AWSSecurityTokenServiceException stex) {
       log.info(exceptionMessage, region, stex);
       return false;

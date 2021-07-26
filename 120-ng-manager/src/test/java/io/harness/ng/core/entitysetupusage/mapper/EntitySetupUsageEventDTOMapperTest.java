@@ -32,6 +32,7 @@ import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
+import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.entitysetupusage.helper.GitInfoPopulatorForConnector;
 import io.harness.ng.core.entitysetupusage.helper.SetupUsageGitInfoPopulator;
@@ -253,31 +254,27 @@ public class EntitySetupUsageEventDTOMapperTest extends NgManagerTestBase {
   private List<EntityDetailWithSetupUsageDetailProtoDTO> createSecretEntityWithDetailsList() {
     List<EntityDetailWithSetupUsageDetailProtoDTO> entityDetailProtoDTOS = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      entityDetailProtoDTOS.add(
-          createEntityDetailDTOWithDetails("secretIdentifierForDetail" + i, EntityTypeProtoEnum.SECRETS));
+      // SECRET_REFERRED_BY_PIPELINE is being sent right now, if SECRET_REFERRED_BY_CONNECTOR is required, make
+      // setupUsageDetailType a method parameter
+      entityDetailProtoDTOS.add(createEntityDetailDTOWithDetails("secretIdentifierForDetail" + i,
+          EntityTypeProtoEnum.SECRETS, SetupUsageDetailType.SECRET_REFERRED_BY_PIPELINE));
     }
     return entityDetailProtoDTOS;
   }
 
   private EntityDetailWithSetupUsageDetailProtoDTO createEntityDetailDTOWithDetails(
-      String identifier, EntityTypeProtoEnum entityType) {
-    IdentifierRefProtoDTO identifierRefProtoDTO = IdentifierRefProtoDTO.newBuilder()
-                                                      .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                                      .setOrgIdentifier(StringValue.of(orgIdentifier))
-                                                      .setProjectIdentifier(StringValue.of(projectIdentifier))
-                                                      .setIdentifier(StringValue.of(identifier))
-                                                      .setScope(PROJECT)
-                                                      .build();
+      String identifier, EntityTypeProtoEnum entityType, SetupUsageDetailType setupUsageDetailType) {
     return EntityDetailWithSetupUsageDetailProtoDTO.newBuilder()
         .setReferredEntity(createEntityDetailDTO(identifier, entityType))
+        .setType(setupUsageDetailType.name())
         .build();
   }
 
   private List<EntityDetailWithSetupUsageDetailProtoDTO> createConnectorEntityWithDetailsList() {
     List<EntityDetailWithSetupUsageDetailProtoDTO> entityDetailProtoDTOS = new ArrayList<>();
     for (int i = 0; i < 2; i++) {
-      entityDetailProtoDTOS.add(
-          createEntityDetailDTOWithDetails("connectorIdentifierForDetail" + i, EntityTypeProtoEnum.CONNECTORS));
+      entityDetailProtoDTOS.add(createEntityDetailDTOWithDetails("connectorIdentifierForDetail" + i,
+          EntityTypeProtoEnum.CONNECTORS, SetupUsageDetailType.CONNECTOR_REFERRED_BY_PIPELINE));
     }
     return entityDetailProtoDTOS;
   }

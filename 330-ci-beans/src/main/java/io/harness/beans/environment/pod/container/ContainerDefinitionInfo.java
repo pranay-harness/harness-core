@@ -29,7 +29,9 @@ public class ContainerDefinitionInfo {
   private List<String> args;
   private List<Integer> ports;
   Map<String, String> envVars;
+  Map<String, String> envVarsWithSecretRef;
   List<SecretNGVariable> secretVariables;
   private boolean privileged;
   private Integer runAsUser;
+  private String imagePullPolicy;
 }

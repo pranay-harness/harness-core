@@ -2,6 +2,7 @@ package logger
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -33,6 +34,9 @@ func Middleware(next http.Handler) http.Handler {
 			"latency": end.Sub(start),
 			"time":    end.Format(time.RFC3339),
 		})
-		log.Infof("Completed request")
+		// Don't spam log service logs with health checks
+		if !strings.Contains(r.RequestURI, "/healthz") {
+			log.Infof("completed request")
+		}
 	})
 }

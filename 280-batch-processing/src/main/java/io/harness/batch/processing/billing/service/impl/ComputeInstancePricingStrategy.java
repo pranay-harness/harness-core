@@ -25,6 +25,7 @@ import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.batch.InstanceData;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.Map;
@@ -132,7 +133,8 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     return pricePerHour;
   }
 
-  private PricingData getCustomVMPricing(InstanceData instanceData, Instant startTime, Instant endTime,
+  @VisibleForTesting
+  PricingData getCustomVMPricing(InstanceData instanceData, Instant startTime, Instant endTime,
       double parentInstanceActiveSecond, String instanceFamily, String region, CloudProvider cloudProvider) {
     PricingData pricingData = null;
     VMInstanceBillingData vmInstanceBillingData = null;
@@ -156,6 +158,9 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
     }
     if (null != vmInstanceBillingData && !Double.isNaN(vmInstanceBillingData.getComputeCost())) {
       double pricePerHr = (vmInstanceBillingData.getComputeCost() * 3600) / parentInstanceActiveSecond;
+      if (!Double.isNaN(vmInstanceBillingData.getRate()) && vmInstanceBillingData.getRate() > 0.0) {
+        pricePerHr = vmInstanceBillingData.getRate();
+      }
       pricingData = PricingData.builder()
                         .pricePerHour(pricePerHr)
                         .networkCost(vmInstanceBillingData.getNetworkCost())

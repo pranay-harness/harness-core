@@ -26,6 +26,7 @@ import com.sun.istack.internal.NotNull;
 import java.util.List;
 import javax.validation.constraints.Size;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.Singular;
 import lombok.Value;
@@ -97,8 +98,18 @@ public class InputSetEntity
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
 
+  @Wither @Builder.Default Boolean isInvalid = Boolean.FALSE;
+
   @Override
   public String getAccountIdentifier() {
     return accountId;
+  }
+
+  @NonNull
+  public Boolean getIsInvalid() {
+    if (isInvalid == null) {
+      return Boolean.FALSE;
+    }
+    return isInvalid;
   }
 }

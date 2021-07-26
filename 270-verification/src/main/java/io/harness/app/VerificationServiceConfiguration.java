@@ -6,7 +6,6 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;

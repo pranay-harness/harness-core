@@ -28,6 +28,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.tasks.ResponseData;
@@ -87,6 +88,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   @Inject private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private AwsStateHelper awsStateHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   private static final String COMMAND_NAME = AMI_SETUP_COMMAND_NAME;
 
@@ -217,6 +219,7 @@ public class AwsAmiServiceTrafficShiftAlbSetup extends State {
         .lbDetails(spotinstStateHelper.getRenderedLbDetails(context, lbDetails))
         .userData(awsStateHelper.getEncodedUserData(
             awsAmiTrafficShiftAlbData.getApp().getUuid(), awsAmiTrafficShiftAlbData.getServiceId(), context))
+        .amiInServiceHealthyStateFFEnabled(false)
         .build();
   }
 

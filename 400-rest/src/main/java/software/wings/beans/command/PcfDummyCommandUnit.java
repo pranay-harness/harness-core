@@ -11,14 +11,6 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(CDP)
 public class PcfDummyCommandUnit extends AbstractCommandUnit {
-  public static final String FetchFiles = "Download Manifest Files";
-  public static final String CheckExistingApps = "Check Existing Applications";
-  public static final String PcfSetup = "Setup Application";
-  public static final String Wrapup = "Wrap up";
-  public static final String Pcfplugin = "Execute CF Command";
-  public static final String Downsize = "Downsize Application";
-  public static final String Upsize = "Upsize Application";
-
   public PcfDummyCommandUnit(String name) {
     super(PCF_DUMMY);
     setName(name);

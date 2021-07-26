@@ -8,8 +8,9 @@ from google.cloud import secretmanager
 from botocore.config import Config
 import datetime
 import boto3
-from util import create_dataset, if_tbl_exists, createTable, print_, ACCOUNTID_LOG, TABLE_NAME_FORMAT
-from aws_util import assumed_role_session, STATIC_REGION, get_secret_key
+import util
+from util import create_dataset, if_tbl_exists, createTable, print_, TABLE_NAME_FORMAT
+from aws_util import assumed_role_session, STATIC_REGION
 
 def getEbsVolumesData(jsonData):
     my_config = Config(
@@ -24,8 +25,8 @@ def getEbsVolumesData(jsonData):
         print_("Assuming role")
         key, secret, token = assumed_role_session(jsonData)
     except Exception as e:
-        print_(e, "ERROR")
-        raise e
+        print_(e, "WARN")
+        return EBS_VOLUMES_DATA_MAP, set()
 
     ec2 = boto3.client('ec2', config=my_config, aws_access_key_id=key,
                        aws_secret_access_key=secret, aws_session_token=token)
@@ -34,7 +35,7 @@ def getEbsVolumesData(jsonData):
         REGIONS = [item["RegionName"] for item in response['Regions']]
     except Exception as e:
         # We probably do not have describe region permission in CF template for this customer.
-        print_(e, "ERROR")
+        print_(e, "WARN")
         print_("Using static region list")
         REGIONS = STATIC_REGION
 
@@ -60,7 +61,7 @@ def getEbsVolumesData(jsonData):
                     volume_inserted[volume['VolumeId']] = True
                     unique_volume_ids.add(volume['VolumeId'])
         except Exception as e:
-            print_(e, "ERROR")
+            print_(e, "WARN")
             print_("Error in getting volumes for %s" % region)
             continue
 
@@ -89,7 +90,7 @@ def getSnapshots(client, region, linkedAccountId):
                 volume_snapshot_mapping[volumeId].append(getSnapshotDetails(snapshot))
                 snapshot_count += 1
     except Exception as e:
-        print_(e, "ERROR")
+        print_(e, "WARN")
         print_("Error in getting volumes for %s" % region)
 
     print_("Found %s snapshots in region %s" % (snapshot_count, region))
@@ -230,7 +231,7 @@ def main(event, context):
     client = bigquery.Client(jsonData["projectName"])
 
     # Set the accountId for GCP logging
-    ACCOUNTID_LOG = jsonData.get("accountIdOrig")
+    util.ACCOUNTID_LOG = jsonData.get("accountIdOrig")
 
     jsonData["accountIdBQ"] = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % jsonData["accountIdBQ"]

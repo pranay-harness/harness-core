@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -15,7 +16,6 @@ import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiI
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -65,6 +65,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -156,6 +157,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
 
   @InjectMocks private AwsAmiServiceDeployState state = new AwsAmiServiceDeployState("stateName");
 
@@ -207,6 +209,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     doReturn(application).when(mockParams).getApp();
     Service service = Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
     doReturn(service).when(mockServiceResourceService).getWithDetails(anyString(), anyString());
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), any());
     doReturn(
         Arrays.asList(
             InstanceInfoVariables.builder()

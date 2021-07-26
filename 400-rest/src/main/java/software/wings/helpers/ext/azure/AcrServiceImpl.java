@@ -40,10 +40,9 @@ public class AcrServiceImpl implements AcrService {
   }
 
   @Override
-  public List<String> listRegistries(
-      AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+  public List<String> listRegistries(AzureConfig config, String subscriptionId) {
     try {
-      return azureHelperService.listContainerRegistryNames(config, encryptionDetails, subscriptionId);
+      return azureHelperService.listContainerRegistryNames(config, subscriptionId);
     } catch (Exception e) {
       throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     }
@@ -88,8 +87,7 @@ public class AcrServiceImpl implements AcrService {
   @Override
   public boolean verifyImageName(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    if (!azureHelperService.isValidSubscription(
-            config, encryptionDetails, artifactStreamAttributes.getSubscriptionId())) {
+    if (!azureHelperService.isValidSubscription(config, artifactStreamAttributes.getSubscriptionId())) {
       log.info(
           "SubscriptionId [" + artifactStreamAttributes.getSubscriptionId() + "] does not exist in Azure account.");
       throw new WingsException(INVALID_ARGUMENT, USER)
@@ -97,8 +95,8 @@ public class AcrServiceImpl implements AcrService {
               "SubscriptionId [" + artifactStreamAttributes.getSubscriptionId() + "] does not exist in Azure account.");
     }
 
-    if (!azureHelperService.isValidContainerRegistry(config, encryptionDetails,
-            artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName())) {
+    if (!azureHelperService.isValidContainerRegistry(
+            config, artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName())) {
       log.info("Registry [" + artifactStreamAttributes.getRegistryName() + "] does not exist in Azure subscription.");
       throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args",
@@ -106,8 +104,8 @@ public class AcrServiceImpl implements AcrService {
     }
 
     if (!azureHelperService
-             .listRepositories(config, encryptionDetails, artifactStreamAttributes.getSubscriptionId(),
-                 artifactStreamAttributes.getRegistryName())
+             .listRepositories(
+                 config, artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName())
              .contains(artifactStreamAttributes.getRepositoryName())) {
       log.info("Repository [" + artifactStreamAttributes.getRepositoryName() + "] does not exist in Azure Registry.");
       throw new WingsException(INVALID_ARGUMENT, USER)

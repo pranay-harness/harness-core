@@ -33,6 +33,8 @@ nextGen:
 
 enableAudit: false
 
+exportMetricsToStackDriver: false
+
 allowedOrigins:
   - https://localhost:8181
   - https://127.0.0.1:8181
@@ -289,8 +291,6 @@ baseUrls:
 
 ngAuthUIEnabled: false
 
-enableDefaultResourceGroupCreation: true
-
 cfClientConfig:
   apiKey: ""
   configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
@@ -314,15 +314,6 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
-yamlSchemaClientConfig:
-  yamlSchemaHttpClientMap:
-    cvng:
-      serviceHttpClientConfig:
-        baseUrl: http://localhost:6457/cv/api/
-        connectTimeOutSeconds: 15
-        readTimeOutSeconds: 15
-      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
-
 signupNotificationConfiguration:
   projectId: "projectId_place_holder"
   bucketName: "bucketName_place_holder"
@@ -334,3 +325,8 @@ signupNotificationConfiguration:
       gcsFileName: "signup_confirmation.txt"
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
+
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]

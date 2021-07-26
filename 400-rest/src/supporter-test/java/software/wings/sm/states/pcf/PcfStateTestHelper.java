@@ -2,8 +2,8 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;

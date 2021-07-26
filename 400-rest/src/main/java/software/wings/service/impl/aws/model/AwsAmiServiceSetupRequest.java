@@ -45,8 +45,8 @@ public class AwsAmiServiceSetupRequest extends AwsAmiRequest {
       List<String> infraMappingTargetGroupArns, String newAsgNamePrefix, Integer maxInstances,
       Integer autoScalingSteadyStateTimeout, String artifactRevision, String userData, String accountId, String appId,
       String activityId, String commandName, boolean blueGreen, boolean useCurrentRunningCount, int desiredInstances,
-      int minInstances) {
-    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_SETUP, region);
+      int minInstances, boolean amiInServiceHealthyStateFFEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_SETUP, region, amiInServiceHealthyStateFFEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.activityId = activityId;

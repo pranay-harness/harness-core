@@ -15,7 +15,6 @@ import io.harness.ng.core.dto.ResponseDTO;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
@@ -47,12 +46,6 @@ public interface AccessControlAdminClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Query("managed") Boolean managed,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO);
-
-  @DELETE(ROLE_ASSIGNMENTS_API + "/{identifier}")
-  Call<ResponseDTO<RoleAssignmentResponseDTO>> deleteRoleAssignment(@Path("identifier") String identifier,
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
   @GET(ROLE_API)
   Call<ResponseDTO<PageResponse<RoleResponseDTO>>> getRoles(

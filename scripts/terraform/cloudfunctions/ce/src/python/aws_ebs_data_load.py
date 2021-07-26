@@ -61,7 +61,7 @@ def load_into_main_table(jsonData):
     query = """
         MERGE `%s` T
         USING `%s` S
-        ON T.volumeId = S.volumeId
+        ON T.volumeId = S.volumeId AND T.linkedAccountId = S.linkedAccountId AND T.region = S.region
         WHEN MATCHED THEN
             UPDATE SET volumeType = s.volumeType, size = s.size, state = s.state, iops = s.iops,
             attachments = s.attachments, tags = s.tags, snapshots = s.snapshots, lastUpdatedAt = '%s',

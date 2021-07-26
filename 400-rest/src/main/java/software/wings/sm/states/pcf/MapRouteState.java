@@ -15,6 +15,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfDeployCommandResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -33,10 +37,6 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -148,7 +148,7 @@ public class MapRouteState extends State {
     List<EncryptedDataDetail> encryptedDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
-    PcfRouteUpdateRequestConfigData requestConfigData = null;
+    CfRouteUpdateRequestConfigData requestConfigData = null;
     if (isRollback()) {
       SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf = sweepingOutputService.findSweepingOutput(
           context.prepareSweepingOutputInquiryBuilder()
@@ -185,9 +185,9 @@ public class MapRouteState extends State {
         renderedTags);
   }
 
-  private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
+  private CfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
       SetupSweepingOutputPcf setupSweepingOutputPcf, PcfInfrastructureMapping infrastructureMapping) {
-    return PcfRouteUpdateRequestConfigData.builder()
+    return CfRouteUpdateRequestConfigData.builder()
         .existingApplicationNames(getApplicationNamesTobeUpdated(setupSweepingOutputPcf))
         .finalRoutes(getRoutes(setupSweepingOutputPcf))
         .isRollback(false)
@@ -228,7 +228,7 @@ public class MapRouteState extends State {
               ? Collections.EMPTY_LIST
               : setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                     .stream()
-                    .map(PcfAppSetupTimeDetails::getApplicationName)
+                    .map(CfAppSetupTimeDetails::getApplicationName)
                     .collect(toList()));
     }
 
@@ -239,7 +239,7 @@ public class MapRouteState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       String activityId = response.keySet().iterator().next();
-      PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+      CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
       ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
           ? ExecutionStatus.SUCCESS
           : ExecutionStatus.FAILED;
@@ -267,17 +267,17 @@ public class MapRouteState extends State {
   protected ExecutionResponse handleAsyncInternal(
       ExecutionContext context, Map<String, DelegateResponseData> response) {
     String activityId = response.keySet().iterator().next();
-    PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+    CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
-    PcfDeployCommandResponse pcfDeployCommandResponse =
-        (PcfDeployCommandResponse) executionResponse.getPcfCommandResponse();
+    CfDeployCommandResponse cfDeployCommandResponse =
+        (CfDeployCommandResponse) executionResponse.getPcfCommandResponse();
 
-    if (pcfDeployCommandResponse.getInstanceDataUpdated() == null) {
-      pcfDeployCommandResponse.setInstanceDataUpdated(new ArrayList<>());
+    if (cfDeployCommandResponse.getInstanceDataUpdated() == null) {
+      cfDeployCommandResponse.setInstanceDataUpdated(new ArrayList<>());
     }
 
     // update PcfDeployStateExecutionData,

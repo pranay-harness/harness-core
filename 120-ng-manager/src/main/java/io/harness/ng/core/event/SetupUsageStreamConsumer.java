@@ -6,6 +6,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -23,11 +24,13 @@ public class SetupUsageStreamConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
+  private final QueueController queueController;
 
   @Inject
   public SetupUsageStreamConsumer(@Named(SETUP_USAGE) Consumer redisConsumer,
-      @Named(SETUP_USAGE) MessageListener setupUsageChangeEventMessageProcessor) {
+      @Named(SETUP_USAGE) MessageListener setupUsageChangeEventMessageProcessor, QueueController queueController) {
     this.redisConsumer = redisConsumer;
+    this.queueController = queueController;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(setupUsageChangeEventMessageProcessor);
   }
@@ -35,15 +38,24 @@ public class SetupUsageStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for setup usage stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info("Setup usage consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error("Setup Usage consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {

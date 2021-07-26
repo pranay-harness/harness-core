@@ -179,3 +179,21 @@ func GetGitClient(p pb.Provider, log *zap.SugaredLogger) (client *scm.Client, er
 	}
 	return client, nil
 }
+
+// returns a string of the git provider being used. Currently only its name.
+func GetProvider(p pb.Provider) string {
+	switch p.GetHook().(type) {
+	case *pb.Provider_Github:
+		return "github"
+	case *pb.Provider_Gitlab:
+		return "gitlab"
+	case *pb.Provider_Gitea:
+		return "gitea"
+	case *pb.Provider_BitbucketCloud:
+		return "bitbucket cloud"
+	case *pb.Provider_BitbucketServer:
+		return "bitbucket server"
+	default:
+		return "unknown provider"
+	}
+}

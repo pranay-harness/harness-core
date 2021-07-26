@@ -8,6 +8,7 @@ import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.EmptyRestResponseException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
@@ -16,7 +17,6 @@ import io.harness.testframework.framework.Setup;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;

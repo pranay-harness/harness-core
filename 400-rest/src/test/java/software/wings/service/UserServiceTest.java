@@ -98,6 +98,7 @@ import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
@@ -138,7 +139,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.AuthenticationManager;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.MarketPlaceConfig;
@@ -280,6 +280,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Inject @InjectMocks SecretManager secretManager;
   @Inject @InjectMocks private AwsMarketPlaceApiHandlerImpl marketPlaceService;
   @Inject WingsPersistence realWingsPersistence;
+  @Mock PortalConfig portalConfig;
 
   @InjectMocks private HarnessUserGroupService harnessUserGroupService = mock(HarnessUserGroupServiceImpl.class);
   @InjectMocks private AccessRequestService accessRequestService = mock(AccessRequestServiceImpl.class);
@@ -804,7 +805,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.update(user);
     Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
-    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnOldOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -821,7 +822,7 @@ public class UserServiceTest extends WingsBaseTest {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.name, USER_NAME);
     Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
-    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnOldOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -847,7 +848,7 @@ public class UserServiceTest extends WingsBaseTest {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.unset(UserKeys.name);
     Query<User> query = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
-    verify(wingsPersistence).findAndModify(query, updateOperations, HPersistence.returnNewOptions);
+    verify(wingsPersistence).findAndModify(query, updateOperations, HPersistence.returnOldOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -1191,7 +1192,7 @@ public class UserServiceTest extends WingsBaseTest {
                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                        .build();
 
-    User user = User.Builder.anUser().uuid(USER_ID).email(USER_EMAIL).build();
+    User user = User.Builder.anUser().uuid(USER_ID).name("UserName").email(USER_EMAIL).build();
     user.getAccounts().add(temp);
 
     when(accountService.get(anyString())).thenReturn(temp);
@@ -1201,6 +1202,7 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn(anUserInvite().withUuid(USER_INVITE_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build());
     when(loginSettingsService.verifyPasswordStrength(Mockito.any(Account.class), Mockito.any(char[].class)))
         .thenReturn(true);
+    when(wingsPersistence.findAndModify(any(), any(), any())).thenReturn(user);
 
     UserInvite userInvite =
         anUserInvite().withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).withUuid(USER_INVITE_ID).build();
@@ -1446,8 +1448,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testJWTToken() {
-    PortalConfig portalConfig = mock(PortalConfig.class);
-    when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getJwtMultiAuthSecret())
         .thenReturn("5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN");
     HashMap<String, String> claimMap = new HashMap<>();

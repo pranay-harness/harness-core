@@ -5,14 +5,14 @@ import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
+import static io.harness.pcf.CfCommandUnitConstants.Downsize;
+import static io.harness.pcf.CfCommandUnitConstants.Upsize;
+import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
-import static software.wings.beans.command.PcfDummyCommandUnit.Downsize;
-import static software.wings.beans.command.PcfDummyCommandUnit.Upsize;
-import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import static com.google.common.collect.Maps.newHashMap;
@@ -25,6 +25,13 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
+import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfDeployCommandResponse;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -34,7 +41,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 
-import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PcfInstanceElement;
@@ -55,12 +61,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.PcfDummyCommandUnit;
-import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -68,6 +68,8 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
+import software.wings.service.mappers.artifact.CfInstanceElementMapper;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -198,10 +200,10 @@ public class PcfDeployState extends State {
     }
 
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
-    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
+    CfInternalConfig pcfConfig = CfConfigToInternalMapper.toCfInternalConfig((PcfConfig) settingAttribute.getValue());
 
-    List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-        (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails(pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     Integer upsizeUpdateCount = getUpsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
     Integer downsizeUpdateCount = getDownsizeUpdateCount(setupSweepingOutputPcf, pcfConfig);
@@ -209,7 +211,7 @@ public class PcfDeployState extends State {
     PcfDeployStateExecutionData stateExecutionData =
         getPcfDeployStateExecutionData(setupSweepingOutputPcf, activity, upsizeUpdateCount, downsizeUpdateCount);
 
-    PcfCommandRequest commandRequest = getPcfCommandRequest(context, app, activity.getUuid(), setupSweepingOutputPcf,
+    CfCommandRequest commandRequest = getPcfCommandRequest(context, app, activity.getUuid(), setupSweepingOutputPcf,
         pcfConfig, upsizeUpdateCount, downsizeUpdateCount, stateExecutionData, pcfInfrastructureMapping);
 
     if (isRollback() && isNotEmpty(stateExecutionData.getSetupSweepingOutputPcf().getTags())) {
@@ -271,13 +273,13 @@ public class PcfDeployState extends State {
     return setupSweepingOutputPcf.getNewPcfApplicationDetails().getApplicationName();
   }
 
-  protected Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
+  protected Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, CfInternalConfig pcfConfig) {
     Integer count = setupSweepingOutputPcf.getDesiredActualFinalCount();
     return getInstanceCountToBeUpdated(count, instanceCount, instanceUnitType, true, pcfConfig, true);
   }
 
   @VisibleForTesting
-  protected Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
+  protected Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, CfInternalConfig pcfConfig) {
     boolean hasUserDefinedDownsizeForOldApp = downsizeInstanceCount != null;
     Integer downsizeUpdateCount = downsizeInstanceCount == null ? instanceCount : downsizeInstanceCount;
     downsizeInstanceUnitType = downsizeInstanceUnitType == null ? instanceUnitType : downsizeInstanceUnitType;
@@ -294,8 +296,8 @@ public class PcfDeployState extends State {
   }
 
   private Integer getInstanceCountForExistingApp(SetupSweepingOutputPcf setupSweepingOutputPcf) {
-    List<PcfAppSetupTimeDetails> appDetailsToBeDownsized = setupSweepingOutputPcf.getAppDetailsToBeDownsized();
-    PcfAppSetupTimeDetails existingAppDetails = null;
+    List<CfAppSetupTimeDetails> appDetailsToBeDownsized = setupSweepingOutputPcf.getAppDetailsToBeDownsized();
+    CfAppSetupTimeDetails existingAppDetails = null;
     if (isNotEmpty(appDetailsToBeDownsized)) {
       existingAppDetails = appDetailsToBeDownsized.get(0);
     }
@@ -309,7 +311,7 @@ public class PcfDeployState extends State {
   }
 
   private Integer getInstanceCountToBeUpdated(Integer maxInstanceCount, Integer instanceCountValue,
-      InstanceUnitType unitType, boolean upsize, PcfConfig pcfConfig, boolean hasUserDefinedDownsizeForOldApp) {
+      InstanceUnitType unitType, boolean upsize, CfInternalConfig pcfConfig, boolean hasUserDefinedDownsizeForOldApp) {
     // final count after upsize or downsize in this deploy phase
     Integer updateCount;
     if (unitType == PERCENTAGE) {
@@ -347,12 +349,12 @@ public class PcfDeployState extends State {
     return updateCount;
   }
 
-  protected PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
-      SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig, Integer updateCount,
+  protected CfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
+      SetupSweepingOutputPcf setupSweepingOutputPcf, CfInternalConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
       PcfInfrastructureMapping infrastructureMapping) {
     boolean useAppAutoscalar = setupSweepingOutputPcf.isUseAppAutoscalar();
-    return PcfCommandDeployRequest.builder()
+    return CfCommandDeployRequest.builder()
         .activityId(activityId)
         .commandName(PCF_RESIZE_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
@@ -400,37 +402,38 @@ public class PcfDeployState extends State {
 
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
-    PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+    CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
-    PcfDeployCommandResponse pcfDeployCommandResponse =
-        (PcfDeployCommandResponse) executionResponse.getPcfCommandResponse();
+    CfDeployCommandResponse cfDeployCommandResponse =
+        (CfDeployCommandResponse) executionResponse.getPcfCommandResponse();
 
-    if (pcfDeployCommandResponse.getInstanceDataUpdated() == null) {
-      pcfDeployCommandResponse.setInstanceDataUpdated(new ArrayList<>());
+    if (cfDeployCommandResponse.getInstanceDataUpdated() == null) {
+      cfDeployCommandResponse.setInstanceDataUpdated(new ArrayList<>());
     }
 
     // update PcfDeployStateExecutionData,
     PcfDeployStateExecutionData stateExecutionData = (PcfDeployStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
-    stateExecutionData.setInstanceData(pcfDeployCommandResponse.getInstanceDataUpdated());
+    stateExecutionData.setInstanceData(cfDeployCommandResponse.getInstanceDataUpdated());
+
+    List<PcfInstanceElement> respPcfInstanceElements =
+        CfInstanceElementMapper.toPcfInstanceElements(cfDeployCommandResponse.getPcfInstanceElements());
 
     // For now, only use newInstances. Do not use existing instances. It will be done as a part of separate story
-    List<PcfInstanceElement> pcfInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+    List<PcfInstanceElement> pcfInstanceElements = isEmpty(respPcfInstanceElements)
         ? emptyList()
-        : pcfDeployCommandResponse.getPcfInstanceElements()
-              .stream()
+        : respPcfInstanceElements.stream()
               .filter(pcfInstanceElement -> pcfInstanceElement.isNewInstance())
               .collect(toList());
 
-    List<PcfInstanceElement> pcfOldInstanceElements = isEmpty(pcfDeployCommandResponse.getPcfInstanceElements())
+    List<PcfInstanceElement> pcfOldInstanceElements = isEmpty(respPcfInstanceElements)
         ? emptyList()
-        : pcfDeployCommandResponse.getPcfInstanceElements()
-              .stream()
+        : respPcfInstanceElements.stream()
               .filter(pcfInstanceElement -> !pcfInstanceElement.isNewInstance())
               .collect(toList());
 
@@ -455,18 +458,17 @@ public class PcfDeployState extends State {
                                      .build());
 
       // This sweeping element will be used by verification or other consumers.
-      List<InstanceDetails> instanceDetails =
-          pcfStateHelper.generateInstanceDetails(pcfDeployCommandResponse.getPcfInstanceElements());
+      List<InstanceDetails> instanceDetails = pcfStateHelper.generateInstanceDetails(respPcfInstanceElements);
       boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
-      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-                                     .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-                                     .value(InstanceInfoVariables.builder()
-                                                .instanceElements(pcfStateHelper.generateInstanceElement(
-                                                    pcfDeployCommandResponse.getPcfInstanceElements()))
-                                                .instanceDetails(instanceDetails)
-                                                .skipVerification(skipVerification)
-                                                .build())
-                                     .build());
+      sweepingOutputService.save(
+          context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+              .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
+              .value(InstanceInfoVariables.builder()
+                         .instanceElements(pcfStateHelper.generateInstanceElement(respPcfInstanceElements))
+                         .instanceDetails(instanceDetails)
+                         .skipVerification(skipVerification)
+                         .build())
+              .build());
     }
 
     InstanceElementListParam instanceElementListParam =

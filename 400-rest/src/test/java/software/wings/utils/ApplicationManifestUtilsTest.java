@@ -28,7 +28,9 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -964,26 +966,6 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testGetApplicationManifestWithPollForChangesEnabled() {
-    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
-    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
-                                                         .storeType(HelmChartRepo)
-                                                         .pollForChanges(true)
-                                                         .helmChartConfig(chartConfig)
-                                                         .build();
-    HelmChart helmChartInContextForService = HelmChart.builder().version("contextChartVersion").build();
-
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
-    doReturn(serviceApplicationManifest).when(applicationManifestService).getManifestByServiceId(APP_ID, SERVICE_ID);
-    doReturn(helmChartInContextForService).when(context).getHelmChartForService(SERVICE_ID);
-
-    ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
-    assertThat(applicationManifest.getHelmChartConfig().getChartVersion()).isEqualTo("contextChartVersion");
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
   public void testGetApplicationManifestWithPollForChangesDisabled() {
     HelmChartConfig chartConfig =
         HelmChartConfig.builder().chartName("chartName").chartVersion("chartVersion").chartUrl("chartUrl").build();
@@ -1005,25 +987,6 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testGetApplicationManifestWithPollForChangesMissingHelmChart() {
-    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
-    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
-                                                         .storeType(HelmChartRepo)
-                                                         .pollForChanges(true)
-                                                         .helmChartConfig(chartConfig)
-                                                         .build();
-
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
-    doReturn(serviceApplicationManifest).when(applicationManifestService).getManifestByServiceId(APP_ID, SERVICE_ID);
-
-    assertThatThrownBy(() -> applicationManifestUtils.getApplicationManifestForService(context))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessageContaining("INVALID_ARGUMENT");
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
   public void testIsPollForChangesEnabled() {
     ApplicationManifestBuilder builder = ApplicationManifest.builder().storeType(HelmChartRepo);
     ApplicationManifest appManifestNullPollForChanges = builder.pollForChanges(null).build();
@@ -1034,6 +997,84 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestNullPollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestFalsePollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestTruePollForChanges)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithHelmChartFromContext() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    ApplicationManifest serviceApplicationManifest = ApplicationManifest.builder()
+                                                         .storeType(HelmChartRepo)
+                                                         .pollForChanges(true)
+                                                         .helmChartConfig(chartConfig)
+                                                         .build();
+    HelmChart helmChartInContextForService =
+        HelmChart.builder().version("contextChartVersion").applicationManifestId(MANIFEST_ID).build();
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactFromManifest(true).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(serviceApplicationManifest).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
+    doReturn(helmChartInContextForService).when(context).getHelmChartForService(SERVICE_ID);
+    assertThat(applicationManifestUtils.getApplicationManifestForService(context)).isSameAs(serviceApplicationManifest);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithHelmChartAsArtifactDisabled() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    ApplicationManifest serviceAppManifestUsingManifestId = ApplicationManifest.builder()
+                                                                .name("serviceAppManifestUsingManifestId")
+                                                                .storeType(HelmChartRepo)
+                                                                .pollForChanges(true)
+                                                                .helmChartConfig(chartConfig)
+                                                                .build();
+    ApplicationManifest serviceAppManifestUsingServiceId = ApplicationManifest.builder()
+                                                               .name("serviceAppManifestUsingServiceId")
+                                                               .storeType(HelmChartRepo)
+                                                               .helmChartConfig(chartConfig)
+                                                               .build();
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactFromManifest(true).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(serviceAppManifestUsingManifestId).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
+    doReturn(serviceAppManifestUsingServiceId)
+        .when(applicationManifestService)
+        .getManifestByServiceId(APP_ID, SERVICE_ID);
+
+    assertThat(applicationManifestUtils.getApplicationManifestForService(context))
+        .isSameAs(serviceAppManifestUsingServiceId);
+    verify(context, never()).getHelmChartForService(SERVICE_ID);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGetApplicationManifestWithHelmChartFromContextFail() {
+    HelmChartConfig chartConfig = HelmChartConfig.builder().chartName("chartName").chartUrl("chartUrl").build();
+    HelmChart helmChartInContextForService =
+        HelmChart.builder().version("contextChartVersion").applicationManifestId(MANIFEST_ID).build();
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactFromManifest(true).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID);
+    doReturn(null).when(context).getHelmChartForService(SERVICE_ID);
+
+    assertThatThrownBy(() -> applicationManifestUtils.getApplicationManifestForService(context))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("INVALID_ARGUMENT");
+
+    doReturn(helmChartInContextForService).when(context).getHelmChartForService(SERVICE_ID);
+    doReturn(null).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
+    assertThatThrownBy(() -> applicationManifestUtils.getApplicationManifestForService(context))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("INVALID_ARGUMENT");
   }
 
   @Test

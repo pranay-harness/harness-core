@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.beans.security.HarnessUserGroup;

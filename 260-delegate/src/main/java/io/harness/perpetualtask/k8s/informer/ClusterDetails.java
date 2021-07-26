@@ -19,5 +19,5 @@ public class ClusterDetails {
   @NonNull String cloudProviderId;
   @NonNull String clusterName;
   @Nonnull String kubeSystemUid;
-  @Builder.Default boolean isSeen = false;
+  boolean isSeen;
 }

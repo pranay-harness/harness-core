@@ -94,6 +94,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -129,10 +130,10 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
@@ -210,6 +211,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private HelmChartService helmChartService;
   @Mock private ArtifactService artifactService;
   @Mock private StateMachineExecutor stateMachineExecutor;
+  @Mock private ApplicationManifestService applicationManifestService;
 
   @Inject private WingsPersistence wingsPersistence1;
 
@@ -646,14 +648,16 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setPipelineExecution(createPipelineExecution(approvalStateExecutionData));
 
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+    when(workflowExecutionServiceSpy.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
+    doNothing().when(workflowExecutionServiceSpy).refreshPipelineExecution(any());
 
     ApprovalStateExecutionData returnedExecutionData =
-        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+        workflowExecutionServiceSpy.fetchApprovalStateExecutionDataFromWorkflowExecution(
             APP_ID, workflowExecution.getUuid(), null, approvalDetails);
     assertThat(returnedExecutionData.getApprovalId()).isEqualTo(approvalId);
     assertThat(returnedExecutionData.getUserGroups()).isEqualTo(asList(userGroup.getUuid()));
+    verify(workflowExecutionServiceSpy).refreshPipelineExecution(workflowExecution);
   }
 
   @Test
@@ -731,11 +735,13 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setPipelineExecution(createPipelineExecution(null));
 
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+    when(workflowExecutionServiceSpy.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 
-    workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+    doNothing().when(workflowExecutionServiceSpy).refreshPipelineExecution(any());
+    workflowExecutionServiceSpy.fetchApprovalStateExecutionDataFromWorkflowExecution(
         APP_ID, workflowExecution.getUuid(), null, approvalDetails);
+    verify(workflowExecutionServiceSpy).refreshPipelineExecution(any());
   }
 
   @Test
@@ -1050,7 +1056,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     assertThat(executionArgs.getHelmCharts()).containsExactly(helmChart1, helmChart2, helmChart3);
     assertThat(workflowExecution.getHelmCharts()).containsExactly(helmChart1, helmChart2);
-    assertThat(keywords).containsExactlyInAnyOrder("chart", "description", "v1", "v2", "value");
+    assertThat(keywords).containsExactlyInAnyOrder("chart", "description", "v1", "v2");
     verify(helmChartService, times(1)).listByIds(anyString(), anyList());
   }
 
@@ -1082,7 +1088,6 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         .uuid(HELM_CHART_ID + version)
         .name("chart")
         .description("description")
-        .metadata(Collections.singletonMap("key", "value"))
         .serviceId(SERVICE_ID + version)
         .version("v" + version)
         .build();

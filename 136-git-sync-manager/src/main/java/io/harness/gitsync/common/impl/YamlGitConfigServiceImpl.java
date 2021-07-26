@@ -38,6 +38,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.utils.CryptoUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -208,7 +209,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   private String getYamlGitConfigNotFoundMessage(
       String accountId, String organizationId, String projectId, String identifier) {
-    return String.format("No yaml git config exists with the id %s, in account %s, org %s, project %s", identifier,
+    return String.format("No git sync config exists with the id %s, in account %s, org %s, project %s", identifier,
         accountId, organizationId, projectId);
   }
 
@@ -248,7 +249,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   private void saveWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
-    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
+    if (isNewRepoInProject(gitSyncConfigDTO)) {
       UpsertWebhookResponseDTO upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
       log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
     }
@@ -270,8 +271,12 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         .build();
   }
 
-  private boolean isNewRepo(String repo) {
-    return getByRepo(repo).isEmpty();
+  private boolean isNewRepoInProject(YamlGitConfigDTO gitSyncConfigDTO) {
+    final Optional<YamlGitConfig> yamlGitConfig =
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
+            gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getIdentifier());
+    return !yamlGitConfig.isPresent();
   }
 
   private void sendEventForConfigChange(
@@ -298,6 +303,24 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateFolderPathIsUnique(ygs);
     validateFoldersAreIndependant(ygs);
     validateAPIAccessFieldPresence(ygs);
+    validateThatHarnessStringComesOnce(ygs);
+  }
+
+  @VisibleForTesting
+  void validateThatHarnessStringComesOnce(YamlGitConfigDTO ygs) {
+    if (ygs.getRootFolders() == null) {
+      return;
+    }
+    for (YamlGitConfigDTO.RootFolder folder : ygs.getRootFolders()) {
+      int harnessStringCount = getHarnessStringCount(folder.getRootFolder());
+      if (harnessStringCount > 1) {
+        throw new InvalidRequestException("The .harness should come only once in the folder path");
+      }
+    }
+  }
+
+  private int getHarnessStringCount(String folderPath) {
+    return folderPath.split(".harness", -1).length - 1;
   }
 
   private void validateAPIAccessFieldPresence(YamlGitConfigDTO ygs) {
@@ -413,7 +436,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   public List<YamlGitConfigDTO> getByRepo(String repo) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = new ArrayList<>();
 
-    Set<YamlGitConfig> yamlGitConfigs = new HashSet<>(yamlGitConfigRepository.findByRepo(repo));
+    List<YamlGitConfig> yamlGitConfigs = yamlGitConfigRepository.findByRepoOrderByCreatedAtDesc(repo);
     yamlGitConfigs.forEach(
         yamlGitConfig -> yamlGitConfigDTOs.add(YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig)));
     return yamlGitConfigDTOs;

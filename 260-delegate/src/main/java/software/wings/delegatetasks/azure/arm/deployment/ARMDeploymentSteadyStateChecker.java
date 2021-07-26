@@ -79,7 +79,7 @@ public class ARMDeploymentSteadyStateChecker {
         }
       };
 
-      HTimeLimiter.callInterruptible(
+      HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMinutes(context.getSteadyCheckTimeoutInMinutes()), objectCallable);
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation deployment - [%s], %n %s",
@@ -112,7 +112,7 @@ public class ARMDeploymentSteadyStateChecker {
         if (hasFailed(status) && statusMessage != null) {
           errorMessage
               .append(String.format("Resource - [%s], %nFailed due to - [%s]", resourceId, statusMessage.toString()))
-              .append("\n");
+              .append('\n');
         }
       }
     }
@@ -174,7 +174,7 @@ public class ARMDeploymentSteadyStateChecker {
         }
       };
 
-      HTimeLimiter.callInterruptible(
+      HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMinutes(context.getSteadyCheckTimeoutInMinutes()), objectCallable);
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation deployment - [%s], %n %s",

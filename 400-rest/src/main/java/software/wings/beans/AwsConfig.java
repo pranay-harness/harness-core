@@ -93,7 +93,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     executionCapabilities.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
 
-    if (this.isUseEc2IamCredentials() && StringUtils.isNotEmpty(tag)) {
+    if ((this.isUseEc2IamCredentials() || this.useIRSA) && StringUtils.isNotEmpty(tag)) {
       executionCapabilities.add(
           SelectorCapability.builder().selectors(new HashSet<String>(Arrays.asList(tag))).build());
     }
@@ -108,7 +108,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @Override
   public List<String> fetchRelevantEncryptedSecrets() {
-    if (useEc2IamCredentials) {
+    if (useEc2IamCredentials || useIRSA) {
       return Collections.emptyList();
     }
 

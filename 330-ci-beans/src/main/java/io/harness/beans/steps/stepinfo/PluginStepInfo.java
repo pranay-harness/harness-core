@@ -11,7 +11,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.filters.WithConnectorRef;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -47,7 +49,7 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.PLUGIN).build();
   @JsonIgnore
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.PLUGIN.getDisplayName()).build();
+      StepType.newBuilder().setType(CIStepInfoType.PLUGIN.getDisplayName()).setStepCategory(StepCategory.STEP).build();
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String identifier;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
@@ -71,14 +73,17 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
 
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ImagePullPolicy")
+  private ParameterField<ImagePullPolicy> imagePullPolicy;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources", "entrypoint",
-      "envVariables", "harnessInternalImage", "privileged", "runAsUser"})
+      "envVariables", "harnessInternalImage", "privileged", "runAsUser", "imagePullPolicy"})
   public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
       ParameterField<String> image, ParameterField<String> connectorRef, ContainerResource resources,
       List<String> entrypoint, Map<String, String> envVariables, boolean harnessManagedImage,
-      ParameterField<Boolean> privileged, ParameterField<Integer> runAsUser) {
+      ParameterField<Boolean> privileged, ParameterField<Integer> runAsUser,
+      ParameterField<ImagePullPolicy> imagePullPolicy) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -92,6 +97,7 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
     this.privileged = privileged;
     this.runAsUser = runAsUser;
     this.harnessManagedImage = harnessManagedImage;
+    this.imagePullPolicy = imagePullPolicy;
   }
 
   @Override

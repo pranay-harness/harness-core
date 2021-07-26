@@ -16,6 +16,8 @@ import org.springframework.data.mongodb.core.query.Update;
 public interface OrganizationRepositoryCustom {
   Page<Organization> findAll(Criteria criteria, Pageable pageable, boolean ignoreCase);
 
+  List<String> findDistinctAccounts();
+
   Organization update(Query query, Update update);
 
   Organization delete(String accountIdentifier, String identifier, Long version);

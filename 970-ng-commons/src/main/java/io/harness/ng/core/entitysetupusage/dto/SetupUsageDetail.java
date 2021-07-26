@@ -12,5 +12,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
   @JsonSubTypes.
   Type(value = SecretReferredByConnectorSetupUsageDetail.class, name = "SecretReferredByConnectorSetupUsageDetail")
+  ,
+      @JsonSubTypes.Type(
+          value = EntityReferredByPipelineSetupUsageDetail.class, name = "EntityReferredByPipelineSetupUsageDetail")
 })
 public interface SetupUsageDetail {}

@@ -12,6 +12,8 @@ if [ "${PLATFORM}" == "jenkins" ]; then
   fi
 fi
 
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --announce_rc"
+
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
 
@@ -21,8 +23,8 @@ fi
 
 # Enable caching by default. Turn it off by exporting CACHE_TEST_RESULTS=no
 # to generate full call-graph for Test Intelligence
-if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
-  export CACHE_TEST_RESULTS=yes
+if [[ ! -z "${CACHE_TEST_RESULTS}" ]]; then
+  export CACHE_TEST_RESULTS_ARG=--cache_test_results=${CACHE_TEST_RESULTS}
 fi
 
 bazel ${bazelrc} build ${BAZEL_ARGUMENTS}  //:resource
@@ -31,7 +33,7 @@ cat ${BAZEL_DIRS}/out/volatile-status.txt
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
-  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
+  && bazel ${bazelrc} test ${CACHE_TEST_RESULTS_ARG} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
   //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
   exit $?
 fi
@@ -64,6 +66,7 @@ BAZEL_MODULES="\
   //410-cg-rest:module \
   //420-delegate-agent:module \
   //420-delegate-service:module \
+  //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
   //445-cg-connectors:module \
@@ -74,13 +77,16 @@ BAZEL_MODULES="\
   //810-ng-triggers:module \
   //815-cg-triggers:module \
   //820-platform-service:module \
+  //820-platform-service:module_deploy.jar \
   //830-notification-service:module \
   //830-resource-group:module \
   //835-notification-senders:module \
   //835-notification-senders:module \
+  //840-template-service:module \
   //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
+  //865-cg-events:module \
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
@@ -90,7 +96,6 @@ BAZEL_MODULES="\
   //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
-  //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
   //900-git-sync-sdk:module \
@@ -103,6 +108,7 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
   //925-access-control-service:module \
+  //925-watcher-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //940-feature-flag:module \
@@ -112,14 +118,13 @@ BAZEL_MODULES="\
   //940-notification-client:module_deploy.jar \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
+  //945-account-mgmt:module \
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
-  //946-access-control-decision:module \
   //947-access-control-core:module \
   //948-access-control-admin-client:module \
   //948-access-control-sdk:module \
   //949-access-control-commons:module \
-  //950-cg-ng-shared-orchestration-beans:module \
   //950-command-library-common:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
@@ -141,7 +146,6 @@ BAZEL_MODULES="\
   //953-git-sync-commons/src/main/proto:all \
   //953-git-sync-commons:module \
   //954-connector-beans:module \
-  //955-account-mgmt:module \
   //955-cg-yaml:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
@@ -164,16 +168,16 @@ BAZEL_MODULES="\
   //960-notification-beans:module \
   //960-persistence:module \
   //960-persistence:supporter-test \
-  //960-recaster:module \
   //960-yaml-sdk:module \
-  //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
   //970-rbac-core:module \
   //970-telemetry-beans:module \
   //980-commons:module \
+  //980-recaster:module \
   //990-commons-test:module \
+  //999-annotations:module \
   //product/ci/engine/proto:all \
   //product/ci/scm/proto:all \
 "
@@ -329,6 +333,7 @@ build_proto_module() {
 }
 
 build_bazel_application 940-notification-client
+build_bazel_application 820-platform-service
 
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
@@ -337,6 +342,7 @@ build_bazel_module 400-rest
 build_bazel_module 410-cg-rest
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
+build_bazel_module 425-verification-commons
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
 build_bazel_module 445-cg-connectors
@@ -349,6 +355,7 @@ build_bazel_module 830-notification-service
 build_bazel_module 830-resource-group
 build_bazel_module 835-notification-senders
 build_bazel_module 850-ng-pipeline-commons
+build_bazel_module 865-cg-events
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-cg-orchestration
@@ -367,6 +374,7 @@ build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
+build_bazel_module 925-watcher-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 940-feature-flag
@@ -375,12 +383,10 @@ build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 946-access-control-aggregator
-build_bazel_module 946-access-control-decision
 build_bazel_module 947-access-control-core
 build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk
 build_bazel_module 949-access-control-commons
-build_bazel_module 950-cg-ng-shared-orchestration-beans
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
@@ -412,14 +418,15 @@ build_bazel_module 960-expression-service
 build_bazel_module 960-ng-core-beans
 build_bazel_module 960-notification-beans
 build_bazel_module 960-persistence
-build_bazel_module 960-recaster
 build_bazel_module 960-yaml-sdk
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
+build_bazel_module 980-recaster
 build_bazel_module 980-commons
 build_bazel_module 990-commons-test
+build_bazel_module 999-annotations
 
 build_bazel_tests 400-rest
 build_bazel_tests 960-persistence

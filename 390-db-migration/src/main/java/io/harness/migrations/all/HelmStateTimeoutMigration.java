@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.sm.StateType.HELM_ROLLBACK;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;

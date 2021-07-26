@@ -3,48 +3,45 @@ package io.harness.cvng.client;
 import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
 import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
 
+import io.harness.AuthorizationServiceHeader;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.exception.GeneralException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.remote.NGObjectMapperHelper;
+import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ClientMode;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
-import java.util.function.Supplier;
-import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import okhttp3.ConnectionPool;
-import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Singleton
-public class NextGenClientFactory implements Provider<NextGenClient> {
-  public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
-  private static final String CLIENT_ID = "NextGenManager";
+public class NextGenClientFactory extends AbstractHttpClientFactory implements Provider<NextGenClient> {
   private NGManagerServiceConfig ngManagerServiceConfig;
-  private ServiceTokenGenerator tokenGenerator;
+  private ClientMode clientMode;
   private final ObjectMapper objectMapper;
 
   public NextGenClientFactory(NGManagerServiceConfig ngManagerServiceConfig, ServiceTokenGenerator tokenGenerator) {
-    this.tokenGenerator = tokenGenerator;
+    super(ServiceHttpClientConfig.builder().baseUrl(ngManagerServiceConfig.getNgManagerUrl()).build(),
+        ngManagerServiceConfig.getManagerServiceSecret(), tokenGenerator, null,
+        AuthorizationServiceHeader.CV_NEXT_GEN.getServiceId(), true, ClientMode.PRIVILEGED);
     this.ngManagerServiceConfig = ngManagerServiceConfig;
     this.objectMapper = new ObjectMapper();
     NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
-  }
-
-  private CircuitBreaker getCircuitBreaker() {
-    return CircuitBreaker.ofDefaults(NG_MANAGER_CIRCUIT_BREAKER);
+    // TODO: this change is for the hotfix. We need to have 2 clients (Previleged and nonprevileged (For client
+    // requests))
+    this.clientMode = ClientMode.PRIVILEGED;
   }
 
   @Override
@@ -66,7 +63,7 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
       return Http.getUnsafeOkHttpClientBuilder(baseUrl, 60, 60)
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(false)
-          .addInterceptor(getAuthorizationInterceptor())
+          .addInterceptor(getAuthorizationInterceptor(clientMode))
           .addInterceptor(getCorrelationIdInterceptor())
           .addInterceptor(getRequestContextInterceptor())
           .addInterceptor(chain -> {
@@ -82,23 +79,5 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
     } catch (Exception e) {
       throw new GeneralException("error while creating okhttp client for Command library service", e);
     }
-  }
-
-  @NotNull
-  private Interceptor getAuthorizationInterceptor() {
-    final Supplier<String> secretKeySupplier = this::getServiceSecret;
-    return chain -> {
-      String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
-      Request request = chain.request();
-      return chain.proceed(request.newBuilder().header("Authorization", CLIENT_ID + StringUtils.SPACE + token).build());
-    };
-  }
-
-  private String getServiceSecret() {
-    String managerServiceSecret = this.ngManagerServiceConfig.getManagerServiceSecret();
-    if (StringUtils.isNotBlank(managerServiceSecret)) {
-      return managerServiceSecret.trim();
-    }
-    throw new InvalidRequestException("No secret key for client for " + CLIENT_ID);
   }
 }

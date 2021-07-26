@@ -1,4 +1,5 @@
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:tools/bazel/harness.bzl", "java_library")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
 HarnessTeam = "CF"
@@ -6,25 +7,28 @@ HarnessTeam = "CF"
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
+        "src/main/java/**/*.java",
+        "src/generated/java/**/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
         "//980-commons:module",
+        "//999-annotations:module",
         "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_code_gson_gson",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
+        "@maven//:com_squareup_okhttp3_logging_interceptor",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_okio_okio",
         "@maven//:io_dropwizard_metrics_metrics_annotation",
+        "@maven//:io_gsonfire_gson_fire",
         "@maven//:io_harness_ff_java_server_sdk",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
-
-# tests library should go here
-
-#run_tests()
 
 run_analysis()

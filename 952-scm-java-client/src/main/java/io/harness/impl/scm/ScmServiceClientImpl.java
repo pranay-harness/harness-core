@@ -15,8 +15,8 @@ import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
-import io.harness.exception.ScmException;
 import io.harness.exception.WingsException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.logger.RepoBranchLogContext;
@@ -398,17 +398,19 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       ScmConnector connector, Set<String> foldersList, String branchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
     String slug = scmGitProviderHelper.getSlug(connector);
-    final GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(
+    final GetLatestCommitResponse latestCommitResponse = scmBlockingStub.getLatestCommit(
         GetLatestCommitRequest.newBuilder().setBranch(branchName).setProvider(gitProvider).setSlug(slug).build());
-    try (AutoLogContext ignore1 =
-             new RepoBranchLogContext(slug, branchName, latestCommit.getCommitId(), OVERRIDE_ERROR)) {
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+        latestCommitResponse.getStatus(), latestCommitResponse.getError());
+    String latestCommitId = latestCommitResponse.getCommitId();
+    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branchName, latestCommitId, OVERRIDE_ERROR)) {
       List<String> getFilesWhichArePartOfHarness =
-          getFileNames(foldersList, slug, gitProvider, branchName, latestCommit.getCommitId(), scmBlockingStub);
-      final FileBatchContentResponse contentOfFiles = getContentOfFiles(
-          getFilesWhichArePartOfHarness, slug, gitProvider, latestCommit.getCommitId(), scmBlockingStub);
+          getFileNames(foldersList, slug, gitProvider, branchName, latestCommitId, scmBlockingStub);
+      final FileBatchContentResponse contentOfFiles =
+          getContentOfFiles(getFilesWhichArePartOfHarness, slug, gitProvider, latestCommitId, scmBlockingStub);
       return FileContentBatchResponse.builder()
           .fileBatchContentResponse(contentOfFiles)
-          .commitId(latestCommit.getCommitId())
+          .commitId(latestCommitId)
           .build();
     }
   }
@@ -454,8 +456,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     try {
       ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
           createBranchResponse.getStatus(), createBranchResponse.getError());
-    } catch (ScmException e) {
-      throw new ExplanationException(String.format("Failed to create branch %s", branch), e);
+    } catch (WingsException e) {
+      final WingsException cause = ExceptionUtils.cause(ErrorCode.SCM_UNPROCESSABLE_ENTITY, e);
+      if (cause != null) {
+        throw new ExplanationException(
+            String.format("A branch with name %s already exists in the remote Git repository", branch), e);
+      } else {
+        throw new ExplanationException(String.format("Failed to create branch %s", branch), e);
+      }
     }
   }
 
@@ -475,10 +483,12 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     try {
       ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(prResponse.getStatus(), prResponse.getError());
     } catch (WingsException e) {
-      if (ErrorCode.SCM_NOT_MODIFIED.equals(e.getCode())) {
+      final WingsException cause = ExceptionUtils.cause(ErrorCode.SCM_NOT_MODIFIED, e);
+      if (cause != null) {
         throw new ExplanationException("A PR already exist for given branches", e);
+      } else {
+        throw new ExplanationException("Failed to create PR", e);
       }
-      throw e;
     }
     return prResponse;
   }
@@ -632,11 +642,12 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                                                  .setSlug(slug)
                                                                                  .setProvider(gitProvider)
                                                                                  .build());
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
       return latestCommit.getCommitId();
     } catch (Exception ex) {
       log.error(
           "Error encountered while getting latest commit of branch [{}] in slug [{}]", defaultBranchName, slug, ex);
-      throw new ExplanationException(ex.getMessage(), ex);
+      throw ex;
     }
   }
 

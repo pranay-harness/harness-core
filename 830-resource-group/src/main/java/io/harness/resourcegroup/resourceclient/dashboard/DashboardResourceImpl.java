@@ -2,6 +2,7 @@ package io.harness.resourcegroup.resourceclient.dashboard;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -12,11 +13,11 @@ import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
 
 import com.google.inject.Inject;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -31,12 +32,12 @@ public class DashboardResourceImpl implements Resource {
 
   @Override
   public List<Boolean> validate(List<String> resourceIds, Scope scope) {
-    return Collections.emptyList();
+    return resourceIds.stream().map(resourceId -> true).collect(Collectors.toList());
   }
 
   @Override
   public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(DYNAMIC);
+    return EnumSet.of(STATIC, DYNAMIC);
   }
 
   @Override

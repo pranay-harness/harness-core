@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.encryption.Scope;
@@ -67,6 +68,7 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
         .nodeName(YamlSchemaUtils.getSwaggerName(CVNGStepInfo.class))
         .schema(partialCVNGSchema)
         .nodeType(getVerifyStepTypeName())
+        .moduleType(ModuleType.CV)
         .build();
   }
 

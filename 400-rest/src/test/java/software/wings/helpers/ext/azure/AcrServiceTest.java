@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.azure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -8,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -29,6 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class AcrServiceTest extends WingsBaseTest {
   @Mock private AzureHelperService azureHelperService;
   @Inject @InjectMocks AcrService acrService;
@@ -66,15 +69,13 @@ public class AcrServiceTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldVerifyImageName() {
-    when(azureHelperService.isValidSubscription(azureConfig, encryptionDetailList, "invalidSubId")).thenReturn(false);
-    when(azureHelperService.isValidSubscription(azureConfig, encryptionDetailList, "validSubId")).thenReturn(true);
+    when(azureHelperService.isValidSubscription(azureConfig, "invalidSubId")).thenReturn(false);
+    when(azureHelperService.isValidSubscription(azureConfig, "validSubId")).thenReturn(true);
 
-    when(azureHelperService.isValidContainerRegistry(azureConfig, encryptionDetailList, "validSubId", "invalidRegName"))
-        .thenReturn(false);
-    when(azureHelperService.isValidContainerRegistry(azureConfig, encryptionDetailList, "validSubId", "validRegName"))
-        .thenReturn(true);
+    when(azureHelperService.isValidContainerRegistry(azureConfig, "validSubId", "invalidRegName")).thenReturn(false);
+    when(azureHelperService.isValidContainerRegistry(azureConfig, "validSubId", "validRegName")).thenReturn(true);
 
-    when(azureHelperService.listRepositories(azureConfig, encryptionDetailList, "validSubId", "validRegName"))
+    when(azureHelperService.listRepositories(azureConfig, "validSubId", "validRegName"))
         .thenReturn(Lists.newArrayList("repoName1"))
         .thenReturn(Lists.newArrayList("repoName1", "repoName2"));
 

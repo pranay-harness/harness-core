@@ -5,7 +5,6 @@ import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.security.PermissionAttribute.PermissionType.TAG_MANAGEMENT;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

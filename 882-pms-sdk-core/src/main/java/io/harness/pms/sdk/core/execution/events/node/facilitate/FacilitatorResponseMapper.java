@@ -17,7 +17,7 @@ public class FacilitatorResponseMapper {
     return FacilitatorResponse.builder()
         .initialWait(ProtoUtils.durationToJavaDuration(proto.getInitialWait()))
         .executionMode(proto.getExecutionMode())
-        .passThroughData(RecastOrchestrationUtils.fromDocumentJson(proto.getPassThroughData(), PassThroughData.class))
+        .passThroughData(RecastOrchestrationUtils.fromJson(proto.getPassThroughData(), PassThroughData.class))
         .build();
   }
 
@@ -28,7 +28,7 @@ public class FacilitatorResponseMapper {
       builder.setInitialWait(ProtoUtils.javaDurationToDuration(facilitatorResponse.getInitialWait()));
     }
     if (facilitatorResponse.getPassThroughData() != null) {
-      builder.setPassThroughData(RecastOrchestrationUtils.toDocumentJson(facilitatorResponse.getPassThroughData()));
+      builder.setPassThroughData(RecastOrchestrationUtils.toJson(facilitatorResponse.getPassThroughData()));
     }
     builder.setIsSuccessful(true);
     return builder.build();

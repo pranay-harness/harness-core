@@ -40,6 +40,8 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.experimental.UtilityClass;
 
@@ -68,13 +71,12 @@ public class InfrastructurePmsPlanCreator {
         .build();
   }
 
-  public PlanNode getInfraSectionPlanNode(YamlNode infraSectionNode, String infraStepNodeUuid,
-      PipelineInfrastructure infrastructure, KryoSerializer kryoSerializer, YamlField infraField,
-      YamlField resourceConstraintField) {
-    PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForInfraSection(YamlNode infraSectionNode,
+      String infraStepNodeUuid, PipelineInfrastructure infrastructure, KryoSerializer kryoSerializer,
+      YamlField infraField) {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
-    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
-        infrastructure.getAllowSimultaneousDeployments(), resourceConstraintField);
+    PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
     InfraSectionStepParameters infraSectionStepParameters = InfraSectionStepParameters.builder()
                                                                 .environmentRef(actualInfraConfig.getEnvironmentRef())
@@ -93,15 +95,56 @@ public class InfrastructurePmsPlanCreator {
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
-                    .build())
-            .adviserObtainments(allowSimultaneousDeployments
-                    ? getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer)
-                    : getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer));
+                    .build());
 
     if (!isProvisionerConfigured(actualInfraConfig)) {
       planNodeBuilder.skipGraphType(SkipType.SKIP_NODE);
     }
-    return planNodeBuilder.build();
+
+    List<AdviserObtainment> adviserObtainments =
+        getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer);
+
+    // adding RC dependency
+    YamlField rcYamlField = constructResourceConstraintYamlField(infraSectionNode);
+    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
+        infrastructure.getAllowSimultaneousDeployments(), rcYamlField);
+
+    if (!allowSimultaneousDeployments && rcYamlField != null) {
+      adviserObtainments = getAdviserObtainmentFromMetaDataToResourceConstraint(rcYamlField, kryoSerializer);
+
+      planCreationResponseMap.put(rcYamlField.getNode().getUuid(),
+          PlanCreationResponse.builder()
+              .dependencies(ImmutableMap.of(rcYamlField.getNode().getUuid(), rcYamlField))
+              .build());
+    }
+
+    PlanNode infraSectionPlanNode = planNodeBuilder.adviserObtainments(adviserObtainments).build();
+
+    // adding infraSection
+    planCreationResponseMap.put(infraSectionPlanNode.getUuid(),
+        PlanCreationResponse.builder().node(infraSectionNode.getUuid(), infraSectionPlanNode).build());
+
+    return planCreationResponseMap;
+  }
+
+  @Nullable
+  private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
+    String resourceUnit = obtainResourceUnitFromInfrastructure(infraNode);
+    if (resourceUnit == null) {
+      return null;
+    }
+    JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
+    return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
+  }
+
+  @Nullable
+  private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
+    JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
+    if (infrastructureKey == null || EmptyPredicate.isEmpty(infrastructureKey.asText())) {
+      return null;
+    }
+
+    return infrastructureKey.asText();
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaDataToExecution(

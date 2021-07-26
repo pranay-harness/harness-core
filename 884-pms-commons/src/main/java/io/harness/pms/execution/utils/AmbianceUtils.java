@@ -3,6 +3,7 @@ package io.harness.pms.execution.utils;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -114,5 +115,13 @@ public class AmbianceUtils {
   public static String getCurrentGroup(Ambiance ambiance) {
     Level level = obtainCurrentLevel(ambiance);
     return level == null || level.getGroup() == null ? null : level.getGroup();
+  }
+
+  public static long getCurrentLevelStartTs(Ambiance ambiance) {
+    Level currLevel = obtainCurrentLevel(ambiance);
+    if (currLevel == null) {
+      throw new InvalidRequestException("Ambiance.levels is empty");
+    }
+    return currLevel.getStartTs();
   }
 }

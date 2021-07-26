@@ -85,7 +85,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(userService.get(ACCOUNT_ID, USER_ID)).thenReturn(user);
     when(wingsPersistence.save(userGroup)).thenReturn("true");
     scimUserService.updateUser(ACCOUNT_ID, USER_ID, patchRequest);
-    verify(userService, times(1)).updateUser(user, updateOperations);
+    verify(userService, times(1)).updateUser(USER_ID, updateOperations);
   }
 
   @Test
@@ -321,7 +321,7 @@ public class ScimUserServiceTest extends WingsBaseTest {
     when(userService.get(account.getUuid(), user.getUuid())).thenReturn(user);
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     Response response = scimUserService.updateUser(user.getUuid(), account.getUuid(), scimUser);
-    verify(userService, times(1)).updateUser(user, updateOperations);
+    verify(userService, times(1)).updateUser(user.getUuid(), updateOperations);
 
     assertThat(response.getStatus()).isNotNull();
   }

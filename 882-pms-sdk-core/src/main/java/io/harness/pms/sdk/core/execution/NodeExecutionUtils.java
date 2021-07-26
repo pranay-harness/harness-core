@@ -20,9 +20,9 @@ import io.harness.pms.yaml.ParameterDocumentField;
 import io.harness.pms.yaml.ParameterDocumentFieldMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
-import org.bson.Document;
 
 @OwnedBy(CDC)
 @UtilityClass
@@ -46,18 +46,18 @@ public class NodeExecutionUtils {
     return executableResponses.get(executableResponses.size() - 1);
   }
 
-  public Document extractObject(String json) {
+  public Map<String, Object> extractObject(String json) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
-    return RecastOrchestrationUtils.toDocumentFromJson(json);
+    return RecastOrchestrationUtils.fromJson(json);
   }
 
-  public Document extractAndProcessObject(String json) {
+  public Map<String, Object> extractAndProcessObject(String json) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
-    return (Document) resolveObject(RecastOrchestrationUtils.toDocumentFromJson(json));
+    return (Map<String, Object>) resolveObject(RecastOrchestrationUtils.fromJson(json));
   }
 
   public Object resolveObject(Object o) {
@@ -88,7 +88,7 @@ public class NodeExecutionUtils {
 
     @Override
     public ResolveObjectResponse processObject(Object o) {
-      Optional<ParameterDocumentField> docFieldOptional = ParameterDocumentFieldMapper.fromParameterFieldDocument(o);
+      Optional<ParameterDocumentField> docFieldOptional = ParameterDocumentFieldMapper.fromParameterFieldMap(o);
       if (!docFieldOptional.isPresent()) {
         return new ResolveObjectResponse(false, null);
       }

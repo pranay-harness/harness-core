@@ -76,12 +76,20 @@ public class ImagePullSecretUtils {
     if (EmptyPredicate.isNotEmpty(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
         && isNotBlank(imageDetails.getPassword())) {
       return getArtifactRegistryCredentials(imageDetails);
+    } else if (EmptyPredicate.isNotEmpty(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsernameRef())
+        && isNotBlank(imageDetails.getPassword())) {
+      return getArtifactRegistryCredentialsFromUsernameRef(imageDetails);
     }
     return "";
   }
 
   public static String getArtifactRegistryCredentials(ImageDetails imageDetails) {
     return "${imageSecret.create(\"" + imageDetails.getRegistryUrl() + "\", \"" + imageDetails.getUsername() + "\", "
+        + imageDetails.getPassword() + ")}";
+  }
+
+  public static String getArtifactRegistryCredentialsFromUsernameRef(ImageDetails imageDetails) {
+    return "${imageSecret.create(\"" + imageDetails.getRegistryUrl() + "\", " + imageDetails.getUsernameRef() + ", "
         + imageDetails.getPassword() + ")}";
   }
 
@@ -94,6 +102,10 @@ public class ImagePullSecretUtils {
         && connectorConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
       DockerUserNamePasswordDTO credentials = (DockerUserNamePasswordDTO) connectorConfig.getAuth().getCredentials();
       String passwordRef = credentials.getPasswordRef().toSecretRefStringValue();
+      if (credentials.getUsernameRef() != null) {
+        imageDetailsBuilder.usernameRef(
+            getPasswordExpression(credentials.getUsernameRef().toSecretRefStringValue(), ambiance));
+      }
       imageDetailsBuilder.username(credentials.getUsername());
       imageDetailsBuilder.password(getPasswordExpression(passwordRef, ambiance));
       imageDetailsBuilder.registryUrl(connectorConfig.getDockerRegistryUrl());

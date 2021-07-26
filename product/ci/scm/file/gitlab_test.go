@@ -155,7 +155,7 @@ func TestFindFilesInBranchGitlab(t *testing.T) {
 	in := &pb.FindFilesInBranchRequest{
 		Slug: "tphoney/test_repo",
 		Type: &pb.FindFilesInBranchRequest_Branch{
-			Branch: "main",
+			Branch: "master",
 		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Gitlab{

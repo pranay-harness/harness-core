@@ -379,4 +379,13 @@ public class TerragruntRollbackStateTest extends WingsBaseTest {
         NameValuePair.builder().name("bucket").value("tf-remote-state").valueType("TEXT").build(),
         NameValuePair.builder().name("access_token").value("access_token").valueType("ENCRYPTED_TEXT").build());
   }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    assertThat(terragruntRollbackState.validateFields().size()).isNotEqualTo(0);
+    terragruntRollbackState.setProvisionerId("test provisioner");
+    assertThat(terragruntRollbackState.validateFields().size()).isEqualTo(0);
+  }
 }

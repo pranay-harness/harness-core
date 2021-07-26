@@ -20,6 +20,9 @@ type Stream interface {
 	// Delete deletes the log stream for the string key.
 	Delete(context.Context, string) error
 
+	// Ping pings the stream backend to see it it's available.
+	Ping(context.Context) error
+
 	// Write writes to the log stream.
 	// TODO(bradrydzewski) change *Line to a proper slice.
 	Write(context.Context, string, ...*Line) error

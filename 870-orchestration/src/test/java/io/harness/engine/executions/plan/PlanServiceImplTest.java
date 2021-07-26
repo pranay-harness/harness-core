@@ -9,6 +9,7 @@ import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 
@@ -25,7 +26,8 @@ public class PlanServiceImplTest extends OrchestrationTestBase {
   private static final String DUMMY_NODE_2_ID = generateUuid();
   private static final String DUMMY_NODE_3_ID = generateUuid();
 
-  private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
+  private static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
 
   @Test
   @Owner(developers = PRASHANT)

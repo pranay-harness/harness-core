@@ -117,7 +117,7 @@ public class WinRmExecutorHelper {
     command = "$ErrorActionPreference=\"Stop\"\n" + command;
     String base64Command = encodeBase64String(command.getBytes(StandardCharsets.UTF_8));
     String wrappedCommand = format(
-        "$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\\\"%s\\\")); Invoke-Expression $decoded",
+        "$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\\\"%s\\\")); $expanded = [Environment]::ExpandEnvironmentVariables($decoded); Invoke-Expression $expanded",
         base64Command);
     return format("%s Invoke-Command -command {%s}", powershell, wrappedCommand);
   }

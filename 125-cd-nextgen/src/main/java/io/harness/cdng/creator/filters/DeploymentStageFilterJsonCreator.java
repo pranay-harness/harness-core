@@ -88,6 +88,21 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
   protected Map<String, YamlField> getDependencies(YamlField stageField) {
     // Add dependency for rollback steps
     Map<String, YamlField> dependencies = new HashMap<>(super.getDependencies(stageField));
+    YamlField provisionerField = stageField.getNode()
+                                     .getField(YAMLFieldNameConstants.SPEC)
+                                     .getNode()
+                                     .getField(YAMLFieldNameConstants.PIPELINE_INFRASTRUCTURE)
+                                     .getNode()
+                                     .getField("infrastructureDefinition")
+                                     .getNode()
+                                     .getField(YAMLFieldNameConstants.PROVISIONER);
+
+    if (provisionerField != null) {
+      YamlField stepsField = provisionerField.getNode().getField("steps");
+      if (stepsField != null && stepsField.getNode().asArray().size() != 0) {
+        addRollbackDependencies(dependencies, stepsField);
+      }
+    }
     YamlField executionField =
         stageField.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
     YamlField rollbackStepsField = executionField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);

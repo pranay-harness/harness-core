@@ -3,8 +3,8 @@ package software.wings.service.impl.instance;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
 
-import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 
 import lombok.AccessLevel;
@@ -21,6 +21,6 @@ public class PcfInstanceSyncPTDelegateParams {
   String applicationName;
   String orgName;
   String space;
-  PcfConfig pcfConfig;
+  CfInternalConfig pcfConfig;
   PcfInfrastructureMapping pcfInfrastructureMapping;
 }

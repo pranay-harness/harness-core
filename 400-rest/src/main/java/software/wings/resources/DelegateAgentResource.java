@@ -354,11 +354,12 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
-      @QueryParam("accountId") @NotEmpty String accountId) throws IOException {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName)
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(
-          accountId, version, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, version,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
     }
   }
 
@@ -384,10 +385,11 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException {
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("delegateName") String delegateName)
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
     }
   }
 

@@ -10,7 +10,6 @@ import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
 import com.jcraft.jsch.JSchException;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -19,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Slf4j
 @OwnedBy(CDP)
@@ -64,39 +64,37 @@ public class SshHelperUtils {
   public static boolean executeLocalCommand(
       String cmdString, LogCallback logCallback, Writer output, boolean isOutputWriter) {
     String[] commandList = new String[] {"/bin/bash", "-c", cmdString};
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-         ByteArrayOutputStream byteArrayErrorStream = new ByteArrayOutputStream()) {
+    ProcessResult processResult = null;
+    try {
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .command(commandList)
                                             .directory(new File(System.getProperty("user.home")))
                                             .readOutput(true)
-                                            .redirectOutput(byteArrayOutputStream)
-                                            .redirectError(byteArrayErrorStream);
+                                            .redirectOutput(new LogOutputStream() {
+                                              @Override
+                                              protected void processLine(String line) {
+                                                if (isOutputWriter) {
+                                                  try {
+                                                    output.write(line);
+                                                  } catch (IOException e) {
+                                                    log.error("Failed to store the output to writer ", e);
+                                                  }
+                                                } else {
+                                                  logCallback.saveExecutionLog(line, LogLevel.INFO);
+                                                }
+                                              }
+                                            })
+                                            .redirectError(new LogOutputStream() {
+                                              @Override
+                                              protected void processLine(String line) {
+                                                logCallback.saveExecutionLog(line, ERROR);
+                                              }
+                                            });
 
-      ProcessResult processResult = null;
-      try {
-        processResult = processExecutor.execute();
-      } catch (IOException | InterruptedException | TimeoutException e) {
-        log.error("Failed to execute command ", e);
-      }
-      if (byteArrayOutputStream.toByteArray().length != 0) {
-        if (isOutputWriter) {
-          try {
-            output.write(byteArrayOutputStream.toString());
-          } catch (IOException e) {
-            log.error("Failed to store the output to writer ", e);
-          }
-        } else {
-          logCallback.saveExecutionLog(byteArrayOutputStream.toString(), LogLevel.INFO);
-        }
-      }
-      if (byteArrayErrorStream.toByteArray().length != 0) {
-        logCallback.saveExecutionLog(byteArrayErrorStream.toString(), ERROR);
-      }
-      return processResult != null && processResult.getExitValue() == 0;
-    } catch (IOException e) {
+      processResult = processExecutor.execute();
+    } catch (IOException | InterruptedException | TimeoutException e) {
       log.error("Failed to execute command ", e);
     }
-    return false;
+    return processResult != null && processResult.getExitValue() == 0;
   }
 }

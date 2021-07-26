@@ -1,8 +1,13 @@
 package io.harness.text;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.text.resolver.ExpressionResolver;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class StringReplacer {
+  private static final char ESCAPE_CHAR = '\\';
+
   private final ExpressionResolver expressionResolver;
   private final char[] expressionPrefix;
   private final char[] expressionSuffix;
@@ -48,7 +53,20 @@ public class StringReplacer {
 
         foundSuffix = isMatch(expressionSuffix, buf, pos, bufEnd);
         if (!foundSuffix) {
-          pos++;
+          if (isMatch(ESCAPE_CHAR, buf, pos, bufEnd)) {
+            // Possible case: <+ abc \> def >
+            if (isMatch(expressionSuffix, buf, pos + 1, bufEnd)) {
+              // If we find an escaped suffix, we delete the escape char and skip over the suffix
+              buf.deleteCharAt(pos);
+              bufEnd = buf.length();
+              pos += expressionSuffix.length;
+            } else {
+              // If the escape char doesn't escape the suffix, treat it as a normal character
+              pos++;
+            }
+          } else {
+            pos++;
+          }
           continue;
         }
 
@@ -80,6 +98,10 @@ public class StringReplacer {
       }
     }
     return altered;
+  }
+
+  private static boolean isMatch(char ch, StringBuffer buf, int bufStart, int bufEnd) {
+    return bufStart < bufEnd && buf.charAt(bufStart) == ch;
   }
 
   private static boolean isMatch(char[] str, StringBuffer buf, int bufStart, int bufEnd) {

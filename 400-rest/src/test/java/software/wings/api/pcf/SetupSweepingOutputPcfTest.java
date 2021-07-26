@@ -6,9 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.rule.Owner;
-
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,12 +31,12 @@ public class SetupSweepingOutputPcfTest extends CategoryTest {
     SetupSweepingOutputPcf setupSweepingOutputPcf =
         SetupSweepingOutputPcf.builder()
             .newPcfApplicationDetails(
-                PcfAppSetupTimeDetails.builder().applicationGuid(guid1).applicationName(name1).urls(tempRoutes).build())
+                CfAppSetupTimeDetails.builder().applicationGuid(guid1).applicationName(name1).urls(tempRoutes).build())
             .appDetailsToBeDownsized(Collections.singletonList(
-                PcfAppSetupTimeDetails.builder().applicationGuid(guid).applicationName(name).urls(finalRoutes).build()))
+                CfAppSetupTimeDetails.builder().applicationGuid(guid).applicationName(name).urls(finalRoutes).build()))
             .routeMaps(finalRoutes)
             .tempRouteMap(tempRoutes)
-            .mostRecentInactiveAppVersionDetails(PcfAppSetupTimeDetails.builder()
+            .mostRecentInactiveAppVersionDetails(CfAppSetupTimeDetails.builder()
                                                      .applicationName("app1")
                                                      .applicationGuid("g1")
                                                      .initialInstanceCount(1)

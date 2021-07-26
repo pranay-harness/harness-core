@@ -6,6 +6,7 @@ option java_multiple_files = true;
 
 message StepType {
   string type = 1;
+  StepCategory stepCategory = 2;
 }
 
 message StepInfo {
@@ -18,4 +19,12 @@ message StepInfo {
 message StepMetaData {
   repeated string category = 1;
   string folderPath = 2;
+}
+
+enum StepCategory {
+  UNKNOWN = 0;
+  PIPELINE = 1;
+  STAGE = 2;
+  STEP = 3;
+  STAGES = 4;
 }

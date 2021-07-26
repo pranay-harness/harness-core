@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.GitBranch;
 
+import com.mongodb.client.result.DeleteResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -18,4 +19,6 @@ public interface GitBranchesRepositoryCustom {
   GitBranch update(Query query, Update update);
 
   GitBranch findOne(Criteria criteria);
+
+  DeleteResult delete(Criteria criteria);
 }

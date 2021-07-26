@@ -1,5 +1,10 @@
 package io.harness.aggregator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.lang.management.ManagementFactory;
 import java.util.Optional;
 import javax.management.MBeanServer;
@@ -7,12 +12,19 @@ import javax.management.ObjectName;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PL)
 @Slf4j
+@Singleton
 public class AggregatorMetricsServiceImpl implements AggregatorMetricsService {
-  private static final String STREAMING_METRICS =
-      "debezium.mongodb:type=connector-metrics,context=streaming,server=access_control_db";
-  private static final String SNAPSHOT_METRICS =
-      "debezium.mongodb:type=connector-metrics,context=snapshot,server=access_control_db";
+  private final String aggregatorMongodbName;
+
+  @Inject
+  public AggregatorMetricsServiceImpl(AggregatorConfiguration aggregatorConfiguration) {
+    this.aggregatorMongodbName = aggregatorConfiguration.getDebeziumConfig().getMongodbName();
+  }
+
+  private static final String STREAMING_METRICS = "debezium.mongodb:type=connector-metrics,context=streaming,server=%s";
+  private static final String SNAPSHOT_METRICS = "debezium.mongodb:type=connector-metrics,context=snapshot,server=%s";
   private static final String NUMBER_OF_DISCONNECTS = "NumberOfDisconnects";
   private static final String NUMBER_OF_PRIMARY_ELECTIONS = "NumberOfPrimaryElections";
   private static final String MILLISECONDS_BEHIND_SOURCE = "MilliSecondsBehindSource";
@@ -30,7 +42,8 @@ public class AggregatorMetricsServiceImpl implements AggregatorMetricsService {
   @SneakyThrows
   public Optional<SnapshotMetrics> getSnapshotMetrics() {
     MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-    ObjectName snapshotMetricsObjectName = new ObjectName(SNAPSHOT_METRICS);
+    String snapshotMetrics = String.format(SNAPSHOT_METRICS, aggregatorMongodbName);
+    ObjectName snapshotMetricsObjectName = new ObjectName(snapshotMetrics);
 
     if (!mBeanServer.isRegistered(snapshotMetricsObjectName)) {
       return Optional.empty();
@@ -64,7 +77,8 @@ public class AggregatorMetricsServiceImpl implements AggregatorMetricsService {
   @SneakyThrows
   public Optional<StreamingMetrics> getStreamingMetrics() {
     MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-    ObjectName streamingMetricsObjectName = new ObjectName(STREAMING_METRICS);
+    String streamingMetrics = String.format(STREAMING_METRICS, aggregatorMongodbName);
+    ObjectName streamingMetricsObjectName = new ObjectName(streamingMetrics);
 
     if (!mBeanServer.isRegistered(streamingMetricsObjectName)) {
       return Optional.empty();

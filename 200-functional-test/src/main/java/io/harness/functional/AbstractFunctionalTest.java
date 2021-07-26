@@ -2,6 +2,7 @@ package io.harness.functional;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -422,5 +423,13 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     }
 
     log.info("Feature flags on manager:\n{}", featureFlagListAsString.toString());
+  }
+
+  protected Workflow createAndAssertWorkflow(Workflow workflow, String accountId, String appId) {
+    Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(bearerToken, accountId, appId, workflow);
+    assertThat(savedWorkflow).isNotNull();
+    assertThat(savedWorkflow.getUuid()).isNotEmpty();
+    assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
+    return savedWorkflow;
   }
 }

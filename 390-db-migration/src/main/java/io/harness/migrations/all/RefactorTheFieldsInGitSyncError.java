@@ -7,7 +7,6 @@ import static software.wings.yaml.errorhandling.GitSyncError.GitSyncDirection.HA
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.OnPrimaryManagerMigration;
 import io.harness.persistence.HIterator;
 

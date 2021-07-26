@@ -12,7 +12,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import org.bson.Document;
+import java.util.Map;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -21,9 +21,9 @@ public class HandleProgressRequestProcessor implements SdkResponseProcessor {
 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
-    HandleProgressRequest progressRequest = event.getSdkResponseEventRequest().getProgressRequest();
-    Document progressDoc = RecastOrchestrationUtils.toDocumentFromJson(progressRequest.getProgressJson());
+    HandleProgressRequest progressRequest = event.getProgressRequest();
+    Map<String, Object> progressDoc = RecastOrchestrationUtils.fromJson(progressRequest.getProgressJson());
     nodeExecutionService.update(
-        progressRequest.getNodeExecutionId(), ops -> setUnset(ops, NodeExecutionKeys.progressData, progressDoc));
+        event.getNodeExecutionId(), ops -> setUnset(ops, NodeExecutionKeys.progressData, progressDoc));
   }
 }

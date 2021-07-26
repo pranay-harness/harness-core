@@ -1,7 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -50,7 +50,7 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> commitId;
 
-  @YamlSchemaTypes(value = {string})
+  @YamlSchemaTypes(value = {runtime})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
@@ -63,6 +63,11 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
   @Override
   public String getKind() {
     return ManifestStoreType.GITLAB;
+  }
+
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
   }
 
   public GitLabStore cloneInternal() {
@@ -78,7 +83,7 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
   }
 
   @Override
-  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GitLabStore gitLabStore = (GitLabStore) overrideConfig;
     GitLabStore resultantGitLabStore = this;
     if (!ParameterField.isNull(gitLabStore.getConnectorRef())) {

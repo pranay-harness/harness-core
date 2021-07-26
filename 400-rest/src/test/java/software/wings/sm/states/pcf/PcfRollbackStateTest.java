@@ -31,6 +31,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.beans.pcf.CfServiceData;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.request.CfCommandRollbackRequest;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
@@ -40,7 +45,6 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
-import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -49,12 +53,10 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
@@ -103,10 +105,10 @@ public class PcfRollbackStateTest extends WingsBaseTest {
       DeploySweepingOutputPcf.builder()
           .uuid(serviceElement.getUuid())
           .name(PCF_SERVICE_NAME)
-          .instanceData(Arrays.asList(
-              PcfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__1").build(),
-              PcfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__2").build(),
-              PcfServiceData.builder().previousCount(0).desiredCount(2).name("APP_SERVICE_ENV__3").build()))
+          .instanceData(
+              Arrays.asList(CfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__1").build(),
+                  CfServiceData.builder().previousCount(1).desiredCount(0).name("APP_SERVICE_ENV__2").build(),
+                  CfServiceData.builder().previousCount(0).desiredCount(2).name("APP_SERVICE_ENV__3").build()))
           //.resizeStrategy(RESIZE_NEW_FIRST)
           .build();
 
@@ -133,30 +135,31 @@ public class PcfRollbackStateTest extends WingsBaseTest {
     SetupSweepingOutputPcf setupSweepingOutputPcf =
         SetupSweepingOutputPcf.builder()
             .newPcfApplicationDetails(
-                PcfAppSetupTimeDetails.builder().applicationName("APP_SERVICE_ENV_NAME__1").build())
-            .pcfCommandRequest(PcfCommandSetupRequest.builder().organization(ORG).space(SPACE).build())
+                CfAppSetupTimeDetails.builder().applicationName("APP_SERVICE_ENV_NAME__1").build())
+            .pcfCommandRequest(CfCommandSetupRequest.builder().organization(ORG).space(SPACE).build())
             .routeMaps(Arrays.asList("R1", "R2"))
             .build();
 
-    PcfCommandRequest pcfCommandRequest =
+    CfInternalConfig value = CfConfigToInternalMapper.toCfInternalConfig((PcfConfig) computeProvider.getValue());
+    CfCommandRequest cfCommandRequest =
         pcfRollbackState.getPcfCommandRequest(context, anApplication().name(APP_NAME).uuid(APP_ID).build(), ACTIVITY_ID,
-            setupSweepingOutputPcf, (PcfConfig) computeProvider.getValue(), -1, -1, stateExecutionData,
+            setupSweepingOutputPcf, value, -1, -1, stateExecutionData,
             pcfStateTestHelper.getPcfInfrastructureMapping(Arrays.asList("R1", "R2"), Arrays.asList("R3")));
 
-    PcfCommandRollbackRequest commandRollbackRequest = (PcfCommandRollbackRequest) pcfCommandRequest;
+    CfCommandRollbackRequest commandRollbackRequest = (CfCommandRollbackRequest) cfCommandRequest;
 
     assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat(commandRollbackRequest).isNotNull();
-    for (PcfServiceData pcfServiceData : commandRollbackRequest.getInstanceData()) {
-      if (pcfServiceData.getName().equals("APP_SERVICE_ENV__1")) {
-        assertThat(1 == pcfServiceData.getDesiredCount()).isTrue();
-        assertThat(0 == pcfServiceData.getPreviousCount()).isTrue();
-      } else if (pcfServiceData.getName().equals("APP_SERVICE_ENV__2")) {
-        assertThat(1 == pcfServiceData.getDesiredCount()).isTrue();
-        assertThat(0 == pcfServiceData.getPreviousCount()).isTrue();
-      } else if (pcfServiceData.getName().equals("APP_SERVICE_ENV__3")) {
-        assertThat(0 == pcfServiceData.getDesiredCount()).isTrue();
-        assertThat(2 == pcfServiceData.getPreviousCount()).isTrue();
+    for (CfServiceData cfServiceData : commandRollbackRequest.getInstanceData()) {
+      if (cfServiceData.getName().equals("APP_SERVICE_ENV__1")) {
+        assertThat(1 == cfServiceData.getDesiredCount()).isTrue();
+        assertThat(0 == cfServiceData.getPreviousCount()).isTrue();
+      } else if (cfServiceData.getName().equals("APP_SERVICE_ENV__2")) {
+        assertThat(1 == cfServiceData.getDesiredCount()).isTrue();
+        assertThat(0 == cfServiceData.getPreviousCount()).isTrue();
+      } else if (cfServiceData.getName().equals("APP_SERVICE_ENV__3")) {
+        assertThat(0 == cfServiceData.getDesiredCount()).isTrue();
+        assertThat(2 == cfServiceData.getPreviousCount()).isTrue();
       }
     }
     assertThat(commandRollbackRequest.getRouteMaps()).hasSize(2);

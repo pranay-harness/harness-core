@@ -6,7 +6,7 @@ import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
@@ -53,7 +53,7 @@ public class WebhookHelper {
   @Inject @Named(WEBHOOK_EVENTS_STREAM) private Producer webhookEventProducer;
   @Inject @Named(GIT_PUSH_EVENT_STREAM) private Producer gitPushEventProducer;
   @Inject @Named(GIT_PR_EVENT_STREAM) private Producer gitPrEventProducer;
-  @Inject @Named(GIT_CREATE_BRANCH_EVENT_STREAM) private Producer gitCreateBranchEventProducer;
+  @Inject @Named(GIT_BRANCH_HOOK_EVENT_STREAM) private Producer gitBranchHookEventProducer;
 
   public WebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String payload, HttpHeaders httpHeaders) {
     List<HeaderConfig> headerConfigs = new ArrayList<>();
@@ -149,7 +149,7 @@ public class WebhookHelper {
       } else if (PR == webhookDTO.getGitDetails().getEvent()) {
         producers.add(gitPrEventProducer);
       } else if (CREATE_BRANCH == webhookDTO.getGitDetails().getEvent()) {
-        producers.add(gitCreateBranchEventProducer);
+        producers.add(gitBranchHookEventProducer);
       }
 
       // Here we can add more logic if need to add more event topics.
