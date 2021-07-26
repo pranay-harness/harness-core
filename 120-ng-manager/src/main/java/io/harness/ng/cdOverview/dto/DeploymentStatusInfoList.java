@@ -18,4 +18,11 @@ public class DeploymentStatusInfoList {
   private List<String> deploymentStatus;
   private List<String> planExecutionIdList;
   private List<String> pipelineIdentifierList;
+
+  private List<String> branch;
+  private List<String> commit;
+  private List<String> commitId;
+  private List<AuthorInfo> author;
+  private List<String> repoName;
+
 }

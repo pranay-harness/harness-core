@@ -8,8 +8,8 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.app.beans.entities.BuildActiveInfo;
-import io.harness.app.beans.entities.BuildFailureInfo;
+import io.harness.app.beans.entities.BuildStatusInfo;
+import io.harness.app.beans.entities.BuildStatusInfo;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsActiveAndFailedInfo;
@@ -114,9 +114,9 @@ public class CIDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam("top") @DefaultValue("20") long days) {
     log.info("Getting builds details failed and active");
-    List<BuildFailureInfo> failureInfos = ciOverviewDashboardService.getDashboardBuildFailureInfo(
+    List<BuildStatusInfo> failureInfos = ciOverviewDashboardService.getDashboardBuildFailureInfo(
         accountIdentifier, orgIdentifier, projectIdentifier, days);
-    List<BuildActiveInfo> activeInfos = ciOverviewDashboardService.getDashboardBuildActiveInfo(
+    List<BuildStatusInfo> activeInfos = ciOverviewDashboardService.getDashboardBuildActiveInfo(
         accountIdentifier, orgIdentifier, projectIdentifier, days);
 
     return ResponseDTO.newResponse(

@@ -1,6 +1,8 @@
 package io.harness.app.beans.entities;
 
 import java.util.List;
+
+import io.harness.ng.cdOverview.dto.AuthorInfo;
 import lombok.Builder;
 import lombok.Value;
 

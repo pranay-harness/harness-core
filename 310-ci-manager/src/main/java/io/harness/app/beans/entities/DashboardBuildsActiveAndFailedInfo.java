@@ -7,6 +7,6 @@ import lombok.Value;
 @Value
 @Builder
 public class DashboardBuildsActiveAndFailedInfo {
-  List<BuildFailureInfo> failed;
-  List<BuildActiveInfo> active;
+  List<BuildStatusInfo> failed;
+  List<BuildStatusInfo> active;
 }

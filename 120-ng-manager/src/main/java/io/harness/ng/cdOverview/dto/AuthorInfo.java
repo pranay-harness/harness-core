@@ -1,4 +1,4 @@
-package io.harness.app.beans.entities;
+package io.harness.ng.cdOverview.dto;
 
 import lombok.Builder;
 import lombok.Value;

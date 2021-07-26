@@ -5,11 +5,10 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.app.beans.entities.AuthorInfo;
-import io.harness.app.beans.entities.BuildActiveInfo;
+import io.harness.ng.cdOverview.dto.AuthorInfo;
+import io.harness.app.beans.entities.BuildStatusInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
-import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.BuildHealth;
 import io.harness.app.beans.entities.BuildInfo;
 import io.harness.app.beans.entities.BuildRepositoryCount;
@@ -203,8 +202,8 @@ public class CIDashboardsApisTest {
     String queryRequired =
         "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, endts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
 
-    List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
-    buildFailureInfos.add(BuildFailureInfo.builder()
+    List<BuildStatusInfo> buildFailureInfos = new ArrayList<>();
+    buildFailureInfos.add(BuildStatusInfo.builder()
                               .piplineName("pip")
                               .pipelineIdentifier("pip")
                               .branch("branch")
@@ -229,8 +228,8 @@ public class CIDashboardsApisTest {
     String queryRequired =
         "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED','PAUSING') ORDER BY startts DESC LIMIT 5;";
 
-    List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
-    buildActiveInfos.add(BuildActiveInfo.builder()
+    List<BuildStatusInfo> buildActiveInfos = new ArrayList<>();
+    buildActiveInfos.add(BuildStatusInfo.builder()
                              .piplineName("pip")
                              .pipelineIdentifier("pip")
                              .branch("branch")
@@ -483,7 +482,7 @@ public class CIDashboardsApisTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetActiveAndFailedBuild() {
-    BuildFailureInfo failureBuild = BuildFailureInfo.builder()
+    BuildStatusInfo failureBuild = BuildStatusInfo.builder()
                                         .piplineName("pip1")
                                         .pipelineIdentifier("pip1")
                                         .commit("commit1")
@@ -493,7 +492,7 @@ public class CIDashboardsApisTest {
                                         .branch("branch1")
                                         .status("status")
                                         .build();
-    BuildActiveInfo activeInfo = BuildActiveInfo.builder()
+    BuildStatusInfo activeInfo = BuildStatusInfo.builder()
                                      .piplineName("pip2")
                                      .pipelineIdentifier("pip2")
                                      .commit("commit2")

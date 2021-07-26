@@ -1,10 +1,9 @@
 package io.harness.core.ci.services;
 
-import io.harness.app.beans.entities.AuthorInfo;
-import io.harness.app.beans.entities.BuildActiveInfo;
+import io.harness.ng.cdOverview.dto.AuthorInfo;
+import io.harness.app.beans.entities.BuildStatusInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
-import io.harness.app.beans.entities.BuildFailureInfo;
 import io.harness.app.beans.entities.BuildHealth;
 import io.harness.app.beans.entities.BuildInfo;
 import io.harness.app.beans.entities.BuildRepositoryCount;
@@ -196,9 +195,9 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return StatusAndTime.builder().status(status).time(time).build();
   }
 
-  public BuildFailureInfo getBuildFailureInfo(String name, String identifier, String branch_name, String commit,
+  public BuildStatusInfo getBuildFailureInfo(String name, String identifier, String branch_name, String commit,
       String commit_id, long startTs, long endTs, AuthorInfo author, String status) {
-    return BuildFailureInfo.builder()
+    return BuildStatusInfo.builder()
         .piplineName(name)
         .pipelineIdentifier(identifier)
         .branch(branch_name)
@@ -211,9 +210,9 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .build();
   }
 
-  public BuildActiveInfo getBuildActiveInfo(String name, String identifier, String branch_name, String commit,
-      String commit_id, AuthorInfo author, long startTs, String status, long endTs) {
-    return BuildActiveInfo.builder()
+  public BuildStatusInfo getBuildActiveInfo(String name, String identifier, String branch_name, String commit,
+                                            String commit_id, AuthorInfo author, long startTs, String status, long endTs) {
+    return BuildStatusInfo.builder()
         .piplineName(name)
         .pipelineIdentifier(identifier)
         .branch(branch_name)
@@ -320,8 +319,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return DashboardBuildExecutionInfo.builder().buildExecutionInfoList(buildExecutionInfoList).build();
   }
 
-  public List<BuildFailureInfo> queryCalculatorBuildFailureInfo(String query) {
-    List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
+  public List<BuildStatusInfo> queryCalculatorBuildFailureInfo(String query) {
+    List<BuildStatusInfo> buildFailureInfos = new ArrayList<>();
     int totalTries = 0;
     boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
@@ -358,8 +357,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return buildFailureInfos;
   }
 
-  public List<BuildActiveInfo> queryCalculatorBuildActiveInfo(String query) {
-    List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
+  public List<BuildStatusInfo> queryCalculatorBuildActiveInfo(String query) {
+    List<BuildStatusInfo> buildActiveInfos = new ArrayList<>();
     int totalTries = 0;
     boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
@@ -392,7 +391,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     return buildActiveInfos;
   }
   @Override
-  public List<BuildFailureInfo> getDashboardBuildFailureInfo(
+  public List<BuildStatusInfo> getDashboardBuildFailureInfo(
       String accountId, String orgId, String projectId, long days) {
     String query = queryBuilderFailedStatusOrderBy(accountId, orgId, projectId, days);
 
@@ -400,7 +399,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   @Override
-  public List<BuildActiveInfo> getDashboardBuildActiveInfo(
+  public List<BuildStatusInfo> getDashboardBuildActiveInfo(
       String accountId, String orgId, String projectId, long days) {
     String query = queryBuilderActiveStatusOrderBy(accountId, orgId, projectId, days);
 

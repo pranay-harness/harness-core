@@ -1,11 +1,12 @@
 package io.harness.app.beans.entities;
 
+import io.harness.ng.cdOverview.dto.AuthorInfo;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-public class BuildActiveInfo {
+public class BuildStatusInfo {
   private String piplineName;
   private String pipelineIdentifier;
   private String branch;

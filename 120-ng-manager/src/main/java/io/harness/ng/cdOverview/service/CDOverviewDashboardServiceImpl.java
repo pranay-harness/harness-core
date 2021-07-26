@@ -19,37 +19,7 @@ import io.harness.exception.UnknownEnumTypeException;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
-import io.harness.ng.cdOverview.dto.BuildIdAndInstanceCount;
-import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
-import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
-import io.harness.ng.cdOverview.dto.Deployment;
-import io.harness.ng.cdOverview.dto.DeploymentCount;
-import io.harness.ng.cdOverview.dto.DeploymentDateAndCount;
-import io.harness.ng.cdOverview.dto.DeploymentInfo;
-import io.harness.ng.cdOverview.dto.DeploymentStatusInfo;
-import io.harness.ng.cdOverview.dto.DeploymentStatusInfoList;
-import io.harness.ng.cdOverview.dto.EntityStatusDetails;
-import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfo;
-import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
-import io.harness.ng.cdOverview.dto.ExecutionDeployment;
-import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
-import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
-import io.harness.ng.cdOverview.dto.HealthDeploymentInfo;
-import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
-import io.harness.ng.cdOverview.dto.LastWorkloadInfo;
-import io.harness.ng.cdOverview.dto.ServiceDeployment;
-import io.harness.ng.cdOverview.dto.ServiceDeploymentInfo;
-import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
-import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
-import io.harness.ng.cdOverview.dto.ServiceDetailsDTO;
-import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
-import io.harness.ng.cdOverview.dto.ServicePipelineInfo;
-import io.harness.ng.cdOverview.dto.TimeAndStatusDeployment;
-import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
-import io.harness.ng.cdOverview.dto.TotalDeploymentInfo;
-import io.harness.ng.cdOverview.dto.WorkloadCountInfo;
-import io.harness.ng.cdOverview.dto.WorkloadDateCountInfo;
-import io.harness.ng.cdOverview.dto.WorkloadDeploymentInfo;
+import io.harness.ng.cdOverview.dto.*;
 import io.harness.ng.cdOverview.util.GrowthTrendEvaluator;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -87,6 +57,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   @Inject InstanceDashboardService instanceDashboardService;
 
   private String tableNameCD = "pipeline_execution_summary_cd";
+  private String tableNameCI = "pipeline_execution_summary_ci";
   private String tableNameServiceAndInfra = "service_infra_info";
   private List<String> failedStatusList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
       ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
@@ -206,30 +177,32 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public String queryBuilderStatus(
       String accountId, String orgId, String projectId, long days, List<String> statusList) {
     String selectStatusQuery =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from " + tableNameCD + " where ";
+        "select pipeline_execution_summary_cd.id,pipeline_execution_summary_cd.name,pipeline_execution_summary_cd.pipelineidentifier,pipeline_execution_summary_cd.startts,pipeline_execution_summary_cd.endTs,pipeline_execution_summary_cd.status,pipeline_execution_summary_cd.planexecutionid,moduleinfo_repository,moduleinfo_branch_name,moduleinfo_branch_commit_id,moduleinfo_branch_commit_message,moduleinfo_author_id,author_avatar from "
+        + tableNameCD + " left join " + tableNameCI
+        + " on pipeline_execution_summary_ci.planexecutionid=pipeline_execution_summary_cd.planexecutionid where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
 
     if (accountId != null) {
-      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountId));
+      totalBuildSqlBuilder.append(String.format("pipeline_execution_summary_cd.accountid='%s' and ", accountId));
     }
 
     if (orgId != null) {
-      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgId));
+      totalBuildSqlBuilder.append(String.format("pipeline_execution_summary_cd.orgidentifier='%s' and ", orgId));
     }
 
     if (projectId != null) {
-      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
+      totalBuildSqlBuilder.append(String.format("pipeline_execution_summary_cd.projectidentifier='%s' and ", projectId));
     }
 
-    totalBuildSqlBuilder.append("status in (");
+    totalBuildSqlBuilder.append("pipeline_execution_summary_cd.status in (");
     for (String status : statusList) {
       totalBuildSqlBuilder.append(String.format("'%s',", status));
     }
 
     totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
 
-    totalBuildSqlBuilder.append(String.format(") and startts is not null ORDER BY startts DESC LIMIT %s;", days));
+    totalBuildSqlBuilder.append(String.format(") and pipeline_execution_summary_cd.startts is not null ORDER BY pipeline_execution_summary_cd.startts DESC LIMIT %s;", days));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -832,6 +805,13 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<String> identifierList = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
 
+    //CI
+    List<String> commit = new ArrayList<>();
+    List<String> commitID = new ArrayList<>();
+    List<String> branch = new ArrayList<>();
+    List<AuthorInfo> author = new ArrayList<>();
+    List<String> repoName = new ArrayList<>();
+
     int totalTries = 0;
     boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
@@ -846,6 +826,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           namePipelineList.add(resultSet.getString("name"));
           startTs.add(Long.valueOf(resultSet.getString("startts")));
           deploymentStatus.add(resultSet.getString("status"));
+
+          commit.add(resultSet.getString("moduleinfo_branch_commit_message"));
+          commitID.add(resultSet.getString("moduleinfo_branch_commit_id"));
+          branch.add(resultSet.getString("moduleinfo_branch_name"));
+          String author_name = resultSet.getString("moduleinfo_author_id");
+          String author_avatar = resultSet.getString("author_avatar");
+          author.add(AuthorInfo.builder().name(author_name).url(author_avatar).build());
+          repoName.add(resultSet.getString("moduleinfo_repository"));
+
           if (resultSet.getString("endTs") != null) {
             endTs.add(Long.valueOf(resultSet.getString("endTs")));
           } else {
@@ -867,6 +856,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .startTs(startTs)
         .pipelineIdentifierList(identifierList)
         .planExecutionIdList(planExecutionIdList)
+         .branch(branch)
+            .commit(commit)
+            .commitId(commitID)
+            .repoName(repoName)
+            .author(author)
         .build();
   }
 
@@ -879,6 +873,14 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<String> planExecutionIdList = new ArrayList<>();
     List<String> pipelineIdentifierList = new ArrayList<>();
 
+    //CI
+    List<String> commit = new ArrayList<>();
+    List<String> commitID = new ArrayList<>();
+    List<String> branch = new ArrayList<>();
+    List<AuthorInfo> author = new ArrayList<>();
+    List<String> repoName = new ArrayList<>();
+
+
     HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
 
     DeploymentStatusInfoList deploymentStatusInfoList = queryCalculatorDeploymentInfo(queryStatus);
@@ -889,6 +891,13 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     startTs = deploymentStatusInfoList.getStartTs();
     planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
     pipelineIdentifierList = deploymentStatusInfoList.getPipelineIdentifierList();
+
+    //CI
+    commit = deploymentStatusInfoList.getCommit();
+    commitID = deploymentStatusInfoList.getCommitId();
+    branch = deploymentStatusInfoList.getBranch();
+    author = deploymentStatusInfoList.getAuthor();
+    repoName = deploymentStatusInfoList.getRepoName();
 
     String queryServiceTag = queryBuilderServiceTag(queryServiceNameTagId);
 
@@ -901,8 +910,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       long endTime = endTs.get(i);
       String pipelineIdentifier = pipelineIdentifierList.get(i);
       String planExecutionId = planExecutionIdList.get(i);
+
+      // BranchInfo
+      BranchInfo branchInfo = BranchInfo.builder().branch(branch.get(i)).commit(commit.get(i)).commitID(commitID.get(i)).repoName(repoName.get(i)).author(author.get(i)).build();
       statusInfo.add(this.getDeploymentStatusInfoObject(namePipelineList.get(i), pipelineIdentifier, planExecutionId,
-          startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(objectId)));
+          startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(objectId),branchInfo));
     }
     return statusInfo;
   }
@@ -935,15 +947,20 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
 
   private DeploymentStatusInfo getDeploymentStatusInfoObject(String name, String identfier, String planExecutionId,
-      Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
+      Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos,BranchInfo branchInfo) {
     return DeploymentStatusInfo.builder()
-        .name(name)
+        .pipelineName(name)
         .pipelineIdentifier(identfier)
         .planExecutionId(planExecutionId)
         .startTs(startTime)
         .endTs(endTime)
         .status(status)
         .serviceInfoList(serviceDeploymentInfos)
+            .author(branchInfo.getAuthor())
+            .branch(branchInfo.getBranch())
+            .commit(branchInfo.getCommit())
+            .commitID(branchInfo.getCommitID())
+            .repoName(branchInfo.getRepoName())
         .build();
   }
 
