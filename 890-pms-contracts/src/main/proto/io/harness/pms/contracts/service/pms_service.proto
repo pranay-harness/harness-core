@@ -15,8 +15,7 @@ service PmsService {
 message InitializeSdkRequest {
   string name = 1;
   map<string, Types> supportedTypes = 2;
-  repeated io.harness.pms.contracts.steps.StepInfo supportedSteps = 3;
-  repeated io.harness.pms.contracts.steps.StepType supportedStepTypes = 4;
+  repeated io.harness.pms.contracts.steps.SdkStep supportedSteps = 13;
   SdkModuleInfo sdkModuleInfo = 5;
   ConsumerConfig interruptConsumerConfig = 6;
   ConsumerConfig orchestrationEventConsumerConfig = 7;
