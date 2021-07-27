@@ -1,8 +1,9 @@
 package io.harness.nexus.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
  * Created by sgurubelli on 11/17/17.

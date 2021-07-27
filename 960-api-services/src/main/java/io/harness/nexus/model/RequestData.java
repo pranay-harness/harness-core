@@ -1,9 +1,9 @@
 package io.harness.nexus.model;
 
-import java.util.List;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+
+import java.util.List;
 import lombok.Builder;
 
 /**
