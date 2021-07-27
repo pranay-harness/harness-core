@@ -252,4 +252,18 @@ public class CDDashboardOverviewResource {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds));
   }
+
+  @GET
+  @Path("/getInstanceGrowthTrend")
+  @ApiOperation(value = "Get instance growth trend", nickname = "getInstanceGrowthTrend")
+  public ResponseDTO<TimeValuePairListDTO<Integer>> getInstanceGrowthTrend(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getInstanceGrowthTrend(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startInterval, endInterval));
+  }
 }
