@@ -23,6 +23,8 @@ public interface InstanceService {
 
   void deleteAll(List<InstanceDTO> instanceDTOList);
 
+  Optional<InstanceDTO> findAndReplace(InstanceDTO instanceDTO);
+
   List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
   List<InstanceDTO> getInstances(
