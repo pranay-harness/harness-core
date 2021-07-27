@@ -4,7 +4,13 @@ KEYS=$(git log --pretty=oneline --abbrev-commit |\
       awk "/${PREVIOUS_CUT_COMMIT_MESSAGE}/ {exit} {print}" |\
       grep -o -iE '('$PROJECTS')-[0-9]+' | sort | uniq)
 
-STATUS_ID=$STATUS_ID_TO_MOVE
+# QA-Test status ID is 201, Dev Complete status id is 151.
+STATUS_ID=201
+
+if [ ! -z "$STATUS_ID_TO_MOVE" ]
+then
+      STATUS_ID=$STATUS_ID_TO_MOVE
+fi
 
 for KEY in ${KEYS}
 do
@@ -18,7 +24,7 @@ do
             then
                echo " ${KEY}  is in Done or QA-Test status, Hence no update"
             else
-               echo " ${KEY}  is in  ${status} , Hence moving to QA-Test status"
+               echo " ${KEY}  is in  ${status} , Hence moving to ${STATUS_ID} status"
                curl \
                  -X POST \
                 --data "{\"transition\":{\"id\":\"${STATUS_ID}\"}}" \
