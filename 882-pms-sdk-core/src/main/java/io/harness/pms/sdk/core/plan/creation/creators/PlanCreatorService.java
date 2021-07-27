@@ -7,8 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.InvalidYamlException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.manage.ManagedExecutorService;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -22,6 +23,7 @@ import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.exception.runtime.InvalidYamlRuntimeException;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -57,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class PlanCreatorService extends PlanCreationServiceImplBase {
   private final Executor executor = new ManagedExecutorService(Executors.newFixedThreadPool(2));
+  @Inject ExceptionManager exceptionManager;
 
   private final FilterCreatorService filterCreatorService;
   private final VariableCreatorService variableCreatorService;
@@ -107,9 +110,11 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       }
     } catch (Exception ex) {
       log.error(ExceptionUtils.getMessage(ex), ex);
+      WingsException processedException = exceptionManager.processException(ex);
       planCreationResponse =
           io.harness.pms.contracts.plan.PlanCreationResponse.newBuilder()
-              .setErrorResponse(ErrorResponse.newBuilder().addMessages(ExceptionUtils.getMessage(ex)).build())
+              .setErrorResponse(
+                  ErrorResponse.newBuilder().addMessages(ExceptionUtils.getMessage(processedException)).build())
               .build();
     }
 
@@ -175,8 +180,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
           } catch (IOException e) {
             // YamlUtils.getErrorNodePartialFQN() uses exception path to build FQN
             log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(field.getNode(), e)), e);
-            throw new InvalidYamlException(
-                format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(field.getNode(), e)), e);
+            throw new InvalidYamlRuntimeException("Invalid yaml in node [%s]", e, field.getNode());
           }
         }
 
@@ -245,9 +249,11 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       filterCreationResponse = FilterCreationResponse.newBuilder().setBlobResponse(response).build();
     } catch (Exception ex) {
       log.error(ExceptionUtils.getMessage(ex), ex);
+      WingsException processedException = exceptionManager.processException(ex);
       filterCreationResponse =
           FilterCreationResponse.newBuilder()
-              .setErrorResponse(ErrorResponse.newBuilder().addMessages(ExceptionUtils.getMessage(ex)).build())
+              .setErrorResponse(
+                  ErrorResponse.newBuilder().addMessages(ExceptionUtils.getMessage(processedException)).build())
               .build();
     }
 
