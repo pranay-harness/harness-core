@@ -2,12 +2,16 @@ package io.harness.perpetualtask;
 
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -31,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.atmosphere.cpr.Broadcaster;
+import org.atmosphere.cpr.BroadcasterFactory;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +51,9 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
   @Mock private Subject<PerpetualTaskStateObserver> perpetualTaskStateObserverSubject;
 
   @InjectMocks @Inject private PerpetualTaskServiceImpl perpetualTaskService;
+
+  @Inject private BroadcasterFactory broadcasterFactory;
+  @Mock private Broadcaster broadcaster;
 
   public static final String TASK_DESCRIPTION = "taskDescription";
   private final String ACCOUNT_ID = "test-account-id";
@@ -299,6 +308,30 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     perpetualTaskService.appointDelegate(accountId, taskId, delegateId2, 1L);
     assertThat(testBroadcastAggregateSet).isNotNull();
     assertThat(testBroadcastAggregateSet).size().isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testBroadcastToDelegate() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateId = UUIDGenerator.generateUuid();
+    String taskId = UUIDGenerator.generateUuid();
+
+    PerpetualTaskClientContext clientContext = clientContext();
+    PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecord();
+    perpetualTaskRecord.setClientContext(clientContext);
+    perpetualTaskRecord.setAccountId(accountId);
+    perpetualTaskRecord.setDelegateId(delegateId);
+    perpetualTaskRecord.setUuid(taskId);
+    perpetualTaskRecordDao.save(perpetualTaskRecord);
+
+    perpetualTaskService.appointDelegate(accountId, taskId, delegateId, 1L);
+
+    assertThat(testBroadcastAggregateSet).isNotNull();
+    assertThat(testBroadcastAggregateSet).size().isEqualTo(1);
+    when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
+    perpetualTaskService.broadcastToDelegate();
   }
 
   public PerpetualTaskClientContext clientContext() {
