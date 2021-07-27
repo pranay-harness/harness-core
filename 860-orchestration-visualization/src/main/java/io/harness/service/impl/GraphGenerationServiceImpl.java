@@ -20,6 +20,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.event.GraphNodeUpdateObserver;
 import io.harness.event.GraphStatusUpdateHelper;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
+import io.harness.event.StepDetailsUpdateEventHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -54,6 +55,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
+  @Inject private StepDetailsUpdateEventHandler stepDetailsUpdateEventHandler;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Getter private final Subject<GraphNodeUpdateObserver> graphNodeUpdateObserverSubject = new Subject<>();
 
@@ -83,6 +85,8 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
         OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+          orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
+        } else if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
           orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
         } else {
           String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();

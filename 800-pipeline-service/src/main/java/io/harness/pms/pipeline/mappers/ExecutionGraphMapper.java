@@ -49,6 +49,7 @@ public class ExecutionGraphMapper {
         .progressData(PmsExecutionUtils.extractToOrchestrationMap(graphVertex.getProgressData()))
         .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
         .interruptHistories(graphVertex.getInterruptHistories())
+        .stepDetails(graphVertex.getStepDetails())
         .build();
   }
 
