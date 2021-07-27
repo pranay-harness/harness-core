@@ -98,26 +98,17 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .compareCommitsResponse(compareCommitsResponse.toByteArray())
             .build();
-      case LATEST_COMMIT_ID:
+      }
+      case LATEST_COMMIT_ID: {
         final GetLatestCommitResponse latestCommitResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.getLatestCommit(
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             latestCommitResponse.getStatus(), latestCommitResponse.getError());
         return ScmGitRefTaskResponseData.builder()
-            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .branch(scmGitRefTaskParams.getBranch())
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .getLatestCommitResponse(latestCommitResponse.toByteArray())
-            .build();
-      }
-      case BRANCH_COMMIT_SHA: {
-        GetLatestCommitResponse latestCommitResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.getLatestCommit(
-                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
-        return ScmGitRefTaskResponseData.builder()
-            .gitRefType(scmGitRefTaskParams.getGitRefType())
-            .branch(scmGitRefTaskParams.getBranch())
-            .latestBranchCommitSha(latestCommitResponse.getCommitId())
             .build();
       }
       default:

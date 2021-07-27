@@ -1,6 +1,7 @@
 package io.harness.states.codebase;
 
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.TaskType.SCM_GIT_REF_TASK;
@@ -32,6 +33,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.FindPRResponse;
+import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.serializer.KryoSerializer;
@@ -90,7 +92,7 @@ public class CodeBaseStep implements TaskExecutable<CodeBaseStepParameters, ScmG
     if (isNotEmpty(branch)) {
       return ScmGitRefTaskParams.builder()
           .branch(branch)
-          .gitRefType(GitRefType.BRANCH_COMMIT_SHA)
+          .gitRefType(GitRefType.LATEST_COMMIT_ID)
           .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
           .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
           .build();
@@ -164,10 +166,17 @@ public class CodeBaseStep implements TaskExecutable<CodeBaseStepParameters, ScmG
               .state(state)
               .build();
 
-    } else if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.BRANCH_COMMIT_SHA) {
+    } else if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.LATEST_COMMIT_ID) {
+      final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getGetLatestCommitResponse();
+      if (isEmpty(getLatestCommitResponseByteArray)) {
+        throw new CIStageExecutionException("Codebase git information can't be obtained");
+      }
+      GetLatestCommitResponse getLatestCommitResponse =
+          GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
+
       codebaseSweepingOutput = CodebaseSweepingOutput.builder()
                                    .branch(scmGitRefTaskResponseData.getBranch())
-                                   .commitSha(scmGitRefTaskResponseData.getLatestBranchCommitSha())
+                                   .commitSha(getLatestCommitResponse.getCommitId())
                                    .build();
     }
 

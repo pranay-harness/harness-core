@@ -19,7 +19,6 @@ import lombok.NoArgsConstructor;
 public class ScmGitRefTaskResponseData implements DelegateResponseData {
   GitRefType gitRefType;
   String branch;
-  String latestBranchCommitSha;
   byte[] listBranchesResponse;
   byte[] listCommitsResponse;
   byte[] listCommitsInPRResponse;

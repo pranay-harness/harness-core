@@ -42,6 +42,7 @@ import static io.harness.common.CIExecutionConstants.PROJECT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.STAGE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;

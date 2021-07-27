@@ -29,7 +29,10 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_REPO_SCM;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_SOURCE_BRANCH;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_TAG;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
