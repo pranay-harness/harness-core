@@ -18,8 +18,8 @@ public class InfrastructureMappingDTO {
   @NonNull private String projectIdentifier;
   @NonNull private String infrastructureMappingType;
   @NonNull private String connectorRef;
-  @NonNull private String envId;
+  @NonNull private String envIdentifier;
   @NonNull private String deploymentType;
-  @NonNull private String serviceId;
+  @NonNull private String serviceIdentifier;
   @NonNull private String infrastructureKey;
 }
