@@ -26,4 +26,5 @@ public class QLPipelineAction implements QLTriggerAction {
   List<QLTriggerVariableValue> variables;
   List<QLArtifactSelection> artifactSelections;
   private Boolean continueWithDefaultValues;
+  List<QLManifestSelection> manifestSelections;
 }

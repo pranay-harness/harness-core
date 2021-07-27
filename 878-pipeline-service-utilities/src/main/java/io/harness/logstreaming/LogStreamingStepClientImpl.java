@@ -57,6 +57,16 @@ public class LogStreamingStepClientImpl implements ILogStreamingStepClient {
     }
   }
 
+  @Override
+  public void closeAllOpenStreamsWithPrefix(String prefix) {
+    try {
+      SafeHttpCall.executeWithExceptions(
+          logStreamingClient.closeLogStreamWithPrefix(token, accountId, prefix, true, true));
+    } catch (Exception ex) {
+      throw new InvalidRequestException(ex.getMessage() + "\nPlease ensure log service is running.", ex);
+    }
+  }
+
   private String generateLogKey(String baseLogKey, String logKeySuffix) {
     return logKeySuffix == null ? baseLogKey
                                 : LogStreamingHelper.generateLogKeyGivenCommandUnit(baseLogKey, logKeySuffix);

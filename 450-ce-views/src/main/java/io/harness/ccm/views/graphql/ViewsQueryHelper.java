@@ -1,6 +1,9 @@
 package io.harness.ccm.views.graphql;
 
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
+
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
 
 import com.hazelcast.util.Preconditions;
 import java.text.NumberFormat;
@@ -12,6 +15,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -107,6 +111,15 @@ public class ViewsQueryHelper {
     return trendCostValue;
   }
 
+  public List<QLCEViewFilterWrapper> getFiltersForForecastCost(List<QLCEViewFilterWrapper> filters) {
+    List<QLCEViewFilterWrapper> filtersForForecastCost =
+        filters.stream().filter(filter -> filter.getTimeFilter() == null).collect(Collectors.toList());
+    long timestampForFilters = getStartOfCurrentDay();
+    filtersForForecastCost.add(getPerspectiveTimeFilter(timestampForFilters - 1000, BEFORE));
+    filtersForForecastCost.add(getPerspectiveTimeFilter(timestampForFilters - 30 * ONE_DAY_MILLIS, AFTER));
+    return filtersForForecastCost;
+  }
+
   public Instant getEndInstantForForecastCost(List<QLCEViewFilterWrapper> filters) {
     List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
     QLCEViewTimeFilter endTimeFilter = null;
@@ -121,6 +134,7 @@ public class ViewsQueryHelper {
     long currentDay = getStartOfCurrentDay();
     long days = 0;
     if (endTimeFilter != null && startTimeFilter != null) {
+      log.info("End time from filters heer: {} {}", endTimeFilter, currentDay - 1000);
       long endTimeFromFilters = endTimeFilter.getValue().longValue();
       long startTimeFromFilters = startTimeFilter.getValue().longValue();
       if (endTimeFromFilters == currentDay - 1000) {
@@ -190,5 +204,31 @@ public class ViewsQueryHelper {
         .statsValue(String.valueOf(currentEfficiencyScore))
         .statsTrend(efficiencyTrend)
         .build();
+  }
+
+  public QLCEViewFilterWrapper getPerspectiveTimeFilter(long timestamp, QLCEViewTimeFilterOperator operator) {
+    return QLCEViewFilterWrapper.builder()
+        .timeFilter(QLCEViewTimeFilter.builder()
+                        .field(QLCEViewFieldInput.builder()
+                                   .fieldId("startTime")
+                                   .fieldName("startTime")
+                                   .identifier(ViewFieldIdentifier.COMMON)
+                                   .identifierName(ViewFieldIdentifier.COMMON.getDisplayName())
+                                   .build())
+                        .operator(operator)
+                        .value(timestamp)
+                        .build())
+        .build();
+  }
+
+  public QLCEViewFilterWrapper getViewMetadataFilter(String viewId) {
+    return QLCEViewFilterWrapper.builder()
+        .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(viewId).isPreview(false).build())
+        .build();
+  }
+
+  public List<QLCEViewAggregation> getPerspectiveTotalCostAggregation() {
+    return Collections.singletonList(
+        QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
   }
 }

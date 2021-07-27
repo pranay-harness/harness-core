@@ -26,6 +26,8 @@ import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -46,6 +48,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 
@@ -605,9 +608,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
       boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize) {
-    Preconditions.checkNotNull(activityId);
-    Activity activity = get(activityId);
-    List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
@@ -621,6 +622,35 @@ public class ActivityServiceImpl implements ActivityService {
     Preconditions.checkNotNull(accountId);
     Preconditions.checkNotNull(activityId);
     return verificationJobInstanceService.getDataSourcetypes(get(activityId).getVerificationJobInstanceIds());
+  }
+
+  @Override
+  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, String hostName) {
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
+    // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
+    // changes later
+    Preconditions.checkState(verificationJobInstanceIds.size() == 1,
+        "We do not support more than one monitored source validation from deployment");
+    return deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceIds.get(0), hostName);
+  }
+
+  @Override
+  public PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(
+      String accountId, String activityId, Integer label, int pageNumber, int pageSize, String hostName) {
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
+    // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
+    // changes later
+    Preconditions.checkState(verificationJobInstanceIds.size() == 1,
+        "We do not support more than one monitored source validation from deployment");
+    return deploymentLogAnalysisService.getLogAnalysisResult(
+        accountId, verificationJobInstanceIds.get(0), label, pageNumber, pageSize, hostName);
+  }
+
+  private List<String> getVerificationJobInstanceId(String activityId) {
+    Preconditions.checkNotNull(activityId);
+    Activity activity = get(activityId);
+    return activity.getVerificationJobInstanceIds();
   }
 
   private void validateJob(VerificationJob verificationJob) {

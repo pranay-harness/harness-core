@@ -118,29 +118,33 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	testSt := time.Now()
 	for i := int32(1); i <= r.numRetries; i++ {
 		if err = r.execute(ctx, i); err == nil {
-			st := time.Now()
+			cgSt := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails
 			errCg = collectCgFn(ctx, r.id, cgDir, time.Since(testSt).Milliseconds(), r.log)
+			cgTime := time.Since(cgSt)
+			repoSt := time.Now()
 			err = collectTestReportsFn(ctx, r.reports, r.id, r.log)
+			repoTime := time.Since(repoSt)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
 				// the step will be marked as an error
-				r.log.Errorw("unable to collect callgraph", zap.Error(errCg))
+				r.log.Errorw(fmt.Sprintf("unable to collect callgraph. Time taken: %s", cgTime), zap.Error(errCg))
 				if err != nil {
-					r.log.Errorw("unable to collect tests reports", zap.Error(err))
+					r.log.Errorw(fmt.Sprintf("unable to collect tests reports. Time taken: %s", repoTime), zap.Error(err))
 				}
 				return r.numRetries, errCg
 			}
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
-				r.log.Errorw("unable to collect test reports", zap.Error(err))
+				r.log.Errorw(fmt.Sprintf("unable to collect test reports. Time taken: %s", repoTime), zap.Error(err))
 				return r.numRetries, err
 			}
 			if len(r.reports) > 0 {
-				r.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
+				r.log.Infow(fmt.Sprintf("successfully collected test reports in %s time", repoTime))
 			}
+			r.log.Infow(fmt.Sprintf("successfully uploaded partial callgraph in %s time", cgTime))
 			return i, nil
 		}
 	}

@@ -1,22 +1,26 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.GraphQLException;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionBuilder;
 import software.wings.beans.trigger.ArtifactSelection.Type;
+import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerBuilder;
 import software.wings.graphql.datafetcher.execution.PipelineExecutionController;
 import software.wings.graphql.datafetcher.execution.WorkflowExecutionController;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
@@ -25,12 +29,20 @@ import software.wings.graphql.schema.type.trigger.QLArtifactSelection;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionInput;
 import software.wings.graphql.schema.type.trigger.QLConditionType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
+import software.wings.graphql.schema.type.trigger.QLFromTriggeringAppManifest;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringArtifactSource;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringPipeline;
 import software.wings.graphql.schema.type.trigger.QLFromWebhookPayload;
 import software.wings.graphql.schema.type.trigger.QLLastCollected;
+import software.wings.graphql.schema.type.trigger.QLLastCollectedManifest;
 import software.wings.graphql.schema.type.trigger.QLLastDeployedFromPipeline;
 import software.wings.graphql.schema.type.trigger.QLLastDeployedFromWorkflow;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedManifestFromPipeline;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedManifestFromWorkflow;
+import software.wings.graphql.schema.type.trigger.QLManifestFromTriggeringPipeline;
+import software.wings.graphql.schema.type.trigger.QLManifestFromWebhookPayload;
+import software.wings.graphql.schema.type.trigger.QLManifestSelection;
+import software.wings.graphql.schema.type.trigger.QLManifestSelectionInput;
 import software.wings.graphql.schema.type.trigger.QLPipelineAction;
 import software.wings.graphql.schema.type.trigger.QLTriggerAction;
 import software.wings.graphql.schema.type.trigger.QLTriggerActionInput;
@@ -124,6 +136,14 @@ public class TriggerActionController {
             })
             .collect(Collectors.toList());
 
+    List<QLManifestSelection> manifestSelections = new ArrayList<>();
+    if (trigger.getManifestSelections() != null) {
+      manifestSelections = trigger.getManifestSelections()
+                               .stream()
+                               .map(e -> getQLManifestSelection(trigger, e))
+                               .collect(Collectors.toList());
+    }
+
     List<QLTriggerVariableValue> variableValues = new ArrayList<>();
     if (trigger.getWorkflowVariables() != null) {
       trigger.getWorkflowVariables().forEach(
@@ -135,6 +155,7 @@ public class TriggerActionController {
                           .pipelineId(trigger.getWorkflowId())
                           .pipelineName(trigger.getWorkflowName())
                           .artifactSelections(artifactSelections)
+                          .manifestSelections(manifestSelections)
                           .variables(variableValues)
                           .continueWithDefaultValues(trigger.isContinueWithDefaultValues())
                           .build();
@@ -143,16 +164,79 @@ public class TriggerActionController {
                           .workflowId(trigger.getWorkflowId())
                           .workflowName(trigger.getWorkflowName())
                           .artifactSelections(artifactSelections)
+                          .manifestSelections(manifestSelections)
                           .variables(variableValues)
                           .build();
     }
     return triggerAction;
   }
 
+  private QLManifestSelection getQLManifestSelection(Trigger trigger, ManifestSelection selection) {
+    QLManifestSelection manifestSelection = null;
+    switch (selection.getType()) {
+      case FROM_APP_MANIFEST:
+        manifestSelection = QLFromTriggeringAppManifest.builder()
+                                .serviceId(selection.getServiceId())
+                                .serviceName(selection.getServiceName())
+                                .manifestSelectionType(selection.getType())
+                                .build();
+        break;
+      case LAST_COLLECTED:
+        manifestSelection = QLLastCollectedManifest.builder()
+                                .serviceId(selection.getServiceId())
+                                .serviceName(selection.getServiceName())
+                                .versionRegex(selection.getVersionRegex())
+                                .appManifestId(selection.getAppManifestId())
+                                .appManifestName(selection.getAppManifestName())
+                                .manifestSelectionType(selection.getType())
+                                .build();
+        break;
+      case LAST_DEPLOYED:
+        if (trigger.getWorkflowType() == WorkflowType.PIPELINE) {
+          manifestSelection = QLLastDeployedManifestFromPipeline.builder()
+                                  .serviceId(selection.getServiceId())
+                                  .serviceName(selection.getServiceName())
+                                  .pipelineId(selection.getPipelineId())
+                                  .pipelineName(selection.getPipelineName())
+                                  .manifestSelectionType(selection.getType())
+                                  .build();
+        } else {
+          manifestSelection = QLLastDeployedManifestFromWorkflow.builder()
+                                  .serviceId(selection.getServiceId())
+                                  .serviceName(selection.getServiceName())
+                                  .workflowId(selection.getWorkflowId())
+                                  .workflowName(selection.getWorkflowName())
+                                  .manifestSelectionType(selection.getType())
+                                  .build();
+        }
+        break;
+      case PIPELINE_SOURCE:
+        manifestSelection = QLManifestFromTriggeringPipeline.builder()
+                                .serviceId(selection.getServiceId())
+                                .serviceName(selection.getServiceName())
+                                .manifestSelectionType(selection.getType())
+                                .build();
+        break;
+      case WEBHOOK_VARIABLE:
+        manifestSelection = QLManifestFromWebhookPayload.builder()
+                                .serviceId(selection.getServiceId())
+                                .serviceName(selection.getServiceName())
+                                .appManifestId(selection.getAppManifestId())
+                                .appManifestName(selection.getAppManifestName())
+                                .manifestSelectionType(selection.getType())
+                                .build();
+        break;
+      default:
+        throw new GraphQLException(
+            "Invalid manifest selection type " + selection.getType() + " present in trigger " + trigger.getUuid(),
+            USER);
+    }
+    return manifestSelection;
+  }
+
   List<ArtifactSelection> resolveArtifactSelections(
       QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, List<String> artifactNeededServiceIds) {
-    if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null
-        || EmptyPredicate.isEmpty(artifactNeededServiceIds)) {
+    if (qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections() == null || isEmpty(artifactNeededServiceIds)) {
       return new ArrayList<>();
     }
 
@@ -160,7 +244,7 @@ public class TriggerActionController {
         .getArtifactSelections()
         .stream()
         .map(e -> {
-          if (EmptyPredicate.isEmpty(e.getServiceId())) {
+          if (isEmpty(e.getServiceId())) {
             throw new InvalidRequestException("Empty serviceId in Artifact Selection", USER);
           }
 
@@ -178,28 +262,28 @@ public class TriggerActionController {
               type = validateAndResolveFromTriggeringPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_COLLECTED:
-              if (EmptyPredicate.isEmpty(e.getArtifactSourceId())) {
+              if (isEmpty(e.getArtifactSourceId())) {
                 throw new InvalidRequestException(
                     "Artifact Source Id to select artifact from is required when using LAST_COLLECTED", USER);
               }
               type = validateAndResolveLastCollectedArtifactSelectionType(e);
               break;
             case FROM_PAYLOAD_SOURCE:
-              if (EmptyPredicate.isEmpty(e.getArtifactSourceId())) {
+              if (isEmpty(e.getArtifactSourceId())) {
                 throw new InvalidRequestException(
                     "Artifact Source Id to select artifact from is required when using FROM_PAYLOAD_SOURCE", USER);
               }
               type = validateAndResolveFromPayloadSourceArtifactSelectionType(qlCreateOrUpdateTriggerInput, e);
               break;
             case LAST_DEPLOYED_PIPELINE:
-              if (EmptyPredicate.isEmpty(e.getPipelineId())) {
+              if (isEmpty(e.getPipelineId())) {
                 throw new InvalidRequestException(
                     "Pipeline Id to select artifact from is required when using LAST_DEPLOYED_PIPELINE", USER);
               }
               type = validateAndResolveLastDeployedPipelineArtifactSelectionType(qlCreateOrUpdateTriggerInput);
               break;
             case LAST_DEPLOYED_WORKFLOW:
-              if (EmptyPredicate.isEmpty(e.getWorkflowId())) {
+              if (isEmpty(e.getWorkflowId())) {
                 throw new InvalidRequestException(
                     "Workflow Id to select artifact from is required when using LAST_DEPLOYED_WORKFLOW", USER);
               }
@@ -278,7 +362,8 @@ public class TriggerActionController {
     if (workflowType != WorkflowType.ORCHESTRATION) {
       throw new InvalidRequestException("Artifact Selection is not allowed for current Workflow Type", USER);
     }
-    validateWorkflow(qlCreateOrUpdateTriggerInput);
+    validateWorkflow(qlCreateOrUpdateTriggerInput,
+        qlCreateOrUpdateTriggerInput.getAction().getArtifactSelections().get(0).getWorkflowId());
     return ArtifactSelection.Type.LAST_DEPLOYED;
   }
 
@@ -341,14 +426,13 @@ public class TriggerActionController {
     }
   }
 
-  void validateWorkflow(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+  void validateWorkflow(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, String workflowId) {
     Workflow workflow = null;
     String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
     QLTriggerActionInput qlTriggerActionInput = qlCreateOrUpdateTriggerInput.getAction();
 
     if (qlTriggerActionInput != null) {
-      workflow =
-          workflowService.readWorkflow(appId, qlTriggerActionInput.getArtifactSelections().get(0).getWorkflowId());
+      workflow = workflowService.readWorkflow(appId, workflowId);
     }
 
     if (workflow != null) {
@@ -363,7 +447,7 @@ public class TriggerActionController {
   private void validateArtifactSource(QLArtifactSelectionInput qlArtifactSelectionInput) {
     String artifactSourceId = qlArtifactSelectionInput.getArtifactSourceId();
 
-    if (EmptyPredicate.isEmpty(artifactSourceId)) {
+    if (isEmpty(artifactSourceId)) {
       throw new InvalidRequestException("Artifact Source must not be null", USER);
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifactSourceId);
@@ -374,5 +458,138 @@ public class TriggerActionController {
       throw new InvalidRequestException(
           "Artifact Source does not belong to the service. Service: " + qlArtifactSelectionInput.getServiceId(), USER);
     }
+  }
+
+  void validateAndSetManifestSelectionsPipeline(Map<String, String> variables,
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, Pipeline pipeline, TriggerBuilder triggerBuilder) {
+    /* Fetch the deployment data to find out the required entity types */
+    List<QLManifestSelectionInput> manifestSelections =
+        qlCreateOrUpdateTriggerInput.getAction().getManifestSelections();
+    DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
+        pipeline.getAppId(), pipeline.getUuid(), variables, null, null, false, null);
+
+    List<String> manifestNeededServiceIds =
+        deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getManifestRequiredServiceIds();
+    checkIfManifestSelectionPresentForRequiredServices(manifestSelections, manifestNeededServiceIds);
+    triggerBuilder.manifestSelections(
+        resolveManifestSelections(qlCreateOrUpdateTriggerInput, manifestNeededServiceIds));
+  }
+
+  void validateAndSetManifestSelectionsWorkflow(Map<String, String> variables,
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, Workflow workflow, TriggerBuilder triggerBuilder) {
+    List<QLManifestSelectionInput> manifestSelections =
+        qlCreateOrUpdateTriggerInput.getAction().getManifestSelections();
+    DeploymentMetadata deploymentMetadata = workflowService.fetchDeploymentMetadata(
+        workflow.getAppId(), workflow, variables, null, null, DeploymentMetadata.Include.ARTIFACT_SERVICE);
+
+    List<String> manifestNeededServiceIds =
+        deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getManifestRequiredServiceIds();
+    checkIfManifestSelectionPresentForRequiredServices(manifestSelections, manifestNeededServiceIds);
+    triggerBuilder.manifestSelections(
+        resolveManifestSelections(qlCreateOrUpdateTriggerInput, manifestNeededServiceIds));
+  }
+
+  List<ManifestSelection> resolveManifestSelections(
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput, List<String> manifestNeededServiceIds) {
+    if (qlCreateOrUpdateTriggerInput.getAction().getManifestSelections() == null || isEmpty(manifestNeededServiceIds)) {
+      return new ArrayList<>();
+    }
+
+    return qlCreateOrUpdateTriggerInput.getAction()
+        .getManifestSelections()
+        .stream()
+        .map(selection -> {
+          validateManifestSelections(
+              selection, qlCreateOrUpdateTriggerInput.getApplicationId(), qlCreateOrUpdateTriggerInput);
+          String entityId = qlCreateOrUpdateTriggerInput.getAction().getExecutionType() == QLExecutionType.WORKFLOW
+              ? selection.getWorkflowId()
+              : selection.getPipelineId();
+          return ManifestSelection.builder()
+              .serviceId(selection.getServiceId())
+              .workflowId(entityId)
+              .type(selection.getManifestSelectionType())
+              .pipelineId(entityId)
+              .versionRegex(selection.getVersionRegex())
+              .build();
+        })
+        .collect(Collectors.toList());
+  }
+
+  private void validateManifestSelections(
+      QLManifestSelectionInput selectionInput, String appId, QLCreateOrUpdateTriggerInput triggerInput) {
+    if (isEmpty(selectionInput.getServiceId())) {
+      throw new InvalidRequestException("Empty serviceId in Manifest selection", USER);
+    }
+    if (serviceResourceService.get(appId, selectionInput.getServiceId()) == null) {
+      throw new InvalidRequestException(
+          "ServiceId mentioned in Manifest Selection doesn't exist. ServiceId: " + selectionInput.getServiceId(), USER);
+    }
+
+    QLConditionType triggerType = triggerInput.getCondition().getConditionType();
+
+    switch (selectionInput.getManifestSelectionType()) {
+      case FROM_APP_MANIFEST:
+        if (triggerType != QLConditionType.ON_NEW_MANIFEST) {
+          throw new InvalidRequestException(
+              "FROM_APP_MANIFEST can be used only with ON_NEW_MANIFEST Condition Type", USER);
+        }
+        break;
+      case PIPELINE_SOURCE:
+        if (triggerType != QLConditionType.ON_PIPELINE_COMPLETION) {
+          throw new InvalidRequestException(
+              "PIPELINE_SOURCE can be used only with ON_PIPELINE_COMPLETION Condition Type", USER);
+        }
+        break;
+      case LAST_COLLECTED:
+        break;
+      case LAST_DEPLOYED:
+        validateLastDeployedManifestSelection(selectionInput, triggerInput);
+        break;
+      case WEBHOOK_VARIABLE:
+        if (QLConditionType.ON_WEBHOOK != triggerType) {
+          throw new InvalidRequestException("WEBHOOK_VARIABLE can be used only with ON_WEBHOOK Condition Type", USER);
+        }
+        if (QLWebhookSource.CUSTOM != triggerInput.getCondition().getWebhookConditionInput().getWebhookSourceType()) {
+          throw new InvalidRequestException("WEBHOOK_VARIABLE can be used only with CUSTOM Webhook Event", USER);
+        }
+        break;
+      default:
+        throw new InvalidRequestException(
+            "Unsupported manifest selection type: " + selectionInput.getManifestSelectionType(), USER);
+    }
+  }
+
+  private void validateLastDeployedManifestSelection(
+      QLManifestSelectionInput selectionInput, QLCreateOrUpdateTriggerInput triggerInput) {
+    if (resolveWorkflowType(triggerInput) == WorkflowType.ORCHESTRATION) {
+      if (isEmpty(selectionInput.getWorkflowId())) {
+        throw new InvalidRequestException(
+            "WorkflowId is required for Last Deployed manifest selection with workflow action");
+      }
+      validateWorkflow(triggerInput, selectionInput.getWorkflowId());
+    } else {
+      if (isEmpty(selectionInput.getPipelineId())) {
+        throw new InvalidRequestException(
+            "PipelineId is required for Last Deployed manifest selection with pipeline action");
+      }
+      validatePipeline(triggerInput, selectionInput.getPipelineId());
+    }
+  }
+
+  private void checkIfManifestSelectionPresentForRequiredServices(
+      List<QLManifestSelectionInput> manifestSelections, List<String> manifestNeededServiceIds) {
+    if (manifestSelections == null) {
+      manifestSelections = new ArrayList<>();
+    }
+
+    List<String> providedServiceIds =
+        manifestSelections.stream().map(QLManifestSelectionInput::getServiceId).collect(Collectors.toList());
+    manifestNeededServiceIds.stream()
+        .filter(serviceId -> !providedServiceIds.contains(serviceId))
+        .findFirst()
+        .ifPresent(serviceId -> {
+          throw new InvalidRequestException(
+              String.format("Manifest selection for service id: %s must be specified", serviceId), USER);
+        });
   }
 }

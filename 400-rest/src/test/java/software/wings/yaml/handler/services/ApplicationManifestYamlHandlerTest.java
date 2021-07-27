@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.services;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.TATHAGAT;
@@ -21,6 +22,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
@@ -66,6 +68,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -205,8 +208,6 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
     when(appService.getAppByName(ACCOUNT_ID, APP_NAME))
         .thenReturn(Application.Builder.anApplication().uuid(APP_ID).name(APP_NAME).build());
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME))
-        .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
-    when(serviceResourceService.getWithDetails(any(), any()))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(serviceResourceService.exist(any(), any())).thenReturn(true);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME))

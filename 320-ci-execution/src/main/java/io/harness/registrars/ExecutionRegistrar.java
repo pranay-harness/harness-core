@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.states.CIPipelineSetupStep;
 import io.harness.states.CISpecStep;
 import io.harness.states.CleanupStep;
 import io.harness.states.DockerStep;
@@ -36,7 +35,6 @@ public class ExecutionRegistrar {
     engineSteps.put(LiteEngineTaskStep.STEP_TYPE, LiteEngineTaskStep.class);
     engineSteps.put(CleanupStep.STEP_TYPE, CleanupStep.class);
     engineSteps.put(RunStep.STEP_TYPE, RunStep.class);
-    engineSteps.put(CIPipelineSetupStep.STEP_TYPE, CIPipelineSetupStep.class);
     engineSteps.put(PluginStep.STEP_TYPE, PluginStep.class);
     engineSteps.put(ECRStep.STEP_TYPE, ECRStep.class);
     engineSteps.put(GCRStep.STEP_TYPE, GCRStep.class);

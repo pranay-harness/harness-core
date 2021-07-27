@@ -64,22 +64,24 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Override
   public void updateGraph(String planExecutionId) {
     long startTs = System.currentTimeMillis();
-    OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
-    if (orchestrationGraph == null) {
-      log.warn("Orchestration Graph not yet generated. Passing on to next iteration");
+
+    Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
+        OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
+    if (lastUpdatedAt == null) {
+      log.info("entity is not present in db, ignoring this update");
       return;
     }
-
-    long lastUpdatedAt = orchestrationGraph.getLastUpdatedAt();
     List<OrchestrationEventLog> unprocessedEventLogs =
         orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, lastUpdatedAt);
     if (!unprocessedEventLogs.isEmpty()) {
+      OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+      if (orchestrationGraph == null) {
+        log.warn("Orchestration Graph not yet generated. Passing on to next iteration");
+        return;
+      }
       log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
-        // Todo: Remove the event in next release
-        OrchestrationEventType orchestrationEventType = orchestrationEventLog.getEvent() != null
-            ? orchestrationEventLog.getEvent().getEventType()
-            : orchestrationEventLog.getOrchestrationEventType();
+        OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
           orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
         } else {
@@ -89,12 +91,12 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         }
         lastUpdatedAt = orchestrationEventLog.getCreatedAt();
       }
+      orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
+      orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
+      cachePartialOrchestrationGraph(orchestrationGraph, lastUpdatedAt);
+      log.info("Processing of [{}] orchestration event logs completed in [{}ms]", unprocessedEventLogs.size(),
+          System.currentTimeMillis() - startTs);
     }
-    orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
-    orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
-    cacheOrchestrationGraph(orchestrationGraph);
-    log.info("Processing of [{}] orchestration event logs completed in [{}ms]", unprocessedEventLogs.size(),
-        System.currentTimeMillis() - startTs);
   }
 
   @Override
@@ -105,6 +107,10 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Override
   public void cacheOrchestrationGraph(OrchestrationGraph orchestrationGraph) {
     mongoStore.upsert(orchestrationGraph, SpringCacheEntity.TTL);
+  }
+
+  private void cachePartialOrchestrationGraph(OrchestrationGraph orchestrationGraph, long entityUpdatedAt) {
+    mongoStore.upsert(orchestrationGraph, SpringCacheEntity.TTL, entityUpdatedAt);
   }
 
   @Deprecated

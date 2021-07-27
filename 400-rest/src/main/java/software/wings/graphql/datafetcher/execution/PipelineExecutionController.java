@@ -34,6 +34,7 @@ import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
@@ -262,13 +263,20 @@ public class PipelineExecutionController {
       List<String> extraVariables = new ArrayList<>();
       Map<String, String> variableValues =
           validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, false);
-      List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(variableValues, serviceInputs, pipeline);
+
+      /* Fetch the deployment data to find out the required entity types */
+      DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
+          pipeline.getAppId(), pipeline.getUuid(), variableValues, null, null, false, null);
+      List<Artifact> artifacts = validateAndGetArtifactsFromServiceInputs(deploymentMetadata, serviceInputs, pipeline);
+
+      List<HelmChart> helmCharts =
+          validateAndGetHelmChartsFromServiceInputs(deploymentMetadata, serviceInputs, pipeline);
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setWorkflowType(WorkflowType.PIPELINE);
       executionArgs.setPipelineId(triggerExecutionInput.getEntityId());
       executionArgs.setContinueWithDefaultValues(triggerExecutionInput.isContinueWithDefaultValues());
       executionController.populateExecutionArgs(
-          variableValues, artifacts, triggerExecutionInput, mutationContext, executionArgs);
+          variableValues, artifacts, triggerExecutionInput, mutationContext, executionArgs, helmCharts);
       WorkflowExecution workflowExecution =
           workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null);
 
@@ -291,6 +299,20 @@ public class PipelineExecutionController {
           .clientMutationId(triggerExecutionInput.getClientMutationId())
           .build();
     }
+  }
+
+  private List<HelmChart> validateAndGetHelmChartsFromServiceInputs(
+      DeploymentMetadata deploymentMetadata, List<QLServiceInput> serviceInputs, Pipeline pipeline) {
+    List<String> manifestNeededServiceIds =
+        deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getManifestRequiredServiceIds();
+    if (isEmpty(manifestNeededServiceIds)) {
+      return new ArrayList<>();
+    }
+
+    List<HelmChart> helmCharts = new ArrayList<>();
+    executionController.getHelmChartsFromServiceInputs(
+        serviceInputs, pipeline.getAppId(), manifestNeededServiceIds, helmCharts);
+    return helmCharts;
   }
 
   private void validateInputs(QLStartExecutionInput triggerExecutionInput) {
@@ -344,11 +366,7 @@ public class PipelineExecutionController {
   }
 
   private List<Artifact> validateAndGetArtifactsFromServiceInputs(
-      Map<String, String> variableValues, List<QLServiceInput> serviceInputs, Pipeline pipeline) {
-    /* Fetch the deployment data to find out the required entity types */
-    DeploymentMetadata deploymentMetadata = pipelineService.fetchDeploymentMetadata(
-        pipeline.getAppId(), pipeline.getUuid(), variableValues, null, null, false, null);
-
+      DeploymentMetadata deploymentMetadata, List<QLServiceInput> serviceInputs, Pipeline pipeline) {
     // Fetch the service
     List<String> artifactNeededServiceIds =
         deploymentMetadata == null ? new ArrayList<>() : deploymentMetadata.getArtifactRequiredServiceIds();
@@ -548,7 +566,7 @@ public class PipelineExecutionController {
     authHandler.authorize(permissionAttributeList, Collections.singletonList(appId), pipelineId);
   }
 
-  List<String> getArtifactNeededServices(QLServiceInputsForExecutionParams parameters) {
+  Map<String, List<String>> getArtifactAndManifestNeededServices(QLServiceInputsForExecutionParams parameters) {
     String appId = parameters.getApplicationId();
     try (AutoLogContext ignore = new AppLogContext(appId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       String pipelineId = parameters.getEntityId();
@@ -567,14 +585,7 @@ public class PipelineExecutionController {
             validateAndResolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, false);
         DeploymentMetadata finalDeploymentMetadata =
             pipelineService.fetchDeploymentMetadata(appId, pipeline, variableValues);
-        if (finalDeploymentMetadata != null) {
-          List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
-          if (isNotEmpty(artifactNeededServiceIds)) {
-            return artifactNeededServiceIds;
-          }
-        }
-        log.info("No Services requires artifact inputs for this pipeline: " + pipelineId);
-        return new ArrayList<>();
+        return executionController.getRequiredServiceIds(pipelineId, finalDeploymentMetadata);
       }
     }
   }

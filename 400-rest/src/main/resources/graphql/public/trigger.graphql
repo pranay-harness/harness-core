@@ -16,7 +16,7 @@ type Trigger {
   name: String
   # Description of the Trigger
   description: String
-  # The condition that will execute the Trigger: On new artifact, On pipeline completion, On Cron schedule, On webhook
+  # The condition that will execute the Trigger: On new artifact, On pipeline completion, On Cron schedule, On webhook, On New Manifest
   condition: TriggerCondition
   # Action performed by the trigger: Execute workflow/pipeline
   action: TriggerAction
@@ -41,6 +41,7 @@ enum TriggerConditionType {
   PIPELINE_COMPLETION
   SCHEDULED
   WEBHOOK
+  NEW_MANIFEST
 }
 
 type OnNewArtifact implements TriggerCondition {
@@ -80,6 +81,15 @@ type OnSchedule implements TriggerCondition {
   onNewArtifactOnly: Boolean
 }
 
+#Beta: details for trigger with condition 'On Manifest changes'
+type OnNewManifest implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  versionRegex: String
+  appManifestId: String
+  appManifestName: String
+  serviceId: String
+}
+
 enum WebhookSource {
   GITHUB
   GITLAB
@@ -95,6 +105,8 @@ type WebhookEvent {
 interface TriggerAction {
   variables: [TriggerVariableValue]
   artifactSelections: [ArtifactSelection]
+  #Beta: Helm chart selections needed to trigger the execution
+  manifestSelections: [ManifestSelection]
 }
 
 type WorkflowAction implements TriggerAction {
@@ -102,6 +114,8 @@ type WorkflowAction implements TriggerAction {
   workflowName: String
   variables: [TriggerVariableValue]
   artifactSelections: [ArtifactSelection]
+  #Beta: Helm chart selections needed to trigger the execution
+  manifestSelections: [ManifestSelection]
 }
 
 type PipelineAction implements TriggerAction {
@@ -109,6 +123,8 @@ type PipelineAction implements TriggerAction {
   pipelineName: String
   variables: [TriggerVariableValue]
   artifactSelections: [ArtifactSelection]
+  #Beta: Helm chart selections needed to trigger the execution
+  manifestSelections: [ManifestSelection]
   # Beta: Coninue with default values as defined in pipeline
   continueWithDefaultValues: Boolean
 }
@@ -161,6 +177,77 @@ type FromWebhookPayload implements ArtifactSelection {
   serviceName: String
   artifactSourceId: String
   artifactSourceName: String
+}
+
+#Beta: Helm chart selections needed to trigger the execution
+interface ManifestSelection {
+  serviceId: String
+  serviceName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+enum ManifestSelectionType {
+  #Beta: Manifest will be selected from the triggering application manifest
+  FROM_APP_MANIFEST
+  #Beta: Last collected Manifest for the service will be selected
+  LAST_COLLECTED
+  #Beta: Last succesfully deployed Manifest from the workflow/pipeline for the service will be selected
+  LAST_DEPLOYED
+  #Beta: Manifest will be selected from the triggering pipeline
+  PIPELINE_SOURCE
+  #Beta: Manifest for the service will be selected from the webhook payload
+  WEBHOOK_VARIABLE
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is FROM_APP_MANIFEST
+type FromTriggeringAppManifest implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is LAST_COLLECTED
+type LastCollectedManifest implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  appManifestId: String
+  appManifestName: String
+  versionRegex: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is LAST_DEPLOYED workflow
+type LastDeployedManifestFromWorkflow implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  workflowId: String
+  workflowName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is LAST_DEPLOYED pipeline
+type LastDeployedManifestFromPipeline implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  pipelineId: String
+  pipelineName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is PIPELINE_SOURCE
+type ManifestFromTriggeringPipeline implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is WEBHOOK_VARIABLE
+type ManifestFromWebhookPayload implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  appManifestId: String
+  appManifestName: String
+  manifestSelectionType: ManifestSelectionType
 }
 
 type TriggerConnection {

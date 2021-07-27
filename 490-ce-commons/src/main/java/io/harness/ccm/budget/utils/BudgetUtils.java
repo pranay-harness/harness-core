@@ -6,7 +6,12 @@ import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.exception.InvalidRequestException;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,6 +27,8 @@ public class BudgetUtils {
   public static final String INVALID_ENTITY_ID_EXCEPTION =
       "Error in create/update budget operation. Some of the appliesTo ids are invalid.";
   private static final String UNDEFINED_BUDGET = "undefined";
+  private static final String DEFAULT_TIMEZONE = "GMT";
+  public static final long ONE_DAY_MILLIS = 86400000;
 
   public static void validateBudget(Budget budget, List<Budget> existingBudgets) {
     validateBudgetAmount(budget);
@@ -57,5 +64,46 @@ public class BudgetUtils {
     log.debug(
         "Budget scope info is: {} {} {}", scope.getBudgetScopeType(), scope.getEntityIds(), scope.getEntityNames());
     return scope.getEntityIds().toArray(new String[0]);
+  }
+
+  public static long getStartOfMonthForCurrentBillingCycle() {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
+    return zdtStart.toEpochSecond() * 1000;
+  }
+
+  public static long getEndOfMonthForCurrentBillingCycle() {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    Calendar cal = Calendar.getInstance();
+    int daysInMonth = cal.getActualMaximum(Calendar.DATE);
+    ZonedDateTime zdtStart = today.withDayOfMonth(daysInMonth).atStartOfDay(zoneId);
+    return zdtStart.toEpochSecond() * 1000 + ONE_DAY_MILLIS - 1000;
+  }
+
+  public static long getStartOfMonth(boolean prevMonth) {
+    Calendar c = Calendar.getInstance();
+    c.setTimeZone(TimeZone.getTimeZone(DEFAULT_TIMEZONE));
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    if (prevMonth) {
+      c.add(Calendar.MONTH, -1);
+    }
+    return c.getTimeInMillis();
+  }
+
+  public static long getStartOfCurrentDay() {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIMEZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
+    return zdtStart.toEpochSecond() * 1000;
+  }
+
+  public static long getStartTimeForForecasting() {
+    return getStartOfCurrentDay() - 30 * ONE_DAY_MILLIS;
   }
 }

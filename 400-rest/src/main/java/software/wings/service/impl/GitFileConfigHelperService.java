@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -20,6 +22,7 @@ import com.google.inject.Singleton;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class GitFileConfigHelperService {
@@ -141,18 +144,6 @@ public class GitFileConfigHelperService {
     GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
     if (GitConfig.UrlType.ACCOUNT == gitConfig.getUrlType() && isBlank(gitFileConfig.getRepoName())) {
       throw new InvalidRequestException("Repository name not provided for Account level git connector.", USER);
-    }
-  }
-
-  public void validateEcsGitfileConfig(GitFileConfig gitFileConfig) {
-    notNullCheck("gitFileConfig has to be specified", gitFileConfig, USER);
-    if (isBlank(gitFileConfig.getTaskSpecFilePath())) {
-      throw new InvalidRequestException("File Path to Task Definition cannot be empty.", USER);
-    }
-    if (!gitFileConfig.isUseInlineServiceDefinition()) {
-      if (isBlank(gitFileConfig.getServiceSpecFilePath())) {
-        throw new InvalidRequestException("File Path to Service Definition cannot be empty.", USER);
-      }
     }
   }
 }

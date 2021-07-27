@@ -431,7 +431,7 @@ func (tdb *TimeScaleDb) GetTestSuites(
 // WriteSelectedTests write selected test information corresponding to a PR to the database.
 // If an entry already exists, it adds the counts to the existing row.
 func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId, projectId, pipelineId,
-	buildId, stageId, stepId string, s types.SelectTestsResp, timeMs int64, upsert bool) error {
+	buildId, stageId, stepId string, s types.SelectTestsResp, timeMs int, upsert bool) error {
 	entries := 12
 	valueArgs := make([]interface{}, 0, entries)
 	var stmt string
@@ -440,8 +440,7 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 		/*
 			Calculation of time_saved:
 				Get list of 10000 runs for the same step_id over previous builds where num_selected != 0 and time_taken_ms != 0 AND test_count = test_selected
-				If there are none, set time_saved = 0
-				Calculate average time / test
+				If there are none, use average time to run all the tests as 500ms * number of tests
 				time_saved = (Total tests skipped) * (Average time per test)
 				if time_saved < 0
 					time_saved = 0
@@ -452,7 +451,7 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 		}
 		query := fmt.Sprintf(
 			`
-				SELECT AVG(time_taken_ms/test_selected) FROM (SELECT test_selected, time_taken_ms FROM %s
+				SELECT AVG(time_taken_ms) FROM (SELECT time_taken_ms FROM %s
 				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 AND test_count = test_selected LIMIT 10000)
 				AS avg`, tdb.SelectionTable)
 		rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, stageId, stepId)
@@ -460,7 +459,7 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 			return rows.Err()
 		}
 		defer rows.Close()
-		avg := 500 // default value of 500ms
+		avgTotalTime := 500 * overview.Total
 		for rows.Next() {
 			var zdur zero.Float
 			err = rows.Scan(&zdur)
@@ -469,12 +468,17 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 				break
 			}
 			if zdur.ValueOrZero() != 0 {
-				avg = int(zdur.ValueOrZero())
+				avgTotalTime = int(zdur.ValueOrZero())
 			}
 			break
 		}
+		timeSavedMs := avgTotalTime - timeMs
+		// If no tests were skipped or the job took more time than the average time for a full run,
+		// set the time saved as 0
+		if timeSavedMs < 0 || overview.Skipped == 0 {
+			timeSavedMs = 0
+		}
 
-		timeSavedMs := overview.Skipped * avg
 		stmt = fmt.Sprintf(
 			`
 					UPDATE %s

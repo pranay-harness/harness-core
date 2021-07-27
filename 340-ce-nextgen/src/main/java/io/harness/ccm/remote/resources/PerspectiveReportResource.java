@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @OwnedBy(CE)
 public class PerspectiveReportResource {
   private CEReportScheduleService ceReportScheduleService;
+  private static final String accountIdPathParam = "{" + NGCommonEntityConstants.ACCOUNT_KEY + "}";
 
   @Inject
   public PerspectiveReportResource(CEReportScheduleService ceReportScheduleService) {
@@ -52,7 +53,7 @@ public class PerspectiveReportResource {
 
   @GET
   @Timed
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @ExceptionMetered
   @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
   public RestResponse<List<CEReportSchedule>> getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
@@ -76,7 +77,7 @@ public class PerspectiveReportResource {
 
   @DELETE
   @Timed
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @ExceptionMetered
   @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
   public RestResponse<String> deleteReportSetting(@QueryParam("reportId") String reportId,
@@ -97,7 +98,7 @@ public class PerspectiveReportResource {
   }
 
   @POST
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
@@ -118,7 +119,7 @@ public class PerspectiveReportResource {
   }
 
   @PUT
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")

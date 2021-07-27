@@ -44,22 +44,22 @@ public class LiteEngineTaskStepGenerator {
     if (isFirstPod) {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+          .name(LITE_ENGINE_TASK + liteEngineCounter)
           .infrastructure(infrastructure)
           .ciCodebase(ciCodebase)
           .skipGitClone(!gitClone)
           .usePVC(usePVC)
           .buildJobEnvInfo(buildJobEnvInfo)
-          .steps(null)
           .executionElementConfig(executionElement)
           .timeout(getTimeout(infrastructure))
           .build();
     } else {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+          .name(LITE_ENGINE_TASK + liteEngineCounter)
           .buildJobEnvInfo(buildJobEnvInfo)
           .infrastructure(infrastructure)
           .usePVC(usePVC)
-          .steps(null)
           .executionElementConfig(executionElement)
           .timeout(getTimeout(infrastructure))
           .build();

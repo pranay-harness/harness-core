@@ -11,7 +11,6 @@ import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
 import software.wings.app.InspectCommand;
-import software.wings.app.MainConfiguration;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.app.WingsApplication;
 import software.wings.jersey.JsonViews;
@@ -20,7 +19,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -32,12 +30,10 @@ import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -59,14 +55,10 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
     List<Module> modules = new ArrayList<>();
     modules.add(new DelegateServiceModule(delegateServiceConfig));
 
-    ObjectMapper mapper = Jackson.newObjectMapper(new YAMLFactory());
-    configureObjectMapper(mapper);
-    MainConfiguration mainConfiguration = mapper.readValue(
-        new File("./../../../../../../../../360-cg-manager/config_delegate_svc.yml"), MainConfiguration.class);
     WingsApplication wingsApplication = new WingsApplication();
-    wingsApplication.addModules(mainConfiguration, modules);
+    wingsApplication.addModules(delegateServiceConfig, modules);
     Injector injector = Guice.createInjector(modules);
-    wingsApplication.initializeManagerSvc(injector, environment, mainConfiguration);
+    wingsApplication.initializeManagerSvc(injector, environment, delegateServiceConfig);
     log.info("Starting Delegate Service App done");
   }
 

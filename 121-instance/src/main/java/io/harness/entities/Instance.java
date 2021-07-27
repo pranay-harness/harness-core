@@ -60,7 +60,7 @@ public class Instance {
 
   private String infrastructureMappingId;
   private String infraMappingType;
-  private String connectorId;
+  private String connectorRef;
 
   private ArtifactDetails primaryArtifact;
 
@@ -77,6 +77,4 @@ public class Instance {
   private long deletedAt;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
-
-  private boolean needRetry;
 }

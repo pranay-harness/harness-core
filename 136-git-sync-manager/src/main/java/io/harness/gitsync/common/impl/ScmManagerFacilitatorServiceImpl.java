@@ -29,6 +29,7 @@ import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 
@@ -160,5 +161,15 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     final ScmConnector decryptedConnector =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
     return scmClient.listCommits(decryptedConnector, yamlGitConfigDTO.getBranch()).getCommitIdsList();
+  }
+
+  @Override
+  public String getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
+    final GetLatestCommitResponse latestCommit =
+        scmClient.getLatestCommit(decryptedConnector, yamlGitConfigDTO.getBranch());
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
+    return latestCommit.getCommitId();
   }
 }

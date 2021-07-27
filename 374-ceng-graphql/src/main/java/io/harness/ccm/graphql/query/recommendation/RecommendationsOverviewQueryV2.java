@@ -16,9 +16,11 @@ import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
 import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.leangen.graphql.annotations.GraphQLArgument;
+import io.leangen.graphql.annotations.GraphQLContext;
 import io.leangen.graphql.annotations.GraphQLEnvironment;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.execution.ResolutionEnvironment;
@@ -26,15 +28,18 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.TableField;
 
+@Slf4j
 @Singleton
 @GraphQLApi
 @OwnedBy(CE)
 public class RecommendationsOverviewQueryV2 {
   @Inject private GraphQLUtils graphQLUtils;
   @Inject private RecommendationService recommendationService;
+  private final Gson GSON = new Gson();
 
   @GraphQLQuery(name = "recommendationsV2", description = "The list of all types of recommendations for overview page")
   public RecommendationsDTO recommendations(
@@ -60,6 +65,33 @@ public class RecommendationsOverviewQueryV2 {
     return recommendationService.getStats(accountId, condition);
   }
 
+  // TODO(UTSAV): Add unit test
+  @GraphQLQuery(name = "count", description = "generic count query RecommendationOverviewStats context")
+  public int count(
+      @GraphQLContext RecommendationOverviewStats xyz, @GraphQLEnvironment final ResolutionEnvironment env) {
+    return genericCountQuery(env);
+  }
+
+  // TODO(UTSAV): Add unit test
+  @GraphQLQuery(name = "count", description = "generic count query RecommendationsDTO context")
+  public int count(@GraphQLContext RecommendationsDTO xyz, @GraphQLEnvironment final ResolutionEnvironment env) {
+    return genericCountQuery(env);
+  }
+
+  private int genericCountQuery(@NotNull final ResolutionEnvironment env) {
+    final String accountId = graphQLUtils.getAccountIdentifier(env);
+
+    String filterAsJson = "{}";
+    if (env.dataFetchingEnvironment.getVariables().containsKey("filter")) {
+      filterAsJson = env.dataFetchingEnvironment.getVariables().get("filter").toString();
+    }
+    K8sRecommendationFilterDTO filter = GSON.fromJson(filterAsJson, K8sRecommendationFilterDTO.class);
+
+    Condition condition = applyCommonFilters(filter);
+
+    return recommendationService.getRecommendationsCount(accountId, condition);
+  }
+
   @GraphQLQuery(name = "recommendationFilterStatsV2", description = "Possible filter values for each key")
   public List<FilterStatsDTO> recommendationFilterStats(
       @GraphQLArgument(name = "keys", defaultValue = "[]") List<String> columns,
@@ -73,7 +105,7 @@ public class RecommendationsOverviewQueryV2 {
   }
 
   @NotNull
-  private Condition applyCommonFilters(K8sRecommendationFilterDTO filter) {
+  private Condition applyCommonFilters(@NotNull K8sRecommendationFilterDTO filter) {
     Condition condition = getValidRecommendationFilter();
 
     if (!isEmpty(filter.getIds())) {

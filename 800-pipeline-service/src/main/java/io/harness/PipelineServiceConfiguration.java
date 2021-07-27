@@ -66,7 +66,6 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
   @JsonProperty("pmsApiBaseUrl") private String pmsApiBaseUrl;
-  @JsonProperty("enableAuth") private boolean enableAuth;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;

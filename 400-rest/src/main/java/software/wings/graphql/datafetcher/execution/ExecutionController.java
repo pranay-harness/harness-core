@@ -27,13 +27,18 @@ import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataKeys;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactIdInput;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactInputType;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLBuildNumberInput;
+import software.wings.graphql.schema.mutation.execution.input.QLManifestInputType;
+import software.wings.graphql.schema.mutation.execution.input.QLManifestValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLParameterValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLParameterizedArtifactSourceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
@@ -50,11 +55,13 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import graphql.GraphQLContext;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +80,7 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ExecutionController {
   @Inject ArtifactService artifactService;
+  @Inject HelmChartService helmChartService;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject @Named("AsyncArtifactCollectionService") private ArtifactCollectionService artifactCollectionServiceAsync;
   @Inject ServiceResourceService serviceResourceService;
@@ -155,7 +163,8 @@ public class ExecutionController {
   }
 
   public void populateExecutionArgs(Map<String, String> variableValues, List<Artifact> artifacts,
-      QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext, ExecutionArgs executionArgs) {
+      QLStartExecutionInput triggerExecutionInput, MutationContext mutationContext, ExecutionArgs executionArgs,
+      List<HelmChart> helmCharts) {
     executionArgs.setArtifacts(artifacts);
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setExcludeHostsWithSameArtifact(triggerExecutionInput.isExcludeHostsWithSameArtifact());
@@ -163,6 +172,7 @@ public class ExecutionController {
     executionArgs.setTargetToSpecificHosts(triggerExecutionInput.isTargetToSpecificHosts());
     executionArgs.setHosts(triggerExecutionInput.getSpecificHosts());
     executionArgs.setWorkflowVariables(variableValues);
+    executionArgs.setHelmCharts(helmCharts);
     if (mutationContext.getDataFetchingEnvironment() != null
         && mutationContext.getDataFetchingEnvironment().getContext() != null) {
       GraphQLContext graphQLContext = mutationContext.getDataFetchingEnvironment().getContext();
@@ -425,5 +435,87 @@ public class ExecutionController {
           throw new InvalidRequestException(
               "Variable " + input.getName() + " can only take values " + allowedValuesMap.get(input.getName()));
         });
+  }
+
+  private HelmChart getHelmChartFromId(String helmChartId, Service service) {
+    if (isEmpty(helmChartId)) {
+      throw new InvalidRequestException("Helm Chart Id cannot be empty for serviceInput: " + service.getName(), USER);
+    }
+
+    HelmChart helmChart = helmChartService.get(service.getAppId(), helmChartId);
+    notNullCheck("Cannot find helm chart for specified Id: " + helmChartId + ". Might be deleted", helmChart, USER);
+
+    return helmChart;
+  }
+
+  private HelmChart getHelmChartFromVersionNumber(String versionNumber, String appManifestName, Service service) {
+    if (isEmpty(versionNumber)) {
+      throw new InvalidRequestException("Version Number cannot be empty for serviceInput: " + service.getName(), USER);
+    }
+
+    HelmChart helmChart =
+        helmChartService.getByChartVersion(service.getAppId(), service.getUuid(), appManifestName, versionNumber);
+    notNullCheck("Cannot find helm chart for specified version number: " + versionNumber, helmChart, USER);
+    return helmChart;
+  }
+
+  public void getHelmChartsFromServiceInputs(List<QLServiceInput> serviceInputs, String appId,
+      List<String> manifestNeededServiceIds, List<HelmChart> helmCharts) {
+    for (String serviceId : manifestNeededServiceIds) {
+      Service service = serviceResourceService.get(appId, serviceId);
+      notNullCheck(
+          "Something went wrong while checking required service Inputs. Associated Service might be deleted", service);
+
+      String serviceName = service.getName();
+      QLServiceInput serviceInput =
+          serviceInputs.stream().filter(t -> serviceName.equals(t.getName())).findFirst().orElse(null);
+      notNullCheck("ServiceInput required for service: " + serviceName, serviceInput, USER);
+
+      QLManifestValueInput manifestValueInput = serviceInput.getManifestValueInput();
+      notNullCheck("ManifestValueInput is required for the service Input: " + serviceName, manifestValueInput, USER);
+
+      QLManifestInputType type = manifestValueInput.getValueType();
+      switch (type) {
+        case HELM_CHART_ID:
+          notNullCheck(
+              "HelmChartId is required for the service Input: " + serviceName + " for value type as HELM_CHART_ID",
+              manifestValueInput.getHelmChartId(), USER);
+          helmCharts.add(getHelmChartFromId(manifestValueInput.getHelmChartId(), service));
+          break;
+        case VERSION_NUMBER:
+          notNullCheck(
+              "versionNumber is required for the service Input: " + serviceName + " for value type as VERSION_NUMBER",
+              manifestValueInput.getVersionNumber(), USER);
+          notNullCheck("appManifestName is required for the version number Input: " + serviceName
+                  + " for value type as VERSION_NUMBER",
+              manifestValueInput.getVersionNumber().getAppManifestName(), USER);
+          notNullCheck(
+              "versionNumber is required for the service Input: " + serviceName + " for value type as VERSION_NUMBER",
+              manifestValueInput.getVersionNumber().getVersionNumber(), USER);
+          helmCharts.add(getHelmChartFromVersionNumber(manifestValueInput.getVersionNumber().getVersionNumber(),
+              manifestValueInput.getVersionNumber().getAppManifestName(), service));
+          break;
+        default:
+          throw new UnsupportedOperationException("Unexpected manifest value type: " + type);
+      }
+    }
+  }
+
+  Map<String, List<String>> getRequiredServiceIds(String workflowId, DeploymentMetadata finalDeploymentMetadata) {
+    Map<String, List<String>> serviceIdMap = new HashMap<>();
+    serviceIdMap.put(DeploymentMetadataKeys.artifactRequiredServices, new ArrayList<>());
+    serviceIdMap.put(DeploymentMetadataKeys.manifestRequiredServiceIds, new ArrayList<>());
+    if (finalDeploymentMetadata != null) {
+      List<String> artifactNeededServiceIds = finalDeploymentMetadata.getArtifactRequiredServiceIds();
+      if (isNotEmpty(artifactNeededServiceIds)) {
+        serviceIdMap.put(DeploymentMetadataKeys.artifactRequiredServices, artifactNeededServiceIds);
+      }
+      List<String> manifestNeededServiceIds = finalDeploymentMetadata.getManifestRequiredServiceIds();
+      if (isNotEmpty(manifestNeededServiceIds)) {
+        serviceIdMap.put(DeploymentMetadataKeys.manifestRequiredServiceIds, manifestNeededServiceIds);
+      }
+    }
+    log.info("No Services requires artifact inputs for this workflow/pipeline: " + workflowId);
+    return serviceIdMap;
   }
 }

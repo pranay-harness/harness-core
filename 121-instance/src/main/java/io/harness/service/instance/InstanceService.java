@@ -3,15 +3,20 @@ package io.harness.service.instance;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
-import io.harness.models.CountByEnvType;
+import io.harness.models.CountByServiceIdAndEnvType;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceService {
+  InstanceDTO save(InstanceDTO instanceDTO);
+
+  Optional<InstanceDTO> saveOrReturnEmptyIfAlreadyExists(InstanceDTO instanceDTO);
+
   List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
   List<InstanceDTO> getInstances(
@@ -33,6 +38,6 @@ public interface InstanceService {
       String orgIdentifier, String projectIdentifier, String serviceId, String envId, List<String> buildIds,
       long timestampInMs, int limit);
 
-  AggregationResults<CountByEnvType> getActiveServiceInstanceCountBreakdown(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
+  AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs);
 }

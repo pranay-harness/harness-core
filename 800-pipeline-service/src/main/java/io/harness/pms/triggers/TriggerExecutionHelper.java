@@ -43,6 +43,7 @@ import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
@@ -116,7 +117,8 @@ public class TriggerExecutionHelper {
         pipelineYaml = pipelineEntityToExecute.get().getYaml();
       } else {
         String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
-        String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
+        String sanitizedRuntimeInputYaml =
+            InputSetSanitizer.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
         if (isBlank(sanitizedRuntimeInputYaml)) {
           pipelineYaml = pipelineYamlBeforeMerge;
         } else {
