@@ -251,9 +251,11 @@ public class DashboardStatisticsResource {
 
   @GET
   @Path("service-compare-environment")
-  public RestResponse<PageResponse<CompareEnvironmentAggregationInfo>> getCompareServicesByEnvironment(@QueryParam("accountId") String accountId,@QueryParam("appId") String appId, @QueryParam("envId1") String envId1, @QueryParam("envId2") String envId2, @QueryParam("offset") @DefaultValue("-1") int offset,
-                                                                               @QueryParam("limit") @DefaultValue("-1") int limit)
-  {
-    return new RestResponse<>(dashboardStatsService.getCompareServicesByEnvironment(appId, envId1,envId2,offset,limit));
+  public RestResponse<PageResponse<CompareEnvironmentAggregationInfo>> getCompareServicesByEnvironment(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, @QueryParam("envId1") String envId1,
+      @QueryParam("envId2") String envId2, @QueryParam("offset") @DefaultValue("-1") int offset,
+      @QueryParam("limit") @DefaultValue("-1") int limit) {
+    return new RestResponse<>(
+        dashboardStatsService.getCompareServicesByEnvironment(accountId, appId, envId1, envId2, offset, limit));
   }
 }

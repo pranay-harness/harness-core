@@ -8,6 +8,7 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
@@ -1231,32 +1232,45 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public PageResponse<CompareEnvironmentAggregationInfo> getCompareServicesByEnvironment(
-      String appId, String envId1, String envId2, int offset, int limit) {
+      String accountId, String appId, String envId1, String envId2, int offset, int limit) {
     Query<Instance> query;
     try {
-      query = getQueryForCompareServicesByEnvironment(appId, envId1, envId2);
+      query = getQueryForCompareServicesByEnvironment(accountId, appId, envId1, envId2);
     } catch (NoResultFoundException nre) {
       return getEmptyPageResponse();
-    } catch (Exception e) {
-      log.error("Error while compiling query for compare environment", e);
-      return getEmptyPageResponse();
     }
+
     List<CompareEnvironmentAggregationInfo> instanceInfoList = new ArrayList<>();
     AggregationPipeline aggregationPipeline =
         wingsPersistence.getDatastore(query.getEntityClass())
             .createAggregation(Instance.class)
             .match(query)
-            .group(Group.id(grouping("serviceId"), grouping("serviceName"), grouping("envId"),
-                grouping("lastArtifactBuildNum"), grouping("infraMappingId"), grouping("lastWorkflowExecutionId"),
-                grouping("lastWorkflowExecutionName"), grouping("infraMappingName")))
-            .group(Group.id(grouping("serviceId", "_id.serviceId")), grouping("serviceId", first("_id.serviceId")),
-                grouping("serviceInfoSummaries",
-                    grouping("$push", projection("serviceName", "_id.serviceName"), projection("envId", "_id.envId"),
-                        projection("lastArtifactBuildNum", "_id.lastArtifactBuildNum"),
-                        projection("lastWorkflowExecutionId", "_id.lastWorkflowExecutionId"),
-                        projection("lastWorkflowExecutionName", "_id.lastWorkflowExecutionName"),
-                        projection("infraMappingId", "_id.infraMappingId"),
-                        projection("infraMappingName", "_id.infraMappingName"))));
+            .group(Group.id(grouping(Instance.InstanceKeys.serviceId), grouping(Instance.InstanceKeys.envId),
+                       grouping(Instance.InstanceKeys.lastArtifactBuildNum),
+                       grouping(Instance.InstanceKeys.infraMappingId),
+                       grouping(Instance.InstanceKeys.lastWorkflowExecutionId)),
+                grouping(Instance.InstanceKeys.serviceName, first(Instance.InstanceKeys.serviceName)),
+                grouping(Instance.InstanceKeys.lastWorkflowExecutionName,
+                    first(Instance.InstanceKeys.lastWorkflowExecutionName)),
+                grouping(Instance.InstanceKeys.infraMappingName, first(Instance.InstanceKeys.infraMappingName)))
+            .group(Group.id(grouping(Instance.InstanceKeys.serviceId, "_id." + Instance.InstanceKeys.serviceId)),
+                grouping(CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys.serviceId,
+                    first("_id." + Instance.InstanceKeys.serviceId)),
+                grouping(CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys.serviceInfoSummaries,
+                    grouping("$push",
+                        projection(
+                            ServiceInfoSummary.ServiceInfoSummaryKeys.serviceName, Instance.InstanceKeys.serviceName),
+                        projection("envId", "_id." + Instance.InstanceKeys.envId),
+                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.lastArtifactBuildNum,
+                            "_id." + Instance.InstanceKeys.lastArtifactBuildNum),
+                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.lastWorkflowExecutionId,
+                            "_id." + Instance.InstanceKeys.lastWorkflowExecutionId),
+                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.lastWorkflowExecutionName,
+                            Instance.InstanceKeys.lastWorkflowExecutionName),
+                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.infraMappingId,
+                            "_id." + Instance.InstanceKeys.infraMappingId),
+                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.infraMappingName,
+                            Instance.InstanceKeys.infraMappingName))));
 
     aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
@@ -1269,19 +1283,20 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     for (CompareEnvironmentAggregationInfo instanceInfo : instanceInfoList) {
       responseList.add(CompareEnvironmentAggregationResponseInfo.builder()
                            .serviceId(instanceInfo.getServiceId())
-                           .envInfo(instanceInfo.getServiceInfoSummaries().stream().collect(
-                               Collectors.groupingBy(ServiceInfoSummary::getEnvId,
-                                   Collectors.mapping(item
-                                       -> ServiceInfoSummary.builder()
-                                              .envId(item.getEnvId())
-                                              .serviceName(item.getServiceName())
-                                              .lastArtifactBuildNum(item.getLastArtifactBuildNum())
-                                              .lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
-                                              .lastWorkflowExecutionName(item.getLastWorkflowExecutionName())
-                                              .infraMappingName(item.getInfraMappingName())
-                                              .infraMappingId(item.getInfraMappingId())
-                                              .build(),
-                                       toList()))))
+                           .envInfo(emptyIfNull(instanceInfo.getServiceInfoSummaries())
+                                        .stream()
+                                        .collect(Collectors.groupingBy(ServiceInfoSummary::getEnvId,
+                                            Collectors.mapping(item
+                                                -> ServiceInfoSummary.builder()
+                                                       .envId(item.getEnvId())
+                                                       .serviceName(item.getServiceName())
+                                                       .lastArtifactBuildNum(item.getLastArtifactBuildNum())
+                                                       .lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
+                                                       .lastWorkflowExecutionName(item.getLastWorkflowExecutionName())
+                                                       .infraMappingName(item.getInfraMappingName())
+                                                       .infraMappingId(item.getInfraMappingId())
+                                                       .build(),
+                                                toList()))))
                            .build());
     }
 
@@ -1292,11 +1307,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .build();
   }
 
-  private Query<Instance> getQueryForCompareServicesByEnvironment(String appId, String envId1, String envId2) {
+  private Query<Instance> getQueryForCompareServicesByEnvironment(
+      String accountId, String appId, String envId1, String envId2) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.and(query.criteria("appId").equal(appId),
-        query.or(query.criteria("envId").equal(envId1), query.criteria("envId").equal(envId2)));
-    query.filter("isDeleted", false);
+    query.filter(Instance.InstanceKeys.accountId, accountId);
+    query.filter(Instance.InstanceKeys.isDeleted, false);
+    query.and(query.criteria(Instance.InstanceKeys.appId).equal(appId),
+        query.or(query.criteria(Instance.InstanceKeys.envId).equal(envId1),
+            query.criteria(Instance.InstanceKeys.envId).equal(envId2)));
     return query;
   }
 }

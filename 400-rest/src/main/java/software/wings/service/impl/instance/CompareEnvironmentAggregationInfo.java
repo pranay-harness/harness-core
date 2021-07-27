@@ -7,8 +7,11 @@ import io.harness.annotations.dev.OwnedBy;
 import java.util.List;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Id;
 
+@FieldNameConstants(innerTypeName = "CompareEnvironmentAggregationInfoKeys")
 @Data
 @NoArgsConstructor
 @OwnedBy(DX)
@@ -23,10 +26,13 @@ public class CompareEnvironmentAggregationInfo {
     private String serviceId;
     private String envId;
     private String lastArtifactBuildNum;
-    private String serviceName;
     private String lastWorkflowExecutionId;
-    private String lastWorkflowExecutionName;
     private String infraMappingId;
-    private String infraMappingName;
+  }
+
+  @UtilityClass
+  public static final class CompareEnvironmentAggregationInfoKeys {
+    public static final String serviceId = "serviceId";
+    public static final String serviceInfoSummaries = "serviceInfoSummaries";
   }
 }
