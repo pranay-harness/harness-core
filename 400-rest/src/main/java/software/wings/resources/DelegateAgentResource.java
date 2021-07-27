@@ -371,9 +371,11 @@ public class DelegateAgentResource {
   public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
-      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize) throws IOException {
+      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize,
+      @QueryParam("patchVersion") String patchVersion) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, delegateVersion,
+      String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, fullVersion,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateSize));
     }
   }
