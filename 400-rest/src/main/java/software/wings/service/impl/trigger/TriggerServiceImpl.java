@@ -296,6 +296,7 @@ public class TriggerServiceImpl implements TriggerService {
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
+      scheduledTriggerHandler.wakeup();
       ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(), trigger);
       jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
     }
@@ -2076,6 +2077,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void addOrUpdateCronForScheduledJob(Trigger trigger, Trigger existingTrigger) {
     if (existingTrigger.getCondition().getConditionType() == SCHEDULED) {
       if (trigger.getCondition().getConditionType() == SCHEDULED) {
+        scheduledTriggerHandler.wakeup();
         TriggerKey triggerKey = new TriggerKey(trigger.getUuid(), ScheduledTriggerJob.GROUP);
         jobScheduler.rescheduleJob(triggerKey, ScheduledTriggerJob.getQuartzTrigger(trigger));
         jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
@@ -2083,6 +2085,7 @@ public class TriggerServiceImpl implements TriggerService {
         jobScheduler.deleteJob(existingTrigger.getUuid(), ScheduledTriggerJob.GROUP);
       }
     } else if (trigger.getCondition().getConditionType() == SCHEDULED) {
+      scheduledTriggerHandler.wakeup();
       String accountId = appService.getAccountIdByAppId(trigger.getAppId());
       ScheduledTriggerJob.add(jobScheduler, accountId, trigger.getAppId(), trigger.getUuid(), trigger);
       jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
@@ -2098,7 +2101,6 @@ public class TriggerServiceImpl implements TriggerService {
       if (EmptyPredicate.isNotEmpty(nextIterations)) {
         trigger.setNextIterations(nextIterations.subList(1, nextIterations.size()));
       }
-      scheduledTriggerHandler.wakeup();
     }
   }
 
