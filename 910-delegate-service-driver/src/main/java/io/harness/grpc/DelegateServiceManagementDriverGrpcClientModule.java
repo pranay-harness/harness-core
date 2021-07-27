@@ -5,6 +5,7 @@ import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.grpc.pingpong.DelegateServicePingPongClient;
+import io.harness.grpc.pingpong.DelegateServicePingPongModule;
 import io.harness.pingpong.DelegateServicePingPongGrpc;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.version.VersionInfo;
@@ -43,6 +44,8 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
   @Override
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).in(Singleton.class);
+    install(new DelegateServicePingPongModule());
+    bind(DelegateProfileServiceGrpcClient.class).in(Singleton.class);
   }
 
   @Named("delegate-service-management-channel")
@@ -143,12 +146,12 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
     return () -> delegateDriverInstalledInNgService;
   }
 
-  @Provides
-  @Singleton
-  DelegateServicePingPongClient delegateServicePingPongClient(
-      DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub pingPongServiceBlockingStub,
-      VersionInfoManager versionInfoManager) {
-    return new DelegateServicePingPongClient(
-        pingPongServiceBlockingStub, versionInfoManager.getVersionInfo().getVersion());
-  }
+  //  @Provides
+  //  @Singleton
+  //  DelegateServicePingPongClient delegateServicePingPongClient(
+  //      DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub pingPongServiceBlockingStub,
+  //      VersionInfoManager versionInfoManager) {
+  //    return new DelegateServicePingPongClient(
+  //        pingPongServiceBlockingStub, versionInfoManager.getVersionInfo().getVersion());
+  //  }
 }
