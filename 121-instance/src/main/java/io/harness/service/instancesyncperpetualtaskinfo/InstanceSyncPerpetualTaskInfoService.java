@@ -16,4 +16,7 @@ public interface InstanceSyncPerpetualTaskInfoService {
   InstanceSyncPerpetualTaskInfoDTO save(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO);
 
   void deleteById(String accountIdentifier, String instanceSyncPerpetualTaskInfoId);
+
+  InstanceSyncPerpetualTaskInfoDTO updateDeploymentInfoDetailsList(
+      InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO);
 }
