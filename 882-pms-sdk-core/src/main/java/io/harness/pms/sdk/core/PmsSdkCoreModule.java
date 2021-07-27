@@ -1,6 +1,10 @@
 package io.harness.pms.sdk.core;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataService;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataServiceImpl;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
@@ -21,6 +25,7 @@ import com.google.inject.name.Named;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkCoreModule extends AbstractModule {
   private static PmsSdkCoreModule instance;
   private final PmsSdkCoreConfig config;
@@ -48,6 +53,8 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     bind(SdkNodeExecutionService.class).to(SdkNodeExecutionServiceImpl.class).in(Singleton.class);
+    bind(SdkGraphVisualizationDataService.class).to(SdkGraphVisualizationDataServiceImpl.class).in(Singleton.class);
+
     install(
         PmsSdkCoreEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);

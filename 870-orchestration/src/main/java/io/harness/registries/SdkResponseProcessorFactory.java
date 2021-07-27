@@ -3,6 +3,7 @@ package io.harness.registries;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handlers.AddExecutableResponseRequestProcessor;
+import io.harness.event.handlers.AddStepDetailsInstanceRequestProcessor;
 import io.harness.event.handlers.AdviserResponseRequestProcessor;
 import io.harness.event.handlers.ErrorEventRequestProcessor;
 import io.harness.event.handlers.FacilitateResponseRequestProcessor;
@@ -50,6 +51,8 @@ public class SdkResponseProcessorFactory {
         return injector.getInstance(SpawnChildrenRequestProcessor.class);
       case HANDLE_PROGRESS:
         return injector.getInstance(HandleProgressRequestProcessor.class);
+      case ADD_STEP_DETAILS_INSTANCE_REQUEST:
+        return injector.getInstance(AddStepDetailsInstanceRequestProcessor.class);
       default:
         throw new InvalidRequestException("Unknown sdkResponseEventType.");
     }
