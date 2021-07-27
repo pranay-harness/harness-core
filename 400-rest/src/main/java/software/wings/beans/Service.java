@@ -77,6 +77,7 @@ public class Service
                  .field(ServiceKeys.accountId)
                  .descSortField(ServiceKeys.createdAt)
                  .build())
+        .add(CompoundMongoIndex.builder().name("deploymentTypeIndex").field(ServiceKeys.deploymentType).build())
         .build();
   }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
@@ -87,6 +88,7 @@ public class Service
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;
+  private String serviceId;
   private String configMapYaml;
   private String helmValueYaml;
 
@@ -242,5 +244,8 @@ public class Service
     public static final String appId = "appId";
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
+    public static final String deploymentType = "deploymentType";
+    public static final String serviceId = "serviceId";
+    public static final String accountId = "accountId";
   }
 }
