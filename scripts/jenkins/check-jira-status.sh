@@ -9,13 +9,14 @@ fi
 
 echo $KEY
 
-jira_response=`curl -X GET -H "Content-Type: application/json" https://harness.atlassian.net/rest/api/2/issue/${KEY}?fields=issuetype,customfield_10687,customfield_10709,customfield_10748,customfield_10763 --user $JIRA_USERNAME:$JIRA_PASSWORD`
+jira_response=`curl -X GET -H "Content-Type: application/json" https://harness.atlassian.net/rest/api/2/issue/${KEY}?fields=issuetype,customfield_10687,customfield_10709,customfield_10748,customfield_10763,customfield_10785 --user $JIRA_USERNAME:$JIRA_PASSWORD`
 
 issuetype=`echo "${jira_response}" | jq ".fields.issuetype.name" | tr -d '"'`
 bug_resolution=`echo "${jira_response}" | jq ".fields.customfield_10687" | tr -d '"'`
 jira_resolved_as=`echo "${jira_response}" | jq ".fields.customfield_10709" | tr -d '"'`
 phase_injected=`echo "${jira_response}" | jq ".fields.customfield_10748" | tr -d '"'`
 what_changed=`echo "${jira_response}" | jq ".fields.customfield_10763" | tr -d '"'`
+ff_added=`echo "${jira_response}" | jq ".fields.customfield_10785.value" | tr -d '"'`
 
 echo "issueType is ${issuetype}"
 
@@ -43,11 +44,11 @@ then
       exit 1
 fi
 
-if [[ "${issuetype}" = "Story" && ( "${what_changed}" = "null" ) ]]
+if [[ "${issuetype}" = "Story" && ( "${ff_added}" = "null" ) ]]
 then
-      if [[ "${what_changed}" = "null" ]]
+      if [[ "${ff_added}" = "null" ]]
       then
-        echo "what_changed is not updated"
+        echo "FF added is not updated, Please update FF added to proceed"
       fi
       exit 1
 fi
