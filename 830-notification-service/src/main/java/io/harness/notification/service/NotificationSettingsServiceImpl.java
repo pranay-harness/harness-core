@@ -123,8 +123,6 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
         if (notificationSettingConfigDTO.getType() == notificationChannelType
             && notificationSettingConfigDTO.getSetting().isPresent()) {
           notificationSettings.add(notificationSettingConfigDTO.getSetting().get());
-        } else if (notificationChannelType == NotificationChannelType.EMAIL) {
-          notificationSettings.addAll(getEmailsForUserIds(userGroupDTO.getUsers(), accountId));
         }
       }
     }

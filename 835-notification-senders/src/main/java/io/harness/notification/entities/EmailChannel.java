@@ -1,8 +1,12 @@
 package io.harness.notification.entities;
 
 import static io.harness.NotificationRequest.Email;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.dtos.UserGroup;
+import io.harness.notification.mapper.NotificationUserGroupMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -12,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @EqualsAndHashCode()
@@ -19,6 +24,7 @@ import lombok.EqualsAndHashCode;
 public class EmailChannel implements Channel {
   List<String> emailIds;
   List<String> userGroupIds;
+  List<UserGroup> userGroups;
   Map<String, String> templateData;
   String templateId;
 
@@ -29,6 +35,7 @@ public class EmailChannel implements Channel {
         .addAllUserGroupIds(userGroupIds)
         .putAllTemplateData(templateData)
         .setTemplateId(templateId)
+        .addAllUserGroup(NotificationUserGroupMapper.toProto(userGroups))
         .build();
   }
 
@@ -44,6 +51,7 @@ public class EmailChannel implements Channel {
         .userGroupIds(emailDetails.getUserGroupIdsList())
         .templateData(emailDetails.getTemplateDataMap())
         .templateId(emailDetails.getTemplateId())
+        .userGroups(NotificationUserGroupMapper.toEntity(emailDetails.getUserGroupList()))
         .build();
   }
 }

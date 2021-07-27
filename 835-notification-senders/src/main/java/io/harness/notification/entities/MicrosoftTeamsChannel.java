@@ -1,8 +1,12 @@
 package io.harness.notification.entities;
 
 import static io.harness.NotificationRequest.MSTeam;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.dtos.UserGroup;
+import io.harness.notification.mapper.NotificationUserGroupMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -12,6 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @EqualsAndHashCode()
@@ -19,6 +24,7 @@ import lombok.EqualsAndHashCode;
 public class MicrosoftTeamsChannel implements Channel {
   List<String> msTeamKeys;
   List<String> userGroupIds;
+  List<UserGroup> userGroups;
   Map<String, String> templateData;
   String templateId;
 
@@ -29,6 +35,7 @@ public class MicrosoftTeamsChannel implements Channel {
         .addAllUserGroupIds(userGroupIds)
         .putAllTemplateData(templateData)
         .setTemplateId(templateId)
+        .addAllUserGroup(NotificationUserGroupMapper.toProto(userGroups))
         .build();
   }
 
@@ -44,6 +51,7 @@ public class MicrosoftTeamsChannel implements Channel {
         .userGroupIds(msTeamDetails.getUserGroupIdsList())
         .templateData(msTeamDetails.getTemplateDataMap())
         .templateId(msTeamDetails.getTemplateId())
+        .userGroups(NotificationUserGroupMapper.toEntity(msTeamDetails.getUserGroupList()))
         .build();
   }
 }

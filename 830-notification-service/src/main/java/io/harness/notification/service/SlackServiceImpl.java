@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -145,6 +146,6 @@ public class SlackServiceImpl implements ChannelService {
           slackChannelDetails.getUserGroupList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 }
