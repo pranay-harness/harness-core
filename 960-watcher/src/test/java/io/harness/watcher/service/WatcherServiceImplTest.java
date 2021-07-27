@@ -58,7 +58,7 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Mock private WatcherConfiguration watcherConfiguration;
   @InjectMocks @Spy private WatcherServiceImpl watcherService;
 
-  private static final String TEST_RESOURCE_PATH = "250-watcher/src/test/resources/service/";
+  private static final String TEST_RESOURCE_PATH = "960-watcher/src/test/resources/service/";
   private static final String DELEGATE_CHECK_LOCATION = "DELEGATE_CHECK_LOCATION";
   private static final String INVALID_UPGRADE_VERSION = "1070400";
   private static final String CURRENT_VERSION = "1.0.70400";
