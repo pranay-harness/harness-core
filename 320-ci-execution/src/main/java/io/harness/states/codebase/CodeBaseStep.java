@@ -1,7 +1,7 @@
 package io.harness.states.codebase;
 
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.TaskType.SCM_GIT_REF_TASK;
 
@@ -30,7 +30,9 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.FindPRResponse;
+import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -38,6 +40,8 @@ import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -59,25 +63,14 @@ public class CodeBaseStep implements TaskExecutable<CodeBaseStepParameters, ScmG
   public TaskRequest obtainTask(
       Ambiance ambiance, CodeBaseStepParameters stepParameters, StepInputPackage inputPackage) {
     ExecutionSource executionSource = stepParameters.getExecutionSource();
-    String prNumber = null;
+    ManualExecutionSource manualExecutionSource = null;
     if (executionSource.getType() == ExecutionSource.Type.MANUAL) {
-      ManualExecutionSource manualExecutionSource = (ManualExecutionSource) executionSource;
-      prNumber = manualExecutionSource.getPrNumber();
+      manualExecutionSource = (ManualExecutionSource) executionSource;
     }
-
-    if (isEmpty(prNumber)) {
-      throw new CIStageExecutionException("PR number should not be empty");
-    }
-
     ConnectorDetails connectorDetails =
         connectorUtils.getConnectorDetails(AmbianceUtils.getNgAccess(ambiance), stepParameters.getConnectorRef());
 
-    ScmGitRefTaskParams scmGitRefTaskParams = ScmGitRefTaskParams.builder()
-                                                  .prNumber(Long.parseLong(prNumber))
-                                                  .gitRefType(GitRefType.PULL_REQUEST)
-                                                  .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
-                                                  .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
-                                                  .build();
+    ScmGitRefTaskParams scmGitRefTaskParams = obtainTaskParameters(manualExecutionSource, connectorDetails);
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
@@ -89,25 +82,101 @@ public class CodeBaseStep implements TaskExecutable<CodeBaseStepParameters, ScmG
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
+  private ScmGitRefTaskParams obtainTaskParameters(
+      ManualExecutionSource manualExecutionSource, ConnectorDetails connectorDetails) {
+    String branch = manualExecutionSource.getBranch();
+    String prNumber = manualExecutionSource.getPrNumber();
+
+    if (isNotEmpty(branch)) {
+      return ScmGitRefTaskParams.builder()
+          .branch(branch)
+          .gitRefType(GitRefType.BRANCH_COMMIT_SHA)
+          .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
+          .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
+          .build();
+    } else if (isNotEmpty(prNumber)) {
+      return ScmGitRefTaskParams.builder()
+          .prNumber(Long.parseLong(prNumber))
+          .gitRefType(GitRefType.PULL_REQUEST_WITH_COMMITS)
+          .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
+          .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
+          .build();
+    } else {
+      throw new CIStageExecutionException("Manual codebase git task needs at least PR number or branch");
+    }
+  }
+
   @Override
   public StepResponse handleTaskResult(Ambiance ambiance, CodeBaseStepParameters stepParameters,
       ThrowingSupplier<ScmGitRefTaskResponseData> responseDataSupplier) throws Exception {
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = responseDataSupplier.get();
-    FindPRResponse findPRResponse = FindPRResponse.parseFrom(scmGitRefTaskResponseData.getFindPRResponse());
-    PullRequest pr = findPRResponse.getPr();
+    CodebaseSweepingOutput codebaseSweepingOutput = null;
 
-    CodebaseSweepingOutput pullReqSweepingOutput = CodebaseSweepingOutput.builder()
-                                                       .commitBranch(pr.getTarget())
-                                                       .commitBefore(pr.getBase().getSha())
-                                                       .commitRef(pr.getRef())
-                                                       .commitSha(pr.getSha())
-                                                       .build();
+    if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.PULL_REQUEST_WITH_COMMITS) {
+      final byte[] findPRResponseByteArray = scmGitRefTaskResponseData.getFindPRResponse();
+      final byte[] listCommitsInPRResponseByteArray = scmGitRefTaskResponseData.getListCommitsInPRResponse();
+
+      if (findPRResponseByteArray == null || listCommitsInPRResponseByteArray == null) {
+        throw new CIStageExecutionException("Codebase git information can't be obtained");
+      }
+
+      FindPRResponse findPRResponse = FindPRResponse.parseFrom(findPRResponseByteArray);
+      ListCommitsInPRResponse listCommitsInPRResponse =
+          ListCommitsInPRResponse.parseFrom(listCommitsInPRResponseByteArray);
+      PullRequest pr = findPRResponse.getPr();
+      List<Commit> commits = listCommitsInPRResponse.getCommitsList();
+      List<CodebaseSweepingOutput.CodeBaseCommit> codeBaseCommits = new ArrayList<>();
+      for (Commit commit : commits) {
+        codeBaseCommits.add(CodebaseSweepingOutput.CodeBaseCommit.builder()
+                                .id(commit.getSha())
+                                .message(commit.getMessage())
+                                .link(commit.getLink())
+                                .timeStamp(commit.getCommitter().getDate().getSeconds())
+                                .ownerEmail(commit.getAuthor().getEmail())
+                                .ownerId(commit.getAuthor().getLogin())
+                                .ownerName(commit.getAuthor().getName())
+                                .build());
+      }
+
+      String state = "open";
+      if (pr.getClosed()) {
+        state = "closed";
+      } else if (pr.getMerged()) {
+        state = "merged";
+      }
+      codebaseSweepingOutput =
+          CodebaseSweepingOutput.builder()
+              .branch(pr.getTarget())
+              .sourceBranch(pr.getSource())
+              .targetBranch(pr.getTarget())
+              .prNumber(String.valueOf(pr.getNumber()))
+              .prTitle(pr.getTitle())
+              .commitSha(pr.getSha())
+              .baseCommitSha(pr.getBase().getSha())
+              .commitRef(pr.getRef())
+              .repoUrl(stepParameters.getRepoUrl()) // Add repo url to scm.PullRequest and get it from there
+              .gitUserName(pr.getAuthor().getName())
+              .gitUserAvatar(pr.getAuthor().getAvatar())
+              .gitUserEmail(pr.getAuthor().getEmail())
+              .gitUserId(pr.getAuthor().getLogin())
+              .pullRequestLink(pr.getLink())
+              .commits(codeBaseCommits)
+              .state(state)
+              .build();
+
+    } else if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.BRANCH_COMMIT_SHA) {
+      codebaseSweepingOutput = CodebaseSweepingOutput.builder()
+                                   .branch(scmGitRefTaskResponseData.getBranch())
+                                   .commitSha(scmGitRefTaskResponseData.getLatestBranchCommitSha())
+                                   .build();
+    }
+
     OptionalSweepingOutput optionalSweepingOutput =
         executionSweepingOutputResolver.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
     if (!optionalSweepingOutput.isFound()) {
       try {
         executionSweepingOutputResolver.consume(
-            ambiance, CODEBASE, pullReqSweepingOutput, StepOutcomeGroup.PIPELINE.name());
+            ambiance, CODEBASE, codebaseSweepingOutput, StepOutcomeGroup.PIPELINE.name());
       } catch (Exception e) {
         log.error("Error while consuming codebase sweeping output", e);
       }

@@ -49,14 +49,15 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
         GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmGitRefTaskParams.getScmConnector()),
         scmGitRefTaskParams.getEncryptedDataDetails());
     switch (scmGitRefTaskParams.getGitRefType()) {
-      case BRANCH:
+      case BRANCH: {
         ListBranchesResponse listBranchesResponse = scmDelegateClient.processScmRequest(
             c -> scmServiceClient.listBranches(scmGitRefTaskParams.getScmConnector(), SCMGrpc.newBlockingStub(c)));
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .listBranchesResponse(listBranchesResponse.toByteArray())
             .build();
-      case COMMIT:
+      }
+      case COMMIT: {
         ListCommitsResponse listCommitsResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listCommits(
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
@@ -65,7 +66,8 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
             .branch(scmGitRefTaskParams.getBranch())
             .listCommitsResponse(listCommitsResponse.toByteArray())
             .build();
-      case PULL_REQUEST_COMMITS:
+      }
+      case PULL_REQUEST_COMMITS: {
         ListCommitsInPRResponse listCommitsInPRResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listCommitsInPR(
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getPrNumber(), SCMGrpc.newBlockingStub(c)));
@@ -73,15 +75,21 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .listCommitsInPRResponse(listCommitsInPRResponse.toByteArray())
             .build();
-      case PULL_REQUEST:
+      }
+      case PULL_REQUEST_WITH_COMMITS: {
         FindPRResponse findPRResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.findPR(
+                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getPrNumber(), SCMGrpc.newBlockingStub(c)));
+        ListCommitsInPRResponse listCommitsInPRResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.listCommitsInPR(
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getPrNumber(), SCMGrpc.newBlockingStub(c)));
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .findPRResponse(findPRResponse.toByteArray())
+            .listCommitsInPRResponse(listCommitsInPRResponse.toByteArray())
             .build();
-      case COMPARE_COMMITS:
+      }
+      case COMPARE_COMMITS: {
         CompareCommitsResponse compareCommitsResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.compareCommits(scmGitRefTaskParams.getScmConnector(),
                 scmGitRefTaskParams.getInitialCommitId(), scmGitRefTaskParams.getFinalCommitId(),
@@ -101,6 +109,17 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .getLatestCommitResponse(latestCommitResponse.toByteArray())
             .build();
+      }
+      case BRANCH_COMMIT_SHA: {
+        GetLatestCommitResponse latestCommitResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.getLatestCommit(
+                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .branch(scmGitRefTaskParams.getBranch())
+            .latestBranchCommitSha(latestCommitResponse.getCommitId())
+            .build();
+      }
       default:
         throw new UnknownEnumTypeException("GitRefType", scmGitRefTaskParams.getGitRefType().toString());
     }

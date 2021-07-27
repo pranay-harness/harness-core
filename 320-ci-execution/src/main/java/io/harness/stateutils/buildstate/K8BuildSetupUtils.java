@@ -42,7 +42,6 @@ import static io.harness.common.CIExecutionConstants.PROJECT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.STAGE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
@@ -300,10 +299,18 @@ public class K8BuildSetupUtils {
     Map<String, String> codebaseRuntimeVars = new HashMap<>();
     CodebaseSweepingOutput codebaseSweeping = (CodebaseSweepingOutput) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
-    codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getCommitBranch());
-    codebaseRuntimeVars.put(DRONE_COMMIT_BEFORE, codebaseSweeping.getCommitBefore());
-    codebaseRuntimeVars.put(DRONE_COMMIT_REF, codebaseSweeping.getCommitRef());
-    codebaseRuntimeVars.put(DRONE_COMMIT_SHA, codebaseSweeping.getCommitSha());
+    if (isNotEmpty(codebaseSweeping.getBranch())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
+    }
+    if (isNotEmpty(codebaseSweeping.getBaseCommitSha())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_BEFORE, codebaseSweeping.getBaseCommitSha());
+    }
+    if (isNotEmpty(codebaseSweeping.getCommitRef())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_REF, codebaseSweeping.getCommitRef());
+    }
+    if (isNotEmpty(codebaseSweeping.getCommitSha())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_SHA, codebaseSweeping.getCommitSha());
+    }
 
     return codebaseRuntimeVars;
   }
