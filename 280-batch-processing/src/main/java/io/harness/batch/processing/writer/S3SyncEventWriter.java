@@ -176,3 +176,4 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
     return areAllSyncSuccessful;
   }
 }
+
