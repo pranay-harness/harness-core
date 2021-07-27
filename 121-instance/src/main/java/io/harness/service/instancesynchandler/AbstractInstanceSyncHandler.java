@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
 import io.harness.dtos.InfrastructureMappingDTO;
+import io.harness.dtos.InstanceDTO;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 import io.harness.dtos.instanceinfo.InstanceInfoDTO;
 import io.harness.entities.InstanceType;
@@ -49,5 +50,11 @@ public abstract class AbstractInstanceSyncHandler implements IInstanceSyncHandle
   @Override
   public String getInstanceKey(InstanceInfoDTO instanceInfoDTO) {
     return instanceInfoDTO.prepareInstanceKey();
+  }
+
+  @Override
+  public InstanceDTO updateInstance(InstanceDTO instanceDTO, InstanceInfoDTO instanceInfoFromServer) {
+    // Do nothing, handler should override it if required
+    return instanceDTO;
   }
 }
