@@ -21,6 +21,7 @@ import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;
@@ -419,14 +420,19 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
-  public List<String> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier) {
-    return hPersistence.createQuery(MonitoredService.class)
-        .filter(MonitoredServiceKeys.accountId, accountId)
-        .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
-        .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
-        .asList()
+  public List<EnvironmentResponse> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier) {
+    List<String> environmentIdentifiers = hPersistence.createQuery(MonitoredService.class)
+                                              .filter(MonitoredServiceKeys.accountId, accountId)
+                                              .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
+                                              .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
+                                              .asList()
+                                              .stream()
+                                              .map(monitoredService -> monitoredService.getEnvironmentIdentifier())
+                                              .collect(Collectors.toList());
+
+    return nextGenService.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
         .stream()
-        .map(monitoredService -> monitoredService.getEnvironmentIdentifier())
+        .distinct()
         .collect(Collectors.toList());
   }
 
