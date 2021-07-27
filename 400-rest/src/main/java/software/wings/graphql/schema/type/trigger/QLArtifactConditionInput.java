@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.type.trigger;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.PermissionAttribute;
@@ -14,6 +16,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(HarnessTeam.CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLArtifactConditionInput {
   private String artifactSourceId;

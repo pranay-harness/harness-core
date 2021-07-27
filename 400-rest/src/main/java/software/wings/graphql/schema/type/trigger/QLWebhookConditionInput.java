@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.type.trigger;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.PermissionAttribute;
@@ -16,6 +18,7 @@ import lombok.Value;
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.CDC)
 public class QLWebhookConditionInput {
   QLWebhookSource webhookSourceType;
   QLGitHubEvent githubEvent;

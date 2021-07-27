@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.bamboo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +11,7 @@ import lombok.Data;
  */
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CDC)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact {
   private String name;

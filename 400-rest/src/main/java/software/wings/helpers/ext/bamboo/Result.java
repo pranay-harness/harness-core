@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.bamboo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CDC)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
