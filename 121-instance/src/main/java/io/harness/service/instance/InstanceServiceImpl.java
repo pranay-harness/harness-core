@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
 import io.harness.entities.Instance;
+import io.harness.entities.Instance.InstanceKeys;
 import io.harness.mappers.InstanceMapper;
 import io.harness.models.CountByServiceIdAndEnvType;
 import io.harness.models.EnvBuildInstanceCount;
@@ -19,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @OwnedBy(HarnessTeam.DX)
@@ -67,6 +69,20 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public void deleteAll(List<InstanceDTO> instanceDTOList) {
     instanceRepository.deleteAll(instanceDTOList.stream().map(InstanceMapper::toEntity).collect(Collectors.toList()));
+  }
+
+  /**
+   * Returns null if no document found to replace
+   * Returns updated record if document is successfully replaced
+   */
+  @Override
+  public Optional<InstanceDTO> findAndReplace(InstanceDTO instanceDTO) {
+    Criteria criteria = Criteria.where(InstanceKeys.instanceKey).is(instanceDTO.getInstanceKey());
+    Instance instanceOptional = instanceRepository.findAndReplace(criteria, InstanceMapper.toEntity(instanceDTO));
+    if (instanceOptional == null) {
+      return Optional.empty();
+    }
+    return Optional.of(InstanceMapper.toDTO(instanceOptional));
   }
 
   @Override
