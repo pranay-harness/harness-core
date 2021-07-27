@@ -43,6 +43,9 @@ public class WebhookEventResource {
   @ApiOperation(hidden = true, value = "Upsert a webhook event", nickname = "webhookUpsert")
   public ResponseDTO<UpsertWebhookResponseDTO> upsertWebhook(@Valid UpsertWebhookRequestDTO upsertWebhookRequest) {
     final UpsertWebhookResponseDTO upsertWebhookResponse = webhookEventService.upsertWebhook(upsertWebhookRequest);
-    return ResponseDTO.newResponse(upsertWebhookResponse);
+    return ResponseDTO.newResponse(UpsertWebhookResponseDTO.builder()
+                                       .status(upsertWebhookResponse.getStatus())
+                                       .error(upsertWebhookResponse.getError())
+                                       .build());
   }
 }
