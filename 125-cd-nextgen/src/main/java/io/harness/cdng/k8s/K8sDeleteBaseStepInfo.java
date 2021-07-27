@@ -1,7 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
@@ -28,7 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("K8sDeleteBaseStepInfo")
 public class K8sDeleteBaseStepInfo {
   @NotNull DeleteResourcesWrapper deleteResources;
-  @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) @YamlSchemaTypes({string}) ParameterField<Boolean> skipDryRun;
   @YamlSchemaTypes({runtime})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;

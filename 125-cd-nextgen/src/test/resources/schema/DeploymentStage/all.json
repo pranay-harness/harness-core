@@ -494,13 +494,10 @@
             "deleteNamespace": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             }
@@ -1291,13 +1288,10 @@
             "skipResourceVersioning": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             },
@@ -1843,26 +1837,20 @@
             "skipDryRun": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             },
             "skipSteadyStateCheck": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             }
@@ -1928,13 +1916,10 @@
             "skipDryRun": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             }
@@ -1997,13 +1982,10 @@
             "skipDryRun": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             }
@@ -2044,13 +2026,10 @@
             "skipDryRun": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             }
@@ -2155,13 +2134,10 @@
             "skipDryRun": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             }
@@ -2196,13 +2172,10 @@
             "skipDryRun": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             }
@@ -2243,26 +2216,20 @@
             "skipDryRun": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             },
             "skipSteadyStateCheck": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             },
@@ -3756,13 +3723,10 @@
             "onDelegate": {
               "oneOf": [
                 {
-                  "$ref": "#/definitions/ParameterFieldBoolean"
+                  "type": "boolean"
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "boolean"
                 }
               ]
             },
