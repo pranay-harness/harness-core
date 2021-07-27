@@ -27,6 +27,7 @@ import lombok.ToString;
 @Builder
 @ToString
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.CDC)
 public class QLDeploymentFilter implements EntityFilter {
   /**
    *   Application(DeploymentMetaDataFields.APPID),

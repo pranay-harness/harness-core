@@ -10,6 +10,7 @@ import software.wings.graphql.schema.type.aggregation.QLDataType;
 
 @OwnedBy(HarnessTeam.DX)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.CDC)
 public enum QLDeploymentFilterType {
   Application(DeploymentMetaDataFields.APPID),
   Service(DeploymentMetaDataFields.SERVICEID),

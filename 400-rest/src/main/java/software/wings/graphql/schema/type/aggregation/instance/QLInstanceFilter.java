@@ -20,6 +20,7 @@ import lombok.Data;
 @Data
 @Builder
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.CDC)
 public class QLInstanceFilter implements EntityFilter {
   private QLTimeFilter createdAt;
   private QLIdFilter application;
