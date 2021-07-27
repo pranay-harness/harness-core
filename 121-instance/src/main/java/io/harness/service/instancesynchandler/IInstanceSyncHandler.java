@@ -3,6 +3,7 @@ package io.harness.service.instancesynchandler;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
+import io.harness.dtos.InstanceDTO;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 import io.harness.dtos.instanceinfo.InstanceInfoDTO;
 
@@ -20,4 +21,8 @@ public interface IInstanceSyncHandler {
   String getInstanceSyncHandlerKey(InstanceInfoDTO instanceInfoDTO);
 
   String getInstanceSyncHandlerKey(DeploymentInfoDTO deploymentInfoDTO);
+
+  // Update and return instance with its corresponding instance info from server, if required
+  // It will be no-op by default, responsibility on handler to implement it if required
+  InstanceDTO updateInstance(InstanceDTO instanceDTO, InstanceInfoDTO instanceInfoFromServer);
 }
