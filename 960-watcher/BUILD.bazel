@@ -12,18 +12,18 @@ java_binary(
     data = ["//:resource"],
     main_class = "io.harness.watcher.app.WatcherApplication",
     resources = [
-        "//250-watcher/src/main/resources:resource",
+        "//960-watcher/src/main/resources:resource",
     ],
     sign = True,
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//250-watcher/src/main/resources",
+        "//960-watcher/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
         "//:lombok",
-        "//925-watcher-beans:module",
         "//970-grpc:module",
+        "//970-watcher-beans:module",
         "//980-commons:module",
         "//999-annotations:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -51,16 +51,16 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
-        "//250-watcher/src/test/resources:resource",
+        "//960-watcher/src/test/resources:resource",
     ],
     resources = [
-        "//250-watcher/src/test/resources:resource",
+        "//960-watcher/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
         ":module",
-        "//925-watcher-beans:module",
         "//970-grpc:module",
+        "//970-watcher-beans:module",
         "//980-commons:module",
         "//990-commons-test:module",
         "//999-annotations:module",

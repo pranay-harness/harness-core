@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>250-watcher</artifactId>
+    <artifactId>960-watcher</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>925-watcher-beans</artifactId>
+            <artifactId>970-watcher-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

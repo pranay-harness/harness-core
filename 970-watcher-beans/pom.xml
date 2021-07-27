@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>925-watcher-beans</artifactId>
+    <artifactId>970-watcher-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

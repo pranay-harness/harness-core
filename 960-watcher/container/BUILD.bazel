@@ -4,7 +4,7 @@ pkg_tar(
     name = "watcher_jar",
     srcs = ["watcherlocal.txt"],
     files = {
-        "//250-watcher:module_deploy_signed": "watcher.jar",
+        "//960-watcher:module_deploy_signed": "watcher.jar",
     },
     mode = "0644",
     package_dir = "/opt/harness-delegate",
