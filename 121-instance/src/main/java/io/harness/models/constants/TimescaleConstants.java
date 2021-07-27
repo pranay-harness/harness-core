@@ -1,10 +1,10 @@
-package io.harness.service.stats;
+package io.harness.models.constants;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(HarnessTeam.DX)
-public enum Constants {
+public enum TimescaleConstants {
   ACCOUNT_ID("ACCOUNTID"),
   ORG_ID("ORGID"),
   PROJECT_ID("PROJECTID"),
@@ -16,11 +16,11 @@ public enum Constants {
   ARTIFACT_ID("ARTIFACTID"),
   INSTANCECOUNT("INSTANCECOUNT"),
   SANITYSTATUS("SANITYSTATUS"),
-  ;
+  REPORTEDAT("REPORTEDAT");
 
   private String key;
 
-  Constants(String key) {
+  TimescaleConstants(String key) {
     this.key = key;
   }
 

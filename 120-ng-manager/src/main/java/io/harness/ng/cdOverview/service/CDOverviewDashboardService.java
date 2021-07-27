@@ -58,4 +58,7 @@ public interface CDOverviewDashboardService {
 
   InstancesByBuildIdList getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, String envId, List<String> buildIds);
+
+  TimeValuePairListDTO<Integer> getInstanceGrowthTrend(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs);
 }
