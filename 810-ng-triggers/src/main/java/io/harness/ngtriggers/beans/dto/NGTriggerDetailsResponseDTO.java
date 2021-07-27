@@ -3,6 +3,7 @@ package io.harness.ngtriggers.beans.dto;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ngtriggers.beans.entity.metadata.WebhookRegistrationStatus;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,5 +34,6 @@ public class NGTriggerDetailsResponseDTO {
   List<Integer> executions;
   String yaml;
   String webhookUrl;
+  WebhookRegistrationStatus registrationStatus;
   boolean enabled;
 }

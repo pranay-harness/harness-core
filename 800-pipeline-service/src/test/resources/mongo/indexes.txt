@@ -64,6 +64,7 @@ entitySetupUsage {"name": "account_referredBy_referred_index", "background": tru
 entitySetupUsage {"name": "account_referredBy_referred_type_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "createdAt": 1}
 entitySetupUsage {"name": "referredByEntityFQN_1", "background": true} {"referredByEntityFQN": 1}
 entitySetupUsage {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
+environmentsNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 executionSweepingOutput {"name": "unique_levelRuntimeIdUniqueIdx2", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 executionSweepingOutput {"name": "validUntil_1", "background": true} {"validUntil": 1}
 featureFlag {"name": "name_1", "background": true} {"name": 1}
