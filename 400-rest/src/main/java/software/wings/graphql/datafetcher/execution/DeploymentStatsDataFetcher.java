@@ -16,6 +16,11 @@ import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.beans.EntityType;
+import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithTags;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentStatsQueryMetaDataBuilder;
@@ -116,6 +121,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @OwnedBy(CDC)
@@ -128,6 +134,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   @Inject ExecutionQueryHelper executionQueryHelper;
   @Inject TagHelper tagHelper;
   @Inject FeatureFlagService featureFlagService;
+  @Inject WingsPersistence wingsPersistence;
 
   private DeploymentTableSchema schema = new DeploymentTableSchema();
   private static final long weekOffset = 7 * 24 * 60 * 60 * 1000;
@@ -595,6 +602,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTags(accountId, filters);
+      filters = processFilterForDeploymentType(accountId, filters);
+      filters = processFilterForWorkflowType(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
     }
 
@@ -1093,6 +1102,90 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       }
     }
     return newList;
+  }
+
+  private List<QLDeploymentFilter> processFilterForDeploymentType(String accountId, List<QLDeploymentFilter> filters) {
+    List<QLDeploymentFilter> newList = new ArrayList<>();
+    for (QLDeploymentFilter filter : filters) {
+      Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
+      for (QLDeploymentFilterType type : filterTypes) {
+        if (type == QLDeploymentFilterType.DeploymentType) {
+          List<String> deploymentTypes = filters.stream()
+                                             .filter(f -> f.getDeploymentType() != null)
+                                             .map(f -> f.getDeploymentType().getValues())
+                                             .map(q -> Arrays.asList(q))
+                                             .flatMap(List::stream)
+                                             .map(deploymentType -> deploymentType.name())
+                                             .distinct()
+                                             .collect(Collectors.toList());
+
+          List<String> serviceIds = getServiceIds(accountId, deploymentTypes);
+
+          if (!serviceIds.isEmpty()) {
+            newList.add(QLDeploymentFilter.builder()
+                            .service(QLIdFilter.builder()
+                                         .operator(QLIdOperator.IN)
+                                         .values(serviceIds.toArray(new String[0]))
+                                         .build())
+                            .build());
+          }
+        }
+      }
+    }
+    newList.addAll(filters);
+
+    return newList;
+  }
+
+  List<String> getServiceIds(String accountId, List<String> deploymentTypes) {
+    Query<Service> query = wingsPersistence.createQuery(Service.class)
+                               .filter(ServiceKeys.accountId, accountId)
+                               .field(ServiceKeys.deploymentType)
+                               .in(deploymentTypes);
+
+    return query.asList().stream().map(service -> service.getUuid()).collect(Collectors.toList());
+  }
+
+  private List<QLDeploymentFilter> processFilterForWorkflowType(String accountId, List<QLDeploymentFilter> filters) {
+    List<QLDeploymentFilter> newList = new ArrayList<>();
+    for (QLDeploymentFilter filter : filters) {
+      Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
+      for (QLDeploymentFilterType type : filterTypes) {
+        if (type == QLDeploymentFilterType.WorkflowType) {
+          List<String> workflowTypes = filters.stream()
+                                           .filter(f -> f.getWorkflowType() != null)
+                                           .map(f -> f.getWorkflowType().getValues())
+                                           .map(q -> Arrays.asList(q))
+                                           .flatMap(List::stream)
+                                           .map(workflowType -> workflowType.name())
+                                           .distinct()
+                                           .collect(Collectors.toList());
+
+          List<String> workflowIds = getWorkflowIds(accountId, workflowTypes);
+
+          if (!workflowIds.isEmpty()) {
+            newList.add(QLDeploymentFilter.builder()
+                            .workflow(QLIdFilter.builder()
+                                          .operator(QLIdOperator.IN)
+                                          .values(workflowIds.toArray(new String[0]))
+                                          .build())
+                            .build());
+          }
+        }
+      }
+    }
+    newList.addAll(filters);
+
+    return newList;
+  }
+
+  List<String> getWorkflowIds(String accountId, List<String> workflowTypes) {
+    Query<Workflow> query = wingsPersistence.createQuery(Workflow.class)
+                                .filter(WorkflowKeys.accountId, accountId)
+                                .field(WorkflowKeys.workflowType)
+                                .in(workflowTypes);
+
+    return query.asList().stream().map(workflow -> workflow.getUuid()).collect(Collectors.toList());
   }
 
   private void addSimpleTimeFilter(SelectQuery selectQuery, Filter filter, QLDeploymentFilterType type) {
