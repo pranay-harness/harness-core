@@ -4,18 +4,6 @@ set -e
 
 PROJECTS="ART|BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PL|SEC|SWAT|GTM|ONP"
 
-cat <<EOF > ${HOME}/.netrc
-machine ${DRONE_NETRC_MACHINE}
-login ${DRONE_NETRC_USERNAME}
-password ${DRONE_NETRC_PASSWORD}
-EOF
-
-
-git fetch --unshallow
-
-git fetch --all
-
-
 for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -${PREV_BRANCHES_COUNT}`;
         do
                echo "Onprem branch is $line"
@@ -23,7 +11,6 @@ for line in `git branch -r | grep "release/on-prem" |grep ".xx$"| tail -${PREV_B
 done
 
 cat release_onprem_temp.txt | sort | uniq >release_onprem.txt
-
 
 echo "Saas branch is ${SAAS_BRANCH}"
 
@@ -39,10 +26,9 @@ NOT_MERGED=`comm -23 release_onprem.txt release_saas.txt | tr '\n' ' '`
 
 if [ -z "$NOT_MERGED" ]
 then
-      echo "All onprem hotfixes are exist in ${SAAS_BRANCH} saas branch "
+      echo "All onprem hotfixes are exist in ${SAAS_BRANCH} saas branch " > envvars
 else
-      echo "These are the not merged JIRA tickets : ${NOT_MERGED} , Please merge them into ${SAAS_BRANCH} branch"
-      exit 1
+      echo NOT_MERGED="${NOT_MERGED}" > envvars
 fi
 
 
