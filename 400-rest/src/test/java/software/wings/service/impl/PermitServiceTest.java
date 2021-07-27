@@ -7,6 +7,8 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -21,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(HarnessTeam.CDC)
 public class PermitServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private PermitService permitService;
 

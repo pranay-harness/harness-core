@@ -4,6 +4,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.beans.Permit.PERMIT_KEY_ID;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.logging.AutoLogContext;
 
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class PermitServiceImpl implements PermitService {
   static class PermitLogContext extends AutoLogContext {
     public static final String PERMIT_KEY = "permitKey";

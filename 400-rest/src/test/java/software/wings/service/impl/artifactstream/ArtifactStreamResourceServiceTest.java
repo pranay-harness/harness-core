@@ -13,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -41,6 +43,7 @@ import org.mockito.Mock;
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   private static final JenkinsArtifactStream artifactStream = JenkinsArtifactStream.builder()
                                                                   .appId(APP_ID)

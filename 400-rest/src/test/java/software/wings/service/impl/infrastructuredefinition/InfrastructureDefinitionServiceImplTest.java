@@ -64,6 +64,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -152,6 +154,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.CDC)
 public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
   @Mock private ExecutionContext executionContext;
   @Mock private WorkflowService workflowService;

@@ -14,6 +14,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
@@ -38,6 +40,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class CustomBuildSourceServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;

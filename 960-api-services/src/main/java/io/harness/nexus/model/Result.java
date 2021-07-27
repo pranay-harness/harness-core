@@ -1,6 +1,9 @@
 package io.harness.nexus.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +12,7 @@ import java.util.List;
  */
 @lombok.Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(HarnessTeam.CDC)
 public class Result {
   private boolean success;
   private List<ResponseData> data = new ArrayList<>();

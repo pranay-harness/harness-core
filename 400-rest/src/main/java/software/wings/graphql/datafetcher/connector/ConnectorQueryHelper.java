@@ -26,6 +26,7 @@ import org.mongodb.morphia.query.Query;
 @Singleton
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+
 public class ConnectorQueryHelper {
   @Inject protected DataFetcherUtils utils;
 

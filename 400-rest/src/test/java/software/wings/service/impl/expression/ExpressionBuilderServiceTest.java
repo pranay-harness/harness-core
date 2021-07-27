@@ -60,6 +60,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -103,6 +105,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private WorkflowService workflowService;

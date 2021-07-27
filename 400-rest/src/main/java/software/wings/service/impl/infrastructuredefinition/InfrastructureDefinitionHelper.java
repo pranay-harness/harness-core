@@ -3,6 +3,8 @@ package software.wings.service.impl.infrastructuredefinition;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.reflection.ReflectionUtils;
 
 import software.wings.beans.InfrastructureMapping;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 class InfrastructureDefinitionHelper {
   @Inject private WingsPersistence wingsPersistence;
 

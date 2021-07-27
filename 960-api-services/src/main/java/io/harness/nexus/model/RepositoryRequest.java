@@ -2,6 +2,9 @@ package io.harness.nexus.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 
 /**
@@ -9,6 +12,7 @@ import lombok.Builder;
  */
 @lombok.Data
 @Builder
+@OwnedBy(HarnessTeam.CDC)
 public class RepositoryRequest {
   private String action;
   private String method;

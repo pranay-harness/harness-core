@@ -13,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.Owner;
@@ -39,6 +41,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactStreamServiceBindingServiceTest extends WingsBaseTest {
   private static final String ANOTHER_SERVICE_ID = "ANOTHER_SERVICE_ID";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";

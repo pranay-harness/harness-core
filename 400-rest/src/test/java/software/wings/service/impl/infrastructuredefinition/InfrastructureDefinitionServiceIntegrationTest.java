@@ -7,6 +7,8 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.category.element.IntegrationTests;
 import io.harness.data.structure.EmptyPredicate;
@@ -41,6 +43,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(HarnessTeam.CDC)
 public class InfrastructureDefinitionServiceIntegrationTest extends IntegrationTestBase {
   @InjectMocks @Inject private AppService appService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;

@@ -44,6 +44,8 @@ import static software.wings.service.impl.expression.ExpressionBuilder.WORKFLOW_
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -59,6 +61,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ExpressionBuilderTest extends WingsBaseTest {
   @Test
   @Owner(developers = ADWAIT)

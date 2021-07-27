@@ -39,6 +39,8 @@ import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.ff.FeatureFlagService;
@@ -67,6 +69,7 @@ import java.util.stream.Collectors;
 /**
  * Created by sgurubelli on 8/7/17.
  */
+@OwnedBy(HarnessTeam.CDC)
 public abstract class ExpressionBuilder {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;

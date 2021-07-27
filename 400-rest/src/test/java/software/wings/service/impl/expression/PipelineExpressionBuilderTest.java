@@ -13,6 +13,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -37,6 +39,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineExpressionBuilderTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineExpressionBuilder pipelineExpressionBuilder;
   @Mock private PipelineService pipelineService;

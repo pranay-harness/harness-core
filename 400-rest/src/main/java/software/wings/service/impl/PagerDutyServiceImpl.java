@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
@@ -28,6 +30,7 @@ import org.apache.commons.text.WordUtils;
 import org.json.JSONObject;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class PagerDutyServiceImpl implements PagerDutyService {
   private static final String hexRegex = "^[0-9A-Fa-f]+$";
   @Override

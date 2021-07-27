@@ -1,6 +1,9 @@
 package io.harness.nexus.model;
 
 import java.util.List;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 
 /**
@@ -8,6 +11,7 @@ import lombok.Builder;
  */
 @lombok.Data
 @Builder
+@OwnedBy(HarnessTeam.CDC)
 public class RequestData {
   private List<Filter> filter;
 
