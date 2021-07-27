@@ -1,5 +1,7 @@
 package io.harness.ci.plan.creator.codebase;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
@@ -46,7 +48,8 @@ public class CodebasePlanCreator {
         IntegrationStageUtils.buildExecutionSource(triggerInfo, triggerPayload, "codebase", ciCodeBase.getBuild());
 
     if (executionSource.getType() == ExecutionSource.Type.MANUAL) {
-      if (isNotEmpty(((ManualExecutionSource) executionSource).getPrNumber())) {
+      if (isNotEmpty(((ManualExecutionSource) executionSource).getPrNumber())
+          || isNotEmpty(((ManualExecutionSource) executionSource).getBranch())) {
         return PlanNode.builder()
             .uuid(ciCodeBaseField.getNode().getUuid())
             .stepType(CodeBaseStep.STEP_TYPE)
