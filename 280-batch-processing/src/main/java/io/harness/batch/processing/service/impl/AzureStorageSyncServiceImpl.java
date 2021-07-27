@@ -48,7 +48,7 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
 
   @Override
   @SuppressWarnings("PMD")
-  public void syncContainer(AzureStorageSyncRecord azureStorageSyncRecord) {
+  public boolean syncContainer(AzureStorageSyncRecord azureStorageSyncRecord) {
     AzureStorageSyncConfig azureStorageSyncConfig = configuration.getAzureStorageSyncConfig();
     String sourcePath = "";
     String sourceSasToken = "";
@@ -70,7 +70,6 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
     Retry.EventPublisher publisher = retry.getEventPublisher();
     publisher.onRetry(event -> log.info(event.toString()));
     publisher.onSuccess(event -> log.info(event.toString()));
-    log.info("azureStorageSyncRecord is {}", azureStorageSyncRecord);
 
     try {
       // generate SAS token for source
@@ -80,7 +79,7 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
     } catch (Exception exception) {
       log.error("Error in generating sourceSasToken sas token", exception);
       // Proceed to next sync
-      return;
+      return false;
     }
     try {
       destinationSasToken = azureStorageSyncConfig.getAzureSasToken();
@@ -95,7 +94,7 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
     } catch (Exception exception) {
       log.error("Error in generating destinationSasToken sas token", exception);
       // Proceed to next sync
-      return;
+      return false;
     }
     try {
       // Run the azcopy tool to do the sync
@@ -128,14 +127,17 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
       try {
         retryingAzcopySync.apply();
       } catch (Throwable throwable) {
-        log.error("azcopy retries are exhausted {}", throwable);
+        log.error("Exception during azcopy sync {}", throwable);
         // throw new BatchProcessingException("azcopy sync failed", throwable);
+        return false;
       }
       log.info("azcopy sync completed");
     } catch (InvalidExitValueException | JsonSyntaxException e) {
       log.error("Exception during azcopy sync for src={}, dest={} exception={}", sourcePath, destinationPath, e);
       // throw new BatchProcessingException("azcopy sync failed {}", e);
+      return false;
     }
+    return true;
   }
 
   private String genSasToken(String storageAccountName, String containerName, String tenantId, String azureAppClientId,
