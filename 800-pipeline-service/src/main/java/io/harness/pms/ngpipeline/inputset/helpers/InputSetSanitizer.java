@@ -11,6 +11,7 @@ import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.merger.helpers.TemplateHelper;
 
+import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
@@ -55,5 +56,20 @@ public class InputSetSanitizer {
                                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
     return new PipelineYamlConfig(filtered, inputSetConfig.getYamlMap()).getYaml();
+  }
+
+  public String trimValues(String yaml) {
+    PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+    Map<FQN, Object> fqnToValueMap = config.getFqnToValueMap();
+    for (FQN fqn : fqnToValueMap.keySet()) {
+      Object value = fqnToValueMap.get(fqn);
+      if (value instanceof TextNode) {
+        String trimValue = ((TextNode) value).textValue().trim();
+        fqnToValueMap.put(fqn, new TextNode(trimValue));
+      }
+    }
+
+    PipelineYamlConfig config1 = new PipelineYamlConfig(fqnToValueMap, config.getYamlMap());
+    return config1.getYaml();
   }
 }
