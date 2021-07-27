@@ -115,6 +115,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -298,8 +299,14 @@ public class K8BuildSetupUtils {
 
   private Map<String, String> getRuntimeCodebaseVars(Ambiance ambiance) {
     Map<String, String> codebaseRuntimeVars = new HashMap<>();
-    CodebaseSweepingOutput codebaseSweeping = (CodebaseSweepingOutput) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputResolver.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+    if (!optionalSweepingOutput.isFound()) {
+      return codebaseRuntimeVars;
+    }
+
+    CodebaseSweepingOutput codebaseSweeping = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
     if (isNotEmpty(codebaseSweeping.getBranch())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
     }

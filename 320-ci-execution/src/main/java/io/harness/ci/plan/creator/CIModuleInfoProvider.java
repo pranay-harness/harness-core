@@ -1,6 +1,8 @@
 package io.harness.ci.plan.creator;
 
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.git.GitClientHelper.getGitRepo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -27,6 +29,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -114,47 +117,37 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     }
 
     // get codebase sweeping output
-    CodebaseSweepingOutput codebaseSweepingOutput = (CodebaseSweepingOutput) executionSweepingOutputService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
-    log.info("Codebase sweeping output {}", codebaseSweepingOutput);
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+    CodebaseSweepingOutput codebaseSweepingOutput = null;
+    if (optionalSweepingOutput.isFound()) {
+      codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+    }
     if (codebaseSweepingOutput != null) {
-      List<CIBuildCommit> ciBuildCommits = new ArrayList<>();
+      log.info("Codebase sweeping output {}", codebaseSweepingOutput);
 
-      for (CodebaseSweepingOutput.CodeBaseCommit commit : codebaseSweepingOutput.getCommits()) {
-        ciBuildCommits.add(CIBuildCommit.builder()
-                               .id(commit.getId())
-                               .link(commit.getLink())
-                               .message(commit.getMessage())
-                               .ownerEmail(commit.getOwnerEmail())
-                               .ownerId(commit.getOwnerId())
-                               .ownerName(commit.getOwnerName())
-                               .timeStamp(commit.getTimeStamp())
-                               .build());
+      List<CIBuildCommit> ciBuildCommits = new ArrayList<>();
+      if (isNotEmpty(codebaseSweepingOutput.getCommits())) {
+        for (CodebaseSweepingOutput.CodeBaseCommit commit : codebaseSweepingOutput.getCommits()) {
+          ciBuildCommits.add(CIBuildCommit.builder()
+                                 .id(commit.getId())
+                                 .link(commit.getLink())
+                                 .message(commit.getMessage())
+                                 .ownerEmail(commit.getOwnerEmail())
+                                 .ownerId(commit.getOwnerId())
+                                 .ownerName(commit.getOwnerName())
+                                 .timeStamp(commit.getTimeStamp())
+                                 .build());
+        }
+      }
+      if (isEmpty(branch)) {
+        branch = codebaseSweepingOutput.getBranch();
       }
 
       return CIPipelineModuleInfo.builder()
-          .branch(codebaseSweepingOutput.getBranch())
+          .branch(branch)
           .repoName(repoName)
-          .ciExecutionInfoDTO(CIWebhookInfoDTO.builder()
-                                  .event("pullRequest")
-                                  .author(CIBuildAuthor.builder()
-                                              .name(codebaseSweepingOutput.getGitUserName())
-                                              .avatar(codebaseSweepingOutput.getGitUserAvatar())
-                                              .email(codebaseSweepingOutput.getGitUserEmail())
-                                              .id(codebaseSweepingOutput.getGitUserId())
-                                              .build())
-                                  .pullRequest(CIBuildPRHook.builder()
-                                                   .id(Long.valueOf(codebaseSweepingOutput.getPrNumber()))
-                                                   .link(codebaseSweepingOutput.getPullRequestLink())
-                                                   .title(codebaseSweepingOutput.getPrTitle())
-                                                   .body(codebaseSweepingOutput.getPullRequestBody())
-                                                   .sourceBranch(codebaseSweepingOutput.getSourceBranch())
-                                                   .targetBranch(codebaseSweepingOutput.getTargetBranch())
-                                                   .state(codebaseSweepingOutput.getState())
-                                                   .commits(ciBuildCommits)
-                                                   .build())
-
-                                  .build())
+          .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput, ciBuildCommits))
           .build();
     }
 
@@ -163,6 +156,33 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .tag(tag)
         .repoName(repoName)
         .ciExecutionInfoDTO(CIModuleInfoMapper.getCIBuildResponseDTO(executionSource))
+        .build();
+  }
+
+  private CIWebhookInfoDTO getCiExecutionInfoDTO(
+      CodebaseSweepingOutput codebaseSweepingOutput, List<CIBuildCommit> ciBuildCommits) {
+    if (isEmpty(codebaseSweepingOutput.getCommits())) {
+      return null;
+    }
+    return CIWebhookInfoDTO.builder()
+        .event("pullRequest")
+        .author(CIBuildAuthor.builder()
+                    .name(codebaseSweepingOutput.getGitUserName())
+                    .avatar(codebaseSweepingOutput.getGitUserAvatar())
+                    .email(codebaseSweepingOutput.getGitUserEmail())
+                    .id(codebaseSweepingOutput.getGitUserId())
+                    .build())
+        .pullRequest(CIBuildPRHook.builder()
+                         .id(Long.valueOf(codebaseSweepingOutput.getPrNumber()))
+                         .link(codebaseSweepingOutput.getPullRequestLink())
+                         .title(codebaseSweepingOutput.getPrTitle())
+                         .body(codebaseSweepingOutput.getPullRequestBody())
+                         .sourceBranch(codebaseSweepingOutput.getSourceBranch())
+                         .targetBranch(codebaseSweepingOutput.getTargetBranch())
+                         .state(codebaseSweepingOutput.getState())
+                         .commits(ciBuildCommits)
+                         .build())
+
         .build();
   }
 

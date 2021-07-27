@@ -36,6 +36,7 @@ import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
+import io.harness.yaml.extended.ci.codebase.impl.CommitShaBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.PRBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
@@ -124,9 +125,15 @@ public class IntegrationStageUtils {
 
       } else if (build.getType().equals(BuildType.PR)) {
         ParameterField<String> number = ((PRBuildSpec) build.getSpec()).getNumber();
-        String prNumber =
-            RunTimeInputHandler.resolveStringParameter("prNumber", "Git Clone", identifier, number, false);
-        return ManualExecutionSource.builder().prNumber(prNumber).build();
+        String numberString =
+            RunTimeInputHandler.resolveStringParameter("number", "Git Clone", identifier, number, false);
+        return ManualExecutionSource.builder().prNumber(numberString).build();
+
+      } else if (build.getType().equals(BuildType.COMMIT_SHA)) {
+        ParameterField<String> commitSha = ((CommitShaBuildSpec) build.getSpec()).getCommitSha();
+        String commitShaString =
+            RunTimeInputHandler.resolveStringParameter("prNumber", "Git Clone", identifier, commitSha, false);
+        return ManualExecutionSource.builder().commitSha(commitShaString).build();
       }
     }
 
