@@ -1,5 +1,6 @@
 package io.harness.ci.plan.creator;
 
+import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
 import static io.harness.git.GitClientHelper.getGitRepo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -7,6 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
+import io.harness.ci.pipeline.executions.beans.CIBuildAuthor;
+import io.harness.ci.pipeline.executions.beans.CIBuildCommit;
+import io.harness.ci.pipeline.executions.beans.CIBuildPRHook;
+import io.harness.ci.pipeline.executions.beans.CIWebhookInfoDTO;
 import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.ci.plan.creator.execution.CIStageModuleInfo;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -23,7 +29,8 @@ import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 import io.harness.pms.yaml.ParameterField;
@@ -37,6 +44,8 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,12 +53,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
-  @Inject OutcomeService outcomeService;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private ConnectorUtils connectorUtils;
 
   @Override
   public boolean shouldRun(OrchestrationEvent event) {
-    return isLiteEngineNode(AmbianceUtils.getCurrentStepType(event.getAmbiance()));
+    StepType currentStepType = AmbianceUtils.getCurrentStepType(event.getAmbiance());
+    return currentStepType != null && isLiteEngineNode(currentStepType);
   }
 
   @Override
@@ -57,9 +67,6 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String branch = null;
     String tag = null;
     String repoName = null;
-    if (!isLiteEngineNode(AmbianceUtils.getCurrentStepType(event.getAmbiance()))) {
-      return null;
-    }
 
     Ambiance ambiance = event.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
@@ -105,6 +112,52 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     } catch (Exception ex) {
       log.error("Failed to retrieve branch and tag for filtering", ex);
     }
+
+    // get codebase sweeping output
+    CodebaseSweepingOutput codebaseSweepingOutput = (CodebaseSweepingOutput) executionSweepingOutputService.resolve(
+        ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+    log.info("Codebase sweeping output {}", codebaseSweepingOutput);
+    if (codebaseSweepingOutput != null) {
+      List<CIBuildCommit> ciBuildCommits = new ArrayList<>();
+
+      for (CodebaseSweepingOutput.CodeBaseCommit commit : codebaseSweepingOutput.getCommits()) {
+        ciBuildCommits.add(CIBuildCommit.builder()
+                               .id(commit.getId())
+                               .link(commit.getLink())
+                               .message(commit.getMessage())
+                               .ownerEmail(commit.getOwnerEmail())
+                               .ownerId(commit.getOwnerId())
+                               .ownerName(commit.getOwnerName())
+                               .timeStamp(commit.getTimeStamp())
+                               .build());
+      }
+
+      return CIPipelineModuleInfo.builder()
+          .branch(codebaseSweepingOutput.getBranch())
+          .repoName(repoName)
+          .ciExecutionInfoDTO(CIWebhookInfoDTO.builder()
+                                  .event("pullRequest")
+                                  .author(CIBuildAuthor.builder()
+                                              .name(codebaseSweepingOutput.getGitUserName())
+                                              .avatar(codebaseSweepingOutput.getGitUserAvatar())
+                                              .email(codebaseSweepingOutput.getGitUserEmail())
+                                              .id(codebaseSweepingOutput.getGitUserId())
+                                              .build())
+                                  .pullRequest(CIBuildPRHook.builder()
+                                                   .id(Long.valueOf(codebaseSweepingOutput.getPrNumber()))
+                                                   .link(codebaseSweepingOutput.getPullRequestLink())
+                                                   .title(codebaseSweepingOutput.getPrTitle())
+                                                   .body(codebaseSweepingOutput.getPullRequestBody())
+                                                   .sourceBranch(codebaseSweepingOutput.getSourceBranch())
+                                                   .targetBranch(codebaseSweepingOutput.getTargetBranch())
+                                                   .state(codebaseSweepingOutput.getState())
+                                                   .commits(ciBuildCommits)
+                                                   .build())
+
+                                  .build())
+          .build();
+    }
+
     return CIPipelineModuleInfo.builder()
         .branch(branch)
         .tag(tag)
@@ -122,8 +175,8 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       ExecutionMetadata executionMetadata, TriggerPayload triggerPayload) {
     ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
     if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-      ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
-      if (parsedPayload != null) {
+      if (triggerPayload != null) {
+        ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
       } else {
         throw new CIStageExecutionException("Parsed payload is empty for webhook execution");

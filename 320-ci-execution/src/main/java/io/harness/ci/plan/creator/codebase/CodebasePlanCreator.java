@@ -1,7 +1,5 @@
 package io.harness.ci.plan.creator.codebase;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
@@ -14,6 +12,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
@@ -67,6 +66,7 @@ public class CodebasePlanCreator {
                     .setParameters(ByteString.copyFrom(
                         kryoSerializer.asBytes(OnSuccessAdviserParameters.builder().nextNodeId(childNodeId).build())))
                     .build())
+            .skipGraphType(SkipType.SKIP_NODE)
             .build();
       }
     }

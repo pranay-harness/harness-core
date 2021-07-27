@@ -9,6 +9,7 @@ import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
@@ -21,9 +22,34 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias(CODEBASE)
 @JsonTypeName(CODEBASE)
 public class CodebaseSweepingOutput implements ExecutionSweepingOutput {
-  String commitBranch;
-  String commitBefore;
-  String commitRef;
+  String branch;
+  String targetBranch;
+  String sourceBranch;
+  String prNumber;
+  String prTitle;
   String commitSha;
+  String baseCommitSha;
+  String commitRef;
+  String repoUrl;
+  String gitUserId;
+  String gitUserEmail;
+  String gitUserName;
+  String gitUserAvatar;
+  String pullRequestLink;
+  String pullRequestBody;
+  String state;
+  List<CodeBaseCommit> commits;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore String uuid;
+
+  @Value
+  @Builder
+  public static class CodeBaseCommit {
+    String id;
+    String link;
+    String message;
+    String ownerName;
+    String ownerId;
+    String ownerEmail;
+    long timeStamp;
+  }
 }
