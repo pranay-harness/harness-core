@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -33,6 +34,13 @@ public class InstanceServiceImpl implements InstanceService {
     return InstanceMapper.toDTO(instance);
   }
 
+  @Override
+  public List<InstanceDTO> saveAll(List<InstanceDTO> instanceDTOList) {
+    List<Instance> instances = (List<Instance>) instanceRepository.saveAll(
+        instanceDTOList.stream().map(InstanceMapper::toEntity).collect(Collectors.toList()));
+    return instances.stream().map(InstanceMapper::toDTO).collect(Collectors.toList());
+  }
+
   /**
    * Create instance record if not present already
    * @param instanceDTO
@@ -49,6 +57,16 @@ public class InstanceServiceImpl implements InstanceService {
       return Optional.empty();
     }
     return Optional.of(InstanceMapper.toDTO(instance));
+  }
+
+  @Override
+  public void deleteById(String id) {
+    instanceRepository.deleteById(id);
+  }
+
+  @Override
+  public void deleteAll(List<InstanceDTO> instanceDTOList) {
+    instanceRepository.deleteAll(instanceDTOList.stream().map(InstanceMapper::toEntity).collect(Collectors.toList()));
   }
 
   @Override
