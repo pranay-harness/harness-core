@@ -184,10 +184,10 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   private ServiceEntity fetchService(InfrastructureMappingDTO infrastructureMappingDTO) {
     Optional<ServiceEntity> serviceEntityOptional = serviceEntityService.get(
         infrastructureMappingDTO.getAccountIdentifier(), infrastructureMappingDTO.getOrgIdentifier(),
-        infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getServiceId(), false);
+        infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getServiceIdentifier(), false);
     if (!serviceEntityOptional.isPresent()) {
       throw new InvalidRequestException(
-          "Service not found for serviceId : {}" + infrastructureMappingDTO.getServiceId());
+          "Service not found for serviceId : {}" + infrastructureMappingDTO.getServiceIdentifier());
     }
     return serviceEntityOptional.get();
   }
@@ -195,9 +195,10 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   private Environment fetchEnvironment(InfrastructureMappingDTO infrastructureMappingDTO) {
     Optional<Environment> environmentServiceOptional = environmentService.get(
         infrastructureMappingDTO.getAccountIdentifier(), infrastructureMappingDTO.getOrgIdentifier(),
-        infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getEnvId(), false);
+        infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getEnvIdentifier(), false);
     if (!environmentServiceOptional.isPresent()) {
-      throw new InvalidRequestException("Environment not found for envId : {}" + infrastructureMappingDTO.getEnvId());
+      throw new InvalidRequestException(
+          "Environment not found for envId : {}" + infrastructureMappingDTO.getEnvIdentifier());
     }
     return environmentServiceOptional.get();
   }
