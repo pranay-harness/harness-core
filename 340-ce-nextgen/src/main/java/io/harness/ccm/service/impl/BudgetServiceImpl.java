@@ -10,9 +10,17 @@ import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.budget.utils.BudgetUtils;
 import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.budget.BudgetCostData;
+import io.harness.ccm.commons.entities.budget.BudgetData;
 import io.harness.ccm.commons.utils.BigQueryHelper;
+import io.harness.ccm.graphql.core.perspectives.PerspectiveTimeSeriesHelper;
+import io.harness.ccm.graphql.dto.common.TimeSeriesDataPoints;
 import io.harness.ccm.service.intf.BudgetService;
+import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
+import io.harness.ccm.views.graphql.QLCEViewGroupBy;
+import io.harness.ccm.views.graphql.QLCEViewTimeGroupType;
+import io.harness.ccm.views.graphql.QLCEViewTimeTruncGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 import io.harness.ccm.views.graphql.ViewCostData;
 import io.harness.ccm.views.graphql.ViewsQueryHelper;
@@ -24,6 +32,7 @@ import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +45,7 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject private CEViewService ceViewService;
   @Inject ViewsBillingService viewsBillingService;
   @Inject ViewsQueryHelper viewsQueryHelper;
+  @Inject PerspectiveTimeSeriesHelper perspectiveTimeSeriesHelper;
   @Inject BigQueryService bigQueryService;
   @Inject BigQueryHelper bigQueryHelper;
 
@@ -109,6 +119,74 @@ public class BudgetServiceImpl implements BudgetService {
     return budgetDao.delete(budgetId, accountId);
   }
 
+  @Override
+  public Double getLastMonthCostForPerspective(String accountId, String perspectiveId) {
+    if (ceViewService.get(perspectiveId) == null) {
+      throw new InvalidRequestException(BudgetUtils.INVALID_PERSPECTIVE_ID_EXCEPTION);
+    }
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonth(true), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(
+        BudgetUtils.getStartOfMonth(false) - BudgetUtils.ONE_DAY_MILLIS, BEFORE));
+    return getCostForPerspective(accountId, filters);
+  }
+
+  @Override
+  public Double getForecastCostForPerspective(String accountId, String perspectiveId) {
+    if (ceViewService.get(perspectiveId) == null) {
+      throw new InvalidRequestException(BudgetUtils.INVALID_PERSPECTIVE_ID_EXCEPTION);
+    }
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    long endTime = BudgetUtils.getEndOfMonthForCurrentBillingCycle();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartTimeForForecasting(), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(endTime, BEFORE));
+    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
+    ViewCostData currentCostData = viewsBillingService.getCostData(bigQueryService.get(), filters,
+        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false);
+
+    return viewsQueryHelper.getForecastCost(currentCostData, Instant.ofEpochMilli(endTime));
+  }
+
+  @Override
+  public BudgetData getBudgetTimeSeriesStats(Budget budget) {
+    if (budget == null) {
+      throw new InvalidRequestException(BudgetUtils.INVALID_BUDGET_ID_EXCEPTION);
+    }
+    List<BudgetCostData> budgetCostDataList = new ArrayList<>();
+    Double budgetedAmount = budget.getBudgetAmount();
+    if (budgetedAmount == null) {
+      budgetedAmount = 0.0;
+    }
+
+    String viewId = budget.getScope().getEntityIds().get(0);
+    long timeFilterValue = BudgetUtils.getStartTimeForCurrentBillingCycle();
+    try {
+      List<TimeSeriesDataPoints> monthlyCostData =
+          getPerspectiveBudgetMonthlyCostData(viewId, budget.getAccountId(), timeFilterValue);
+
+      for (TimeSeriesDataPoints data : monthlyCostData) {
+        double actualCost =
+            data.getValues().stream().map(dataPoint -> dataPoint.getValue().doubleValue()).reduce(0D, Double::sum);
+        double budgetVariance = BudgetUtils.getBudgetVariance(budgetedAmount, actualCost);
+        double budgetVariancePercentage = BudgetUtils.getBudgetVariancePercentage(budgetVariance, budgetedAmount);
+        BudgetCostData budgetCostData =
+            BudgetCostData.builder()
+                .actualCost(viewsQueryHelper.getRoundedDoubleValue(actualCost))
+                .budgeted(viewsQueryHelper.getRoundedDoubleValue(budgetedAmount))
+                .budgetVariance(viewsQueryHelper.getRoundedDoubleValue(budgetVariance))
+                .budgetVariancePercentage(viewsQueryHelper.getRoundedDoubleValue(budgetVariancePercentage))
+                .time(data.getTime())
+                .build();
+        budgetCostDataList.add(budgetCostData);
+      }
+    } catch (Exception e) {
+      log.info("Error in generating data for budget : {}", budget.getUuid());
+    }
+    return BudgetData.builder().costData(budgetCostDataList).forecastCost(budget.getForecastCost()).build();
+  }
+
   private void validatePerspective(Budget budget) {
     BudgetScope scope = budget.getScope();
     String[] entityIds = BudgetUtils.getAppliesToIds(scope);
@@ -159,37 +237,40 @@ public class BudgetServiceImpl implements BudgetService {
     filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
     filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonthForCurrentBillingCycle(), AFTER));
     filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getEndOfMonthForCurrentBillingCycle(), BEFORE));
-    return getCostForPerspectiveBudget(budget, filters);
+    return getCostForPerspective(budget.getAccountId(), filters);
   }
 
   private double getLastMonthCostForPerspectiveBudget(Budget budget) {
-    String viewId = budget.getScope().getEntityIds().get(0);
-    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
-    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
-    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonth(true), AFTER));
-    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(
-        BudgetUtils.getStartOfMonth(false) - BudgetUtils.ONE_DAY_MILLIS, BEFORE));
-    return getCostForPerspectiveBudget(budget, filters);
+    return getLastMonthCostForPerspective(budget.getAccountId(), budget.getScope().getEntityIds().get(0));
   }
 
   private double getForecastCostForPerspectiveBudget(Budget budget) {
-    String viewId = budget.getScope().getEntityIds().get(0);
-    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
-    long endTime = BudgetUtils.getEndOfMonthForCurrentBillingCycle();
-    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
-    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartTimeForForecasting(), AFTER));
-    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(endTime, BEFORE));
-    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(budget.getAccountId(), UNIFIED_TABLE);
-    ViewCostData currentCostData = viewsBillingService.getCostData(bigQueryService.get(), filters,
-        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, budget.getAccountId(), false);
-
-    return viewsQueryHelper.getForecastCost(currentCostData, Instant.ofEpochMilli(endTime));
+    return getForecastCostForPerspective(budget.getAccountId(), budget.getScope().getEntityIds().get(0));
   }
 
-  private double getCostForPerspectiveBudget(Budget budget, List<QLCEViewFilterWrapper> filters) {
-    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(budget.getAccountId(), UNIFIED_TABLE);
+  private double getCostForPerspective(String accountId, List<QLCEViewFilterWrapper> filters) {
+    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
         bigQueryService.get(), filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable);
     return trendData.getValue().doubleValue();
+  }
+
+  private List<TimeSeriesDataPoints> getPerspectiveBudgetMonthlyCostData(
+      String viewId, String accountId, long startTime) {
+    List<QLCEViewAggregation> aggregationFunction = viewsQueryHelper.getPerspectiveTotalCostAggregation();
+    List<QLCEViewGroupBy> groupBy = new ArrayList<>();
+    groupBy.add(
+        QLCEViewGroupBy.builder()
+            .timeTruncGroupBy(QLCEViewTimeTruncGroupBy.builder().resolution(QLCEViewTimeGroupType.MONTH).build())
+            .build());
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(startTime, AFTER));
+    String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
+    return perspectiveTimeSeriesHelper
+        .fetch(viewsBillingService.getTimeSeriesStats(bigQueryService.get(), filters, groupBy, aggregationFunction,
+                   Collections.emptyList(), cloudProviderTable),
+            perspectiveTimeSeriesHelper.getTimePeriod(groupBy))
+        .getStats();
   }
 }

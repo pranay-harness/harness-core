@@ -79,7 +79,7 @@ public class ViewsQueryHelper {
 
     double totalBillingAmount = billingAmountData.getCost();
     long actualTimeDiffMillis = endInstant.toEpochMilli() - billingAmountData.getMinStartTime();
-    return totalBillingAmount * (actualTimeDiffMillis / billingTimeDiffMillis);
+    return getRoundedDoubleValue(totalBillingAmount * ((double) actualTimeDiffMillis / billingTimeDiffMillis));
   }
 
   private Long getModifiedMaxStartTime(long maxStartTime) {
