@@ -7,6 +7,8 @@ import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_
 import static io.harness.ng.core.invites.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_EXPIRED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.ACCEPTED_INVITE;
 
@@ -263,8 +265,9 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String email, String jwtToken) {
     String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
-    if (inviteAcceptResponse.getResponse().equals(FAIL)) {
-      return getLoginPageUrl(accountIdentifier);
+    if (inviteAcceptResponse.getResponse().equals(INVITE_EXPIRED)
+        || inviteAcceptResponse.getResponse().equals(INVITE_INVALID)) {
+      return getLoginPageUrl(accountIdentifier, inviteAcceptResponse.getResponse());
     }
 
     UserInfo userInfo = inviteAcceptResponse.getUserInfo();
@@ -348,12 +351,12 @@ public class InviteServiceImpl implements InviteService {
     }
   }
 
-  private URI getLoginPageUrl(String accountIdentifier) {
+  private URI getLoginPageUrl(String accountIdentifier, InviteOperationResponse inviteOperationResponse) {
     try {
       String baseUrl = getBaseUrl(accountIdentifier);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
-      uriBuilder.setFragment("/signin");
+      uriBuilder.setFragment("/signin?errorCode=" + inviteOperationResponse.getType());
       return uriBuilder.build();
     } catch (URISyntaxException e) {
       throw new WingsException(e);
@@ -389,10 +392,16 @@ public class InviteServiceImpl implements InviteService {
     Optional<Invite> inviteOptional = getInviteFromToken(jwtToken, true);
     if (!inviteOptional.isPresent() || !inviteOptional.get().getInviteToken().equals(jwtToken)) {
       log.warn("Invite token {} is invalid", jwtToken);
-      return InviteAcceptResponse.builder().response(InviteOperationResponse.FAIL).build();
+      return InviteAcceptResponse.builder().response(INVITE_INVALID).build();
+    }
+    Invite invite = inviteOptional.get();
+    Date today = Date.from(OffsetDateTime.now().toInstant());
+    Date validUntil = invite.getValidUntil();
+    if (validUntil.compareTo(today) < 0) {
+      log.warn("Invite expired");
+      return InviteAcceptResponse.builder().response(INVITE_EXPIRED).build();
     }
 
-    Invite invite = inviteOptional.get();
     Optional<UserMetadataDTO> ngUserOpt = ngUserService.getUserByEmail(invite.getEmail(), true);
     UserInfo userInfo = ngUserOpt
                             .map(user
