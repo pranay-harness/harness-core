@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 
 import software.wings.security.PermissionAttribute.Action;
@@ -10,6 +13,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
  * Created by anubhaw on 3/17/16.
  */
 
+@OwnedBy(PL)
 public class Permission {
   private ResourceType resourceType;
   private Action action;

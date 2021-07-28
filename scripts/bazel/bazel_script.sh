@@ -80,6 +80,7 @@ BAZEL_MODULES="\
   //820-platform-service:module_deploy.jar \
   //830-notification-service:module \
   //830-resource-group:module \
+  //834-user-beans:module \
   //835-notification-senders:module \
   //835-notification-senders:module \
   //840-template-service:module \

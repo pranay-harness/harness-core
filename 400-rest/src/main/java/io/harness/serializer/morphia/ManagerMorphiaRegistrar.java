@@ -246,7 +246,6 @@ import software.wings.beans.PrometheusConfig;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintNotification;
 import software.wings.beans.ResourceLookup;
-import software.wings.beans.Role;
 import software.wings.beans.RollingOrchestrationWorkflow;
 import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SSHExecutionCredential;
@@ -990,7 +989,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ResourceConstraintInstance.class);
     set.add(ResourceConstraintNotification.class);
     set.add(ResourceLookup.class);
-    set.add(Role.class);
     set.add(SamlSettings.class);
     set.add(Schema.class);
     set.add(SearchDistributedLock.class);

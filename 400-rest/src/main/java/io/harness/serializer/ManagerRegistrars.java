@@ -49,6 +49,7 @@ public class ManagerRegistrars {
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(FileServiceCommonsRegistrars.kryoRegistrars)
           .addAll(NotificationSenderRegistrars.kryoRegistrars)
+          .addAll(UserBeansRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           // temporary:
           .add(DelegateAgentKryoRegister.class)
@@ -86,6 +87,7 @@ public class ManagerRegistrars {
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(UserBeansRegistrars.morphiaRegistrars)
           .add(EventEntitiesMorphiaRegister.class)
           .build();
 

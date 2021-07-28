@@ -1,31 +1,55 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
 
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.security.PermissionAttribute.PermissionType;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.PrePersist;
 
 /**
  * Created by anubhaw on 3/16/16.
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity(value = "roles", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "RoleKeys")
-public class Role extends Base implements AccountAccess {
+@OwnedBy(PL)
+public class Role implements AccountAccess, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                             UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -35,6 +59,16 @@ public class Role extends Base implements AccountAccess {
                  .build())
         .build();
   }
+
+  @Deprecated public static final String ACCOUNT_ID_KEY2 = "accountId";
+
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @FdIndex private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   @NotEmpty private String name;
   private String description;
@@ -162,13 +196,16 @@ public class Role extends Base implements AccountAccess {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    if (!super.equals(o)) {
-      return false;
-    }
 
     Role role = (Role) o;
 
     if (allApps != role.allApps) {
+      return false;
+    }
+    if (uuid != null ? !uuid.equals(role.uuid) : role.uuid != null) {
+      return false;
+    }
+    if (appId != null ? !appId.equals(role.appId) : role.appId != null) {
       return false;
     }
     if (name != null ? !name.equals(role.name) : role.name != null) {
@@ -185,7 +222,9 @@ public class Role extends Base implements AccountAccess {
 
   @Override
   public int hashCode() {
-    int result = super.hashCode();
+    int result = 31;
+    result = 31 * result + (uuid != null ? uuid.hashCode() : 0);
+    result = 31 * result + (appId != null ? appId.hashCode() : 0);
     result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (description != null ? description.hashCode() : 0);
     result = 31 * result + (accountId != null ? accountId.hashCode() : 0);
@@ -201,11 +240,8 @@ public class Role extends Base implements AccountAccess {
         + ", permissions=" + permissions + ", roleType=" + roleType + ", allApps=" + allApps + '}';
   }
 
-  @Override
+  @PrePersist
   public void onSave() {
-    super.onSave();
-
-    // No need to save permissions with standard roles
     if (roleType == RoleType.ACCOUNT_ADMIN || roleType == RoleType.APPLICATION_ADMIN
         || roleType == RoleType.PROD_SUPPORT || roleType == RoleType.NON_PROD_SUPPORT) {
       permissions = null;
