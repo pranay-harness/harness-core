@@ -137,11 +137,7 @@ public class SlackServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     Slack slackChannelDetails = notificationRequest.getSlack();
     List<String> recipients = new ArrayList<>(slackChannelDetails.getSlackWebHookUrlsList());
-    if (isNotEmpty(slackChannelDetails.getUserGroupIdsList())) {
-      List<String> slackWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
-          slackChannelDetails.getUserGroupIdsList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
-      recipients.addAll(slackWebHookUrls);
-    } else {
+    if (isNotEmpty(slackChannelDetails.getUserGroupList())) {
       List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
           slackChannelDetails.getUserGroupList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
