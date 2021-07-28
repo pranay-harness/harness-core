@@ -158,20 +158,21 @@ public class UserGroupServiceImpl implements UserGroupService {
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
-    UserGroup savedUserGroup = wingsPersistence.saveAndGet(UserGroup.class, userGroup);
+    String savedUserGroup = wingsPersistence.save(userGroup);
+    UserGroup getUserGroup = wingsPersistence.get(UserGroup.class, savedUserGroup);
     Account account = accountService.get(userGroup.getAccountId());
     notNullCheck("account", account);
-    loadUsers(savedUserGroup, account);
-    evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
+    loadUsers(getUserGroup, account);
+    evictUserPermissionInfoCacheForUserGroup(getUserGroup);
 
-    if (!ccmSettingService.isCloudCostEnabled(savedUserGroup.getAccountId())) {
-      maskCePermissions(savedUserGroup);
+    if (!ccmSettingService.isCloudCostEnabled(getUserGroup.getAccountId())) {
+      maskCePermissions(getUserGroup);
     }
 
     auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, userGroup, Type.CREATE);
     log.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
-    eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), savedUserGroup.getUuid(), EntityType.USER_GROUP);
-    return savedUserGroup;
+    eventPublishHelper.publishSetupRbacEvent(userGroup.getAccountId(), getUserGroup.getUuid(), EntityType.USER_GROUP);
+    return getUserGroup;
   }
 
   private void validateUserGroupName(String name) {

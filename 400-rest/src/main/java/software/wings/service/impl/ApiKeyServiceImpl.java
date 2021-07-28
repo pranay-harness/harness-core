@@ -37,7 +37,6 @@ import io.harness.security.SimpleEncryption;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApiKeyEntry.ApiKeyEntryKeys;
-import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -190,7 +189,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     Map<String, UserGroup> idUserGroupMap =
-        allUserGroupList.stream().collect(Collectors.toMap(Base::getUuid, identity()));
+        allUserGroupList.stream().collect(Collectors.toMap(UserGroup::getUuid, identity()));
 
     apiKeyEntries.forEach(apiKeyEntry -> {
       List<String> userGroupIds = apiKeyEntry.getUserGroupIds();

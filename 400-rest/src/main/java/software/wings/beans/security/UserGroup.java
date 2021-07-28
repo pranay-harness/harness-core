@@ -15,17 +15,25 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.NameAccess;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
+import io.harness.validation.Update;
 
-import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.User;
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.notification.NotificationSettings;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.sso.SSOType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
@@ -33,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,8 +50,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
-
 /**
  * User bean class.
  *
@@ -51,11 +61,13 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonInclude(NON_EMPTY)
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
+@AllArgsConstructor
+@EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess, NameAccess {
+public class UserGroup implements NotificationReceiverInfo, AccountAccess, NameAccess, PersistentEntity, UuidAware,
+                                  CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -103,6 +115,17 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
       ImmutableSet.of(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME, DEFAULT_PROD_SUPPORT_USER_GROUP_NAME,
           DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_READ_ONLY_USER_GROUP_NAME);
 
+  @Deprecated public static final String ID_KEY2 = "_id";
+
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
+
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @FdIndex private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
+
   @NotEmpty @FdIndex private String name;
   private String description;
 
@@ -131,10 +154,15 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
   @Builder
   public UserGroup(String name, String description, String accountId, List<String> memberIds, List<User> members,
       Set<AppPermission> appPermissions, AccountPermissions accountPermissions, String uuid, String appId,
-      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
-      boolean isSsoLinked, SSOType linkedSsoType, String linkedSsoId, String linkedSsoDisplayName, String ssoGroupId,
-      String ssoGroupName, NotificationSettings notificationSettings, boolean isDefault, boolean importedByScim) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
+      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, boolean isSsoLinked,
+      SSOType linkedSsoType, String linkedSsoId, String linkedSsoDisplayName, String ssoGroupId, String ssoGroupName,
+      NotificationSettings notificationSettings, boolean isDefault, boolean importedByScim) {
+    this.uuid = uuid;
+    this.appId = appId;
+    this.createdBy = createdBy;
+    this.createdAt = createdAt;
+    this.lastUpdatedBy = lastUpdatedBy;
+    this.lastUpdatedAt = lastUpdatedAt;
     this.name = name;
     this.description = description;
     this.accountId = accountId;
@@ -162,7 +190,6 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
         .lastUpdatedBy(null)
         .lastUpdatedAt(0)
         // @@@ .keywords(getKeywords())
-        .entityYamlPath(getEntityYamlPath())
         .name(newName)
         .description(newDescription)
         .accountId(accountId)
@@ -223,7 +250,7 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
     return isNotEmpty(memberIds) && memberIds.contains(userId);
   }
 
-  public boolean hasMember(User user) {
-    return user != null && hasMember(user.getUuid());
+  public boolean hasMemberId(String userId) {
+    return hasMember(userId);
   }
 }

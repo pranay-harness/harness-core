@@ -1194,7 +1194,7 @@ public class UserServiceImpl implements UserService {
 
     Set<String> newUserGroups = Sets.newHashSet();
     for (UserGroup userGroup : userGroups) {
-      if (!userGroup.hasMember(user)) {
+      if (!userGroup.hasMemberId(user.getUuid())) {
         if (userGroup.getMemberIds() == null) {
           userGroup.setMemberIds(new ArrayList<>());
         }
