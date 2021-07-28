@@ -4,8 +4,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
 import io.harness.entities.Instance;
+import io.harness.entities.Instance.InstanceKeys;
 import io.harness.mappers.InstanceMapper;
-import io.harness.models.CountByEnvType;
+import io.harness.models.CountByServiceIdAndEnvType;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.repositories.instance.InstanceRepository;
@@ -14,10 +15,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @OwnedBy(HarnessTeam.DX)
@@ -31,6 +34,13 @@ public class InstanceServiceImpl implements InstanceService {
     Instance instance = InstanceMapper.toEntity(instanceDTO);
     instance = instanceRepository.save(instance);
     return InstanceMapper.toDTO(instance);
+  }
+
+  @Override
+  public List<InstanceDTO> saveAll(List<InstanceDTO> instanceDTOList) {
+    List<Instance> instances = (List<Instance>) instanceRepository.saveAll(
+        instanceDTOList.stream().map(InstanceMapper::toEntity).collect(Collectors.toList()));
+    return instances.stream().map(InstanceMapper::toDTO).collect(Collectors.toList());
   }
 
   /**
@@ -49,6 +59,30 @@ public class InstanceServiceImpl implements InstanceService {
       return Optional.empty();
     }
     return Optional.of(InstanceMapper.toDTO(instance));
+  }
+
+  @Override
+  public void deleteById(String id) {
+    instanceRepository.deleteById(id);
+  }
+
+  @Override
+  public void deleteAll(List<InstanceDTO> instanceDTOList) {
+    instanceRepository.deleteAll(instanceDTOList.stream().map(InstanceMapper::toEntity).collect(Collectors.toList()));
+  }
+
+  /**
+   * Returns null if no document found to replace
+   * Returns updated record if document is successfully replaced
+   */
+  @Override
+  public Optional<InstanceDTO> findAndReplace(InstanceDTO instanceDTO) {
+    Criteria criteria = Criteria.where(InstanceKeys.instanceKey).is(instanceDTO.getInstanceKey());
+    Instance instanceOptional = instanceRepository.findAndReplace(criteria, InstanceMapper.toEntity(instanceDTO));
+    if (instanceOptional == null) {
+      return Optional.empty();
+    }
+    return Optional.of(InstanceMapper.toDTO(instanceOptional));
   }
 
   @Override
@@ -113,11 +147,11 @@ public class InstanceServiceImpl implements InstanceService {
 
   /*
     Returns breakup of active instances by envType at a given timestamp for specified accountIdentifier,
-    projectIdentifier, orgIdentifier and serviceId
+    projectIdentifier, orgIdentifier and serviceIds
   */
   @Override
-  public AggregationResults<CountByEnvType> getActiveServiceInstanceCountBreakdown(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+  public AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs) {
     return instanceRepository.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
   }

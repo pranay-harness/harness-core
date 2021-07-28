@@ -40,4 +40,5 @@ public class ExecutionNode {
   OrchestrationMap progressData;
   List<DelegateInfo> delegateInfoList;
   List<InterruptEffect> interruptHistories;
+  Map<String, OrchestrationMap> stepDetails;
 }

@@ -19,4 +19,6 @@ public interface ILogStreamingStepClient {
    * Push log message to the existing log stream
    */
   void writeLogLine(LogLine logLine, String logKeySuffix);
+
+  void closeAllOpenStreamsWithPrefix(String prefix);
 }

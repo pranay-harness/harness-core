@@ -1,7 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -10,6 +10,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 
@@ -18,7 +19,7 @@ import lombok.experimental.FieldNameConstants;
 @JsonTypeName("ReleaseName")
 @FieldNameConstants(innerTypeName = "DeleteReleaseNameSpecKeys")
 public class DeleteReleaseNameSpec implements DeleteResourcesBaseSpec {
-  @YamlSchemaTypes({string, bool}) ParameterField<Boolean> deleteNamespace;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) @YamlSchemaTypes({string}) ParameterField<Boolean> deleteNamespace;
 
   @Override
   public DeleteResourcesType getType() {

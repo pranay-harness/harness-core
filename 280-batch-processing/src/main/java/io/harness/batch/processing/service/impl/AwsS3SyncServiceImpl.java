@@ -42,7 +42,7 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
 
   @Override
   @SuppressWarnings("PMD")
-  public void syncBuckets(S3SyncRecord s3SyncRecord) {
+  public boolean syncBuckets(S3SyncRecord s3SyncRecord) {
     AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
 
     // Retry class config to retry aws commands
@@ -97,18 +97,21 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
         retryingAwsS3Sync.apply();
       } catch (Throwable throwable) {
         log.error("Exception during s3 sync {}", throwable);
+        return false;
         // throw new BatchProcessingException("S3 sync failed", throwable);
       }
       log.info("sync completed");
-
     } catch (IOException | TimeoutException | InvalidExitValueException | JsonSyntaxException e) {
       log.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
           s3SyncRecord.getBillingBucketPath(), s3SyncRecord.getBillingBucketRegion(), destinationBucketPath,
           s3SyncRecord.getRoleArn());
+      return false;
       // throw new BatchProcessingException("S3 sync failed", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      return false;
     }
+    return true;
   }
 
   public ProcessResult trySyncBucket(ArrayList<String> cmd, ImmutableMap<String, String> roleEnvVariables)

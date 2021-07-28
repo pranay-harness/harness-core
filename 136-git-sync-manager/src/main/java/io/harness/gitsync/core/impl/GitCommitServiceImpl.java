@@ -6,6 +6,7 @@ import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATU
 import static org.springframework.data.mongodb.core.query.Update.update;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.helper.GitCommitMapper;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitKeys;
@@ -79,6 +80,15 @@ public class GitCommitServiceImpl implements GitCommitService {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public Optional<GitCommitDTO> findLastGitCommit(
+      String accountIdentifier, String repo, String branchName, GitSyncDirection gitSyncDirection) {
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameAndGitSyncDirectionOrderByCreatedAtDesc(
+            accountIdentifier, repo, branchName, gitSyncDirection.name());
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
   }
 
   @Override

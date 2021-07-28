@@ -896,19 +896,14 @@ public class K8sStepHelper {
   }
 
   private ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
-    ManifestsOutcome manifestsOutcome = null;
-    try {
-      manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
-          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
-    } catch (Exception exception) {
-      throw new InvalidRequestException("Manifests can't be empty", exception);
+    OptionalOutcome manifestsOutcome = outcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+
+    if (!manifestsOutcome.isFound()) {
+      throw new InvalidRequestException("No manifests found.");
     }
 
-    if (isEmpty(manifestsOutcome)) {
-      throw new InvalidRequestException("Manifests can't be empty");
-    }
-
-    return manifestsOutcome;
+    return (ManifestsOutcome) manifestsOutcome.getOutcome();
   }
 
   private TaskChainResponse prepareOcTemplateWithOcParamManifests(K8sStepExecutor k8sStepExecutor,

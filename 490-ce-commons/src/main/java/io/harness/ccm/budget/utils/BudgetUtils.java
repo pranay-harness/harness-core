@@ -26,6 +26,8 @@ public class BudgetUtils {
   private static final String BUDGET_NAME_NOT_PROVIDED_EXCEPTION = "Please provide a name for clone budget.";
   public static final String INVALID_ENTITY_ID_EXCEPTION =
       "Error in create/update budget operation. Some of the appliesTo ids are invalid.";
+  public static final String INVALID_PERSPECTIVE_ID_EXCEPTION = "Invalid perspective id";
+  public static final String INVALID_BUDGET_ID_EXCEPTION = "Invalid budget id";
   private static final String UNDEFINED_BUDGET = "undefined";
   private static final String DEFAULT_TIMEZONE = "GMT";
   public static final long ONE_DAY_MILLIS = 86400000;
@@ -105,5 +107,20 @@ public class BudgetUtils {
 
   public static long getStartTimeForForecasting() {
     return getStartOfCurrentDay() - 30 * ONE_DAY_MILLIS;
+  }
+
+  public static long getStartTimeForCurrentBillingCycle() {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    c.set(Calendar.YEAR, c.get(Calendar.YEAR) - 1);
+    return c.getTimeInMillis();
+  }
+
+  public static double getBudgetVariance(double budgetedAmount, double actualCost) {
+    return actualCost - budgetedAmount;
+  }
+
+  public static double getBudgetVariancePercentage(double budgetVariance, double budgetedAmount) {
+    return budgetedAmount != 0 ? (budgetVariance / budgetedAmount) * 100 : 0.0;
   }
 }

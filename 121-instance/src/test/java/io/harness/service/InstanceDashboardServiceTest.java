@@ -183,8 +183,11 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
     });
 
     InstanceCountDetailsByEnvTypeBase instanceCountDetailsByEnvTypeBase =
-        instanceDashboardService.getActiveServiceInstanceCountBreakdown(
-            ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, Arrays.asList(SERVICE_IDENTIFIER), 5)
+            .getInstanceCountDetailsByEnvTypeBaseMap()
+            .get(SERVICE_IDENTIFIER);
     assertThat(instanceCountDetailsByEnvTypeBase.getTotalInstances()).isEqualTo(mockList.size());
     assertThat(instanceCountDetailsByEnvTypeBase.getNonProdInstances()).isEqualTo(3);
     assertThat(instanceCountDetailsByEnvTypeBase.getProdInstances()).isEqualTo(1);

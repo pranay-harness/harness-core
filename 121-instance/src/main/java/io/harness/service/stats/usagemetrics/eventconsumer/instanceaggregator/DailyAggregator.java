@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEventAggregator;
 import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.eventsframework.schemas.instancestatstimeseriesevent.TimeseriesBatchEventInfo;
-import io.harness.service.stats.Constants;
+import io.harness.models.constants.TimescaleConstants;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -56,19 +56,19 @@ public class DailyAggregator extends InstanceAggregator {
 
     statement.setTimestamp(1, new Timestamp(this.getWindowBeginTimestamp().getTime()), DateUtils.getDefaultCalendar());
     statement.setString(2, this.getEventInfo().getAccountId());
-    statement.setString(3, dataMap.get(Constants.ORG_ID.getKey()));
-    statement.setString(4, dataMap.get(Constants.PROJECT_ID.getKey()));
-    statement.setString(5, dataMap.get(Constants.SERVICE_ID.getKey()));
-    statement.setString(6, dataMap.get(Constants.ENV_ID.getKey()));
-    statement.setString(7, dataMap.get(Constants.CLOUDPROVIDER_ID.getKey()));
-    statement.setString(8, dataMap.get(Constants.INSTANCE_TYPE.getKey()));
-    statement.setInt(9, (Integer) params.get(Constants.INSTANCECOUNT.getKey()));
-    statement.setString(10, dataMap.get(Constants.ARTIFACT_ID.getKey()));
+    statement.setString(3, dataMap.get(TimescaleConstants.ORG_ID.getKey()));
+    statement.setString(4, dataMap.get(TimescaleConstants.PROJECT_ID.getKey()));
+    statement.setString(5, dataMap.get(TimescaleConstants.SERVICE_ID.getKey()));
+    statement.setString(6, dataMap.get(TimescaleConstants.ENV_ID.getKey()));
+    statement.setString(7, dataMap.get(TimescaleConstants.CLOUDPROVIDER_ID.getKey()));
+    statement.setString(8, dataMap.get(TimescaleConstants.INSTANCE_TYPE.getKey()));
+    statement.setInt(9, (Integer) params.get(TimescaleConstants.INSTANCECOUNT.getKey()));
+    statement.setString(10, dataMap.get(TimescaleConstants.ARTIFACT_ID.getKey()));
     statement.setTimestamp(
         11, new Timestamp(this.getWeeklyWindowTimestamp().getTime()), DateUtils.getDefaultCalendar());
     statement.setTimestamp(
         12, new Timestamp(this.getMonthlyWindowTimestamp().getTime()), DateUtils.getDefaultCalendar());
-    statement.setBoolean(12, (Boolean) params.get(Constants.SANITYSTATUS.getKey()));
+    statement.setBoolean(12, (Boolean) params.get(TimescaleConstants.SANITYSTATUS.getKey()));
   }
 
   // Calculate the month window to which event belongs (starting timestamp of the month)

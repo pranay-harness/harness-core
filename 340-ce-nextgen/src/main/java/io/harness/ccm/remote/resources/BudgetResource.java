@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.budget.BudgetData;
 import io.harness.ccm.service.intf.BudgetService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -104,5 +105,35 @@ public class BudgetResource {
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @PathParam("id") String budgetId) {
     budgetService.delete(budgetId, accountId);
     return new RestResponse<>("Successfully deleted the budget");
+  }
+
+  @GET
+  @Path("lastMonthCost")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get last month cost for perspective", nickname = "getLastMonthCost")
+  public RestResponse<Double> getLastMonthCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
+    return new RestResponse<>(budgetService.getLastMonthCostForPerspective(accountId, perspectiveId));
+  }
+
+  @GET
+  @Path("forecastCost")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get forecast cost for perspective", nickname = "getForecastCost")
+  public RestResponse<Double> getForecastCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
+    return new RestResponse<>(budgetService.getForecastCostForPerspective(accountId, perspectiveId));
+  }
+
+  @GET
+  @Path("{id}/costDetails")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get cost details for budget", nickname = "getCostDetails")
+  public RestResponse<BudgetData> getCostDetails(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @PathParam("id") String budgetId) {
+    return new RestResponse<>(budgetService.getBudgetTimeSeriesStats(budgetService.get(budgetId, accountId)));
   }
 }

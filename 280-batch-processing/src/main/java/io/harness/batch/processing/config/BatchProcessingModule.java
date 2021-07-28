@@ -9,6 +9,8 @@ import io.harness.batch.processing.metrics.CeCloudMetricsService;
 import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
+import io.harness.batch.processing.tasklet.util.ClusterHelperImpl;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -87,6 +89,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
     bind(RecommendationCrudService.class).to(RecommendationCrudServiceImpl.class);
+    bind(ClusterHelper.class).to(ClusterHelperImpl.class);
 
     bindCFServices();
 

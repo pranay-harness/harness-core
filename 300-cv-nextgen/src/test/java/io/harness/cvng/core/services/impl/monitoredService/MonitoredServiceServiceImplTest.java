@@ -592,6 +592,28 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     getCVConfigs(updatedMonitoredService).forEach(cvConfig -> assertThat(cvConfig.isEnabled()).isTrue());
   }
 
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testListEnvironments() {
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceService.create(accountId, monitoredServiceDTO);
+
+    when(nextGenService.listEnvironment(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(EnvironmentResponse.builder()
+                                      .environment(builderFactory.environmentResponseDTOBuilder()
+                                                       .identifier(environmentIdentifier)
+                                                       .name("environmentName")
+                                                       .build())
+                                      .build()));
+
+    List<EnvironmentResponse> environmentResponses =
+        monitoredServiceService.listEnvironments(accountId, orgIdentifier, projectIdentifier);
+    assertThat(environmentResponses.size()).isEqualTo(1);
+    assertThat(environmentResponses.get(0).getEnvironment().getName()).isEqualTo("environmentName");
+    assertThat(environmentResponses.get(0).getEnvironment().getIdentifier()).isEqualTo(environmentIdentifier);
+  }
+
   MonitoredServiceDTO createMonitoredServiceDTO() {
     return builderFactory.monitoredServiceDTOBuilder()
         .identifier(monitoredServiceIdentifier)

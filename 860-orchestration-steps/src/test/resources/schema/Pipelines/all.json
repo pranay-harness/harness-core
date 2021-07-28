@@ -717,6 +717,7 @@
             "PipelineStart",
             "PipelineSuccess",
             "PipelineFailed",
+            "PipelineEnd",
             "PipelinePaused",
             "StageSuccess",
             "StageFailed",

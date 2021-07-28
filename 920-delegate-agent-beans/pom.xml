@@ -14,7 +14,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>925-watcher-beans</artifactId>
+            <artifactId>970-watcher-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

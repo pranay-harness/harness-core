@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
@@ -51,6 +52,7 @@ import org.mockito.ArgumentCaptor;
 public class ComputedRecommendationWriterTest extends CategoryTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String CLUSTER_ID = "CLUSTER_ID";
+  public static final String CLUSTER_NAME = "CLUSTER_NAME";
   public static final String NAMESPACE = "NAMESPACE";
   public static final String WORKLOAD_NAME = "WORKLOAD_NAME";
   public static final String WORKLOAD_TYPE = "WORKLOAD_TYPE";
@@ -68,6 +70,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   private WorkloadRepository workloadRepository;
   private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
   private RecommendationCrudService recommendationCrudService;
+  private ClusterHelper clusterHelper;
 
   @Before
   public void setUp() throws Exception {
@@ -76,15 +79,17 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     workloadRepository = mock(WorkloadRepository.class);
     k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
     recommendationCrudService = mock(RecommendationCrudService.class);
+    clusterHelper = mock(ClusterHelper.class);
 
     when(workloadRecommendationDao.save(any(K8sWorkloadRecommendation.class))).thenReturn(UUID);
     when(workloadRepository.getWorkload(any())).thenReturn(Optional.empty());
     when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(anyString(), anyMap()))
         .thenReturn(Optional.empty());
-    doNothing().when(recommendationCrudService).upsertWorkloadRecommendation(any(), any(), any());
+    doNothing().when(recommendationCrudService).upsertWorkloadRecommendation(any(), any(), any(), any());
+    when(clusterHelper.fetchClusterName(eq(CLUSTER_ID))).thenReturn(CLUSTER_NAME);
 
     computedRecommendationWriter = new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService,
-        workloadRepository, k8sLabelServiceInfoFetcher, recommendationCrudService, JOB_START_DATE);
+        workloadRepository, k8sLabelServiceInfoFetcher, recommendationCrudService, clusterHelper, JOB_START_DATE);
     captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
     stringCaptor = ArgumentCaptor.forClass(String.class);
   }
@@ -382,7 +387,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(189.52));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
 
-    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -484,7 +489,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(183.80));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
 
-    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -646,7 +651,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
 
     assertThat(recommendation.isLastDayCostAvailable()).isFalse();
 
-    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -734,7 +739,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .limit("memory", "20M")
                        .build());
 
-    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
@@ -823,7 +828,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .limit("memory", "250M")
                        .build());
 
-    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any());
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
     assertThat(stringCaptor.getAllValues()).hasSize(1);
     assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }

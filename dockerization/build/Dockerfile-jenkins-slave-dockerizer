@@ -3,6 +3,9 @@ FROM jenkinsci/jnlp-slave
 ARG DOCKER_VERSION=5:19.03.5~3-0~debian-stretch
 ARG DC_VERSION=1.25.1
 
+ARG JFROG_USERNAME=?
+ARG JFROG_PASSWORD=?
+
 USER root
 ENV HOME /root
 RUN mkdir /root/.jenkins
@@ -25,6 +28,8 @@ RUN apt-get update && \
     apt-cache madison docker-ce && \
     apt-get install -qq -y --no-install-recommends docker-ce=${DOCKER_VERSION} && \
     curl -L https://github.com/docker/compose/releases/download/${DC_VERSION}/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose && \
+    curl -X GET -u ${JFROG_USERNAME}:${JFROG_PASSWORD} https://harness.jfrog.io/artifactory/BuildsTools/docker/twistcli/twistcli -o /usr/local/bin/twistcli && \
+    chmod +x /usr/local/bin/twistcli && \
     chmod +x /usr/local/bin/docker-compose && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

@@ -1,6 +1,7 @@
 package io.harness.ccm.service.intf;
 
 import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.budget.BudgetData;
 
 import java.util.List;
 
@@ -16,4 +17,9 @@ public interface BudgetService {
   List<Budget> list(String accountId, String viewId);
 
   boolean delete(String budgetId, String accountId);
+
+  Double getLastMonthCostForPerspective(String accountId, String perspectiveId);
+  Double getForecastCostForPerspective(String accountId, String perspectiveId);
+
+  BudgetData getBudgetTimeSeriesStats(Budget budget);
 }

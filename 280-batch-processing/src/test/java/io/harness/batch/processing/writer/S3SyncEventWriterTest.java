@@ -76,7 +76,7 @@ public class S3SyncEventWriterTest extends CategoryTest {
                                             .withValue(settingValue)
                                             .build();
     Mockito.doReturn(false).when(featureFlagService).isEnabled(CE_AWS_BILLING_CONNECTOR_DETAIL, TEST_ACCOUNT_ID);
-    Mockito.doNothing().when(awsS3SyncService).syncBuckets(any());
+    Mockito.doReturn(true).when(awsS3SyncService).syncBuckets(any());
     Mockito.doReturn(Arrays.asList(settingAttribute))
         .when(cloudToHarnessMappingService)
         .listSettingAttributesCreatedInDuration(any(), any(), any());

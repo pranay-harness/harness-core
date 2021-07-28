@@ -7,6 +7,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
   PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, Integer offset, Integer pageSize, String filter);
-  List<String> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);
+  List<EnvironmentResponse> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);
   MonitoredServiceResponse createDefault(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String environmentIdentifier);
   HealthMonitoringFlagResponse setHealthMonitoringFlag(

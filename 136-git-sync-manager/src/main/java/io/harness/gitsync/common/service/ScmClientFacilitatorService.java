@@ -41,4 +41,8 @@ public interface ScmClientFacilitatorService {
 
   GitDiffResultFileListDTO listCommitsDiffFiles(
       YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId);
+
+  List<String> listCommits(YamlGitConfigDTO yamlGitConfigDTO, String branch);
+
+  String getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch);
 }

@@ -1,6 +1,8 @@
 package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -31,6 +33,7 @@ import org.mongodb.morphia.annotations.Entity;
  * We enforce unique constraint in code based on the instance key sub class.
  * @author rktummala
  */
+@OwnedBy(HarnessTeam.DX)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "InstanceKeys")
@@ -210,5 +213,6 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
     public static final String isDeleted = "isDeleted";
     public static final String instanceInfoPodName = "instanceInfo.podName";
     public static final String instanceInfoNamespace = "instanceInfo.namespace";
+    public static final String deploymentType = "deploymentType";
   }
 }

@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
@@ -28,8 +28,10 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("K8sApplyBaseStepInfo")
 @FieldNameConstants(innerTypeName = "K8sApplyBaseStepInfoKeys")
 public class K8sApplyBaseStepInfo {
-  @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
-  @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipSteadyStateCheck;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) @YamlSchemaTypes({string}) ParameterField<Boolean> skipDryRun;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH)
+  @YamlSchemaTypes({string})
+  ParameterField<Boolean> skipSteadyStateCheck;
   @YamlSchemaTypes(runtime)
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<String>> filePaths;

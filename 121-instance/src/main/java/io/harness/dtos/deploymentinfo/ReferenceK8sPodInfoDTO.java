@@ -14,4 +14,9 @@ import lombok.EqualsAndHashCode;
 // Created for reference, either change its name before modifying or create a new deployment info
 public class ReferenceK8sPodInfoDTO extends DeploymentInfoDTO {
   String podName;
+
+  @Override
+  public String prepareInstanceSyncHandlerKey() {
+    return podName;
+  }
 }

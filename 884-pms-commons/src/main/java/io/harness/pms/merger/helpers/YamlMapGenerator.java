@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.fqn.FQNNode;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -21,9 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PIPELINE)
 @UtilityClass
+@Slf4j
 public class YamlMapGenerator {
   /**
    * For a given fqn to values map, along with the JsonNode for a yaml, this method converts
@@ -32,7 +35,7 @@ public class YamlMapGenerator {
    * For example, the fqnMap can be corresponding to an input set. In this case, the originalYaml
    * refers to the pipeline of this input set
    */
-  public JsonNode generateYamlMap(Map<FQN, Object> fqnMap, JsonNode originalYaml) throws IOException {
+  public JsonNode generateYamlMap(Map<FQN, Object> fqnMap, JsonNode originalYaml) {
     Set<String> fieldNames = new LinkedHashSet<>();
     originalYaml.fieldNames().forEachRemaining(fieldNames::add);
     String topKey = fieldNames.iterator().next();
@@ -43,7 +46,12 @@ public class YamlMapGenerator {
     Map<String, Object> tempMap = new LinkedHashMap<>();
     generateYamlMap(YamlSubMapExtractor.getFQNToObjectSubMap(fqnMap, currentFQN), currentFQN, originalYaml.get(topKey),
         tempMap, topKey);
-    return YamlUtils.readTree(YamlUtils.write(tempMap).replace("---\n", "")).getNode().getCurrJsonNode();
+    try {
+      return YamlUtils.readTree(YamlUtils.write(tempMap).replace("---\n", "")).getNode().getCurrJsonNode();
+    } catch (IOException e) {
+      log.error("Could not generate JsonNode from FQN Map.", e);
+      throw new InvalidRequestException("Could not generate JsonNode from FQN Map: " + e.getMessage());
+    }
   }
 
   private void generateYamlMap(

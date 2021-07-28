@@ -442,6 +442,11 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public long count(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return defaultConnectorService.count(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     ConnectorValidationResult connectorValidationResult = null;

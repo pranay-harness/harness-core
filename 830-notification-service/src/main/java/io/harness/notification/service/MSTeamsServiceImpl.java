@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -193,7 +194,7 @@ public class MSTeamsServiceImpl implements ChannelService {
           msTeamDetails.getUserGroupList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 
   Map<String, String> processTemplateVariables(Map<String, String> templateVariables) {

@@ -197,7 +197,7 @@ public class PagerDutyServiceImpl implements ChannelService {
           pagerDutyDetails.getUserGroupList(), NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 
   @Getter
