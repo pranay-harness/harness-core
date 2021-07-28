@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION;
+import static io.harness.ng.core.account.ServiceAccountConfig.DEFAULT_API_KEY_LIMIT;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -13,12 +14,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.AccountOrgProjectValidator;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.common.beans.ApiKeyType;
@@ -64,6 +67,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private TokenService tokenService;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
   @Inject private AccessControlClient accessControlClient;
+  @Inject private AccountService accountService;
 
   @Override
   public ApiKeyDTO createApiKey(ApiKeyDTO apiKeyDTO) {
@@ -91,6 +95,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
       throw new InvalidArgumentsException(String.format("Project [%s] in Org [%s] and Account [%s] does not exist",
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
+    }
+    ServiceAccountConfig serviceAccountConfig = accountService.getAccount(accountIdentifier).getServiceAccountConfig();
+    long apiKeyLimit = serviceAccountConfig != null ? serviceAccountConfig.getApiKeyLimit() : DEFAULT_API_KEY_LIMIT;
+    long existingAPIKeyCount = apiKeyRepository.count();
+    if (existingAPIKeyCount >= apiKeyLimit) {
+      throw new InvalidRequestException(String.format("Maximum limit has reached"));
     }
   }
 
