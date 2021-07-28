@@ -2,9 +2,13 @@ package io.harness.generator.constants;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CDC)
 public class InfraDefinitionGeneratorConstants {
   public static final String GCP_CLUSTER = "us-central1-a/harness-test";
   public static final String AWS_EC2_USER = "ec2-user";

@@ -1,5 +1,7 @@
 package io.harness.governance.pipeline.service;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceRule;
 import io.harness.governance.pipeline.service.model.Tag;
@@ -14,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
  * Evaluates how a tagged entity scores in respect to a governance standard.
  * @param <T>
  */
+@OwnedBy(HarnessTeam.CDC)
 public interface GovernanceStatusEvaluator<T extends TagAware> {
   enum EntityType { PIPELINE, WORKFLOW }
   GovernanceRuleStatus status(String accountId, T entity, PipelineGovernanceRule rule);

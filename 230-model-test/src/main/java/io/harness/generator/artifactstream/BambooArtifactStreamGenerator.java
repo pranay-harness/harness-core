@@ -4,6 +4,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
@@ -20,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class BambooArtifactStreamGenerator implements ArtifactStreamsGenerator {
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
   @Inject private SettingGenerator settingGenerator;

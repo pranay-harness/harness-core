@@ -2,6 +2,8 @@ package io.harness.generator.artifactstream;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.GeneratorConstants;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -16,6 +18,7 @@ import software.wings.beans.artifact.ArtifactStream;
 
 import com.google.inject.Inject;
 
+@OwnedBy(HarnessTeam.CDC)
 public class AmazonLambdaArtifactStreamGenerator extends AmazonS3ArtifactStreamStreamsGenerator {
   @Inject private SettingGenerator settingGenerator;
 

@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -33,6 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineGovernanceReportEvaluatorTest extends WingsBaseTest {
   @Mock private HarnessTagService harnessTagService;
   @Mock private PipelineGovernanceService pipelineGovernanceService;

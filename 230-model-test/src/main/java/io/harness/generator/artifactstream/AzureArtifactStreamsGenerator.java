@@ -2,6 +2,8 @@ package io.harness.generator.artifactstream;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
@@ -15,6 +17,7 @@ import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 
 import com.google.inject.Inject;
 
+@OwnedBy(HarnessTeam.CDC)
 public class AzureArtifactStreamsGenerator implements ArtifactStreamsGenerator {
   @Inject private SettingGenerator settingGenerator;
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;

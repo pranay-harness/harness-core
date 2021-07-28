@@ -1,5 +1,7 @@
 package io.harness.governance.pipeline.service.model;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -8,6 +10,7 @@ import lombok.Value;
 
 @Value
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(HarnessTeam.CDC)
 public class Restriction {
   public enum RestrictionType { APP_BASED, TAG_BASED }
 

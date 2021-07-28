@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -11,6 +14,7 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("CUSTOM")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(HarnessTeam.CDC)
 public class CustomEnvFilter extends EnvironmentFilter {
   private List<String> environments;
   @JsonCreator

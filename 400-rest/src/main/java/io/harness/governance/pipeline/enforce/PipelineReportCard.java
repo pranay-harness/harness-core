@@ -1,5 +1,7 @@
 package io.harness.governance.pipeline.enforce;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 
@@ -10,6 +12,7 @@ import lombok.Value;
  * this model tells how a pipeline is performing relative a pipeline governance standard.
  */
 @Value
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineReportCard {
   /**
    * this is just a restricted version of {@link io.harness.governance.pipeline.service.model.PipelineGovernanceConfig}

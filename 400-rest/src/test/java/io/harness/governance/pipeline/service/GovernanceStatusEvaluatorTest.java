@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.service.model.Tag;
 import io.harness.rule.Owner;
@@ -17,6 +19,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class GovernanceStatusEvaluatorTest extends WingsBaseTest {
   @Test
   @Owner(developers = UJJAWAL)

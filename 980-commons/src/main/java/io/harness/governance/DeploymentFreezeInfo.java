@@ -2,11 +2,15 @@ package io.harness.governance;
 
 import java.util.Map;
 import java.util.Set;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CDC)
 public class DeploymentFreezeInfo {
   private boolean freezeAll; // This is set to true if the master deployment freeze is on
   private Set<String> allEnvFrozenApps; // Applications for which all envs are frozen

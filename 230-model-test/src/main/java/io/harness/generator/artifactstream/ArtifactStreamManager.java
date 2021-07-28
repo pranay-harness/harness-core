@@ -1,5 +1,7 @@
 package io.harness.generator.artifactstream;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
@@ -16,6 +18,7 @@ import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactStreamManager {
   @Inject ArtifactStreamService artifactStreamService;
   @Inject private EnvironmentGenerator environmentGenerator;

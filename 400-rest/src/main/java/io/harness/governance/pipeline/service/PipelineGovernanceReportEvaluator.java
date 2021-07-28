@@ -4,6 +4,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ff.FeatureFlagService;
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.enforce.PipelineReportCard;
@@ -33,6 +35,7 @@ import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineGovernanceReportEvaluator {
   @Value
   private static class ReportEvaluationContext {

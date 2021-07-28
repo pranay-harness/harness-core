@@ -10,6 +10,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.ImageType.IMAGE_GALLERY;
 import static software.wings.beans.artifact.AzureMachineImageArtifactStream.OSType.LINUX;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
@@ -23,6 +25,7 @@ import software.wings.beans.artifact.AzureMachineImageArtifactStream.ImageDefini
 
 import com.google.common.base.Preconditions;
 
+@OwnedBy(HarnessTeam.CDC)
 public class AzureMachineImageLinuxGalleryArtifactStreamGenerator extends AzureMachineImageArtifactStreamGenerator {
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, boolean atConnector, boolean metadataOnly) {

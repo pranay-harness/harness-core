@@ -11,6 +11,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.persistence.HPersistence;
@@ -34,6 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineGovernanceServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private PipelineGovernanceService pipelineGovernanceService;
   @Inject private HPersistence persistence;

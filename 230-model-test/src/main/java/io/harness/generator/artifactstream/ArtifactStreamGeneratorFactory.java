@@ -1,5 +1,7 @@
 package io.harness.generator.artifactstream;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
@@ -8,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactStreamGeneratorFactory {
   @Inject private ArtifactStreamManager artifactStreamManager;
   @Inject private EcrArtifactStreamStreamsGenerator ecrArtifactStreamGenerator;
