@@ -20,6 +20,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
@@ -35,7 +36,7 @@ import java.util.Set;
  * Created by rsingh on 9/7/18.
  */
 @OwnedBy(PL)
-public class NoOpSecretManagerImpl implements SecretManager {
+public class NoOpSecretManagerImpl implements SecretManager, EncryptedSettingAttributes {
   @Override
   public List<SecretManagerConfig> listSecretManagers(String accountId) {
     throw new UnsupportedOperationException();

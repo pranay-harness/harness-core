@@ -1,5 +1,8 @@
 package io.harness.serializer.kryo;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.MailTaskParams;
 import io.harness.delegate.beans.MicrosoftTeamsTaskParams;
 import io.harness.delegate.beans.NotificationTaskResponse;
@@ -9,11 +12,16 @@ import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.remote.SmtpConfigResponse;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.beans.NotificationChannelType;
+import software.wings.beans.notification.NotificationSettings;
+import software.wings.beans.notification.SlackNotificationSetting;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.github.dikhan.pagerduty.client.events.domain.LinkContext;
 import com.github.dikhan.pagerduty.client.events.domain.Payload;
 import com.github.dikhan.pagerduty.client.events.domain.Severity;
 
+@OwnedBy(PL)
 public class NotificationSenderKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -27,5 +35,8 @@ public class NotificationSenderKryoRegistrar implements KryoRegistrar {
     kryo.register(NotificationProcessingResponse.class, 55217);
     kryo.register(Severity.class, 55218);
     kryo.register(SmtpConfigResponse.class, 55219);
+    kryo.register(NotificationSettings.class, 5626);
+    kryo.register(NotificationChannelType.class, 7115);
+    kryo.register(SlackNotificationSetting.class, 7119);
   }
 }

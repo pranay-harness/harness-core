@@ -1,10 +1,12 @@
 package io.harness.stream;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.serializer.JsonUtils;
 
@@ -14,6 +16,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -21,6 +24,8 @@ import org.atmosphere.cpr.BroadcastFilter.BroadcastAction.ACTION;
 import org.atmosphere.cpr.BroadcastFilterAdapter;
 import org.jetbrains.annotations.NotNull;
 
+@Slf4j
+@OwnedBy(DEL)
 public class DelegateEventFilter extends BroadcastFilterAdapter {
   @Inject private DelegateService delegateService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
@@ -49,6 +54,11 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
       }
 
       if (!delegateService.filter(broadcast.getAccountId(), delegateId)) {
+        return abort(message);
+      }
+
+      if (delegateService.checkMismatch(broadcast.getAccountId(), delegateId, broadcast.isNg())) {
+        log.debug("CG/NG mismatch. Delegate id: {}, task id: {}", delegateId, broadcast.getTaskId());
         return abort(message);
       }
 

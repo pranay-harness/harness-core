@@ -107,6 +107,10 @@ capabilityTaskSelectionDetails {"name": "validUntil_1", "background": true, "exp
 ceCloudAccount {"name": "no_dup_account", "unique": true} {"accountId": 1, "infraAccountId": 1, "infraMasterAccountId": 1, "masterAccountSettingId": 1}
 ceCommunications {"name": "account_email_type", "unique": true} {"accountId": 1, "emailId": 1, "type": 1}
 ceCommunications {"name": "account_enabled_type", "background": true} {"accountId": 1, "enabled": 1, "type": 1}
+cgEventConfig {"name": "accountId_1", "background": true} {"accountId": 1}
+cgEventConfig {"name": "appId_1", "background": true} {"appId": 1}
+cgEventConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
+cgEventConfig {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 cloudFormationRollbackConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 cloudFormationRollbackConfig {"name": "appId_1", "background": true} {"appId": 1}
 cloudFormationRollbackConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -155,9 +159,6 @@ cvFeedbackRecords {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
 cvFeedbackRecords {"name": "envId_1", "background": true} {"envId": 1}
 cvFeedbackRecords {"name": "serviceId_1", "background": true} {"serviceId": 1}
 cvFeedbackRecords {"name": "stateExecutionId_1", "background": true} {"stateExecutionId": 1}
-cvngVerificationTasks {"name": "activityId_1", "background": true} {"activityId": 1}
-cvngVerificationTasks {"name": "iterator", "background": true} {"status": 1, "cvngVerificationTaskIteration": 1}
-cvngVerificationTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 dashboardSettings {"name": "accountId_1", "background": true} {"accountId": 1}
 delayQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 delayQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
@@ -272,6 +273,12 @@ environments {"name": "appId_1", "background": true} {"appId": 1}
 environments {"name": "createdAt_1", "background": true} {"createdAt": 1}
 environments {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 environmentsNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
+events {"name": "accountId_1", "background": true} {"accountId": 1}
+events {"name": "appId_1", "background": true} {"appId": 1}
+events {"name": "createdAt_1", "background": true} {"createdAt": 1}
+events {"name": "eventConfigId_1", "background": true} {"eventConfigId": 1}
+events {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
+events {"name": "status_1", "background": true} {"status": 1}
 executionInterrupts {"name": "accountId_1", "background": true} {"accountId": 1}
 executionInterrupts {"name": "appId_1", "background": true} {"appId": 1}
 executionInterrupts {"name": "appId_seized_executionUuid", "background": true} {"appId": 1, "seized": 1, "executionUuid": 1}
@@ -626,6 +633,7 @@ services {"name": "accountId_1", "background": true} {"accountId": 1}
 services {"name": "appId_1", "background": true} {"appId": 1}
 services {"name": "artifactStreamIds_1", "background": true} {"artifactStreamIds": 1}
 services {"name": "createdAt_1", "background": true} {"createdAt": 1}
+services {"name": "deploymentTypeIndex", "background": true} {"deploymentType": 1}
 services {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 settingAttributes {"name": "accountIdAppIdCategoryCreatedAt", "background": true} {"accountId": 1, "appId": 1, "category": 1, "createdAt": -1}
 settingAttributes {"name": "acctCatTypeIdx", "background": true} {"accountId": 1, "category": 1, "value.type": 1}
@@ -859,6 +867,7 @@ workflows {"name": "appId_1", "background": true} {"appId": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
 workflows {"name": "linkedArtifactStreamIds_1", "background": true} {"linkedArtifactStreamIds": 1}
 workflows {"name": "linkedTemplateUuids_1", "background": true} {"linkedTemplateUuids": 1}
+workflows {"name": "workflowTypeIndex", "background": true} {"workflowType": 1}
 yamlChangeSet {"name": "accountId_createdAt_index", "background": true} {"accountId": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_queuekey_status_createdAt_index", "background": true} {"accountId": 1, "queueKey": 1, "status": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_status_gitToHarness_createdAt_index", "background": true} {"accountId": 1, "status": 1, "gitToHarness": 1, "createdAt": 1}

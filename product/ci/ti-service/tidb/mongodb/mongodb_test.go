@@ -293,11 +293,11 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 		getVCSInfo(), "acct", "org", "proj")
 	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test", false,
+	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test", false,
+	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test", false,
+	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -326,11 +326,11 @@ func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
 		getVCSInfo(), "acct", "org", "proj")
 	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test", false,
+	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test", false,
+	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test", false,
+	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -442,6 +442,50 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2}
+	db.Database.Collection("nodes").InsertMany(ctx, n)
+
+	// Add relation between them
+	r1 := NewRelation(1, []int{2}, getVCSInfo(), "acct", "org", "proj")
+	r2 := NewRelation(5, []int{6}, getVCSInfo(), "acct", "org", "proj")
+	r3 := NewRelation(8, []int{9}, getVCSInfo(), "acct", "org", "proj")
+	db.Database.Collection("relations").InsertMany(ctx, []interface{}{r1, r2, r3})
+
+	chFiles := []types.File{{Name: "src/a.xml", Status: types.FileModified},
+		{Name: "src/b.jsp", Status: types.FileModified},
+		{Name: "src/main/java/path/to/pkg2/XyzTest.java", Status: types.FileAdded},
+		{Name: "src/test/java/path/to/test8/NewTest.java", Status: types.FileAdded},
+		{Name: "src/test/java/path/to/test3/DefTest.java", Status: types.FileAdded},
+		{Name: "src/test/java/path/to/test4/GhiTest.java", Status: types.FileAdded}}
+	ticonfig := types.TiConfig{}
+	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
+
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct", false)
+	assert.Nil(t, err)
+	assert.Equal(t, resp.SelectAll, false)
+	assert.Equal(t, resp.TotalTests, 1)    // new tests will get factored after CG
+	assert.Equal(t, resp.SelectedTests, 0) // don't factor in new tests here. they will be upserted after uploading of PCG
+	assert.Equal(t, resp.SrcCodeTests, 0)
+	assert.Equal(t, resp.UpdatedTests, 0)
+}
+
+func Test_GetTestsToRun_WithNewTests_SameIds(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	// Insert source and tests
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
+		getVCSInfo(), "acct", "org", "proj")
+	// n3 and n4 have same IDs as n2. They should be ignored
+	n3 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n4 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n := []interface{}{n1, n2, n3, n4}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
 
 	// Add relation between them

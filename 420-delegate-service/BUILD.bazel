@@ -23,6 +23,7 @@ java_library(
         "//945-ng-audit-client:module",
         "//948-access-control-sdk:module",
         "//950-common-entities:module",
+        "//950-delegate-tasks-beans:module",
         "//950-wait-engine:module",
         "//955-alert-beans:module",
         "//955-delegate-beans:module",

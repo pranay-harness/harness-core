@@ -20,8 +20,8 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sRollingStepParameters")
 public class K8sRollingStepParameters extends K8sRollingBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingStepParameters(
-      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
-    super(skipDryRun, delegateSelectors);
+  public K8sRollingStepParameters(ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String canaryStepFqn) {
+    super(skipDryRun, delegateSelectors, canaryStepFqn);
   }
 }

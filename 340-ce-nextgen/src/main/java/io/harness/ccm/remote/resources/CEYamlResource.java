@@ -5,6 +5,7 @@ import static io.harness.ccm.service.intf.CEYamlService.CLOUD_COST_K8S_CLUSTER_S
 import static io.harness.ccm.service.intf.CEYamlService.DOT_YAML;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
@@ -56,8 +57,8 @@ public class CEYamlResource {
   @ApiOperation(value = "Get Cost Optimisation Yaml", nickname = "getCostOptimisationYamlTemplate")
   @Deprecated // use 'io.harness.ccm.remote.resources.CEYamlResource.cloudCostK8sClusterSetup'
   public Response generateCostOptimisationYaml(@Context HttpServletRequest request,
-      @QueryParam("accountId") String accountId, @QueryParam("connectorIdentifier") String connectorIdentifier)
-      throws IOException {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("connectorIdentifier") String connectorIdentifier) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       String serverName = request.getServerName();
       String harnessHost = request.getScheme() + "://" + serverName;
@@ -77,8 +78,8 @@ public class CEYamlResource {
   @ExceptionMetered
   @ApiOperation(value = "get k8s cluster setup yaml based on features enabled", nickname = CLOUD_COST_K8S_CLUSTER_SETUP)
   public Response cloudCostK8sClusterSetup(@Context HttpServletRequest request,
-      @NotEmpty @QueryParam("accountId") String accountId, @Valid @NotNull @RequestBody K8sClusterSetupRequest body)
-      throws Exception {
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Valid @NotNull @RequestBody K8sClusterSetupRequest body) throws Exception {
     if (body.getFeaturesEnabled().contains(CEFeatures.BILLING)) {
       throw new InvalidRequestException("Feature BILLING not supported for CEK8sCluster Connector Setup");
     }

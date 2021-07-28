@@ -29,6 +29,8 @@ public interface UserGroupService {
 
   List<UserGroup> getUserGroupsBySsoId(String accountIdentifier, String ssoId);
 
+  List<UserGroup> getUserGroupsBySsoId(String ssoId);
+
   UserGroup update(UserGroupDTO userGroupDTO);
 
   Page<UserGroup> list(
@@ -56,8 +58,10 @@ public interface UserGroupService {
   void removeMemberAll(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
       @NotNull String userIdentifier);
 
-  UserGroup linkToSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, @NotNull SSOType ssoType,
-      @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName);
+  UserGroup linkToSsoGroup(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      @NotBlank String userGroupId, @NotNull SSOType ssoType, @NotBlank String ssoId, @NotBlank String ssoGroupId,
+      @NotBlank String ssoGroupName);
 
-  UserGroup unlinkSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, boolean retainMembers);
+  UserGroup unlinkSsoGroup(@NotBlank String accountId, String orgIdentifier, String projectIdentifier,
+      @NotBlank String userGroupId, boolean retainMembers);
 }

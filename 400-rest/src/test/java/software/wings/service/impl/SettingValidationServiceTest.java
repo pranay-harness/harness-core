@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ARVIND;
@@ -34,6 +35,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.UUIDGenerator;
@@ -41,6 +44,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.AccessType;
@@ -65,6 +69,9 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.config.LogzConfig;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
+import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
@@ -74,6 +81,8 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.gcp.GcpHelperServiceManager;
 import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
 import software.wings.service.intfc.AwsHelperResourceService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
@@ -94,13 +103,17 @@ import com.splunk.JobArgs;
 import com.splunk.JobCollection;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mongodb.morphia.query.Query;
@@ -109,6 +122,7 @@ import retrofit2.Call;
 /**
  * Created by Pranjal on 09/14/2018
  */
+@OwnedBy(CDC)
 public class SettingValidationServiceTest extends WingsBaseTest {
   @Inject private SettingValidationService settingValidationService;
   @Inject private AnalysisService analysisService;
@@ -1022,5 +1036,47 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> settingValidationService.validate(attribute))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("Delegate Selector must be provided if inherit from delegate option is selected.");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidateHelmRepoConfigForDelegateSelector() throws IllegalAccessException, InterruptedException {
+    AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = AmazonS3HelmRepoConfig.builder()
+                                                        .connectorId("CONNECTOR_ID")
+                                                        .bucketName("aws-s3-bucket")
+                                                        .region("us-east-1")
+                                                        .build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(amazonS3HelmRepoConfig);
+
+    SettingAttribute connectorAttribute = new SettingAttribute();
+    connectorAttribute.setValue(AwsConfig.builder().tag("aws-delegate").build());
+    SettingsService settingsService = mock(SettingsService.class);
+    DelegateService delegateService = mock(DelegateService.class);
+    FieldUtils.writeField(settingValidationService, "settingsService", settingsService, true);
+    FieldUtils.writeField(settingValidationService, "delegateService", delegateService, true);
+
+    when(settingsService.get(anyString(), anyString())).thenReturn(connectorAttribute);
+    when(delegateService.executeTask(any(DelegateTask.class)))
+        .thenReturn(
+            HelmRepoConfigValidationResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
+
+    settingValidationService.validate(attribute);
+    connectorAttribute.setValue(
+        GcpConfig.builder().delegateSelectors(Collections.singletonList("gcp-delegate")).build());
+    settingValidationService.validate(attribute);
+
+    ArgumentCaptor<DelegateTask> taskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(2)).executeTask(taskArgumentCaptor.capture());
+    List<DelegateTask> delegateTaskList = taskArgumentCaptor.getAllValues();
+
+    List<String> delegateSelectors =
+        delegateTaskList.stream()
+            .map(delegateTask -> (HelmRepoConfigValidationTaskParams) delegateTask.getData().getParameters()[0])
+            .map(taskParams -> taskParams.getDelegateSelectors())
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    assertThat(delegateSelectors).containsExactlyInAnyOrder("aws-delegate", "gcp-delegate");
   }
 }

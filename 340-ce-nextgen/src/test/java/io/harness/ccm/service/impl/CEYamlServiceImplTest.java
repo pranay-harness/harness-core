@@ -28,6 +28,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class CEYamlServiceImplTest extends CategoryTest {
   private static final String CONNECTOR_IDENTIFIER = "cId";
+  private static final String CCM_CONNECTOR_IDENTIFIER = "ccmId";
   private static final String ACCOUNT_IDENTIFIER = "aId";
   private static final String ORG_IDENTIFIER = "oId";
   private static final String PROJECT_IDENTIFIER = "pId";
@@ -60,6 +61,7 @@ public class CEYamlServiceImplTest extends CategoryTest {
             .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION))
             .orgIdentifier(ORG_IDENTIFIER)
             .projectIdentifier(PROJECT_IDENTIFIER)
+            .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
             .build();
 
     final String yamlContent =
@@ -91,6 +93,7 @@ public class CEYamlServiceImplTest extends CategoryTest {
             .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION))
             .orgIdentifier(ORG_IDENTIFIER)
             .projectIdentifier(PROJECT_IDENTIFIER)
+            .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
             .build();
 
     final String actualYamlContent =
@@ -131,6 +134,7 @@ public class CEYamlServiceImplTest extends CategoryTest {
 
     // OPTIMIZATION Check
     assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
+    assertThat(yamlContent).doesNotContain(CCM_CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(HARNESS_HOST);
     assertThat(yamlContent).doesNotContain(SERVER_NAME);
@@ -141,10 +145,8 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUnifiedCloudCostK8sClusterYaml_Optimization() throws Exception {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
-                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
                                                .featuresEnabled(ImmutableList.of(CEFeatures.OPTIMIZATION))
-                                               .orgIdentifier(ORG_IDENTIFIER)
-                                               .projectIdentifier(PROJECT_IDENTIFIER)
+                                               .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
                                                .build();
 
     final String yamlContent =
@@ -167,7 +169,9 @@ public class CEYamlServiceImplTest extends CategoryTest {
   }
 
   private void assertContainsOptimizationParams(String yamlContent) {
-    assertThat(yamlContent).contains(CONNECTOR_IDENTIFIER);
+    assertThat(yamlContent).contains(CCM_CONNECTOR_IDENTIFIER);
+    assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
+
     assertThat(yamlContent).contains(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).contains(HARNESS_HOST);
     assertThat(yamlContent).contains(SERVER_NAME);

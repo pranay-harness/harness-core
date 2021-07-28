@@ -10,7 +10,9 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
@@ -78,6 +80,17 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .compareCommitsResponse(compareCommitsResponse.toByteArray())
+            .build();
+      case LATEST_COMMIT_ID:
+        final GetLatestCommitResponse latestCommitResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.getLatestCommit(
+                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            latestCommitResponse.getStatus(), latestCommitResponse.getError());
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .getLatestCommitResponse(latestCommitResponse.toByteArray())
             .build();
       default:
         throw new UnknownEnumTypeException("GitRefType", scmGitRefTaskParams.getGitRefType().toString());

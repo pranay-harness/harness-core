@@ -17,6 +17,7 @@ import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
+import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
@@ -28,6 +29,8 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
@@ -123,6 +126,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class ApplicationManifestServiceImpl implements ApplicationManifestService {
   private static final int ALLOWED_SIZE_IN_BYTES = 1024 * 1024; // 1 MiB
   public static final String CHART_URL = "url";
@@ -1038,31 +1042,17 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  @VisibleForTesting
-  void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
+  private void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
     if (applicationManifest.getHelmChartConfig() != null) {
       throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
     if (applicationManifest.getCustomSourceConfig() != null) {
       throw new InvalidRequestException(
-          "customSourceConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
+          "customSourcceConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
     gitFileConfigHelperService.validate(applicationManifest.getGitFileConfig());
-
-    Service service =
-        serviceResourceService.getWithDetails(applicationManifest.getAppId(), applicationManifest.getServiceId());
-
-    if (service == null) {
-      log.error("Remote Manifest validation failed as service with serviceId : {} does not exist for app manifest : {}",
-          applicationManifest.getServiceId(), applicationManifest.getUuid());
-      throw new InvalidRequestException("Remote manifest validation failed as service could not be found", USER);
-    }
-
-    if ((applicationManifest.getStoreType() == Remote) && (service.getDeploymentType() == DeploymentType.ECS)) {
-      gitFileConfigHelperService.validateEcsGitfileConfig(applicationManifest.getGitFileConfig());
-    }
   }
 
   private void validateKustomizeAppManifest(ApplicationManifest applicationManifest) {

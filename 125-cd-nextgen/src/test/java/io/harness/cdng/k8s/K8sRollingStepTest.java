@@ -51,6 +51,7 @@ import org.mockito.Mock;
 public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   @Mock ExecutionSweepingOutputService executionSweepingOutputService;
   @InjectMocks private K8sRollingStep k8sRollingStep;
+  final String canaryStepFqn = "canaryStep";
 
   @Test
   @Owner(developers = ABOSII)
@@ -58,11 +59,13 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   public void testExecuteK8sTask() {
     K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
+    stepParameters.setCanaryStepFqn(canaryStepFqn);
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
 
-    when(executionSweepingOutputService.resolveOptional(
-             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+    when(executionSweepingOutputService.resolveOptional(ambiance,
+             RefObjectUtils.getSweepingOutputRefObject(
+                 canaryStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
         .thenReturn(OptionalSweepingOutput.builder().found(false).build());
 
     K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
@@ -89,11 +92,13 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   public void testExecuteK8sTaskInCanaryWorkflow() {
     K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
+    stepParameters.setCanaryStepFqn(canaryStepFqn);
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
 
-    when(executionSweepingOutputService.resolveOptional(
-             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+    when(executionSweepingOutputService.resolveOptional(ambiance,
+             RefObjectUtils.getSweepingOutputRefObject(
+                 canaryStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
         .thenReturn(OptionalSweepingOutput.builder().found(true).build());
 
     K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
@@ -120,11 +125,13 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   public void testExecuteK8sTaskNullParameterFields() {
     K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
     stepParameters.setSkipDryRun(ParameterField.ofNull());
+    stepParameters.setCanaryStepFqn(canaryStepFqn);
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
 
-    when(executionSweepingOutputService.resolveOptional(
-             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+    when(executionSweepingOutputService.resolveOptional(ambiance,
+             RefObjectUtils.getSweepingOutputRefObject(
+                 canaryStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
         .thenReturn(OptionalSweepingOutput.builder().found(false).build());
 
     K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
@@ -190,13 +197,15 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testDontSaveReleaseOutputIfQueueTaskFails() {
     final K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
+    stepParameters.setCanaryStepFqn(canaryStepFqn);
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
     final RuntimeException thrownException = new RuntimeException("test");
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
 
-    when(executionSweepingOutputService.resolveOptional(
-             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+    when(executionSweepingOutputService.resolveOptional(ambiance,
+             RefObjectUtils.getSweepingOutputRefObject(
+                 canaryStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
         .thenReturn(OptionalSweepingOutput.builder().found(false).build());
 
     doThrow(thrownException)

@@ -9,7 +9,9 @@ import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.QLCEViewGridData;
 import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
+import io.harness.ccm.views.graphql.QLCEViewTrendData;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
+import io.harness.ccm.views.graphql.ViewCostData;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.TableResult;
@@ -37,18 +39,25 @@ public interface ViewsBillingService {
   // For NG perspective queries
   QLCEViewGridData getEntityStatsDataPointsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
-      String cloudProviderTableName, Integer limit, Integer offset, String accountId, boolean getCostTrend);
+      String cloudProviderTableName, Integer limit, Integer offset, String accountId, boolean isUsedByTimeSeriesStats,
+      boolean isClusterQuery);
 
   List<String> getFilterValueStatsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
-      String cloudProviderTableName, Integer limit, Integer offset, String accountId);
+      String cloudProviderTableName, Integer limit, Integer offset, String accountId, boolean isClusterQuery);
 
-  QLCEViewTrendInfo getTrendStatsDataNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
-      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId);
+  QLCEViewTrendData getTrendStatsDataNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
+      boolean isClusterQuery);
 
   TableResult getTimeSeriesStatsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
-      String cloudProviderTableName, String accountId, boolean includeOthers, Integer limit);
+      String cloudProviderTableName, String accountId, boolean includeOthers, Integer limit, boolean isClusterQuery);
 
   QLCEViewTrendInfo getForecastCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
-      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId);
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
+      boolean isClusterQuery);
+
+  ViewCostData getCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId,
+      boolean isClusterQuery);
 }

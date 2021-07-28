@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -64,6 +64,7 @@ public class GraphVertex implements Serializable {
 
   private List<UnitProgress> unitProgresses;
   private OrchestrationMap progressData;
+  private Map<String, OrchestrationMap> stepDetails;
 
   // UI
   @Builder.Default RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;

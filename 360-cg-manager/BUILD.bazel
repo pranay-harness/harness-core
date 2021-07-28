@@ -21,6 +21,7 @@ java_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//375-ce-graphql:module",
         "//380-cg-graphql:module",
         "//390-db-migration:module",
         "//400-rest:module",

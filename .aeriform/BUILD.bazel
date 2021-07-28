@@ -46,10 +46,6 @@ aeriform("//220-graphql-test:tests")
 
 aeriform("//230-model-test:module")
 
-aeriform("//250-watcher:module")
-
-aeriform("//250-watcher:tests")
-
 aeriform("//260-delegate:module")
 
 aeriform("//260-delegate:tests")
@@ -182,6 +178,10 @@ aeriform("//830-resource-group:tests")
 
 aeriform("//835-notification-senders:module")
 
+aeriform("//840-template-service:module")
+
+aeriform("//840-template-service:tests")
+
 aeriform("//850-ng-pipeline-commons:module")
 
 aeriform("//850-ng-pipeline-commons:tests")
@@ -195,6 +195,10 @@ aeriform("//860-orchestration-visualization:module")
 aeriform("//860-orchestration-visualization:tests")
 
 aeriform("//861-cg-orchestration-states:module")
+
+aeriform("//865-cg-events:module")
+
+aeriform("//865-cg-events:tests")
 
 aeriform("//870-cg-orchestration:module")
 
@@ -246,6 +250,8 @@ aeriform("//900-git-sync-sdk:tests")
 
 aeriform("//910-delegate-service-driver:module")
 
+aeriform("//910-delegate-service-driver:tests")
+
 aeriform("//910-delegate-task-grpc-service:module")
 
 aeriform("//910-delegate-task-grpc-service:tests")
@@ -263,8 +269,6 @@ aeriform("//920-ng-signup:tests")
 aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
-
-aeriform("//925-watcher-beans:module")
 
 aeriform("//930-delegate-tasks:module")
 
@@ -442,9 +446,17 @@ aeriform("//960-persistence:supporter-test")
 
 aeriform("//960-persistence:tests")
 
+aeriform("//960-watcher:module")
+
+aeriform("//960-watcher:tests")
+
 aeriform("//960-yaml-sdk:module")
 
 aeriform("//960-yaml-sdk:tests")
+
+aeriform("//965-api-key-filter:module")
+
+aeriform("//965-api-key-filter:tests")
 
 aeriform("//970-api-services-beans:module")
 
@@ -462,6 +474,8 @@ aeriform("//970-rbac-core:module")
 
 aeriform("//970-telemetry-beans:module")
 
+aeriform("//970-watcher-beans:module")
+
 aeriform("//980-commons:module")
 
 aeriform("//980-commons:tests")
@@ -475,3 +489,5 @@ aeriform("//990-commons-test:abstract-module")
 aeriform("//990-commons-test:module")
 
 aeriform("//990-commons-test:tests")
+
+aeriform("//999-annotations:module")

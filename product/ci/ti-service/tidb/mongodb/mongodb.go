@@ -279,14 +279,19 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 	// Test methods corresponding to each <package, class>
 	methodMap := make(map[types.RunnableTest][]types.RunnableTest)
+	idMap := make(map[int]struct{})
 	reflectionTests := []types.RunnableTest{}
 	for _, t := range all {
+		if _, ok := idMap[t.Id]; ok { // Only add unique IDs in the map
+			continue
+		}
 		u := types.RunnableTest{Pkg: t.Package, Class: t.Class}
 		methodMap[u] = append(methodMap[u], types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method})
 		if t.CallsReflection {
 			reflectionTests = append(reflectionTests, u)
 		}
 		totalTests += 1
+		idMap[t.Id] = struct{}{}
 	}
 
 	// If no tests were found in the target branch, we want to run all the tests to generate the callgraph for that branch
@@ -404,10 +409,13 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
 func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
+	resp := types.SelectTestsResp{}
+	if len(cg.Nodes) == 0 && len(cg.Relations) == 0 {
+		// Don't delete the existing callgraph, this might happen in case of some issues with the setup
+		return resp, nil
+	}
 	nodes := make([]Node, len(cg.Nodes))
 	rels := make([]Relation, len(cg.Relations))
-
-	resp := types.SelectTestsResp{}
 
 	// Create method map to calculate how many tests have been added
 	all := []Node{}

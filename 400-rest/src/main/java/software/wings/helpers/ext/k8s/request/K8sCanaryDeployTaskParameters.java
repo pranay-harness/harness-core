@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -17,7 +17,6 @@ import io.harness.k8s.model.HelmVersion;
 import software.wings.beans.InstanceUnitType;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -59,13 +58,11 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements 
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities =
         new ArrayList<>(super.fetchRequiredExecutionCapabilities(maskingEvaluator));
-    if (k8sDelegateManifestConfig == null || k8sDelegateManifestConfig.getGitConfig() == null
-        || isEmpty(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors())) {
-      return capabilities;
+
+    Set<String> delegateSelectors = getDelegateSelectorsFromConfigs(k8sDelegateManifestConfig);
+    if (isNotEmpty(delegateSelectors)) {
+      capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
     }
-    capabilities.add(SelectorCapability.builder()
-                         .selectors(new HashSet<>(k8sDelegateManifestConfig.getGitConfig().getDelegateSelectors()))
-                         .build());
     return capabilities;
   }
 }

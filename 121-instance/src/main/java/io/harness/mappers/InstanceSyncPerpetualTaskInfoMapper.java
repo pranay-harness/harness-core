@@ -16,10 +16,9 @@ import lombok.experimental.UtilityClass;
 public class InstanceSyncPerpetualTaskInfoMapper {
   public InstanceSyncPerpetualTaskInfoDTO toDTO(InstanceSyncPerpetualTaskInfo instanceSyncPerpetualTaskInfo) {
     return InstanceSyncPerpetualTaskInfoDTO.builder()
+        .id(instanceSyncPerpetualTaskInfo.getId())
         .accountIdentifier(instanceSyncPerpetualTaskInfo.getAccountIdentifier())
-        .orgIdentifier(instanceSyncPerpetualTaskInfo.getOrgIdentifier())
-        .projectIdentifier(instanceSyncPerpetualTaskInfo.getProjectIdentifier())
-        .deploymentSummaryIdList(instanceSyncPerpetualTaskInfo.getDeploymentSummaryIdList())
+        .infrastructureMappingId(instanceSyncPerpetualTaskInfo.getInfrastructureMappingId())
         .deploymentInfoDetailsDTOList(
             toDeploymentInfoDetailsDTOList(instanceSyncPerpetualTaskInfo.getDeploymentInfoDetailsList()))
         .perpetualTaskId(instanceSyncPerpetualTaskInfo.getPerpetualTaskId())
@@ -31,10 +30,7 @@ public class InstanceSyncPerpetualTaskInfoMapper {
   public InstanceSyncPerpetualTaskInfo toEntity(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO) {
     return InstanceSyncPerpetualTaskInfo.builder()
         .accountIdentifier(instanceSyncPerpetualTaskInfoDTO.getAccountIdentifier())
-        .orgIdentifier(instanceSyncPerpetualTaskInfoDTO.getOrgIdentifier())
-        .projectIdentifier(instanceSyncPerpetualTaskInfoDTO.getProjectIdentifier())
         .infrastructureMappingId(instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId())
-        .deploymentSummaryIdList(instanceSyncPerpetualTaskInfoDTO.getDeploymentSummaryIdList())
         .deploymentInfoDetailsList(
             toDeploymentInfoDetailsList(instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList()))
         .perpetualTaskId(instanceSyncPerpetualTaskInfoDTO.getPerpetualTaskId())

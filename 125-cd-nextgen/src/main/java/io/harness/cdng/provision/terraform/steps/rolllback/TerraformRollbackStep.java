@@ -5,7 +5,9 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.common.step.StepHelper;
+import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.provision.terraform.TerraformConfig;
+import io.harness.cdng.provision.terraform.TerraformConfigDAL;
 import io.harness.cdng.provision.terraform.TerraformConfigHelper;
 import io.harness.cdng.provision.terraform.TerraformStepHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -17,6 +19,7 @@ import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters.TerraformTaskNGParametersBuilder;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -28,6 +31,7 @@ import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -46,7 +50,9 @@ import software.wings.beans.TaskType;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(HarnessTeam.CDP)
 public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<TerraformTaskNGResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder()
@@ -59,12 +65,14 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
   @Inject private TerraformStepHelper terraformStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private StepHelper stepHelper;
+  @Inject private EngineExpressionService engineExpressionService;
+  @Inject public TerraformConfigDAL terraformConfigDAL;
 
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     TerraformRollbackStepParameters stepParametersSpec = (TerraformRollbackStepParameters) stepParameters.getSpec();
-
+    log.info("Running Obtain Inline Task for the Rollback Step");
     String provisionerIdentifier = stepParametersSpec.getProvisionerIdentifier();
     String entityId =
         terraformStepHelper.generateFullIdentifier(stepParametersSpec.getProvisionerIdentifier(), ambiance);
@@ -106,6 +114,9 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
         rollbackMessage.append("Inheriting Terraform Config from last successful Terraform Execution : ");
         rollbackMessage.append(prepareExecutionUrl(rollbackConfig.getPipelineExecutionId(), ambiance));
       }
+
+      ExpressionEvaluatorUtils.updateExpressions(
+          rollbackConfig, new CDExpressionResolveFunctor(engineExpressionService, ambiance));
       // TODO:  log rollback message
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.TERRAFORM_CONFIG,
           TerraformConfigSweepingOutput.builder().terraformConfig(rollbackConfig).tfTaskType(tfTaskType).build(),
@@ -160,6 +171,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
   @Override
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseDataSupplier) throws Exception {
+    log.info("Handling Task Result With Security Context for the Rollback Step");
     TerraformRollbackStepParameters stepParametersSpec = (TerraformRollbackStepParameters) stepParameters.getSpec();
     TerraformTaskNGResponse taskResponse = responseDataSupplier.get();
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
@@ -183,7 +195,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<Ter
       if (rollbackConfigOutput.getTfTaskType() == TFTaskType.APPLY) {
         terraformStepHelper.saveTerraformConfig(rollbackConfig, ambiance);
       } else {
-        terraformStepHelper.clearTerraformConfig(ambiance, rollbackConfig.getEntityId());
+        terraformConfigDAL.clearTerraformConfig(ambiance, rollbackConfig.getEntityId());
       }
     }
     return stepResponseBuilder.build();

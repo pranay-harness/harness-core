@@ -1607,6 +1607,8 @@ public class UserServiceImpl implements UserService {
     }
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    // Empty user group list because this user invite is from NG and the method adds user to CG user groups
+    moveAccountFromPendingToConfirmed(user, account, Collections.emptyList(), true);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
     NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getToken()));
   }
@@ -2622,6 +2624,12 @@ public class UserServiceImpl implements UserService {
     Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
     query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
         query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
+  }
+
+  @Override
+  public List<User> getUsers(Set<String> userIds) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
     return query.asList();
   }
 

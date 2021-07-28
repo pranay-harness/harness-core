@@ -3,12 +3,9 @@ package io.harness.entities.instancesyncperpetualtaskinfo;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.ng.DbAliases;
 
-import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -32,26 +29,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Persistent
 @OwnedBy(HarnessTeam.DX)
 public class InstanceSyncPerpetualTaskInfo {
-  public static List<MongoIndex> mongoIndexes() {
-    return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
-                 .name("unique_account_org_project_id")
-                 .unique(true)
-                 .field(InstanceSyncPerpetualTaskInfoKeys.accountIdentifier)
-                 .field(InstanceSyncPerpetualTaskInfoKeys.orgIdentifier)
-                 .field(InstanceSyncPerpetualTaskInfoKeys.projectIdentifier)
-                 .build())
-        .build();
-  }
-
   @Id @org.mongodb.morphia.annotations.Id String id;
   String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
-  @FdIndex String infrastructureMappingId;
-  List<String> deploymentSummaryIdList;
+  @FdUniqueIndex String infrastructureMappingId;
   List<DeploymentInfoDetails> deploymentInfoDetailsList;
-  String perpetualTaskId;
+  @FdUniqueIndex String perpetualTaskId;
   @CreatedDate long createdAt;
   @LastModifiedDate long lastUpdatedAt;
 }

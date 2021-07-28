@@ -422,21 +422,4 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     cfMigrationService.syncFeatureFlagWithCF(featureFlag);
     return Optional.of(featureFlag);
   }
-
-  /**
-   * Removes an account from the FeatureFlags collection
-   * @param accountId
-   */
-  @Override
-  public void removeAccountReferenceFromAllFeatureFlags(String accountId) {
-    List<FeatureFlag> featureFlags = getAllFeatureFlags();
-    for (FeatureFlag featureFlag : featureFlags) {
-      try {
-        updateFeatureFlagForAccount(featureFlag.getName(), accountId, false);
-      } catch (Exception e) {
-        log.error(
-            "Exception occurred while deleting account {} from FeatureFlag {}", accountId, featureFlag.getName(), e);
-      }
-    }
-  }
 }

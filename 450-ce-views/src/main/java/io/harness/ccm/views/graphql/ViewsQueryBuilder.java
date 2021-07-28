@@ -6,17 +6,30 @@ import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY_UN_NEST
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_VALUE_UN_NESTED;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLOUD_SERVICE_NAME;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLUSTER_TABLE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_UTILIZATION_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_APPLICATION;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_CLOUD_PROVIDER;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_LAUNCH_TYPE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_SERVICE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ENVIRONMENT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_INSTANCE_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_NODE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_SERVICE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.INSTANCE_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.LAUNCH_TYPE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TASK_ID;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
@@ -78,6 +91,9 @@ public class ViewsQueryBuilder {
   private static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
   private static final ImmutableList<String> applicationGroupBys =
       ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT, GROUP_BY_CLOUD_PROVIDER);
+  private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING = "PROVIDERS";
+  private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY =
+      "CASE WHEN cloudProvider = 'CLUSTER' THEN 'CLUSTER' ELSE 'CLOUD' END";
 
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
@@ -89,7 +105,7 @@ public class ViewsQueryBuilder {
     boolean isClusterTable = isClusterTable(cloudProviderTableName);
 
     List<ViewField> customFields = collectCustomFieldList(rules, filters, groupByEntity);
-    if (!isApplicationQuery(groupByList) || !isClusterTable) {
+    if ((!isApplicationQuery(groupByList) || !isClusterTable) && !isInstanceQuery(groupByList)) {
       modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQuery);
     }
 
@@ -154,6 +170,31 @@ public class ViewsQueryBuilder {
     selectQuery.addCondition(BinaryCondition.equalTo(new CustomSql("table_name"), table));
 
     log.info("Information schema query for table {}", selectQuery.toString());
+    return selectQuery;
+  }
+
+  public SelectQuery getCostByProvidersOverviewQuery(List<QLCEViewTimeFilter> timeFilters,
+      List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations, String cloudProviderTableName) {
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.addCustomFromTable(cloudProviderTableName);
+    QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
+
+    selectQuery.addAliasedColumn(new CustomSql(CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY), CLOUD_PROVIDERS_CUSTOM_GROUPING);
+    selectQuery.addCustomGroupings(CLOUD_PROVIDERS_CUSTOM_GROUPING);
+
+    if (!aggregations.isEmpty()) {
+      decorateQueryWithAggregations(selectQuery, aggregations);
+    }
+
+    if (!timeFilters.isEmpty()) {
+      decorateQueryWithTimeFilters(selectQuery, timeFilters, false);
+    }
+
+    if (groupByTime != null) {
+      decorateQueryWithGroupByTime(selectQuery, groupByTime, false);
+    }
+
+    log.info("Query for Overview cost by providers {}", selectQuery.toString());
     return selectQuery;
   }
 
@@ -577,8 +618,9 @@ public class ViewsQueryBuilder {
           String.format(
               aliasStartTimeMaxMin, ViewsMetaDataFields.START_TIME.getFieldName(), aggregation.getOperationType())));
     } else {
-      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
-          functionCall.addCustomParams(new CustomSql(aggregation.getColumnName())), aggregation.getColumnName()));
+      selectQuery.addCustomColumns(
+          Converter.toCustomColumnSqlObject(functionCall.addCustomParams(new CustomSql(aggregation.getColumnName())),
+              getAliasNameForAggregation(aggregation.getColumnName())));
     }
   }
 
@@ -896,9 +938,28 @@ public class ViewsQueryBuilder {
         .anyMatch(entry -> applicationGroupBys.contains(entry.getEntityGroupBy().getFieldName()));
   }
 
-  private boolean isNodeQuery(List<QLCEViewGroupBy> groupByList) {
+  private boolean isInstanceQuery(List<QLCEViewGroupBy> groupByList) {
     return groupByList.stream()
         .filter(entry -> entry.getEntityGroupBy() != null)
-        .anyMatch(entry -> entry.getEntityGroupBy().getFieldName().equals(GROUP_BY_NODE));
+        .anyMatch(entry -> entry.getEntityGroupBy().getFieldName().equals(GROUP_BY_INSTANCE_ID));
+  }
+
+  private String getAliasNameForAggregation(String value) {
+    switch (value) {
+      case EFFECTIVE_CPU_LIMIT:
+        return TIME_AGGREGATED_CPU_LIMIT;
+      case EFFECTIVE_CPU_REQUEST:
+        return TIME_AGGREGATED_CPU_REQUEST;
+      case EFFECTIVE_CPU_UTILIZATION_VALUE:
+        return TIME_AGGREGATED_CPU_UTILIZATION_VALUE;
+      case EFFECTIVE_MEMORY_LIMIT:
+        return TIME_AGGREGATED_MEMORY_LIMIT;
+      case EFFECTIVE_MEMORY_REQUEST:
+        return TIME_AGGREGATED_MEMORY_REQUEST;
+      case EFFECTIVE_MEMORY_UTILIZATION_VALUE:
+        return TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE;
+      default:
+        return value;
+    }
   }
 }

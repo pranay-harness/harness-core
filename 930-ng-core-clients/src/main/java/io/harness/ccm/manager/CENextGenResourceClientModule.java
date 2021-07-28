@@ -1,5 +1,8 @@
 package io.harness.ccm.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -9,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
+@OwnedBy(CE)
 public class CENextGenResourceClientModule extends AbstractModule {
   private final ServiceHttpClientConfig httpClientConfig;
   private final String serviceSecret;

@@ -1,5 +1,6 @@
 package io.harness.cvng.core.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Builder;
@@ -9,8 +10,8 @@ import lombok.Data;
 @Builder
 public class PrometheusMetricDefinition {
   private String query;
-  private String serviceIdentifier;
-  private String envIdentifier;
+  @JsonIgnore private String serviceIdentifier;
+  @JsonIgnore private String envIdentifier;
   private boolean isManualQuery;
   private String groupName;
   private String metricName;
@@ -33,6 +34,7 @@ public class PrometheusMetricDefinition {
     private String labelName;
     private String labelValue;
 
+    @JsonIgnore
     public String getQueryFilterString() {
       return labelName + "=\"" + labelValue + "\"";
     }

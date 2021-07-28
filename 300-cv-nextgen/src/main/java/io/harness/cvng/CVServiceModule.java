@@ -15,10 +15,8 @@ import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActi
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
-import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.source.services.impl.ActivitySourceServiceImpl;
-import io.harness.cvng.activity.source.services.impl.CD10ActivitySourceServiceImpl;
 import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
@@ -140,7 +138,9 @@ import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTr
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.PrometheusHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.SplunkHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.StackdriverLogHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.StackdriverMetricHealthSourceSpecTransformer;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
@@ -303,8 +303,16 @@ public class CVServiceModule extends AbstractModule {
         .to(StackdriverLogHealthSourceSpecTransformer.class);
 
     bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+        .to(SplunkHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
         .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
         .to(PrometheusHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+        .to(StackdriverMetricHealthSourceSpecTransformer.class);
 
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
@@ -396,7 +404,6 @@ public class CVServiceModule extends AbstractModule {
     bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
     bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
     bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
-    bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
 
     bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
     MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =

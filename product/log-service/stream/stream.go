@@ -38,6 +38,9 @@ type Stream interface {
 
 	// Exists checks whether the key is present in the stream or not.
 	Exists(ctx context.Context, key string) error
+
+	// ListPrefix returns a list of keys starting with the given prefix in the stream.
+	ListPrefix(ctx context.Context, prefix string) ([]string, error)
 }
 
 // Line represents a line in the logs.

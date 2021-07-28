@@ -11,6 +11,7 @@ import static io.harness.cdng.manifest.ManifestType.VALUES;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.manifest.steps.ManifestStepParameters;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
@@ -34,13 +35,14 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(CDP)
 public class ManifestOutcomeMapper {
-  public List<ManifestOutcome> toManifestOutcome(List<ManifestAttributes> manifestAttributesList) {
+  public List<ManifestOutcome> toManifestOutcome(
+      List<ManifestAttributes> manifestAttributesList, ManifestStepParameters parameters) {
     return manifestAttributesList.stream()
-        .map(ManifestOutcomeMapper::toManifestOutcome)
+        .map(manifest -> toManifestOutcome(manifest, parameters))
         .collect(Collectors.toCollection(LinkedList::new));
   }
 
-  public ManifestOutcome toManifestOutcome(ManifestAttributes manifestAttributes) {
+  public ManifestOutcome toManifestOutcome(ManifestAttributes manifestAttributes, ManifestStepParameters parameters) {
     if (manifestAttributes.getStoreConfig() != null) {
       ManifestOutcomeValidator.validateStore(
           manifestAttributes.getStoreConfig(), manifestAttributes.getKind(), manifestAttributes.getIdentifier(), true);
@@ -50,7 +52,7 @@ public class ManifestOutcomeMapper {
       case K8Manifest:
         return getK8sOutcome(manifestAttributes);
       case VALUES:
-        return getValuesOutcome(manifestAttributes);
+        return getValuesOutcome(manifestAttributes, parameters);
       case HelmChart:
         return getHelmChartOutcome(manifestAttributes);
       case Kustomize:
@@ -58,7 +60,7 @@ public class ManifestOutcomeMapper {
       case OpenshiftTemplate:
         return getOpenshiftOutcome(manifestAttributes);
       case OpenshiftParam:
-        return getOpenshiftParamOutcome(manifestAttributes);
+        return getOpenshiftParamOutcome(manifestAttributes, parameters);
       default:
         throw new UnsupportedOperationException(
             format("Unknown Artifact Config type: [%s]", manifestAttributes.getKind()));
@@ -75,11 +77,12 @@ public class ManifestOutcomeMapper {
         .build();
   }
 
-  private ValuesManifestOutcome getValuesOutcome(ManifestAttributes manifestAttributes) {
+  private ValuesManifestOutcome getValuesOutcome(ManifestAttributes manifestAttributes, ManifestStepParameters params) {
     ValuesManifest attributes = (ValuesManifest) manifestAttributes;
     return ValuesManifestOutcome.builder()
         .identifier(attributes.getIdentifier())
         .store(attributes.getStoreConfig())
+        .order(params.getOrder())
         .build();
   }
 
@@ -117,12 +120,14 @@ public class ManifestOutcomeMapper {
         .build();
   }
 
-  private OpenshiftParamManifestOutcome getOpenshiftParamOutcome(ManifestAttributes manifestAttributes) {
+  private OpenshiftParamManifestOutcome getOpenshiftParamOutcome(
+      ManifestAttributes manifestAttributes, ManifestStepParameters params) {
     OpenshiftParamManifest attributes = (OpenshiftParamManifest) manifestAttributes;
 
     return OpenshiftParamManifestOutcome.builder()
         .identifier(attributes.getIdentifier())
         .store(attributes.getStoreConfig())
+        .order(params.getOrder())
         .build();
   }
 }

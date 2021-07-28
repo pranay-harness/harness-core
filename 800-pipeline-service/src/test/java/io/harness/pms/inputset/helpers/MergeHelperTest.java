@@ -1,13 +1,14 @@
 package io.harness.pms.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
-import static io.harness.pms.merger.helpers.MergeHelper.getInvalidFQNsInInputSet;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
-import static io.harness.pms.merger.helpers.MergeHelper.sanitizeInputSet;
-import static io.harness.pms.merger.helpers.MergeHelper.sanitizeRuntimeInput;
+import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper.getInvalidFQNsInInputSet;
+import static io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer.sanitizeInputSet;
+import static io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer.sanitizeRuntimeInput;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,6 +19,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -46,7 +49,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testCreateTemplateFromPipeline() throws IOException {
+  public void testCreateTemplateFromPipeline() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
     String templateYaml = createTemplateFromPipeline(yaml);
@@ -59,7 +62,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeInputSetIntoPipeline() throws IOException {
+  public void testMergeInputSetIntoPipeline() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
 
@@ -78,7 +81,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeInputSetIntoServiceDependenciesPipeline() throws IOException {
+  public void testMergeInputSetIntoServiceDependenciesPipeline() {
     String filename = "service-dependencies-pipeline.yaml";
     String yaml = readFile(filename);
 
@@ -97,7 +100,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testGetInvalidFQNsInInputSet() throws IOException {
+  public void testGetInvalidFQNsInInputSet() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
     String templateYaml = createTemplateFromPipeline(yaml);
@@ -123,7 +126,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeInputSets() throws IOException {
+  public void testMergeInputSets() {
     String inputSet1 = "inputSet1.yml";
     String inputSetYaml1 = readFile(inputSet1);
     String inputSet2 = "inputSet2.yml";
@@ -146,7 +149,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testSanitizeInputSets() throws IOException {
+  public void testSanitizeInputSets() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
 
@@ -169,14 +172,14 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testGetErrorMap() throws IOException {
+  public void testGetErrorMap() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
 
     String inputSetWrongFile = "inputSetWrong1.yml";
     String inputSetWrongYaml = readFile(inputSetWrongFile);
 
-    InputSetErrorWrapperDTOPMS errorWrapperDTOPMS = MergeUtils.getErrorMap(yaml, inputSetWrongYaml);
+    InputSetErrorWrapperDTOPMS errorWrapperDTOPMS = InputSetErrorsHelper.getErrorMap(yaml, inputSetWrongYaml);
     assertThat(errorWrapperDTOPMS).isNotNull();
     assertThat(errorWrapperDTOPMS.getErrorPipelineYaml())
         .isEqualTo("pipeline:\n"
@@ -200,14 +203,14 @@ public class MergeHelperTest extends CategoryTest {
 
     String inputSetFile = "inputSet1.yml";
     String inputSetYaml = readFile(inputSetFile);
-    InputSetErrorWrapperDTOPMS emptyErrorWrapperDTOPMS = MergeUtils.getErrorMap(yaml, inputSetYaml);
+    InputSetErrorWrapperDTOPMS emptyErrorWrapperDTOPMS = InputSetErrorsHelper.getErrorMap(yaml, inputSetYaml);
     assertThat(emptyErrorWrapperDTOPMS).isNull();
   }
 
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnYamlWithFailureStrategies() throws IOException {
+  public void testMergeOnYamlWithFailureStrategies() {
     String fullYamlFile = "failure-strategy.yaml";
     String fullYaml = readFile(fullYamlFile);
     String templateOfFull = createTemplateFromPipeline(fullYaml);
@@ -230,7 +233,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnCIPipelineYaml() throws IOException {
+  public void testMergeOnCIPipelineYaml() {
     String fullYamlFile = "ci-pipeline-with-reports.yaml";
     String fullYaml = readFile(fullYamlFile);
     String templateOfFull = createTemplateFromPipeline(fullYaml);
@@ -253,7 +256,7 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeOnPipelineWithEmptyListAndObject() throws IOException {
+  public void testMergeOnPipelineWithEmptyListAndObject() {
     String yamlFile = "empty-object-and-list-with-runtime.yaml";
     String yaml = readFile(yamlFile);
     String template = createTemplateFromPipeline(yaml);
@@ -271,20 +274,37 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testGetErrorMapForInputSetValidators() throws IOException {
+  public void testMergeOnPipelineWithHelmCommandFlags() {
+    String yamlFile = "helm-command-flags-pipeline.yaml";
+    String yaml = readFile(yamlFile);
+    String template = createTemplateFromPipeline(yaml);
+    assertThat(template).isNotNull();
+
+    String runtimeInputFile = "helm-command-flags-runtime-input.yaml";
+    String runtimeInput = readFile(runtimeInputFile);
+    String mergedYaml = mergeInputSetIntoPipeline(yaml, runtimeInput, false);
+    String fullYamlFile = "helm-command-flags-merged-pipeline.yaml";
+    String fullYaml = readFile(fullYamlFile);
+    assertThat(mergedYaml).isEqualTo(fullYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetErrorMapForInputSetValidators() {
     String yamlFile = "pipeline-with-input-set-validators.yaml";
     String pipelineYaml = readFile(yamlFile);
 
     String inputSetCorrectFile = "input-set-for-validators.yaml";
     String inputSetCorrect = readFile(inputSetCorrectFile);
 
-    InputSetErrorWrapperDTOPMS errorMap = MergeUtils.getErrorMap(pipelineYaml, inputSetCorrect);
+    InputSetErrorWrapperDTOPMS errorMap = InputSetErrorsHelper.getErrorMap(pipelineYaml, inputSetCorrect);
     assertThat(errorMap).isNull();
 
     String inputSetWrongFile = "wrong-input-set-for-validators.yaml";
     String inputSetWrong = readFile(inputSetWrongFile);
 
-    InputSetErrorWrapperDTOPMS errorMapWrong = MergeUtils.getErrorMap(pipelineYaml, inputSetWrong);
+    InputSetErrorWrapperDTOPMS errorMapWrong = InputSetErrorsHelper.getErrorMap(pipelineYaml, inputSetWrong);
     assertThat(errorMapWrong).isNotNull();
     Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap = errorMapWrong.getUuidToErrorResponseMap();
     assertThat(uuidToErrorResponseMap.size()).isEqualTo(5);
@@ -300,5 +320,19 @@ public class MergeHelperTest extends CategoryTest {
         .isTrue();
     assertThat(uuidToErrorResponseMap.containsKey("pipeline.stages.qaStage.spec.execution.steps.httpStep2.spec.method"))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testTrimmedValues() {
+    String yamlFile = "pipeline-with-space-values.yaml";
+    String pipelineYaml = readFile(yamlFile);
+
+    String trimYamlFile = "pipeline-with-trimmed-values.yaml";
+    String trimmedCorrectPipelineYaml = readFile(trimYamlFile);
+
+    String trimmedOutputPipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
+    assertThat(trimmedCorrectPipelineYaml).isEqualTo(trimmedOutputPipelineYaml);
   }
 }

@@ -15,7 +15,7 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.encryption.ScopeHelper;
-import io.harness.gitsync.beans.YamlDTO;
+import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.exceptions.NGYamlParsingException;
 import io.harness.ng.core.EntityDetail;
@@ -26,13 +26,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.DX)
-public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Connector, ConnectorDTO> {
+public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connector, ConnectorDTO>
+    implements GitSdkEntityHandlerInterface<Connector, ConnectorDTO> {
   ConnectorMapper connectorMapper;
   ConnectorService connectorService;
   ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
@@ -78,7 +80,7 @@ public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Conn
 
   @Override
   public ConnectorDTO save(String accountIdentifier, String yaml) {
-    ConnectorDTO connectorDTO = (ConnectorDTO) convertStringToDTO(yaml, ConnectorDTO.class);
+    ConnectorDTO connectorDTO = getYamlDTO(yaml);
     ConnectorResponseDTO connectorResponseDTO = connectorService.create(connectorDTO, accountIdentifier);
     ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
@@ -86,15 +88,16 @@ public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Conn
 
   @Override
   public ConnectorDTO update(String accountIdentifier, String yaml) {
-    ConnectorDTO connectorDTO = (ConnectorDTO) convertStringToDTO(yaml, ConnectorDTO.class);
+    ConnectorDTO connectorDTO = getYamlDTO(yaml);
     ConnectorResponseDTO connectorResponseDTO = connectorService.update(connectorDTO, accountIdentifier);
     ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }
 
-  private YamlDTO convertStringToDTO(String yaml, Class<? extends YamlDTO> yamlClass) {
+  @Override
+  public ConnectorDTO getYamlDTO(String yaml) {
     try {
-      return objectMapper.readValue(yaml, yamlClass);
+      return objectMapper.readValue(yaml, ConnectorDTO.class);
     } catch (IOException ex) {
       log.error("Error converting the yaml file [{}]", yaml, ex);
       throw new NGYamlParsingException(String.format("Could not parse the YAML %s", yaml));
@@ -130,5 +133,14 @@ public class ConnectorGitSyncHelper implements GitSdkEntityHandlerInterface<Conn
   @Override
   public String getBranchKey() {
     return ConnectorKeys.branch;
+  }
+
+  @Override
+  public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
+    final ConnectorDTO connectorDTO = getYamlDTO(yaml);
+    final ConnectorInfoDTO connectorInfo = connectorDTO.getConnectorInfo();
+    final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    return connectorResponseDTO.map(connectorResponse -> connectorResponse.getGitDetails().getObjectId()).orElse(null);
   }
 }

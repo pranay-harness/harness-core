@@ -57,7 +57,6 @@ import io.harness.rule.Owner;
 import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -125,9 +124,8 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock private ConfigurationController configurationController;
   @Mock private HarnessCacheManager harnessCacheManager;
-  @Mock PortalConfig portalConfig;
+  @Inject PortalConfig portalConfig;
   @Mock private DelegateTokenAuthenticator delegateTokenAuthenticator;
-  @Inject MainConfiguration mainConfiguration;
   @Inject @InjectMocks private UserService userService;
   @Inject @InjectMocks private AuthService authService;
 
@@ -142,7 +140,6 @@ public class AuthServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     initMocks(this);
-    on(mainConfiguration).set("portal", portalConfig);
     when(configurationController.isPrimary()).thenReturn(true);
     when(harnessCacheManager.getCache(anyString(), eq(String.class), eq(User.class), any())).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().uuid(USER_ID).build());
@@ -155,7 +152,7 @@ public class AuthServiceTest extends WingsBaseTest {
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(cache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
-    when(portalConfig.getJwtAuthSecret()).thenReturn(AUTH_SECRET);
+    on(portalConfig).set("jwtAuthSecret", AUTH_SECRET);
 
     when(persistence.getDatastore(AuthToken.class)).thenReturn(advancedDatastore);
   }

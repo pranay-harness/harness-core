@@ -165,9 +165,10 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(2);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.size()).isEqualTo(3);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -242,14 +243,15 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(4);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(5);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(HttpConnectionExecutionCapability.class);
-    assertThat(executionCapabilities.get(3)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(3);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(4)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(4);
     assertThat(httpHelmSelectorCapability.getSelectors()).isEqualTo(httpHelmDelegateSelectors);
   }
 
@@ -291,13 +293,14 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(4);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(2);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(3);
     assertThat(httpHelmSelectorCapability.getSelectors()).isEqualTo(s3HelmDelegateSelectors);
   }
 
@@ -344,12 +347,13 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(4);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -394,12 +398,13 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(4);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -441,13 +446,15 @@ public class K8sDeployCapabilityTest extends CategoryTest {
     List<ExecutionCapability> executionCapabilities =
         rollingRequest.fetchRequiredExecutionCapabilities(expressionEvaluator);
     assertThat(executionCapabilities).isNotEmpty();
-    assertThat(executionCapabilities.size()).isEqualTo(3);
-    assertThat(executionCapabilities.get(0)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(0);
+    assertThat(executionCapabilities.size()).isEqualTo(5);
+    assertThat(executionCapabilities.get(0)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(1)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability k8sSelectorCapability = (SelectorCapability) executionCapabilities.get(1);
     assertThat(k8sSelectorCapability.getSelectors()).isEqualTo(k8sDelegateSelectors);
-    assertThat(executionCapabilities.get(1)).isInstanceOf(HelmInstallationCapability.class);
-    assertThat(executionCapabilities.get(2)).isInstanceOf(SelectorCapability.class);
-    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(2);
+    assertThat(executionCapabilities.get(2)).isInstanceOf(HelmInstallationCapability.class);
+    assertThat(executionCapabilities.get(3)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(executionCapabilities.get(4)).isInstanceOf(SelectorCapability.class);
+    SelectorCapability httpHelmSelectorCapability = (SelectorCapability) executionCapabilities.get(4);
     assertThat(httpHelmSelectorCapability.getSelectors()).isEqualTo(gcsHelmDelegateSelectors);
   }
 

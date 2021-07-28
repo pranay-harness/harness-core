@@ -10,7 +10,7 @@ java_library(
         "//:lombok",
         "//960-persistence:module",
         "//970-api-services-beans:module",
-        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
+        "//970-api-services-beans/src/main/proto:970_api_services_beans_java_proto",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",

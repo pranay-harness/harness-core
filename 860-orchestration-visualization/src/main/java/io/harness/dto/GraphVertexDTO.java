@@ -52,6 +52,7 @@ public class GraphVertexDTO {
 
   List<UnitProgress> unitProgresses;
   OrchestrationMap progressData;
+  Map<String, OrchestrationMap> stepDetails;
 
   // skip
   SkipType skipType;

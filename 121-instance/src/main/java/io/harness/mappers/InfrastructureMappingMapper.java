@@ -17,10 +17,10 @@ public class InfrastructureMappingMapper {
         .projectIdentifier(infrastructureMapping.getProjectIdentifier())
         .connectorRef(infrastructureMapping.getConnectorRef())
         .deploymentType(infrastructureMapping.getDeploymentType())
-        .envId(infrastructureMapping.getEnvId())
+        .envIdentifier(infrastructureMapping.getEnvId())
         .id(infrastructureMapping.getId())
-        .infrastructureId(infrastructureMapping.getId())
-        .serviceId(infrastructureMapping.getServiceId())
+        .infrastructureKey(infrastructureMapping.getInfrastructureKey())
+        .serviceIdentifier(infrastructureMapping.getServiceId())
         .infrastructureMappingType(infrastructureMapping.getInfrastructureMappingType())
         .build();
   }
@@ -32,11 +32,10 @@ public class InfrastructureMappingMapper {
         .projectIdentifier(infrastructureMappingDTO.getProjectIdentifier())
         .connectorRef(infrastructureMappingDTO.getConnectorRef())
         .deploymentType(infrastructureMappingDTO.getDeploymentType())
-        .envId(infrastructureMappingDTO.getEnvId())
-        .infrastructureKey(infrastructureMappingDTO.getInfrastructureId())
+        .envId(infrastructureMappingDTO.getEnvIdentifier())
+        .infrastructureKey(infrastructureMappingDTO.getInfrastructureKey())
         .infrastructureMappingType(infrastructureMappingDTO.getInfrastructureMappingType())
-        .serviceId(infrastructureMappingDTO.getServiceId())
-        .id(infrastructureMappingDTO.getId())
+        .serviceId(infrastructureMappingDTO.getServiceIdentifier())
         .build();
   }
 }

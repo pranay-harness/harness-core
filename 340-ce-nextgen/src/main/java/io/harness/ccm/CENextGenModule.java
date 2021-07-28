@@ -20,7 +20,9 @@ import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.bigQuery.BigQueryServiceImpl;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.ccm.commons.service.intf.ClusterRecordService;
+import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
 import io.harness.ccm.service.impl.AWSBucketPolicyHelperServiceImpl;
@@ -62,6 +64,7 @@ import io.harness.persistence.UserProvider;
 import io.harness.queryconverter.SQLConverter;
 import io.harness.queryconverter.SQLConverterImpl;
 import io.harness.redis.RedisConfig;
+import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.serializer.CENextGenModuleRegistrars;
 import io.harness.serializer.KryoRegistrar;
@@ -186,7 +189,7 @@ public class CENextGenModule extends AbstractModule {
       }
     });
     install(new ConnectorResourceClientModule(configuration.getNgManagerClientConfig(),
-        configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
+        configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId(), ClientMode.PRIVILEGED));
     install(new K8sWatchTaskResourceClientModule(
         configuration.getManagerClientConfig(), configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(new TokenClientModule(configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(),
@@ -214,6 +217,7 @@ public class CENextGenModule extends AbstractModule {
     bind(AWSOrganizationHelperService.class).to(AWSOrganizationHelperServiceImpl.class);
     bind(AWSBucketPolicyHelperService.class).to(AWSBucketPolicyHelperServiceImpl.class);
     bind(BudgetService.class).to(BudgetServiceImpl.class);
+    bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
 
     registerEventsFrameworkMessageListeners();
 

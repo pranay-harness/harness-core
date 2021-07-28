@@ -7,8 +7,9 @@ import io.harness.batch.processing.reader.CloseableIteratorItemReader;
 import io.harness.batch.processing.reader.PublishedMessageBatchedReader;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
@@ -127,11 +128,11 @@ public class K8sWorkloadRecommendationConfig {
   @StepScope
   public ComputedRecommendationWriter computedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
       WorkloadCostService workloadCostService, WorkloadRepository workloadRepository,
-      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, K8sRecommendationDAO k8sRecommendationDAO,
-      @Value("#{jobParameters[startDate]}") Long startDateMillis) {
+      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, RecommendationCrudService recommendationCrudService,
+      ClusterHelper clusterHelper, @Value("#{jobParameters[startDate]}") Long startDateMillis) {
     Instant jobStartDate = Instant.ofEpochMilli(startDateMillis);
     return new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService, workloadRepository,
-        k8sLabelServiceInfoFetcher, k8sRecommendationDAO, jobStartDate);
+        k8sLabelServiceInfoFetcher, recommendationCrudService, clusterHelper, jobStartDate);
   }
 
   @Bean

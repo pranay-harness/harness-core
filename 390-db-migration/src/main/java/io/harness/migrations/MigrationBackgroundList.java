@@ -65,6 +65,7 @@ import io.harness.migrations.all.DelegateProfileIdentifierMigration;
 import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
+import io.harness.migrations.all.DeleteInvalidArtifactStreams;
 import io.harness.migrations.all.DeleteInvalidServiceGuardConfigs;
 import io.harness.migrations.all.DeleteOrphanNotificationGroups;
 import io.harness.migrations.all.DeleteOrphanPerpetualTaskMigration;
@@ -337,6 +338,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(199, AddAppManifestName.class))
         .add(Pair.of(200, DelegateProfileIdentifierMigration.class))
         .add(Pair.of(201, DelegateGroupIdentifierMigration.class))
+        .add(Pair.of(202, DeleteInvalidArtifactStreams.class))
         .build();
   }
 }

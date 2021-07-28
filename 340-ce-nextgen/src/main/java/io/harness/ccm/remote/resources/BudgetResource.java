@@ -2,8 +2,10 @@ package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.budget.BudgetData;
 import io.harness.ccm.service.intf.BudgetService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -40,7 +42,7 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create budget", nickname = "createBudget")
-  public RestResponse<String> save(@QueryParam("accountId") String accountId, Budget budget) {
+  public RestResponse<String> save(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, Budget budget) {
     budget.setAccountId(accountId);
     return new RestResponse<>(budgetService.create(budget));
   }
@@ -50,8 +52,8 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Clone budget", nickname = "cloneBudget")
-  public RestResponse<String> clone(@QueryParam("accountId") String accountId, @PathParam("id") String budgetId,
-      @QueryParam("cloneName") String budgetName) {
+  public RestResponse<String> clone(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @PathParam("id") String budgetId, @QueryParam("cloneName") String budgetName) {
     return new RestResponse<>(budgetService.clone(budgetId, budgetName, accountId));
   }
 
@@ -60,7 +62,8 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Get budget", nickname = "getBudget")
-  public RestResponse<Budget> get(@QueryParam("accountId") String accountId, @PathParam("id") String budgetId) {
+  public RestResponse<Budget> get(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @PathParam("id") String budgetId) {
     return new RestResponse<>(budgetService.get(budgetId, accountId));
   }
 
@@ -68,7 +71,7 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "List budgets for account", nickname = "listBudgetsForAccount")
-  public RestResponse<List<Budget>> list(@NotEmpty @QueryParam("accountId") String accountId) {
+  public RestResponse<List<Budget>> list(@NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     return new RestResponse<>(budgetService.list(accountId));
   }
 
@@ -77,8 +80,8 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "List budgets for perspective", nickname = "listBudgetsForPerspective")
-  public RestResponse<List<Budget>> list(
-      @NotEmpty @QueryParam("accountId") String accountId, @QueryParam("perspectiveId") String perspectiveId) {
+  public RestResponse<List<Budget>> list(@NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
     return new RestResponse<>(budgetService.list(accountId, perspectiveId));
   }
 
@@ -87,7 +90,8 @@ public class BudgetResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update budget", nickname = "updateBudget")
-  public RestResponse<String> update(@PathParam("id") String budgetId, Budget budget) {
+  public RestResponse<String> update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @PathParam("id") String budgetId, Budget budget) {
     budgetService.update(budgetId, budget);
     return new RestResponse<>("Successfully updated the budget");
   }
@@ -98,8 +102,38 @@ public class BudgetResource {
   @ExceptionMetered
   @ApiOperation(value = "Delete budget", nickname = "deleteBudget")
   public RestResponse<String> delete(
-      @NotEmpty @QueryParam("accountId") String accountId, @PathParam("id") String budgetId) {
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @PathParam("id") String budgetId) {
     budgetService.delete(budgetId, accountId);
     return new RestResponse<>("Successfully deleted the budget");
+  }
+
+  @GET
+  @Path("lastMonthCost")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get last month cost for perspective", nickname = "getLastMonthCost")
+  public RestResponse<Double> getLastMonthCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
+    return new RestResponse<>(budgetService.getLastMonthCostForPerspective(accountId, perspectiveId));
+  }
+
+  @GET
+  @Path("forecastCost")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get forecast cost for perspective", nickname = "getForecastCost")
+  public RestResponse<Double> getForecastCost(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
+    return new RestResponse<>(budgetService.getForecastCostForPerspective(accountId, perspectiveId));
+  }
+
+  @GET
+  @Path("{id}/costDetails")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "Get cost details for budget", nickname = "getCostDetails")
+  public RestResponse<BudgetData> getCostDetails(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @PathParam("id") String budgetId) {
+    return new RestResponse<>(budgetService.getBudgetTimeSeriesStats(budgetService.get(budgetId, accountId)));
   }
 }

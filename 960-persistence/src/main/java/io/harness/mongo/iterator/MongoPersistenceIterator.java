@@ -13,6 +13,8 @@ import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistentIrregularIterable;
 import io.harness.iterator.PersistentIterable;
@@ -36,6 +38,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PL)
 @Builder
 @Slf4j
 public class MongoPersistenceIterator<T extends PersistentIterable, F extends FilterExpander>
@@ -44,9 +47,7 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
 
   @Inject private final QueueController queueController;
 
-  public interface Handler<T> {
-    void handle(T entity);
-  }
+  public interface Handler<T> { void handle(T entity); }
 
   public enum SchedulingType { REGULAR, IRREGULAR, IRREGULAR_SKIP_MISSED }
 
@@ -165,6 +166,8 @@ public class MongoPersistenceIterator<T extends PersistentIterable, F extends Fi
         long sleepMillis = calculateSleepDuration(next).toMillis();
         // Do not sleep with 0, it is actually infinite sleep
         if (sleepMillis > 0) {
+          // set previous to 0 to reset base after notify() is called
+          previous = 0;
           synchronized (this) {
             wait(sleepMillis);
           }

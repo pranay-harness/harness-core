@@ -21,4 +21,5 @@ public class ManifestStepParameters implements StepParameters {
   ManifestAttributes spec;
   @Singular List<ManifestAttributes> overrideSets;
   ManifestAttributes stageOverride;
+  int order;
 }

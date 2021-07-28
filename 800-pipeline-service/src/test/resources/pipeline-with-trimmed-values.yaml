@@ -1,0 +1,81 @@
+pipeline:
+  identifier: "http"
+  name: "http"
+  projectIdentifier: "HttpJson"
+  orgIdentifier: "default"
+  tags: {}
+  stages:
+  - stage:
+      identifier: "stage1"
+      type: "Deployment"
+      name: "stage1"
+      description: ""
+      spec:
+        serviceConfig:
+          serviceDefinition:
+            type: "Kubernetes"
+            spec:
+              artifacts:
+                sidecars: []
+              variables: []
+              manifestOverrideSets: []
+              manifests: []
+          serviceRef: "service1"
+        infrastructure:
+          environmentRef: "ev"
+          infrastructureDefinition:
+            type: "KubernetesDirect"
+            spec:
+              connectorRef: "fdfd"
+              namespace: "fdfd"
+              releaseName: "release-<+INFRA_KEY>"
+          allowSimultaneousDeployments: false
+        execution:
+          steps:
+          - step:
+              identifier: "shell1"
+              type: "ShellScript"
+              name: "shell1"
+              spec:
+                shell: "Bash"
+                onDelegate: true
+                source:
+                  type: "Inline"
+                  spec:
+                    script: "exit 0"
+                environmentVariables:
+                - name: "string1"
+                  type: "String"
+                  value: "prashant1"
+                - name: "string2"
+                  type: "String"
+                  value: "supu1"
+                - name: "string3"
+                  type: "String"
+                  value: "Notrim"
+                outputVariables:
+                - name: "string4"
+                  type: "String"
+                  value: "string1"
+                - name: "string5"
+                  type: "String"
+                  value: "string2"
+                - name: "string6"
+                  type: "String"
+                  value: "string3"
+                executionTarget: {}
+              timeout: "10m"
+          rollbackSteps:
+          - step:
+              identifier: "rollbackRolloutDeployment"
+              type: "K8sRollingRollback"
+              name: "Rollback Rollout Deployment"
+              timeout: "10m"
+              spec: {}
+      tags: {}
+      failureStrategies:
+      - onFailure:
+          errors:
+          - "AllErrors"
+          action:
+            type: "StageRollback"

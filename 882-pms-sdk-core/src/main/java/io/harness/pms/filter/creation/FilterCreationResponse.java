@@ -2,10 +2,13 @@ package io.harness.pms.filter.creation;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.pipeline.filter.PipelineFilter;
+import io.harness.pms.sdk.core.pipeline.creators.CreatorResponse;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.ArrayList;
@@ -18,7 +21,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class FilterCreationResponse {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class FilterCreationResponse implements CreatorResponse {
   PipelineFilter pipelineFilter;
   int stageCount;
   @Default Map<String, YamlField> dependencies = new HashMap<>();

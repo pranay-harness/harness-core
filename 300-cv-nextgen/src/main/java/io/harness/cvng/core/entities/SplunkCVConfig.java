@@ -16,12 +16,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("SPLUNK")
 @Data
 @FieldNameConstants(innerTypeName = "SplunkCVConfigKeys")
 @NoArgsConstructor
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 public class SplunkCVConfig extends LogCVConfig {
   @VisibleForTesting static final String DSL = readDSL("splunk.datacollection");

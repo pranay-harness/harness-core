@@ -15,10 +15,14 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGPipelineSummaryCDConstants;
 import io.harness.cd.NGServiceConstants;
+import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
+import io.harness.models.constants.TimescaleConstants;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
+import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
 import io.harness.ng.cdOverview.dto.BuildIdAndInstanceCount;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
@@ -45,6 +49,7 @@ import io.harness.ng.cdOverview.dto.ServiceDetailsDTO;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
 import io.harness.ng.cdOverview.dto.ServicePipelineInfo;
 import io.harness.ng.cdOverview.dto.TimeAndStatusDeployment;
+import io.harness.ng.cdOverview.dto.TimeValuePair;
 import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.cdOverview.dto.TotalDeploymentInfo;
 import io.harness.ng.cdOverview.dto.WorkloadCountInfo;
@@ -67,6 +72,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1164,11 +1170,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
 
   /*
-    Returns break down of instance count for various environment type for given account+org+project+service
+    Returns break down of instance count for various environment type for given account+org+project+serviceIds
   */
   @Override
-  public InstanceCountDetailsByEnvTypeBase getActiveServiceInstanceCountBreakdown(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+  public InstanceCountDetailsByEnvTypeAndServiceId getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> serviceId) {
     return instanceDashboardService.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
   }
@@ -1225,5 +1231,77 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
             accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds, getCurrentTime());
     return InstancesByBuildIdList.builder().instancesByBuildIdList(instancesByBuildIdList).build();
+  }
+
+  /*
+    Returns instance count summary for given account+org+project+serviceId, includes rate of change in count since
+    provided timestamp
+  */
+  @Override
+  public ActiveServiceInstanceSummary getActiveServiceInstanceSummary(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    final long currentTime = getCurrentTime();
+    InstanceCountDetailsByEnvTypeBase currentCountDetails =
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), currentTime)
+            .getInstanceCountDetailsByEnvTypeBaseMap()
+            .get(serviceId);
+    InstanceCountDetailsByEnvTypeBase prevCountDetails =
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), timestampInMs)
+            .getInstanceCountDetailsByEnvTypeBaseMap()
+            .get(serviceId);
+
+    double changeRate =
+        calculateChangeRate(prevCountDetails.getTotalInstances(), currentCountDetails.getTotalInstances());
+
+    return ActiveServiceInstanceSummary.builder().countDetails(currentCountDetails).changeRate(changeRate).build();
+  }
+
+  /*
+    Returns a list of time value pairs where value represents count of instances for given account+org+project+service
+    within provided time interval
+  */
+  @Override
+  public TimeValuePairListDTO<Integer> getInstanceGrowthTrend(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
+    List<TimeValuePair<Integer>> timeValuePairList = new ArrayList<>();
+
+    final long tunedStartTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(startTimeInMs);
+    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
+
+    final String query =
+        "select reportedat, SUM(instancecount) as count from instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat order by reportedat asc";
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountIdentifier);
+        statement.setString(2, orgIdentifier);
+        statement.setString(3, projectIdentifier);
+        statement.setString(4, serviceId);
+        statement.setTimestamp(5, new Timestamp(tunedStartTimeInMs), DateUtils.getDefaultCalendar());
+        statement.setTimestamp(6, new Timestamp(tunedEndTimeInMs), DateUtils.getDefaultCalendar());
+
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          final long timestamp =
+              resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
+          final int count = Integer.parseInt(resultSet.getString("count"));
+          timeValuePairList.add(new TimeValuePair<>(timestamp, count));
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return new TimeValuePairListDTO<>(timeValuePairList);
   }
 }

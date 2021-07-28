@@ -9,6 +9,7 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
@@ -19,10 +20,10 @@ import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.exception.InvalidRequestException;
 
 import java.net.ConnectException;
-import java.time.Instant;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
@@ -42,8 +43,10 @@ import retrofit2.Response;
 @OwnedBy(CE)
 public class K8sNodeRecommendationTasklet implements Tasklet {
   @Autowired private K8sRecommendationDAO k8sRecommendationDAO;
+  @Autowired private RecommendationCrudService recommendationCrudService;
   @Autowired private BanzaiRecommenderClient banzaiRecommenderClient;
   @Autowired private VMPricingService vmPricingService;
+  @Autowired private ClusterHelper clusterHelper;
 
   private JobConstants jobConstants;
 
@@ -105,7 +108,8 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     RecommendationOverviewStats stats = getMonthlyCostAndSaving(serviceProvider, recommendation);
     log.info("The monthly stat is: {}", stats);
 
-    k8sRecommendationDAO.updateCeRecommendation(mongoEntityId, jobConstants, nodePoolId, stats, Instant.now());
+    final String clusterName = clusterHelper.fetchClusterName(nodePoolId.getClusterid());
+    recommendationCrudService.upsertNodeRecommendation(mongoEntityId, jobConstants, nodePoolId, clusterName, stats);
   }
 
   private K8sServiceProvider getCurrentNodePoolConfiguration(@NonNull NodePoolId nodePoolId) {

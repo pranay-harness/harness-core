@@ -70,7 +70,8 @@ public class CEYamlServiceImpl implements CEYamlService {
         yamlFileContent += "\n---\n";
       }
 
-      yamlFileContent += getK8sOptimisationYaml(accountId, request.getConnectorIdentifier(), harnessHost, serverName);
+      yamlFileContent +=
+          getK8sOptimisationYaml(accountId, request.getCcmConnectorIdentifier(), harnessHost, serverName);
     }
 
     return yamlFileContent;

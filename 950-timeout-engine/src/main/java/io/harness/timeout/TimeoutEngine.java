@@ -81,7 +81,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
     PersistenceIteratorFactory.PumpExecutorOptions options = PersistenceIteratorFactory.PumpExecutorOptions.builder()
                                                                  .interval(Duration.ofSeconds(10))
                                                                  .poolSize(5)
-                                                                 .name("TimeoutEngineHandler")
+                                                                 .name("TimeoutEngineHandler-%d")
                                                                  .build();
     iterator = persistenceIteratorFactory.createLoopIteratorWithDedicatedThreadPool(options, TimeoutInstance.class,
         MongoPersistenceIterator.<TimeoutInstance, SpringFilterExpander>builder()

@@ -793,7 +793,8 @@ public class ArtifactCollectionUtils {
    * @param artifactStreamAttributes the artifact stream attributes - used only for ARTIFACTORY
    * @return the set of artifact keys
    */
-  Set<String> getArtifactsKeys(ArtifactStream artifactStream, ArtifactStreamAttributes artifactStreamAttributes) {
+  public Set<String> getArtifactsKeys(
+      ArtifactStream artifactStream, ArtifactStreamAttributes artifactStreamAttributes) {
     if (artifactStream == null || artifactStream.getArtifactStreamType() == null) {
       return Collections.emptySet();
     }

@@ -36,9 +36,9 @@ public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStep
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sRollingStepInfo(
-      ParameterField<Boolean> skipDryRun, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
-    super(skipDryRun, delegateSelectors);
+  public K8sRollingStepInfo(ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String canaryStepFqn) {
+    super(skipDryRun, delegateSelectors, canaryStepFqn);
   }
 
   @Override
@@ -56,6 +56,7 @@ public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStep
     return K8sRollingStepParameters.infoBuilder()
         .skipDryRun(skipDryRun)
         .delegateSelectors(this.getDelegateSelectors())
+        .canaryStepFqn(canaryStepFqn)
         .build();
   }
 }

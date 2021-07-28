@@ -22,6 +22,8 @@ import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.plan.Types;
+import io.harness.pms.contracts.steps.SdkStep;
+import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -42,6 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -122,8 +125,7 @@ public class PmsSdkInitHelper {
     return InitializeSdkRequest.newBuilder()
         .setName(sdkConfiguration.getServiceName())
         .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(infoProvider))
-        .addAllSupportedSteps(infoProvider.getStepInfo())
-        .addAllSupportedStepTypes(calculateStepTypes(injector))
+        .addAllSupportedSteps(mapToSdkStep(calculateStepTypes(injector), infoProvider.getStepInfo()))
         .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(moduleType.getDisplayName()).build())
         .setInterruptConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.INTERRUPT_EVENT))
         .setOrchestrationEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.ORCHESTRATION_EVENT))
@@ -133,6 +135,24 @@ public class PmsSdkInitHelper {
         .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
         .setNodeResumeEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_RESUME))
         .build();
+  }
+
+  private static List<SdkStep> mapToSdkStep(List<StepType> stepTypeList, List<StepInfo> stepInfos) {
+    Map<String, StepType> stepTypeStringToStepType =
+        stepTypeList.stream().collect(Collectors.toMap(StepType::getType, stepType -> stepType));
+    Map<String, StepInfo> stepTypeStringToStepInfo =
+        stepInfos.stream().collect(Collectors.toMap(StepInfo::getType, stepType -> stepType));
+    List<SdkStep> pmsSdkStepTypeWithInfos = new ArrayList<>();
+    for (String stepType : stepTypeStringToStepType.keySet()) {
+      SdkStep.Builder sdkStepWrapper = SdkStep.newBuilder();
+      sdkStepWrapper.setStepType(stepTypeStringToStepType.get(stepType));
+      if (stepTypeStringToStepInfo.containsKey(stepType)) {
+        sdkStepWrapper.setIsPartOfStepPallete(true);
+        sdkStepWrapper.setStepInfo(stepTypeStringToStepInfo.get(stepType));
+      }
+      pmsSdkStepTypeWithInfos.add(sdkStepWrapper.build());
+    }
+    return pmsSdkStepTypeWithInfos;
   }
 
   /**

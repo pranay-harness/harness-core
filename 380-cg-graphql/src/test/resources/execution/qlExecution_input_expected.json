@@ -8,5 +8,6 @@
    "deploymentType": "HELM",
    "createdAt": 0,
    "createdBy": null
- }]
+ }],
+  "serviceManifestInputs":null
 }

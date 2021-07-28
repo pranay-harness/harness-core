@@ -458,6 +458,15 @@ public class BudgetServiceImpl implements BudgetService {
     String[] emailAddresses = ArrayUtils.nullToEmpty(budget.getEmailAddresses());
     String[] uniqueEmailAddresses = new HashSet<>(Arrays.asList(emailAddresses)).toArray(new String[0]);
     budget.setEmailAddresses(uniqueEmailAddresses);
+    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
+    if (alertThresholds != null && alertThresholds.length > 0) {
+      for (AlertThreshold alertThreshold : alertThresholds) {
+        emailAddresses = ArrayUtils.nullToEmpty(alertThreshold.getEmailAddresses());
+        uniqueEmailAddresses = new HashSet<>(Arrays.asList(emailAddresses)).toArray(new String[0]);
+        alertThreshold.setEmailAddresses(uniqueEmailAddresses);
+      }
+      budget.setAlertThresholds(alertThresholds);
+    }
   }
 
   private double computeActualCost(Budget budget) {

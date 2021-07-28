@@ -86,6 +86,7 @@ BAZEL_MODULES="\
   //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
+  //865-cg-events:module \
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
@@ -95,7 +96,6 @@ BAZEL_MODULES="\
   //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
-  //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
   //900-git-sync-sdk:module \
@@ -108,7 +108,6 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
   //925-access-control-service:module \
-  //925-watcher-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //940-feature-flag:module \
@@ -169,12 +168,12 @@ BAZEL_MODULES="\
   //960-persistence:module \
   //960-persistence:supporter-test \
   //960-yaml-sdk:module \
-  //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
   //970-rbac-core:module \
   //970-telemetry-beans:module \
+  //970-watcher-beans:module \
   //980-commons:module \
   //980-recaster:module \
   //990-commons-test:module \
@@ -356,6 +355,7 @@ build_bazel_module 830-notification-service
 build_bazel_module 830-resource-group
 build_bazel_module 835-notification-senders
 build_bazel_module 850-ng-pipeline-commons
+build_bazel_module 865-cg-events
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-cg-orchestration
@@ -374,7 +374,6 @@ build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
-build_bazel_module 925-watcher-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 940-feature-flag
@@ -423,6 +422,7 @@ build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
+build_bazel_module 970-watcher-beans
 build_bazel_module 980-recaster
 build_bazel_module 980-commons
 build_bazel_module 990-commons-test

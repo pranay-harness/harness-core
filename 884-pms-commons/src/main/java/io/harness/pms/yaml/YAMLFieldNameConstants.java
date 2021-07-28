@@ -45,4 +45,5 @@ public class YAMLFieldNameConstants {
   public final String PIPELINE_GROUP = "PIPELINE";
   public final String STORE = "store";
   public final String PIPELINE_INFRASTRUCTURE = "infrastructure";
+  public final String COMMAND_TYPE = "commandType";
 }
