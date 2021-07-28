@@ -68,7 +68,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public void deleteAll(List<InstanceDTO> instanceDTOList) {
-    instanceRepository.deleteAll(instanceDTOList.stream().map(InstanceMapper::toEntity).collect(Collectors.toList()));
+    instanceDTOList.forEach(instanceDTO -> instanceRepository.deleteByInstanceKey(instanceDTO.getInstanceKey()));
   }
 
   /**

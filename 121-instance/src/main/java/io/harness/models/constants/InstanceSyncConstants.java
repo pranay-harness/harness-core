@@ -32,6 +32,7 @@ public final class InstanceSyncConstants {
   public static final int INSTANCE_LIMIT = 20;
   public static final String buildId = "buildId";
   public static final String ENV_TYPE = "envType";
+  public static final String AUTO_SCALED = "AUTO_SCALED";
 
   // Lock key prefixes and timeouts
   public static final String INSTANCE_SYNC_PREFIX = "INSTANCE_SYNC:";
