@@ -76,6 +76,7 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
   }
 
   private OkHttpClient getSafeOkHttpClient() {
+    log.info("Starting getSafeOkHttpClient ");
     try {
       KeyStore keyStore = getKeyStore();
 
@@ -130,6 +131,8 @@ public class DelegateAgentManagerClientFactory implements Provider<DelegateAgent
         for (X509Certificate acceptedIssuer : ((X509TrustManager) trustManager).getAcceptedIssuers()) {
           keyStore.setCertificateEntry(acceptedIssuer.getSubjectDN().getName(), acceptedIssuer);
         }
+      }else {
+        log.info("Not instance of X509TrustManager");
       }
     }
 
