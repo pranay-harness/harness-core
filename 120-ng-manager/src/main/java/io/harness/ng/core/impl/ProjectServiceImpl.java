@@ -76,6 +76,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -264,7 +265,9 @@ public class ProjectServiceImpl implements ProjectService {
                             .exists(true);
     Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
     List<UserMembership> userMembershipList = userMembershipPage.getContent();
-
+    if (userMembershipList.isEmpty()) {
+      return getNGPageResponse(Page.empty(), Collections.emptyList());
+    }
     Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
     List<Criteria> criteriaList = new ArrayList<>();
     for (UserMembership userMembership : userMembershipList) {
