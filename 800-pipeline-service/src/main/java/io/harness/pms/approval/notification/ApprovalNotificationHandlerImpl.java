@@ -169,7 +169,6 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
             .team(Team.PIPELINE)
             .templateId(slackTemplateId)
             .templateData(templateData)
-            .userGroupIds(Collections.singletonList(userGroup.getIdentifier()))
             .webhookUrls(Collections.singletonList(slackConfig.getSlackWebhookUrl()))
             .build();
       case EMAIL:
@@ -182,7 +181,6 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
             .team(Team.PIPELINE)
             .templateId(emailTemplateId)
             .templateData(templateData)
-            .userGroupIds(Collections.singletonList(userGroup.getIdentifier()))
             .recipients(Collections.singletonList(emailConfigDTO.getGroupEmail()))
             .build();
       default:

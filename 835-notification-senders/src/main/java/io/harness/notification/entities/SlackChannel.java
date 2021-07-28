@@ -23,14 +23,12 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("Slack")
 public class SlackChannel implements Channel {
   List<String> slackWebHookUrls;
-  List<String> userGroupIds;
   List<UserGroup> userGroups;
   Map<String, String> templateData;
   @Override
   public Object toObjectofProtoSchema() {
     return Slack.newBuilder()
         .addAllSlackWebHookUrls(slackWebHookUrls)
-        .addAllUserGroupIds(userGroupIds)
         .putAllTemplateData(templateData)
         .addAllUserGroup(NotificationUserGroupMapper.toProto(userGroups))
         .build();
@@ -45,7 +43,6 @@ public class SlackChannel implements Channel {
   public static SlackChannel toSlackEntity(Slack slackDetails) {
     return SlackChannel.builder()
         .slackWebHookUrls(slackDetails.getSlackWebHookUrlsList())
-        .userGroupIds(slackDetails.getUserGroupIdsList())
         .templateData(slackDetails.getTemplateDataMap())
         .userGroups(NotificationUserGroupMapper.toEntity(slackDetails.getUserGroupList()))
         .build();

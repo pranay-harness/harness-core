@@ -52,7 +52,20 @@ public class EventConfigServiceImpl implements EventConfigService {
 
   @Override
   public CgEventConfig getEventsConfig(String accountId, String appId, @Valid @NotBlank String eventConfigId) {
-    return hPersistence.get(CgEventConfig.class, eventConfigId);
+    return hPersistence.createQuery(CgEventConfig.class)
+        .filter(CgEventConfigKeys.accountId, accountId)
+        .filter(CgEventConfigKeys.appId, appId)
+        .filter(CgEventConfigKeys.uuid, eventConfigId)
+        .get();
+  }
+
+  @Override
+  public CgEventConfig getEventsConfigByName(String accountId, String appId, @Valid @NotBlank String eventConfigName) {
+    return hPersistence.createQuery(CgEventConfig.class)
+        .filter(CgEventConfigKeys.accountId, accountId)
+        .filter(CgEventConfigKeys.appId, appId)
+        .filter(CgEventConfigKeys.name, eventConfigName)
+        .get();
   }
 
   @Override
