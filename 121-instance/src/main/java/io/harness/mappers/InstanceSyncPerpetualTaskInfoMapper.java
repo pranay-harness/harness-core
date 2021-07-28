@@ -29,6 +29,7 @@ public class InstanceSyncPerpetualTaskInfoMapper {
 
   public InstanceSyncPerpetualTaskInfo toEntity(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO) {
     return InstanceSyncPerpetualTaskInfo.builder()
+        .id(instanceSyncPerpetualTaskInfoDTO.getId())
         .accountIdentifier(instanceSyncPerpetualTaskInfoDTO.getAccountIdentifier())
         .infrastructureMappingId(instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId())
         .deploymentInfoDetailsList(
