@@ -33,4 +33,5 @@ public class ContainerDefinitionInfo {
   List<SecretNGVariable> secretVariables;
   private boolean privileged;
   private Integer runAsUser;
+  private String imagePullPolicy;
 }

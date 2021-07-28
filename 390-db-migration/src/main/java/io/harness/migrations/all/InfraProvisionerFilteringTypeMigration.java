@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.PageRequest;
 import io.harness.exception.ExceptionUtils;
 import io.harness.migrations.Migration;

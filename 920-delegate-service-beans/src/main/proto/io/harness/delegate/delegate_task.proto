@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package io.harness.delegate;
+
+option java_multiple_files = true;
+option go_package = "920_delegate_service_beans";
+
+service DelegateTask {
+  rpc QueueTask(DelegateClassicTaskRequest) returns (QueueTaskResponse);
+  rpc ExecuteTask(DelegateClassicTaskRequest) returns (ExecuteTaskResponse);
+}
+
+message DelegateClassicTaskRequest {
+  bytes delegate_task_kryo = 1;
+}
+
+message QueueTaskResponse {
+  string uuid = 1;
+}
+
+message ExecuteTaskResponse {
+  bytes delegate_task_response_kryo = 1;
+}

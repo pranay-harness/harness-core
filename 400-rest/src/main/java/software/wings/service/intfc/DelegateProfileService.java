@@ -27,10 +27,17 @@ public interface DelegateProfileService extends OwnedByAccount {
   DelegateProfile fetchNgPrimaryProfile(String accountId, DelegateEntityOwner owner);
 
   DelegateProfile update(DelegateProfile delegateProfile);
+  DelegateProfile updateV2(DelegateProfile delegateProfile);
   DelegateProfile updateScopingRules(
       String accountId, String delegateProfileId, List<DelegateProfileScopingRule> scopingRules);
   DelegateProfile add(DelegateProfile delegateProfile);
   void delete(String accountId, String delegateProfileId);
   DelegateProfile updateDelegateProfileSelectors(String delegateProfileId, String accountId, List<String> selectors);
   List<String> getDelegatesForProfile(String accountId, String profileId);
+  DelegateProfile getProfileByIdentifier(String accountId, DelegateEntityOwner owner, String profileIdentifier);
+  DelegateProfile updateScopingRules(String accountId, DelegateEntityOwner owner, String profileIdentifier,
+      List<DelegateProfileScopingRule> scopingRules);
+  void deleteProfileV2(String accountId, DelegateEntityOwner owner, String delegateProfileIdentifier);
+  DelegateProfile updateProfileSelectorsV2(
+      String accountId, DelegateEntityOwner owner, String delegateProfileIdentifier, List<String> selectors);
 }

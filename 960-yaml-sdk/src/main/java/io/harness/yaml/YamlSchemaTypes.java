@@ -20,4 +20,14 @@ public @interface YamlSchemaTypes {
    * Set a defaultType if it is default for schema. (It will appear as topmost suggestion.)
    */
   SupportedPossibleFieldTypes defaultType() default SupportedPossibleFieldTypes.none;
+
+  /**
+   * Set a regex which will be used only in case of SupportedPossibleFieldTypes.string
+   */
+  String pattern() default "";
+
+  /**
+   * Set min string length which will be used only in case of SupportedPossibleFieldTypes.string
+   */
+  int minLength() default - 1;
 }

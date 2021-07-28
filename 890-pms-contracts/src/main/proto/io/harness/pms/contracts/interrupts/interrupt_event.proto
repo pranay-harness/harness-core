@@ -5,10 +5,8 @@ package io.harness.pms.contracts.interrupts;
 option java_multiple_files = true;
 
 import "io/harness/pms/contracts/interrupts/interrupt_type.proto";
-import "io/harness/pms/contracts/execution/node_execution_proto.proto";
 import "io/harness/pms/contracts/execution/executable_response.proto";
 import "io/harness/pms/contracts/ambiance/ambiance.proto";
-import "io/harness/pms/contracts/steps/step_type.proto";
 
 message InterruptEvent {
   string interruptUuid = 1;

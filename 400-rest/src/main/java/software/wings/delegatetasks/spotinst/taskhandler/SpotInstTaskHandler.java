@@ -137,7 +137,7 @@ public abstract class SpotInstTaskHandler {
     ExecutionLogCallback waitLogCallback = getLogCallBack(parameters, waitCommandUnitName);
     waitLogCallback.saveExecutionLog(format("Waiting for Elastigroup: [%s] to reach steady state", elastiGroupId));
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(steadyStateTimeOut), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(steadyStateTimeOut), () -> {
         while (true) {
           if (allInstancesHealthy(spotInstToken, spotInstAccountId, elastiGroupId, waitLogCallback, targetInstances)) {
             return true;

@@ -5,6 +5,7 @@ import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.HARNESS__STATUS__IDENTIFIER;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.ARVIND;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,9 +31,11 @@ import io.harness.logging.LogCallback;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -53,6 +56,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -89,6 +93,8 @@ public class CfDeploymentManagerImplTest extends CategoryTest {
   public void getAppPrefixByRemovingNumber() {
     assertThat(StringUtils.EMPTY).isEqualTo(deploymentManager.getAppPrefixByRemovingNumber(null));
     assertThat("a_b_c").isEqualTo(deploymentManager.getAppPrefixByRemovingNumber("a_b_c__4"));
+    assertThat("a_b_c").isEqualTo(deploymentManager.getAppPrefixByRemovingNumber("a_b_c"));
+    assertThat("a_b_c").isEqualTo(deploymentManager.getAppPrefixByRemovingNumber("a_b_c__INACTIVE"));
   }
 
   @Test
@@ -668,6 +674,32 @@ public class CfDeploymentManagerImplTest extends CategoryTest {
     assertThat(previousReleasesApplication).isNotNull();
     assertThat(previousReleasesApplication.size()).isEqualTo(1);
 
+    // non-versioned
+    reset(sdkClient);
+    List<ApplicationSummary> summaries = new ArrayList<>();
+    summaries.add(getApplicationSummary(prefix, 0));
+    when(sdkClient.getApplications(eq(cfRequestConfig))).thenReturn(summaries);
+    List<ApplicationSummary> releases = deploymentManager.getPreviousReleases(cfRequestConfig, prefix);
+    assertThat(releases.size()).isEqualTo(1);
+    assertThat(releases.stream().map(ApplicationSummary::getName)).containsExactly(prefix);
+
+    summaries.add(getApplicationSummary(prefix + "__INACTIVE", 0));
+    releases = deploymentManager.getPreviousReleases(cfRequestConfig, prefix);
+    assertThat(releases.size()).isEqualTo(2);
+    assertThat(releases.stream().map(ApplicationSummary::getName)).containsExactly(prefix + "__INACTIVE", prefix);
+
+    summaries.add(getApplicationSummary(prefix + "__1", 0));
+    releases = deploymentManager.getPreviousReleases(cfRequestConfig, prefix);
+    assertThat(releases.size()).isEqualTo(3);
+    assertThat(releases.stream().map(ApplicationSummary::getName))
+        .containsExactly(prefix + "__1", prefix + "__INACTIVE", prefix);
+
+    summaries.add(getApplicationSummary(prefix + "__2", 0));
+    releases = deploymentManager.getPreviousReleases(cfRequestConfig, prefix);
+    assertThat(releases.size()).isEqualTo(4);
+    assertThat(releases.stream().map(ApplicationSummary::getName))
+        .containsExactly(prefix + "__1", prefix + "__2", prefix + "__INACTIVE", prefix);
+
     reset(sdkClient);
     doThrow(Exception.class).when(sdkClient).getApplications(eq(cfRequestConfig));
     assertThatThrownBy(() -> deploymentManager.getPreviousReleases(cfRequestConfig, prefix))
@@ -892,5 +924,37 @@ public class CfDeploymentManagerImplTest extends CategoryTest {
     verify(sdkClient).pushAppBySdk(cfRequestCaptor.capture(), any(), any());
     CfRequestConfig captorValueConfig = cfRequestCaptor.getValue();
     assertThat(captorValueConfig).isEqualTo(cfRequestConfig);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testRenameApplication() throws Exception {
+    CfRenameRequest request = Mockito.mock(CfRenameRequest.class);
+    when(request.getName()).thenReturn("app");
+    when(request.getNewName()).thenReturn("app", "app1");
+    deploymentManager.renameApplication(request, logCallback);
+    verify(sdkClient, times(0)).renameApplication(request);
+    deploymentManager.renameApplication(request, logCallback);
+    verify(sdkClient).renameApplication(request);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testMatchesPrefix2() {
+    String prefix = "A__B__c";
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__34")).isTrue();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__INACTIVE")).isTrue();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__inactive")).isTrue();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__cinactive")).isFalse();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__387")).isTrue();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__387b")).isFalse();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__hello387b")).isFalse();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__hello__387b")).isFalse();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "A__b__c__hello__7b")).isFalse();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "a__b__c")).isTrue();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "a__B__c")).isTrue();
+    assertThat(deploymentManager.matchesPrefix2(prefix, "B__B__c")).isFalse();
   }
 }

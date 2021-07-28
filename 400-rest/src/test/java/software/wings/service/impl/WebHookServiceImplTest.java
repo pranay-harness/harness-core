@@ -69,6 +69,7 @@ import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.Trigger;
@@ -1082,11 +1083,11 @@ public class WebHookServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build());
     wingsPersistence.save(Service.builder().name(SERVICE_NAME + 2).appId(APP_ID).uuid(SERVICE_ID + 2).build());
 
-    Map<String, String> serviceManifestMapping =
+    Map<String, ManifestSummary> serviceManifestMapping =
         webhookServiceImpl.resolveServiceHelmChartVersion(APP_ID, webHookRequest);
     assertThat(serviceManifestMapping).isNotEmpty();
-    assertThat(serviceManifestMapping).containsEntry(SERVICE_ID, "1.0");
-    assertThat(serviceManifestMapping).containsEntry(SERVICE_ID + 2, "2.0");
+    assertThat(serviceManifestMapping.get(SERVICE_ID).getVersionNo()).isEqualTo("1.0");
+    assertThat(serviceManifestMapping.get(SERVICE_ID + 2).getVersionNo()).isEqualTo("2.0");
   }
 
   @Test
@@ -1130,7 +1131,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
 
     Response response = webHookService.execute(token, request, httpHeaders);
     assertThat(response).isNotNull();
-    assertThat(response.getStatus()).isEqualTo(400);
+    assertThat(response.getStatus()).isEqualTo(401);
     assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
     WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
     assertThat(webHookResponse.getError()).isEqualTo("Api Key cannot be empty");

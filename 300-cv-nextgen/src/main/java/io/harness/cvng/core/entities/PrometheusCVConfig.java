@@ -9,8 +9,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.core.beans.PrometheusDSConfig.PrometheusFilter;
-import io.harness.cvng.core.beans.PrometheusDSConfig.PrometheusMetricDefinition;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition.PrometheusFilter;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
@@ -23,11 +23,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("PROMETHEUS")
 @Data
-@Builder
+@SuperBuilder
 @FieldNameConstants(innerTypeName = "PrometheusCVConfigKeys")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -92,7 +93,7 @@ public class PrometheusCVConfig extends MetricCVConfig {
     }
   }
 
-  public void fromDSConfigDefinitions(
+  public void populateFromMetricDefinitions(
       List<PrometheusMetricDefinition> metricDefinitions, CVMonitoringCategory category) {
     if (metricInfoList == null) {
       metricInfoList = new ArrayList<>();

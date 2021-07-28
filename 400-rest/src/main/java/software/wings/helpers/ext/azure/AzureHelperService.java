@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.azure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -20,6 +21,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.exception.AzureServiceException;
@@ -87,6 +89,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class AzureHelperService {
@@ -141,9 +144,7 @@ public class AzureHelperService {
         Collectors.toMap(Subscription::subscriptionId, Subscription::displayName));
   }
 
-  public boolean isValidSubscription(
-      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+  public boolean isValidSubscription(AzureConfig azureConfig, String subscriptionId) {
     return getAzureClient(azureConfig)
                .subscriptions()
                .list()
@@ -419,18 +420,14 @@ public class AzureHelperService {
     return Collections.EMPTY_SET;
   }
 
-  public List<String> listContainerRegistryNames(
-      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+  public List<String> listContainerRegistryNames(AzureConfig azureConfig, String subscriptionId) {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<String> registries = new ArrayList<>();
     azure.containerRegistries().list().forEach(registry -> registries.add(registry.name()));
     return registries;
   }
 
-  public List<AzureContainerRegistry> listContainerRegistries(
-      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+  public List<AzureContainerRegistry> listContainerRegistries(AzureConfig azureConfig, String subscriptionId) {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<AzureContainerRegistry> registries = new ArrayList<>();
     azure.containerRegistries().list().forEach(registry
@@ -444,9 +441,7 @@ public class AzureHelperService {
     return registries;
   }
 
-  public boolean isValidContainerRegistry(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
-      String subscriptionId, String registryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+  public boolean isValidContainerRegistry(AzureConfig azureConfig, String subscriptionId, String registryName) {
     return getAzureClient(azureConfig, subscriptionId)
                .containerRegistries()
                .list()
@@ -474,9 +469,7 @@ public class AzureHelperService {
         .get();
   }
 
-  public List<String> listRepositories(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
-      String subscriptionId, String registryName) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+  public List<String> listRepositories(AzureConfig azureConfig, String subscriptionId, String registryName) {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     try {
       Registry registry = azure.containerRegistries()

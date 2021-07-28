@@ -3,6 +3,8 @@ package io.harness.pms.sdk.core.execution.events.orchestration;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.util.Collections.emptyList;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -13,13 +15,16 @@ import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
-import io.harness.serializer.ProtoUtils;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -76,11 +81,25 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
     return io.harness.pms.sdk.core.events.OrchestrationEvent.builder()
         .eventType(event.getEventType())
         .ambiance(event.getAmbiance())
-        .createdAt(ProtoUtils.timestampToUnixMillis(event.getCreatedAt()))
         .status(event.getStatus())
-        .resolvedStepParameters(event.getStepParameters().toStringUtf8())
+        .resolvedStepParameters(
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class))
         .serviceName(event.getServiceName())
         .triggerPayload(event.getTriggerPayload())
+        .tags(generateTagList(event))
         .build();
+  }
+
+  private List<String> generateTagList(OrchestrationEvent event) {
+    if (event.getTagsList() == null || event.getTagsCount() == 0) {
+      return emptyList();
+    }
+
+    List<String> tags = new ArrayList<>();
+    for (int i = 0; i < event.getTagsCount(); i++) {
+      tags.add(event.getTags(i));
+    }
+
+    return tags;
   }
 }

@@ -27,6 +27,7 @@ import javax.ws.rs.QueryParam;
 @NextGenManagerAuth
 public class DeploymentLogAnalysisResource {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
+  private int DEFAULT_PAGE_SIZE = 10;
 
   @Produces({"application/json", "application/v1+json"})
   @GET
@@ -51,6 +52,6 @@ public class DeploymentLogAnalysisResource {
       @QueryParam("accountId") String accountId, @QueryParam("label") Integer label,
       @QueryParam("pageNumber") int pageNumber, @QueryParam("hostName") String hostName) {
     return new RestResponse(deploymentLogAnalysisService.getLogAnalysisResult(
-        accountId, verificationJobInstanceId, label, pageNumber, hostName));
+        accountId, verificationJobInstanceId, label, pageNumber, DEFAULT_PAGE_SIZE, hostName));
   }
 }

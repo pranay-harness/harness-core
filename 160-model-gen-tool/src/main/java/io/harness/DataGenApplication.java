@@ -1,11 +1,13 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
@@ -14,7 +16,6 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.client.CVNGClientModule;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -90,6 +91,7 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(PL)
 public class DataGenApplication extends Application<MainConfiguration> {
   public static void main(String... args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -199,7 +201,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
-    modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

@@ -2,6 +2,7 @@ package io.harness.accesscontrol;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.accesscontrol.acl.ACLModule;
 import io.harness.accesscontrol.permissions.PermissionsModule;
 import io.harness.accesscontrol.principals.PrincipalModule;
 import io.harness.accesscontrol.resources.ResourceModule;
@@ -40,6 +41,7 @@ public class AccessControlCoreModule extends AbstractModule {
     install(RoleModule.getInstance());
     install(PrincipalModule.getInstance());
     install(RoleAssignmentModule.getInstance());
+    install(ACLModule.getInstance());
     registerRequiredBindings();
   }
 

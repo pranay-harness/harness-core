@@ -3,6 +3,8 @@ package io.harness.delegate.beans.connector.awskmsconnector;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -19,6 +21,6 @@ import lombok.Data;
 @JsonTypeName(AwsKmsConstants.MANUAL_CONFIG)
 @ApiModel("AwsKmsCredentialSpecManualConfig")
 public class AwsKmsCredentialSpecManualConfigDTO implements AwsKmsCredentialSpecDTO {
-  @ApiModelProperty(dataType = "string") @NotNull private String accessKey;
-  @ApiModelProperty(dataType = "string") @NotNull private String secretKey;
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData accessKey;
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;
 }

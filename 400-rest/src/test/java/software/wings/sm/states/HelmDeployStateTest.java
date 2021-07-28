@@ -107,6 +107,7 @@ import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
@@ -136,6 +137,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -976,7 +978,7 @@ public class HelmDeployStateTest extends CategoryTest {
     Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     // Rethrow instance of WingsException
-    doThrow(new HelmClientException("Client exception"))
+    doThrow(new HelmClientException("Client exception", HelmCliCommandType.INSTALL))
         .when(spyDeployState)
         .handleAsyncInternal(context, responseDataMap);
     assertThatThrownBy(() -> spyDeployState.handleAsyncResponse(context, responseDataMap))
@@ -1356,7 +1358,10 @@ public class HelmDeployStateTest extends CategoryTest {
 
     doReturn(serviceHelmChartManifest).when(applicationManifestUtils).getApplicationManifestForService(context);
     when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, serviceHelmChartManifest))
-        .thenReturn(HelmChartConfigParams.builder().repoName("repoName").build());
+        .thenReturn(HelmChartConfigParams.builder()
+                        .connectorConfig(GcpConfig.builder().delegateSelectors(singletonList("gcp-delegate")).build())
+                        .repoName("repoName")
+                        .build());
 
     helmDeployState.executeHelmValuesFetchTask(context, ACTIVITY_ID, helmOverrideManifestMap);
 
@@ -1370,6 +1375,7 @@ public class HelmDeployStateTest extends CategoryTest {
     HelmValuesFetchTaskParameters taskParameters = (HelmValuesFetchTaskParameters) task.getData().getParameters()[0];
     assertThat(taskParameters.getHelmChartConfigTaskParams()).isNotNull();
     assertThat(taskParameters.getHelmChartConfigTaskParams().getRepoName()).isEqualTo("repoName");
+    assertThat(taskParameters.getDelegateSelectors()).containsExactly("gcp-delegate");
   }
 
   @Test
@@ -1563,26 +1569,55 @@ public class HelmDeployStateTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ABOSII)
+  @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testExecuteHelmTaskWithPollForChangesEnabled() throws Exception {
+  public void testExecuteHelmTaskWithHelmChartAsArtifact() throws Exception {
     HelmChartSpecification helmChartSpec = HelmChartSpecification.builder().chartName("name").build();
-    ApplicationManifest appManifest = ApplicationManifest.builder()
-                                          .pollForChanges(true)
-                                          .storeType(HelmChartRepo)
-                                          .helmChartConfig(HelmChartConfig.builder().chartName("name").build())
-                                          .build();
+
+    HelmChartConfig chartConfigForServiceManifest =
+        HelmChartConfig.builder().chartVersion("3.0.0").chartName("chartConfigForServiceManifest").build();
+    ApplicationManifest appManifestUsingServiceId = ApplicationManifest.builder()
+                                                        .pollForChanges(true)
+                                                        .storeType(HelmChartRepo)
+                                                        .helmChartConfig(chartConfigForServiceManifest)
+                                                        .build();
+    HelmChartConfig chartConfigForManifestAsArtifact =
+        HelmChartConfig.builder().chartVersion("2.0.0").chartName("chartConfigForManifestAsArtifact").build();
+    ApplicationManifest appManifestUsingManifestIdFromChartConfig =
+        ApplicationManifest.builder()
+            .pollForChanges(true)
+            .storeType(HelmChartRepo)
+            .helmChartConfig(chartConfigForManifestAsArtifact)
+            .build();
 
     doReturn(helmChartSpec).when(serviceResourceService).getHelmChartSpecification(anyString(), anyString());
     doReturn(true).when(featureFlagService).isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, null);
-    doReturn(true).when(applicationManifestUtils).isPollForChangesEnabled(appManifest);
-    doReturn(appManifest)
+    doReturn(appManifestUsingServiceId)
         .when(applicationManifestService)
         .getAppManifest(app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
+    doReturn(appManifestUsingManifestIdFromChartConfig)
+        .when(applicationManifestUtils)
+        .getAppManifestFromFromExecutionContextHelmChart(context, serviceElement.getUuid());
+    doReturn(Service.builder().uuid(SERVICE_ID).artifactFromManifest(true).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID);
 
     helmDeployState.executeHelmTask(context, ACTIVITY_ID, emptyMap(), emptyMap());
     verify(applicationManifestUtils, times(1))
-        .applyHelmChartFromExecutionContext(appManifest, context, serviceElement.getUuid());
+        .getAppManifestFromFromExecutionContextHelmChart(context, serviceElement.getUuid());
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    verifyDelegateSelectorInDelegateTaskParams(delegateTask);
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
+
+    assertThat(helmInstallCommandRequest.getChartSpecification()).isNotNull();
+    assertThat(helmInstallCommandRequest.getChartSpecification().getChartName())
+        .isEqualTo("chartConfigForManifestAsArtifact");
+    assertThat(helmInstallCommandRequest.getChartSpecification().getChartVersion()).isEqualTo("2.0.0");
   }
 
   @Test

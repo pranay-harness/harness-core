@@ -18,15 +18,18 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionBuilder;
 import software.wings.beans.trigger.GithubAction;
+import software.wings.beans.trigger.ManifestTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
@@ -42,7 +45,9 @@ import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLGitHubAction;
 import software.wings.graphql.schema.type.trigger.QLGitHubEvent;
+import software.wings.graphql.schema.type.trigger.QLManifestConditionInput;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
+import software.wings.graphql.schema.type.trigger.QLOnNewManifest;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
 import software.wings.graphql.schema.type.trigger.QLOnWebhook;
@@ -53,6 +58,7 @@ import software.wings.graphql.schema.type.trigger.QLWebhookConditionInput;
 import software.wings.graphql.schema.type.trigger.QLWebhookDetails;
 import software.wings.graphql.schema.type.trigger.QLWebhookEvent;
 import software.wings.graphql.schema.type.trigger.QLWebhookSource;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
@@ -73,6 +79,7 @@ public class TriggerConditionController {
   @Inject MainConfiguration mainConfiguration;
   @Inject ArtifactStreamService artifactStreamService;
   @Inject SettingsService settingsService;
+  @Inject ApplicationManifestService applicationManifestService;
   @Inject FeatureFlagService featureFlagService;
 
   public QLTriggerCondition populateTriggerCondition(Trigger trigger, String accountId) {
@@ -180,6 +187,17 @@ public class TriggerConditionController {
                 .build();
 
         break;
+      case NEW_MANIFEST:
+        ManifestTriggerCondition manifestTriggerCondition = (ManifestTriggerCondition) trigger.getCondition();
+        condition = QLOnNewManifest.builder()
+                        .appManifestId(manifestTriggerCondition.getAppManifestId())
+                        .appManifestName(manifestTriggerCondition.getAppManifestName())
+                        .serviceId(manifestTriggerCondition.getServiceId())
+                        .versionRegex(manifestTriggerCondition.getVersionRegex())
+                        .triggerConditionType(
+                            QLTriggerConditionType.valueOf(manifestTriggerCondition.getConditionType().name()))
+                        .build();
+        break;
       default:
     }
     return condition;
@@ -250,6 +268,9 @@ public class TriggerConditionController {
       case ON_WEBHOOK:
         triggerCondition = validateAndResolveOnWebhookConditionType(qlCreateOrUpdateTriggerInput);
         break;
+      case ON_NEW_MANIFEST:
+        triggerCondition = validateAndResolveOnNewManifestConditionType(qlCreateOrUpdateTriggerInput);
+        break;
       default:
     }
 
@@ -272,6 +293,41 @@ public class TriggerConditionController {
       artifactTriggerConditionBuilder.regex(triggerConditionInput.getArtifactConditionInput().getRegex());
     }
     return artifactTriggerConditionBuilder.build();
+  }
+
+  TriggerCondition validateAndResolveOnNewManifestConditionType(
+      QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLManifestConditionInput manifestConditionInput =
+        qlCreateOrUpdateTriggerInput.getCondition().getManifestConditionInput();
+
+    validateManifestTriggerCondition(qlCreateOrUpdateTriggerInput);
+
+    return ManifestTriggerCondition.builder()
+        .appManifestId(manifestConditionInput.getAppManifestId())
+        .versionRegex(manifestConditionInput.getVersionRegex())
+        .build();
+  }
+
+  private void validateManifestTriggerCondition(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+    QLTriggerConditionInput triggerConditionInput = qlCreateOrUpdateTriggerInput.getCondition();
+
+    if (null == triggerConditionInput.getManifestConditionInput()) {
+      throw new InvalidRequestException("ManifestConditionInput cannot not be null for On New Manifest Trigger", USER);
+    }
+    String appManifestId = triggerConditionInput.getManifestConditionInput().getAppManifestId();
+
+    if (EmptyPredicate.isEmpty(appManifestId)) {
+      throw new InvalidRequestException("Application Manifest Id must not be null nor empty", USER);
+    }
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getById(qlCreateOrUpdateTriggerInput.getApplicationId(), appManifestId);
+    if (applicationManifest == null) {
+      throw new InvalidRequestException(
+          String.format("Application manifest with id %s not found in given application %s", appManifestId,
+              qlCreateOrUpdateTriggerInput.getApplicationId()),
+          USER);
+    }
   }
 
   TriggerCondition validateAndResolveOnPipelineCompletionConditionType(

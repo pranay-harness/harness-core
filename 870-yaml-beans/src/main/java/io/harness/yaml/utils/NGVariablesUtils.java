@@ -3,6 +3,9 @@ package io.harness.yaml.utils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.encryption.SecretRefData;
+import io.harness.exception.InvalidRequestException;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.core.variables.SecretNGVariable;
 
@@ -22,13 +25,16 @@ public class NGVariablesUtils {
     for (NGVariable variable : variables) {
       if (variable instanceof SecretNGVariable) {
         SecretNGVariable secretNGVariable = (SecretNGVariable) variable;
-        String secretValue = secretNGVariable.getValue().getValue() != null
-            ? secretNGVariable.getValue().getValue().toSecretRefStringValue()
-            : secretNGVariable.getValue().getExpressionValue();
-        String value = "${ngSecretManager.obtain(\"" + secretValue + "\", " + expressionFunctorToken + ")}";
-        mapOfVariables.put(variable.getName(), value);
+        String secretValue = getSecretValue(secretNGVariable);
+        if (secretValue != null) {
+          String value = "${ngSecretManager.obtain(\"" + secretValue + "\", " + expressionFunctorToken + ")}";
+          mapOfVariables.put(variable.getName(), value);
+        }
       } else {
-        mapOfVariables.put(variable.getName(), variable.getCurrentValue());
+        ParameterField<?> value = getNonSecretValue(variable);
+        if (value != null) {
+          mapOfVariables.put(variable.getName(), value);
+        }
       }
     }
     return mapOfVariables;
@@ -42,16 +48,44 @@ public class NGVariablesUtils {
     for (NGVariable variable : variables) {
       if (variable instanceof SecretNGVariable) {
         SecretNGVariable secretNGVariable = (SecretNGVariable) variable;
-        String secretValue = secretNGVariable.getValue().getValue() != null
-            ? secretNGVariable.getValue().getValue().toSecretRefStringValue()
-            : secretNGVariable.getValue().getExpressionValue();
-        String value = "<+secrets.getValue(\"" + secretValue + "\")>";
-        mapOfVariables.put(variable.getName(), value);
+        String secretValue = getSecretValue(secretNGVariable);
+        if (secretValue != null) {
+          String value = "<+secrets.getValue(\"" + secretValue + "\")>";
+          mapOfVariables.put(variable.getName(), value);
+        }
       } else {
-        mapOfVariables.put(variable.getName(), variable.getCurrentValue());
+        ParameterField<?> value = getNonSecretValue(variable);
+        if (value != null) {
+          mapOfVariables.put(variable.getName(), value);
+        }
       }
     }
     return mapOfVariables;
+  }
+
+  private String getSecretValue(SecretNGVariable variable) {
+    ParameterField<SecretRefData> value = (ParameterField<SecretRefData>) variable.getCurrentValue();
+    if (ParameterField.isNull(value)
+        || (!value.isExpression() && (value.getValue() == null || value.getValue().isNull()))) {
+      if (variable.isRequired()) {
+        throw new InvalidRequestException(
+            String.format("Value not provided for required secret variable: %s", variable.getName()));
+      }
+      return null;
+    }
+    return value.isExpression() ? value.getExpressionValue() : value.getValue().toSecretRefStringValue();
+  }
+
+  private ParameterField<?> getNonSecretValue(NGVariable variable) {
+    ParameterField<?> value = variable.getCurrentValue();
+    if (ParameterField.isNull(value) || (!value.isExpression() && value.getValue() == null)) {
+      if (variable.isRequired()) {
+        throw new InvalidRequestException(
+            String.format("Value not provided for required variable: %s", variable.getName()));
+      }
+      return null;
+    }
+    return value;
   }
 
   public Map<String, Object> applyVariableOverrides(

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 
 @OwnedBy(PIPELINE)
@@ -20,10 +21,18 @@ public class LevelUtils {
                                      .setIdentifier(node.getIdentifier())
                                      .setRetryIndex(retryIndex)
                                      .setSkipExpressionChain(node.getSkipExpressionChain())
-                                     .setStepType(StepType.newBuilder().setType(node.getStepType().getType()).build());
+                                     .setStartTs(System.currentTimeMillis())
+                                     .setStepType(StepType.newBuilder()
+                                                      .setType(node.getStepType().getType())
+                                                      .setStepCategory(node.getStepType().getStepCategory())
+                                                      .build());
     if (node.getGroup() != null) {
       levelBuilder.setGroup(node.getGroup());
     }
     return levelBuilder.build();
+  }
+
+  public static boolean isStageLevel(Level level) {
+    return level.getStepType().getStepCategory() == StepCategory.STAGE;
   }
 }

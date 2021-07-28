@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.beans.HarnessTag;

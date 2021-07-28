@@ -261,15 +261,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void markFirstTaskCollected(CVConfig cvConfig) {
-    UpdateOperations<CVConfig> updateOperations =
-        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.firstTaskQueued, true);
-    Query<CVConfig> query =
-        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfig.getUuid());
-    hPersistence.update(query, updateOperations);
-  }
-
-  @Override
   public Set<CVMonitoringCategory> getAvailableCategories(String accountId, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier) {
     BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(
@@ -495,6 +486,18 @@ public class CVConfigServiceImpl implements CVConfigService {
       log.info("Cleaned up perpetual tasks for the following cvConfigs : " + cvConfigIds);
     }
     return cvConfigIds;
+  }
+
+  @Override
+  public void setHealthMonitoringFlag(
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers, boolean isEnabled) {
+    hPersistence.update(hPersistence.createQuery(CVConfig.class)
+                            .filter(CVConfigKeys.accountId, accountId)
+                            .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                            .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                            .field(CVConfigKeys.identifier)
+                            .in(identifiers),
+        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.enabled, isEnabled));
   }
 
   @Override

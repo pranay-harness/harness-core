@@ -7,6 +7,7 @@ import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
 import static io.harness.common.CIExecutionConstants.GIT_SSL_NO_VERIFY;
+import static io.harness.common.CIExecutionConstants.PR_CLONE_STRATEGY_ATTRIBUTE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -38,7 +39,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,9 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 public class CILiteEngineStepGroupUtils {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
-  private static final String BUILD_NUMBER = "buildnumber";
   @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
-  private static final SecureRandom random = new SecureRandom();
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(StageElementConfig stageElementConfig,
@@ -131,6 +129,7 @@ public class CILiteEngineStepGroupUtils {
       String uuid = generateUuid();
       String jsonString = JsonPipelineUtils.writeJsonString(StepElementConfig.builder()
                                                                 .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+                                                                .name(LITE_ENGINE_TASK + liteEngineCounter)
                                                                 .uuid(generateUuid())
                                                                 .type("liteEngineTask")
                                                                 .stepSpecType(liteEngineTaskStepInfo)
@@ -201,6 +200,9 @@ public class CILiteEngineStepGroupUtils {
 
   private ExecutionWrapperConfig getGitCloneStep(CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase) {
     Map<String, String> settings = new HashMap<>();
+    if (ciCodebase == null) {
+      throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
+    }
     Integer depth = ciCodebase.getDepth();
     if (depth == null && ciExecutionArgs.getExecutionSource().getType() != ExecutionSource.Type.WEBHOOK) {
       depth = GIT_CLONE_MANUAL_DEPTH;
@@ -208,6 +210,10 @@ public class CILiteEngineStepGroupUtils {
 
     if (depth != null) {
       settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, depth.toString());
+    }
+
+    if (ciCodebase.getPrCloneStrategy() != null) {
+      settings.put(PR_CLONE_STRATEGY_ATTRIBUTE, ciCodebase.getPrCloneStrategy().getYamlName());
     }
 
     Map<String, String> envVariables = new HashMap<>();

@@ -2,6 +2,7 @@ package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -44,7 +45,7 @@ public class MetricsResource {
   @ExceptionMetered
   @ApiOperation(value = "timescale", nickname = "timescale sql queries stats")
   public ResponseDTO<Map<String, QueryStatsPrinter.QueryStat>> timescale(
-      @NotEmpty @QueryParam("accountId") String accountId) throws Exception {
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) throws Exception {
     if (!internalAccountIds.contains(accountId)) {
       throw new InvalidRequestException("Not Allowed");
     }

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -24,6 +25,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
+import io.harness.queue.QueueController;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
@@ -47,31 +49,38 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(DX)
 public class GitChangeSetRunnable implements Runnable {
   public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 5;
-  public static final int MAX_RETRY_FOR_CHANGESET = 3;
+  public static final int MAX_RETRY_FOR_CHANGESET = 10;
+  public static final int MAX_RETRIED_QUEUED_JOB_CHECK_INTERVAL = 5 /*min*/;
+
   public static final List<YamlChangeSetStatus> terminalStatusList =
       ImmutableList.of(YamlChangeSetStatus.FAILED, YamlChangeSetStatus.COMPLETED, YamlChangeSetStatus.SKIPPED);
   public static final List<YamlChangeSetStatus> runningStatusList = ImmutableList.of(YamlChangeSetStatus.RUNNING);
 
   private static final AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
   private static final AtomicLong lastTimestampForStatusLogPrint = new AtomicLong(0);
+  private static final AtomicLong lastTimestampForQueuedJobCheck = new AtomicLong(0);
 
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
   @Inject private GitChangeSetRunnableQueueHelper gitChangeSetRunnableQueueHelper;
   @Inject private PersistentLocker persistentLocker;
   @Inject private YamlChangeSetLifeCycleManagerService yamlChangeSetLifeCycleHandlerService;
+  @Inject private QueueController queueController;
+
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
-    //    log.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
+    //    log.info("Started job to pick changesets for processing");
 
     try {
       if (!shouldRun()) {
         log.info("Not continuing with GitChangeSetRunnable job");
+        Thread.sleep(300);
         return;
       }
 
       handleStuckChangeSets();
+      handleChangeSetWithMaxRetry();
 
       final List<YamlChangeSetDTO> yamlChangeSets = getYamlChangeSetsToProcess();
 
@@ -160,10 +169,9 @@ public class GitChangeSetRunnable implements Runnable {
     return null;
   }
 
-  private boolean shouldRun() {
-    // TODO(abhinav): add maintainance logic
-    //    return !getMaintenanceFilename() && configurationController.isPrimary();
-    return true;
+  @VisibleForTesting
+  boolean shouldRun() {
+    return !getMaintenanceFlag() && queueController.isPrimary();
   }
 
   private void handleStuckChangeSets() {
@@ -261,5 +269,24 @@ public class GitChangeSetRunnable implements Runnable {
   @VisibleForTesting
   int getMaxRunningChangesetsForAccount() {
     return MAX_RUNNING_CHANGESETS_FOR_ACCOUNT;
+  }
+
+  private void handleChangeSetWithMaxRetry() {
+    if (shouldPerformMaxRetriedJobCheck()) {
+      log.info("handling max retried queued change sets");
+      lastTimestampForQueuedJobCheck.set(System.currentTimeMillis());
+      skipChangeSetsWithMaxRetries();
+      log.info("Successfully handled max retried stuck queued change sets");
+    }
+  }
+
+  private void skipChangeSetsWithMaxRetries() {
+    yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(MAX_RETRY_FOR_CHANGESET);
+  }
+
+  boolean shouldPerformMaxRetriedJobCheck() {
+    return lastTimestampForQueuedJobCheck.get() == 0
+        || (System.currentTimeMillis() - lastTimestampForQueuedJobCheck.get()
+            > TimeUnit.MINUTES.toMillis(MAX_RETRIED_QUEUED_JOB_CHECK_INTERVAL));
   }
 }

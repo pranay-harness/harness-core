@@ -1,5 +1,6 @@
 package io.harness.pms.triggers;
 
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
@@ -12,7 +13,7 @@ import static io.harness.ngtriggers.Constants.TRIGGER_REF;
 import static io.harness.ngtriggers.Constants.TRIGGER_REF_DELIMITER;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK_CUSTOM;
-import static io.harness.pms.plan.execution.PlanExecutionInterruptType.ABORT;
+import static io.harness.pms.plan.execution.PlanExecutionInterruptType.ABORTALL;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -29,6 +30,9 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAware;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.TriggerIssuer;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -39,15 +43,20 @@ import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.PushHook;
 import io.harness.product.ci.scm.proto.User;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -108,7 +117,8 @@ public class TriggerExecutionHelper {
         pipelineYaml = pipelineEntityToExecute.get().getYaml();
       } else {
         String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
-        String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
+        String sanitizedRuntimeInputYaml =
+            InputSetSanitizer.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
         if (isBlank(sanitizedRuntimeInputYaml)) {
           pipelineYaml = pipelineYamlBeforeMerge;
         } else {
@@ -118,7 +128,11 @@ public class TriggerExecutionHelper {
         }
       }
       planExecutionMetadataBuilder.yaml(pipelineYaml);
+      planExecutionMetadataBuilder.processedYaml(YamlUtils.injectUuid(pipelineYaml));
+      planExecutionMetadataBuilder.triggerPayload(triggerPayload);
 
+      // Set Principle user as pipeline service.
+      SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
       pmsYamlSchemaService.validateYamlSchema(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
 
@@ -126,8 +140,8 @@ public class TriggerExecutionHelper {
           ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
 
       PlanExecution planExecution = pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(),
-          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml,
-          executionMetaDataBuilder.build(), planExecutionMetadataBuilder, triggerPayload);
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), executionMetaDataBuilder.build(),
+          planExecutionMetadataBuilder.build());
       // check if abort prev execution needed.
       requestPipelineExecutionAbortForSameExecTagIfNeeded(triggerDetails, planExecution, executionTagForGitEvent);
       return planExecution;
@@ -259,7 +273,7 @@ public class TriggerExecutionHelper {
       }
 
       for (PlanExecution execution : executionsToAbort) {
-        registerPipelineExecutionAbortInterrupt(execution, executionTag);
+        registerPipelineExecutionAbortInterrupt(execution, executionTag, triggerDetails.getNgTriggerEntity());
       }
     } catch (Exception e) {
       log.error("Failed while requesting abort for pipeline executions using executionTag: " + executionTag, e);
@@ -280,7 +294,8 @@ public class TriggerExecutionHelper {
     return autoAbortPreviousExecutions;
   }
 
-  private void registerPipelineExecutionAbortInterrupt(PlanExecution execution, String executionTag) {
+  private void registerPipelineExecutionAbortInterrupt(
+      PlanExecution execution, String executionTag, NGTriggerEntity ngTriggerEntity) {
     try {
       log.info(new StringBuilder(128)
                    .append("Requesting Pipeline Execution Abort for planExecutionId")
@@ -288,7 +303,18 @@ public class TriggerExecutionHelper {
                    .append(", with Tag: ")
                    .append(executionTag)
                    .toString());
-      pmsExecutionService.registerInterrupt(ABORT, execution.getUuid(), null);
+
+      InterruptConfig interruptConfig =
+          InterruptConfig.newBuilder()
+              .setIssuedBy(IssuedBy.newBuilder()
+                               .setTriggerIssuer(TriggerIssuer.newBuilder()
+                                                     .setTriggerRef(generateTriggerRef(ngTriggerEntity))
+                                                     .setAbortPrevConcurrentExecution(true)
+                                                     .build())
+                               .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                               .build())
+              .build();
+      pmsExecutionService.registerInterrupt(ABORTALL, execution.getUuid(), null, interruptConfig);
     } catch (Exception e) {
       log.error("Exception white requesting Pipeline Execution Abort: " + executionTag, e);
     }

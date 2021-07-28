@@ -2,6 +2,7 @@ package io.harness.ng.core.event;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
@@ -15,6 +16,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.encryption.Scope;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
@@ -71,8 +73,22 @@ public class HarnessSMManager {
     globalSecretManager.setProjectIdentifier(projectIdentifier);
     globalSecretManager.setOrgIdentifier(orgIdentifier);
     globalSecretManager.setDefault(true);
-    ConnectorDTO connectorDTO = getConnectorRequestDTO(globalSecretManager);
+
+    Scope secretScope = getSecretScope(orgIdentifier, projectIdentifier);
+
+    ConnectorDTO connectorDTO =
+        getConnectorRequestDTO(globalSecretManager, secretScope, accountIdentifier, projectIdentifier, orgIdentifier);
     secretManagerConnectorService.create(connectorDTO, accountIdentifier);
+  }
+
+  private Scope getSecretScope(@OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
+    Scope secretScope = Scope.ACCOUNT;
+    if (isNotEmpty(projectIdentifier)) {
+      secretScope = Scope.PROJECT;
+    } else if (isNotEmpty(orgIdentifier)) {
+      secretScope = Scope.ORG;
+    }
+    return secretScope;
   }
 
   @DefaultOrganization
@@ -90,19 +106,15 @@ public class HarnessSMManager {
         accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);
   }
 
-  private ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO) {
+  public ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO, Scope secretScope,
+      String accountIdentifier, String projectIdentifier, String orgIdentifier) {
     ConnectorInfoDTO connectorInfo;
     switch (secretManagerConfigDTO.getEncryptionType()) {
       case GCP_KMS:
         GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfigDTO;
-        GcpKmsConnectorDTO gcpKmsConnectorDTO = GcpKmsConnectorDTO.builder()
-                                                    .region(gcpKmsConfig.getRegion())
-                                                    .keyRing(gcpKmsConfig.getKeyRing())
-                                                    .keyName(gcpKmsConfig.getKeyName())
-                                                    .projectId(gcpKmsConfig.getProjectId())
-                                                    .credentials(gcpKmsConfig.getCredentials())
-                                                    .isDefault(secretManagerConfigDTO.isDefault())
-                                                    .build();
+
+        GcpKmsConnectorDTO gcpKmsConnectorDTO =
+            GcpKmsConnectorDTO.builder().isDefault(secretManagerConfigDTO.isDefault()).build();
         gcpKmsConnectorDTO.setHarnessManaged(true);
         connectorInfo = ConnectorInfoDTO.builder()
                             .connectorType(GCP_KMS)
@@ -116,7 +128,8 @@ public class HarnessSMManager {
         break;
       case KMS:
         AwsKmsConfigDTO configDTO = (AwsKmsConfigDTO) secretManagerConfigDTO;
-        AwsKmsConnectorDTO awsKmsConnectorDTO = AwsKmsMappingHelper.configDTOToConnectorDTO(configDTO);
+        AwsKmsConnectorDTO awsKmsConnectorDTO =
+            AwsKmsMappingHelper.configDTOToConnectorDTO(configDTO, null, null, null);
         awsKmsConnectorDTO.setHarnessManaged(true);
         connectorInfo = ConnectorInfoDTO.builder()
                             .connectorType(AWS_KMS)

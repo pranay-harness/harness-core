@@ -3,7 +3,7 @@ package io.harness.serializer.recaster;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
-import io.harness.core.Recaster;
+import io.harness.beans.RecasterMap;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterDocumentField;
 import io.harness.pms.yaml.ParameterDocumentFieldMapper;
@@ -13,8 +13,8 @@ import io.harness.transformers.simplevalue.CustomValueTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
@@ -28,14 +28,15 @@ public class ParameterFieldRecastTransformer extends RecastTransformer implement
         return null;
       }
 
-      Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Document) fromObject);
+      RecasterMap recasterMap = new RecasterMap((Map<String, Object>) fromObject);
+      Object encodedValue = recasterMap.getEncodedValue();
 
-      if (decodedObject == null) {
-        ((Document) fromObject).remove(Recaster.RECAST_CLASS_KEY);
-        return objectMapper.convertValue(fromObject, ParameterField.class);
+      if (encodedValue == null) {
+        recasterMap.removeIdentifier();
+        return objectMapper.convertValue(recasterMap, ParameterField.class);
       }
 
-      ParameterDocumentField documentField = ParameterDocumentFieldMapper.fromDocument((Document) decodedObject);
+      ParameterDocumentField documentField = ParameterDocumentFieldMapper.fromMap((Map<String, Object>) encodedValue);
       return ParameterDocumentFieldMapper.toParameterField(documentField);
     } catch (Exception e) {
       log.error("Exception while decoding ParameterField {}", fromObject, e);
@@ -48,7 +49,7 @@ public class ParameterFieldRecastTransformer extends RecastTransformer implement
     try {
       ParameterDocumentField documentField =
           ParameterDocumentFieldMapper.fromParameterField((ParameterField<?>) value, castedField);
-      return RecastOrchestrationUtils.toDocument(documentField);
+      return RecastOrchestrationUtils.toMap(documentField);
     } catch (Exception e) {
       log.error("Exception while encoding ParameterField {}", value, e);
       throw e;

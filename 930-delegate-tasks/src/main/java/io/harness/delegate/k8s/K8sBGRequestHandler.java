@@ -200,6 +200,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
   boolean init(K8sBGDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams,
       LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    executionLogCallback.saveExecutionLog(color(String.format("Release Name: [%s]", releaseName), Yellow, Bold));
 
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig());
@@ -257,11 +258,11 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {
           executionLogCallback.saveExecutionLog(
-              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green workflow type.",
               ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
-              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with "
+              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only. To deploy additional workloads in Manifests, annotate them with "
                   + HarnessAnnotations.directApply + ": true",
               ERROR, FAILURE);
         }

@@ -1,13 +1,16 @@
 package io.harness.gcp.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.GoogleClientException;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.gcp.client.GcpClient;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -25,6 +28,7 @@ import org.apache.commons.io.IOUtils;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class GcpClientImpl implements GcpClient {
   @Override
   public void validateDefaultCredentials() {
@@ -39,11 +43,12 @@ public class GcpClientImpl implements GcpClient {
       GoogleCredential credential = getDefaultGoogleCredentials();
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
-      throw new GoogleClientException(
-          "Failed To Get Google Container Service", ErrorCode.INCORRECT_DEFAULT_GOOGLE_CREDENTIALS, e);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Provide a valid Service Account Key", "Invalid Service Account Key", e);
     } catch (IOException e) {
-      throw new GoogleClientException(
-          "Missing Google Cloud Platform Credentials", ErrorCode.MISSING_DEFAULT_GOOGLE_CREDENTIALS, e);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Set the GOOGLE_APPLICATION_CREDENTIALS environment variable or make sure that the delegate is running on Google Environments",
+          "Missing Google Cloud Platform Credentials", e);
     }
   }
 
@@ -64,14 +69,24 @@ public class GcpClientImpl implements GcpClient {
       GoogleCredential credential = getGoogleCredential(serviceAccountKey);
       return new Container.Builder(transport, jsonFactory, credential).setApplicationName("Harness").build();
     } catch (GeneralSecurityException e) {
-      log.error("Security exception getting Google container service", e);
+      log.error("Security registeredException getting Google container service", e);
       throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
           .addParam("message", "Invalid Google Cloud Platform credentials.");
     } catch (IOException e) {
       log.error("Error getting Google container service", e);
-      throw new WingsException(INVALID_CLOUD_PROVIDER, USER)
-          .addParam("message", "Invalid Google Cloud Platform credentials.");
+      throw convertIntoHintException(e);
     }
+  }
+
+  private RuntimeException convertIntoHintException(Exception ex) {
+    if (ex instanceof JsonParseException) {
+      return NestedExceptionUtils.hintWithExplanationException(
+          "Provide a valid json service account key", "Service account Key is not a valid json", ex);
+    } else if (ex instanceof IOException) {
+      return NestedExceptionUtils.hintWithExplanationException("Provide a valid service account key provided by Google",
+          "Invalid Spec for the Service Account Key File", ex);
+    }
+    return new InvalidRequestException(ex.getMessage(), ex);
   }
 
   GoogleCredential getGoogleCredential(char[] serviceAccountKey) throws IOException {

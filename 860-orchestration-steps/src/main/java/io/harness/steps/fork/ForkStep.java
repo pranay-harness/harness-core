@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -18,7 +19,8 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 public class ForkStep implements ChildrenExecutable<ForkStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.FORK).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(OrchestrationStepTypes.FORK).setStepCategory(StepCategory.STEP).build();
 
   @Override
   public Class<ForkStepParameters> getStepParametersClass() {

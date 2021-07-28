@@ -23,6 +23,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.expression.EngineExpressionService;
@@ -46,18 +47,19 @@ public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void performCheckWhenConditionFalse() {
     String skipCondition = "<+pipeline.name>==\"name\"";
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(generateUuid())
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(Status.QUEUED)
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .setSkipCondition(skipCondition)
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(Status.QUEUED)
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setSkipCondition(skipCondition)
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
     nodeExecutionService.save(nodeExecution);
 
     when(engineExpressionService.evaluateExpression(nodeExecution.getAmbiance(), skipCondition)).thenReturn(false);
@@ -72,18 +74,19 @@ public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void performCheckWhenConditionTrue() {
     String skipCondition = "<+pipeline.name>==\"name\"";
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(generateUuid())
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(Status.QUEUED)
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .setSkipCondition(skipCondition)
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(Status.QUEUED)
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setSkipCondition(skipCondition)
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
     nodeExecutionService.save(nodeExecution);
 
     when(engineExpressionService.evaluateExpression(nodeExecution.getAmbiance(), skipCondition)).thenReturn(true);
@@ -103,18 +106,19 @@ public class SkipPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void performCheckWhenConditionException() {
     String skipCondition = "<+pipeline.name>==\"name\"";
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(generateUuid())
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(Status.QUEUED)
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .setSkipCondition(skipCondition)
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(Status.QUEUED)
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setSkipCondition(skipCondition)
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
     nodeExecutionService.save(nodeExecution);
 
     InvalidRequestException testException = new InvalidRequestException("TestException");

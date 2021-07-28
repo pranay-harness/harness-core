@@ -63,7 +63,7 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20),
             () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig));
       } catch (SecretManagementDelegateException e) {
         throw e;

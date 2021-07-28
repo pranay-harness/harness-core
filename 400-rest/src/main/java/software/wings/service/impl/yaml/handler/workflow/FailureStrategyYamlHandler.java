@@ -59,6 +59,12 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
       }
     }
 
+    if (RepairActionCode.RETRY.equals(repairActionCode)) {
+      if (yaml.getRetryCount() <= 0) {
+        throw new InvalidArgumentsException("\"retryCount\" should be greater than 0");
+      }
+    }
+
     return FailureStrategy.builder()
         .executionScope(executionScope)
         .repairActionCode(repairActionCode)

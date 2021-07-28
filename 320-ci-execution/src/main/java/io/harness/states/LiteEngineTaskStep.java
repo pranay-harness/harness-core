@@ -138,8 +138,9 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier)
+      throws Exception {
     K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
 
     LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
@@ -304,6 +305,9 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
 
     // Add git clone connector
     if (!liteEngineTaskStepInfo.isSkipGitClone()) {
+      if (liteEngineTaskStepInfo.getCiCodebase() == null) {
+        throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
+      }
       entityDetails.add(createEntityDetails(liteEngineTaskStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier,
           projectIdentifier, orgIdentifier));
     }

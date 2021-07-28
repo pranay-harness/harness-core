@@ -122,8 +122,11 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			}
 			topic := fmt.Sprintf("%sstreams:webhook_request_payload_data", prefix)
 			log.Infow("registering webhook payload consumer with events framework", "topic", topic)
-			rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db)
-			rdb.Run()
+			err = rdb.RegisterMerge(ctx, topic, tidb.MergePartialCg, db)
+			if err != nil {
+				log.Errorw("error while registering callback function with redis", zap.Error(err))
+				return err
+			}
 			log.Infow("done registering webhook consumer")
 		} else {
 			log.Errorw("events framework redis URL not configured")

@@ -1,10 +1,9 @@
 package software.wings.service;
 
+import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

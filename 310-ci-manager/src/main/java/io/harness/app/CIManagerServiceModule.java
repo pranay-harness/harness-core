@@ -7,12 +7,8 @@ import io.harness.CIExecutionServiceModule;
 import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.app.impl.CIBuildInfoServiceImpl;
 import io.harness.app.impl.CIYamlSchemaServiceImpl;
-import io.harness.app.impl.YAMLToObjectImpl;
-import io.harness.app.intfc.CIBuildInfoService;
 import io.harness.app.intfc.CIYamlSchemaService;
-import io.harness.app.intfc.YAMLToObject;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -29,8 +25,6 @@ import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoPersistence;
-import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.client.ClientMode;
@@ -41,6 +35,7 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.tiserviceclient.TIServiceClientModule;
+import io.harness.token.TokenClientModule;
 import io.harness.yaml.core.StepSpecType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -129,10 +124,7 @@ public class CIManagerServiceModule extends AbstractModule {
   protected void configure() {
     install(PrimaryVersionManagerModule.getInstance());
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
-    bind(YAMLToObject.class).toInstance(new YAMLToObjectImpl());
     bind(HPersistence.class).to(MongoPersistence.class).in(Singleton.class);
-    bind(NGPipelineService.class).to(NGPipelineServiceImpl.class);
-    bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(CIOverviewDashboardService.class).to(CIOverviewDashboardServiceImpl.class);
@@ -173,6 +165,9 @@ public class CIManagerServiceModule extends AbstractModule {
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority(), true));
+
+    install(new TokenClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.getServiceId()));
 
     install(new AbstractManagerGrpcClientModule() {
       @Override

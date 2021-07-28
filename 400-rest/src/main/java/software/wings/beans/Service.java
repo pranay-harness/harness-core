@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._959_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
@@ -61,7 +61,7 @@ import org.mongodb.morphia.annotations.Version;
 @FieldNameConstants(innerTypeName = "ServiceKeys")
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_959_CG_BEANS)
 public class Service
     extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
   public static List<MongoIndex> mongoIndexes() {
@@ -77,19 +77,18 @@ public class Service
                  .field(ServiceKeys.accountId)
                  .descSortField(ServiceKeys.createdAt)
                  .build())
+        .add(CompoundMongoIndex.builder().name("deploymentTypeIndex").field(ServiceKeys.deploymentType).build())
         .build();
   }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
   public static final String APP_ID = "appId";
   public static final String ID = "_id";
 
-  @Trimmed(message = "Service Name should not contain leading and trailing spaces")
-  @EntityName
-  @NotEmpty
-  private String name;
+  @Trimmed(message = "should not contain leading and trailing spaces") @EntityName @NotEmpty private String name;
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;
+  private String serviceId;
   private String configMapYaml;
   private String helmValueYaml;
 
@@ -121,6 +120,7 @@ public class Service
 
   private String deploymentTypeTemplateId;
   private transient String customDeploymentName;
+  private Boolean artifactFromManifest;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -130,7 +130,8 @@ public class Service
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
       List<String> artifactStreamIds, boolean sample, boolean isPcfV2, HelmVersion helmVersion,
-      CfCliVersion cfCliVersion, String deploymentTypeTemplateId, String customDeploymentName) {
+      CfCliVersion cfCliVersion, String deploymentTypeTemplateId, String customDeploymentName,
+      Boolean artifactFromManifest) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -157,6 +158,7 @@ public class Service
     this.cfCliVersion = cfCliVersion;
     this.deploymentTypeTemplateId = deploymentTypeTemplateId;
     this.customDeploymentName = customDeploymentName;
+    this.artifactFromManifest = artifactFromManifest;
   }
 
   // TODO: check what to do with artifactStreamIds and artifactStreamBindings
@@ -177,6 +179,7 @@ public class Service
         .cfCliVersion(cfCliVersion)
         .deploymentTypeTemplateId(deploymentTypeTemplateId)
         .customDeploymentName(customDeploymentName)
+        .artifactFromManifest(artifactFromManifest)
         .build();
   }
 
@@ -205,6 +208,7 @@ public class Service
     private String configMapYaml;
     private String applicationStack;
     private String helmVersion;
+    private Boolean artifactFromManifest;
     private String cfCliVersion;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
@@ -217,7 +221,8 @@ public class Service
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
         String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables, String helmVersion,
-        String cfCliVersion, String deploymentTypeTemplateUri, String deploymentTypeTemplateVersion) {
+        String cfCliVersion, String deploymentTypeTemplateUri, String deploymentTypeTemplateVersion,
+        Boolean artifactFromManifest) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
@@ -229,6 +234,7 @@ public class Service
       this.cfCliVersion = cfCliVersion;
       this.deploymentTypeTemplateUri = deploymentTypeTemplateUri;
       this.deploymentTypeTemplateVersion = deploymentTypeTemplateVersion;
+      this.artifactFromManifest = artifactFromManifest;
     }
   }
 
@@ -238,5 +244,8 @@ public class Service
     public static final String appId = "appId";
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
+    public static final String deploymentType = "deploymentType";
+    public static final String serviceId = "serviceId";
+    public static final String accountId = "accountId";
   }
 }

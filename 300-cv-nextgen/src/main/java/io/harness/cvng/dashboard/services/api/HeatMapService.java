@@ -1,6 +1,8 @@
 package io.harness.cvng.dashboard.services.api;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
@@ -12,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import javax.validation.constraints.NotNull;
+import org.apache.commons.lang3.tuple.Pair;
 
 public interface HeatMapService {
   void updateRiskScore(@NotNull String accountId, @NotNull String orgIdentifier, @NotNull String projectIdentifier,
@@ -30,4 +33,10 @@ public interface HeatMapService {
 
   RiskSummaryPopoverDTO getRiskSummaryPopover(String accountId, String orgIdentifier, String projectIdentifier,
       Instant endTime, String serviceIdentifier, CVMonitoringCategory category);
+
+  List<HistoricalTrend> getHistoricalTrend(String accountId, String orgIdentifier, String projectIdentifier,
+      List<Pair<String, String>> serviceEnvIdentifiers, int hours);
+
+  List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
+      List<Pair<String, String>> serviceEnvIdentifiers);
 }

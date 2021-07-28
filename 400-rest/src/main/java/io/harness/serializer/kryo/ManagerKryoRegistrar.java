@@ -136,6 +136,7 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.shellscript.provision.ShellScriptProvisionOutputVariables;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
@@ -159,6 +160,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
@@ -209,9 +211,9 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
-import software.wings.beans.NotificationChannelType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Permission;
+import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PipelineStageExecutionAdvisor;
 import software.wings.beans.PrometheusConfig;
@@ -324,8 +326,6 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.beans.loginSettings.UserLockoutInfo;
-import software.wings.beans.notification.NotificationSettings;
-import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.s3.FetchS3FilesCommandParams;
 import software.wings.beans.s3.FetchS3FilesExecutionResponse;
 import software.wings.beans.s3.FetchS3FilesExecutionResponse.FetchS3FilesCommandStatus;
@@ -395,6 +395,7 @@ import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTaskParameters;
 import software.wings.delegatetasks.cv.DataCollectionException;
+import software.wings.delegatetasks.event.EventsDeliveryCallback;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionResponse;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
@@ -517,7 +518,6 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript;
@@ -806,6 +806,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
@@ -1038,12 +1039,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraConfig.JiraSetupType.class, 5569);
     kryo.register(JiraConfig.class, 5581);
     kryo.register(KubernetesClusterConfig.class, 5244);
-
     kryo.register(LambdaTestEvent.class, 5604);
     kryo.register(LicenseInfo.class, 5511);
     kryo.register(NameValuePair.class, 5226);
     kryo.register(NewRelicConfig.class, 5175);
-    kryo.register(NotificationSettings.class, 5626);
     kryo.register(PcfConfig.class, 5296);
     kryo.register(Permission.class, 5310);
     kryo.register(PhaseStepType.class, 5026);
@@ -1156,7 +1155,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(TriggerDeploymentNeededResponse.class, 5554);
     kryo.register(TriggerResponse.class, 5556);
     kryo.register(MetricType.class, 5313);
-    kryo.register(AuthenticationMechanism.class, 5357);
     kryo.register(TwoFactorAuthenticationMechanism.class, 5358);
     kryo.register(AnalysisComparisonStrategy.class, 5240);
     kryo.register(CustomLogDataCollectionInfo.class, 5492);
@@ -1351,11 +1349,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ShellScriptApprovalExecutionData.class, 7112);
     kryo.register(K8sDeleteTaskParameters.class, 7113);
     kryo.register(K8sDeleteResponse.class, 7114);
-    kryo.register(NotificationChannelType.class, 7115);
+
     kryo.register(AwsLambdaFunctionRequest.class, 7116);
     kryo.register(AwsLambdaFunctionResponse.class, 7117);
 
-    kryo.register(SlackNotificationSetting.class, 7119);
     kryo.register(AwsAmiSetupExecutionData.class, 7120);
     kryo.register(EcsServiceSetupRequest.class, 7121);
     kryo.register(EcsServiceSetupResponse.class, 7122);
@@ -1734,5 +1731,11 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildSourceCallback.class, 40010);
     kryo.register(ArtifactCollectionCallback.class, 40011);
     kryo.register(ExecutionWaitCallback.class, 40012);
+    kryo.register(AzureContainerRegistry.class, 40013);
+    kryo.register(StackStatus.class, 40113);
+    kryo.register(PerpetualTaskBroadcastEvent.class, 40114);
+    kryo.register(EventsDeliveryCallback.class, 40014);
+
+    kryo.register(ShellScriptProvisionOutputVariables.class, 40021);
   }
 }

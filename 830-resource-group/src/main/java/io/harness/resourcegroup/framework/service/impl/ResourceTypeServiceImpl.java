@@ -8,6 +8,7 @@ import io.harness.resourcegroup.framework.remote.mapper.ResourceTypeMapper;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
 import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
+import io.harness.resourcegroup.remote.dto.ResourceTypeDTO.ResourceType;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -19,11 +20,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class ResourceTypeServiceImpl implements ResourceTypeService {
-  Map<String, Resource> resourceValidators;
+  Map<String, Resource> resources;
 
   @Inject
-  public ResourceTypeServiceImpl(Map<String, Resource> resourceValidators) {
-    this.resourceValidators = resourceValidators;
+  public ResourceTypeServiceImpl(Map<String, Resource> resources) {
+    this.resources = resources;
+  }
+
+  private static ResourceType toResourceType(Resource resource) {
+    return ResourceType.builder()
+        .name(resource.getType())
+        .validatorTypes(new ArrayList<>(resource.getSelectorKind()))
+        .build();
   }
 
   @Override
@@ -31,15 +39,11 @@ public class ResourceTypeServiceImpl implements ResourceTypeService {
     if (Objects.isNull(scopeLevel)) {
       return null;
     }
-    return ResourceTypeMapper.toDTO(
-        resourceValidators.values()
-            .stream()
-            .filter(resourceValidator -> resourceValidator.getValidScopeLevels().contains(scopeLevel))
-            .map(resourceValidator
-                -> ResourceTypeDTO.ResourceType.builder()
-                       .name(resourceValidator.getType())
-                       .validatorTypes(new ArrayList<>(resourceValidator.getSelectorKind()))
-                       .build())
-            .collect(Collectors.toList()));
+
+    return ResourceTypeMapper.toDTO(resources.values()
+                                        .stream()
+                                        .filter(resource -> resource.getValidScopeLevels().contains(scopeLevel))
+                                        .map(ResourceTypeServiceImpl::toResourceType)
+                                        .collect(Collectors.toList()));
   }
 }

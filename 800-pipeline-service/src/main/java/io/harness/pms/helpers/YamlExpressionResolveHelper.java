@@ -46,7 +46,7 @@ public class YamlExpressionResolveHelper {
 
         JsonNode resolvedYamlNode = yamlField.getNode().getCurrJsonNode();
         YamlUtils.removeUuid(resolvedYamlNode);
-        return YamlPipelineUtils.writeString(resolvedYamlNode).replace("---\n", "").replace("\"", "");
+        return YamlPipelineUtils.writeString(resolvedYamlNode).replace("---\n", "");
 
       } catch (IOException ex) {
         log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);

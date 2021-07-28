@@ -13,6 +13,7 @@ import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import io.harness.delegate.task.DataCollectionExecutorService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -27,6 +28,7 @@ import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -76,88 +78,94 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
     setupTestNodeData.setFromTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getFromTime()));
     setupTestNodeData.setToTime(TimeUnit.SECONDS.toMillis(setupTestNodeData.getToTime()));
     encryptionService.decrypt(config, encryptionDetails, false);
-    AmazonCloudWatchClient cloudWatchClient =
-        awsHelperService.getAwsCloudWatchClient(setupTestNodeData.getRegion(), config);
-    // Fetch ELB Metrics
-    if (!isEmpty(setupTestNodeData.getLoadBalancerMetricsByLBName())) {
-      setupTestNodeData.getLoadBalancerMetricsByLBName().forEach(
-          (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-            callables.add(()
-                              -> getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient, cloudWatchMetric,
-                                  loadBalancerName, DEFAULT_GROUP_NAME,
-                                  CloudWatchDataCollectionInfo.builder()
-                                      .awsConfig(config)
-                                      .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
-                                      .build(),
-                                  setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
-                                  setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
-          }));
-    }
-
-    // Fetch EC2 Metrics
-    if (!isEmpty(setupTestNodeData.getEc2Metrics())) {
-      setupTestNodeData.getEc2Metrics().forEach(cloudWatchMetric
-          -> callables.add(()
-                               -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, hostName,
-                                   DEFAULT_GROUP_NAME,
-                                   CloudWatchDataCollectionInfo.builder()
-                                       .awsConfig(config)
-                                       .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
-                                       .build(),
-                                   setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
-                                   setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>())));
-    }
-
-    // Fetch ECS Metrics
-    if (!isEmpty(setupTestNodeData.getEcsMetrics())) {
-      setupTestNodeData.getEcsMetrics().forEach(
-          (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-            callables.add(()
-                              -> getMetricDataRecords(AwsNameSpace.ECS, cloudWatchClient, cloudWatchMetric, clusterName,
-                                  DEFAULT_GROUP_NAME,
-                                  CloudWatchDataCollectionInfo.builder()
-                                      .awsConfig(config)
-                                      .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
-                                      .build(),
-                                  setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
-                                  setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
-          }));
-    }
-
-    // Fetch Lambda Metrics
-    if (!isEmpty(setupTestNodeData.getLambdaFunctionsMetrics())) {
-      setupTestNodeData.getLambdaFunctionsMetrics().forEach(
-          (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
-            callables.add(()
-                              -> getMetricDataRecords(AwsNameSpace.LAMBDA, cloudWatchClient, cloudWatchMetric,
-                                  clusterName, DEFAULT_GROUP_NAME,
-                                  CloudWatchDataCollectionInfo.builder()
-                                      .awsConfig(config)
-                                      .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
-                                      .build(),
-                                  setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
-                                  setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
-          }));
-    }
-
-    List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> metricsResults =
-        dataCollectionService.executeParrallel(callables);
-    List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
-
-    metricsResults.forEach(metricDataRecordsOptional -> {
-      if (metricDataRecordsOptional.isPresent()) {
-        metricDataRecords.addAll(metricDataRecordsOptional.get().values());
+    try (CloseableAmazonWebServiceClient<AmazonCloudWatchClient> closeableAmazonCloudWatchClient =
+             new CloseableAmazonWebServiceClient(
+                 awsHelperService.getAwsCloudWatchClient(setupTestNodeData.getRegion(), config))) {
+      // Fetch ELB Metrics
+      if (!isEmpty(setupTestNodeData.getLoadBalancerMetricsByLBName())) {
+        setupTestNodeData.getLoadBalancerMetricsByLBName().forEach(
+            (loadBalancerName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+              callables.add(()
+                                -> getMetricDataRecords(AwsNameSpace.ELB, closeableAmazonCloudWatchClient.getClient(),
+                                    cloudWatchMetric, loadBalancerName, DEFAULT_GROUP_NAME,
+                                    CloudWatchDataCollectionInfo.builder()
+                                        .awsConfig(config)
+                                        .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                                        .build(),
+                                    setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
+                                    setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
+            }));
       }
-    });
 
-    return VerificationNodeDataSetupResponse.builder()
-        .providerReachable(true)
-        .loadResponse(VerificationLoadResponse.builder()
-                          .loadResponse(metricDataRecords)
-                          .isLoadPresent(!metricDataRecords.isEmpty())
-                          .build())
-        .dataForNode(metricDataRecords)
-        .build();
+      // Fetch EC2 Metrics
+      if (!isEmpty(setupTestNodeData.getEc2Metrics())) {
+        setupTestNodeData.getEc2Metrics().forEach(cloudWatchMetric
+            -> callables.add(()
+                                 -> getMetricDataRecords(AwsNameSpace.EC2, closeableAmazonCloudWatchClient.getClient(),
+                                     cloudWatchMetric, hostName, DEFAULT_GROUP_NAME,
+                                     CloudWatchDataCollectionInfo.builder()
+                                         .awsConfig(config)
+                                         .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                                         .build(),
+                                     setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
+                                     setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>())));
+      }
+
+      // Fetch ECS Metrics
+      if (!isEmpty(setupTestNodeData.getEcsMetrics())) {
+        setupTestNodeData.getEcsMetrics().forEach(
+            (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+              callables.add(()
+                                -> getMetricDataRecords(AwsNameSpace.ECS, closeableAmazonCloudWatchClient.getClient(),
+                                    cloudWatchMetric, clusterName, DEFAULT_GROUP_NAME,
+                                    CloudWatchDataCollectionInfo.builder()
+                                        .awsConfig(config)
+                                        .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                                        .build(),
+                                    setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(),
+                                    setupTestNodeData.getToTime(), thirdPartyApiCallLog, false, new HashMap<>()));
+            }));
+      }
+
+      // Fetch Lambda Metrics
+      if (!isEmpty(setupTestNodeData.getLambdaFunctionsMetrics())) {
+        setupTestNodeData.getLambdaFunctionsMetrics().forEach(
+            (clusterName, cloudWatchMetrics) -> cloudWatchMetrics.forEach(cloudWatchMetric -> {
+              callables.add(
+                  ()
+                      -> getMetricDataRecords(AwsNameSpace.LAMBDA, closeableAmazonCloudWatchClient.getClient(),
+                          cloudWatchMetric, clusterName, DEFAULT_GROUP_NAME,
+                          CloudWatchDataCollectionInfo.builder()
+                              .awsConfig(config)
+                              .analysisComparisonStrategy(COMPARE_WITH_PREVIOUS)
+                              .build(),
+                          setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
+                          thirdPartyApiCallLog, false, new HashMap<>()));
+            }));
+      }
+
+      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> metricsResults =
+          dataCollectionService.executeParrallel(callables);
+      List<NewRelicMetricDataRecord> metricDataRecords = new ArrayList<>();
+
+      metricsResults.forEach(metricDataRecordsOptional -> {
+        if (metricDataRecordsOptional.isPresent()) {
+          metricDataRecords.addAll(metricDataRecordsOptional.get().values());
+        }
+      });
+
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .loadResponse(VerificationLoadResponse.builder()
+                            .loadResponse(metricDataRecords)
+                            .isLoadPresent(!metricDataRecords.isEmpty())
+                            .build())
+          .dataForNode(metricDataRecords)
+          .build();
+    } catch (Exception e) {
+      log.error("Exception getMetricsWithDataForNode", e);
+      throw new InvalidRequestException(io.harness.exception.ExceptionUtils.getMessage(e), e);
+    }
   }
 
   public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(AwsNameSpace awsNameSpace,

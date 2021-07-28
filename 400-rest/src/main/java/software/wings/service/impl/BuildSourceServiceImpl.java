@@ -34,6 +34,8 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -52,6 +54,7 @@ import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.ArtifactStreamHelper;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -107,6 +110,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ArtifactStreamHelper artifactStreamHelper;
   @Inject private DelegateServiceImpl delegateService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -243,7 +247,30 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     return getBuildDetails(appId, artifactStreamId, settingId, limit);
   }
 
+  /**
+   * Get New builds only returns new artifacts. Let us assume that a artifact source has v1, v2, v3 & v4 versions.
+   * And we have already collected v1, v2 & v3. This method returns only v4.
+   * And we had already collected v1, v2, v3 & v4. This method returns only empty list.
+   */
+  @Override
+  public List<BuildDetails> getNewBuilds(String appId, String artifactStreamId, String settingId) {
+    return getBuildDetails(appId, artifactStreamId, settingId, -1, true);
+  }
+
+  /**
+   *
+   */
   private List<BuildDetails> getBuildDetails(String appId, String artifactStreamId, String settingId, int limit) {
+    return getBuildDetails(appId, artifactStreamId, settingId, limit, false);
+  }
+
+  /**
+   * The shouldSetSavedBuildKeys flag is used to pass the existing collected artifacts versions to the delegate.
+   * Set this to true when trying to do an artifact collection. To get the list of all artifacts then pass false.
+   * Checkout method - getNewBuilds
+   */
+  private List<BuildDetails> getBuildDetails(
+      String appId, String artifactStreamId, String settingId, int limit, boolean shouldSetSavedBuildKeys) {
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     if (artifactStream.isArtifactStreamParameterized()) {
       throw new InvalidRequestException("Manually pull artifact not supported for parameterized artifact stream");
@@ -270,6 +297,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     if (GCS.name().equals(artifactStreamType)) {
       limit = (limit != -1) ? limit : 100;
+    }
+    if (shouldSetSavedBuildKeys) {
+      artifactStreamAttributes.setSavedBuildDetailsKeys(
+          artifactCollectionUtils.getArtifactsKeys(artifactStream, artifactStreamAttributes));
     }
     return getBuildDetails(appId, limit, settingAttribute, settingValue, encryptedDataDetails, artifactStreamType,
         artifactStreamAttributes);
@@ -740,6 +771,42 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Assert.notNull(delegateResponseData, "Delegate Response data should not be null!");
     return delegateResponseData.getTriggers();
+  }
+
+  @Override
+  public List<String> listAcrRepositories(String settingId, String subscriptionId, String registryName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listRepositories((AzureConfig) settingValue, encryptedDataDetails, subscriptionId, registryName);
+  }
+
+  @Override
+  public List<AzureContainerRegistry> listAzureContainerRegistries(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listContainerRegistries((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
+  }
+
+  @Override
+  public List<String> listAzureContainerRegistryNames(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listContainerRegistryNames((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
   }
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {

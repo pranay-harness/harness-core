@@ -19,9 +19,9 @@ public class SuspendChainRequestProcessor implements SdkResponseProcessor {
 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
-    SuspendChainRequest request = event.getSdkResponseEventRequest().getSuspendChainRequest();
-    nodeExecutionService.update(request.getNodeExecutionId(),
+    SuspendChainRequest request = event.getSuspendChainRequest();
+    nodeExecutionService.update(event.getNodeExecutionId(),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
-    engine.resume(request.getNodeExecutionId(), request.getResponseMap(), request.getIsError());
+    engine.resume(event.getNodeExecutionId(), request.getResponseMap(), request.getIsError());
   }
 }

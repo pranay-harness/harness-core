@@ -91,8 +91,10 @@ public class RoleDaoImpl implements RoleDao {
       criteria.and(RoleDBOKeys.scopeIdentifier).in(scopeIdentifier, null);
     } else if (managedFilter.equals(ONLY_CUSTOM)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier);
+      criteria.and(RoleDBOKeys.managed).is(false);
     } else if (managedFilter.equals(ONLY_MANAGED)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(null);
+      criteria.and(RoleDBOKeys.managed).is(true);
     }
 
     if (!isEmpty(scopeIdentifier)) {
@@ -118,16 +120,16 @@ public class RoleDaoImpl implements RoleDao {
   }
 
   @Override
-  public Optional<Role> delete(String identifier, String scopeIdentifier) {
-    return roleRepository.deleteByIdentifierAndScopeIdentifier(identifier, scopeIdentifier)
+  public Optional<Role> delete(String identifier, String scopeIdentifier, boolean managed) {
+    return roleRepository.deleteByIdentifierAndScopeIdentifierAndManaged(identifier, scopeIdentifier, managed)
         .stream()
         .findFirst()
         .flatMap(r -> Optional.of(fromDBO(r)));
   }
 
   @Override
-  public boolean removePermissionFromRoles(String permissionIdentifier) {
-    Criteria criteria = new Criteria();
+  public boolean removePermissionFromRoles(String permissionIdentifier, RoleFilter roleFilter) {
+    Criteria criteria = createCriteriaFromFilter(roleFilter);
     criteria.and(RoleDBOKeys.permissions).is(permissionIdentifier);
     Update update = new Update().pull(RoleDBOKeys.permissions, permissionIdentifier);
     UpdateResult updateResult = roleRepository.updateMulti(criteria, update);
@@ -161,19 +163,22 @@ public class RoleDaoImpl implements RoleDao {
       criteria.and(RoleDBOKeys.identifier).in(roleFilter.getIdentifierFilter());
     }
 
-    if (!roleFilter.getAllowedScopeLevelsFilter().isEmpty()) {
-      criteria.and(RoleDBOKeys.allowedScopeLevels).in(roleFilter.getAllowedScopeLevelsFilter());
+    if (!roleFilter.getScopeLevelsFilter().isEmpty()) {
+      criteria.and(RoleDBOKeys.allowedScopeLevels).in(roleFilter.getScopeLevelsFilter());
     }
 
     if (roleFilter.getManagedFilter().equals(ONLY_MANAGED)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(null);
+      criteria.and(RoleDBOKeys.managed).is(true);
     } else if (roleFilter.getManagedFilter().equals(NO_FILTER)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).in(roleFilter.getScopeIdentifier(), null);
     } else if (roleFilter.getManagedFilter().equals(ONLY_CUSTOM) && roleFilter.isIncludeChildScopes()) {
       Pattern startsWithScope = Pattern.compile("^".concat(roleFilter.getScopeIdentifier()));
       criteria.and(RoleDBOKeys.scopeIdentifier).regex(startsWithScope);
+      criteria.and(RoleDBOKeys.managed).is(false);
     } else if (roleFilter.getManagedFilter().equals(ONLY_CUSTOM)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(roleFilter.getScopeIdentifier());
+      criteria.and(RoleDBOKeys.managed).is(false);
     }
 
     if (isNotEmpty(roleFilter.getScopeIdentifier()) && !roleFilter.isIncludeChildScopes()) {

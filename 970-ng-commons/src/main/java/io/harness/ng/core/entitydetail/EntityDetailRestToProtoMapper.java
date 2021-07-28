@@ -27,7 +27,10 @@ public class EntityDetailRestToProtoMapper {
     final EntityTypeProtoEnum entityTypeProto =
         EntityToEntityProtoHelper.getEntityTypeFromProto(entityDetail.getType());
     final EntityDetailProtoDTO.Builder entityDetailProtoBuilder =
-        EntityDetailProtoDTO.newBuilder().setName(entityDetail.getName()).setType(entityTypeProto);
+        EntityDetailProtoDTO.newBuilder().setType(entityTypeProto);
+    if (entityDetail.getName() != null) {
+      entityDetailProtoBuilder.setName(entityDetail.getName());
+    }
     if (entityDetail.getEntityRef() instanceof IdentifierRef) {
       return entityDetailProtoBuilder.setIdentifierRef(createIdentifierRef((IdentifierRef) entityDetail.getEntityRef()))
           .build();

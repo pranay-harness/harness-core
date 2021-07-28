@@ -13,6 +13,7 @@ import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.filters.WithConnectorRef;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -49,7 +50,7 @@ public class DockerStepInfo implements PluginCompatibleStep, WithConnectorRef {
 
   @JsonIgnore
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.DOCKER.getDisplayName()).build();
+      StepType.newBuilder().setType(CIStepInfoType.DOCKER.getDisplayName()).setStepCategory(StepCategory.STEP).build();
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String identifier;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;

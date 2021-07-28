@@ -2,8 +2,6 @@ package io.harness.migrations.accountpermission;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 
-import io.harness.annotations.dev.HarnessModule;
-
 import software.wings.security.PermissionAttribute;
 
 import com.google.common.collect.Sets;

@@ -10,8 +10,8 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.pms.inputset.InputSetErrorDTOPMS;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
-import io.harness.pms.inputset.helpers.MergeUtils;
 import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -138,7 +138,7 @@ public class PreflightServiceImpl implements PreflightService {
 
     InputSetErrorWrapperDTOPMS errorMap = EmptyPredicate.isEmpty(inputSetPipelineYaml)
         ? null
-        : MergeUtils.getErrorMap(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
+        : InputSetErrorsHelper.getErrorMap(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
     PreFlightEntity preFlightEntitySaved;
     if (errorMap == null) {
       preFlightEntitySaved = saveInitialPreflightEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier,

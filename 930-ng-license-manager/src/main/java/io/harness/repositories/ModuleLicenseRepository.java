@@ -11,6 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 @HarnessRepo
 @Transactional
 public interface ModuleLicenseRepository extends CrudRepository<ModuleLicense, String> {
-  ModuleLicense findByAccountIdentifierAndModuleType(String accountIdentifier, ModuleType moduleType);
+  List<ModuleLicense> findByAccountIdentifierAndModuleType(String accountIdentifier, ModuleType moduleType);
   List<ModuleLicense> findByAccountIdentifier(String accountIdentifier);
 }

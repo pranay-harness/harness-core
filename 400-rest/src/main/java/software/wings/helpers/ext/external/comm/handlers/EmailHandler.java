@@ -75,7 +75,7 @@ public class EmailHandler implements CollaborationHandler {
   private boolean validateDelegateConnectionInternal(
       SmtpConfig smtpConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(10), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(10), () -> {
         boolean result = false;
         try {
           Properties props = new Properties();

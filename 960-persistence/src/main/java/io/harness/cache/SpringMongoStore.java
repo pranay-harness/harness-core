@@ -4,6 +4,8 @@ import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.SpringCacheEntity.SpringCacheEntityKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.serializer.KryoSerializer;
@@ -26,6 +28,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class SpringMongoStore implements DistributedStore {
   private static final int VERSION = 1;
 
@@ -37,20 +40,28 @@ public class SpringMongoStore implements DistributedStore {
     return get(null, algorithmId, structureHash, key, params);
   }
 
+  public Long getEntityUpdatedAt(long algorithmId, long structureHash, String key, List<String> params) {
+    return getEntityUpdatedAt(null, algorithmId, structureHash, key, params);
+  }
+
   @Override
   public <T extends Distributable> T get(
       long contextHash, long algorithmId, long structureHash, String key, List<String> params) {
     return get(Long.valueOf(contextHash), algorithmId, structureHash, key, params);
   }
 
+  public <T extends Distributable> void upsert(T entity, Duration ttl, long entityUpdatedAt) {
+    upsertInternal(entity, ttl, false, entityUpdatedAt);
+  }
+
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl) {
-    upsertInternal(entity, ttl, false);
+    upsertInternal(entity, ttl, false, System.currentTimeMillis());
   }
 
   @Override
   public <T extends Distributable> void upsert(T entity, Duration ttl, boolean downgrade) {
-    upsertInternal(entity, ttl, downgrade);
+    upsertInternal(entity, ttl, downgrade, System.currentTimeMillis());
   }
 
   private String canonicalKey(long algorithmId, long structureHash, String key, List<String> params) {
@@ -58,6 +69,30 @@ public class SpringMongoStore implements DistributedStore {
       return format("%s/%d/%d/%d", key, VERSION, algorithmId, structureHash);
     }
     return format("%s/%d/%d/%d%d", key, VERSION, algorithmId, structureHash, Objects.hash(params.toArray()));
+  }
+
+  private Long getEntityUpdatedAt(
+      Long contextValue, long algorithmId, long structureHash, String key, List<String> params) {
+    try {
+      Query query = new Query(
+          where(SpringCacheEntityKeys.canonicalKey).is(canonicalKey(algorithmId, structureHash, key, params)));
+
+      if (contextValue != null) {
+        query.addCriteria(where(SpringCacheEntityKeys.contextValue).is(contextValue));
+      }
+      query.fields().include(SpringCacheEntityKeys.entityUpdatedAt).include(SpringCacheEntityKeys.contextValue);
+
+      final SpringCacheEntity cacheEntity = mongoTemplate.findOne(query, SpringCacheEntity.class);
+
+      if (cacheEntity == null) {
+        return null;
+      }
+
+      return cacheEntity.getEntityUpdatedAt();
+    } catch (RuntimeException ex) {
+      log.error("Failed to obtain from cache", ex);
+    }
+    return null;
   }
 
   private <T extends Distributable> T get(
@@ -83,7 +118,8 @@ public class SpringMongoStore implements DistributedStore {
     return null;
   }
 
-  private <T extends Distributable> void upsertInternal(T entity, Duration ttl, boolean downgrade) {
+  private <T extends Distributable> void upsertInternal(
+      T entity, Duration ttl, boolean downgrade, long entityLastUpdatedAt) {
     final String canonicalKey =
         canonicalKey(entity.algorithmId(), entity.structureHash(), entity.key(), entity.parameters());
     Long contextValue =
@@ -99,7 +135,8 @@ public class SpringMongoStore implements DistributedStore {
                           .setOnInsert(SpringCacheEntityKeys.canonicalKey, canonicalKey)
                           .set(SpringCacheEntityKeys.contextValue, contextValue)
                           .set(SpringCacheEntityKeys.entity, kryoSerializer.asDeflatedBytes(entity))
-                          .set(SpringCacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()));
+                          .set(SpringCacheEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(ttl).toInstant()))
+                          .set(SpringCacheEntityKeys.entityUpdatedAt, entityLastUpdatedAt);
 
       mongoTemplate.findAndModify(query, update, HMongoTemplate.upsertReturnNewOptions, SpringCacheEntity.class);
     } catch (MongoCommandException e) {

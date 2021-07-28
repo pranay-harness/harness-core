@@ -12,6 +12,7 @@ import io.harness.ng.authenticationsettings.dtos.mechanisms.OAuthSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.SAMLSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.UsernamePasswordSettings;
 import io.harness.ng.authenticationsettings.remote.AuthSettingsManagerClient;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 
 import software.wings.beans.loginSettings.LoginSettings;
@@ -21,7 +22,6 @@ import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SSOConfig;
 

@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+import static io.harness.pms.PmsCommonConstants.AUTO_ABORT_PIPELINE_THROUGH_TRIGGER;
+import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
@@ -26,16 +28,22 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecutionMetadata;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.observer.Subject;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.serializer.ProtoUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
@@ -46,10 +54,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -164,12 +172,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                             .setAmbiance(nodeExecution.getAmbiance())
                             .setStatus(nodeExecution.getStatus())
                             .setEventType(OrchestrationEventType.NODE_EXECUTION_START)
-                            .setServiceName(nodeExecution.getNode().getServiceName())
-                            .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()));
+                            .setServiceName(nodeExecution.getNode().getServiceName());
 
       if (nodeExecution.getResolvedStepParameters() != null) {
-        builder.setStepParameters(
-            ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
+        builder.setStepParameters(ByteString.copyFromUtf8(
+            emptyIfNull(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))));
       }
       eventEmitter.emitEvent(builder.build());
       nodeExecutionStartSubject.fireInform(
@@ -352,8 +359,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
-    Document resolvedStepParameters = nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
-    String stepParametersJson = resolvedStepParameters != null ? resolvedStepParameters.toJson() : null;
+    Map<String, Object> resolvedStepParameters =
+        nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
+    String stepParametersJson =
+        resolvedStepParameters != null ? RecastOrchestrationUtils.toJson(resolvedStepParameters) : null;
 
     TriggerPayload triggerPayload = TriggerPayload.newBuilder().build();
     if (nodeExecution != null && nodeExecution.getAmbiance() != null) {
@@ -365,14 +374,69 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       triggerPayload = metadata.getTriggerPayload() != null ? metadata.getTriggerPayload() : triggerPayload;
     }
 
-    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+    Builder eventBuilder = OrchestrationEvent.newBuilder()
                                .setAmbiance(nodeExecution.getAmbiance())
                                .setStatus(nodeExecution.getStatus())
                                .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParametersJson)))
                                .setEventType(orchestrationEventType)
                                .setServiceName(nodeExecution.getNode().getServiceName())
-                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
-                               .setTriggerPayload(triggerPayload)
-                               .build());
+                               .setTriggerPayload(triggerPayload);
+
+    updateEventIfCausedByAutoAbortThroughTrigger(nodeExecution, orchestrationEventType, eventBuilder);
+    eventEmitter.emitEvent(eventBuilder.build());
+  }
+
+  /**
+   * This may seem very specialized logic for a particular case, but we want to keep events lighter as much as possible.
+   * So putting this data only in case needed, as there will be large no of NODE_EXECUTION_STATUS_UPDATE events.
+   * <p>
+   * This is special handling added for CI usecase, to skip update git prs in case of pipeline auto abort from trigger.
+   * NOTE: some refactoring is due, with which CI will start listenening to Stage level events only, then this wont be
+   * needed here. But, that may take some time.
+   */
+  @VisibleForTesting
+  void updateEventIfCausedByAutoAbortThroughTrigger(
+      NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType, Builder eventBuilder) {
+    if (orchestrationEventType == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE) {
+      Level level = AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance());
+      if (level != null && level.getStepType().getStepCategory() == StepCategory.STAGE
+          && nodeExecution.getStatus() == ABORTED) {
+        List<NodeExecution> allChildrenWithStatusInAborted = findAllChildrenWithStatusIn(
+            nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid(), EnumSet.of(ABORTED), false);
+        if (isEmpty(allChildrenWithStatusInAborted)) {
+          return;
+        }
+
+        List<NodeExecution> nodeExecutionsAbortedThroughTrigger =
+            allChildrenWithStatusInAborted.stream().filter(this::isAbortedThroughTrigger).collect(Collectors.toList());
+        if (isNotEmpty(nodeExecutionsAbortedThroughTrigger)) {
+          eventBuilder.addTags(AUTO_ABORT_PIPELINE_THROUGH_TRIGGER);
+        }
+      }
+    }
+  }
+
+  private boolean isAbortedThroughTrigger(NodeExecution nodeExecution) {
+    return nodeExecution.getInterruptHistories().stream().anyMatch(this::isIssuedByTrigger);
+  }
+
+  private boolean isIssuedByTrigger(InterruptEffect interruptEffect) {
+    InterruptConfig interruptConfig = interruptEffect.getInterruptConfig();
+    return interruptConfig.hasIssuedBy() && interruptConfig.getIssuedBy().hasTriggerIssuer()
+        && interruptConfig.getIssuedBy().getTriggerIssuer().getAbortPrevConcurrentExecution();
+  }
+
+  @Override
+  public boolean removeTimeoutInstances(String nodeExecutionId) {
+    Update ops = new Update();
+    ops.set(NodeExecutionKeys.timeoutInstanceIds, new ArrayList<>());
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+
+    if (!updateResult.wasAcknowledged()) {
+      log.warn("TimeoutInstanceIds cannot be removed from nodeExecution {}", nodeExecutionId);
+      return false;
+    }
+    return true;
   }
 }

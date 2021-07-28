@@ -63,6 +63,9 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   public boolean validateConnector(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     final Call<JsonNode> request;
+    if (config.getPassword() == null) {
+      throw new ServiceNowException("Could not decrypt password. Secret might be deleted", SERVICENOW_ERROR, USER);
+    }
     request = getRestClient(taskParameters)
                   .validateConnection(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     Response<JsonNode> response = null;

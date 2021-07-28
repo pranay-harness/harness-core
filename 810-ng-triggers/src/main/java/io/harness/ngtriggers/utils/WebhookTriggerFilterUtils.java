@@ -5,12 +5,14 @@ import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ngtriggers.Constants.CHANGED_FILES;
 import static io.harness.ngtriggers.Constants.ISSUE_COMMENT_EVENT_TYPE;
 import static io.harness.ngtriggers.Constants.MERGE_REQUEST_EVENT_TYPE;
 import static io.harness.ngtriggers.Constants.PULL_REQUEST_EVENT_TYPE;
 import static io.harness.ngtriggers.Constants.PUSH_EVENT_TYPE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -124,13 +126,21 @@ public class WebhookTriggerFilterUtils {
       return true;
     }
 
+    // Remove changed files condition from payload conditions. It will be evaluated separately.
+    List<TriggerEventDataCondition> payloadConditions = webhookTriggerSpec.fetchPayloadAware().fetchPayloadConditions();
+    payloadConditions = payloadConditions.stream()
+                            .filter(payloadCondition -> !CHANGED_FILES.equalsIgnoreCase(payloadCondition.getKey()))
+                            .collect(toList());
+    if (isEmpty(payloadConditions)) {
+      return true;
+    }
+
     String input;
     String standard;
     String operator;
     TriggerExpressionEvaluator triggerExpressionEvaluator = null;
     boolean allConditionsMatched = true;
-    for (TriggerEventDataCondition triggerEventDataCondition :
-        webhookTriggerSpec.fetchPayloadAware().fetchPayloadConditions()) {
+    for (TriggerEventDataCondition triggerEventDataCondition : payloadConditions) {
       standard = triggerEventDataCondition.getValue();
       operator =
           triggerEventDataCondition.getOperator() != null ? triggerEventDataCondition.getOperator().getValue() : EMPTY;
@@ -243,7 +253,7 @@ public class WebhookTriggerFilterUtils {
     return triggerExpressionEvaluator.renderExpression(key, true);
   }
 
-  TriggerExpressionEvaluator generatorPMSExpressionEvaluator(WebhookPayloadData webhookPayloadData) {
+  public TriggerExpressionEvaluator generatorPMSExpressionEvaluator(WebhookPayloadData webhookPayloadData) {
     return generatorPMSExpressionEvaluator(webhookPayloadData.getParseWebhookResponse(),
         webhookPayloadData.getOriginalEvent().getHeaders(), webhookPayloadData.getOriginalEvent().getPayload());
   }

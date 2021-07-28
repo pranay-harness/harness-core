@@ -1,6 +1,6 @@
 package io.harness.encryptors.managerproxy;
 
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
+import static io.harness.delegate.beans.NgSetupFields.OWNER;
 import static io.harness.rule.OwnerRule.ARVIND;
 
 import static org.assertj.core.api.Assertions.assertThat;

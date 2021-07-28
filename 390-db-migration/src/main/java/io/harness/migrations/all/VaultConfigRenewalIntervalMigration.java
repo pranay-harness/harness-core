@@ -3,7 +3,6 @@ package io.harness.migrations.all;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;

@@ -45,5 +45,6 @@ public class K8sDirectInfraYaml implements Infrastructure {
     @ApiModelProperty(dataType = INTEGER_CLASSPATH)
     private ParameterField<Integer> runAsUser;
     @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> serviceAccountName;
+    @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> initTimeout;
   }
 }

@@ -1,0 +1,143 @@
+#extend type Query {
+#    # Get details about a Events Config
+#    eventsConfig(appId: String!, eventsConfigId: String!): EventsConfig @dataFetcher(name: eventsConfig)
+#
+#    # Get details about Events Configs.
+#    eventsConfigs(appId: String!, filters: [EventsConfigFilter], limit: Int!, offset: Int): EventsConfigConnection @dataFetcher(name: eventsConfigConnection)
+#
+#    # Fetch details about a Events Config by it's name
+#    eventsConfigsByName(appId: String!, name: String!): EventsConfig @dataFetcher(name: eventsConfig)
+#}
+
+type EventsConfig {
+  id: String
+  name: String
+  appId: String
+  webhookConfig: WebhookConfig
+  rule: EventRule
+  delegateSelectors: [String]
+  enabled: Boolean
+}
+
+type WebhookConfig {
+  url: String!
+  headers: [WebhookHeader]
+}
+
+input WebhookConfigInput {
+  url: String!
+  headers: [WebhookHeaderInput]
+}
+
+input WebhookHeaderInput {
+  key: String!
+  value: String!
+}
+
+type WebhookHeader {
+  key: String!
+  value: String!
+}
+
+input EventRuleInput {
+  #Allowed values are ALL, PIPELINE, WORKFLOW
+  type: String!
+  pipelineRule: PipelineRuleInput
+  workflowRule: WorkflowRuleInput
+}
+
+type EventRule {
+  #Allowed values are ALL, PIPELINE, WORKFLOW
+  type: String!
+  pipelineRule: PipelineRule
+  workflowRule: WorkflowRule
+}
+
+type EventsConfigConnection {
+  pageInfo: PageInfo
+  nodes: [EventsConfig]
+}
+
+input EventsConfigFilter {
+  eventsConfig: IdFilter
+}
+
+type PipelineRule {
+  allEvents: Boolean!
+  allPipelines: Boolean!
+  pipelineIds: [String]
+  events: [String]
+}
+
+type WorkflowRule {
+  allEvents: Boolean!
+  allWorkflows: Boolean!
+  workflowIds: [String]
+  events: [String]
+}
+
+input PipelineRuleInput {
+  allEvents: Boolean!
+  allPipelines: Boolean!
+  pipelineIds: [String]
+  events: [String]
+}
+
+input WorkflowRuleInput {
+  allEvents: Boolean!
+  allWorkflows: Boolean!
+  workflowIds: [String]
+  events: [String]
+}
+
+extend type Mutation {
+  #Creates a new events config and returns it
+  createEventsConfig(input: CreateEventsConfigInput!): CreateEventsConfigPayload @dataFetcher(name: createEventsConfig)
+
+  #Updates an events config and returns it.
+  updateEventsConfig(input: UpdateEventsConfigInput!): UpdateEventsConfigPayload @dataFetcher(name: updateEventsConfig)
+
+  #Deletes an events config.
+  deleteEventsConfig(input: DeleteEventsConfigInput!): DeleteEventsConfigPayload @dataFetcher(name: deleteEventsConfig)
+}
+
+input CreateEventsConfigInput {
+  clientMutationId: String
+  appId: String!
+  name: String!
+  webhookConfig: WebhookConfigInput!
+  rule: EventRuleInput!
+  delegateSelectors: [String]
+  enabled: Boolean!
+}
+
+input UpdateEventsConfigInput {
+  clientMutationId: String
+  appId: String!
+  name: String!
+  webhookConfig: WebhookConfigInput!
+  rule: EventRuleInput!
+  delegateSelectors: [String]
+  enabled: Boolean!
+  id: String!
+}
+
+input DeleteEventsConfigInput {
+  clientMutationId: String
+  appId: String!
+  eventsConfigId: String!
+}
+
+type CreateEventsConfigPayload {
+  clientMutationId: String
+  eventsConfig: EventsConfig
+}
+
+type UpdateEventsConfigPayload {
+  clientMutationId: String
+  eventsConfig: EventsConfig
+}
+
+type DeleteEventsConfigPayload {
+  clientMutationId: String
+}

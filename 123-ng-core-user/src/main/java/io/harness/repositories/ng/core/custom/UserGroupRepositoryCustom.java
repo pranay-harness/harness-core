@@ -20,4 +20,6 @@ public interface UserGroupRepositoryCustom {
   List<UserGroup> findAll(Criteria criteria);
 
   UserGroup delete(Criteria criteria);
+
+  List<UserGroup> deleteAll(Criteria criteria);
 }

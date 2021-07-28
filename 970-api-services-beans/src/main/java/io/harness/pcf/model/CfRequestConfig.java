@@ -32,4 +32,5 @@ public class CfRequestConfig {
   private boolean loggedin;
   private boolean limitPcfThreads;
   private boolean ignorePcfConnectionContextCache;
+  private boolean useNumbering;
 }

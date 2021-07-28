@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.VED;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -579,14 +580,20 @@ public class NexusServiceTest extends WingsBaseTest {
    * The Wire mock rule.
    */
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                          .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                          .disableRequestJournal()
+                                                          .port(0));
   @Rule
-  public WireMockRule wireMockRule2 = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule2 = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                           .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                           .disableRequestJournal()
+                                                           .port(0));
   @Rule
-  public WireMockRule wireMockRule3 = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule3 = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                           .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                           .disableRequestJournal()
+                                                           .port(0));
 
   private String DEFAULT_NEXUS_URL;
 
@@ -756,6 +763,30 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetRepositoriesError404() {
     NexusRequest config = NexusRequest.builder()
+                              .nexusUrl(String.format("http://localhost:%d/nexus2/", wireMockRule.port()))
+                              .version("3.x")
+                              .username("admin")
+                              .password("wings123!".toCharArray())
+                              .build();
+    assertThatThrownBy(() -> nexusClient.isRunning(config))
+        .isInstanceOf(HintException.class)
+        .hasMessage(
+            "Check if the Nexus URL & Nexus version are correct. Nexus URLs are different for different Nexus versions")
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .hasMessage("The Nexus URL or the version for the connector is incorrect")
+        .getCause()
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .hasMessage("INVALID_ARTIFACT_SERVER")
+        .extracting("params")
+        .hasFieldOrPropertyWithValue("message", "Invalid Nexus connector details");
+  }
+
+  @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void shouldGetRepositoriesError404_reverse() {
+    NexusRequest config = NexusRequest.builder()
                               .nexusUrl(String.format("http://localhost:%d/nexus3/", wireMockRule.port()))
                               .version("2.x")
                               .username("admin")
@@ -763,11 +794,16 @@ public class NexusServiceTest extends WingsBaseTest {
                               .build();
     assertThatThrownBy(() -> nexusClient.getRepositories(config, null))
         .isInstanceOf(HintException.class)
+        .hasMessage(
+            "Check if the Nexus URL & Nexus version are correct. Nexus URLs are different for different Nexus versions")
         .getCause()
         .isInstanceOf(ExplanationException.class)
+        .hasMessage("The Nexus URL or the version for the connector is incorrect")
         .getCause()
         .isInstanceOf(InvalidArtifactServerException.class)
-        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+        .hasMessage("INVALID_ARTIFACT_SERVER")
+        .extracting("params")
+        .hasFieldOrPropertyWithValue("message", "Invalid Nexus connector details");
   }
 
   @Test

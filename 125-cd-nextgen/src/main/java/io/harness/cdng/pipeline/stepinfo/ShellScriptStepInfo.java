@@ -1,5 +1,7 @@
 package io.harness.cdng.pipeline.stepinfo;
 
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -20,6 +22,7 @@ import io.harness.steps.common.script.ShellScriptStepParameters;
 import io.harness.steps.common.script.ShellType;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
 
@@ -43,6 +46,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;
+  @YamlSchemaTypes(value = {runtime})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 

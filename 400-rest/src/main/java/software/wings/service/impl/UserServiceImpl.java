@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -10,13 +11,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.ng.core.common.beans.Generation.NG;
-import static io.harness.ng.core.invites.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
-import static io.harness.ng.core.invites.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
-import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_INVITED;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
@@ -31,7 +33,6 @@ import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMEN
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.collect.Lists.newArrayList;
@@ -77,6 +78,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.invites.remote.NgInviteClient;
 import io.harness.limits.ActionType;
@@ -84,11 +86,15 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
-import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.invites.dto.InviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
+import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -96,6 +102,7 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.sanitizer.HtmlInputSanitizer;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
+import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
@@ -157,7 +164,6 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.OauthProviderType;
@@ -196,6 +202,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -312,10 +319,12 @@ public class UserServiceImpl implements UserService {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ConfigurationController configurationController;
   @Inject private HtmlInputSanitizer userNameSanitizer;
-  @Inject private NgInviteClient ngInviteClient;
+  @Inject @Named("PRIVILEGED") private NgInviteClient ngInviteClient;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
   @Inject private SegmentHelper segmentHelper;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject @Named("PRIVILEGED") private UserMembershipClient userMembershipClient;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {
@@ -383,6 +392,82 @@ public class UserServiceImpl implements UserService {
     createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId);
 
     return savedUser;
+  }
+
+  @Override
+  public UserInvite createNewSignupInvite(SignupInviteDTO signupInvite) {
+    final String emailAddress = signupInvite.getEmail().toLowerCase();
+    UserInvite userInviteInDB = signupService.getUserInviteByEmail(emailAddress);
+
+    if (userInviteInDB == null) {
+      UserInvite userInvite = new UserInvite();
+      userInvite.setEmail(emailAddress);
+      userInvite.setPasswordHash(signupInvite.getPasswordHash());
+      userInvite.setIntent(signupInvite.getIntent());
+      userInvite.setCreatedFromNG(true);
+      userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
+      userInvite.setCompleted(false);
+
+      String inviteId = wingsPersistence.save(userInvite);
+      userInvite.setUuid(inviteId);
+
+      log.info("Created a new ng signup user invite for {}", emailAddress);
+
+      return userInvite;
+    } else if (userInviteInDB.isCompleted()) {
+      if (spamChecker.isSpam(userInviteInDB)) {
+        throw new InvalidRequestException("User already finished registration.");
+      }
+    }
+
+    if (spamChecker.isSpam(userInviteInDB)) {
+      throw new InvalidRequestException("Spam signup request");
+    }
+
+    throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+  }
+
+  @Override
+  public User completeNewSignupInvite(UserInvite userInvite) {
+    User existingUser = getUserByEmail(userInvite.getEmail());
+    if (existingUser != null) {
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+    }
+
+    // create account
+    String username = userInvite.getEmail().split("@")[0];
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(username)
+                          .withCompanyName(username)
+                          .withDefaultExperience(DefaultExperience.NG)
+                          .withCreatedFromNG(true)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.TRIAL)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(50)
+                               .build());
+
+    // TODO: remove this code when CD/CE GA. Presume to set CG default Experience with CD/CE intent.
+    if ("CD".equalsIgnoreCase(userInvite.getIntent()) || "CE".equalsIgnoreCase(userInvite.getIntent())) {
+      account.setDefaultExperience(DefaultExperience.CG);
+    }
+    Account createdAccount = accountService.save(account, false);
+
+    // create user
+    User user = User.Builder.anUser()
+                    .email(userInvite.getEmail())
+                    .name(createdAccount.getAccountName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(createdAccount.getAccountName())
+                    .companyName(createdAccount.getCompanyName())
+                    .accounts(Lists.newArrayList(createdAccount))
+                    .emailVerified(true)
+                    .defaultAccountId(createdAccount.getUuid())
+                    .build();
+    completeUserInviteForSignup(userInvite, createdAccount.getUuid());
+    return createNewUserAndSignIn(user, createdAccount.getUuid());
   }
 
   @Override
@@ -654,7 +739,7 @@ public class UserServiceImpl implements UserService {
     newAccounts.add(account);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.accounts, newAccounts);
-    updateUser(user, updateOperations);
+    updateUser(user.getUuid(), updateOperations);
   }
 
   @Override
@@ -684,10 +769,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean isUserPasswordPresent(String accountId, String emailId) {
     User user = getUserByEmail(emailId);
-
-    Account account = accountService.get(accountId);
-    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
-    return !((authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash()));
+    return isNotEmpty(user.getPasswordHash());
   }
 
   @Override
@@ -714,7 +796,7 @@ public class UserServiceImpl implements UserService {
       UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
       updateOperations.set(UserKeys.name, user.getName());
       updateOperations.set(UserKeys.passwordHash, hashpw(new String(user.getPassword()), BCrypt.gensalt()));
-      updateUser(existingUser, updateOperations);
+      updateUser(existingUser.getUuid(), updateOperations);
       return existingUser;
     }
   }
@@ -1433,6 +1515,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User completeNGInviteAndSignIn(UserInviteDTO userInvite) {
+    signupService.validateName(userInvite.getName());
+    if (!validateNgInvite(userInvite)) {
+      throw new InvalidRequestException("User invite token invalid");
+    }
     completeNGInvite(userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), userInvite.getPassword());
   }
@@ -1492,7 +1578,8 @@ public class UserServiceImpl implements UserService {
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private void completeNGInvite(UserInviteDTO userInvite) {
+  @Override
+  public void completeNGInvite(UserInviteDTO userInvite) {
     String accountId = userInvite.getAccountId();
     limitCheck(accountId, userInvite.getEmail());
     Account account = accountService.get(accountId);
@@ -1507,23 +1594,32 @@ public class UserServiceImpl implements UserService {
       user.setAccounts(new ArrayList<>(Collections.singletonList(account)));
     }
     String name = userInvite.getName().trim();
-    signupService.validateName(name);
     user.setName(name);
-    if (userInvite.getPassword() == null) {
-      throw new InvalidRequestException("User name/password is not provided", USER);
-    }
-    AuthenticationMechanism authenticationMechanism =
-        account.getAuthenticationMechanism() == null ? USER_PASSWORD : account.getAuthenticationMechanism();
-    Preconditions.checkState(authenticationMechanism == USER_PASSWORD,
-        "Invalid request. Complete invite should only be called if Auth Mechanism is UsePass");
-    loginSettingsService.verifyPasswordStrength(
-        accountService.get(userInvite.getAccountId()), userInvite.getPassword().toCharArray());
+    if (userInvite.getPassword() != null) {
+      AuthenticationMechanism authenticationMechanism =
+          account.getAuthenticationMechanism() == null ? USER_PASSWORD : account.getAuthenticationMechanism();
+      Preconditions.checkState(authenticationMechanism == USER_PASSWORD,
+          "Invalid request. Complete invite should only be called if Auth Mechanism is UserPassword");
+      loginSettingsService.verifyPasswordStrength(
+          accountService.get(userInvite.getAccountId()), userInvite.getPassword().toCharArray());
 
-    user.setPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()));
+      user.setPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()));
+    }
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
+    // Empty user group list because this user invite is from NG and the method adds user to CG user groups
+    moveAccountFromPendingToConfirmed(user, account, Collections.emptyList(), true);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
     NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getToken()));
+  }
+
+  private boolean validateNgInvite(UserInviteDTO userInvite) {
+    InviteDTO inviteDTO = NGRestUtils.getResponse(ngInviteClient.getInviteWithToken(userInvite.getToken()));
+    if (inviteDTO == null || !inviteDTO.getEmail().equals(userInvite.getEmail())
+        || !inviteDTO.getAccountIdentifier().equals(userInvite.getAccountId())) {
+      return false;
+    }
+    return true;
   }
 
   private void marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
@@ -2056,9 +2152,10 @@ public class UserServiceImpl implements UserService {
       Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
+      String templateName = isNGRequest ? "ng_reset_password" : "reset_password";
       EmailData emailData = EmailData.builder()
                                 .to(toList)
-                                .templateName("reset_password")
+                                .templateName(templateName)
                                 .templateModel(templateModel)
                                 .accountId(getPrimaryAccount(user).getUuid())
                                 .build();
@@ -2134,7 +2231,7 @@ public class UserServiceImpl implements UserService {
             "Auditing updation of User Profile for user={} in account={}", user.getUuid(), account.getAccountName());
       });
     }
-    return updateUser(user, updateOperations);
+    return updateUser(user.getUuid(), updateOperations);
   }
 
   @Override
@@ -2226,7 +2323,7 @@ public class UserServiceImpl implements UserService {
       updateOperations.set(UserKeys.lastLogin, user.getLastLogin());
     }
 
-    return updateUser(user, updateOperations);
+    return updateUser(user.getUuid(), updateOperations);
   }
 
   @Override
@@ -2242,7 +2339,7 @@ public class UserServiceImpl implements UserService {
     setUnset(operations, UserKeys.userLockoutInfo, new UserLockoutInfo());
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Type.UNLOCK);
     log.info("Auditing unlocking of user={} in account={}", user.getName(), accountId);
-    return applyUpdateOperations(user, operations);
+    return updateUser(user.getUuid(), operations);
   }
 
   @Override
@@ -2371,7 +2468,17 @@ public class UserServiceImpl implements UserService {
       List<Account> updatedActiveAccounts = new ArrayList<>();
       if (isNotEmpty(user.getAccounts())) {
         for (Account account : user.getAccounts()) {
-          if (!account.getUuid().equals(accountId)) {
+          if (account.getUuid().equals(accountId)) {
+            if (featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId)) {
+              Boolean isUserPartOfAccountInNG =
+                  NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
+              log.info(
+                  "User {} is {} of nextgen in account {}", userId, isUserPartOfAccountInNG ? "" : "not", accountId);
+              if (isUserPartOfAccountInNG) {
+                updatedActiveAccounts.add(account);
+              }
+            }
+          } else {
             updatedActiveAccounts.add(account);
           }
         }
@@ -2418,21 +2525,19 @@ public class UserServiceImpl implements UserService {
       if (defaultAccountId != null) {
         updateOp.set(UserKeys.defaultAccountId, defaultAccountId);
       }
-      updateUser(user, updateOp);
+      updateUser(user.getUuid(), updateOp);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
     log.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
   }
 
   @Override
-  public User updateUser(User oldUser, UpdateOperations<User> updateOperations) {
-    if (oldUser.getUuid() == null) {
-      return null;
-    }
-    User updatedUser = wingsPersistence.findAndModify(
-        wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, oldUser.getUuid()), updateOperations,
-        HPersistence.returnNewOptions);
-    evictUserFromCache(oldUser.getUuid());
+  public User updateUser(String userId, UpdateOperations<User> updateOperations) {
+    User oldUser =
+        wingsPersistence.findAndModify(wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, userId),
+            updateOperations, HPersistence.returnOldOptions);
+    User updatedUser = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, userId).get();
+    evictUserFromCache(userId);
     publishUserEvent(oldUser, updatedUser);
     return updatedUser;
   }
@@ -2456,23 +2561,25 @@ public class UserServiceImpl implements UserService {
     String action;
     if (isUserCreated) {
       action = EventsFrameworkMetadataConstants.CREATE_ACTION;
-      userDTO = getEventDataForCreateEvent(updatedUser);
     } else if (isUserDeleted) {
       action = EventsFrameworkMetadataConstants.DELETE_ACTION;
-      userDTO = getEventDataForDeleteEvent(oldUser);
     } else {
       action = EventsFrameworkMetadataConstants.UPDATE_ACTION;
-      userDTO = getEventDataForUpdateEvent(oldUser, updatedUser);
+      /**
+       * Dont send unnecessary events. Right now we only send events when username has changed or user is
+       * created/deleted or user locked status has changed.
+       */
+      if (updatedUser.getName().equals(oldUser.getName()) && updatedUser.isUserLocked() == oldUser.isUserLocked()) {
+        return;
+      }
     }
 
-    /**
-     * Dont send unnecessary events. Right now we only send events when user is added/removed from account or when
-     * username is changed
-     */
-    if (userDTO.getAccountsUserRemovedFromList().isEmpty() && userDTO.getNewAccountsUserAddedToList().isEmpty()
-        && isBlank(userDTO.getName())) {
-      return;
-    }
+    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
+    userDTOBuilder.setUserId(updatedUser != null ? updatedUser.getUuid() : oldUser.getUuid());
+    userDTOBuilder.setName(updatedUser != null ? updatedUser.getName() : oldUser.getName());
+    userDTOBuilder.setEmail(updatedUser != null ? updatedUser.getEmail() : oldUser.getEmail());
+    userDTOBuilder.setLocked(updatedUser != null ? updatedUser.isUserLocked() : oldUser.isUserLocked());
+    userDTO = userDTOBuilder.build();
 
     try {
       eventProducer.send(
@@ -2484,46 +2591,6 @@ public class UserServiceImpl implements UserService {
     } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework for user [userId: {}", userDTO.getUserId(), e);
     }
-  }
-
-  private UserDTO getEventDataForUpdateEvent(User oldUser, User updatedUser) {
-    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
-    userDTOBuilder.setUserId(oldUser.getUuid());
-    if (updatedUser.getName() != null
-        && (oldUser.getName() == null || !oldUser.getName().equals(updatedUser.getName()))) {
-      userDTOBuilder.setName(updatedUser.getName());
-    }
-    Set<String> oldAccounts =
-        new HashSet<>(Optional.ofNullable(oldUser.getAccountIds()).orElse(Collections.emptyList()));
-    Set<String> newAccounts =
-        new HashSet<>(Optional.ofNullable(updatedUser.getAccountIds()).orElse(Collections.emptyList()));
-    userDTOBuilder.addAllNewAccountsUserAddedTo(Sets.difference(newAccounts, oldAccounts));
-    userDTOBuilder.addAllAccountsUserRemovedFrom(Sets.difference(oldAccounts, newAccounts));
-    return userDTOBuilder.build();
-  }
-
-  private UserDTO getEventDataForDeleteEvent(User oldUser) {
-    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
-    if (oldUser.getName() != null) {
-      userDTOBuilder.setName(oldUser.getName());
-    }
-    userDTOBuilder.setUserId(oldUser.getUuid());
-    if (oldUser.getAccountIds() != null) {
-      userDTOBuilder.addAllAccountsUserRemovedFrom(oldUser.getAccountIds());
-    }
-    return userDTOBuilder.build();
-  }
-
-  private UserDTO getEventDataForCreateEvent(User updatedUser) {
-    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
-    if (updatedUser.getName() != null) {
-      userDTOBuilder.setName(updatedUser.getName());
-    }
-    userDTOBuilder.setUserId(updatedUser.getUuid());
-    if (updatedUser.getAccountIds() != null) {
-      userDTOBuilder.addAllNewAccountsUserAddedTo(updatedUser.getAccountIds());
-    }
-    return userDTOBuilder.build();
   }
 
   /* (non-Javadoc)
@@ -2557,6 +2624,12 @@ public class UserServiceImpl implements UserService {
     Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
     query.or(query.criteria(UserKeys.accounts).hasThisOne(accountId),
         query.criteria(UserKeys.pendingAccounts).hasThisOne(accountId));
+    return query.asList();
+  }
+
+  @Override
+  public List<User> getUsers(Set<String> userIds) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
     return query.asList();
   }
 
@@ -2821,7 +2894,7 @@ public class UserServiceImpl implements UserService {
     if (account != null) {
       updateOperations.addToSet(UserKeys.accounts, account.getUuid());
     }
-    updateUser(existingUser, updateOperations);
+    updateUser(existingUser.getUuid(), updateOperations);
   }
 
   private Account setupTrialAccount(String accountName, String companyName) {
@@ -2839,6 +2912,7 @@ public class UserServiceImpl implements UserService {
   private Account setupAccount(Account account, boolean shouldCreateSampleApp) {
     // HAR-8645: Always set default appId for account creation to pass validation
     account.setAppId(GLOBAL_APP_ID);
+    account.setDefaultExperience(DefaultExperience.CG);
     Account savedAccount = accountService.save(account, false, shouldCreateSampleApp);
     log.info("New account created with accountId {} and licenseType {}", account.getUuid(),
         account.getLicenseInfo().getAccountType());
@@ -3414,28 +3488,45 @@ public class UserServiceImpl implements UserService {
     if (inviteAcceptResponse.getResponse().equals(FAIL)) {
       return FAIL;
     }
+
+    Account account = accountService.get(inviteAcceptResponse.getAccountIdentifier());
+    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
+    boolean isPasswordRequired = authMechanism == null || authMechanism == USER_PASSWORD;
+
     UserInfo userInfo = inviteAcceptResponse.getUserInfo();
     if (userInfo == null) {
-      return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+      if (isPasswordRequired) {
+        return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+      } else {
+        String email = inviteAcceptResponse.getEmail();
+        UserInviteDTO userInviteDTO = UserInviteDTO.builder()
+                                          .accountId(userInvite.getAccountId())
+                                          .email(email)
+                                          .name(email.trim())
+                                          .token(userInvite.getUuid())
+                                          .build();
+        completeNGInvite(userInviteDTO);
+        return ACCOUNT_INVITE_ACCEPTED;
+      }
+    } else {
+      User user = getUserByEmail(userInfo.getEmail());
+      if (isPasswordRequired && isEmpty(user.getPasswordHash())) {
+        return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+      } else {
+        NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
+        return ACCOUNT_INVITE_ACCEPTED;
+      }
     }
-    User user = getUserByEmail(userInfo.getEmail());
-    Account account = accountService.get(userInvite.getAccountId());
-    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
-    boolean isPasswordRequired =
-        (authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash());
-    if (isPasswordRequired) {
-      return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
-    }
-    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
-    return ACCOUNT_INVITE_ACCEPTED;
   }
 
   private void moveAccountFromPendingToConfirmed(
       User existingUser, Account invitationAccount, List<UserGroup> userGroups, boolean markEmailVerified) {
     addUserToUserGroups(invitationAccount.getUuid(), existingUser, userGroups, false, false);
-
+    String invitationAccountId = invitationAccount.getUuid();
     List<Account> newAccountsList = new ArrayList<>(existingUser.getAccounts());
-    newAccountsList.add(invitationAccount);
+    if (newAccountsList.stream().map(Account::getUuid).noneMatch(invitationAccountId::equals)) {
+      newAccountsList.add(invitationAccount);
+    }
 
     List<Account> newPendingAccountsList = new ArrayList<>();
     if (existingUser.getPendingAccounts() != null) {
@@ -3449,7 +3540,7 @@ public class UserServiceImpl implements UserService {
     updateOperations.set(UserKeys.accounts, newAccountsList);
     updateOperations.set(UserKeys.pendingAccounts, newPendingAccountsList);
     updateOperations.set(UserKeys.emailVerified, markEmailVerified);
-    updateUser(existingUser, updateOperations);
+    updateUser(existingUser.getUuid(), updateOperations);
   }
 
   private void markUserInviteComplete(UserInvite userInvite) {
@@ -3463,7 +3554,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.name, userInvite.getName().trim());
     updateOperations.set(UserKeys.passwordHash, hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
-    updateUser(existingUser, updateOperations);
+    updateUser(existingUser.getUuid(), updateOperations);
   }
 
   private String setupAccountBasedOnProduct(User user, UserInvite userInvite, MarketPlace marketPlace) {

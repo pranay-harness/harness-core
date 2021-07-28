@@ -1,5 +1,9 @@
 package io.harness.rule;
 
+import static org.powermock.api.mockito.PowerMockito.mock;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -28,6 +32,7 @@ import org.mongodb.morphia.ObjectFactory;
 import org.mongodb.morphia.mapping.DefaultCreator;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class CommonsRule implements MethodRule, InjectorRuleMixin {
   ClosingFactory closingFactory;
 
@@ -37,6 +42,9 @@ public class CommonsRule implements MethodRule, InjectorRuleMixin {
 
   @Override
   public void initialize(Injector injector, List<Module> modules) {
+    // Do not remove, identifies the use of powermock.mockito for the unused dependency check
+    mock(Boolean.class);
+
     for (Module module : modules) {
       if (module instanceof ServersModule) {
         for (Closeable server : ((ServersModule) module).servers(injector)) {

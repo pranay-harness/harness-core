@@ -23,6 +23,6 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 public class CDModuleLicenseDTO extends ModuleLicenseDTO {
-  Integer maxWorkLoads;
+  Integer workloads;
   Integer deploymentsPerDay;
 }

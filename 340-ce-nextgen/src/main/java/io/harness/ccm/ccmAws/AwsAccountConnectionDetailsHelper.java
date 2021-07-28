@@ -7,6 +7,7 @@ import io.harness.ccm.CENextGenConfiguration;
 import io.harness.ccm.commons.entities.AwsAccountConnectionDetail;
 
 import com.google.inject.Inject;
+import java.math.BigDecimal;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,14 +21,23 @@ public class AwsAccountConnectionDetailsHelper {
   private static final String stackNameValue = "harness-ce-iam-role-stack";
   public AwsAccountConnectionDetail getAwsAccountConnectorDetail(String accountId) {
     String harnessAccountId = configuration.getAwsConfig().getHarnessAwsAccountId();
-    String externalId = String.format(EXTERNAL_ID_TEMPLATE, harnessAccountId, accountId);
+    String externalId = String.format(EXTERNAL_ID_TEMPLATE, getProcessedAccountId(harnessAccountId), accountId);
     String stackLaunchTemplateLink =
         String.format(stackBaseTemplate, stackNameValue, configuration.getAwsConfig().getAwsConnectorTemplate());
     return AwsAccountConnectionDetail.builder()
         .externalId(externalId)
-        .harnessAccountId(harnessAccountId)
+        .harnessAccountId(getProcessedAccountId(harnessAccountId))
         .cloudFormationTemplateLink(configuration.getAwsConfig().getAwsConnectorTemplate())
         .stackLaunchTemplateLink(stackLaunchTemplateLink)
         .build();
+  }
+
+  public static String getProcessedAccountId(String awsAccountId) {
+    try {
+      awsAccountId = String.valueOf(new BigDecimal(awsAccountId).longValue());
+    } catch (Exception ex) {
+      log.error("Exception while getting accountId {}", ex);
+    }
+    return awsAccountId;
   }
 }

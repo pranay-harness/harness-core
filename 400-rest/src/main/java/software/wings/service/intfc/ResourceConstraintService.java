@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.ResourceConstraint;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintRegistry;
 import io.harness.validation.Update;
@@ -25,6 +25,8 @@ public interface ResourceConstraintService extends OwnedByAccount {
   PageResponse<ResourceConstraint> list(PageRequest<ResourceConstraint> pageRequest);
 
   @ValidationGroups(Update.class) void update(@Valid ResourceConstraint resourceConstraint);
+
+  ResourceConstraint getById(String id);
 
   ResourceConstraint getByName(@NotNull String accountId, @NotNull String resourceConstraintName);
 
@@ -71,4 +73,8 @@ public interface ResourceConstraintService extends OwnedByAccount {
   }
 
   int getAllCurrentlyAcquiredPermits(String holdingScope, String releaseEntityId, String appId);
+
+  ResourceConstraint get(String ownerId, String id);
+
+  ResourceConstraint save(@Valid ResourceConstraint resourceConstraint);
 }

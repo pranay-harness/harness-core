@@ -2,7 +2,6 @@ package io.harness.engine;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -54,9 +53,6 @@ public class EndNodeExecutionHelper {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
       setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
-      if (stepResponse.getStatus() != EXPIRED) {
-        setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, new ArrayList<>());
-      }
     }, EnumSet.noneOf(Status.class));
   }
 
@@ -83,6 +79,7 @@ public class EndNodeExecutionHelper {
   }
 
   public NodeExecution handleStepResponsePreAdviser(NodeExecution nodeExecution, StepResponseProto stepResponse) {
+    log.info("Handling Step response before calling advisers");
     return transactionUtils.performTransaction(() -> processStepResponsePreAdvisers(nodeExecution, stepResponse));
   }
 
@@ -90,6 +87,8 @@ public class EndNodeExecutionHelper {
     List<StepOutcomeRef> outcomeRefs = handleOutcomes(
         nodeExecution.getAmbiance(), stepResponse.getStepOutcomesList(), stepResponse.getGraphOutcomesList());
 
+    log.info(
+        "Trying to update nodeExecution status from {} to {}", nodeExecution.getStatus(), stepResponse.getStatus());
     return nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), stepResponse.getStatus(), ops -> {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);

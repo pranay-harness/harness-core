@@ -9,12 +9,18 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
+import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
-import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.ng.beans.PageResponse;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
+
 @OwnedBy(HarnessTeam.CV)
 public interface ActivityService {
   Activity get(String activityId);
@@ -22,8 +28,7 @@ public interface ActivityService {
   String register(String accountId, String webhookToken, ActivityDTO activityDTO);
 
   String register(String accountId, ActivityDTO activityDTO);
-
-  CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO);
+  String register(Activity activity);
 
   void updateActivityStatus(Activity activity);
 
@@ -51,4 +56,13 @@ public interface ActivityService {
 
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
+  TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
+      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize);
+  Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
+
+  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, String hostName);
+
+  PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(
+      String accountId, String activityId, Integer label, int pageNumber, int pageSize, String hostName);
 }

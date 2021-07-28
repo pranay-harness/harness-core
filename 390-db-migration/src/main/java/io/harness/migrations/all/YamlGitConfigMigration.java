@@ -6,7 +6,6 @@ import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_ID_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_TYPE_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.SYNC_MODE_KEY;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

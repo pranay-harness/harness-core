@@ -51,6 +51,7 @@ public class PerspectiveFieldsHelper {
     List<ViewField> customFields = new ArrayList<>();
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
     boolean isExplorerQuery = false;
+    boolean isClusterPerspective = viewsBillingService.isClusterPerspective(filters);
     String viewId = null;
     if (viewMetadataFilter.isPresent()) {
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
@@ -69,7 +70,7 @@ public class PerspectiveFieldsHelper {
       for (ViewField field : customFieldViewFields) {
         if (field.getIdentifier() == ViewFieldIdentifier.LABEL) {
           for (QLCEViewFieldIdentifierData viewFieldIdentifierData :
-              getFieldIdentifierDataFromCEMetadataRecord(accountId)) {
+              getFieldIdentifierDataFromCEMetadataRecord(accountId, isClusterPerspective)) {
             viewFieldIdentifierSetFromCustomFields.add(viewFieldIdentifierData.getIdentifier());
           }
         } else {
@@ -87,7 +88,8 @@ public class PerspectiveFieldsHelper {
           } else if (viewFieldIdentifier == ViewFieldIdentifier.GCP) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER) {
-            fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+            fieldIdentifierData.add(
+                getViewField(ViewFieldUtils.getClusterFields(isClusterPerspective), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.AZURE) {
             fieldIdentifierData.add(getViewField(accountIdToSupportedAzureFields.get(accountId), viewFieldIdentifier));
           }
@@ -102,22 +104,24 @@ public class PerspectiveFieldsHelper {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER
               && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.CLUSTER)) {
-            fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+            fieldIdentifierData.add(
+                getViewField(ViewFieldUtils.getClusterFields(isClusterPerspective), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.AZURE
               && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.AZURE)) {
             fieldIdentifierData.add(getViewField(accountIdToSupportedAzureFields.get(accountId), viewFieldIdentifier));
           }
         }
       } else {
-        fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId));
+        fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId, isClusterPerspective));
       }
     } else {
-      fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId));
+      fieldIdentifierData.addAll(getFieldIdentifierDataFromCEMetadataRecord(accountId, isClusterPerspective));
     }
     return PerspectiveFieldsData.builder().fieldIdentifierData(fieldIdentifierData).build();
   }
 
-  private List<QLCEViewFieldIdentifierData> getFieldIdentifierDataFromCEMetadataRecord(String accountId) {
+  private List<QLCEViewFieldIdentifierData> getFieldIdentifierDataFromCEMetadataRecord(
+      String accountId, boolean isClusterPerspective) {
     List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();
     CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
     Boolean clusterDataConfigured = true;
@@ -133,7 +137,8 @@ public class PerspectiveFieldsHelper {
     }
 
     if (clusterDataConfigured == null || clusterDataConfigured) {
-      fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), ViewFieldIdentifier.CLUSTER));
+      fieldIdentifierData.add(
+          getViewField(ViewFieldUtils.getClusterFields(isClusterPerspective), ViewFieldIdentifier.CLUSTER));
     }
     if (awsConnectorConfigured == null || awsConnectorConfigured) {
       fieldIdentifierData.add(getViewField(ViewFieldUtils.getAwsFields(), ViewFieldIdentifier.AWS));

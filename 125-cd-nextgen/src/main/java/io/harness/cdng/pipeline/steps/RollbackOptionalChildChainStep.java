@@ -9,6 +9,7 @@ import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -25,7 +26,8 @@ import java.util.Map;
 
 @OwnedBy(PIPELINE)
 public class RollbackOptionalChildChainStep implements ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").setStepCategory(StepCategory.STEP).build();
 
   @Inject private PlanCreatorHelper planCreatorHelper;
   @Inject private KryoSerializer kryoSerializer;

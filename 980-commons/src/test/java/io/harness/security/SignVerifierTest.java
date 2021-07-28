@@ -67,4 +67,14 @@ public class SignVerifierTest extends CategoryTest {
       assertThat(SignVerifier.meticulouslyVerify(jar)).isTrue();
     }
   }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testHarnessSignedWithTheBazelRule() throws IOException {
+    try (JarFile jar = jarFileFromResource("/980-commons/io/harness/security/non-signed_signed.jar")) {
+      assertThat(SignVerifier.verify(jar)).isTrue();
+      assertThat(SignVerifier.meticulouslyVerify(jar)).isTrue();
+    }
+  }
 }

@@ -28,8 +28,7 @@ public class QueriesTest extends DelegateServiceTestBase {
   @Category(UnitTests.class)
   public void testConfirmAllIndexedQueries() throws Exception {
     Set<Class<? extends PersistentQuery>> indexedQueries = new HashSet<>();
-    Reflections reflections =
-        new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "io.serializer");
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
     indexedQueries.addAll(reflections.getSubTypesOf(PersistentQuery.class));
     List<String> indexedQueriesCanonicalForm = new ArrayList<>();
     for (Class<? extends PersistentQuery> indexedQuery : indexedQueries) {
@@ -37,7 +36,7 @@ public class QueriesTest extends DelegateServiceTestBase {
     }
     indexedQueriesCanonicalForm.sort(String::compareTo);
     List<String> expectedIndexesRaw;
-    try (InputStream in = getClass().getResourceAsStream("/mongo/indexedQueries.txt")) {
+    try (InputStream in = getClass().getResourceAsStream("/mongo/queries.txt")) {
       expectedIndexesRaw = IOUtils.readLines(in, "UTF-8");
     }
     List<String> expectedQueries = new ArrayList<>();
@@ -57,6 +56,8 @@ public class QueriesTest extends DelegateServiceTestBase {
       expectedQueries.add(currentQuery.toString());
     }
     expectedQueries.sort(String::compareTo);
-    assertThat(indexedQueriesCanonicalForm).isEqualTo(expectedQueries);
+    assertThat(indexedQueriesCanonicalForm)
+        .as("\n" + String.join("\n", indexedQueriesCanonicalForm) + "\n")
+        .isEqualTo(expectedQueries);
   }
 }

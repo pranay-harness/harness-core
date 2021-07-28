@@ -168,6 +168,11 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   }
 
   @Override
+  public List<ServiceEntity> listRunTimePermission(Criteria criteria) {
+    return serviceRepository.findAllRunTimePermission(criteria);
+  }
+
+  @Override
   public boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, Long version) {
     ServiceEntity serviceEntity = ServiceEntity.builder()

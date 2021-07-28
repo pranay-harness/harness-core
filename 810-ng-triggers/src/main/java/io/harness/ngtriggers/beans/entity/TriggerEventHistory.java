@@ -5,14 +5,18 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
 import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -67,6 +71,7 @@ public class TriggerEventHistory implements PersistentEntity {
   String planExecutionId;
   boolean exceptionOccurred;
   String triggerIdentifier;
+  @FdTtlIndex @Default Date validUntil = Date.from(OffsetDateTime.now().plusDays(3).toInstant());
   TargetExecutionSummary targetExecutionSummary;
 
   @CreatedDate Long createdAt;

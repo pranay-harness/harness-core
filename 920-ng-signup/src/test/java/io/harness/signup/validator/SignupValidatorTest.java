@@ -2,6 +2,7 @@ package io.harness.signup.validator;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.rule.OwnerRule.NATHAN;
+import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -13,6 +14,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
@@ -202,5 +204,20 @@ public class SignupValidatorTest extends CategoryTest {
     } catch (Exception exception) {
       assertThat(exception.getClass()).isEqualTo(WeakPasswordException.class);
     }
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testInvalidIntent() throws IOException {
+    String email = "test@google.com";
+
+    Call<RestResponse<Optional<UserInfo>>> getUserCall = mock(Call.class);
+    when(getUserCall.execute()).thenReturn(Response.success(new RestResponse<>(Optional.ofNullable(null))));
+    when(userClient.getUserByEmailId(eq(email))).thenReturn(getUserCall);
+
+    SignupDTO signupDTO = SignupDTO.builder().email(email).password("admin12345").intent("A").build();
+
+    signupValidator.validateSignup(signupDTO);
   }
 }

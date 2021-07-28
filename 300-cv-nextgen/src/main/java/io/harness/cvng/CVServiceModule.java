@@ -15,10 +15,8 @@ import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActi
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
-import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.source.services.impl.ActivitySourceServiceImpl;
-import io.harness.cvng.activity.source.services.impl.CD10ActivitySourceServiceImpl;
 import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
@@ -96,6 +94,8 @@ import io.harness.cvng.core.services.api.SumoLogicService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
+import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
@@ -132,6 +132,15 @@ import io.harness.cvng.core.services.impl.SumoLogicServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
+import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceImpl;
+import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
+import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
+import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.PrometheusHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.SplunkHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.StackdriverLogHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.StackdriverMetricHealthSourceSpecTransformer;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
@@ -281,6 +290,30 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(ActivitySourceType.HARNESS_CD10.name()))
         .to(CD10ActivitySourceUpdatableEntity.class);
 
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
+        .to(AppDynamicsHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+        .to(NewRelicHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
+        .to(StackdriverLogHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
+        .to(SplunkHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+        .to(PrometheusHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+        .to(StackdriverMetricHealthSourceSpecTransformer.class);
+
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsCVConfigTransformer.class);
@@ -371,7 +404,6 @@ public class CVServiceModule extends AbstractModule {
     bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
     bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
     bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
-    bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
 
     bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
     MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
@@ -399,6 +431,9 @@ public class CVServiceModule extends AbstractModule {
     bind(PrometheusService.class).to(PrometheusServiceImpl.class);
     bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
     bind(SumoLogicService.class).to(SumoLogicServiceImpl.class);
+
+    bind(HealthSourceService.class).to(HealthSourceServiceImpl.class);
+    bind(MonitoredServiceService.class).to(MonitoredServiceServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

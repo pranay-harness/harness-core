@@ -1,11 +1,14 @@
 package io.harness.changehandlers;
 
+import static java.util.Arrays.asList;
+
 import io.harness.changestreamsframework.ChangeEvent;
 
 import software.wings.beans.Account.AccountKeys;
 
 import com.mongodb.DBObject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AccountChangeDataHandler extends AbstractChangeDataHandler {
@@ -32,5 +35,10 @@ public class AccountChangeDataHandler extends AbstractChangeDataHandler {
     }
 
     return columnValueMapping;
+  }
+
+  @Override
+  public List<String> getPrimaryKeys() {
+    return asList("id");
   }
 }

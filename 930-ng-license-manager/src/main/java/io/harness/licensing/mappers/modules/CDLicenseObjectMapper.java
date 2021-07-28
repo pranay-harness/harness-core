@@ -3,27 +3,26 @@ package io.harness.licensing.mappers.modules;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
-import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.entities.modules.CDModuleLicense;
-import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.licensing.mappers.LicenseObjectMapper;
 
+import com.google.inject.Singleton;
+
 @OwnedBy(HarnessTeam.GTM)
-public class CDLicenseObjectMapper implements LicenseObjectMapper {
+@Singleton
+public class CDLicenseObjectMapper implements LicenseObjectMapper<CDModuleLicense, CDModuleLicenseDTO> {
   @Override
-  public ModuleLicenseDTO toDTO(ModuleLicense moduleLicense) {
-    CDModuleLicense entity = (CDModuleLicense) moduleLicense;
+  public CDModuleLicenseDTO toDTO(CDModuleLicense entity) {
     return CDModuleLicenseDTO.builder()
-        .maxWorkLoads(entity.getMaxWorkLoads())
+        .workloads(entity.getWorkloads())
         .deploymentsPerDay(entity.getDeploymentsPerDay())
         .build();
   }
 
   @Override
-  public ModuleLicense toEntity(ModuleLicenseDTO moduleLicenseDTO) {
-    CDModuleLicenseDTO dto = (CDModuleLicenseDTO) moduleLicenseDTO;
+  public CDModuleLicense toEntity(CDModuleLicenseDTO dto) {
     return CDModuleLicense.builder()
-        .maxWorkLoads(dto.getMaxWorkLoads())
+        .workloads(dto.getWorkloads())
         .deploymentsPerDay(dto.getDeploymentsPerDay())
         .build();
   }

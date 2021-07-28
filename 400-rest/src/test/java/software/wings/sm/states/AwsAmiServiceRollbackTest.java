@@ -46,6 +46,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -110,6 +111,7 @@ public class AwsAmiServiceRollbackTest extends WingsBaseTest {
   @Mock private DelegateService mockDelegateService;
   @Mock private KryoSerializer kryoSerializer;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private AwsAmiServiceRollback state = new AwsAmiServiceRollback("stepName");
 
@@ -168,6 +170,7 @@ public class AwsAmiServiceRollbackTest extends WingsBaseTest {
             .build();
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
     doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(false).when(featureFlagService).isEnabled(any(), any());
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     List newInstanceData = new ArrayList();
     newInstanceData.add(ContainerServiceData.builder().name("target-name").build());

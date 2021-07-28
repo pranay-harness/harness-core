@@ -29,6 +29,7 @@ public class ManifestSelection {
   private String pipelineName;
   private String workflowId;
   private String workflowName;
+  private String appManifestName;
 
   public enum ManifestSelectionType {
     FROM_APP_MANIFEST,

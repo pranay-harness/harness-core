@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,9 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
   public boolean handleChange(ChangeEvent<?> changeEvent, String tableName, String[] fields) {
     log.info("In TimeScale Change Handler: {}, {}, {}", changeEvent, tableName, fields);
     Map<String, String> columnValueMapping = null;
+    List<String> primaryKeys = null;
     try {
+      primaryKeys = getPrimaryKeys();
       columnValueMapping = getColumnValueMapping(changeEvent, fields);
     } catch (Exception e) {
       log.info(String.format("Not able to parse this event %s", changeEvent));
@@ -40,7 +43,8 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
         break;
       case UPDATE:
         if (columnValueMapping != null) {
-          dbOperation(updateSQL(tableName, columnValueMapping, Collections.singletonMap("id", changeEvent.getUuid())));
+          dbOperation(updateSQL(
+              tableName, columnValueMapping, Collections.singletonMap("id", changeEvent.getUuid()), primaryKeys));
         }
         break;
       case DELETE:
@@ -74,6 +78,8 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
   }
 
   public abstract Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields);
+
+  public abstract List<String> getPrimaryKeys();
 
   // https://www.codeproject.com/articles/779373/generic-functions-to-generate-insert-update-delete Generic Function
   // Adapted from here
@@ -122,8 +128,15 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
   }
 
   public static String updateSQL(String tableName, Map<String, String> columnValueMappingForSet,
-      Map<String, String> columnValueMappingForCondition) {
+      Map<String, String> columnValueMappingForCondition, List<String> primaryKeys) {
     StringBuilder updateQueryBuilder = new StringBuilder(2048);
+
+    StringBuilder primaryKeysBuilder = new StringBuilder("");
+    for (String primaryKey : primaryKeys) {
+      primaryKeysBuilder.append(primaryKey);
+      primaryKeysBuilder.append(',');
+    }
+    primaryKeysBuilder = new StringBuilder(primaryKeysBuilder.subSequence(0, primaryKeysBuilder.length() - 1));
 
     /**
      * Adding insert statement
@@ -132,7 +145,7 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
       updateQueryBuilder.append(insertSQL(tableName, columnValueMappingForSet));
     }
     // On conflict condition
-    updateQueryBuilder.append(" ON CONFLICT (id) Do ");
+    updateQueryBuilder.append(" ON CONFLICT (").append(primaryKeysBuilder.toString()).append(") Do ");
 
     if (!columnValueMappingForSet.isEmpty()) {
       Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForSet.entrySet();

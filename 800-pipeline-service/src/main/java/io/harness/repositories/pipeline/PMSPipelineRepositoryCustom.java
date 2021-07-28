@@ -14,8 +14,8 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 public interface PMSPipelineRepositoryCustom {
-  Page<PipelineEntity> findAll(
-      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, boolean getDistinctFromBranches);
 
   PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO);
 

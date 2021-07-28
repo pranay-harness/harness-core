@@ -47,24 +47,35 @@ public class RetryHelper {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNodeProto node = nodeExecution.getNode();
     String newUuid = generateUuid();
+
     Ambiance oldAmbiance = nodeExecution.getAmbiance();
+    NodeExecution updatedRetriedNode = updateRetriedNodeMetadata(nodeExecution);
+
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(oldAmbiance);
     Ambiance ambiance = AmbianceUtils.cloneForFinish(oldAmbiance);
     int newRetryIndex = currentLevel != null ? currentLevel.getRetryIndex() + 1 : 0;
     ambiance = ambiance.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(newUuid, newRetryIndex, node)).build();
     NodeExecution newNodeExecution =
-        cloneForRetry(nodeExecution, parameters, newUuid, ambiance, interruptConfig, interruptId);
+        cloneForRetry(updatedRetriedNode, parameters, newUuid, ambiance, interruptConfig, interruptId);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
-    nodeExecutionService.updateRelationShipsForRetryNode(nodeExecution.getUuid(), savedNodeExecution.getUuid());
-    nodeExecutionService.markRetried(nodeExecution.getUuid());
-    updateRetriedNodeStatusIfInterventionWaiting(nodeExecution);
 
+    nodeExecutionService.updateRelationShipsForRetryNode(updatedRetriedNode.getUuid(), savedNodeExecution.getUuid());
+    nodeExecutionService.markRetried(updatedRetriedNode.getUuid());
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
+  }
+
+  private NodeExecution updateRetriedNodeMetadata(NodeExecution nodeExecution) {
+    NodeExecution updatedNodeExecution = updateRetriedNodeStatusIfInterventionWaiting(nodeExecution);
+    if (updatedNodeExecution != null && updatedNodeExecution.getEndTs() == null) {
+      updatedNodeExecution = nodeExecutionService.update(
+          updatedNodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+    }
+    return updatedNodeExecution == null ? nodeExecution : updatedNodeExecution;
   }
 
   // Update the status of older retried node to true status from interventionWaiting if retry is on intervention waiting
   // node.
-  private void updateRetriedNodeStatusIfInterventionWaiting(NodeExecution nodeExecution) {
+  private NodeExecution updateRetriedNodeStatusIfInterventionWaiting(NodeExecution nodeExecution) {
     if (nodeExecution.getStatus() == Status.INTERVENTION_WAITING
         && nodeExecution.getAdviserResponse().hasInterventionWaitAdvise()) {
       InterventionWaitAdvise interventionWaitAdvise = nodeExecution.getAdviserResponse().getInterventionWaitAdvise();
@@ -75,7 +86,9 @@ public class RetryHelper {
         log.warn("Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(),
             interventionWaitAdvise.getFromStatus());
       }
+      return updatedNodeExecution;
     }
+    return nodeExecution;
   }
 
   @VisibleForTesting
@@ -107,7 +120,7 @@ public class RetryHelper {
         .ambiance(ambiance)
         .node(newPlanNode)
         .mode(null)
-        .startTs(null)
+        .startTs(AmbianceUtils.getCurrentLevelStartTs(ambiance))
         .endTs(null)
         .initialWaitDuration(null)
         .resolvedStepParameters((StepParameters) null)

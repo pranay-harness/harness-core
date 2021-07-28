@@ -3,6 +3,7 @@ package io.harness.k8s;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -12,6 +13,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.oidc.OidcTokenRetriever;
@@ -111,5 +113,12 @@ public class KubernetesHelperServiceTest extends CategoryTest {
 
     helperService.getIstioClient(kubernetesConfig);
     verify(oidcTokenRetriever, times(1)).getOidcIdToken(kubernetesConfig);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SATYAM)
+  @Category(UnitTests.class)
+  public void testValidateCluster() {
+    assertThatThrownBy(() -> helperService.validateCluster("")).isInstanceOf(InvalidArgumentsException.class);
   }
 }

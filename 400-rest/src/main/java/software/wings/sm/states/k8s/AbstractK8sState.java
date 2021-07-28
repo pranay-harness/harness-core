@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STA
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -69,9 +70,11 @@ import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -92,6 +95,7 @@ import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.container.ContainerMasterUrlHelper;
+import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
@@ -120,6 +124,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -878,12 +883,16 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       containerServiceParams = containerDeploymentManagerHelper.getContainerServiceParams(infraMapping, "", context);
     }
 
+    HelmChartConfigParams helmChartConfigTaskParams =
+        helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest);
+    Set<String> delegateSelectors = getDelegateSelectorFromHelmChartConfigTaskParam(helmChartConfigTaskParams);
+    delegateSelectors.addAll(getDelegateSelectors(applicationManifest, context));
+
     return HelmValuesFetchTaskParameters.builder()
         .accountId(context.getAccountId())
         .appId(context.getAppId())
         .activityId(activityId)
-        .helmChartConfigTaskParams(
-            helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
+        .helmChartConfigTaskParams(helmChartConfigTaskParams)
         .containerServiceParams(containerServiceParams)
         .isBindTaskFeatureSet(
             featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, context.getAccountId()))
@@ -891,8 +900,30 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         .workflowExecutionId(context.getWorkflowExecutionId())
         .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(applicationManifest.getHelmCommandFlag()))
         .mergeCapabilities(featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
-        .delegateSelectors(getDelegateSelectors(applicationManifest, context))
+        .delegateSelectors(delegateSelectors)
         .build();
+  }
+
+  @Nonnull
+  private Set<String> getDelegateSelectorFromHelmChartConfigTaskParam(HelmChartConfigParams helmChartConfigTaskParams) {
+    Set<String> delegateSelectors = new HashSet<>();
+    if (helmChartConfigTaskParams != null) {
+      SettingValue connectorConfig = helmChartConfigTaskParams.getConnectorConfig();
+      if (connectorConfig != null) {
+        if (connectorConfig instanceof AwsConfig) {
+          AwsConfig awsConfig = (AwsConfig) connectorConfig;
+          if (isNotEmpty(awsConfig.getTag())) {
+            delegateSelectors.add(awsConfig.getTag());
+          }
+        } else if (connectorConfig instanceof GcpConfig) {
+          GcpConfig gcpConfig = (GcpConfig) connectorConfig;
+          if (isNotEmpty(gcpConfig.getDelegateSelector())) {
+            delegateSelectors.addAll(gcpConfig.getDelegateSelectors());
+          }
+        }
+      }
+    }
+    return delegateSelectors;
   }
 
   private ExecutionResponse handleAsyncResponseForHelmFetchTask(

@@ -104,7 +104,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
     doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L);
+        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L,
+            HelmCliCommandType.INIT);
     assertThatCode(() -> helmTaskHelperBase.initHelm("/working/directory", V2, 9000L)).doesNotThrowAnyException();
   }
 
@@ -117,7 +118,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
     doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L);
+        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L,
+            HelmCliCommandType.INIT);
     assertThatThrownBy(() -> helmTaskHelperBase.initHelm("/working/directory", V2, 9000L))
         .isInstanceOf(HelmClientException.class)
         .hasMessageContaining("Failed to init helm")
@@ -136,7 +138,7 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   private void testAddRepoIfHelmCommandFailed() {
     doReturn(new ProcessResult(1, new ProcessOutput(new byte[1])))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
     assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(()
                         -> helmTaskHelperBase.addRepo("vault", "vault", "https://helm-server", "admin",
@@ -146,9 +148,9 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   }
 
   private void testAddRepoIfProcessExecException() {
-    doThrow(new HelmClientException("ex"))
+    doThrow(new HelmClientException("ex", HelmCliCommandType.REPO_ADD))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
 
     assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(()
@@ -161,12 +163,13 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(0, new ProcessOutput(new byte[1])))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
     helmTaskHelperBase.addRepo(
         "vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3, 9000L);
 
     verify(helmTaskHelperBase, times(1))
-        .executeCommand(captor.capture(), captor.capture(), captor.capture(), eq(9000L));
+        .executeCommand(
+            captor.capture(), captor.capture(), captor.capture(), eq(9000L), eq(HelmCliCommandType.REPO_ADD));
 
     assertThat(captor.getAllValues().get(0))
         .isEqualTo("v3/helm repo add vault https://helm-server --username admin --password secret-text");
@@ -184,11 +187,12 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(0, new ProcessOutput(new byte[1])))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
     helmTaskHelperBase.addRepo("vault", "vault", "https://helm-server", null, null, "/home", V3, 9000L);
 
     verify(helmTaskHelperBase, times(1))
-        .executeCommand(captor.capture(), captor.capture(), captor.capture(), eq(9000L));
+        .executeCommand(
+            captor.capture(), captor.capture(), captor.capture(), eq(9000L), eq(HelmCliCommandType.REPO_ADD));
 
     assertThat(captor.getAllValues().get(0)).isEqualTo("v3/helm repo add vault https://helm-server  ");
     assertThat(captor.getAllValues().get(1)).isEqualTo("/home");
@@ -240,14 +244,15 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   public void testFetchChartFromRepo() {
     doReturn(new ProcessResult(0, new ProcessOutput(null)))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
 
     assertThatCode(()
                        -> helmTaskHelperBase.fetchChartFromRepo(
                            "repo", "repo display", "chart", "1.0.0", "/dir", V3, emptyHelmCommandFlag, 90000))
         .doesNotThrowAnyException();
 
-    verify(helmTaskHelperBase, times(1)).executeCommand(anyString(), anyString(), anyString(), anyLong());
+    verify(helmTaskHelperBase, times(1))
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
   }
 
   @Test
@@ -258,14 +263,15 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(123, new ProcessOutput(cliError.getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
 
     assertThatThrownBy(()
                            -> helmTaskHelperBase.fetchChartFromRepo(REPO_NAME, REPO_DISPLAY_NAME, CHART_NAME,
                                CHART_VERSION, "/dir", V3, emptyHelmCommandFlag, 90000))
         .isInstanceOf(InvalidRequestException.class);
 
-    verify(helmTaskHelperBase, times(1)).executeCommand(anyString(), anyString(), anyString(), anyLong());
+    verify(helmTaskHelperBase, times(1))
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
   }
 
   @Test
@@ -398,12 +404,14 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(0, new ProcessOutput(null)))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis));
+        .executeCommand(
+            anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis), eq(HelmCliCommandType.REPO_ADD));
 
     helmTaskHelperBase.addChartMuseumRepo(REPO_NAME, REPO_DISPLAY_NAME, port, chartDirectory, V3, timeoutInMillis);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(helmTaskHelperBase, times(1))
-        .executeCommand(commandCaptor.capture(), eq(chartDirectory), anyString(), eq(timeoutInMillis));
+        .executeCommand(commandCaptor.capture(), eq(chartDirectory), anyString(), eq(timeoutInMillis),
+            eq(HelmCliCommandType.REPO_ADD));
     String executedCommand = commandCaptor.getValue();
     assertThat(executedCommand).contains(CHART_MUSEUM_SERVER_URL.replace("${PORT}", Integer.toString(port)));
   }
@@ -418,7 +426,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis));
+        .executeCommand(
+            anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis), eq(HelmCliCommandType.REPO_ADD));
 
     assertThatThrownBy(()
                            -> helmTaskHelperBase.addChartMuseumRepo(
@@ -505,29 +514,29 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecuteCommand() throws Exception {
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
-    helmTaskHelperBase.executeCommand("", ".", "", 9000L);
+    helmTaskHelperBase.executeCommand("", ".", "", 9000L, HelmCliCommandType.INIT);
 
     doThrow(new IOException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("[IO exception]");
 
     doThrow(new InterruptedException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "foo", 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "foo", 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("[Interrupted] foo");
 
     doThrow(new TimeoutException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", null, 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", null, 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("[Timed out]");
 
     doThrow(new RuntimeException("test")).when(processExecutor).execute();
     assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("test");
   }
@@ -541,7 +550,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     final String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
     doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L);
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L,
+            HelmCliCommandType.REPO_REMOVE);
 
     assertThatCode(() -> helmTaskHelperBase.removeRepo(repoName, workingDirectory, V2, 9000L))
         .doesNotThrowAnyException();
@@ -556,7 +566,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     final String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
     doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L);
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L,
+            HelmCliCommandType.REPO_REMOVE);
 
     assertThatCode(() -> helmTaskHelperBase.removeRepo(repoName, workingDirectory, V2, 9000L))
         .doesNotThrowAnyException();
@@ -571,7 +582,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     final String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
     doThrow(new InvalidRequestException("Something went wrong", USER))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L);
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L,
+            HelmCliCommandType.REPO_REMOVE);
 
     assertThatCode(() -> helmTaskHelperBase.removeRepo(repoName, workingDirectory, V2, 9000L))
         .doesNotThrowAnyException();

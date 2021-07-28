@@ -85,4 +85,9 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
   public String getBranchKey() {
     return "branch";
   }
+
+  @Override
+  public SampleBean upsert(String accountIdentifier, String yaml) {
+    return null;
+  }
 }

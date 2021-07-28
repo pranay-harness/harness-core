@@ -22,4 +22,5 @@ import lombok.experimental.FieldNameConstants;
 public class QLServiceInput {
   String name;
   QLArtifactValueInput artifactValueInput;
+  QLManifestValueInput manifestValueInput;
 }

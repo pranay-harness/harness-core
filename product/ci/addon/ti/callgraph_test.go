@@ -19,12 +19,13 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 				Type:    "source",
 			},
 			{
-				Package: "package2",
-				Method:  "m2",
-				ID:      1,
-				Params:  "param2",
-				Class:   "class2",
-				Type:    "test",
+				Package:         "package2",
+				Method:          "m2",
+				ID:              1,
+				Params:          "param2",
+				Class:           "class2",
+				Type:            "test",
+				CallsReflection: true,
 			},
 		},
 		Relations: []Relation{
@@ -70,6 +71,8 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 							node.Params = v.(string)
 						case "class":
 							node.Class = v.(string)
+						case "callsReflection":
+							node.CallsReflection = v.(bool)
 						case "type":
 							node.Type = v.(string)
 						}

@@ -1,7 +1,9 @@
 package io.harness.delegate.cf;
 
+import static io.harness.pcf.model.PcfConstants.HARNESS__INACTIVE__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -10,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -32,9 +36,11 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.LogCallback;
 import io.harness.pcf.CfCliDelegateResolver;
 import io.harness.pcf.CfDeploymentManager;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 
@@ -58,6 +64,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
@@ -98,6 +105,23 @@ public class PcfCommandTaskBaseHelperTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+  }
+
+  private static ApplicationSummary getApplicationSummary(String name, String id) {
+    return getApplicationSummary(name, id, 2);
+  }
+
+  private static ApplicationSummary getApplicationSummary(String name, String id, int instanceCount) {
+    return ApplicationSummary.builder()
+        .name(name)
+        .diskQuota(1)
+        .requestedState(RUNNING)
+        .id(id)
+        .urls(new String[] {"url" + id, "url4" + id})
+        .instances(instanceCount)
+        .memoryLimit(1)
+        .runningInstances(0)
+        .build();
   }
 
   @Test
@@ -605,5 +629,249 @@ public class PcfCommandTaskBaseHelperTest extends CategoryTest {
     assertThatThrownBy(() -> pcfCommandTaskHelper.getCfCliPathOnDelegate(true, CfCliVersion.V7))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("Unable to find CF CLI version on delegate, requested version: V7");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testConstructAppName() {
+    assertThat(PcfCommandTaskBaseHelper.constructActiveAppName("P", 12, true)).isEqualTo("P");
+    assertThat(PcfCommandTaskBaseHelper.constructActiveAppName("P", 12, false)).isEqualTo("P__14");
+    assertThat(PcfCommandTaskBaseHelper.constructInActiveAppName("P", 12, true))
+        .isEqualTo("P__" + HARNESS__INACTIVE__IDENTIFIER);
+    assertThat(PcfCommandTaskBaseHelper.constructInActiveAppName("P", 12, false)).isEqualTo("P__13");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetVersionChangeMessage() {
+    assertThat(PcfCommandTaskBaseHelper.getVersionChangeMessage(true)).contains("Versioned to Non-versioned");
+    assertThat(PcfCommandTaskBaseHelper.getVersionChangeMessage(false)).contains("on-versioned to Versioned");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testRenameApp() throws Exception {
+    ApplicationSummary summary1 = getApplicationSummary("app1", "1");
+    ApplicationSummary summary2 = getApplicationSummary("app2", "2");
+    List<ApplicationSummary> summaries = Arrays.asList(summary1, summary2);
+
+    CfRequestConfig cfRequestConfig = Mockito.mock(CfRequestConfig.class);
+    ApplicationSummary app = getApplicationSummary("app3", "3");
+
+    ArgumentCaptor<CfRenameRequest> captor = ArgumentCaptor.forClass(CfRenameRequest.class);
+    doNothing().when(pcfDeploymentManager).renameApplication(captor.capture(), eq(executionLogCallback));
+    pcfCommandTaskHelper.renameApp(app, cfRequestConfig, executionLogCallback, "app");
+
+    CfRenameRequest value = captor.getValue();
+    assertThat(value.getName()).isEqualTo("app3");
+    assertThat(value.getNewName()).isEqualTo("app");
+    assertThat(value.getGuid()).isEqualTo("3");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetMaxVersion() throws Exception {
+    ApplicationSummary summary1 = getApplicationSummary("app__1", "1");
+    ApplicationSummary summary2 = getApplicationSummary("app__2", "2");
+    List<ApplicationSummary> summaries = new ArrayList<>();
+    assertThat(PcfCommandTaskBaseHelper.getMaxVersion(summaries)).isEqualTo(-1);
+    summaries.add(summary1);
+    assertThat(PcfCommandTaskBaseHelper.getMaxVersion(summaries)).isEqualTo(1);
+    summaries.add(summary2);
+    assertThat(PcfCommandTaskBaseHelper.getMaxVersion(summaries)).isEqualTo(2);
+    summaries.add(getApplicationSummary("app", "3"));
+    summaries.add(getApplicationSummary("app__INACTIVE", "4"));
+    assertThat(PcfCommandTaskBaseHelper.getMaxVersion(summaries)).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testResetState() throws Exception {
+    ApplicationSummary prevInactive = getApplicationSummary("app__1", "1");
+    ApplicationSummary inactive = getApplicationSummary("app__2", "2");
+    ApplicationSummary active = getApplicationSummary("app__3", "3");
+
+    List<ApplicationSummary> summaries = new ArrayList<>();
+    CfRequestConfig cfRequestConfig = Mockito.mock(CfRequestConfig.class);
+    pcfCommandTaskHelper.resetState(
+        summaries, null, null, "app", cfRequestConfig, true, null, -1, executionLogCallback);
+    verify(pcfDeploymentManager, times(0)).renameApplication(any(), any());
+
+    summaries.add(active);
+    pcfCommandTaskHelper.resetState(
+        summaries, active, null, "app", cfRequestConfig, true, null, -1, executionLogCallback);
+    verify(pcfDeploymentManager, times(1)).renameApplication(any(), any());
+
+    Mockito.reset(pcfDeploymentManager);
+    summaries.add(inactive);
+    summaries.add(prevInactive);
+    pcfCommandTaskHelper.resetState(
+        summaries, active, inactive, "app", cfRequestConfig, true, null, -1, executionLogCallback);
+    verify(pcfDeploymentManager, times(2)).renameApplication(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testResetState2() throws Exception {
+    ApplicationSummary prevInactive = getApplicationSummary("app__1", "1");
+    ApplicationSummary inactive = getApplicationSummary("app__INACTIVE", "2");
+    ApplicationSummary active = getApplicationSummary("app", "3");
+
+    List<ApplicationSummary> summaries = new ArrayList<>();
+    CfRequestConfig cfRequestConfig = Mockito.mock(CfRequestConfig.class);
+    pcfCommandTaskHelper.resetState(
+        summaries, null, null, "app", cfRequestConfig, false, null, -1, executionLogCallback);
+    verify(pcfDeploymentManager, times(0)).renameApplication(any(), any());
+
+    summaries.add(active);
+    pcfCommandTaskHelper.resetState(
+        summaries, active, null, "app", cfRequestConfig, false, null, -1, executionLogCallback);
+    verify(pcfDeploymentManager, times(1)).renameApplication(any(), any());
+
+    Mockito.reset(pcfDeploymentManager);
+    summaries.add(inactive);
+    summaries.add(prevInactive);
+    pcfCommandTaskHelper.resetState(
+        summaries, active, inactive, "app", cfRequestConfig, false, null, -1, executionLogCallback);
+    verify(pcfDeploymentManager, times(2)).renameApplication(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testResetStateWithActiveAppRevision() throws Exception {
+    ApplicationSummary active = getApplicationSummary("app", "3");
+    ApplicationSummary inactiveApp = null;
+    List<ApplicationSummary> summaries = new ArrayList<>();
+    summaries.add(active);
+
+    CfRequestConfig cfRequestConfig = Mockito.mock(CfRequestConfig.class);
+
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 1, "app__1", null, -1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 1, "app__0", null, 0);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 1, "app__1", null, 1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 1, "app__10", null, 10);
+
+    inactiveApp = getApplicationSummary("app__inactive", "3");
+    summaries.add(inactiveApp);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__1", "app__0", -1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__0", "app__-1", 0);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__1", "app__0", 1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__10", "app__9", 10);
+
+    summaries.add(getApplicationSummary("app__0", "3"));
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__2", "app__1", -1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__2", "app__1", 0);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__2", "app__1", 1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__2", "app__1", 10);
+
+    summaries.add(getApplicationSummary("app__1", "3"));
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__3", "app__2", -1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__3", "app__2", 0);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__3", "app__2", 1);
+    verifyReset(active, inactiveApp, summaries, cfRequestConfig, 2, "app__3", "app__2", 10);
+  }
+
+  private void verifyReset(ApplicationSummary active, ApplicationSummary inactiveApp,
+      List<ApplicationSummary> summaries, CfRequestConfig cfRequestConfig, int renames, String activeAppName,
+      String inactiveAppName, int activeAppRevision) throws PivotalClientApiException {
+    ArgumentCaptor<CfRenameRequest> captor = ArgumentCaptor.forClass(CfRenameRequest.class);
+    pcfCommandTaskHelper.resetState(
+        summaries, active, inactiveApp, "app", cfRequestConfig, false, null, activeAppRevision, executionLogCallback);
+    verify(pcfDeploymentManager, times(renames)).renameApplication(captor.capture(), eq(executionLogCallback));
+    List<CfRenameRequest> values = captor.getAllValues();
+    assertThat(values.size()).isEqualTo(renames);
+    for (int i = 0; i < renames; i++) {
+      CfRenameRequest request = values.get(i);
+      if (i == 0) {
+        assertThat(request.getNewName()).isEqualTo(activeAppName);
+      } else {
+        assertThat(request.getNewName()).isEqualTo(inactiveAppName);
+      }
+    }
+    reset(pcfDeploymentManager);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetMostRecentInactiveApplication() throws Exception {
+    ApplicationSummary prevInactive = getApplicationSummary("app__1", "1", 0);
+    ApplicationSummary inactive = getApplicationSummary("app__INACTIVE", "2", 5);
+    ApplicationSummary active = getApplicationSummary("app", "3", 4);
+    CfRequestConfig cfRequestConfig = Mockito.mock(CfRequestConfig.class);
+    List<ApplicationSummary> summaries = new ArrayList<>();
+    assertThat(
+        pcfCommandTaskHelper.getMostRecentInactiveApplication(executionLogCallback, false, null, null, cfRequestConfig))
+        .isNull();
+    assertThat(pcfCommandTaskHelper.getMostRecentInactiveApplication(
+                   executionLogCallback, false, null, summaries, cfRequestConfig))
+        .isNull();
+    assertThat(pcfCommandTaskHelper.getMostRecentInactiveApplication(
+                   executionLogCallback, false, active, null, cfRequestConfig))
+        .isNull();
+    assertThat(pcfCommandTaskHelper.getMostRecentInactiveApplication(
+                   executionLogCallback, false, active, summaries, cfRequestConfig))
+        .isNull();
+
+    summaries.add(prevInactive);
+    summaries.add(inactive);
+    summaries.add(active);
+    assertThat(pcfCommandTaskHelper.getMostRecentInactiveApplication(
+                   executionLogCallback, false, active, summaries, cfRequestConfig))
+        .isEqualTo(inactive);
+    inactive = getApplicationSummary("app__INACTIVE", "2", 0);
+    summaries.set(1, inactive);
+    assertThat(pcfCommandTaskHelper.getMostRecentInactiveApplication(
+                   executionLogCallback, false, active, summaries, cfRequestConfig))
+        .isEqualTo(inactive);
+    summaries.remove(0);
+    summaries.remove(0);
+    assertThat(pcfCommandTaskHelper.getMostRecentInactiveApplication(
+                   executionLogCallback, false, active, summaries, cfRequestConfig))
+        .isNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testFindActiveApplicationNonBG() throws Exception {
+    CfRequestConfig config = Mockito.mock(CfRequestConfig.class);
+    List<ApplicationSummary> summaries = new ArrayList<>();
+    assertThat(pcfCommandTaskHelper.findActiveApplication(executionLogCallback, false, config, summaries)).isNull();
+    ApplicationSummary summary1 = getApplicationSummary("app__1", "1", 0);
+    ApplicationSummary summary2 = getApplicationSummary("app__2", "2", 0);
+    ApplicationSummary summary3 = getApplicationSummary("app__3", "3", 10);
+    summaries.add(summary1);
+    summaries.add(summary2);
+    assertThat(pcfCommandTaskHelper.findActiveApplication(executionLogCallback, false, config, summaries))
+        .isEqualTo(summary2);
+
+    summaries.clear();
+    summaries.add(summary1);
+    summaries.add(summary2);
+    summaries.add(summary3);
+    assertThat(pcfCommandTaskHelper.findActiveApplication(executionLogCallback, false, config, summaries))
+        .isEqualTo(summary3);
+
+    summaries.clear();
+    summaries.add(summary3);
+    summaries.add(summary1);
+    summaries.add(summary2);
+    assertThat(pcfCommandTaskHelper.findActiveApplication(executionLogCallback, false, config, summaries))
+        .isEqualTo(summary3);
+
+    summaries.clear();
+    summaries.add(summary1);
+    summaries.add(summary3);
+    summaries.add(summary2);
+    assertThat(pcfCommandTaskHelper.findActiveApplication(executionLogCallback, false, config, summaries))
+        .isEqualTo(summary3);
   }
 }

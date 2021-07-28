@@ -3,6 +3,7 @@ package io.harness.delegate.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.DelegateEntityOwner.DelegateEntityOwnerKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -53,9 +55,13 @@ public class DelegateGroup implements PersistentEntity, UuidAware {
 
   private K8sConfigDetails k8sConfigDetails;
 
+  private Set<String> tags;
+
   @Builder.Default private DelegateGroupStatus status = DelegateGroupStatus.ENABLED;
 
   @FdTtlIndex private Date validUntil;
+
+  @EntityIdentifier private String identifier;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -64,12 +70,20 @@ public class DelegateGroup implements PersistentEntity, UuidAware {
                  .unique(true)
                  .field(DelegateGroupKeys.accountId)
                  .field(DelegateGroupKeys.name)
+                 .field(DelegateGroupKeys.ng)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .field(DelegateGroupKeys.accountId)
                  .field(DelegateGroupKeys.ng)
                  .field(DelegateGroupKeys.owner)
                  .name("byAcctNgOwner")
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_identification")
+                 .unique(true)
+                 .field(DelegateGroupKeys.accountId)
+                 .field(DelegateGroupKeys.owner)
+                 .field(DelegateGroupKeys.identifier)
                  .build())
         .build();
   }

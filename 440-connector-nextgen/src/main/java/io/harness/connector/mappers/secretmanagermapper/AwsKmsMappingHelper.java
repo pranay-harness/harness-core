@@ -20,11 +20,12 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsCredentialSpecConfig;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsIamCredentialConfig;
-import io.harness.secretmanagerclient.dto.awskms.AwsKmsManualCredentialConfig;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsStsCredentialConfig;
 import io.harness.secretmanagerclient.dto.awskms.BaseAwsKmsConfigDTO;
 
@@ -37,10 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AwsKmsMappingHelper {
   public AwsKmsConnectorDTOBuilder buildFromManualConfig(AwsKmsManualCredential credentialSpec) {
-    AwsKmsCredentialSpecManualConfigDTO configDTO = AwsKmsCredentialSpecManualConfigDTO.builder()
-                                                        .secretKey(credentialSpec.getSecretKey())
-                                                        .accessKey(credentialSpec.getAccessKey())
-                                                        .build();
+    AwsKmsCredentialSpecManualConfigDTO configDTO =
+        AwsKmsCredentialSpecManualConfigDTO.builder()
+            .secretKey(SecretRefHelper.createSecretRef(credentialSpec.getSecretKey()))
+            .accessKey(SecretRefHelper.createSecretRef(credentialSpec.getAccessKey()))
+            .build();
 
     return populateCredentialDTO(populateCredentialSpec(configDTO, MANUAL_CONFIG));
   }
@@ -84,19 +86,21 @@ public class AwsKmsMappingHelper {
   }
 
   public AwsKmsConnectorBuilder buildManualConfig(AwsKmsCredentialSpecManualConfigDTO credentialConfig) {
-    AwsKmsManualCredential build = AwsKmsManualCredential.builder()
-                                       .secretKey(credentialConfig.getSecretKey())
-                                       .accessKey(credentialConfig.getAccessKey())
-                                       .build();
+    AwsKmsManualCredential build =
+        AwsKmsManualCredential.builder()
+            .secretKey(SecretRefHelper.getSecretConfigString(credentialConfig.getSecretKey()))
+            .accessKey(SecretRefHelper.getSecretConfigString(credentialConfig.getAccessKey()))
+            .build();
     return getAwsKmsConnectorBuilder(build, MANUAL_CONFIG);
   }
 
-  public AwsKmsConnectorDTO configDTOToConnectorDTO(AwsKmsConfigDTO configDTO) {
+  public AwsKmsConnectorDTO configDTOToConnectorDTO(AwsKmsConfigDTO configDTO, SecretRefData kmsArnRefData,
+      SecretRefData accessRefData, SecretRefData secretRefData) {
     BaseAwsKmsConfigDTO baseAwsKmsConfigDTO = configDTO.getBaseAwsKmsConfigDTO();
     return AwsKmsConnectorDTO.builder()
-        .kmsArn(baseAwsKmsConfigDTO.getKmsArn())
+        .kmsArn(kmsArnRefData)
         .region(baseAwsKmsConfigDTO.getRegion())
-        .credential(populateCredential(baseAwsKmsConfigDTO))
+        .credential(populateCredential(baseAwsKmsConfigDTO, accessRefData, secretRefData))
         .build();
   }
 
@@ -114,19 +118,21 @@ public class AwsKmsMappingHelper {
     return AwsKmsConnector.builder().credentialType(manualConfig).credentialSpec(build);
   }
 
-  private AwsKmsConnectorCredentialDTO populateCredential(BaseAwsKmsConfigDTO baseAwsKmsConfigDTO) {
+  private AwsKmsConnectorCredentialDTO populateCredential(
+      BaseAwsKmsConfigDTO baseAwsKmsConfigDTO, SecretRefData accessRefData, SecretRefData secretRefData) {
     return AwsKmsConnectorCredentialDTO.builder()
         .credentialType(baseAwsKmsConfigDTO.getCredentialType())
-        .config(populateCredentials(baseAwsKmsConfigDTO))
+        .config(populateCredentials(baseAwsKmsConfigDTO, accessRefData, secretRefData))
         .build();
   }
 
-  private AwsKmsCredentialSpecDTO populateCredentials(BaseAwsKmsConfigDTO baseAwsKmsConfigDTO) {
+  private AwsKmsCredentialSpecDTO populateCredentials(
+      BaseAwsKmsConfigDTO baseAwsKmsConfigDTO, SecretRefData accessRefData, SecretRefData secretRefData) {
     AwsKmsCredentialSpecConfig credential = baseAwsKmsConfigDTO.getCredential();
     AwsKmsCredentialType credentialType = baseAwsKmsConfigDTO.getCredentialType();
     switch (credentialType) {
       case MANUAL_CONFIG:
-        return buildFromManualConfig((AwsKmsManualCredentialConfig) credential);
+        return buildFromManualConfig(accessRefData, secretRefData);
       case ASSUME_IAM_ROLE:
         return buildFromIamConfig((AwsKmsIamCredentialConfig) credential);
       case ASSUME_STS_ROLE:
@@ -136,11 +142,9 @@ public class AwsKmsMappingHelper {
     }
   }
 
-  private AwsKmsCredentialSpecManualConfigDTO buildFromManualConfig(AwsKmsManualCredentialConfig credential) {
-    return AwsKmsCredentialSpecManualConfigDTO.builder()
-        .secretKey(credential.getSecretKey())
-        .accessKey(credential.getAccessKey())
-        .build();
+  private AwsKmsCredentialSpecManualConfigDTO buildFromManualConfig(
+      SecretRefData accessRefData, SecretRefData secretRefData) {
+    return AwsKmsCredentialSpecManualConfigDTO.builder().secretKey(secretRefData).accessKey(accessRefData).build();
   }
 
   private AwsKmsCredentialSpecAssumeIAMDTO buildFromIamConfig(AwsKmsIamCredentialConfig credential) {

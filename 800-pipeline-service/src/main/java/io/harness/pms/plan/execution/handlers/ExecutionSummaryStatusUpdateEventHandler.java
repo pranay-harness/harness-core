@@ -1,10 +1,8 @@
 package io.harness.pms.plan.execution.handlers;
 
-import static io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup.PIPELINE;
-import static io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup.STAGE;
-
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.event.GraphNodeUpdateInfo;
 import io.harness.event.GraphNodeUpdateObserver;
 import io.harness.execution.NodeExecution;
@@ -47,7 +45,7 @@ public class ExecutionSummaryStatusUpdateEventHandler
     String planExecutionId = graphNodeUpdateInfo.getPlanExecutionId();
     Update update = new Update();
     for (NodeExecution nodeExecution : graphNodeUpdateInfo.getNodeExecutions()) {
-      if (Objects.equals(nodeExecution.getNode().getGroup(), STAGE.name())
+      if (OrchestrationUtils.isStageNode(nodeExecution)
           || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
         ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
       }
@@ -59,7 +57,7 @@ public class ExecutionSummaryStatusUpdateEventHandler
   }
 
   public void updatePipelineLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
-    if (Objects.equals(nodeExecution.getNode().getGroup(), PIPELINE.name())) {
+    if (OrchestrationUtils.isPipelineNode(nodeExecution)) {
       Update update = new Update();
       ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(update, planExecutionId, nodeExecution);
       Criteria criteria =
@@ -70,7 +68,7 @@ public class ExecutionSummaryStatusUpdateEventHandler
   }
 
   public void updateStageLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
-    if (Objects.equals(nodeExecution.getNode().getGroup(), STAGE.name())
+    if (OrchestrationUtils.isStageNode(nodeExecution)
         || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       Update update = new Update();
       ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);

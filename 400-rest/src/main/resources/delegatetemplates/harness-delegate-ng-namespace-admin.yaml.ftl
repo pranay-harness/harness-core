@@ -20,7 +20,7 @@ rules:
 
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: ${delegateNamespace}-harness-namespace-admin
@@ -61,6 +61,7 @@ metadata:
   namespace: ${delegateNamespace}
 spec:
   replicas: ${delegateReplicas}
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       harness.io/app: harness-delegate
@@ -86,6 +87,9 @@ spec:
           limits:
             cpu: "${delegateCpu}"
             memory: "${delegateRam}Mi"
+          requests:
+            cpu: "${delegateRequestsCpu}"
+            memory: "${delegateRequestsRam}Mi"
         readinessProbe:
           exec:
             command:

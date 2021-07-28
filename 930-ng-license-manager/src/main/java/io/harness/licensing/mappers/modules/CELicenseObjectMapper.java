@@ -3,16 +3,16 @@ package io.harness.licensing.mappers.modules;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
-import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.entities.modules.CEModuleLicense;
-import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.licensing.mappers.LicenseObjectMapper;
 
+import com.google.inject.Singleton;
+
 @OwnedBy(HarnessTeam.GTM)
-public class CELicenseObjectMapper implements LicenseObjectMapper {
+@Singleton
+public class CELicenseObjectMapper implements LicenseObjectMapper<CEModuleLicense, CEModuleLicenseDTO> {
   @Override
-  public ModuleLicenseDTO toDTO(ModuleLicense moduleLicense) {
-    CEModuleLicense entity = (CEModuleLicense) moduleLicense;
+  public CEModuleLicenseDTO toDTO(CEModuleLicense entity) {
     return CEModuleLicenseDTO.builder()
         .numberOfCluster(entity.getNumberOfCluster())
         .spendLimit(entity.getSpendLimit())
@@ -21,8 +21,7 @@ public class CELicenseObjectMapper implements LicenseObjectMapper {
   }
 
   @Override
-  public ModuleLicense toEntity(ModuleLicenseDTO moduleLicenseDTO) {
-    CEModuleLicenseDTO dto = (CEModuleLicenseDTO) moduleLicenseDTO;
+  public CEModuleLicense toEntity(CEModuleLicenseDTO dto) {
     return CEModuleLicense.builder()
         .numberOfCluster(dto.getNumberOfCluster())
         .spendLimit(dto.getSpendLimit())

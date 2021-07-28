@@ -1,7 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
-
 import software.wings.beans.BarrierInstance.BarrierInstanceKeys;
 
 public class AddAccountIdToBarrierInstanceCollection extends AddAccountIdToCollectionUsingAppIdMigration {

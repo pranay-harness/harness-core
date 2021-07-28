@@ -3,6 +3,7 @@ package io.harness.ccm.remote.resources;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
@@ -23,6 +24,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +39,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,8 +72,9 @@ public class PerspectiveCustomFieldResource {
   @POST
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Save customField", nickname = "saveCustomField")
   public RestResponse<ViewCustomField> saveCustomField(
-      @QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
@@ -127,8 +128,9 @@ public class PerspectiveCustomFieldResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<ViewCustomField> get(
-      @QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId) {
+  @ApiOperation(value = "Get customField", nickname = "getCustomField")
+  public RestResponse<ViewCustomField> get(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("customFieldId") String customFieldId) {
     return new RestResponse<>(viewCustomFieldService.get(customFieldId));
   }
 
@@ -136,20 +138,22 @@ public class PerspectiveCustomFieldResource {
   @Timed
   @ExceptionMetered
   @Path("/validate")
-  public Response validate(@QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
+  @ApiOperation(value = "Validate customField", nickname = "validateCustomField")
+  public RestResponse<String> validate(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     viewCustomFieldService.validate(viewCustomField, bigQuery, cloudProviderTableName);
-    RestResponse rr = new RestResponse("Valid Formula");
-    return prepareResponse(rr, Response.Status.OK);
+    return new RestResponse<>("Valid Formula");
   }
 
   @PUT
   @Timed
   @ExceptionMetered
-  public RestResponse<ViewCustomField> update(
-      @QueryParam("accountId") String accountId, @Valid @RequestBody ViewCustomField viewCustomField) {
+  @ApiOperation(value = "Update customField", nickname = "updateCustomField")
+  public RestResponse<ViewCustomField> update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Valid @RequestBody ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
@@ -159,14 +163,10 @@ public class PerspectiveCustomFieldResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  public Response delete(@QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId,
-      @Valid @RequestBody CEView ceView) {
+  @ApiOperation(value = "Delete customField", nickname = "deleteCustomField")
+  public RestResponse<String> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("customFieldId") String customFieldId, @Valid @RequestBody CEView ceView) {
     viewCustomFieldService.delete(customFieldId, accountId, ceView);
-    RestResponse rr = new RestResponse("Successfully deleted the custom field.");
-    return prepareResponse(rr, Response.Status.OK);
-  }
-
-  private Response prepareResponse(RestResponse restResponse, Response.Status status) {
-    return Response.status(status).entity(restResponse).type(MediaType.APPLICATION_JSON).build();
+    return new RestResponse<>("Successfully deleted the custom field.");
   }
 }

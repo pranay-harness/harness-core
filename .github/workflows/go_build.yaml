@@ -13,12 +13,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create dummy bazel-credentials.bzl file
-        run: |
-          touch bazel-credentials.bzl
-          echo "JFROG_USERNAME=\"foo\"" >> bazel-credentials.bzl
-          echo "JFROG_PASSWORD=\"bar\"" >> bazel-credentials.bzl
-
       - name: Building expression service code
         run: |
           echo "Building golang expression service protobuf using bazel..."

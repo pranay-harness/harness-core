@@ -19,6 +19,8 @@ then
      ;;
      "CCE") export HARNESS_TEAM="CE"
      ;;
+     "PIP") export HARNESS_TEAM="PIPELINE"
+     ;;
      "CCM") export HARNESS_TEAM="CE"
      ;;
      "CDC") export HARNESS_TEAM="CDC"
@@ -102,9 +104,6 @@ then
     ${TRACK_FILES} \
     --team-filter ${HARNESS_TEAM} \
     --kind-filter AutoAction \
-    --kind-filter Critical \
     --kind-filter Error \
-    --kind-filter ToDo \
-    --kind-filter Warning \
     --exit-code
 fi

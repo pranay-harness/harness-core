@@ -156,7 +156,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   }
 
   private Map<String, VMInstanceBillingData> query(String formattedQuery, String cloudProviderType) {
-    log.info("Formatted query for {} : {}", cloudProviderType, formattedQuery);
+    log.debug("Formatted query for {} : {}", cloudProviderType, formattedQuery);
     BigQuery bigQueryService = getBigQueryService();
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
     TableResult result = null;
@@ -209,7 +209,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
     });
 
-    log.info("Azure: resource map data {} ", vmInstanceBillingDataMap);
+    log.debug("Azure: resource map data {} ", vmInstanceBillingDataMap);
     return vmInstanceBillingDataMap;
   }
 
@@ -314,6 +314,8 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     } catch (InterruptedException e) {
       log.error("Failed to get CloudProvider overview data. {}", e);
       Thread.currentThread().interrupt();
+    } catch (Exception ex) {
+      log.error("Exception while executing query", ex);
     }
   }
 
@@ -404,7 +406,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
     });
 
-    log.info("AWS: resource map data {} ", vmInstanceBillingDataMap);
+    log.debug("AWS: resource map data {} ", vmInstanceBillingDataMap);
     return vmInstanceBillingDataMap;
   }
 
@@ -437,7 +439,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
     });
 
-    log.info("EKS Fargate resource map data {} ", vmInstanceBillingDataMap);
+    log.debug("EKS Fargate resource map data {} ", vmInstanceBillingDataMap);
     return vmInstanceBillingDataMap;
   }
 

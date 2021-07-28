@@ -13,9 +13,13 @@ import io.harness.signup.dto.VerifyTokenResponseDTO;
 public interface SignupService {
   UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException;
 
+  boolean createSignupInvite(SignupDTO dto, String captchaToken);
+
+  UserInfo completeSignupInvite(String token);
+
   UserInfo oAuthSignup(OAuthSignupDTO dto) throws WingsException;
 
   VerifyTokenResponseDTO verifyToken(String token);
 
-  void resendVerificationEmail(String userId);
+  void resendVerificationEmail(String email);
 }

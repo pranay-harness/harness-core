@@ -22,7 +22,6 @@ import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
-import static io.harness.common.CIExecutionConstants.HARNESS_SECRETS_LIST;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_LOG_KEY_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
@@ -33,6 +32,7 @@ import static io.harness.common.CIExecutionConstants.ORG_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_EXECUTION_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
 import static io.harness.common.CIExecutionConstants.PROJECT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.STAGE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
@@ -96,6 +96,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -112,12 +113,14 @@ import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.util.GithubApiFunctor;
 import io.harness.util.GithubApiTokenEvaluator;
 import io.harness.util.LiteEngineSecretEvaluator;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -152,8 +155,6 @@ public class K8BuildSetupUtils {
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
-
-  private final String regexPattern = "^\\$\\{ngSecretManager.obtain\\(.*)\\}";
 
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
@@ -192,7 +193,22 @@ public class K8BuildSetupUtils {
             annotations, labels, stageRunAsUser, serviceAccountName);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
-    return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
+    return CIK8BuildTaskParams.builder()
+        .k8sConnector(k8sConnector)
+        .cik8PodParams(podParams)
+        .podMaxWaitUntilReadySecs(getPodWaitUntilReadTimeout(k8sDirectInfraYaml))
+        .build();
+  }
+
+  private int getPodWaitUntilReadTimeout(K8sDirectInfraYaml k8sDirectInfraYaml) {
+    ParameterField<String> timeout = k8sDirectInfraYaml.getSpec().getInitTimeout();
+
+    int podWaitUntilReadyTimeout = POD_MAX_WAIT_UNTIL_READY_SECS;
+    if (timeout != null && timeout.fetchFinalValue() != null) {
+      long timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis();
+      podWaitUntilReadyTimeout = (int) (timeoutInMillis / 1000);
+    }
+    return podWaitUntilReadyTimeout;
   }
 
   public List<ContainerDefinitionInfo> getCIk8BuildServiceContainers(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
@@ -211,8 +227,7 @@ public class K8BuildSetupUtils {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageConnector = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
-      harnessInternalImageConnector =
-          connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
+      harnessInternalImageConnector = getDefaultInternalConnector(ngAccess);
     }
 
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
@@ -404,7 +419,6 @@ public class K8BuildSetupUtils {
 
     Map<String, String> envVarsWithSecretRef = removeEnvVarsWithSecretRef(envVars);
 
-    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails, envVarsWithSecretRef));
     if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
@@ -429,6 +443,7 @@ public class K8BuildSetupUtils {
             .volumeToMountPath(volumeToMountPath)
             .privileged(containerDefinitionInfo.isPrivileged())
             .runAsUser(containerDefinitionInfo.getRunAsUser())
+            .imagePullPolicy(containerDefinitionInfo.getImagePullPolicy())
             .build();
     if (containerDefinitionInfo.getContainerType() != CIContainerType.SERVICE) {
       cik8ContainerParams.setWorkingDir(workDirPath);
@@ -456,26 +471,6 @@ public class K8BuildSetupUtils {
     }
 
     return IntegrationStageUtils.getFullyQualifiedImageName(imageName, imgConnector);
-  }
-
-  private Map<String, String> createEnvVariableForSecret(
-      List<SecretVariableDetails> secretVariableDetails, Map<String, String> envVariablesWithSecretRef) {
-    Map<String, String> envVars = new HashMap<>();
-
-    List<String> secretEnvNames = new ArrayList<>();
-
-    if (isNotEmpty(secretVariableDetails)) {
-      secretEnvNames.addAll(secretVariableDetails.stream()
-                                .map(secretVariableDetail -> secretVariableDetail.getSecretVariableDTO().getName())
-                                .collect(Collectors.toList()));
-    }
-    if (isNotEmpty(envVariablesWithSecretRef)) {
-      secretEnvNames.addAll(envVariablesWithSecretRef.keySet());
-    }
-
-    envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
-
-    return envVars;
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(ConnectorDetails connectorDetails,
@@ -852,5 +847,19 @@ public class K8BuildSetupUtils {
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+  }
+
+  private ConnectorDetails getDefaultInternalConnector(NGAccess ngAccess) {
+    ConnectorDetails connectorDetails = null;
+    if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
+      try {
+        connectorDetails =
+            connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
+      } catch (ConnectorNotFoundException e) {
+        log.info("Default harness image connector does not exist: {}", e.getMessage());
+        connectorDetails = null;
+      }
+    }
+    return connectorDetails;
   }
 }

@@ -49,6 +49,7 @@ public class GitFileLocation implements PersistentEntity, UuidAware, CreatedAtAw
   private boolean isDefault;
   private String folderPath;
   private String entityGitPath;
+  private String completeGitPath;
   private String entityIdentifier;
   private String entityName;
   @Deprecated private String entityRootFolderName;

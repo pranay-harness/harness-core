@@ -39,7 +39,7 @@ public class ChildrenStrategy implements ExecuteStrategy {
     ChildrenExecutable childrenExecutable = extractStep(ambiance);
     StepResponse stepResponse = childrenExecutable.handleChildrenResponse(
         ambiance, resumePackage.getStepParameters(), resumePackage.getResponseDataMap());
-    sdkNodeExecutionService.handleStepResponse(
+    sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
@@ -49,11 +49,8 @@ public class ChildrenStrategy implements ExecuteStrategy {
   }
 
   private void handleResponse(Ambiance ambiance, ChildrenExecutableResponse response) {
-    SpawnChildrenRequest spawnChildrenRequest = SpawnChildrenRequest.newBuilder()
-                                                    .setPlanExecutionId(ambiance.getPlanExecutionId())
-                                                    .setNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
-                                                    .setChildren(response)
-                                                    .build();
-    sdkNodeExecutionService.spawnChildren(spawnChildrenRequest);
+    SpawnChildrenRequest spawnChildrenRequest = SpawnChildrenRequest.newBuilder().setChildren(response).build();
+    sdkNodeExecutionService.spawnChildren(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance), spawnChildrenRequest);
   }
 }

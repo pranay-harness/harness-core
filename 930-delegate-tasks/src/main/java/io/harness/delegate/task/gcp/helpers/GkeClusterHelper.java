@@ -1,6 +1,7 @@
 package io.harness.delegate.task.gcp.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.ALL_LOCATIONS;
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
@@ -13,6 +14,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.GcpServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -107,7 +110,15 @@ public class GkeClusterHelper {
       char[] serviceAccountKeyFileContent, boolean useDelegate, String locationClusterName, String namespace) {
     Container gkeContainerService = gcpHelperService.getGkeContainerService(serviceAccountKeyFileContent, useDelegate);
     String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent, useDelegate);
+    if (EmptyPredicate.isEmpty(locationClusterName)) {
+      throw new InvalidRequestException("Cluster name is empty in Inframapping");
+    }
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    if (locationCluster.length < 2) {
+      throw new InvalidRequestException(String.format("Cluster name is not in proper format. "
+              + "Expected format is <Location/ClusterName> i.e us-central1-c/test-cluster. Cluster name: [%s]",
+          locationClusterName));
+    }
     String location = locationCluster[0];
     String clusterName = locationCluster[1];
     try {
@@ -152,10 +163,22 @@ public class GkeClusterHelper {
                                     .map(cluster -> cluster.getZone() + LOCATION_DELIMITER + cluster.getName())
                                     .collect(toList())
                               : ImmutableList.of();
+    } catch (GoogleJsonResponseException e) {
+      String errorMessage;
+      if (e.getDetails() != null && isNotEmpty(e.getDetails().getMessage())) {
+        errorMessage = e.getDetails().getMessage();
+      } else {
+        errorMessage = e.getMessage();
+      }
+      log.error(errorMessage, e);
+      throw new GcpServerException(
+          String.format("Error listing clusters for project %s. Error: %s", projectId, errorMessage));
     } catch (IOException e) {
-      log.error("Error listing clusters for project " + projectId, e);
+      String errorMessage =
+          String.format("Error listing clusters for project %s. Error: %s", projectId, e.getMessage());
+      log.error(errorMessage, e);
+      throw new GcpServerException(errorMessage);
     }
-    return null;
   }
 
   private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {
@@ -185,22 +208,23 @@ public class GkeClusterHelper {
       String location, String operationLogMessage) {
     log.info(operationLogMessage + "...");
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(gcpHelperService.getTimeoutMins()), () -> {
-        while (true) {
-          String status =
-              gkeContainerService.projects()
-                  .locations()
-                  .operations()
-                  .get("projects/" + projectId + "/locations/" + location + "/operations/" + operation.getName())
-                  .execute()
-                  .getStatus();
-          if (!status.equals("RUNNING")) {
-            log.info(operationLogMessage + ": " + status);
-            return status;
-          }
-          sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
-        }
-      });
+      return HTimeLimiter.callInterruptible21(
+          timeLimiter, Duration.ofMinutes(gcpHelperService.getTimeoutMins()), () -> {
+            while (true) {
+              String status =
+                  gkeContainerService.projects()
+                      .locations()
+                      .operations()
+                      .get("projects/" + projectId + "/locations/" + location + "/operations/" + operation.getName())
+                      .execute()
+                      .getStatus();
+              if (!status.equals("RUNNING")) {
+                log.info(operationLogMessage + ": " + status);
+                return status;
+              }
+              sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
+            }
+          });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out checking operation status");
       return "UNKNOWN";

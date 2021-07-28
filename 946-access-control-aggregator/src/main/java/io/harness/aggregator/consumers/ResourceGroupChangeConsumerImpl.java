@@ -6,8 +6,8 @@ import static io.harness.aggregator.ACLUtils.buildACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.Principal;
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupRepository;
@@ -43,12 +43,15 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final ResourceGroupRepository resourceGroupRepository;
   private final ExecutorService executorService;
+  private final ChangeConsumerService changeConsumerService;
 
   public ResourceGroupChangeConsumerImpl(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
-      ResourceGroupRepository resourceGroupRepository, String executorServiceSuffix) {
+      ResourceGroupRepository resourceGroupRepository, String executorServiceSuffix,
+      ChangeConsumerService changeConsumerService) {
     this.aclRepository = aclRepository;
     this.roleAssignmentRepository = roleAssignmentRepository;
     this.resourceGroupRepository = resourceGroupRepository;
+    this.changeConsumerService = changeConsumerService;
     String changeConsumerThreadFactory =
         String.format("%s-resource-group-change-consumer", executorServiceSuffix) + "-%d";
     // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
@@ -58,6 +61,10 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
 
   @Override
   public void consumeUpdateEvent(String id, ResourceGroupDBO updatedResourceGroup) {
+    if (updatedResourceGroup.getResourceSelectors() == null && updatedResourceGroup.getFullScopeSelected() == null) {
+      return;
+    }
+
     Optional<ResourceGroupDBO> resourceGroup = resourceGroupRepository.findById(id);
     if (!resourceGroup.isPresent()) {
       return;
@@ -67,11 +74,12 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
                             .is(resourceGroup.get().getIdentifier())
                             .and(RoleAssignmentDBOKeys.scopeIdentifier)
                             .is(resourceGroup.get().getScopeIdentifier());
-    List<ReProcessRoleAssignmentOnRoleUpdateTask> tasksToExecute =
+    List<ReProcessRoleAssignmentOnResourceGroupUpdateTask> tasksToExecute =
         roleAssignmentRepository.findAll(criteria, Pageable.unpaged())
             .stream()
             .map((RoleAssignmentDBO roleAssignment)
-                     -> new ReProcessRoleAssignmentOnRoleUpdateTask(aclRepository, roleAssignment, resourceGroup.get()))
+                     -> new ReProcessRoleAssignmentOnResourceGroupUpdateTask(
+                         aclRepository, changeConsumerService, roleAssignment, resourceGroup.get()))
             .collect(Collectors.toList());
 
     long numberOfACLsCreated = 0;
@@ -100,18 +108,21 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
   }
 
   @Override
-  public long consumeCreateEvent(String id, ResourceGroupDBO createdEntity) {
-    return 0;
+  public void consumeCreateEvent(String id, ResourceGroupDBO createdEntity) {
+    // we do not consume create event
   }
 
-  private static class ReProcessRoleAssignmentOnRoleUpdateTask implements Callable<Result> {
+  private static class ReProcessRoleAssignmentOnResourceGroupUpdateTask implements Callable<Result> {
     private final ACLRepository aclRepository;
     private final RoleAssignmentDBO roleAssignmentDBO;
     private final ResourceGroupDBO updatedResourceGroup;
+    private final ChangeConsumerService changeConsumerService;
 
-    private ReProcessRoleAssignmentOnRoleUpdateTask(
-        ACLRepository aclRepository, RoleAssignmentDBO roleAssignment, ResourceGroupDBO updatedResourceGroup) {
+    private ReProcessRoleAssignmentOnResourceGroupUpdateTask(ACLRepository aclRepository,
+        ChangeConsumerService changeConsumerService, RoleAssignmentDBO roleAssignment,
+        ResourceGroupDBO updatedResourceGroup) {
       this.aclRepository = aclRepository;
+      this.changeConsumerService = changeConsumerService;
       this.roleAssignmentDBO = roleAssignment;
       this.updatedResourceGroup = updatedResourceGroup;
     }
@@ -144,13 +155,15 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
 
       long numberOfACLsCreated = 0;
       List<ACL> aclsToCreate = new ArrayList<>();
-      for (String resourceSelector : resourceSelectorsAddedToResourceGroup) {
-        for (String principalIdentifier : existingPrincipals) {
-          for (String permissionIdentifier : existingPermissions) {
-            aclsToCreate.add(buildACL(permissionIdentifier, Principal.of(principalType, principalIdentifier),
-                roleAssignmentDBO, resourceSelector));
-          }
-        }
+
+      if (existingPermissions.isEmpty() || existingPrincipals.isEmpty()) {
+        aclsToCreate.addAll(changeConsumerService.getAClsForRoleAssignment(roleAssignmentDBO));
+      } else {
+        resourceSelectorsAddedToResourceGroup.forEach(resourceSelector
+            -> existingPrincipals.forEach(principalIdentifier
+                -> existingPermissions.forEach(permissionIdentifier
+                    -> aclsToCreate.add(buildACL(permissionIdentifier, Principal.of(principalType, principalIdentifier),
+                        roleAssignmentDBO, resourceSelector)))));
       }
       numberOfACLsCreated += aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
 

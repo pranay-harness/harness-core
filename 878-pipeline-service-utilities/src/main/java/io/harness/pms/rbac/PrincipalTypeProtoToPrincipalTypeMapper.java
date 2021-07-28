@@ -18,6 +18,8 @@ public class PrincipalTypeProtoToPrincipalTypeMapper {
         return PrincipalType.USER_GROUP;
       case SERVICE:
         return PrincipalType.SERVICE;
+      case API_KEY:
+        return PrincipalType.API_KEY;
       default:
         throw new InvalidRequestException("Unknown principal type found");
     }

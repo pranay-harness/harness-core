@@ -33,7 +33,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -51,20 +50,16 @@ public class PlanCreatorMergeService {
     this.pmsSdkHelper = pmsSdkHelper;
   }
 
-  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata,
-      PlanExecutionMetadata.Builder planExecutionMetadataBuilder, TriggerPayload triggerPayload) throws IOException {
+  public PlanCreationBlobResponse createPlan(ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata)
+      throws IOException {
     log.info("Starting plan creation");
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
-    String processedYaml = YamlUtils.injectUuid(content);
-
-    planExecutionMetadataBuilder.processedYaml(processedYaml);
-
-    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
+    YamlField pipelineField = YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml());
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     PlanCreationBlobResponse finalResponse =
-        createPlanForDependenciesRecursive(services, dependencies, metadata, triggerPayload);
+        createPlanForDependenciesRecursive(services, dependencies, metadata, planExecutionMetadata.getTriggerPayload());
     validatePlanCreationBlobResponse(finalResponse);
     log.info("Done with plan creation");
     return finalResponse;

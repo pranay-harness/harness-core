@@ -121,6 +121,14 @@
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
             "privileged": {
               "oneOf": [
                 {
@@ -179,7 +187,10 @@
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Service"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -409,6 +420,9 @@
         "connectorRef": {
           "type": "string"
         },
+        "initTimeout": {
+          "type": "string"
+        },
         "labels": {
           "oneOf": [
             {
@@ -456,7 +470,8 @@
           ]
         },
         "memory": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(([0-9]*[.])?[0-9]+)([GM]i?)$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

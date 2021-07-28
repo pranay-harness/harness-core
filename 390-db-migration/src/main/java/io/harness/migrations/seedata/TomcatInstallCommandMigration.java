@@ -8,7 +8,6 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.migrations.SeedDataMigration;

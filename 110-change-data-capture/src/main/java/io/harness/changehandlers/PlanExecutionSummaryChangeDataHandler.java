@@ -1,5 +1,7 @@
 package io.harness.changehandlers;
 
+import static java.util.Arrays.asList;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
@@ -40,11 +42,21 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     if (dbObject.get("pipelineIdentifier") != null) {
       columnValueMapping.put("pipelineIdentifier", dbObject.get("pipelineIdentifier").toString());
     }
+    if (dbObject.get("planExecutionId") != null) {
+      columnValueMapping.put("planExecutionId", dbObject.get("planExecutionId").toString());
+    }
     if (dbObject.get("name") != null) {
       columnValueMapping.put("name", dbObject.get("name").toString());
     }
     if (dbObject.get("status") != null) {
       columnValueMapping.put("status", dbObject.get("status").toString());
+    }
+
+    if (dbObject.get("executionErrorInfo") != null) {
+      DBObject executionErrorInfo = (DBObject) dbObject.get("executionErrorInfo");
+      if (executionErrorInfo.get("message") != null) {
+        columnValueMapping.put("errorMessage", executionErrorInfo.get("message").toString());
+      }
     }
 
     // if moduleInfo is not null
@@ -114,5 +126,10 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     }
 
     return columnValueMapping;
+  }
+
+  @Override
+  public List<String> getPrimaryKeys() {
+    return asList("id", "startts");
   }
 }

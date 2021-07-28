@@ -15,6 +15,7 @@ public class ManifestSummary {
   private String versionNo;
   private String name;
   private String source;
+  private String appManifestName;
 
   public static ManifestSummary prepareSummaryFromHelmChart(HelmChart helmChart) {
     if (helmChart == null) {

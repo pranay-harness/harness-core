@@ -13,12 +13,21 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class StatusUtilsTest extends CategoryTest {
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testNodeAllowedSatusInCaseOfTimeout() {
+    EnumSet<Status> statuses = StatusUtils.nodeAllowedStartSet(Status.DISCONTINUING);
+    assertThat(statuses.contains(Status.EXPIRED)).isTrue();
+  }
+
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)

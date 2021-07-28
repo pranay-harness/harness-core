@@ -22,6 +22,7 @@ import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -114,6 +115,7 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
+import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
@@ -335,6 +337,8 @@ import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -840,6 +844,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpBucketDetails.class, 543360);
 
     kryo.register(K8sClusterInfo.class, 543361);
+    kryo.register(K8sServiceAccountInfoResponse.class, 543362);
 
     kryo.register(CfDeployCommandResponse.class, 543401);
     kryo.register(CfInfraMappingDataResponse.class, 543402);
@@ -863,5 +868,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CfInstanceSyncRequest.class, 543420);
     kryo.register(CfRunPluginCommandRequest.class, 543421);
     kryo.register(CfCommandExecutionResponse.class, 543422);
+    kryo.register(ScmPathFilterEvaluationTaskParams.class, 543423);
+    kryo.register(ScmPathFilterEvaluationTaskResponse.class, 543424);
+    kryo.register(DelegateTaskRank.class, 543425);
   }
 }

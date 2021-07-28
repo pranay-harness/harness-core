@@ -67,7 +67,7 @@ public class HostValidationServiceImpl implements HostValidationService {
           (HostConnectionAttributes) connectionSetting.getValue(), sshVaultConfig);
     }
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1), () -> {
         hostNames.forEach(hostName -> {
           HostValidationResponse response;
           if (connectionSetting.getValue() instanceof WinRmConnectionAttributes) {

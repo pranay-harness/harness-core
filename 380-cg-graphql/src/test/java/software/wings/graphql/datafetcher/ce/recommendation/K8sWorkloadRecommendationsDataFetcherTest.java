@@ -101,13 +101,12 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                     .getUuid();
   }
 
+  // https://harness.slack.com/archives/C01JMN5P7EX/p1615213693230500?thread_ts=1615212596.227700&cid=C01JMN5P7EX
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  @Ignore(
-      "test outdated https://harness.slack.com/archives/C01JMN5P7EX/p1615213693230500?thread_ts=1615212596.227700&cid=C01JMN5P7EX")
-  public void
-  shouldFetchRecommendation() throws Exception {
+  @Ignore("Test is outdated. Please check the slack for details")
+  public void shouldFetchRecommendation() throws Exception {
     K8sWorkloadRecommendation recommendation = getK8sWorkloadRecommendationBuilder().build();
     hPersistence.save(recommendation);
     List<QLK8sWorkloadFilter> filters = getFilters();

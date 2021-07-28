@@ -44,6 +44,7 @@ import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
@@ -150,6 +151,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(Comparable.class);
     set.add(PrometheusCVConfig.class);
     set.add(StackdriverLogCVConfig.class);
+    set.add(MonitoredService.class);
   }
 
   @Override

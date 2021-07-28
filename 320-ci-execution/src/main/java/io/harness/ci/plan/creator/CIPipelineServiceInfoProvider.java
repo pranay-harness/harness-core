@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ci.creator.variables.CIStageVariableCreator;
 import io.harness.ci.creator.variables.CIStepVariableCreator;
+import io.harness.ci.creator.variables.RunStepVariableCreator;
 import io.harness.ci.plan.creator.filter.CIStageFilterJsonCreator;
 import io.harness.ci.plan.creator.stage.IntegrationStagePMSPlanCreator;
 import io.harness.ci.plan.creator.step.CIPMSStepFilterJsonCreator;
@@ -52,6 +53,7 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     variableCreators.add(new CIStageVariableCreator());
     variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new CIStepVariableCreator());
+    variableCreators.add(new RunStepVariableCreator());
     return variableCreators;
   }
 

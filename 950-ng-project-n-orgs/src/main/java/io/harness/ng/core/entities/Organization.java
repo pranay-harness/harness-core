@@ -11,6 +11,7 @@ import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
 import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
@@ -89,7 +90,7 @@ public class Organization implements PersistentEntity, NGAccountAccess {
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   String accountIdentifier;
-  @EntityIdentifier(allowBlank = false) String identifier;
+  @EntityIdentifier(allowBlank = false) @FdIndex String identifier;
 
   @NGEntityName String name;
 

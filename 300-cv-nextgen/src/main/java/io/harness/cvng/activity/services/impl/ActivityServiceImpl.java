@@ -11,7 +11,6 @@ import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
-import io.harness.cvng.activity.beans.Cd10ValidateMappingParams;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
@@ -25,27 +24,31 @@ import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
+import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
+import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
+import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
-import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
-import io.harness.cvng.verificationjob.CVVerificationJobConstants;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 
@@ -82,8 +85,9 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private VerificationJobService verificationJobService;
   @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
-  @Inject private CD10ActivitySourceService cd10ActivitySourceService;
   @Inject private AlertRuleService alertRuleService;
+  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
+  @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
 
   @Override
   public Activity get(String activityId) {
@@ -117,57 +121,22 @@ public class ActivityServiceImpl implements ActivityService {
     return activity.getUuid();
   }
   @Override
-  public CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO) {
-    Preconditions.checkNotNull(activityDTO);
-    Preconditions.checkState(
-        activityDTO.getVerificationJobRuntimeDetails().size() == 1, "RuntimeDetails should be of size 1");
-    Preconditions.checkState(
-        activityDTO.getServiceIdentifier() == null && activityDTO.getEnvironmentIdentifier() == null,
-        "service and env identifiers should be null");
-    Map<String, String> runtimeValues = activityDTO.getVerificationJobRuntimeDetails().get(0).getRuntimeValues();
-    String harness10CdAppId = runtimeValues.get("harnessCdAppId");
-    String harness10CdServiceId = runtimeValues.get("harnessCdServiceId");
-    String harness10CdEnvId = runtimeValues.get("harnessCdEnvId");
-    Preconditions.checkNotNull(harness10CdAppId, "harnessCdAppId is not present in runtimeValues");
-    Preconditions.checkNotNull(harness10CdServiceId, "harnessCdServiceId is not present in runtimeValues");
-    Preconditions.checkNotNull(harness10CdEnvId, "harnessCdEnvId is not present in runtimeValues");
-    activityDTO.setEnvironmentIdentifier(cd10ActivitySourceService.getNextGenEnvIdentifier(accountId,
-        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdEnvId));
-    runtimeValues.put(CVVerificationJobConstants.ENV_IDENTIFIER_KEY, activityDTO.getEnvironmentIdentifier());
-    activityDTO.setServiceIdentifier(cd10ActivitySourceService.getNextGenServiceIdentifier(accountId,
-        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdServiceId));
-    runtimeValues.put(CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY, activityDTO.getServiceIdentifier());
-    validateCD10Mappings(activityDTO, harness10CdAppId, harness10CdServiceId, harness10CdEnvId);
-    String activityId = register(accountId, activityDTO);
-    return CD10RegisterActivityDTO.builder()
-        .activityId(activityId)
-        .serviceIdentifier(activityDTO.getServiceIdentifier())
-        .envIdentifier(activityDTO.getEnvironmentIdentifier())
-        .build();
-  }
+  public String register(Activity activity) {
+    activity.validate();
+    List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
+    activity.getVerificationJobs().forEach(verificationJob -> {
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
+          activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
+      validateJob(verificationJob);
+      activity.fillInVerificationJobInstanceDetails(verificationJobInstanceBuilder);
 
-  private void validateCD10Mappings(ActivityDTO activityDTO, String cd10AppId, String cd10ServiceId, String cd10EnvId) {
-    Preconditions.checkState(activityDTO.getVerificationJobRuntimeDetails().size() == 1,
-        "VerificationJobRuntimeDetails should be of size 1");
-    String verificationJobIdentifier =
-        activityDTO.getVerificationJobRuntimeDetails().get(0).getVerificationJobIdentifier();
-    Preconditions.checkNotNull(verificationJobIdentifier, "verificationJobIdentifier can not be null");
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(activityDTO.getAccountIdentifier(),
-        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), verificationJobIdentifier);
-    Preconditions.checkNotNull(
-        verificationJob, "VerificationJob with identifier %s does not exists", verificationJobIdentifier);
-    cd10ActivitySourceService.validateMapping(
-        Cd10ValidateMappingParams.builder()
-            .accountId(activityDTO.getAccountIdentifier())
-            .orgIdentifier(activityDTO.getOrgIdentifier())
-            .projectIdentifier(activityDTO.getProjectIdentifier())
-            .activitySourceIdentifier(verificationJob.getActivitySourceIdentifier())
-            .cd10AppId(cd10AppId)
-            .cd10ServiceId(cd10ServiceId)
-            .cd10EnvId(cd10EnvId)
-            .serviceIdentifier(verificationJob.getServiceIdentifierRuntimeParam())
-            .environmentIdentifier(verificationJob.getEnvIdentifierRuntimeParam())
-            .build());
+      verificationJobInstances.add(verificationJobInstanceBuilder.build());
+    });
+    activity.setVerificationJobInstanceIds(verificationJobInstanceService.create(verificationJobInstances));
+    hPersistence.save(activity);
+    log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(),
+        activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
+    return activity.getUuid();
   }
 
   @Override
@@ -284,6 +253,11 @@ public class ActivityServiceImpl implements ActivityService {
     DeploymentActivity activity = (DeploymentActivity) get(activityId);
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         getDeploymentVerificationJobInstanceSummary(activity);
+    deploymentVerificationJobInstanceSummary.setTimeSeriesAnalysisSummary(
+        deploymentTimeSeriesAnalysisService.getAnalysisSummary(activity.getVerificationJobInstanceIds()));
+    deploymentVerificationJobInstanceSummary.setLogsAnalysisSummary(deploymentLogAnalysisService.getAnalysisSummary(
+        activity.getAccountId(), activity.getVerificationJobInstanceIds()));
+
     return DeploymentActivitySummaryDTO.builder()
         .deploymentVerificationJobInstanceSummary(deploymentVerificationJobInstanceSummary)
         .serviceIdentifier(activity.getServiceIdentifier())
@@ -578,6 +552,7 @@ public class ActivityServiceImpl implements ActivityService {
     }
   }
 
+  @Override
   public List<String> createVerificationJobInstancesForActivity(Activity activity) {
     List<VerificationJobInstance> jobInstancesToCreate = new ArrayList<>();
     List<VerificationJob> verificationJobs = new ArrayList<>();
@@ -628,6 +603,54 @@ public class ActivityServiceImpl implements ActivityService {
     } else {
       return verificationJobInstanceService.create(jobInstancesToCreate);
     }
+  }
+
+  @Override
+  public TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
+      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize) {
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
+    // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
+    // changes later
+    Preconditions.checkState(verificationJobInstanceIds.size() == 1,
+        "We do not support more than one monitored source validation from deployment");
+    return deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceIds.get(0), anomalousMetricsOnly, hostName, filter, pageNumber);
+  }
+
+  @Override
+  public Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(activityId);
+    return verificationJobInstanceService.getDataSourcetypes(get(activityId).getVerificationJobInstanceIds());
+  }
+
+  @Override
+  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, String hostName) {
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
+    // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
+    // changes later
+    Preconditions.checkState(verificationJobInstanceIds.size() == 1,
+        "We do not support more than one monitored source validation from deployment");
+    return deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceIds.get(0), hostName);
+  }
+
+  @Override
+  public PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(
+      String accountId, String activityId, Integer label, int pageNumber, int pageSize, String hostName) {
+    List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
+    // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
+    // changes later
+    Preconditions.checkState(verificationJobInstanceIds.size() == 1,
+        "We do not support more than one monitored source validation from deployment");
+    return deploymentLogAnalysisService.getLogAnalysisResult(
+        accountId, verificationJobInstanceIds.get(0), label, pageNumber, pageSize, hostName);
+  }
+
+  private List<String> getVerificationJobInstanceId(String activityId) {
+    Preconditions.checkNotNull(activityId);
+    Activity activity = get(activityId);
+    return activity.getVerificationJobInstanceIds();
   }
 
   private void validateJob(VerificationJob verificationJob) {

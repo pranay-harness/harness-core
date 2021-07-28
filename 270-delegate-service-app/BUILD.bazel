@@ -6,6 +6,9 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
+    "//360-cg-manager:module",
+    "//380-cg-graphql:module",
+    "//390-db-migration:module",
     "//400-rest:module",
     "//420-delegate-agent:module",
     "//420-delegate-service:module",
@@ -46,7 +49,7 @@ shared_dependencies = [
     "//970-grpc:module",
     "//970-ng-commons:module",
     "//980-commons:module",
-    "@jira_client//jar",
+    "@maven//:net_rcarz_jira_client",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",
     "@maven//:ch_qos_logback_contrib_logback_jackson",
@@ -276,7 +279,6 @@ shared_dependencies = [
     "@maven//:commons_net_commons_net",
     "@maven//:commons_pool_commons_pool",
     "@maven//:commons_validator_commons_validator",
-    "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
@@ -409,7 +411,6 @@ shared_dependencies = [
     "@maven//:net_i2p_crypto_eddsa",
     "@maven//:net_java_dev_jna_jna",
     "@maven//:net_java_dev_jna_jna_platform",
-    "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
     "@maven//:net_jcip_jcip_annotations",
     "@maven//:net_jodah_expiringmap",
     "@maven//:net_jodah_failsafe",
@@ -482,7 +483,6 @@ shared_dependencies = [
     "@maven//:org_atmosphere_atmosphere_runtime",
     "@maven//:org_atmosphere_wasync",
     "@maven//:org_atteo_evo_inflector",
-    "@maven//:org_awaitility_awaitility",
     "@maven//:org_bitbucket_b_c_jose4j",
     "@maven//:org_bouncycastle_bcpg_jdk15on",
     "@maven//:org_bouncycastle_bcpkix_jdk15on",
@@ -649,13 +649,13 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@maven//:io_harness_cv_data_collection_dsl",
     "//:lombok",
 ]
 
 java_binary(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     main_class = "io.harness.delegate.app.DelegateServiceApplication",
     resources = [
         "//270-delegate-service-app/src/main/resources:resource",
@@ -708,7 +708,4 @@ java_library(
 
 run_tests()
 
-run_analysis(
-    run_checkstyle = False,
-    run_pmd = False,
-)
+run_analysis()

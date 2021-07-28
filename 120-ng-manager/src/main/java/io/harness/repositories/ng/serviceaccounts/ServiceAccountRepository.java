@@ -11,7 +11,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
 @OwnedBy(PL)
-public interface ServiceAccountRepository extends PagingAndSortingRepository<ServiceAccount, String> {
+public interface ServiceAccountRepository
+    extends PagingAndSortingRepository<ServiceAccount, String>, ServiceAccountCustomRepository {
   ServiceAccount findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
   List<ServiceAccount> findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifierIsIn(

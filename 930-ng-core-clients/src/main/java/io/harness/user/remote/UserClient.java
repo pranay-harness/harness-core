@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
+import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
 import io.harness.ng.core.user.TwoFactorAuthSettingsInfo;
 import io.harness.ng.core.user.UserInfo;
@@ -29,17 +31,27 @@ public interface UserClient {
   String USERS_SEARCH_API = "ng/user/search";
   String USERS_API = "ng/user";
   String USERS_API_OAUTH = "ng/user/oauth";
+  String USERS_SIGNUP_INVITE_API = "ng/user/signup-invite";
   String USER_BATCH_LIST_API = "ng/user/batch";
   String USER_IN_ACCOUNT_VERIFICATION = "ng/user/user-account";
   String USER_SAFE_DELETE = "ng/user/safeDelete/{userId}";
   String UPDATE_USER_API = "ng/user/user";
+  String CREATE_USER_VIA_INVITE = "ng/user/invites/create-user";
   String USER_TWO_FACTOR_AUTH_SETTINGS = "ng/user/two-factor-auth/{auth-mechanism}";
   String USER_ENABLE_TWO_FACTOR_AUTH = "ng/user/enable-two-factor-auth";
   String USER_DISABLE_TWO_FACTOR_AUTH = "ng/user/disable-two-factor-auth";
+  String USER_UNLOCK = "ng/user/unlock-user";
 
   @POST(USERS_API) Call<RestResponse<UserInfo>> createNewUser(@Body UserRequestDTO userRequest);
 
   @POST(USERS_API_OAUTH) Call<RestResponse<UserInfo>> createNewOAuthUser(@Body UserRequestDTO userRequest);
+
+  @POST(USERS_SIGNUP_INVITE_API)
+  Call<RestResponse<SignupInviteDTO>> createNewSignupInvite(@Body SignupInviteDTO userRequest);
+
+  @GET(USERS_SIGNUP_INVITE_API) Call<RestResponse<SignupInviteDTO>> getSignupInvite(@Query("email") String email);
+
+  @PUT(USERS_SIGNUP_INVITE_API) Call<RestResponse<UserInfo>> completeSignupInvite(@Query("email") String email);
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
@@ -55,6 +67,9 @@ public interface UserClient {
   Call<RestResponse<List<UserInfo>>> listUsers(@Query("accountId") String accountId, @Body UserFilterNG userFilterNG);
 
   @PUT(UPDATE_USER_API) Call<RestResponse<Optional<UserInfo>>> updateUser(@Body UserInfo userInfo);
+
+  @PUT(CREATE_USER_VIA_INVITE)
+  Call<RestResponse<Boolean>> createUserAndCompleteNGInvite(@Body UserInviteDTO userInviteDTO);
 
   @GET(USER_IN_ACCOUNT_VERIFICATION)
   Call<RestResponse<Boolean>> isUserInAccount(
@@ -89,4 +104,8 @@ public interface UserClient {
 
   @PUT(USERS_API + "/{userId}/verified")
   Call<RestResponse<Boolean>> changeUserEmailVerified(@Path(value = "userId") String userId);
+
+  @PUT(USER_UNLOCK)
+  Call<RestResponse<Optional<UserInfo>>> unlockUser(
+      @Query(value = "email") String email, @Query("accountId") String accountId);
 }

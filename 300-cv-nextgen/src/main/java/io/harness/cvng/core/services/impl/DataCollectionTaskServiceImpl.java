@@ -201,27 +201,34 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
-  public void handleRecoverNextTask(CVConfig cvConfig) {
+  public void handleCreateNextTask(CVConfig cvConfig) {
+    Preconditions.checkState(cvConfig.isEnabled(), "CVConfig should be enabled");
     String serviceGuardVerificationTaskId =
         verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
 
     DataCollectionTask dataCollectionTask =
-        hPersistence.createQuery(DataCollectionTask.class)
-            .filter(DataCollectionTaskKeys.accountId, cvConfig.getAccountId())
-            .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
-            .order(Sort.descending(DataCollectionTaskKeys.startTime))
-            .get();
-
-    Preconditions.checkNotNull(dataCollectionTask, "dataCollectionTask can not be null");
-    if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
-            .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
-        && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
-      createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
-      log.warn(
-          "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
-          dataCollectionTask.getUuid(), cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
-          cvConfig.getOrgIdentifier());
+        getLastDataCollectionTask(cvConfig.getAccountId(), serviceGuardVerificationTaskId);
+    if (dataCollectionTask == null) {
+      enqueueFirstTask(cvConfig);
+    } else {
+      if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
+              .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
+          && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
+        createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
+        log.warn(
+            "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
+            dataCollectionTask.getUuid(), cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
+            cvConfig.getOrgIdentifier());
+      }
     }
+  }
+
+  private DataCollectionTask getLastDataCollectionTask(String accountId, String serviceGuardVerificationTaskId) {
+    return hPersistence.createQuery(DataCollectionTask.class)
+        .filter(DataCollectionTaskKeys.accountId, accountId)
+        .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+        .order(Sort.descending(DataCollectionTaskKeys.startTime))
+        .get();
   }
 
   private void markDependentTasksFailed(DataCollectionTask task) {
@@ -290,6 +297,10 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       log.info("CVConfig no longer exists for verificationTaskId {}", prevTask.getVerificationTaskId());
       return;
     }
+    if (!cvConfig.isEnabled()) {
+      log.info("Not creating next task as CVConfig is disabled. cvConfigId: {}", cvConfig.getUuid());
+      return;
+    }
     populateMetricPack(cvConfig);
     Instant nextTaskStartTime = prevTask.getEndTime();
     Instant currentTime = clock.instant();
@@ -331,16 +342,12 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     }
   }
 
-  @Override
-  public void enqueueFirstTask(CVConfig cvConfig) {
-    log.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
+  private void enqueueFirstTask(CVConfig cvConfig) {
     populateMetricPack(cvConfig);
     TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
-
     save(dataCollectionTask);
-    cvConfigService.markFirstTaskCollected(cvConfig);
     log.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
   }
 

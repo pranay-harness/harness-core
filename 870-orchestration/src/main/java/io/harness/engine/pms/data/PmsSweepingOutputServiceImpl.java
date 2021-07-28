@@ -6,15 +6,19 @@ import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.outputs.SweepingOutputException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -25,9 +29,11 @@ import com.mongodb.DuplicateKeyException;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import org.apache.commons.jexl3.JexlException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
@@ -44,7 +50,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? null : RecastOrchestrationUtils.toDocumentJson(value);
+    return value == null ? null : RecastOrchestrationUtils.toJson(value);
   }
 
   private String resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
@@ -53,7 +59,8 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
     if (instance == null) {
       throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instance.getValue());
+
+    return instance.getOutputValue();
   }
 
   @Override
@@ -66,24 +73,22 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
     EngineExpressionEvaluator evaluator =
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
-    Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? RawOptionalSweepingOutput.builder().found(false).build()
-                         : RawOptionalSweepingOutput.builder()
-                               .found(true)
-                               .output(RecastOrchestrationUtils.toDocumentJson(value))
-                               .build();
+    try {
+      Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
+      return value == null
+          ? RawOptionalSweepingOutput.builder().found(false).build()
+          : RawOptionalSweepingOutput.builder().found(true).output(RecastOrchestrationUtils.toJson(value)).build();
+    } catch (UnresolvedExpressionsException | JexlException e) {
+      return RawOptionalSweepingOutput.builder().found(false).build();
+    }
   }
 
   private RawOptionalSweepingOutput resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
-    String name = refObject.getName();
     ExecutionSweepingOutputInstance instance = getInstance(ambiance, refObject);
     if (instance == null) {
       return RawOptionalSweepingOutput.builder().found(false).build();
     }
-    return RawOptionalSweepingOutput.builder()
-        .found(true)
-        .output(RecastOrchestrationUtils.toDocumentJson(instance.getValue()))
-        .build();
+    return RawOptionalSweepingOutput.builder().found(true).output(instance.getOutputValue()).build();
   }
 
   private ExecutionSweepingOutputInstance getInstance(Ambiance ambiance, RefObject refObject) {
@@ -114,7 +119,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
                                    .planExecutionId(ambiance.getPlanExecutionId())
                                    .levels(ambiance.getLevelsList())
                                    .name(name)
-                                   .value(RecastOrchestrationUtils.toDocumentFromJson(value))
+                                   .valueOutput(OrchestrationMap.parse(RecastOrchestrationUtils.fromJson(value)))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();

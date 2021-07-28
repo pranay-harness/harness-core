@@ -62,7 +62,7 @@ public class ArtifactCleanupServiceAsyncImplTest extends WingsBaseTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void verifyGCRCleanup() {
-    artifactCleanupServiceAsync.cleanupArtifactsAsync(gcrArtifactStream);
+    artifactCleanupServiceAsync.cleanupArtifacts(gcrArtifactStream, null);
     verify(settingsService, times(1)).get(any());
   }
 
@@ -72,7 +72,7 @@ public class ArtifactCleanupServiceAsyncImplTest extends WingsBaseTest {
   public void verifyCustomCleanup() {
     when(delegateService.queueTask(any())).thenReturn("ID");
 
-    artifactCleanupServiceAsync.cleanupArtifactsAsync(customArtifactStream);
+    artifactCleanupServiceAsync.cleanupArtifacts(customArtifactStream, null);
 
     verify(mockWaitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
   }

@@ -34,7 +34,7 @@ public class TimeModuleTest extends CategoryTest {
     Injector injector = Guice.createInjector(modules);
     TimeLimiter timeLimiter = injector.getInstance(TimeLimiter.class);
     try (AutoLogContext context = new TestLogContext("foo", "bar", AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1), () -> {
         assertThat(MDC.get("foo")).isEqualTo("bar");
         return null;
       });

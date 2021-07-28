@@ -25,5 +25,5 @@ public class DelegateAsyncTaskResponse implements PersistentEntity {
   @FdIndex private long processAfter;
   private Long holdUntil;
 
-  @FdTtlIndex @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plusHours(2).toInstant());
+  @FdTtlIndex @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plusHours(24).toInstant());
 }

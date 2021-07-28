@@ -82,7 +82,7 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 	return nil
 }
 
-func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger) error {
+func collectCg(ctx context.Context, stepID, cgDir string, timeMs int64, log *zap.SugaredLogger) error {
 	repo, err := external.GetRepo()
 	if err != nil {
 		return err
@@ -123,6 +123,7 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 		Source: source,
 		Target: target,
 		CgDir:  cgDir,
+		TimeMs: timeMs,
 	}
 	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetCgDir()))
 	_, err = client.Client().UploadCg(ctx, req)
@@ -159,7 +160,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 		}
 
 		var tests []string
-		testc, _ := rep.GetTests(ctx)
+		testc := rep.GetTests(ctx)
 		for t := range testc {
 			jt, _ := json.Marshal(t)
 			tests = append(tests, string(jt))

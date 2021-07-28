@@ -37,8 +37,7 @@ public class ResourceConstraintUtility {
     return resourceConstraintYamlField.getNode().getCurrJsonNode();
   }
 
-  public boolean isSimultaneousDeploymentsAllowed(
-      ParameterField<Boolean> allowSimultaneousDeploymentsField, YamlField rcYamlField) {
+  public boolean isSimultaneousDeploymentsAllowed(ParameterField<Boolean> allowSimultaneousDeploymentsField) {
     if (!ParameterField.isNull(allowSimultaneousDeploymentsField) && allowSimultaneousDeploymentsField.isExpression()) {
       throw new InvalidRequestException(
           "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
@@ -48,10 +47,6 @@ public class ResourceConstraintUtility {
       allowSimultaneousDeployments = allowSimultaneousDeploymentsField.getValue();
     }
 
-    if (allowSimultaneousDeployments) {
-      return true;
-    }
-
-    return rcYamlField == null;
+    return allowSimultaneousDeployments;
   }
 }

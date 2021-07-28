@@ -6,8 +6,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
-import io.harness.cvng.beans.MetricPackDTO;
-import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -93,8 +91,8 @@ public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtA
     return metrics;
   }
 
-  public MetricPackDTO toDTO() {
-    return MetricPackDTO.builder()
+  public io.harness.cvng.beans.MetricPackDTO toDTO() {
+    return io.harness.cvng.beans.MetricPackDTO.builder()
         .uuid(getUuid())
         .accountId(getAccountId())
         .orgIdentifier(getOrgIdentifier())
@@ -129,8 +127,8 @@ public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtA
       return validationPath;
     }
 
-    public MetricDefinitionDTO toDTO() {
-      return MetricDefinitionDTO.builder()
+    public io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO toDTO() {
+      return io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO.builder()
           .name(name)
           .path(path)
           .responseJsonPath(responseJsonPath)

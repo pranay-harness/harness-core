@@ -19,6 +19,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 
@@ -76,6 +77,7 @@ public class AwsAmiSwitchRoutesState extends State {
   @Inject protected transient DelegateService delegateService;
   @Inject protected transient AwsStateHelper awsStateHelper;
   @Inject protected transient AwsAmiServiceStateHelper awsAmiServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public AwsAmiSwitchRoutesState(String name) {
     super(name, StateType.AWS_AMI_SWITCH_ROUTES.name());
@@ -156,6 +158,7 @@ public class AwsAmiSwitchRoutesState extends State {
             .downscaleOldAsg(downsizeOldAsg)
             .rollback(rollback)
             .baseScalingPolicyJSONs(serviceSetupElement.getBaseScalingPolicyJSONs())
+            .amiInServiceHealthyStateFFEnabled(false)
             .build();
 
     AwsAmiSwitchRoutesStateExecutionData executionData =

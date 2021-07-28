@@ -10,11 +10,14 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJEC
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_GROUP;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_SCOPE_RECONCILIATION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -38,6 +41,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final Map<String, MessageProcessor> processorMap;
   private final List<MessageListener> messageListenersList;
+  private final QueueController queueController;
 
   @Inject
   public EntityCRUDStreamConsumer(@Named(ENTITY_CRUD) Consumer redisConsumer,
@@ -46,14 +50,20 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener,
       @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
       @Named(USER_ENTITY + ENTITY_CRUD) MessageListener userEntityCRUDStreamListener,
-      @Named(SECRET_ENTITY + ENTITY_CRUD) MessageListener secretEntityCRUDStreamListner) {
+      @Named(SECRET_ENTITY + ENTITY_CRUD) MessageListener secretEntityCRUDStreamListner,
+      @Named(USER_GROUP + ENTITY_CRUD) MessageListener userGroupEntityCRUDStreamListener,
+      @Named(USER_SCOPE_RECONCILIATION) MessageListener userMembershipReconciliationMessageProcessor,
+      QueueController queueController) {
     this.redisConsumer = redisConsumer;
+    this.queueController = queueController;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationEntityCRUDStreamListener);
     messageListenersList.add(projectEntityCRUDStreamListener);
     messageListenersList.add(connectorEntityCRUDStreamListener);
     messageListenersList.add(userEntityCRUDStreamListener);
     messageListenersList.add(secretEntityCRUDStreamListner);
+    messageListenersList.add(userGroupEntityCRUDStreamListener);
+    messageListenersList.add(userMembershipReconciliationMessageProcessor);
     processorMap = new HashMap<>();
     processorMap.put(SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
   }
@@ -64,6 +74,11 @@ public class EntityCRUDStreamConsumer implements Runnable {
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info("Entity crud consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (InterruptedException ex) {

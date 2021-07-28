@@ -13,10 +13,13 @@ locals {
   # prod and freemium is #ce-alerts channel. dev and qa is #ce-alerts-test channel
   slack_prod_channel = "projects/${var.projectId}/notificationChannels/10185135917587539827"
   slack_dev_channel  = "projects/${var.projectId}/notificationChannels/13768296773189683769"
-  slack_qa_channel   = "projects/${var.projectId}/notificationChannels/11524768178699293863" #2940114166643309654 for ce-qa
+  slack_qa_channel   = "projects/${var.projectId}/notificationChannels/11524768178699293863"
+  slack_ceqa_channel   = "projects/${var.projectId}/notificationChannels/2940114166643309654"
 
   # prod is ce-alerts@harness.io, rest is ce-alerts-qa@harness.io
   email_prod_channel = "projects/${var.projectId}/notificationChannels/16286565924796139541"
   email_dev_channel  = "projects/${var.projectId}/notificationChannels/17855665763510449367"
   email_qa_channel   = "projects/${var.projectId}/notificationChannels/9385478850545552747"
+  email_ceqa_channel   = "projects/${var.projectId}/notificationChannels/17367544434138981620"
+
 }

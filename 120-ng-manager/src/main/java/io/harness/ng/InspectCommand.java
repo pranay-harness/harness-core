@@ -14,7 +14,6 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
-import io.harness.serializer.NgAccessControlMigrationRegistrars;
 import io.harness.serializer.NgUserCoreRegistrars;
 
 import com.google.common.collect.ImmutableMap;
@@ -91,7 +90,6 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NextGenRegistrars.morphiaRegistrars)
             .addAll(NgUserCoreRegistrars.morphiaRegistrars)
-            .addAll(NgAccessControlMigrationRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -100,7 +98,6 @@ public class InspectCommand<T extends io.dropwizard.Configuration> extends Confi
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(NextGenRegistrars.morphiaConverters)
-            .addAll(NgAccessControlMigrationRegistrars.morphiaConverters)
             .addAll(NgUserCoreRegistrars.morphiaConverters)
             .build();
       }

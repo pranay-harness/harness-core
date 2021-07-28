@@ -48,7 +48,7 @@ public class SmtpCapabilityCheck implements CapabilityCheck, ProtoCapabilityChec
 
   static boolean isCapable(boolean useSsl, boolean startTls, String host, int port, String username) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(10), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(10), () -> {
         boolean result = false;
         try {
           Properties props = new Properties();

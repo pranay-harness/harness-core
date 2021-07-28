@@ -32,6 +32,7 @@ public class VaultConfigMapper {
                                   .secretId(vaultConfigDTO.getSecretId())
                                   .renewalInterval(vaultConfigDTO.getRenewalIntervalMinutes())
                                   .isReadOnly(vaultConfigDTO.isReadOnly())
+                                  .delegateSelectors(vaultConfigDTO.getDelegateSelectors())
                                   .build();
     vaultConfig.setNgMetadata(ngMetaDataFromDto(vaultConfigDTO));
     vaultConfig.setAccountId(vaultConfigDTO.getAccountIdentifier());

@@ -13,4 +13,6 @@ import software.wings.security.annotations.Scope;
 @OwnedBy(CDC)
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public interface QLTriggerCondition extends QLObject {}
+public interface QLTriggerCondition extends QLObject {
+  QLTriggerConditionType getTriggerConditionType();
+}

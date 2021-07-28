@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
@@ -38,9 +39,11 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Mock private ActivityService activityService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
+  BuilderFactory builderFactory;
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
+    builderFactory = BuilderFactory.getDefault();
     FieldUtils.writeField(cvngStepTaskService, "activityService", activityService, true);
     FieldUtils.writeField(cvngStepTaskService, "waitNotifyEngine", waitNotifyEngine, true);
   }
@@ -50,8 +53,17 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
   public void testCreate() {
     String activityId = generateUuid();
     cvngStepTaskService.create(
-        CVNGStepTask.builder().accountId(generateUuid()).activityId(activityId).status(Status.IN_PROGRESS).build());
+        builderFactory.cvngStepTaskBuilder().activityId(activityId).callbackId(activityId).build());
     assertThat(get(activityId)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreate_withSkip() {
+    String callbackId = generateUuid();
+    cvngStepTaskService.create(builderFactory.cvngStepTaskBuilder().callbackId(callbackId).skip(true).build());
+    assertThat(get(callbackId)).isNotNull();
   }
 
   @Test
@@ -77,13 +89,34 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
                                               .durationMs(Duration.ofMinutes(30).toMillis())
                                               .build();
     when(activityService.getActivityStatus(eq(accountId), eq(activityId))).thenReturn(activityStatusDTO);
-    cvngStepTaskService.create(
-        CVNGStepTask.builder().accountId(accountId).activityId(activityId).status(Status.IN_PROGRESS).build());
+    cvngStepTaskService.create(builderFactory.cvngStepTaskBuilder()
+                                   .accountId(accountId)
+                                   .activityId(activityId)
+                                   .callbackId(activityId)
+                                   .status(Status.IN_PROGRESS)
+                                   .build());
     cvngStepTaskService.notifyCVNGStep(get(activityId));
     assertThat(get(activityId).getStatus()).isEqualTo(Status.DONE);
     verify(waitNotifyEngine, times(1))
         .doneWith(eq(activityId),
             eq(CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testNotifyCVNGStep_whenSkipIsTrue() {
+    String callbackId = generateUuid();
+    String accountId = generateUuid();
+    cvngStepTaskService.create(builderFactory.cvngStepTaskBuilder()
+                                   .accountId(accountId)
+                                   .skip(true)
+                                   .callbackId(callbackId)
+                                   .status(Status.IN_PROGRESS)
+                                   .build());
+    cvngStepTaskService.notifyCVNGStep(get(callbackId));
+    assertThat(get(callbackId).getStatus()).isEqualTo(Status.DONE);
+    verify(waitNotifyEngine, times(1)).doneWith(eq(callbackId), eq(CVNGResponseData.builder().skip(true).build()));
   }
 
   @Test
@@ -99,8 +132,12 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
                                               .durationMs(Duration.ofMinutes(30).toMillis())
                                               .build();
     when(activityService.getActivityStatus(eq(accountId), eq(activityId))).thenReturn(activityStatusDTO);
-    cvngStepTaskService.create(
-        CVNGStepTask.builder().accountId(accountId).activityId(activityId).status(Status.IN_PROGRESS).build());
+    cvngStepTaskService.create(builderFactory.cvngStepTaskBuilder()
+                                   .accountId(accountId)
+                                   .activityId(activityId)
+                                   .callbackId(activityId)
+                                   .status(Status.IN_PROGRESS)
+                                   .build());
     cvngStepTaskService.notifyCVNGStep(get(activityId));
     assertThat(get(activityId).getStatus()).isEqualTo(Status.IN_PROGRESS);
     verify(waitNotifyEngine, times(1))
@@ -108,7 +145,7 @@ public class CVNGStepTaskServiceImplTest extends CvNextGenTestBase {
             eq(CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
   }
 
-  private CVNGStepTask get(String activityId) {
-    return hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
+  private CVNGStepTask get(String callbackId) {
+    return hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callbackId).get();
   }
 }

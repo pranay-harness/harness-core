@@ -26,5 +26,6 @@ public class CodeBase {
   ParameterField<Build> build;
   Integer depth;
   Boolean sslVerify;
+  PRCloneStrategy prCloneStrategy;
   ContainerResource resources;
 }

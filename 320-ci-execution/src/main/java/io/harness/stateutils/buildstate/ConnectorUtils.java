@@ -6,6 +6,7 @@ import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
+import static io.harness.exception.WingsException.USER;
 
 import static java.lang.String.format;
 
@@ -58,17 +59,24 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
-import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.dto.ErrorDTO;
+import io.harness.ng.core.dto.FailureDTO;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.JsonUtils;
 import io.harness.utils.IdentifierRefHelper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -79,6 +87,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import retrofit2.Response;
 
 @Singleton
 @Slf4j
@@ -126,7 +135,8 @@ public class ConnectorUtils {
     return Failsafe.with(retryPolicy).get(() -> { return getConnectorDetailsInternal(ngAccess, connectorIdentifier); });
   }
 
-  private ConnectorDetails getConnectorDetailsInternal(NGAccess ngAccess, String connectorIdentifier) {
+  private ConnectorDetails getConnectorDetailsInternal(NGAccess ngAccess, String connectorIdentifier)
+      throws IOException {
     log.info("Getting connector details for connector ref [{}]", connectorIdentifier);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifier,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
@@ -440,41 +450,46 @@ public class ConnectorUtils {
         kubernetesClusterConfigDTO.getCredential().getKubernetesCredentialType(), kubernetesClusterConfigDTO));
   }
 
-  private ConnectorDTO getConnector(IdentifierRef connectorRef) {
-    Optional<ConnectorDTO> connectorDTO;
+  private ConnectorDTO getConnector(IdentifierRef connectorRef) throws IOException {
+    log.info("Fetching connector details for connector id:[{}] acc:[{}] project:[{}] org:[{}]",
+        connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(), connectorRef.getProjectIdentifier(),
+        connectorRef.getOrgIdentifier());
 
+    Response<ResponseDTO<Optional<ConnectorDTO>>> response =
+        connectorResourceClient
+            .get(connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(), connectorRef.getOrgIdentifier(),
+                connectorRef.getProjectIdentifier())
+            .execute();
+    if (response.isSuccessful()) {
+      Optional<ConnectorDTO> connectorDTO = response.body().getData();
+      if (!connectorDTO.isPresent()) {
+        throw new CIStageExecutionException(format("Connector not present for identifier : [%s] with scope: [%s]",
+            connectorRef.getIdentifier(), connectorRef.getScope()));
+      }
+      return connectorDTO.get();
+    } else {
+      ErrorCode errorCode = getResponseErrorCode(response);
+      if (errorCode == ErrorCode.RESOURCE_NOT_FOUND_EXCEPTION) {
+        throw new ConnectorNotFoundException(format("Connector not found for identifier : [%s] with scope: [%s]",
+                                                 connectorRef.getIdentifier(), connectorRef.getScope()),
+            USER);
+      } else {
+        throw new CIStageExecutionException(
+            format("Failed to find connector for identifier: [%s] with scope: [%s] with error: %s",
+                connectorRef.getIdentifier(), connectorRef.getScope(), errorCode));
+      }
+    }
+  }
+
+  private <T> ErrorCode getResponseErrorCode(Response<ResponseDTO<T>> response) throws IOException {
     try {
-      log.info("Fetching connector details for connector id:[{}] acc:[{}] project:[{}] org:[{}]",
-          connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(), connectorRef.getProjectIdentifier(),
-          connectorRef.getOrgIdentifier());
-
-      RetryPolicy<Object> retryPolicy =
-          getRetryPolicy(format("[Retrying failed call to fetch connector: [%s] with scope: [%s]; attempt: {}",
-                             connectorRef.getIdentifier(), connectorRef.getScope()),
-              format("Failed to fetch connector: [%s] with scope: [%s] after retrying {} times",
-                  connectorRef.getIdentifier(), connectorRef.getScope()));
-
-      connectorDTO = Failsafe.with(retryPolicy)
-                         .get(()
-                                  -> SafeHttpCall
-                                         .execute(connectorResourceClient.get(connectorRef.getIdentifier(),
-                                             connectorRef.getAccountIdentifier(), connectorRef.getOrgIdentifier(),
-                                             connectorRef.getProjectIdentifier()))
-                                         .getData());
-
+      FailureDTO failureResponse =
+          JsonUtils.asObject(response.errorBody().string(), new TypeReference<FailureDTO>() {});
+      return failureResponse.getCode();
     } catch (Exception e) {
-      log.error(format("Unable to get connector information : [%s] with scope: [%s]", connectorRef.getIdentifier(),
-                    connectorRef.getScope()),
-          e);
-      throw new CIStageExecutionException(format("Unable to get connector information : [%s] with scope: [%s]",
-          connectorRef.getIdentifier(), connectorRef.getScope()));
+      ErrorDTO errResponse = JsonUtils.asObject(response.errorBody().string(), new TypeReference<ErrorDTO>() {});
+      return errResponse.getCode();
     }
-
-    if (!connectorDTO.isPresent()) {
-      throw new CIStageExecutionException(format("Connector not found for identifier : [%s] with scope: [%s]",
-          connectorRef.getIdentifier(), connectorRef.getScope()));
-    }
-    return connectorDTO.get();
   }
 
   private String fetchUserNameFromGitlabConnector(GitlabConnectorDTO gitConfigDTO) {
@@ -529,6 +544,7 @@ public class ConnectorUtils {
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(Exception.class)
+        .abortOn(ConnectorNotFoundException.class)
         .withDelay(RETRY_SLEEP_DURATION)
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))

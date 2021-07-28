@@ -17,7 +17,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.UnitStatus.RUNNING;
-import static io.harness.steps.StepUtils.prepareTaskRequestWithTaskSelector;
+import static io.harness.steps.StepUtils.prepareCDTaskRequest;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static java.lang.String.format;
@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -103,10 +104,12 @@ import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.eraro.Level;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
@@ -130,6 +133,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -142,6 +146,7 @@ import io.harness.pms.yaml.validation.ExpressionUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
@@ -155,8 +160,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -165,6 +173,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDP)
@@ -188,8 +197,11 @@ public class K8sStepHelper {
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private EncryptionHelper encryptionHelper;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
+  @Inject private StepHelper stepHelper;
+  @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
 
-  String getReleaseName(InfrastructureOutcome infrastructure) {
+  String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
@@ -203,11 +215,19 @@ public class K8sStepHelper {
       default:
         throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }
+    if (EngineExpressionEvaluator.hasExpressions(releaseName)) {
+      releaseName = engineExpressionService.renderExpression(ambiance, releaseName);
+    }
+
     validateReleaseName(releaseName);
     return releaseName;
   }
 
   private static void validateReleaseName(String name) {
+    if (isEmpty(name)) {
+      throw new InvalidArgumentsException(Pair.of("releaseName", "Cannot be empty"));
+    }
+
     if (!ExpressionUtils.matchesPattern(releaseNamePattern, name)) {
       throw new InvalidRequestException(format(
           "Invalid Release name format: %s. Release name must consist of lower case alphanumeric characters, '-' or '.'"
@@ -434,7 +454,8 @@ public class K8sStepHelper {
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
         break;
       case ManifestType.Kustomize:
-        paths.add("");
+        // Set as repository root
+        paths.add("/");
         break;
 
       default:
@@ -538,6 +559,7 @@ public class K8sStepHelper {
         K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
         ConnectorInfoDTO gcpConnectorDTO = getConnector(k8sGcpInfrastructure.getConnectorRef(), ambiance);
         KubernetesHelperService.validateNamespace(k8sGcpInfrastructure.getNamespace());
+        KubernetesHelperService.validateCluster(k8sGcpInfrastructure.getCluster());
 
         return GcpK8sInfraDelegateConfig.builder()
             .namespace(k8sGcpInfrastructure.getNamespace())
@@ -569,10 +591,10 @@ public class K8sStepHelper {
 
     String taskName = TaskType.K8S_COMMAND_TASK_NG.getDisplayName() + " : " + k8sDeployRequest.getCommandName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         k8SSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
-
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))),
+        stepHelper.getEnvironmentType(ambiance));
     return TaskChainResponse.builder()
         .taskRequest(taskRequest)
         .chainEnd(true)
@@ -730,9 +752,10 @@ public class K8sStepHelper {
 
     String taskName = TaskType.HELM_VALUES_FETCH_NG.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         k8SSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))),
+        stepHelper.getEnvironmentType(ambiance));
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -767,9 +790,10 @@ public class K8sStepHelper {
 
     String taskName = TaskType.GIT_FETCH_NEXT_GEN_TASK.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         k8SSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))),
+        stepHelper.getEnvironmentType(ambiance));
 
     return TaskChainResponse.builder()
         .chainEnd(false)
@@ -853,37 +877,33 @@ public class K8sStepHelper {
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     ExpressionEvaluatorUtils.updateExpressions(
         manifestsOutcome, new CDExpressionResolveFunctor(engineExpressionService, ambiance));
-    manifestsOutcome.values().forEach(value -> ManifestOutcomeValidator.validate(value, false));
+    validateManifestsOutcome(ambiance, manifestsOutcome);
 
-    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
+    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(manifestsOutcome.values());
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
           K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
-      return prepareK8sOrHelmWithValuesManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
+      return prepareK8sOrHelmWithValuesManifests(k8sStepExecutor, getOrderedManifestOutcome(manifestsOutcome.values()),
           k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
     } else {
-      return prepareOcTemplateWithOcParamManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
-          k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
+      return prepareOcTemplateWithOcParamManifests(k8sStepExecutor,
+          getOrderedManifestOutcome(manifestsOutcome.values()), k8sManifestOutcome, ambiance, stepElementParameters,
+          infrastructureOutcome);
     }
   }
 
   private ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
-    ManifestsOutcome manifestsOutcome = null;
-    try {
-      manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
-          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
-    } catch (Exception exception) {
-      throw new InvalidRequestException("Manifests can't be empty", exception);
+    OptionalOutcome manifestsOutcome = outcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+
+    if (!manifestsOutcome.isFound()) {
+      throw new InvalidRequestException("No manifests found.");
     }
 
-    if (isEmpty(manifestsOutcome)) {
-      throw new InvalidRequestException("Manifests can't be empty");
-    }
-
-    return manifestsOutcome;
+    return (ManifestsOutcome) manifestsOutcome.getOutcome();
   }
 
   private TaskChainResponse prepareOcTemplateWithOcParamManifests(K8sStepExecutor k8sStepExecutor,
@@ -922,7 +942,7 @@ public class K8sStepHelper {
   }
 
   @VisibleForTesting
-  public ManifestOutcome getK8sSupportedManifestOutcome(@NotEmpty List<ManifestOutcome> manifestOutcomes) {
+  public ManifestOutcome getK8sSupportedManifestOutcome(@NotEmpty Collection<ManifestOutcome> manifestOutcomes) {
     List<ManifestOutcome> k8sManifests =
         manifestOutcomes.stream()
             .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
@@ -977,6 +997,12 @@ public class K8sStepHelper {
   private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests) {
     // TODO: implement when local store is available
     return emptyList();
+  }
+
+  private List<ManifestOutcome> getOrderedManifestOutcome(Collection<ManifestOutcome> manifestOutcomes) {
+    return manifestOutcomes.stream()
+        .sorted(Comparator.comparingInt(ManifestOutcome::getOrder))
+        .collect(Collectors.toCollection(LinkedList::new));
   }
 
   private boolean isAnyOcParamRemoteStore(@NotEmpty List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
@@ -1296,24 +1322,34 @@ public class K8sStepHelper {
         .build();
   }
 
+  private void validateManifestsOutcome(Ambiance ambiance, ManifestsOutcome manifestsOutcome) {
+    Set<EntityDetailProtoDTO> entityDetails = new HashSet<>();
+    manifestsOutcome.values().forEach(value -> {
+      entityDetails.addAll(entityReferenceExtractorUtils.extractReferredEntities(ambiance, value.getStore()));
+      ManifestOutcomeValidator.validate(value, false);
+    });
+
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
+  }
+
   public static boolean getParameterFieldBooleanValue(
       ParameterField<?> fieldValue, String fieldName, StepElementParameters stepElement) {
-    try {
-      return getBooleanParameterFieldValue(fieldValue);
-    } catch (Exception e) {
-      String message = String.format("%s for field %s in %s step with identifier: %s", e.getMessage(), fieldName,
-          stepElement.getType(), stepElement.getIdentifier());
-      throw new InvalidArgumentsException(message);
-    }
+    return getParameterFieldBooleanValue(fieldValue, fieldName,
+        String.format("%s step with identifier: %s", stepElement.getType(), stepElement.getIdentifier()));
   }
 
   public static boolean getParameterFieldBooleanValue(
       ParameterField<?> fieldValue, String fieldName, ManifestOutcome manifestOutcome) {
+    return getParameterFieldBooleanValue(fieldValue, fieldName,
+        String.format("%s manifest with identifier: %s", manifestOutcome.getType(), manifestOutcome.getIdentifier()));
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, String description) {
     try {
       return getBooleanParameterFieldValue(fieldValue);
     } catch (Exception e) {
-      String message = String.format("%s for field %s in %s manifest with identifier: %s", e.getMessage(), fieldName,
-          manifestOutcome.getType(), manifestOutcome.getIdentifier());
+      String message = String.format("%s for field %s in %s", e.getMessage(), fieldName, description);
       throw new InvalidArgumentsException(message);
     }
   }

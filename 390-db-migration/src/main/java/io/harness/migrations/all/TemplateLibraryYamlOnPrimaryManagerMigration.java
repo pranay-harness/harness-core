@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.ff.FeatureFlagService;

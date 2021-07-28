@@ -27,6 +27,7 @@ import lombok.experimental.Wither;
 @NoArgsConstructor
 @AllArgsConstructor
 @OneOfField(fields = {"useFromStage", "service", "serviceRef"})
+@OneOfField(fields = {"serviceDefinition", "useFromStage"})
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
 @OwnedBy(CDC)
 public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {

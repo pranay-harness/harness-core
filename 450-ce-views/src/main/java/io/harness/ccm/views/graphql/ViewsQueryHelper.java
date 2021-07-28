@@ -1,5 +1,10 @@
 package io.harness.ccm.views.graphql;
 
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
+
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
+
 import com.hazelcast.util.Preconditions;
 import java.text.NumberFormat;
 import java.time.Instant;
@@ -7,9 +12,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -18,6 +27,10 @@ public class ViewsQueryHelper {
   private static final String TOTAL_COST_DATE_PATTERN_WITHOUT_YEAR = "MMM dd";
   private static final String DEFAULT_TIME_ZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
+  private static final int IDLE_COST_BASELINE = 30;
+  private static final int UNALLOCATED_COST_BASELINE = 5;
+  private static final int DEFAULT_EFFICIENCY_SCORE = -1;
+  private static final String EFFICIENCY_SCORE_LABEL = "Efficiency Score";
 
   public boolean isYearRequired(Instant startInstant, Instant endInstant) {
     LocalDate endDate = LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC).toLocalDate();
@@ -47,6 +60,10 @@ public class ViewsQueryHelper {
     return Math.round(value * 100D) / 100D;
   }
 
+  public double getRoundedDoublePercentageValue(double value) {
+    return Math.round(value * 10000D) / 100D;
+  }
+
   public double getForecastCost(ViewCostData billingAmountData, Instant endInstant) {
     Preconditions.checkNotNull(billingAmountData);
     Instant currentTime = Instant.now();
@@ -62,7 +79,7 @@ public class ViewsQueryHelper {
 
     double totalBillingAmount = billingAmountData.getCost();
     long actualTimeDiffMillis = endInstant.toEpochMilli() - billingAmountData.getMinStartTime();
-    return totalBillingAmount * (actualTimeDiffMillis / billingTimeDiffMillis);
+    return getRoundedDoubleValue(totalBillingAmount * ((double) actualTimeDiffMillis / billingTimeDiffMillis));
   }
 
   private Long getModifiedMaxStartTime(long maxStartTime) {
@@ -92,5 +109,126 @@ public class ViewsQueryHelper {
       }
     }
     return trendCostValue;
+  }
+
+  public List<QLCEViewFilterWrapper> getFiltersForForecastCost(List<QLCEViewFilterWrapper> filters) {
+    List<QLCEViewFilterWrapper> filtersForForecastCost =
+        filters.stream().filter(filter -> filter.getTimeFilter() == null).collect(Collectors.toList());
+    long timestampForFilters = getStartOfCurrentDay();
+    filtersForForecastCost.add(getPerspectiveTimeFilter(timestampForFilters - 1000, BEFORE));
+    filtersForForecastCost.add(getPerspectiveTimeFilter(timestampForFilters - 30 * ONE_DAY_MILLIS, AFTER));
+    return filtersForForecastCost;
+  }
+
+  public Instant getEndInstantForForecastCost(List<QLCEViewFilterWrapper> filters) {
+    List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
+    QLCEViewTimeFilter endTimeFilter = null;
+    QLCEViewTimeFilter startTimeFilter = null;
+    for (QLCEViewTimeFilter timeFilter : timeFilters) {
+      if (timeFilter.getOperator() == AFTER) {
+        startTimeFilter = timeFilter;
+      } else {
+        endTimeFilter = timeFilter;
+      }
+    }
+    long currentDay = getStartOfCurrentDay();
+    long days = 0;
+    if (endTimeFilter != null && startTimeFilter != null) {
+      log.info("End time from filters heer: {} {}", endTimeFilter, currentDay - 1000);
+      long endTimeFromFilters = endTimeFilter.getValue().longValue();
+      long startTimeFromFilters = startTimeFilter.getValue().longValue();
+      if (endTimeFromFilters == currentDay - 1000) {
+        days = (currentDay - startTimeFromFilters) / ONE_DAY_MILLIS;
+      }
+      if (endTimeFromFilters == currentDay + ONE_DAY_MILLIS - 1000) {
+        days = (currentDay + ONE_DAY_MILLIS - startTimeFromFilters) / ONE_DAY_MILLIS;
+      }
+    }
+    return days != 0 ? Instant.ofEpochMilli(currentDay + (days - 1) * ONE_DAY_MILLIS - 1000)
+                     : Instant.ofEpochMilli(currentDay - ONE_DAY_MILLIS);
+  }
+
+  private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream()
+        .filter(f -> f.getTimeFilter() != null)
+        .map(QLCEViewFilterWrapper::getTimeFilter)
+        .collect(Collectors.toList());
+  }
+
+  public long getStartOfCurrentDay() {
+    ZoneId zoneId = ZoneId.of(DEFAULT_TIME_ZONE);
+    LocalDate today = LocalDate.now(zoneId);
+    ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
+    return zdtStart.toEpochSecond() * 1000;
+  }
+
+  public int calculateEfficiencyScore(double totalCost, double idleCost, double unallocatedCost) {
+    int utilizedBaseline = 100 - IDLE_COST_BASELINE - UNALLOCATED_COST_BASELINE;
+    double utilizedCost = totalCost - idleCost - unallocatedCost;
+    if (totalCost > 0.0) {
+      double utilizedPercentage = utilizedCost / totalCost * 100;
+      int efficiencyScore = (int) Math.round((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
+      return Math.min(efficiencyScore, 100);
+    }
+    return DEFAULT_EFFICIENCY_SCORE;
+  }
+
+  public EfficiencyScoreStats getEfficiencyScoreStats(ViewCostData currentCostData, ViewCostData previousCostData) {
+    int currentEfficiencyScore = DEFAULT_EFFICIENCY_SCORE;
+    int previousEfficiencyScore;
+    double efficiencyTrend = DEFAULT_EFFICIENCY_SCORE;
+
+    // Calculating efficiency score for current period
+    if (currentCostData != null && currentCostData.getCost() > 0 && currentCostData.getIdleCost() != null) {
+      double unallocatedCost =
+          currentCostData.getUnallocatedCost() != null ? currentCostData.getUnallocatedCost() : 0.0;
+      currentEfficiencyScore =
+          calculateEfficiencyScore(currentCostData.getCost(), currentCostData.getIdleCost(), unallocatedCost);
+    }
+
+    // Calculating efficiency score for previous period
+    if (previousCostData != null && previousCostData.getCost() > 0 && previousCostData.getIdleCost() != null) {
+      double unallocatedCost =
+          previousCostData.getUnallocatedCost() != null ? previousCostData.getUnallocatedCost() : 0.0;
+      previousEfficiencyScore =
+          calculateEfficiencyScore(previousCostData.getCost(), previousCostData.getIdleCost(), unallocatedCost);
+
+      if (previousEfficiencyScore > 0) {
+        efficiencyTrend = getRoundedDoubleValue(
+            ((double) (currentEfficiencyScore - previousEfficiencyScore) / previousEfficiencyScore) * 100);
+      }
+    }
+
+    return EfficiencyScoreStats.builder()
+        .statsLabel(EFFICIENCY_SCORE_LABEL)
+        .statsValue(String.valueOf(currentEfficiencyScore))
+        .statsTrend(efficiencyTrend)
+        .build();
+  }
+
+  public QLCEViewFilterWrapper getPerspectiveTimeFilter(long timestamp, QLCEViewTimeFilterOperator operator) {
+    return QLCEViewFilterWrapper.builder()
+        .timeFilter(QLCEViewTimeFilter.builder()
+                        .field(QLCEViewFieldInput.builder()
+                                   .fieldId("startTime")
+                                   .fieldName("startTime")
+                                   .identifier(ViewFieldIdentifier.COMMON)
+                                   .identifierName(ViewFieldIdentifier.COMMON.getDisplayName())
+                                   .build())
+                        .operator(operator)
+                        .value(timestamp)
+                        .build())
+        .build();
+  }
+
+  public QLCEViewFilterWrapper getViewMetadataFilter(String viewId) {
+    return QLCEViewFilterWrapper.builder()
+        .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(viewId).isPreview(false).build())
+        .build();
+  }
+
+  public List<QLCEViewAggregation> getPerspectiveTotalCostAggregation() {
+    return Collections.singletonList(
+        QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
   }
 }

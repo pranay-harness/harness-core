@@ -12,6 +12,7 @@ import io.harness.validation.Update;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.Trigger;
@@ -116,7 +117,7 @@ public interface TriggerService
   void triggerScheduledExecutionAsync(Trigger trigger, Date scheduledFireTime);
 
   WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
-      Map<String, ArtifactSummary> serviceBuildNumbers, Map<String, String> serviceManifestMapping,
+      Map<String, ArtifactSummary> serviceBuildNumbers, Map<String, ManifestSummary> serviceManifestMapping,
       TriggerExecution triggerExecution, Map<String, String> parameters);
 
   /**

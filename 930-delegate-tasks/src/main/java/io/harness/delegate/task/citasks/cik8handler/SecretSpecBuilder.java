@@ -11,7 +11,6 @@ import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
 import static java.lang.String.format;
@@ -19,7 +18,6 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
 import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
@@ -51,17 +49,11 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.delegate.task.gitapi.client.impl.GithubApiClient;
 import io.harness.encryption.SecretRefData;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.security.encryption.SecretDecryptionService;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,14 +68,10 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(HarnessTeam.CI)
 public class SecretSpecBuilder {
-  private static final String DOCKER_REGISTRY_SECRET_TYPE = "kubernetes.io/dockercfg";
-  public static final String GIT_SECRET_USERNAME_KEY = "username";
-  public static final String GIT_SECRET_PWD_KEY = "password";
-  public static final String GIT_SECRET_SSH_KEY = "ssh_key";
+  public static final String DOCKER_REGISTRY_SECRET_TYPE = "kubernetes.io/dockercfg";
   public static final String SECRET_KEY = "secret_key";
   public static final String SECRET = "secret";
-  private static final String OPAQUE_SECRET_TYPE = "opaque";
-  private static final String DOCKER_CONFIG_KEY = ".dockercfg";
+  public static final String OPAQUE_SECRET_TYPE = "opaque";
   private static final String DRONE_NETRC_PASSWORD = "DRONE_NETRC_PASSWORD";
   private static final String DRONE_NETRC_USERNAME = "DRONE_NETRC_USERNAME";
   private static final String DRONE_AWS_ACCESS_KEY = "DRONE_AWS_ACCESS_KEY";
@@ -95,24 +83,6 @@ public class SecretSpecBuilder {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private ImageSecretBuilder imageSecretBuilder;
   @Inject private GithubApiClient githubApiClient;
-
-  public Secret getRegistrySecretSpec(
-      String secretName, ImageDetailsWithConnector imageDetailsWithConnector, String namespace) {
-    String credentialData = imageSecretBuilder.getJSONEncodedImageCredentials(imageDetailsWithConnector);
-    if (credentialData == null) {
-      return null;
-    }
-
-    Map<String, String> data = ImmutableMap.of(DOCKER_CONFIG_KEY, encodeBase64(credentialData));
-    return new SecretBuilder()
-        .withNewMetadata()
-        .withName(secretName)
-        .withNamespace(namespace)
-        .endMetadata()
-        .withType(DOCKER_REGISTRY_SECRET_TYPE)
-        .withData(data)
-        .build();
-  }
 
   public Map<String, SecretParams> decryptCustomSecretVariables(List<SecretVariableDetails> secretVariableDetails) {
     Map<String, SecretParams> data = new HashMap<>();
@@ -285,61 +255,6 @@ public class SecretSpecBuilder {
     return secretData;
   }
 
-  public Secret createSecret(String secretName, String namespace, Map<String, String> data) {
-    return new SecretBuilder()
-        .withNewMetadata()
-        .withName(secretName)
-        .withNamespace(namespace)
-        .endMetadata()
-        .withType(OPAQUE_SECRET_TYPE)
-        .withData(data)
-        .build();
-  }
-
-  public Secret getGitSecretSpec(ConnectorDetails gitConnector, String namespace) {
-    if (gitConnector == null) {
-      return null;
-    }
-
-    Map<String, String> data;
-
-    if (gitConnector.getConnectorType() == ConnectorType.GITHUB) {
-      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
-      data = retrieveGitHubSecretData(gitConfigDTO, gitConnector);
-    } else if (gitConnector.getConnectorType() == GITLAB) {
-      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
-      data = retrieveGitLabSecretData(gitConfigDTO, gitConnector);
-    } else if (gitConnector.getConnectorType() == BITBUCKET) {
-      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
-      data = retrieveBitbucketSecretData(gitConfigDTO, gitConnector);
-    } else {
-      throw new CIStageExecutionException("Unsupported git connector type" + gitConnector.getConnectorType());
-    }
-
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-    log.info(
-        "Decrypting git connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
-    secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitConnector.getEncryptedDataDetails());
-
-    log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
-    if (data.isEmpty()) {
-      String errMsg = format("Invalid GIT Authentication scheme %s for repository %s", gitConfigDTO.getGitAuthType(),
-          gitConfigDTO.getUrl());
-      log.error(errMsg);
-      throw new InvalidArgumentsException(errMsg, WingsException.USER);
-    }
-
-    String secretName = getKubernetesGitSecretName(gitConfigDTO.getUrl());
-    return new SecretBuilder()
-        .withNewMetadata()
-        .withName(secretName)
-        .withNamespace(namespace)
-        .endMetadata()
-        .withType(OPAQUE_SECRET_TYPE)
-        .withData(data)
-        .build();
-  }
-
   public static String getSecretName(String podName) {
     return podName + "-" + SECRET;
   }
@@ -432,49 +347,6 @@ public class SecretSpecBuilder {
     return secretData;
   }
 
-  private Map<String, String> retrieveGitHubSecretData(GithubConnectorDTO gitConfigDTO, ConnectorDetails gitConnector) {
-    Map<String, String> data = new HashMap<>();
-
-    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
-      GithubHttpCredentialsDTO gitHTTPAuthenticationDTO =
-          (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-
-      log.info("Decrypting GitHub connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
-          gitConnector.getConnectorType());
-      secretDecryptionService.decrypt(
-          gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
-      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
-
-      if (gitHTTPAuthenticationDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-        GithubUsernamePasswordDTO githubHttpCredentialsSpecDTO =
-            (GithubUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
-
-        try {
-          String urlEncodedPwd =
-              URLEncoder.encode(new String(githubHttpCredentialsSpecDTO.getPasswordRef().getDecryptedValue()), "UTF-8");
-          data.put(GIT_SECRET_USERNAME_KEY, encodeBase64(githubHttpCredentialsSpecDTO.getUsername()));
-          data.put(GIT_SECRET_PWD_KEY, encodeBase64(urlEncodedPwd));
-        } catch (Exception ex) {
-          throw new CIStageExecutionException("Failed to encode password");
-        }
-
-      } else {
-        throw new CIStageExecutionException("Unsupported git connector auth type" + gitHTTPAuthenticationDTO.getType());
-      }
-    } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
-      //      GitSSHAuthenticationDTO gitHTTPAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
-      //      data.put(GIT_SECRET_SSH_KEY, encodeBase64(gitHTTPAuthenticationDTO.getEncryptedSshKey()));
-
-      throw new CIStageExecutionException(
-          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    } else {
-      throw new CIStageExecutionException(
-          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-
-    return data;
-  }
-
   private Map<String, SecretParams> retrieveGitlabSecretParams(
       GitlabConnectorDTO gitConfigDTO, ConnectorDetails gitConnector) {
     Map<String, SecretParams> secretData = new HashMap<>();
@@ -558,47 +430,6 @@ public class SecretSpecBuilder {
     return secretData;
   }
 
-  private Map<String, String> retrieveGitLabSecretData(GitlabConnectorDTO gitConfigDTO, ConnectorDetails gitConnector) {
-    Map<String, String> data = new HashMap<>();
-
-    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
-      GitlabHttpCredentialsDTO gitHTTPAuthenticationDTO =
-          (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      log.info("Decrypting GitLab connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
-          gitConnector.getConnectorType());
-      secretDecryptionService.decrypt(
-          gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
-      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
-      if (gitHTTPAuthenticationDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-        GitlabUsernamePasswordDTO gitlabHttpCredentialsSpecDTO =
-            (GitlabUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
-
-        try {
-          String urlEncodedPwd =
-              URLEncoder.encode(new String(gitlabHttpCredentialsSpecDTO.getPasswordRef().getDecryptedValue()), "UTF-8");
-          data.put(GIT_SECRET_USERNAME_KEY, encodeBase64(gitlabHttpCredentialsSpecDTO.getUsername()));
-          data.put(GIT_SECRET_PWD_KEY, encodeBase64(urlEncodedPwd));
-        } catch (Exception ex) {
-          throw new CIStageExecutionException("Failed to encode password");
-        }
-
-      } else {
-        throw new CIStageExecutionException("Unsupported git connector auth type" + gitHTTPAuthenticationDTO.getType());
-      }
-    } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
-      //      GitSSHAuthenticationDTO gitHTTPAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
-      //      data.put(GIT_SECRET_SSH_KEY, encodeBase64(gitHTTPAuthenticationDTO.getEncryptedSshKey()));
-
-      throw new CIStageExecutionException(
-          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    } else {
-      throw new CIStageExecutionException(
-          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-
-    return data;
-  }
-
   private Map<String, SecretParams> retrieveBitbucketSecretParams(
       BitbucketConnectorDTO gitConfigDTO, ConnectorDetails gitConnector) {
     Map<String, SecretParams> secretData = new HashMap<>();
@@ -653,48 +484,6 @@ public class SecretSpecBuilder {
     }
 
     return secretData;
-  }
-
-  private Map<String, String> retrieveBitbucketSecretData(
-      BitbucketConnectorDTO gitConfigDTO, ConnectorDetails gitConnector) {
-    Map<String, String> data = new HashMap<>();
-
-    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
-      BitbucketHttpCredentialsDTO gitHTTPAuthenticationDTO =
-          (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
-      log.info("Decrypting Bitbucket connector id:[{}], type:[{}]", gitConnector.getIdentifier(),
-          gitConnector.getConnectorType());
-      secretDecryptionService.decrypt(
-          gitHTTPAuthenticationDTO.getHttpCredentialsSpec(), gitConnector.getEncryptedDataDetails());
-      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
-      if (gitHTTPAuthenticationDTO.getType() == BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-        BitbucketUsernamePasswordDTO bitbucketHttpCredentialsSpecDTO =
-            (BitbucketUsernamePasswordDTO) gitHTTPAuthenticationDTO.getHttpCredentialsSpec();
-
-        try {
-          String urlEncodedPwd = URLEncoder.encode(
-              new String(bitbucketHttpCredentialsSpecDTO.getPasswordRef().getDecryptedValue()), "UTF-8");
-          data.put(GIT_SECRET_USERNAME_KEY, encodeBase64(bitbucketHttpCredentialsSpecDTO.getUsername()));
-          data.put(GIT_SECRET_PWD_KEY, encodeBase64(urlEncodedPwd));
-        } catch (Exception ex) {
-          throw new CIStageExecutionException("Failed to encode password");
-        }
-
-      } else {
-        throw new CIStageExecutionException("Unsupported git connector auth type" + gitHTTPAuthenticationDTO.getType());
-      }
-    } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
-      //      GitSSHAuthenticationDTO gitHTTPAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
-      //      data.put(GIT_SECRET_SSH_KEY, encodeBase64(gitHTTPAuthenticationDTO.getEncryptedSshKey()));
-
-      throw new CIStageExecutionException(
-          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    } else {
-      throw new CIStageExecutionException(
-          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
-    }
-
-    return data;
   }
 
   public Map<String, SecretParams> fetchGithubAppToken(Map<String, ConnectorDetails> gitConnectors) {

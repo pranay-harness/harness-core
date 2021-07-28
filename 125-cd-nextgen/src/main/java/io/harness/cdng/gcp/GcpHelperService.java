@@ -101,8 +101,12 @@ public class GcpHelperService {
             .taskType(NGTaskType.GCP_TASK.name())
             .taskParameters(gcpTaskParameters)
             .executionTimeout(java.time.Duration.ofSeconds(30))
+            .taskSetupAbstraction(SetupAbstractionKeys.ng, "true")
+            .taskSetupAbstraction(
+                SetupAbstractionKeys.owner, ngAccess.getOrgIdentifier() + "/" + ngAccess.getProjectIdentifier())
             .taskSetupAbstraction(SetupAbstractionKeys.orgIdentifier, ngAccess.getOrgIdentifier())
             .taskSetupAbstraction(SetupAbstractionKeys.projectIdentifier, ngAccess.getProjectIdentifier())
+            .taskSelectors(gcpRequest.getDelegateSelectors())
             .build();
     return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
   }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
 
@@ -19,6 +20,7 @@ import lombok.Value;
 @Builder
 public class DelegateGroupDetails {
   private String groupId;
+  private String delegateGroupIdentifier;
   private String delegateType;
   private String groupName;
   private String groupHostName;
@@ -26,6 +28,7 @@ public class DelegateGroupDetails {
   private String delegateConfigurationId;
   private DelegateSizeDetails sizeDetails;
   private Map<String, SelectorType> groupImplicitSelectors;
+  private Set<String> groupCustomSelectors;
   private DelegateInsightsDetails delegateInsightsDetails;
   private long lastHeartBeat;
   private boolean activelyConnected;

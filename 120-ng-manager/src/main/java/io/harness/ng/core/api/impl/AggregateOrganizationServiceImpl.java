@@ -1,44 +1,41 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.removeAdmins;
-import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
-import io.harness.beans.Scope.ScopeKeys;
+import io.harness.connector.services.ConnectorService;
 import io.harness.ng.core.api.AggregateOrganizationService;
+import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
-import io.harness.ng.core.dto.OrganizationAggregateDTO.OrganizationAggregateDTOBuilder;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
-import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @Singleton
@@ -47,14 +44,21 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private static final String ORG_ADMIN_ROLE = "_organization_admin";
   private final OrganizationService organizationService;
   private final ProjectService projectService;
+  private final NGSecretServiceV2 secretServiceV2;
+  private final ConnectorService defaultConnectorService;
   private final NgUserService ngUserService;
+  private final ExecutorService executorService;
 
   @Inject
-  public AggregateOrganizationServiceImpl(
-      OrganizationService organizationService, ProjectService projectService, NgUserService ngUserService) {
+  public AggregateOrganizationServiceImpl(OrganizationService organizationService, ProjectService projectService,
+      NGSecretServiceV2 secretService, @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
+      NgUserService ngUserService, @Named("aggregate-orgs") ExecutorService executorService) {
     this.organizationService = organizationService;
     this.projectService = projectService;
+    this.secretServiceV2 = secretService;
+    this.defaultConnectorService = defaultConnectorService;
     this.ngUserService = ngUserService;
+    this.executorService = executorService;
   }
 
   @Override
@@ -63,172 +67,75 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     if (!organizationOptional.isPresent()) {
       throw new NotFoundException(String.format("Organization with identifier [%s] not found", identifier));
     }
-    OrganizationAggregateDTOBuilder organizationAggregateDTO = OrganizationAggregateDTO.builder();
-    organizationAggregateDTO.organizationResponse(toResponseWrapper(organizationOptional.get()));
-
-    return buildOrganizationAggregateDTO(organizationAggregateDTO, accountIdentifier, identifier);
+    return buildAggregateDTO(organizationOptional.get());
   }
 
-  private OrganizationAggregateDTO buildOrganizationAggregateDTO(
-      OrganizationAggregateDTOBuilder organizationAggregateDTOBuilder, String accountIdentifier, String identifier) {
-    // projects
-    int projectsCount = getProjectsCountForOrganization(accountIdentifier, identifier);
-    organizationAggregateDTOBuilder.projectsCount(projectsCount);
+  private OrganizationAggregateDTO buildAggregateDTO(final Organization organization) {
+    int projectsCount = projectService
+                            .getProjectsCountPerOrganization(
+                                organization.getAccountIdentifier(), singletonList(organization.getIdentifier()))
+                            .getOrDefault(organization.getIdentifier(), 0);
+    long secretsCount = secretServiceV2.count(organization.getAccountIdentifier(), organization.getIdentifier(), null);
+    long connectorsCount =
+        defaultConnectorService.count(organization.getAccountIdentifier(), organization.getIdentifier(), null);
 
-    // admins and collaborators
-    try {
-      Pair<List<UserMetadataDTO>, List<UserMetadataDTO>> orgUsers =
-          getAdminsAndCollaborators(accountIdentifier, identifier);
-      organizationAggregateDTOBuilder.admins(orgUsers.getLeft());
-      organizationAggregateDTOBuilder.collaborators(orgUsers.getRight());
-    } catch (Exception exception) {
-      log.error(
-          String.format("Could not fetch Admins and Collaborators for organization with identifier [%s]", identifier),
-          exception);
-    }
+    Scope scope = Scope.builder()
+                      .accountIdentifier(organization.getAccountIdentifier())
+                      .orgIdentifier(organization.getIdentifier())
+                      .build();
+    List<UserMetadataDTO> orgAdmins = ngUserService.listUsersHavingRole(scope, ORG_ADMIN_ROLE);
+    List<UserMetadataDTO> collaborators = ngUserService.listUsers(scope);
+    collaborators.removeAll(orgAdmins);
 
-    return organizationAggregateDTOBuilder.build();
-  }
-
-  private int getProjectsCountForOrganization(String accountIdentifier, String orgIdentifier) {
-    return projectService.getProjectsCountPerOrganization(accountIdentifier, singletonList(orgIdentifier))
-        .getOrDefault(orgIdentifier, 0);
-  }
-
-  private Pair<List<UserMetadataDTO>, List<UserMetadataDTO>> getAdminsAndCollaborators(
-      String accountIdentifier, String identifier) {
-    Criteria userMembershipCriteria = Criteria.where(UserMembershipKeys.scopes)
-                                          .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
-                                                         .is(accountIdentifier)
-                                                         .and(ScopeKeys.orgIdentifier)
-                                                         .is(identifier)
-                                                         .and(ScopeKeys.projectIdentifier)
-                                                         .is(null));
-    List<UserMembership> userMemberships = ngUserService.listUserMemberships(userMembershipCriteria);
-    List<UserMetadataDTO> collaborators = userMemberships.stream()
-                                              .map(userMembership
-                                                  -> UserMetadataDTO.builder()
-                                                         .uuid(userMembership.getUserId())
-                                                         .name(userMembership.getName())
-                                                         .email(userMembership.getEmailId())
-                                                         .build())
-                                              .collect(Collectors.toList());
-    List<UserMetadataDTO> admins = getAdmins(accountIdentifier, identifier);
-    return Pair.of(admins, removeAdmins(collaborators, admins));
+    return OrganizationAggregateDTO.builder()
+        .organizationResponse(OrganizationMapper.toResponseWrapper(organization))
+        .projectsCount(projectsCount)
+        .admins(orgAdmins)
+        .secretsCount(secretsCount)
+        .connectorsCount(connectorsCount)
+        .collaborators(collaborators)
+        .build();
   }
 
   @Override
   public Page<OrganizationAggregateDTO> listOrganizationAggregateDTO(
       String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO) {
-    Page<OrganizationResponse> organizations =
-        organizationService.list(accountIdentifier, pageable, organizationFilterDTO)
-            .map(OrganizationMapper::toResponseWrapper);
-    Page<OrganizationAggregateDTO> organizationAggregateDTOs = organizations.map(
-        organizationResponse -> OrganizationAggregateDTO.builder().organizationResponse(organizationResponse).build());
+    Page<Organization> organizations = organizationService.list(accountIdentifier, pageable, organizationFilterDTO);
+    List<Organization> organizationList = organizations.toList();
 
-    buildOrganizationAggregateDTOPage(organizationAggregateDTOs, accountIdentifier, organizations);
-    return organizationAggregateDTOs;
-  }
+    List<Callable<OrganizationAggregateDTO>> tasks = new ArrayList<>();
+    organizations.forEach(org -> tasks.add(() -> buildAggregateDTO(org)));
 
-  private void buildOrganizationAggregateDTOPage(Page<OrganizationAggregateDTO> organizationAggregateDTOs,
-      String accountIdentifier, Page<OrganizationResponse> organizations) {
-    // projects
-    Map<String, Integer> projectMap = getProjectsCountPerOrganization(accountIdentifier, organizations);
-    organizationAggregateDTOs.forEach(organizationAggregateDTO -> {
-      Integer count = Optional
-                          .ofNullable(projectMap.get(
-                              organizationAggregateDTO.getOrganizationResponse().getOrganization().getIdentifier()))
-                          .orElse(0);
-      organizationAggregateDTO.setProjectsCount(count);
-    });
-
-    // admins and collaborators
+    List<Future<OrganizationAggregateDTO>> futures;
     try {
-      addAdminsAndCollaborators(organizationAggregateDTOs, accountIdentifier, organizations);
-    } catch (Exception exception) {
-      log.error("Could not fetch Org Members for Organizations in the account", exception);
+      futures = executorService.invokeAll(tasks, 10, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return Page.empty();
     }
-  }
 
-  private Map<String, Integer> getProjectsCountPerOrganization(
-      String accountIdentifier, Page<OrganizationResponse> organizations) {
-    List<String> orgIdentifiers =
-        organizations.map(organizationResponse -> organizationResponse.getOrganization().getIdentifier()).getContent();
-    return projectService.getProjectsCountPerOrganization(accountIdentifier, orgIdentifiers);
-  }
-
-  private void addAdminsAndCollaborators(Page<OrganizationAggregateDTO> organizationAggregateDTOs,
-      String accountIdentifier, Page<OrganizationResponse> organizations) {
-    List<UserMembership> userMemberships = getUserMemberships(accountIdentifier, organizations);
-    Map<String, List<UserMetadataDTO>> orgUsersMap = getOrgUsersMap(userMemberships);
-    Map<String, List<UserMetadataDTO>> orgAdminsMap = getOrgAdminsMap(accountIdentifier, organizations);
-    organizationAggregateDTOs.forEach(organizationAggregateDTO -> {
-      String orgId = organizationAggregateDTO.getOrganizationResponse().getOrganization().getIdentifier();
-      List<UserMetadataDTO> admins = orgAdminsMap.getOrDefault(orgId, new ArrayList<>());
-      organizationAggregateDTO.setAdmins(admins);
-      organizationAggregateDTO.setCollaborators(
-          removeAdmins(orgUsersMap.getOrDefault(orgId, Collections.emptyList()), admins));
-    });
-  }
-
-  private Map<String, List<UserMetadataDTO>> getOrgAdminsMap(
-      String accountIdentifier, Page<OrganizationResponse> organizations) {
-    Map<String, List<UserMetadataDTO>> orgAdminsMap = new HashMap<>();
-    List<Scope> scopes = new ArrayList<>();
-    organizations.forEach(organizationResponse
-        -> scopes.add(Scope.builder()
-                          .accountIdentifier(accountIdentifier)
-                          .orgIdentifier(organizationResponse.getOrganization().getIdentifier())
-                          .projectIdentifier(null)
-                          .build()));
-    /*
-    Performance can be improved by a batch call with multiple scopes as input.
-     */
-    scopes.forEach(
-        scope -> orgAdminsMap.put(scope.getOrgIdentifier(), getAdmins(accountIdentifier, scope.getOrgIdentifier())));
-    return orgAdminsMap;
-  }
-
-  private List<UserMetadataDTO> getAdmins(String accountIdentifier, String orgId) {
-    return ngUserService.listUsersHavingRole(
-        Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgId).build(), ORG_ADMIN_ROLE);
-  }
-
-  private List<UserMembership> getUserMemberships(String accountIdentifier, Page<OrganizationResponse> organizations) {
-    List<Criteria> criteriaList = new ArrayList<>();
-    organizations.forEach(organizationResponse -> {
-      Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
-                              .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
-                                             .is(accountIdentifier)
-                                             .and(ScopeKeys.orgIdentifier)
-                                             .is(organizationResponse.getOrganization().getIdentifier())
-                                             .and(ScopeKeys.projectIdentifier)
-                                             .is(null));
-      criteriaList.add(criteria);
-    });
-    if (isEmpty(criteriaList)) {
-      return new ArrayList<>();
+    List<OrganizationAggregateDTO> aggregates = new ArrayList<>();
+    for (int i = 0; i < futures.size(); i++) {
+      try {
+        aggregates.add(futures.get(i).get());
+      } catch (CancellationException e) {
+        log.error("Org aggregate task cancelled for [{}/{}]", organizationList.get(i).getAccountIdentifier(),
+            organizationList.get(i).getIdentifier(), e);
+        aggregates.add(OrganizationAggregateDTO.builder()
+                           .organizationResponse(OrganizationMapper.toResponseWrapper(organizationList.get(i)))
+                           .build());
+      } catch (InterruptedException interruptedException) {
+        Thread.currentThread().interrupt();
+        return Page.empty();
+      } catch (ExecutionException e) {
+        log.error("Error occurred while computing aggregate for org [{}/{}]",
+            organizationList.get(i).getAccountIdentifier(), organizationList.get(i).getIdentifier(), e);
+        aggregates.add(OrganizationAggregateDTO.builder()
+                           .organizationResponse(OrganizationMapper.toResponseWrapper(organizationList.get(i)))
+                           .build());
+      }
     }
-    return ngUserService.listUserMemberships(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
-  }
 
-  private Map<String, List<UserMetadataDTO>> getOrgUsersMap(List<UserMembership> userMemberships) {
-    Map<String, List<UserMetadataDTO>> orgProjectUserMap = new HashMap<>();
-    userMemberships.forEach(userMembership
-        -> userMembership.getScopes()
-               .stream()
-               .filter(scope -> scope.getOrgIdentifier() != null)
-               .map(Scope::getOrgIdentifier)
-               .distinct()
-               .forEach(orgIdentifier -> {
-                 orgProjectUserMap.computeIfAbsent(orgIdentifier, arg -> new ArrayList<>());
-                 orgProjectUserMap.get(orgIdentifier)
-                     .add(UserMetadataDTO.builder()
-                              .uuid(userMembership.getUserId())
-                              .name(userMembership.getName())
-                              .email(userMembership.getEmailId())
-                              .build());
-               }));
-    return orgProjectUserMap;
+    return new PageImpl<>(aggregates, organizations.getPageable(), organizations.getTotalElements());
   }
 }

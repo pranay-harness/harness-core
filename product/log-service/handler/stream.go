@@ -58,51 +58,77 @@ func HandleOpen(stream stream.Stream) http.HandlerFunc {
 func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		var keys []string
 
 		accountID := r.FormValue(accountIDParam)
 		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
 
-		snapshot := r.FormValue(snapshotParam)
-		if snapshot == "true" {
-			if err := logStream.Exists(ctx, key); err != nil {
+		// If prefix is set as true, perform close operation on all the keys
+		// with that prefix. If no keys are found with that prefix, it's not
+		// an error.
+		usePrefix := r.FormValue(usePrefixParam)
+		if usePrefix == "true" {
+			// Use the provided key as a prefix
+			var err error
+			keys, err = logStream.ListPrefix(ctx, key)
+			if err != nil {
 				WriteInternalError(w, err)
 				logger.FromRequest(r).
 					WithError(err).
 					WithField("key", key).
-					Errorln("api: key does not exist")
+					WithField("prefix", "true").
+					Errorln("api: could not fetch prefixes")
 				return
 			}
-			pr, pw := io.Pipe()
-			defer pr.Close()
-			br := bufio.NewReader(pr)
-			bwc := &BufioWriterCloser{pw, bufio.NewWriter(pw)}
+		} else {
+			keys = []string{key}
+		}
 
-			g := new(errgroup.Group)
-			g.Go(func() error {
-				return logStream.CopyTo(ctx, key, bwc)
-			})
+		snapshot := r.FormValue(snapshotParam)
+		if snapshot == "true" {
+			for _, k := range keys {
+				if err := logStream.Exists(ctx, k); err != nil {
+					WriteInternalError(w, err)
+					logger.FromRequest(r).
+						WithError(err).
+						WithField("key", k).
+						Errorln("api: key does not exist")
+					return
+				}
+				pr, pw := io.Pipe()
+				defer pr.Close()
+				br := bufio.NewReader(pr)
+				bwc := &BufioWriterCloser{pw, bufio.NewWriter(pw)}
 
-			g.Go(func() error {
-				return store.Upload(ctx, key, br)
-			})
+				g := new(errgroup.Group)
+				g.Go(func() error {
+					return logStream.CopyTo(ctx, k, bwc)
+				})
 
-			if err := g.Wait(); err != nil {
-				WriteInternalError(w, err)
-				logger.FromRequest(r).
-					WithError(err).
-					WithField("key", key).
-					Errorln("api: could not snapshot stream to store")
-				return // don't delete the stream if snapshotting failed
+				g.Go(func() error {
+					return store.Upload(ctx, k, br)
+				})
+
+				if err := g.Wait(); err != nil {
+					WriteInternalError(w, err)
+					logger.FromRequest(r).
+						WithError(err).
+						WithField("key", k).
+						Errorln("api: could not snapshot stream to store")
+					return // don't delete the stream if snapshotting failed
+				}
 			}
 		}
 
-		if err := logStream.Delete(ctx, key); err != nil {
-			WriteInternalError(w, err)
-			logger.FromRequest(r).
-				WithError(err).
-				WithField("key", key).
-				Errorln("api: cannot close stream")
-			return
+		for _, k := range keys {
+			if err := logStream.Delete(ctx, k); err != nil {
+				WriteInternalError(w, err)
+				logger.FromRequest(r).
+					WithError(err).
+					WithField("key", k).
+					Errorln("api: cannot close stream")
+				return
+			}
 		}
 
 		w.WriteHeader(http.StatusNoContent)

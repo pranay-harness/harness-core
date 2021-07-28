@@ -2,8 +2,6 @@ package io.harness.migrations.accountpermission;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
 
-import io.harness.annotations.dev.HarnessModule;
-
 import software.wings.security.PermissionAttribute;
 
 import com.google.common.collect.Sets;

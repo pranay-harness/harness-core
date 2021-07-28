@@ -10,12 +10,15 @@ shared_dependencies = [
 ] + [
     "//:lombok",
     "//420-delegate-service:module",
+    "//425-verification-commons:module",
     "//430-cv-nextgen-commons:module",
     "//450-ce-views:module",
     "//460-capability:module",
     "//470-alert:module",
     "//490-ce-commons:module",
+    "//820-platform-service:module",
     "//835-notification-senders:module",
+    "//865-cg-events:module",
     "//870-cg-orchestration:module",
     "//874-orchestration-delay:module",
     "//890-sm-core:module",
@@ -46,13 +49,13 @@ shared_dependencies = [
     "//960-continuous-features:module",
     "//960-ng-core-beans:module",
     "//960-notification-beans:module",
+    "//960-ng-license-beans:module",
     "//960-persistence:module",
     "//970-api-services-beans:module",
-    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
     "//970-grpc:module",
     "//970-ng-commons:module",
     "//980-commons:module",
-    "@jira_client//jar",
+    "@maven//:net_rcarz_jira_client",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",
     "@maven//:ch_qos_logback_contrib_logback_jackson",
@@ -292,7 +295,6 @@ shared_dependencies = [
     "@maven//:commons_net_commons_net",
     "@maven//:commons_pool_commons_pool",
     "@maven//:commons_validator_commons_validator",
-    "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
@@ -422,7 +424,6 @@ shared_dependencies = [
     "@maven//:net_i2p_crypto_eddsa",
     "@maven//:net_java_dev_jna_jna",
     "@maven//:net_java_dev_jna_jna_platform",
-    "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
     "@maven//:net_jcip_jcip_annotations",
     "@maven//:net_jodah_expiringmap",
     "@maven//:net_jodah_failsafe",
@@ -497,7 +498,6 @@ shared_dependencies = [
     "@maven//:org_atmosphere_atmosphere_hazelcast",
     "@maven//:org_atmosphere_atmosphere_runtime",
     "@maven//:org_atteo_evo_inflector",
-    "@maven//:org_awaitility_awaitility",
     "@maven//:org_bitbucket_b_c_jose4j",
     "@maven//:org_bouncycastle_bcpg_jdk15on",
     "@maven//:org_bouncycastle_bcpkix_jdk15on",
@@ -665,14 +665,14 @@ shared_dependencies = [
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
     "@maven//:io_harness_ff_java_server_sdk",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@maven//:io_harness_cv_data_collection_dsl",
 ]
 
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
+        "src/main/java/**/*.java",
+        "src/generated/java/**/*.java",
     ]),
     resources = [
         "//400-rest/src/main/resources:resource",
@@ -698,23 +698,24 @@ java_library(
         "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "@com_github_tomakehurst_wiremock//jar",
-    ] + shared_dependencies + [
-        ":module",
-        "//990-commons-test:module",
+    deps = shared_dependencies + [
         "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        ":module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
+        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
         "@maven//:io_github_benas_random_beans",
         "@maven//:junit_junit",
+        "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
         "@maven//:org_assertj_assertj_core",
+        "@maven//:org_awaitility_awaitility",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:pl_pragmatists_JUnitParams",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     ],
 )
 
@@ -733,6 +734,7 @@ test_dependencies = shared_dependencies + [
     "@maven//:pl_pragmatists_JUnitParams",
     "@maven//:io_grpc_grpc_testing",
     "@maven//:io_fabric8_kubernetes_server_mock",
+    "@maven//:org_powermock_powermock_api_mockito",
 ]
 
 run_package_tests(

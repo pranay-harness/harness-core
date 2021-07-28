@@ -9,7 +9,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.CPU;
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement.MEMORY;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.math.RoundingMode.HALF_UP;
 import static java.time.Duration.between;
 import static java.util.Collections.emptyMap;
@@ -18,8 +17,9 @@ import static java.util.Optional.ofNullable;
 import io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
-import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
@@ -65,19 +65,21 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
   private final WorkloadCostService workloadCostService;
   private final WorkloadRepository workloadRepository;
   private final K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
-  private final K8sRecommendationDAO k8sRecommendationDAO;
+  private final RecommendationCrudService recommendationCrudService;
+  private final ClusterHelper clusterHelper;
 
   private final Instant jobStartDate;
 
   ComputedRecommendationWriter(WorkloadRecommendationDao workloadRecommendationDao,
       WorkloadCostService workloadCostService, WorkloadRepository workloadRepository,
-      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, K8sRecommendationDAO k8sRecommendationDAO,
-      Instant jobStartDate) {
+      K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher, RecommendationCrudService recommendationCrudService,
+      ClusterHelper clusterHelper, Instant jobStartDate) {
     this.workloadRecommendationDao = workloadRecommendationDao;
     this.workloadCostService = workloadCostService;
     this.workloadRepository = workloadRepository;
     this.k8sLabelServiceInfoFetcher = k8sLabelServiceInfoFetcher;
-    this.k8sRecommendationDAO = k8sRecommendationDAO;
+    this.recommendationCrudService = recommendationCrudService;
+    this.clusterHelper = clusterHelper;
     this.jobStartDate = jobStartDate;
   }
 
@@ -204,7 +206,6 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       recommendation.setNumDays(minNumDays == Integer.MAX_VALUE ? 0 : minNumDays);
       Instant startInclusive = jobStartDate.minus(Duration.ofDays(7));
       Cost lastDayCost = workloadCostService.getLastAvailableDayCost(workloadId, startInclusive);
-      BigDecimal monthlyCost = null;
       BigDecimal monthlySavings = null;
       if (lastDayCost != null) {
         recommendation.setLastDayCost(lastDayCost);
@@ -214,14 +215,9 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
         monthlySavings = estimateMonthlySavings(containerRecommendations, lastDayCost);
         recommendation.setEstimatedSavings(monthlySavings);
-
-        monthlyCost = BigDecimal.ZERO.add(lastDayCost.getCpu())
-                          .add(lastDayCost.getMemory())
-                          .multiply(BigDecimal.valueOf(30))
-                          .setScale(2, BigDecimal.ROUND_HALF_EVEN);
       } else {
         recommendation.setLastDayCostAvailable(false);
-        log.info("Unable to get lastDayCost for workload {}", workloadId);
+        log.debug("Unable to get lastDayCost for workload {}", workloadId);
       }
       recommendation.setTtl(Instant.now().plus(RECOMMENDATION_TTL));
       recommendation.setDirty(false);
@@ -229,11 +225,8 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       final String uuid = workloadRecommendationDao.save(recommendation);
       Preconditions.checkNotNullNorEmpty(uuid, "unexpected, uuid can't be null or empty");
 
-      k8sRecommendationDAO.insertIntoCeRecommendation(uuid, workloadId,
-          ofNullable(monthlyCost).map(BigDecimal::doubleValue).orElse(null),
-          ofNullable(monthlySavings).map(BigDecimal::doubleValue).orElse(null),
-          recommendation.shouldShowRecommendation(),
-          firstNonNull(recommendation.getLastReceivedUtilDataAt(), Instant.EPOCH));
+      final String clusterName = clusterHelper.fetchClusterName(workloadId.getClusterId());
+      recommendationCrudService.upsertWorkloadRecommendation(uuid, workloadId, clusterName, recommendation);
     }
   }
 

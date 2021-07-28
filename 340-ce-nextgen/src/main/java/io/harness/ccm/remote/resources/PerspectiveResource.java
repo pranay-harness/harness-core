@@ -3,6 +3,7 @@ package io.harness.ccm.remote.resources;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
@@ -18,6 +19,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -26,8 +28,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -59,8 +59,9 @@ public class PerspectiveResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<CEView> create(@QueryParam("accountId") String accountId, @QueryParam("clone") boolean clone,
-      @Valid @RequestBody CEView ceView) {
+  @ApiOperation(value = "Create perspective", nickname = "createPerspective")
+  public RestResponse<CEView> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("clone") boolean clone, @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);
     if (clone) {
       // reset these fields which gets set downstream appropriately
@@ -79,31 +80,32 @@ public class PerspectiveResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<CEView> get(
-      @QueryParam("accountId") String accountId, @QueryParam("perspectiveId") String perspectiveId) {
+  @ApiOperation(value = "Get perspective", nickname = "getPerspective")
+  public RestResponse<CEView> get(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
     return new RestResponse<>(ceViewService.get(perspectiveId));
   }
 
   @PUT
   @Timed
   @ExceptionMetered
-  public RestResponse<CEView> update(@QueryParam("accountId") String accountId, @Valid @RequestBody CEView ceView) {
+  @ApiOperation(value = "Update perspective", nickname = "updatePerspective")
+  public RestResponse<CEView> update(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);
+    log.info(ceView.toString());
     return new RestResponse<>(updateTotalCost(ceViewService.update(ceView)));
   }
 
   @DELETE
   @Timed
   @ExceptionMetered
-  public Response delete(@QueryParam("accountId") String accountId, @QueryParam("perspectiveId") String perspectiveId) {
+  @ApiOperation(value = "Delete perspective", nickname = "deletePerspective")
+  public RestResponse<String> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
     ceViewService.delete(perspectiveId, accountId);
     ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
     viewCustomFieldService.deleteByViewId(perspectiveId, accountId);
-    RestResponse rr = new RestResponse("Successfully deleted the view");
-    return prepareResponse(rr, Response.Status.OK);
-  }
-
-  private Response prepareResponse(RestResponse restResponse, Response.Status status) {
-    return Response.status(status).entity(restResponse).type(MediaType.APPLICATION_JSON).build();
+    return new RestResponse<>("Successfully deleted the view");
   }
 }

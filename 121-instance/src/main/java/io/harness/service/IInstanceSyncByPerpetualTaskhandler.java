@@ -3,7 +3,7 @@ package io.harness.service;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.entities.infrastructureMapping.InfrastructureMapping;
+import io.harness.entities.InfrastructureMapping;
 
 import software.wings.service.impl.instance.Status;
 

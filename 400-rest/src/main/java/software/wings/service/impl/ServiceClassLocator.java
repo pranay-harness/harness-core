@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnknownArtifactStreamTypeException;
 
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -43,6 +45,7 @@ import org.reflections.Reflections;
  */
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PL)
 public class ServiceClassLocator {
   @Inject Injector injector;
   private Map<Class, List> cache = new ConcurrentHashMap<>();

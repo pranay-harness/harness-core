@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -218,7 +219,7 @@ public class MailServiceImpl implements ChannelService {
           emailDetails.getUserGroupList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 
   @Getter

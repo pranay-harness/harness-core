@@ -20,6 +20,8 @@ public interface DelegateSetupService {
 
   DelegateGroupDetails getDelegateGroupDetails(String accountId, String delegateGroupId);
 
+  DelegateGroupDetails getDelegateGroupDetailsV2(String accountId, String orgId, String projectId, String identifier);
+
   String getHostNameForGroupedDelegate(String hostname);
 
   Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate);
@@ -30,4 +32,10 @@ public interface DelegateSetupService {
 
   List<Boolean> validateDelegateConfigurations(
       String accountId, String orgId, String projectId, List<String> identifiers);
+
+  DelegateGroupDetails updateDelegateGroup(
+      String accountId, String delegateGroupId, DelegateGroupDetails delegateGroupDetails);
+
+  DelegateGroupDetails updateDelegateGroup(
+      String accountId, String orgId, String projectId, String identifier, DelegateGroupDetails delegateGroupDetails);
 }

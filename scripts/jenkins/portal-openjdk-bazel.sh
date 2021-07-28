@@ -47,6 +47,8 @@ cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.j
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 cp ../../alpn-boot-8.1.13.v20181017.jar .
+cp ../../300-cv-nextgen/src/main/resources/redisson-jcache.yaml .
+
 
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/cv-nextgen/Dockerfile-verification-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
@@ -183,7 +185,7 @@ cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 cp protocol.info dist/delegate/.
 
 mkdir -p dist/watcher
-cp ${HOME}/.bazel-dirs/bin/250-watcher/module_deploy.jar dist/watcher/watcher-capsule.jar
+cp ${HOME}/.bazel-dirs/bin/960-watcher/module_deploy.jar dist/watcher/watcher-capsule.jar
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/watcher/watcher-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
 cp protocol.info dist/watcher/.
@@ -255,6 +257,8 @@ cp ../../310-ci-manager/ci-manager-config.yml .
 cp ../../keystore.jks .
 cp ../../310-ci-manager/key.pem .
 cp ../../310-ci-manager/cert.pem .
+cp ../../310-ci-manager/src/main/resources/redisson-jcache.yaml .
+
 cp ../../alpn-boot-8.1.13.v20181017.jar .
 
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-openjdk ./Dockerfile
@@ -300,6 +304,8 @@ cp ../../800-pipeline-service/config.yml .
 cp ../../800-pipeline-service/keystore.jks .
 cp ../../800-pipeline-service/key.pem .
 cp ../../800-pipeline-service/cert.pem .
+cp ../../800-pipeline-service/src/main/resources/redisson-jcache.yaml .
+
 cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr

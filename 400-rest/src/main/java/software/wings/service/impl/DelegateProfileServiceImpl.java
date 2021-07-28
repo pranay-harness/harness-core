@@ -34,6 +34,7 @@ import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
@@ -43,6 +44,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Event;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
+import software.wings.utils.Utils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +52,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.fabric8.utils.Strings;
 import java.util.List;
 import java.util.Optional;
@@ -86,6 +89,15 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public DelegateProfile get(String accountId, String delegateProfileId) {
     return delegateCache.getDelegateProfile(accountId, delegateProfileId);
+  }
+
+  @Override
+  public DelegateProfile getProfileByIdentifier(String accountId, DelegateEntityOwner owner, String profileIdentifier) {
+    return persistence.createQuery(DelegateProfile.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .filter(DelegateKeys.owner, owner)
+        .filter(DelegateProfileKeys.identifier, profileIdentifier)
+        .get();
   }
 
   @Override
@@ -147,6 +159,39 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   }
 
   @Override
+  public DelegateProfile updateV2(DelegateProfile delegateProfile) {
+    DelegateProfile originalProfile = getProfileByIdentifier(
+        delegateProfile.getAccountId(), delegateProfile.getOwner(), delegateProfile.getIdentifier());
+
+    UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
+    setUnset(updateOperations, DelegateProfileKeys.name, delegateProfile.getName());
+    setUnset(updateOperations, DelegateProfileKeys.description, delegateProfile.getDescription());
+    setUnset(updateOperations, DelegateProfileKeys.startupScript, delegateProfile.getStartupScript());
+    setUnset(updateOperations, DelegateProfileKeys.approvalRequired, delegateProfile.isApprovalRequired());
+    setUnset(updateOperations, DelegateProfileKeys.selectors, delegateProfile.getSelectors());
+    setUnset(updateOperations, DelegateProfileKeys.scopingRules, delegateProfile.getScopingRules());
+
+    Query<DelegateProfile> query = persistence.createQuery(DelegateProfile.class)
+                                       .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
+                                       .filter(DelegateProfileKeys.owner, delegateProfile.getOwner())
+                                       .filter(DelegateProfileKeys.identifier, delegateProfile.getIdentifier());
+
+    persistence.update(query, updateOperations);
+
+    DelegateProfile updatedDelegateProfile = getProfileByIdentifier(
+        delegateProfile.getAccountId(), delegateProfile.getOwner(), delegateProfile.getIdentifier());
+    log.info("Updated delegate profile with identifier: {}", updatedDelegateProfile.getIdentifier());
+
+    delegateProfileSubject.fireInform(
+        DelegateProfileObxxxxxxxx:onProfileUpdated, originalProfile, updatedDelegateProfile);
+
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
+    log.info("Auditing update of Delegate Profile for accountId={}", delegateProfile.getAccountId());
+    return updatedDelegateProfile;
+  }
+
+  @Override
   public DelegateProfile updateDelegateProfileSelectors(
       String delegateProfileId, String accountId, List<String> selectors) {
     Query<DelegateProfile> delegateProfileQuery = persistence.createQuery(DelegateProfile.class)
@@ -177,6 +222,38 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   }
 
   @Override
+  public DelegateProfile updateProfileSelectorsV2(
+      String accountId, DelegateEntityOwner owner, String delegateProfileIdentifier, List<String> selectors) {
+    Query<DelegateProfile> delegateProfileQuery =
+        persistence.createQuery(DelegateProfile.class)
+            .filter(DelegateProfileKeys.accountId, accountId)
+            .filter(DelegateProfileKeys.owner, owner)
+            .filter(DelegateProfileKeys.identifier, delegateProfileIdentifier);
+    DelegateProfile originalProfile = delegateProfileQuery.get();
+
+    UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
+
+    setUnset(updateOperations, DelegateProfileKeys.selectors, selectors);
+
+    // Update and invalidate cache
+    DelegateProfile delegateProfileSelectorsUpdated =
+        persistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
+    delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileSelectorsUpdated.getUuid());
+    log.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(
+          DelegateProfileObxxxxxxxx:onProfileSelectorsUpdated, accountId, delegateProfileSelectorsUpdated.getUuid());
+    }
+
+    auditServiceHelper.reportForAuditingUsingAccountId(
+        accountId, originalProfile, delegateProfileSelectorsUpdated, Event.Type.UPDATE);
+    log.info("Auditing update of Selectors of Delegate Profile for accountId={}", accountId);
+
+    return delegateProfileSelectorsUpdated;
+  }
+
+  @Override
   public DelegateProfile updateScopingRules(
       String accountId, String delegateProfileId, List<DelegateProfileScopingRule> scopingRules) {
     UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
@@ -197,10 +274,50 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   }
 
   @Override
+  public DelegateProfile updateScopingRules(String accountId, DelegateEntityOwner owner, String profileIdentifier,
+      List<DelegateProfileScopingRule> scopingRules) {
+    UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
+    setUnset(updateOperations, DelegateProfileKeys.scopingRules, scopingRules);
+    Query<DelegateProfile> query = persistence.createQuery(DelegateProfile.class)
+                                       .filter(DelegateProfileKeys.accountId, accountId)
+                                       .filter(DelegateProfileKeys.owner, owner)
+                                       .filter(DelegateProfileKeys.identifier, profileIdentifier);
+    // Update and invalidate cache
+    DelegateProfile updatedDelegateProfile = persistence.findAndModify(query, updateOperations, returnNewOptions);
+    delegateCache.invalidateDelegateProfileCache(accountId, updatedDelegateProfile.getUuid());
+    log.info("Updated profile scoping rules for accountId={}", accountId);
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(
+          DelegateProfileObxxxxxxxx:onProfileScopesUpdated, accountId, updatedDelegateProfile.getUuid());
+    }
+
+    return updatedDelegateProfile;
+  }
+
+  @Override
   public DelegateProfile add(DelegateProfile delegateProfile) {
+    if (Strings.isNullOrBlank(delegateProfile.getIdentifier())) {
+      delegateProfile.setIdentifier(Utils.normalizeIdentifier(delegateProfile.getName()));
+    }
+    if (delegateProfile.isNg()) {
+      try {
+        NGUtils.validate(delegateProfile);
+      } catch (JerseyViolationException exception) {
+        throw new InvalidRequestException("Identifier " + delegateProfile.getIdentifier()
+            + " did not pass validation checks: "
+            + exception.getConstraintViolations()
+                  .stream()
+                  .map(i -> i.getMessage())
+                  .reduce("", (i, j) -> i + " <" + j + "> "));
+      }
+    }
     if (Strings.isNotBlank(delegateProfile.getIdentifier())
-        && !isValidIdentifier(delegateProfile.getAccountId(), delegateProfile.getIdentifier())) {
-      throw new InvalidRequestException("The identifier is invalid. Could not add delegate profile.");
+        && identifierExists(
+            delegateProfile.getAccountId(), delegateProfile.getOwner(), delegateProfile.getIdentifier())) {
+      throw new InvalidRequestException(
+          "The identifier already exists. Could not add delegate profile with identifier: "
+          + delegateProfile.getIdentifier());
     }
 
     persistence.save(delegateProfile);
@@ -224,6 +341,27 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       persistence.delete(delegateProfile);
 
       delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
+      auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
+      log.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
+
+      publishDelegateProfileChangeEventViaEventFramework(delegateProfile, DELETE_ACTION);
+    }
+  }
+
+  @Override
+  public void deleteProfileV2(String accountId, DelegateEntityOwner owner, String delegateProfileIdentifier) {
+    DelegateProfile delegateProfile = persistence.createQuery(DelegateProfile.class)
+                                          .filter(DelegateProfileKeys.accountId, accountId)
+                                          .filter(DelegateProfileKeys.owner, owner)
+                                          .filter(DelegateProfileKeys.identifier, delegateProfileIdentifier)
+                                          .get();
+    if (delegateProfile != null) {
+      ensureProfileSafeToDelete(accountId, delegateProfile);
+      log.info("Deleting delegate profile: {}", delegateProfile.getUuid());
+      // Delete and invalidate cache
+      persistence.delete(delegateProfile);
+
+      delegateCache.invalidateDelegateProfileCache(accountId, delegateProfile.getUuid());
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
       log.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
 
@@ -375,12 +513,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   }
 
   @VisibleForTesting
-  public boolean isValidIdentifier(String accountId, String proposedIdentifier) {
+  public boolean identifierExists(String accountId, DelegateEntityOwner owner, String proposedIdentifier) {
     Query<DelegateProfile> result = persistence.createQuery(DelegateProfile.class)
                                         .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.owner, owner)
                                         .field(DelegateProfileKeys.identifier)
                                         .equalIgnoreCase(proposedIdentifier);
-
-    return result.get() == null;
+    return result.get() != null;
   }
 }

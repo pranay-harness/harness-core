@@ -1,6 +1,8 @@
 package software.wings.graphql.schema;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLApprovalStageExecution;
@@ -95,13 +97,20 @@ import software.wings.graphql.schema.type.secrets.QLKerberosAuthentication;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthentication;
 import software.wings.graphql.schema.type.secrets.QLSSHCredential;
 import software.wings.graphql.schema.type.secrets.QLWinRMCredential;
+import software.wings.graphql.schema.type.trigger.QLFromTriggeringAppManifest;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringArtifactSource;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringPipeline;
 import software.wings.graphql.schema.type.trigger.QLFromWebhookPayload;
 import software.wings.graphql.schema.type.trigger.QLLastCollected;
+import software.wings.graphql.schema.type.trigger.QLLastCollectedManifest;
 import software.wings.graphql.schema.type.trigger.QLLastDeployedFromPipeline;
 import software.wings.graphql.schema.type.trigger.QLLastDeployedFromWorkflow;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedManifestFromPipeline;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedManifestFromWorkflow;
+import software.wings.graphql.schema.type.trigger.QLManifestFromTriggeringPipeline;
+import software.wings.graphql.schema.type.trigger.QLManifestFromWebhookPayload;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
+import software.wings.graphql.schema.type.trigger.QLOnNewManifest;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
 import software.wings.graphql.schema.type.trigger.QLOnWebhook;
@@ -120,6 +129,7 @@ import lombok.experimental.UtilityClass;
 
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.DX)
 public class TypeResolverManager {
   // Uniface is a short for union or interface
   @UtilityClass
@@ -143,6 +153,7 @@ public class TypeResolverManager {
     public static final String TRIGGER_ACTION = "TriggerAction";
     public static final String ARTIFACT_SELECTION = "ArtifactSelection";
     public static final String PipelineStageExecution = "PipelineStageExecution";
+    public static final String MANIFEST_SELECTION = "ManifestSelection";
   }
 
   @UtilityClass
@@ -251,6 +262,7 @@ public class TypeResolverManager {
     public static final String ON_SCHEDULE = "OnSchedule";
     public static final String WORKFLOW_ACTION = "WorkflowAction";
     public static final String PIPELINE_ACTION = "PipelineAction";
+    public static final String ON_NEW_MANIFEST = "OnNewManifest";
     public static final String FROM_TRIGGERING_ARTIFACT_SOURCE = "FromTriggeringArtifactSource";
     public static final String LAST_COLLECTED = "LastCollected";
     public static final String LAST_DEPLOYED_FROM_WORKFLOW = "LastDeployedFromWorkflow";
@@ -258,6 +270,13 @@ public class TypeResolverManager {
     public static final String FROM_TRIGGERING_PIPELINE = "FromTriggeringPipeline";
     public static final String FROM_WEBHOOK_PAYLOAD = "FromWebhookPayload";
     public static final String EXECUTION_INPUTS_TO_RESUME_PIPELINE = "ExecutionInputsToResumePipeline";
+
+    public static final String FROM_TRIGGERING_APP_MANIFEST = "FromTriggeringAppManifest";
+    public static final String LAST_COLLECTED_MANIFEST = "LastCollectedManifest";
+    public static final String LAST_DEPLOYED_MANIFEST_FROM_WORKFLOW = "LastDeployedManifestFromWorkflow";
+    public static final String LAST_DEPLOYED_MANIFEST_FROM_PIPELINE = "LastDeployedManifestFromPipeline";
+    public static final String MANIFEST_FROM_TRIGGERING_PIPELINE = "ManifestFromTriggeringPipeline";
+    public static final String MANIFEST_FROM_WEBHOOK_PAYLOAD = "ManifestFromWebhookPayload";
   }
 
   /**
@@ -432,6 +451,7 @@ public class TypeResolverManager {
                     .put(QLOnPipelineCompletion.class, TypeResolverManagerTypes.ON_PIPELINE_COMPLETION)
                     .put(QLOnWebhook.class, TypeResolverManagerTypes.ON_WEB_HOOK)
                     .put(QLOnSchedule.class, TypeResolverManagerTypes.ON_SCHEDULE)
+                    .put(QLOnNewManifest.class, TypeResolverManagerTypes.ON_NEW_MANIFEST)
                     .build()))
         .put(TypeResolverManagerUnifaces.TRIGGER_ACTION,
             getResultTypeResolver(ImmutableMap.<Class, String>builder()
@@ -447,6 +467,19 @@ public class TypeResolverManager {
                     .put(QLLastDeployedFromPipeline.class, TypeResolverManagerTypes.LAST_DEPLOYED_FROM_PIPELINE)
                     .put(QLFromTriggeringPipeline.class, TypeResolverManagerTypes.FROM_TRIGGERING_PIPELINE)
                     .put(QLFromWebhookPayload.class, TypeResolverManagerTypes.FROM_WEBHOOK_PAYLOAD)
+                    .build()))
+        .put(TypeResolverManagerUnifaces.MANIFEST_SELECTION,
+            getResultTypeResolver(
+                ImmutableMap.<Class, String>builder()
+                    .put(QLFromTriggeringAppManifest.class, TypeResolverManagerTypes.FROM_TRIGGERING_APP_MANIFEST)
+                    .put(QLLastCollectedManifest.class, TypeResolverManagerTypes.LAST_COLLECTED_MANIFEST)
+                    .put(QLLastDeployedManifestFromWorkflow.class,
+                        TypeResolverManagerTypes.LAST_DEPLOYED_MANIFEST_FROM_WORKFLOW)
+                    .put(QLLastDeployedManifestFromPipeline.class,
+                        TypeResolverManagerTypes.LAST_DEPLOYED_MANIFEST_FROM_PIPELINE)
+                    .put(QLManifestFromTriggeringPipeline.class,
+                        TypeResolverManagerTypes.MANIFEST_FROM_TRIGGERING_PIPELINE)
+                    .put(QLManifestFromWebhookPayload.class, TypeResolverManagerTypes.MANIFEST_FROM_WEBHOOK_PAYLOAD)
                     .build()))
         .build();
   }

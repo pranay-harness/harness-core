@@ -16,6 +16,7 @@ import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.serializer.json.ExecutableResponseSerializer;
@@ -32,6 +33,7 @@ import io.harness.serializer.json.SkipInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.serializer.json.TriggeredBySerializer;
 import io.harness.serializer.json.UnitProgressSerializer;
+import io.harness.serializer.json.YamlOutputPropertiesSerializer;
 import io.harness.serializer.json.YamlPropertiesSerializer;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -47,6 +49,7 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(TriggeredBy.class, new TriggeredBySerializer());
     addSerializer(ExecutionMetadata.class, new ExecutionMetadataSerializer());
     addSerializer(YamlProperties.class, new YamlPropertiesSerializer());
+    addSerializer(YamlOutputProperties.class, new YamlOutputPropertiesSerializer());
     addSerializer(ExecutableResponse.class, new ExecutableResponseSerializer());
     addSerializer(SkipInfo.class, new SkipInfoSerializer());
     addSerializer(UnitProgress.class, new UnitProgressSerializer());

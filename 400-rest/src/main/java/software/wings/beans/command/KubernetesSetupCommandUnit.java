@@ -1421,7 +1421,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             || (isNotBlank(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
       executionLogCallback.saveExecutionLog("Waiting for service " + serviceName + " load balancer to be ready");
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeoutInMinutes), () -> {
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeoutInMinutes), () -> {
           while (true) {
             LoadBalancerStatus loadBalancerStatus =
                 kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceName)

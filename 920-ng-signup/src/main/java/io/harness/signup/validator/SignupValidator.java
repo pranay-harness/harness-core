@@ -7,8 +7,10 @@ import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
@@ -42,6 +44,7 @@ public class SignupValidator {
   public void validateSignup(SignupDTO dto) {
     validateEmail(dto.getEmail());
     validatePassword(dto.getPassword());
+    validateIntent(dto);
   }
 
   public void validateEmail(String email) {
@@ -98,6 +101,18 @@ public class SignupValidator {
     if (password.length() > 64) {
       throw new WeakPasswordException("Password should be less than or equal to 64 characters.", null,
           PASSWORD_STRENGTH_CHECK_FAILED, Level.ERROR, USER, null);
+    }
+  }
+
+  private void validateIntent(SignupDTO dto) {
+    if (dto.getIntent() == null) {
+      dto.setIntent("");
+    } else {
+      try {
+        ModuleType.fromString(dto.getIntent());
+      } catch (IllegalArgumentException e) {
+        throw new InvalidRequestException("Invalid intent", e);
+      }
     }
   }
 }

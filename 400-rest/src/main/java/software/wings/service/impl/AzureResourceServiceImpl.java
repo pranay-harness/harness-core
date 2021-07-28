@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.azure.utility.AzureUtils.AZURE_GOV_REGIONS_NAMES;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.app.MainConfiguration;
@@ -15,6 +17,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.AzureResourceService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -31,6 +34,7 @@ import javax.validation.executable.ValidateOnExecution;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 public class AzureResourceServiceImpl implements AzureResourceService {
@@ -39,6 +43,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
   @Inject private AzureHelperService azureHelperService;
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
+  @Inject private BuildSourceService buildSourceService;
 
   @Override
   public Map<String, String> listSubscriptions(String cloudProviderId) {
@@ -50,26 +55,17 @@ public class AzureResourceServiceImpl implements AzureResourceService {
 
   @Override
   public List<String> listContainerRegistryNames(String cloudProviderId, String subscriptionId) {
-    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
-    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listContainerRegistryNames(
-        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
+    return buildSourceService.listAzureContainerRegistryNames(cloudProviderId, subscriptionId);
   }
 
   @Override
   public List<AzureContainerRegistry> listContainerRegistries(String cloudProviderId, String subscriptionId) {
-    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
-    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listContainerRegistries(
-        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
+    return buildSourceService.listAzureContainerRegistries(cloudProviderId, subscriptionId);
   }
 
   @Override
   public List<String> listRepositories(String cloudProviderId, String subscriptionId, String registryName) {
-    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
-    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listRepositories(
-        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, registryName);
+    return buildSourceService.listAcrRepositories(cloudProviderId, subscriptionId, registryName);
   }
 
   @Override

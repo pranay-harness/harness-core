@@ -7,13 +7,12 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
@@ -32,8 +31,8 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
-import io.harness.ccm.cluster.InstanceDataService;
-import io.harness.ccm.cluster.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
@@ -57,13 +56,10 @@ import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
-import io.harness.cvng.client.CVNGService;
-import io.harness.cvng.client.CVNGServiceImpl;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskServiceImpl;
-import io.harness.cvng.state.CVNGVerificationTaskService;
-import io.harness.cvng.state.CVNGVerificationTaskServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.datahandler.services.AdminAccountService;
@@ -119,6 +115,8 @@ import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
+import io.harness.licensing.remote.NgLicenseHttpClientModule;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClientModule;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -140,8 +138,6 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
-import io.harness.outbox.OutboxPollConfiguration;
-import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pcf.CfDeploymentManager;
@@ -177,7 +173,13 @@ import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
+import io.harness.service.CgEventHelper;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.EventConfigService;
+import io.harness.service.EventConfigServiceImpl;
+import io.harness.service.EventHelper;
+import io.harness.service.EventService;
+import io.harness.service.EventServiceImpl;
 import io.harness.service.impl.DelegateTokenServiceImpl;
 import io.harness.service.intfc.DelegateTokenService;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
@@ -186,6 +188,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.usermembership.UserMembershipClientModule;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
@@ -407,6 +410,7 @@ import software.wings.service.impl.apm.ApmVerificationServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.applicationmanifest.HelmChartServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
+import software.wings.service.impl.artifact.ArtifactCleanupServiceSyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
@@ -429,7 +433,6 @@ import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerIm
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
-import software.wings.service.impl.cvng.CVNGStateServiceImpl;
 import software.wings.service.impl.datadog.DatadogServiceImpl;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.deployment.checks.DeploymentRateLimitChecker;
@@ -643,7 +646,6 @@ import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
-import software.wings.service.intfc.cvng.CVNGStateService;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.deployment.AccountExpiryCheck;
 import software.wings.service.intfc.deployment.PreDeploymentChecker;
@@ -677,14 +679,13 @@ import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
-import software.wings.service.intfc.security.NGSecretFileService;
-import software.wings.service.intfc.security.NGSecretFileServiceImpl;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
@@ -760,7 +761,6 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -844,10 +844,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new EventsFrameworkModule(
+        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
     install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
+    bind(PortalConfig.class).toInstance(configuration.getPortal());
     // RetryOnException Binding start
     bind(MethodExecutionHelper.class); // untargetted binding for eager loading
     ProviderMethodInterceptor retryOnExceptionInterceptor =
@@ -890,6 +892,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(GcsService.class).to(GcsServiceImpl.class);
     bind(GcsBuildService.class).to(GcsBuildServiceImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
+    bind(EventConfigService.class).to(EventConfigServiceImpl.class);
+    bind(EventService.class).to(EventServiceImpl.class);
+    bind(EventHelper.class).to(CgEventHelper.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(EmailNotificationService.class).to(EmailNotificationServiceImpl.class);
     bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);
@@ -1066,9 +1071,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ExperimentalMetricAnalysisRecordService.class).to(ExperimentalMetricAnalysisRecordServiceImpl.class);
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
-    bind(CVNGVerificationTaskService.class).to(CVNGVerificationTaskServiceImpl.class);
-    bind(CVNGService.class).to(CVNGServiceImpl.class);
-    bind(CVNGStateService.class).to(CVNGStateServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -1129,6 +1131,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ArtifactCleanupService.class)
         .annotatedWith(Names.named("AsyncArtifactCleanupService"))
         .to(ArtifactCleanupServiceAsyncImpl.class);
+    bind(ArtifactCleanupService.class)
+        .annotatedWith(Names.named("SyncArtifactCleanupService"))
+        .to(ArtifactCleanupServiceSyncImpl.class);
     bind(CustomBuildSourceService.class).to(CustomBuildSourceServiceImpl.class);
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
@@ -1281,6 +1286,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
+    // ng-usermembership Dependencies
+    install(new UserMembershipClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
     // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
@@ -1292,6 +1301,14 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // ng-rbac dependencies
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
+
+    // ng-license dependencies
+    install(new NgLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // admin ng-license dependencies
+    install(new AdminLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
@@ -1306,9 +1323,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new AuditClientModule(this.configuration.getAuditClientConfig(),
         this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(),
         this.configuration.isEnableAudit()));
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, MANAGER.getServiceId(), false));
 
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
+    install(new CVCommonsServiceModule());
   }
 
   private void bindFeatures() {
@@ -1445,9 +1463,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ManagerDecryptionService.class).to(ManagerDecryptionServiceImpl.class);
     bind(RuntimeCredentialsInjector.class).annotatedWith(Names.named(hashicorpvault)).to(VaultServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(SecretManagerImpl.class);
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretService.class).to(NGSecretServiceImpl.class);
-    bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
     bind(DelegatePropertiesServiceProvider.class).to(NoopDelegatePropertiesServiceProviderImpl.class);
     bind(DelegateConfigurationServiceProvider.class).to(NoopDelegateConfigurationServiceProviderImpl.class);
@@ -1597,13 +1615,5 @@ public class WingsModule extends AbstractModule implements ServersModule {
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
     return Jackson.newObjectMapper();
-  }
-
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
-    outboxPollConfiguration.setLockId(MANAGER.getServiceId());
-    return outboxPollConfiguration;
   }
 }

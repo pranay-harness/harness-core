@@ -33,7 +33,7 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
     }
 
     try {
-      RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+      RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
           ()
               -> execute(verificationClient.saveTimeSeriesMetrics(
                   accountId, applicationId, stateExecutionId, delegateTaskId, metricData)));

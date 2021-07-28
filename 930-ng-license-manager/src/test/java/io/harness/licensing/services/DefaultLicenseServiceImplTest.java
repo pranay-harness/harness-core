@@ -1,6 +1,12 @@
 package io.harness.licensing.services;
 
-import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_OPERATION;
+import static io.harness.licensing.LicenseTestConstant.ACCOUNT_IDENTIFIER;
+import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE;
+import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE_DTO;
+import static io.harness.licensing.LicenseTestConstant.DEFAULT_MODULE_TYPE;
+import static io.harness.licensing.ModuleType.CD;
+import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_EXTEND_TRIAL_OPERATION;
+import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_START_TRIAL_OPERATION;
 import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,29 +15,39 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.account.services.AccountService;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
-import io.harness.licensing.LicenseTestBase;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.ModuleType;
-import io.harness.licensing.beans.modules.AccountLicensesDTO;
-import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
+import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
-import io.harness.licensing.beans.modules.StartTrialRequestDTO;
+import io.harness.licensing.beans.modules.StartTrialDTO;
+import io.harness.licensing.beans.response.CheckExpiryResultDTO;
+import io.harness.licensing.entities.modules.CDModuleLicense;
 import io.harness.licensing.entities.modules.CIModuleLicense;
 import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
-import io.harness.licensing.mappers.LicenseObjectMapper;
+import io.harness.licensing.mappers.LicenseObjectConverter;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.dto.AccountDTO;
 import io.harness.repositories.ModuleLicenseRepository;
 import io.harness.rule.Owner;
 import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,67 +55,42 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class DefaultLicenseServiceImplTest extends LicenseTestBase {
+public class DefaultLicenseServiceImplTest extends CategoryTest {
   @Mock ModuleLicenseRepository moduleLicenseRepository;
   @Mock ModuleLicenseInterface moduleLicenseInterface;
-  @Mock LicenseObjectMapper licenseObjectMapper;
+  @Mock LicenseObjectConverter licenseObjectConverter;
   @Mock AccountService accountService;
   @Mock TelemetryReporter telemetryReporter;
   @InjectMocks DefaultLicenseServiceImpl licenseService;
 
-  private ModuleLicenseDTO defaultModueLicenseDTO;
-  private ModuleLicense defaultModuleLicense;
-  private AccountLicensesDTO defaultAccountLicensesDTO;
-  private StartTrialRequestDTO startTrialRequestDTO;
-  private static final String ACCOUNT_IDENTIFIER = "account";
-  private static final ModuleType DEFAULT_MODULE_TYPE = ModuleType.CI;
+  private StartTrialDTO startTrialRequestDTO;
+  private AccountLicenseDTO defaultAccountLicensesDTO;
 
   @Before
   public void setUp() {
-    defaultModueLicenseDTO = CIModuleLicenseDTO.builder()
-                                 .numberOfCommitters(10)
-                                 .id("id")
-                                 .accountIdentifier(ACCOUNT_IDENTIFIER)
-                                 .licenseType(LicenseType.TRIAL)
-                                 .edition(Edition.ENTERPRISE)
-                                 .status(LicenseStatus.ACTIVE)
-                                 .moduleType(DEFAULT_MODULE_TYPE)
-                                 .startTime(0)
-                                 .expiryTime(0)
-                                 .createdAt(0L)
-                                 .lastModifiedAt(0L)
-                                 .build();
-    defaultModuleLicense = CIModuleLicense.builder().numberOfCommitters(10).build();
-    defaultModuleLicense.setId("id");
-    defaultModuleLicense.setAccountIdentifier(ACCOUNT_IDENTIFIER);
-    defaultModuleLicense.setModuleType(DEFAULT_MODULE_TYPE);
-    defaultModuleLicense.setEdition(Edition.ENTERPRISE);
-    defaultModuleLicense.setStatus(LicenseStatus.ACTIVE);
-    defaultModuleLicense.setLicenseType(LicenseType.TRIAL);
-    defaultModuleLicense.setStartTime(0);
-    defaultModuleLicense.setExpiryTime(0);
-    defaultModuleLicense.setCreatedAt(0L);
-    defaultModuleLicense.setLastUpdatedAt(0L);
+    initMocks(this);
+    startTrialRequestDTO = StartTrialDTO.builder().moduleType(DEFAULT_MODULE_TYPE).build();
+    when(licenseObjectConverter.toDTO(DEFAULT_CI_MODULE_LICENSE)).thenReturn(DEFAULT_CI_MODULE_LICENSE_DTO);
+    when(licenseObjectConverter.toEntity(DEFAULT_CI_MODULE_LICENSE_DTO)).thenReturn(DEFAULT_CI_MODULE_LICENSE);
 
     defaultAccountLicensesDTO =
-        AccountLicensesDTO.builder()
+        AccountLicenseDTO.builder()
             .accountId(ACCOUNT_IDENTIFIER)
-            .moduleLicenses(Collections.singletonMap(DEFAULT_MODULE_TYPE, defaultModueLicenseDTO))
+            .moduleLicenses(Collections.singletonMap(DEFAULT_MODULE_TYPE, DEFAULT_CI_MODULE_LICENSE_DTO))
+            .allModuleLicenses(
+                Collections.singletonMap(DEFAULT_MODULE_TYPE, Lists.newArrayList(DEFAULT_CI_MODULE_LICENSE_DTO)))
             .build();
-    startTrialRequestDTO = StartTrialRequestDTO.builder().moduleType(DEFAULT_MODULE_TYPE).build();
-    when(licenseObjectMapper.toDTO(defaultModuleLicense)).thenReturn(defaultModueLicenseDTO);
-    when(licenseObjectMapper.toEntity(defaultModueLicenseDTO)).thenReturn(defaultModuleLicense);
   }
 
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
-  public void testGetModuleLicense() {
+  public void testGetModuleLicenses() {
     when(moduleLicenseRepository.findByAccountIdentifierAndModuleType(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE))
-        .thenReturn(defaultModuleLicense);
-    ModuleLicenseDTO moduleLicense = licenseService.getModuleLicense(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
+        .thenReturn(Lists.newArrayList(DEFAULT_CI_MODULE_LICENSE));
+    List<ModuleLicenseDTO> moduleLicense = licenseService.getModuleLicenses(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
 
-    assertThat(moduleLicense).isEqualTo(defaultModueLicenseDTO);
+    assertThat(moduleLicense).isEqualTo(Lists.newArrayList(DEFAULT_CI_MODULE_LICENSE_DTO));
   }
 
   @Test
@@ -107,7 +98,7 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
   @Category(UnitTests.class)
   public void testGetModuleLicenseWithNoResult() {
     when(moduleLicenseRepository.findByAccountIdentifierAndModuleType(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE))
-        .thenReturn(null);
+        .thenReturn(new ArrayList<>());
     ModuleLicenseDTO moduleLicense = licenseService.getModuleLicense(ACCOUNT_IDENTIFIER, DEFAULT_MODULE_TYPE);
     assertThat(moduleLicense).isNull();
   }
@@ -117,10 +108,10 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
   @Category(UnitTests.class)
   public void testGetAccountLicense() {
     when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER))
-        .thenReturn(ImmutableList.<ModuleLicense>builder().add(defaultModuleLicense).build());
-    AccountLicensesDTO accountLicensesDTO = licenseService.getAccountLicense(ACCOUNT_IDENTIFIER);
+        .thenReturn(ImmutableList.<ModuleLicense>builder().add(DEFAULT_CI_MODULE_LICENSE).build());
+    AccountLicenseDTO accountLicenseDTO = licenseService.getAccountLicense(ACCOUNT_IDENTIFIER);
 
-    assertThat(accountLicensesDTO).isEqualTo(defaultAccountLicensesDTO);
+    assertThat(accountLicenseDTO).isEqualTo(defaultAccountLicensesDTO);
   }
 
   @Test
@@ -128,34 +119,168 @@ public class DefaultLicenseServiceImplTest extends LicenseTestBase {
   @Category(UnitTests.class)
   public void testGetAccountLicenseWithNoResult() {
     when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER)).thenReturn(Collections.emptyList());
-    AccountLicensesDTO accountLicensesDTO = licenseService.getAccountLicense(ACCOUNT_IDENTIFIER);
+    AccountLicenseDTO accountLicenseDTO = licenseService.getAccountLicense(ACCOUNT_IDENTIFIER);
 
-    assertThat(accountLicensesDTO.getAccountId()).isEqualTo(ACCOUNT_IDENTIFIER);
-    assertThat(accountLicensesDTO.getModuleLicenses().size()).isEqualTo(0);
+    assertThat(accountLicenseDTO.getAccountId()).isEqualTo(ACCOUNT_IDENTIFIER);
+    assertThat(accountLicenseDTO.getModuleLicenses().size()).isEqualTo(0);
   }
 
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetModuleLicenseById() {
-    when(moduleLicenseRepository.findById(any())).thenReturn(Optional.of(defaultModuleLicense));
+    when(moduleLicenseRepository.findById(any())).thenReturn(Optional.of(DEFAULT_CI_MODULE_LICENSE));
     ModuleLicenseDTO moduleLicense = licenseService.getModuleLicenseById("1");
 
-    assertThat(moduleLicense).isEqualTo(defaultModueLicenseDTO);
+    assertThat(moduleLicense).isEqualTo(DEFAULT_CI_MODULE_LICENSE_DTO);
   }
 
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testStartTrial() {
-    when(moduleLicenseRepository.save(defaultModuleLicense)).thenReturn(defaultModuleLicense);
+    when(moduleLicenseRepository.save(DEFAULT_CI_MODULE_LICENSE)).thenReturn(DEFAULT_CI_MODULE_LICENSE);
     when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
-        .thenReturn(defaultModueLicenseDTO);
+        .thenReturn(DEFAULT_CI_MODULE_LICENSE_DTO);
+    when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
     ModuleLicenseDTO result = licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
     verify(accountService, times(1)).updateDefaultExperienceIfApplicable(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
     verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
     verify(telemetryReporter, times(1))
-        .sendTrackEvent(eq(SUCCEED_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
-    assertThat(result).isEqualTo(defaultModueLicenseDTO);
+        .sendTrackEvent(eq(SUCCEED_START_TRIAL_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
+    assertThat(result).isEqualTo(DEFAULT_CI_MODULE_LICENSE_DTO);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testExtendTrial() {
+    when(moduleLicenseRepository.save(DEFAULT_CI_MODULE_LICENSE)).thenReturn(DEFAULT_CI_MODULE_LICENSE);
+    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
+        .thenReturn(DEFAULT_CI_MODULE_LICENSE_DTO);
+
+    CIModuleLicense expiredTrial = CIModuleLicense.builder().numberOfCommitters(10).build();
+    expiredTrial.setLicenseType(LicenseType.TRIAL);
+    expiredTrial.setEdition(Edition.ENTERPRISE);
+    expiredTrial.setExpiryTime(Instant.now().minus(5, ChronoUnit.DAYS).toEpochMilli());
+    expiredTrial.setStatus(LicenseStatus.EXPIRED);
+    when(moduleLicenseRepository.findByAccountIdentifierAndModuleType(eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
+        .thenReturn(Lists.newArrayList(expiredTrial));
+
+    ModuleLicenseDTO result = licenseService.extendTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
+    verify(telemetryReporter, times(1))
+        .sendTrackEvent(eq(SUCCEED_EXTEND_TRIAL_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
+    assertThat(result).isEqualTo(DEFAULT_CI_MODULE_LICENSE_DTO);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testExtendTrialFailed() {
+    CIModuleLicense expiredTrial = CIModuleLicense.builder().numberOfCommitters(10).build();
+    expiredTrial.setLicenseType(LicenseType.TRIAL);
+    expiredTrial.setEdition(Edition.ENTERPRISE);
+    expiredTrial.setExpiryTime(Instant.now().minus(30, ChronoUnit.DAYS).toEpochMilli());
+    expiredTrial.setStatus(LicenseStatus.EXPIRED);
+    when(moduleLicenseRepository.findByAccountIdentifierAndModuleType(eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
+        .thenReturn(Lists.newArrayList(expiredTrial));
+
+    licenseService.extendTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testCheckExpiryWithRegularTrial() {
+    ModuleLicense moduleLicense = CIModuleLicense.builder().numberOfCommitters(10).build();
+    moduleLicense.setStatus(LicenseStatus.ACTIVE);
+    moduleLicense.setModuleType(ModuleType.CI);
+    moduleLicense.setEdition(Edition.ENTERPRISE);
+    moduleLicense.setLicenseType(LicenseType.TRIAL);
+    moduleLicense.setExpiryTime(Long.MAX_VALUE);
+    when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER))
+        .thenReturn(ImmutableList.<ModuleLicense>builder().add(moduleLicense).build());
+
+    CheckExpiryResultDTO checkExpiryResultDTO = licenseService.checkExpiry(ACCOUNT_IDENTIFIER);
+    assertThat(checkExpiryResultDTO.isShouldDelete()).isFalse();
+    assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(Long.MAX_VALUE);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testCheckExpiryWithTrialExpire() {
+    ModuleLicense expiryModuleLicense = CDModuleLicense.builder().build();
+    expiryModuleLicense.setStatus(LicenseStatus.ACTIVE);
+    expiryModuleLicense.setModuleType(CD);
+    expiryModuleLicense.setEdition(Edition.ENTERPRISE);
+    expiryModuleLicense.setLicenseType(LicenseType.TRIAL);
+    expiryModuleLicense.setExpiryTime(0);
+    expiryModuleLicense.setCreatedBy(EmbeddedUser.builder().email("test").build());
+
+    when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER))
+        .thenReturn(ImmutableList.<ModuleLicense>builder().add(expiryModuleLicense).build());
+
+    CheckExpiryResultDTO checkExpiryResultDTO = licenseService.checkExpiry(ACCOUNT_IDENTIFIER);
+    assertThat(checkExpiryResultDTO.isShouldDelete()).isTrue();
+    assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(0);
+    verify(moduleLicenseRepository, times(1)).save(any());
+    verify(telemetryReporter, times(1)).sendTrackEvent(any(), any(), any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testCheckExpiryWithAlreadyExpiredTrial() {
+    ModuleLicense expiredModuleLicense = CDModuleLicense.builder().build();
+    expiredModuleLicense.setStatus(LicenseStatus.EXPIRED);
+    expiredModuleLicense.setModuleType(CD);
+    expiredModuleLicense.setEdition(Edition.ENTERPRISE);
+    expiredModuleLicense.setLicenseType(LicenseType.TRIAL);
+    expiredModuleLicense.setExpiryTime(0);
+
+    when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER))
+        .thenReturn(ImmutableList.<ModuleLicense>builder().add(expiredModuleLicense).build());
+
+    CheckExpiryResultDTO checkExpiryResultDTO = licenseService.checkExpiry(ACCOUNT_IDENTIFIER);
+    assertThat(checkExpiryResultDTO.isShouldDelete()).isTrue();
+    assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testCheckExpiryWithFreeEdition() {
+    ModuleLicense moduleLicense = CIModuleLicense.builder().numberOfCommitters(10).build();
+    moduleLicense.setStatus(LicenseStatus.ACTIVE);
+    moduleLicense.setModuleType(ModuleType.CI);
+    moduleLicense.setEdition(Edition.FREE);
+    moduleLicense.setLicenseType(LicenseType.TRIAL);
+
+    when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER))
+        .thenReturn(ImmutableList.<ModuleLicense>builder().add(moduleLicense).build());
+
+    CheckExpiryResultDTO checkExpiryResultDTO = licenseService.checkExpiry(ACCOUNT_IDENTIFIER);
+    assertThat(checkExpiryResultDTO.isShouldDelete()).isFalse();
+    assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testCheckExpiryWithPaid() {
+    ModuleLicense moduleLicense = CIModuleLicense.builder().numberOfCommitters(10).build();
+    moduleLicense.setStatus(LicenseStatus.ACTIVE);
+    moduleLicense.setModuleType(ModuleType.CI);
+    moduleLicense.setEdition(Edition.ENTERPRISE);
+    moduleLicense.setLicenseType(LicenseType.PAID);
+
+    when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER))
+        .thenReturn(ImmutableList.<ModuleLicense>builder().add(moduleLicense).build());
+
+    CheckExpiryResultDTO checkExpiryResultDTO = licenseService.checkExpiry(ACCOUNT_IDENTIFIER);
+    assertThat(checkExpiryResultDTO.isShouldDelete()).isFalse();
+    assertThat(checkExpiryResultDTO.getExpiryTime()).isEqualTo(0);
+    verify(moduleLicenseRepository, times(1)).save(any());
   }
 }

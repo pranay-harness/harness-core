@@ -11,7 +11,6 @@ import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.advisers.AdviseEvent;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -25,7 +24,6 @@ public class RedisNodeAdviseEventPublisher implements NodeAdviseEventPublisher {
   public String publishEvent(String nodeExecutionId, Status fromStatus) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     AdviseEvent adviseEvent =
         AdviseEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
@@ -39,7 +37,7 @@ public class RedisNodeAdviseEventPublisher implements NodeAdviseEventPublisher {
             .build();
 
     return eventSender.sendEvent(
-        adviseEvent.toByteString(), PmsEventCategory.NODE_ADVISE, serviceName, accountId, true);
+        nodeExecution.getAmbiance(), adviseEvent.toByteString(), PmsEventCategory.NODE_ADVISE, serviceName, true);
   }
 
   private boolean isPreviousAdviserExpired(List<InterruptEffect> interruptHistories) {

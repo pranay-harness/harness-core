@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ShortNode;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 @Slf4j
 public class JsonObjectRecastTransformer extends RecastTransformer implements CustomValueTransformer {
@@ -29,7 +29,7 @@ public class JsonObjectRecastTransformer extends RecastTransformer implements Cu
         return NullNode.getInstance();
       }
 
-      Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Document) fromObject);
+      Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Map<String, Object>) fromObject);
       if (decodedObject == null) {
         return NullNode.getInstance();
       }

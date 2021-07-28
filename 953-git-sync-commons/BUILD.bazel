@@ -15,7 +15,7 @@ java_library(
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [
         "//953-git-sync-commons/src/main/proto:953_git_sync_java_contracts_proto",
     ],

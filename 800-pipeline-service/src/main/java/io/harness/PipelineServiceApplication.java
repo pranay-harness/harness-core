@@ -10,6 +10,8 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
+import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.OrchestrationEngine;
@@ -21,6 +23,7 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
+import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
@@ -36,6 +39,8 @@ import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
+import io.harness.graph.stepDetail.PmsGraphStepDetailsServiceImpl;
+import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -60,6 +65,7 @@ import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
 import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
+import io.harness.pms.ngpipeline.inputset.observers.InputSetValidationObserver;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
 import io.harness.pms.notification.orchestration.handlers.NotificationInformHandler;
 import io.harness.pms.notification.orchestration.handlers.PipelineStartNotificationHandler;
@@ -118,6 +124,7 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMo
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
+import io.harness.token.remote.TokenClient;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -240,6 +247,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     modules.add(PipelineServiceModule.getInstance(appConfig));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(NGMigrationSdkModule.getInstance());
+    CacheModule cacheModule = new CacheModule(appConfig.getCacheConfig());
+    modules.add(cacheModule);
     if (appConfig.isShouldDeployWithGitSync()) {
       GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
       modules.add(new AbstractGitSyncSdkModule() {
@@ -280,7 +289,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     registerObservers(injector);
-    registerMigrations(injector);
     registerRequestContextFilter(environment);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
@@ -306,10 +314,16 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
     registerPmsSdkEvents(injector);
+    registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
 
   private static void registerObservers(Injector injector) {
+    PmsGraphStepDetailsServiceImpl pmsGraphStepDetailsService =
+        (PmsGraphStepDetailsServiceImpl) injector.getInstance(Key.get(PmsGraphStepDetailsService.class));
+    pmsGraphStepDetailsService.getStepDetailsUpdateObserverSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+
     // Register Pipeline Observers
     PMSPipelineServiceImpl pmsPipelineService =
         (PMSPipelineServiceImpl) injector.getInstance(Key.get(PMSPipelineService.class));
@@ -318,6 +332,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pmsPipelineService.getPipelineSubject().register(
         injector.getInstance(Key.get(PipelineExecutionSummaryDeleteObserver.class)));
     pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetsDeleteObserver.class)));
+    pmsPipelineService.getPipelineSubject().register(injector.getInstance(Key.get(InputSetValidationObserver.class)));
 
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
@@ -336,6 +351,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(TimeoutInstanceRemover.class)));
 
     // NodeUpdateObservers
     nodeExecutionService.getNodeUpdateObserverSubject().register(
@@ -382,7 +399,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(OrchestrationEndGraphHandler.class)));
     orchestrationEngine.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(OrchestrationEndInterruptHandler.class)));
-
+    orchestrationEngine.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(NotificationInformHandler.class)));
     GraphGenerationServiceImpl graphGenerationService =
         (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
     graphGenerationService.getGraphNodeUpdateObserverSubject().register(
@@ -394,19 +412,18 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerAuthFilters(PipelineServiceConfiguration config, Environment environment, Injector injector) {
-    if (config.isEnableAuth()) {
-      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
-      Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
-      serviceToSecretMapping.put(
-          AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
-      serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
-      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
-    }
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+        -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
+    serviceToSecretMapping.put(
+        AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -530,6 +547,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
+    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {

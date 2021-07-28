@@ -1,5 +1,6 @@
 package io.harness.delegate.resources;
 
+import static io.harness.delegate.utils.RbacConstants.DELEGATE_EDIT_PERMISSION;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_RESOURCE_TYPE;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_VIEW_PERMISSION;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -25,6 +26,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -91,6 +93,22 @@ public class DelegateSetupResource {
 
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateSetupService.getDelegateGroupDetails(accountId, delegateGroupId));
+    }
+  }
+
+  @PUT
+  @Path("{delegateGroupId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateGroupDetails> update(@PathParam("delegateGroupId") @NotEmpty String delegateGroupId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
+      @QueryParam("projectId") String projectId, DelegateGroupDetails delegateGroupDetails) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, delegateGroupId), DELEGATE_EDIT_PERMISSION);
+
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(
+          delegateSetupService.updateDelegateGroup(accountId, delegateGroupId, delegateGroupDetails));
     }
   }
 }

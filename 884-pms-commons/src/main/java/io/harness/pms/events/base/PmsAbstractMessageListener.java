@@ -1,9 +1,11 @@
 package io.harness.pms.events.base;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
 import io.harness.eventsframework.consumer.Message;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.serializer.ProtoUtils;
 
@@ -11,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import lombok.NonNull;
@@ -44,26 +47,23 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
   public boolean handleMessage(Message message) {
     long startTs = System.currentTimeMillis();
     if (isProcessable(message)) {
-      try {
-        log.info(
-            "[PMS_SDK] Starting to process {} event with messageId: {}", entityClass.getSimpleName(), message.getId());
-
-        executorService.submit(() -> {
+      executorService.submit(() -> {
+        Map<String, String> messageIdMap = new HashMap<>();
+        messageIdMap.put("messageId", message.getId());
+        try (AutoLogContext ignore = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS);
+             AutoLogContext ignore1 = new AutoLogContext(messageIdMap, OVERRIDE_NESTS)) {
           T entity = extractEntity(message);
           Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
           processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
-        });
-
-        log.info("[PMS_SDK] Processing Finished for {} event with messageId: {}", entityClass.getSimpleName(),
-            message.getId());
-      } catch (Exception ex) {
-        log.info("[PMS_SDK] Exception occurred while processing {} event with messageId: {}",
-            entityClass.getSimpleName(), message.getId());
-      }
+        } catch (Exception ex) {
+          log.error("[PMS_MESSAGE_LISTENER] Exception occurred while processing {} event with messageId: {}",
+              entityClass.getSimpleName(), message.getId(), ex);
+        }
+      });
     }
     Duration processDuration = Duration.ofMillis(System.currentTimeMillis() - startTs);
     if (THRESHOLD_PROCESS_DURATION.compareTo(processDuration) < 0) {
-      log.warn("[PMS_SDK] Processing for {} event took {}s which is more than threshold of {}s",
+      log.warn("[PMS_MESSAGE_LISTENER] Processing for {} event took {}s which is more than threshold of {}s",
           entityClass.getSimpleName(), processDuration.getSeconds(), THRESHOLD_PROCESS_DURATION.getSeconds());
     }
     return true;

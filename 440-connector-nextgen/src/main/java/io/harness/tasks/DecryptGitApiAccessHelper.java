@@ -66,7 +66,12 @@ public class DecryptGitApiAccessHelper {
                                                   .taskParameters(apiAccessTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
                                                   .build();
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    DelegateResponseData responseData = null;
+    try {
+      responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (Exception e) {
+      log.error("Encountered error while decrypting api access", e);
+    }
     if (responseData instanceof ErrorNotifyResponseData || responseData instanceof RemoteMethodReturnValueData) {
       log.error("Error decrypting the credentials, the responseData returned from delegate: {}", responseData);
       throw new UnexpectedException("Error while decrypting api access");

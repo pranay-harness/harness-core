@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.GraphQLModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
@@ -17,7 +18,6 @@ import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
-import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -51,7 +51,6 @@ import io.harness.version.VersionModule;
 import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
-import software.wings.app.GraphQLModule;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -256,8 +255,6 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       protected void configure() {
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
-        CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-        bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
 
@@ -283,7 +280,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));
-    modules.add(new GraphQLModule());
+    modules.add(GraphQLModule.getInstance());
     modules.add(new AuthModule());
     modules.add(new SSOModule());
     modules.add(new SignupModule());

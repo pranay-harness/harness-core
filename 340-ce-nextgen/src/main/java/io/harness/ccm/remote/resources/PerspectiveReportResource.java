@@ -2,6 +2,7 @@ package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -15,6 +16,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
@@ -42,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @OwnedBy(CE)
 public class PerspectiveReportResource {
   private CEReportScheduleService ceReportScheduleService;
+  private static final String accountIdPathParam = "{" + NGCommonEntityConstants.ACCOUNT_KEY + "}";
 
   @Inject
   public PerspectiveReportResource(CEReportScheduleService ceReportScheduleService) {
@@ -50,90 +53,87 @@ public class PerspectiveReportResource {
 
   @GET
   @Timed
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @ExceptionMetered
-  public Response getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
-      @QueryParam("reportId") String reportId, @PathParam("accountId") String accountId) {
+  @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
+  public RestResponse<List<CEReportSchedule>> getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
+      @QueryParam("reportId") String reportId, @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     if (perspectiveId != null) {
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(
-          ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
     } else if (reportId != null) {
       List<CEReportSchedule> ceList = new ArrayList<>();
       CEReportSchedule rep = ceReportScheduleService.get(reportId, accountId);
       if (rep != null) {
         ceList.add(rep);
       }
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceList);
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>(ceList);
     }
     // INVALID_REQUEST
-    RestResponse rr = new RestResponse<>();
+    RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
     addResponseMessage(
         rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Either 'viewId' or 'reportId' is needed");
-    return prepareResponse(rr, Response.Status.BAD_REQUEST);
+    return rr;
   }
 
   @DELETE
   @Timed
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @ExceptionMetered
-  public Response deleteReportSetting(@QueryParam("reportId") String reportId,
-      @QueryParam("perspectiveId") String perspectiveId, @PathParam("accountId") String accountId) {
+  @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
+  public RestResponse<String> deleteReportSetting(@QueryParam("reportId") String reportId,
+      @QueryParam("perspectiveId") String perspectiveId,
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     if (perspectiveId != null) {
       ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
-      RestResponse rr = new RestResponse("Successfully deleted the record");
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>("Successfully deleted the record");
     } else if (reportId != null) {
       ceReportScheduleService.delete(reportId, accountId);
-      RestResponse rr = new RestResponse("Successfully deleted the record");
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>("Successfully deleted the record");
     }
     // INVALID_REQUEST
-    RestResponse rr = new RestResponse();
+    RestResponse<String> rr = new RestResponse<>();
     addResponseMessage(
         rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Either 'viewId' or 'reportId' is needed");
-    return prepareResponse(rr, Response.Status.BAD_REQUEST);
+    return rr;
   }
 
   @POST
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @Timed
   @ExceptionMetered
-  public Response createReportSetting(
-      @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+  @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
+  public RestResponse<List<CEReportSchedule>> createReportSetting(
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      ceList.add(ceReportScheduleService.createReportSetting(cronSequenceGenerator, accountId, schedule));
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceList);
-      return prepareResponse(rr, Response.Status.OK);
+      ceList.add(ceReportScheduleService.createReportSetting(accountId, schedule));
+      return new RestResponse<>(ceList);
     } catch (IllegalArgumentException e) {
       log.error("ERROR", e);
-      RestResponse rr = new RestResponse();
+      RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
       addResponseMessage(
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
-      return prepareResponse(rr, Response.Status.BAD_REQUEST);
+      return rr;
     }
   }
 
   @PUT
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @Timed
   @ExceptionMetered
-  public Response updateReportSetting(
-      @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+  @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
+  public RestResponse<List<CEReportSchedule>> updateReportSetting(
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(
-          ceReportScheduleService.update(cronSequenceGenerator, accountId, schedule));
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>(ceReportScheduleService.update(accountId, schedule));
     } catch (IllegalArgumentException e) {
       log.warn(String.valueOf(e));
-      RestResponse rr = new RestResponse();
+      RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
       addResponseMessage(
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
-      return prepareResponse(rr, Response.Status.BAD_REQUEST);
+      return rr;
     }
   }
 

@@ -6,7 +6,6 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;

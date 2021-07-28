@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -88,7 +89,6 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           log.info("Nothing to process.");
           break;
         } else {
-          ;
           log.info("Next tasks to process: {}", dataCollectionTasks);
           List<Callable<Void>> callables = new ArrayList<>();
           dataCollectionTasks.forEach(dataCollectionTaskDTO -> callables.add(() -> {
@@ -110,6 +110,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         .getResource();
   }
 
+  @SuppressWarnings("PMD")
   private void run(DataCollectionPerpetualTaskParams taskParams, ConnectorConfigDTO connectorConfigDTO,
       DataCollectionTaskDTO dataCollectionTask) {
     try {
@@ -143,11 +144,17 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           logRecordDataStoreService.save(
               dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), logDataRecords);
           if (dataCollectionInfo.isCollectHostData()) {
+            Set<String> hosts;
             LogDataCollectionInfo logDataCollectionInfo = (LogDataCollectionInfo) dataCollectionInfo;
-            Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(
-                logDataCollectionInfo.getHostCollectionDSL(), runtimeParameters,
-                new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
-                    delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime())));
+            if (isNotEmpty(logDataCollectionInfo.getHostCollectionDSL())) {
+              hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(
+                  logDataCollectionInfo.getHostCollectionDSL(), runtimeParameters,
+                  new ThirdPartyCallHandler(dataCollectionTask.getAccountId(),
+                      dataCollectionTask.getVerificationTaskId(), delegateLogService, dataCollectionTask.getStartTime(),
+                      dataCollectionTask.getEndTime())));
+            } else {
+              hosts = logDataRecords.stream().map(LogDataRecord::getHostname).collect(Collectors.toSet());
+            }
             hostRecordDataStoreService.save(dataCollectionTask.getAccountId(),
                 dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getStartTime(),
                 dataCollectionTask.getEndTime(), hosts);

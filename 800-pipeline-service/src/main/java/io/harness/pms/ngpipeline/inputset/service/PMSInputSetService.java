@@ -20,6 +20,8 @@ public interface PMSInputSetService {
 
   InputSetEntity update(InputSetEntity inputSetEntity);
 
+  boolean switchValidationFlag(InputSetEntity entity, boolean isInvalid);
+
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
       String identifier, Long version);
 

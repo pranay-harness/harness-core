@@ -1,6 +1,8 @@
 package io.harness.connector.impl;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.Scope.ACCOUNT;
@@ -22,6 +24,8 @@ import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig.CEAwsConfigKeys;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigKeys;
+import io.harness.connector.entities.embedded.cek8s.CEK8sDetails.CEK8sDetailsKeys;
+import io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig.GcpCloudCostConfigKeys;
 import io.harness.connector.services.ConnectorFilterService;
 import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -248,7 +252,8 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   }
 
   public Criteria createCriteriaFromConnectorFilter(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType connectorType, ConnectorCategory category) {
+      String projectIdentifier, String searchTerm, ConnectorType connectorType, ConnectorCategory category,
+      ConnectorCategory sourceCategory) {
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
     criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
@@ -261,7 +266,9 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     if (category != null) {
       criteria.and(ConnectorKeys.categories).in(category);
     }
-
+    if (sourceCategory != null && SECRET_MANAGER == sourceCategory) {
+      criteria.and(ConnectorKeys.identifier).in(HARNESS_SECRET_MANAGER_IDENTIFIER);
+    }
     if (isNotBlank(searchTerm)) {
       Criteria seachCriteria = new Criteria().orOperator(where(ConnectorKeys.name).regex(searchTerm, "i"),
           where(NGCommonEntityConstants.IDENTIFIER_KEY).regex(searchTerm, "i"),
@@ -274,12 +281,26 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   private void populateCcmFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
     populateAwsFilters(criteria, ccmConnectorFilter);
     populateAzureFilters(criteria, ccmConnectorFilter);
+    populateGcpFilters(criteria, ccmConnectorFilter);
+    populateK8sFilters(criteria, ccmConnectorFilter);
     populateAllFilter(criteria, CEAzureConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
   }
 
   private void populateAwsFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
     if (ccmConnectorFilter.getAwsAccountId() != null) {
       populateInFilter(criteria, CEAwsConfigKeys.awsAccountId, Arrays.asList(ccmConnectorFilter.getAwsAccountId()));
+    }
+  }
+
+  private void populateGcpFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getGcpProjectId() != null) {
+      populateInFilter(criteria, GcpCloudCostConfigKeys.projectId, Arrays.asList(ccmConnectorFilter.getGcpProjectId()));
+    }
+  }
+
+  private void populateK8sFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getK8sConnectorRef() != null) {
+      populateInFilter(criteria, CEK8sDetailsKeys.connectorRef, Arrays.asList(ccmConnectorFilter.getK8sConnectorRef()));
     }
   }
 

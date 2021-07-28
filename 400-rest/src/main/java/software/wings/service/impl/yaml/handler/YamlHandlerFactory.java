@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -516,7 +518,8 @@ public class YamlHandlerFactory {
     } else if (entity instanceof ManifestFile) {
       return ((ManifestFile) entity).getFileName();
     } else if (entity instanceof ApplicationManifest) {
-      return YamlConstants.INDEX;
+      String name = ((ApplicationManifest) entity).getName();
+      return isNotBlank(name) ? name : YamlConstants.INDEX;
     } else if (entity instanceof CVConfiguration) {
       return ((CVConfiguration) entity).getName();
     } else if (entity instanceof Trigger) {

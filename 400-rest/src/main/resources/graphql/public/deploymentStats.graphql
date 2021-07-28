@@ -27,6 +27,8 @@ input DeploymentFilter {
   cloudProvider: IdFilter
   environment: IdFilter
   environmentType: EnvironmentTypeFilter
+  deploymentType: DeploymentTypeFilter
+  workflowType: WorkflowTypeFilter
   status: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter

@@ -5,8 +5,8 @@ import static io.harness.aggregator.models.AggregatorSecondarySyncState.Secondar
 import static io.harness.aggregator.models.MongoReconciliationOffset.PRIMARY_COLLECTION;
 import static io.harness.aggregator.models.MongoReconciliationOffset.SECONDARY_COLLECTION;
 
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.aggregator.models.AggregatorSecondarySyncState;
 import io.harness.aggregator.repositories.AggregatorSecondarySyncStateRepository;
 import io.harness.aggregator.repositories.MongoReconciliationOffsetRepository;

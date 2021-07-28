@@ -21,7 +21,6 @@ import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.client.CVNGClientConfig;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -127,7 +126,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ocVersion") private String ocVersion;
   @JsonProperty("scmVersion") private String scmVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
-  @JsonProperty("ngManagerAvailable") private boolean ngManagerAvailable;
+  @JsonProperty("eventsFrameworkAvailableInOnPrem") private boolean eventsFrameworkAvailableInOnPrem;
   @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")
   private boolean trialRegistrationAllowedForBugathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
@@ -175,7 +174,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
   @JsonProperty(value = "jobsFrequencyConfig") private JobsFrequencyConfig jobsFrequencyConfig;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
-  @JsonProperty("cvngClientConfig") private CVNGClientConfig cvngClientConfig;
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
   @JsonProperty("numberOfRemindersBeforeAccountDeletion") private int numberOfRemindersBeforeAccountDeletion;
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
@@ -240,13 +238,13 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     return assetsConfiguration;
   }
 
-  private ConnectorFactory getDefaultAdminConnectorFactory() {
+  protected ConnectorFactory getDefaultAdminConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
     factory.setPort(9091);
     return factory;
   }
 
-  private ConnectorFactory getDefaultApplicationConnectorFactory() {
+  protected ConnectorFactory getDefaultApplicationConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
     factory.setPort(9090);
     return factory;

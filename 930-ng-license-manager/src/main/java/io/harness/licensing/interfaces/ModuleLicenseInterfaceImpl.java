@@ -12,15 +12,13 @@ import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 @OwnedBy(HarnessTeam.GTM)
 @Singleton
 public class ModuleLicenseInterfaceImpl implements ModuleLicenseInterface {
   @Inject Map<ModuleType, ModuleLicenseClient> clientMap;
-  static final long TRIAL_DURATION = 14;
+  public static final long TRIAL_DURATION = 14;
 
   @Override
   public ModuleLicenseDTO generateTrialLicense(
@@ -46,12 +44,6 @@ public class ModuleLicenseInterfaceImpl implements ModuleLicenseInterface {
     }
     if (moduleLicenseDTO.getLicenseType() == null) {
       moduleLicenseDTO.setLicenseType(type);
-    }
-    if (moduleLicenseDTO.getStartTime() == 0) {
-      moduleLicenseDTO.setStartTime(Instant.now().toEpochMilli());
-    }
-    if (moduleLicenseDTO.getExpiryTime() == 0) {
-      moduleLicenseDTO.setExpiryTime(Instant.now().plus(TRIAL_DURATION, ChronoUnit.DAYS).toEpochMilli());
     }
     if (moduleLicenseDTO.getStatus() == null) {
       moduleLicenseDTO.setStatus(LicenseStatus.ACTIVE);

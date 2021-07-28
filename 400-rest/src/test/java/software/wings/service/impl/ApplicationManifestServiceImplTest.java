@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -8,6 +9,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -25,6 +27,7 @@ import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
 import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -48,6 +51,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -61,12 +65,14 @@ import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
 import software.wings.beans.HelmCommandFlagConfig;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -84,6 +90,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +106,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDC)
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Spy @InjectMocks private GitFileConfigHelperService gitFileConfigHelperService;
@@ -118,6 +126,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   public void setup() {
     Reflect.on(applicationManifestServiceImpl).set("wingsPersistence", persistence);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(serviceResourceService.get(any(), anyString(), eq(false)))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(false).build());
   }
 
   @Test
@@ -533,6 +543,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     gitFileConfig.setRepoName("repo-name");
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
+    Service service = Service.builder().deploymentType(DeploymentType.HELM).build();
+    doReturn(service).when(serviceResourceService).getWithDetails(any(), any());
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
   }
 
@@ -830,16 +842,21 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     ApplicationManifest applicationManifest1 = getHelmChartApplicationManifest();
     applicationManifest1.setAppId(APP_ID);
     applicationManifest1.setPollForChanges(true);
+    applicationManifest1.setServiceId(SERVICE_ID + 1);
+    applicationManifest1.setName(APP_MANIFEST_NAME + 1);
     persistence.save(applicationManifest1);
 
     ApplicationManifest applicationManifest2 = getHelmChartApplicationManifest();
     applicationManifest2.setAppId(APP_ID);
     applicationManifest2.setPollForChanges(true);
-    applicationManifest2.setServiceId("SERVICE_ID_1");
+    applicationManifest2.setServiceId(SERVICE_ID + 2);
+    applicationManifest2.setName(APP_MANIFEST_NAME + 2);
     persistence.save(applicationManifest2);
 
     when(serviceResourceService.getServiceNames(anyString(), anySet()))
         .thenReturn(Collections.singletonMap(SERVICE_ID, SERVICE_NAME));
+    when(serviceResourceService.getIdsWithArtifactFromManifest(APP_ID))
+        .thenReturn(Arrays.asList(SERVICE_ID + 2, SERVICE_ID + 1));
   }
 
   @Test
@@ -853,10 +870,11 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     PageResponse<ApplicationManifest> pageResponse =
         applicationManifestServiceImpl.listPollingEnabled(pageRequest, APP_ID);
     List<ApplicationManifest> applicationManifestList = pageResponse.getResponse();
-    assertThat(applicationManifestList).isNotNull().hasSize(1);
+    assertThat(applicationManifestList).isNotNull().hasSize(2);
     ApplicationManifest savedAppManifest = applicationManifestList.get(0);
     assertThat(savedAppManifest.getPollForChanges()).isTrue();
-    assertThat(savedAppManifest.getServiceName()).isNotNull().isEqualTo(SERVICE_NAME);
+    assertThat(applicationManifestList.stream().map(ApplicationManifest::getName))
+        .containsExactlyInAnyOrder(APP_MANIFEST_NAME + 1, APP_MANIFEST_NAME + 2);
   }
 
   @Test
@@ -918,6 +936,44 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifestServiceImpl.upsertApplicationManifestFile(newManifestFile, applicationManifest, false);
     verify(yamlPushService, times(1))
         .pushYamlChangeSet(ACCOUNT_ID, oldManifestFile, newManifestFile, Type.UPDATE, false, false);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void testValidateRemoteAppManifest() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder().build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(Remote)
+                                                  .helmChartConfig(HelmChartConfig.builder().build())
+                                                  .gitFileConfig(gitFileConfig)
+                                                  .build();
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest))
+        .withMessageContaining("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.");
+
+    applicationManifest.setHelmChartConfig(null);
+    applicationManifest.setCustomSourceConfig(CustomSourceConfig.builder().build());
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest))
+        .withMessageContaining("customSourceConfig cannot be used with Remote. Use gitFileConfig instead.");
+
+    applicationManifest.setCustomSourceConfig(null);
+    doNothing().when(gitFileConfigHelperService).validate(any());
+    applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest);
+
+    applicationManifest.setServiceId("service__1");
+    doNothing().when(gitFileConfigHelperService).validate(any());
+    when(serviceResourceService.getWithDetails(any(), any())).thenReturn(null);
+    applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest);
+
+    applicationManifest.setAppId("appId");
+    Service service = Service.builder().deploymentType(DeploymentType.ECS).build();
+    doNothing().when(gitFileConfigHelperService).validate(any());
+    when(serviceResourceService.getWithDetails(any(), any())).thenReturn(service);
+    doNothing().when(gitFileConfigHelperService).validateEcsGitfileConfig(any());
+    applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest);
+    verify(gitFileConfigHelperService, times(1)).validateEcsGitfileConfig(gitFileConfig);
   }
 
   @NotNull

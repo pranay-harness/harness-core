@@ -7,7 +7,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

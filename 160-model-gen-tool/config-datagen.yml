@@ -222,7 +222,7 @@ ngManagerServiceHttpClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
-ngManagerAvailable: true
+eventsFrameworkAvailableInOnPrem: false
 
 grpcDelegateServiceClientConfig:
   target: localhost:9880
@@ -239,10 +239,6 @@ accessControlClient:
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-
-cvngClientConfig:
-  baseUrl: https://localhost:6060/cv/
-  cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 eventsFramework:
   redis:

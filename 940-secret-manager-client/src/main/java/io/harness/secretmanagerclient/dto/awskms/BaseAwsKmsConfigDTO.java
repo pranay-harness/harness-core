@@ -7,11 +7,13 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Set;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 @OwnedBy(PL)
@@ -21,6 +23,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
+@FieldNameConstants(innerTypeName = "BaseAwsKmsConfigDTOKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BaseAwsKmsConfigDTO {
   AwsKmsCredentialType credentialType;
@@ -29,4 +32,5 @@ public class BaseAwsKmsConfigDTO {
   AwsKmsCredentialSpecConfig credential;
   String kmsArn;
   String region;
+  Set<String> delegateSelectors;
 }

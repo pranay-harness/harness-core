@@ -15,7 +15,8 @@ import java.util.List;
 public enum HookEventType {
   @JsonProperty("TRIGGER_EVENTS")
   TRIGGER_EVENTS(Arrays.asList(GithubWebhookEvent.GITHUB_CREATE, GithubWebhookEvent.GITHUB_PUSH,
-                     GithubWebhookEvent.GITHUB_DELETE, GithubWebhookEvent.GITHUB_DEPLOYMENT),
+                     GithubWebhookEvent.GITHUB_DELETE, GithubWebhookEvent.GITHUB_DEPLOYMENT,
+                     GithubWebhookEvent.GITHUB_PULL_REQUEST, GithubWebhookEvent.GITHUB_PULL_REQUEST_REVIEW),
       Arrays.asList(GitlabWebhookEvent.GITLAB_COMMENT, GitlabWebhookEvent.GITLAB_ISSUES,
           GitlabWebhookEvent.GITLAB_MERGE, GitlabWebhookEvent.GITLAB_PUSH),
       Arrays.asList(

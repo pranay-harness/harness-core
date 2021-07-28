@@ -8,16 +8,22 @@ import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.security.PmsSecurityContextEventGuard;
+
+import lombok.SneakyThrows;
 
 @OwnedBy(PIPELINE)
 public interface ChildChainExecutableWithRbac<T extends StepParameters> extends ChildChainExecutable<T> {
   void validateResources(Ambiance ambiance, T stepParameters);
 
+  @SneakyThrows
   @Override
   default ChildChainExecutableResponse executeFirstChild(
       Ambiance ambiance, T stepParameters, StepInputPackage inputPackage) {
-    validateResources(ambiance, stepParameters);
-    return this.executeFirstChildAfterRbac(ambiance, stepParameters, inputPackage);
+    try (PmsSecurityContextEventGuard securityContextEventGuard = new PmsSecurityContextEventGuard(ambiance)) {
+      validateResources(ambiance, stepParameters);
+      return this.executeFirstChildAfterRbac(ambiance, stepParameters, inputPackage);
+    }
   }
 
   ChildChainExecutableResponse executeFirstChildAfterRbac(

@@ -2,9 +2,7 @@ package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -16,7 +14,6 @@ import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
-import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
@@ -26,7 +23,6 @@ import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
 import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.notifications.NotificationReceiverInfo;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
@@ -140,6 +136,7 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.shellscript.provision.ShellScriptProvisionOutputVariables;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terragrunt.TerragruntApplyMarkerParam;
@@ -255,7 +252,6 @@ import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.Schema;
-import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceNowConfig;
@@ -806,7 +802,6 @@ import java.security.Principal;
 import java.util.Set;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
 
@@ -974,7 +969,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Notification.class);
     set.add(NotificationBatch.class);
     set.add(NotificationGroup.class);
-    set.add(NotificationReceiverInfo.class);
     set.add(NotificationRulesStatus.class);
     set.add(OauthSettings.class);
     set.add(PcfInfrastructureMapping.class);
@@ -1060,11 +1054,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlHistory.class);
     set.add(YamlSuccessfulChange.class);
     set.add(YamlVersion.class);
-    set.add(SecretManagerRuntimeParameters.class);
     set.add(HelmChart.class);
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
-    set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
     set.add(AccessRequest.class);
   }
@@ -1631,6 +1623,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terraform.TerraformOutputVariables", TerraformOutputVariables.class);
     w.put("api.terragrunt.TerragruntOutputVariables", TerragruntOutputVariables.class);
     w.put("api.arm.ARMOutputVariables", ARMOutputVariables.class);
+    w.put("api.shellscript.provision.ShellScriptProvisionOutputVariables", ShellScriptProvisionOutputVariables.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 

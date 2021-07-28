@@ -9,7 +9,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.helm.HelmConstants.CHARTS_YAML_KEY;
-import static io.harness.helm.HelmConstants.HELM_HOME_PATH_FLAG;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.REPO_NAME;
 import static io.harness.helm.HelmConstants.VALUES_YAML;
@@ -330,8 +329,7 @@ public class HelmTaskHelper {
         HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_UPDATE, helmVersion)
             .replace(HELM_PATH_PLACEHOLDER, helmTaskHelperBase.getHelmPath(helmVersion))
             .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
-            .replace(REPO_NAME, repoName)
-        + HELM_HOME_PATH_FLAG;
+            .replace(REPO_NAME, repoName);
 
     return helmTaskHelperBase.applyHelmHomePath(repoUpdateCommand, workingDirectory);
   }
@@ -343,9 +341,10 @@ public class HelmTaskHelper {
   public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     try {
       String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
+      ProcessResult processResult = helmTaskHelperBase.executeCommand(repoUpdateCommand, null,
+          format("update helm repo %s", repoName), timeoutInMillis, HelmCliCommandType.REPO_UPDATE);
 
-      ProcessResult processResult = helmTaskHelperBase.executeCommand(
-          repoUpdateCommand, null, format("update helm repo %s", repoName), timeoutInMillis);
+      log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
       if (processResult.getExitValue() != 0) {
         log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
@@ -434,7 +433,7 @@ public class HelmTaskHelper {
     String commandOutput = executeCommandWithLogOutput(
         fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
             helmChartConfigParams.getRepoName(), destinationDirectory),
-        workingDirectory, "Helm chart fetch versions command failed ");
+        workingDirectory, "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
 
     if (log.isDebugEnabled()) {
       log.debug("Result of the helm repo search command: {}, chart name: {}", commandOutput,
@@ -502,7 +501,7 @@ public class HelmTaskHelper {
       String commandOutput = executeCommandWithLogOutput(
           fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
               helmChartConfigParams.getRepoName(), chartDirectory),
-          chartDirectory, "Helm chart fetch versions command failed ");
+          chartDirectory, "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
       return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
     } finally {
       chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
@@ -524,24 +523,27 @@ public class HelmTaskHelper {
     return helmTaskHelperBase.applyHelmHomePath(helmFetchCommand, workingDirectory);
   }
 
-  String executeCommandWithLogOutput(String command, String chartDirectory, String errorMessage) {
+  String executeCommandWithLogOutput(
+      String command, String chartDirectory, String errorMessage, HelmCliCommandType helmCliCommandType) {
     StringBuilder sb = new StringBuilder();
     ProcessExecutor processExecutor = createProcessExecutorWithRedirectOutput(command, chartDirectory, sb);
 
+    log.info("Helm command executed on delegate: {}", command);
+
     try {
       ProcessResult processResult = processExecutor.execute();
-      if (processResult.getExitValue() == 0) {
-        return sb.toString();
+      if (processResult.getExitValue() != 0) {
+        log.warn("Command failed with following result: {}", sb.toString());
       }
+      return sb.toString();
     } catch (IOException e) {
-      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e, helmCliCommandType);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e, helmCliCommandType);
     } catch (TimeoutException | UncheckedTimeoutException e) {
-      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e, helmCliCommandType);
     }
-    return null;
   }
 
   ProcessExecutor createProcessExecutorWithRedirectOutput(

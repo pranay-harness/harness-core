@@ -225,6 +225,7 @@ public class PcfStateHelper {
         .commandName(commandName)
         .pcfRouteUpdateRequestConfigData(requestConfigData)
         .tags(tags)
+        .isRollback(requestConfigData.isRollback())
         .build();
   }
 

@@ -1,11 +1,5 @@
-load("@bazel_version//:bazel_version.bzl", "bazel_version")
-load("@bazel_skylib//lib:versions.bzl", "versions")
-
 def sonarqube_coverage_generator_binary():
-    if versions.is_at_least(threshold = "2.1.0", version = bazel_version):
-        deps = ["@remote_coverage_tools//:all_lcov_merger_lib"]
-    else:
-        deps = ["@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:all_lcov_merger_lib"]
+    deps = ["@remote_coverage_tools//:all_lcov_merger_lib"]
 
     native.java_binary(
         name = "SonarQubeCoverageGenerator",

@@ -24,7 +24,7 @@ container_image(
         "no-ide",
     ],
     tars = [
-        "//250-watcher/container:watcher_jar",
+        "//960-watcher/container:watcher_jar",
     ],
 )
 
@@ -59,4 +59,19 @@ container_image(
         "no-ide",
     ],
     workdir = "/opt/harness-delegate",
+)
+
+container_push(
+    name = "push_delegate_image",
+    format = "Docker",
+    image = "delegate_image",
+    registry = "us.gcr.io",
+    repository = "platform-205701/functional-test/delegate",
+    tag = "{GIT_BRANCH_BASED_CONTAINER_TAG}",
+    tags = [
+        "functional-test-image",
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
 )

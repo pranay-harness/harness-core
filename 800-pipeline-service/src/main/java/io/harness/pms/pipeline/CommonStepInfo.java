@@ -3,7 +3,6 @@ package io.harness.pms.pipeline;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -19,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class CommonStepInfo {
+  private static final String APPROVAL_STEP_CATEGORY = "Approval";
+
   @Inject PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   StepInfo shellScriptStepInfo =
@@ -41,7 +42,6 @@ public class CommonStepInfo {
                                                               .addCategory("Approval")
                                                               .setFolderPath("Approval")
                                                               .build())
-                                         .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
                                          .build();
   StepInfo jiraApprovalStepInfo = StepInfo.newBuilder()
                                       .setName("Jira Approval")
@@ -51,33 +51,32 @@ public class CommonStepInfo {
                                                            .addCategory("Approval")
                                                            .setFolderPath("Approval")
                                                            .build())
-                                      .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
                                       .build();
   StepInfo jiraCreateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Create")
           .setType(StepSpecTypeConstants.JIRA_CREATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
-          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo jiraUpdateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Update")
           .setType(StepSpecTypeConstants.JIRA_UPDATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
-          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
           .setName("Barrier")
           .setType("Barrier")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("FlowControl/Barrier").build())
-          .setFeatureFlag(FeatureName.NG_BARRIERS.name())
           .build();
 
-  public List<StepInfo> getCommonSteps() {
+  public List<StepInfo> getCommonSteps(String category) {
     List<StepInfo> stepInfos = new ArrayList<>();
-    stepInfos.add(shellScriptStepInfo);
+    // Remove shell script from approval stage till shell script step is moved to pipeline service.
+    if (!APPROVAL_STEP_CATEGORY.equals(category)) {
+      stepInfos.add(shellScriptStepInfo);
+    }
     stepInfos.add(httpStepInfo);
     stepInfos.add(harnessApprovalStepInfo);
     stepInfos.add(jiraApprovalStepInfo);

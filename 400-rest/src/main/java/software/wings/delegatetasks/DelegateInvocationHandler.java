@@ -1,8 +1,8 @@
 package software.wings.delegatetasks;
 
-import static io.harness.beans.shared.tasks.NgSetupFields.NG;
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.NgSetupFields.NG;
+import static io.harness.delegate.beans.NgSetupFields.OWNER;
 
 import static java.util.Collections.singletonList;
 

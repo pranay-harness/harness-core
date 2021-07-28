@@ -13,6 +13,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.handlers.AbortInterruptHandler;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
@@ -21,7 +22,9 @@ import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.InterruptRepository;
 
 import com.google.inject.Inject;
@@ -45,6 +48,7 @@ public class InterruptServiceImpl implements InterruptService {
   @Inject private ResumeAllInterruptHandler resumeAllInterruptHandler;
   @Inject private AbortInterruptHandler abortInterruptHandler;
   @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PlanExecutionService planExecutionService;
 
   @Override
   public Interrupt get(String interruptId) {
@@ -115,6 +119,16 @@ public class InterruptServiceImpl implements InterruptService {
     }
 
     // This case is for stage level PAUSE
+
+    // Lets first check if stage is already in final state
+    // (ex. interrupt was fired for the last node in the stage)
+    NodeExecution interruptNodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
+    if (StatusUtils.isFinalStatus(interruptNodeExecution.getStatus())) {
+      updatePlanStatus(interruptNodeExecution.getAmbiance().getPlanExecutionId(), nodeExecutionId);
+      updateInterruptState(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+      return false;
+    }
+
     // Find All children for the stage (nodeExecutionId in interrupt) and check if the starting node is one of these. If
     // yes Pause the execution
     List<NodeExecution> targetExecutions =
@@ -181,5 +195,12 @@ public class InterruptServiceImpl implements InterruptService {
   public List<Interrupt> fetchActiveInterruptsForNodeExecution(String planExecutionId, String nodeExecutionId) {
     return interruptRepository.findByPlanExecutionIdAndNodeExecutionIdAndStateInOrderByCreatedAtDesc(
         planExecutionId, nodeExecutionId, EnumSet.of(REGISTERED, PROCESSING));
+  }
+
+  private void updatePlanStatus(String planExecutionId, String excludingNodeExecutionId) {
+    Status planStatus = planExecutionService.calculateStatusExcluding(planExecutionId, excludingNodeExecutionId);
+    if (!StatusUtils.isFinalStatus(planStatus)) {
+      planExecutionService.updateStatus(planExecutionId, planStatus);
+    }
   }
 }

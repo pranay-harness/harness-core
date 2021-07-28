@@ -1,5 +1,6 @@
 package io.harness.connector;
 
+import static io.harness.ConnectorConstants.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
@@ -10,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
+import io.harness.connector.services.ConnectorService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
@@ -45,6 +47,8 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+
+import software.wings.service.impl.security.NGEncryptorService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
@@ -92,6 +96,10 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
         bind(ProjectService.class).toInstance(mock(ProjectService.class));
+        bind(ConnectorService.class)
+            .annotatedWith(Names.named(CONNECTOR_DECORATOR_SERVICE))
+            .toInstance(mock(ConnectorService.class));
+        bind(NGEncryptorService.class).toInstance(mock(NGEncryptorService.class));
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(NGActivityService.class).toInstance(mock(NGActivityService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));

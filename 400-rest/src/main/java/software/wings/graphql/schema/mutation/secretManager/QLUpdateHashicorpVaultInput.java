@@ -15,6 +15,7 @@ import lombok.Value;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLUpdateHashicorpVaultInput {
   String name;
+  String namespace;
   QLHashicorpVaultAuthDetails authDetails;
   Boolean isReadOnly;
   Long secretEngineRenewalInterval;

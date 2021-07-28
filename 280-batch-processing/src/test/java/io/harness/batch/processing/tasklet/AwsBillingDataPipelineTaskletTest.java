@@ -69,9 +69,8 @@ public class AwsBillingDataPipelineTaskletTest extends BaseTaskletTest {
 
     when(cloudToHarnessMappingService.getAccountInfoFromId(ACCOUNT_ID))
         .thenReturn(Account.Builder.anAccount().withAccountName(accountName).build());
-    when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(ACCOUNT_ID,
-             SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS, START_TIME_MILLIS,
-             END_TIME_MILLIS))
+    when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
+             ACCOUNT_ID, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS))
         .thenReturn(Collections.singletonList(settingAttribute));
     when(billingDataPipelineService.createDataSet(any())).thenReturn(dataSetId);
     when(billingDataPipelineService.createDataTransferJobFromGCS(

@@ -68,7 +68,7 @@ public class KubernetesActivitiesStoreService {
           }
           try {
             log.info("Dispatching {} activities for [{}] [{}]", activities.size(), accountId, activitySourceConfigId);
-            RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(30),
+            RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30),
                 ()
                     -> execute(cvNextGenServiceClient.saveKubernetesActivities(
                         accountId, activitySourceConfigId, activities)));

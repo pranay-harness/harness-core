@@ -13,7 +13,7 @@ import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.PlanExecutionUtils;
-import io.harness.serializer.JsonUtils;
+import io.harness.pms.utils.PmsExecutionUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +21,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 @UtilityClass
 @Slf4j
@@ -34,10 +33,10 @@ public class ExecutionGraphMapper {
         .failureInfo(graphVertex.getFailureInfo())
         .skipInfo(graphVertex.getSkipInfo())
         .nodeRunInfo(graphVertex.getNodeRunInfo())
-        .stepParameters(extractDocumentStepParameters(graphVertex.getStepParameters()))
+        .stepParameters(PmsExecutionUtils.extractToOrchestrationMap(graphVertex.getStepParameters()))
         .name(graphVertex.getName())
         .baseFqn(basefqn)
-        .outcomes(graphVertex.getOutcomes())
+        .outcomes(PmsExecutionUtils.convertToOrchestrationMap(graphVertex.getOutcomes()))
         .startTs(graphVertex.getStartTs())
         .endTs(graphVertex.getEndTs())
         .identifier(graphVertex.getIdentifier())
@@ -47,9 +46,10 @@ public class ExecutionGraphMapper {
         .setupId(graphVertex.getPlanNodeId())
         .executableResponses(graphVertex.getExecutableResponses())
         .unitProgresses(graphVertex.getUnitProgresses())
-        .progressData(graphVertex.getProgressData())
+        .progressData(PmsExecutionUtils.extractToOrchestrationMap(graphVertex.getProgressData()))
         .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
         .interruptHistories(graphVertex.getInterruptHistories())
+        .stepDetails(graphVertex.getStepDetails())
         .build();
   }
 
@@ -90,26 +90,5 @@ public class ExecutionGraphMapper {
         .nodeAdjacencyListMap(orchestrationGraph.getAdjacencyList().getAdjacencyMap().entrySet().stream().collect(
             Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNodeAdjacencyList.apply(entry.getValue()))))
         .build();
-  }
-
-  /**
-   * This method is used for backward compatibility
-   * @param stepParameters can be of type {@link Document} (current)
-   *                      and {@link java.util.LinkedHashMap} (before recaster)
-   * @return document representation of step parameters
-   */
-  private Document extractDocumentStepParameters(Object stepParameters) {
-    if (stepParameters == null) {
-      return Document.parse("{}");
-    }
-    if (stepParameters instanceof Document) {
-      return (Document) stepParameters;
-    } else if (stepParameters instanceof Map) {
-      return Document.parse(JsonUtils.asJson(stepParameters));
-    } else {
-      log.error("Unable to parse stepParameters {} from graphVertex", stepParameters.getClass());
-      throw new IllegalStateException(
-          String.format("Unable to parse stepParameters %s from graphVertex", stepParameters.getClass()));
-    }
   }
 }

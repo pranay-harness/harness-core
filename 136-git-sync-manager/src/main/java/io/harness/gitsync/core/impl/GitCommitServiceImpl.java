@@ -6,12 +6,14 @@ import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATU
 import static org.springframework.data.mongodb.core.query.Update.update;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.helper.GitCommitMapper;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitKeys;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
+import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.repositories.gitCommit.GitCommitRepository;
 
 import com.google.inject.Inject;
@@ -81,6 +83,15 @@ public class GitCommitServiceImpl implements GitCommitService {
   }
 
   @Override
+  public Optional<GitCommitDTO> findLastGitCommit(
+      String accountIdentifier, String repo, String branchName, GitSyncDirection gitSyncDirection) {
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameAndGitSyncDirectionOrderByCreatedAtDesc(
+            accountIdentifier, repo, branchName, gitSyncDirection.name());
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
+  }
+
+  @Override
   public Optional<GitCommitDTO> findLastGitCommit(String accountIdentifier, String repo, String branchName) {
     Optional<GitCommit> gitCommit =
         gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
@@ -90,6 +101,11 @@ public class GitCommitServiceImpl implements GitCommitService {
 
   @Override
   public UpdateResult upsertOnCommitIdAndRepoUrlAndGitSyncDirection(GitCommitDTO gitCommitDTO) {
+    if (isFileProcessingSummaryEmpty(gitCommitDTO.getFileProcessingSummary())) {
+      log.info("Ignoring gitCommit upsert : {} as file processing summary is empty", gitCommitDTO);
+      return UpdateResult.unacknowledged();
+    }
+
     Criteria criteria = Criteria.where(GitCommitKeys.commitId)
                             .is(gitCommitDTO.getCommitId())
                             .and(GitCommitKeys.repoURL)
@@ -98,6 +114,7 @@ public class GitCommitServiceImpl implements GitCommitService {
                             .is(gitCommitDTO.getGitSyncDirection());
     Update update = update(GitCommitKeys.status, gitCommitDTO.getStatus())
                         .set(GitCommitKeys.fileProcessingSummary, gitCommitDTO.getFileProcessingSummary());
+    // TODO added explicitly createdAt for timebeing until annotation issue isn't resolved
     update.setOnInsert(GitCommitKeys.repoURL, gitCommitDTO.getRepoURL())
         .set(GitCommitKeys.commitId, gitCommitDTO.getCommitId())
         .set(GitCommitKeys.accountIdentifier, gitCommitDTO.getAccountIdentifier())
@@ -105,7 +122,8 @@ public class GitCommitServiceImpl implements GitCommitService {
         .set(GitCommitKeys.commitMessage, gitCommitDTO.getCommitMessage())
         .set(GitCommitKeys.gitSyncDirection, gitCommitDTO.getGitSyncDirection())
         .set(GitCommitKeys.fileProcessingSummary, gitCommitDTO.getFileProcessingSummary())
-        .set(GitCommitKeys.failureReason, gitCommitDTO.getFailureReason());
+        .set(GitCommitKeys.failureReason, gitCommitDTO.getFailureReason())
+        .set(GitCommitKeys.createdAt, System.currentTimeMillis());
 
     return mongoTemplate.upsert(new Query(criteria), update, GitCommit.class);
   }
@@ -124,5 +142,21 @@ public class GitCommitServiceImpl implements GitCommitService {
         .repoURL(gitCommitDTO.getRepoURL())
         .status(gitCommitDTO.getStatus())
         .build();
+  }
+
+  private boolean isFileProcessingSummaryEmpty(GitFileProcessingSummary gitFileProcessingSummary) {
+    if (isValueEmpty(gitFileProcessingSummary.getFailureCount())
+        && isValueEmpty(gitFileProcessingSummary.getQueuedCount())
+        && isValueEmpty(gitFileProcessingSummary.getSkippedCount())
+        && isValueEmpty(gitFileProcessingSummary.getSuccessCount())
+        && isValueEmpty(gitFileProcessingSummary.getTotalCount())) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean isValueEmpty(Long value) {
+    return value == null || value == 0;
   }
 }

@@ -52,7 +52,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
             () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -73,7 +73,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(5),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(5),
             () -> upsertSecretInternal(name, plaintext, accountId, existingRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -94,7 +94,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
             () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -171,7 +171,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(
+        return HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> fetchSecretInternal(encryptedRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -219,5 +219,16 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     } else {
       return vaultConfig.getAuthToken();
     }
+  }
+
+  @Override
+  public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    try {
+      createSecret(accountId, VaultConfig.VAULT_VAILDATION_URL, Boolean.TRUE.toString(), encryptionConfig);
+    } catch (Exception exception) {
+      log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName());
+      return false;
+    }
+    return true;
   }
 }

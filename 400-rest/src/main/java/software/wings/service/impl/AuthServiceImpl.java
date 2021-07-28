@@ -298,13 +298,29 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private void authorize(String accountId, String appId, String entityId, User user,
-      List<PermissionAttribute> permissionAttributes, boolean accountNullCheck) {
+      List<PermissionAttribute> permissionAttributes, boolean accountNullCheck, boolean matchesAny) {
     UserPermissionInfo userPermissionInfo = authorizeAndGetUserPermissionInfo(accountId, appId, user, accountNullCheck);
 
-    for (PermissionAttribute permissionAttribute : permissionAttributes) {
-      if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+    if (matchesAny) {
+      boolean authorised = false;
+      for (PermissionAttribute permissionAttribute : permissionAttributes) {
+        if (authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+          authorised = true;
+          break;
+        }
+      }
+
+      if (!authorised) {
         log.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
         throw new AccessDeniedException("Not authorized", USER);
+      }
+
+    } else {
+      for (PermissionAttribute permissionAttribute : permissionAttributes) {
+        if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+          log.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
+          throw new AccessDeniedException("Not authorized", USER);
+        }
       }
     }
   }
@@ -346,7 +362,13 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void authorize(
       String accountId, String appId, String entityId, User user, List<PermissionAttribute> permissionAttributes) {
-    authorize(accountId, appId, entityId, user, permissionAttributes, true);
+    authorize(accountId, appId, entityId, user, permissionAttributes, true, false);
+  }
+
+  @Override
+  public void authorize(String accountId, String appId, String entityId, User user,
+      List<PermissionAttribute> permissionAttributes, boolean matchesAny) {
+    authorize(accountId, appId, entityId, user, permissionAttributes, true, matchesAny);
   }
 
   @Override
@@ -359,7 +381,7 @@ public class AuthServiceImpl implements AuthService {
 
     if (appIds != null) {
       for (String appId : appIds) {
-        authorize(accountId, appId, entityId, user, permissionAttributes, false);
+        authorize(accountId, appId, entityId, user, permissionAttributes, false, false);
       }
     }
   }

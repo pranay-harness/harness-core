@@ -4,7 +4,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Account.AccountKeys;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

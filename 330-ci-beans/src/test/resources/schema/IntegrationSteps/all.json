@@ -333,22 +333,6 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "InputSetValidator": {
-      "type": "object",
-      "properties": {
-        "parameters": {
-          "type": "string"
-        },
-        "validatorType": {
-          "type": "string",
-          "enum": [
-            "ALLOWED_VALUES",
-            "REGEX"
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "JUnitTestReport": {
       "allOf": [
         {
@@ -389,94 +373,21 @@
           ]
         },
         "memory": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(([0-9]*[.])?[0-9]+)([GM]i?)$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterField": {
+    "OutputNGVariable": {
       "type": "object",
       "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
+        "description": {
           "type": "string"
         },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldListString": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldMapStringString": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -498,6 +409,14 @@
             },
             "image": {
               "type": "string"
+            },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
             },
             "privileged": {
               "oneOf": [
@@ -708,18 +627,19 @@
             "image": {
               "type": "string"
             },
-            "outputVariables": {
-              "oneOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                {
-                  "type": "string"
-                }
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
               ]
+            },
+            "outputVariables": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OutputNGVariable"
+              }
             },
             "privileged": {
               "oneOf": [
@@ -770,6 +690,7 @@
           "required": [
             "args",
             "buildTool",
+            "connectorRef",
             "image",
             "language",
             "packages"
@@ -779,22 +700,50 @@
               "type": "string"
             },
             "buildTool": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Maven",
+                "Bazel"
+              ]
             },
-            "connector": {
+            "connectorRef": {
               "type": "string"
             },
             "envVariables": {
-              "$ref": "#/definitions/ParameterFieldMapStringString"
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
             "language": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Java"
+              ]
             },
             "outputVariables": {
-              "$ref": "#/definitions/ParameterFieldListString"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OutputNGVariable"
+              }
             },
             "packages": {
               "type": "string"
@@ -833,7 +782,14 @@
               ]
             },
             "runOnlySelectedTests": {
-              "type": "boolean"
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "testAnnotations": {
               "type": "string"

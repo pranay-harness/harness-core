@@ -1,12 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.ng.core.account.AuthenticationMechanism.LDAP;
+import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
+import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
+import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UJJAWAL;
-
-import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
-import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
-import static software.wings.security.authentication.AuthenticationMechanism.SAML;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;

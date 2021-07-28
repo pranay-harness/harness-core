@@ -75,7 +75,7 @@ public class HealthService extends HealthCheck {
   @SuppressWarnings("PMD")
   private Throwable checkMonitor(HealthMonitor monitor) {
     try {
-      Throwable exception = HTimeLimiter.callInterruptible(
+      Throwable exception = HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMillis(monitor.healthExpectedResponseTimeout().toMillis()), () -> {
             try {
               monitor.isHealthy();

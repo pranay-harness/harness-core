@@ -4,13 +4,17 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -20,14 +24,18 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse.CloudFormationCommandExecutionResponseBuilder;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStackResourcesRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
+import com.amazonaws.services.cloudformation.model.StackResource;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.List;
@@ -77,6 +85,93 @@ public abstract class CloudFormationCommandTaskHandler {
     }
   }
 
+  protected CloudFormationCommandExecutionResponse deleteStack(String stackId, String stackName,
+      CloudFormationCommandRequest request, ExecutionLogCallback executionLogCallback) {
+    CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
+    Stack stack = null;
+    try {
+      long stackEventsTs = System.currentTimeMillis();
+      executionLogCallback.saveExecutionLog(String.format("# Starting to delete stack: %s", stackName));
+      DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackId);
+      if (EmptyPredicate.isNotEmpty(request.getCloudFormationRoleArn())) {
+        deleteStackRequest.withRoleARN(request.getCloudFormationRoleArn());
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "No specific cloudformation role provided will use the default permissions on delegate.");
+      }
+      awsHelperService.deleteStack(request.getRegion(), deleteStackRequest, request.getAwsConfig());
+      sleep(ofSeconds(30));
+
+      executionLogCallback.saveExecutionLog(
+          String.format("# Request to delete stack: %s submitted. Now beginning to poll.", stackName));
+      int timeOutMs = request.getTimeoutInMs() > 0 ? request.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
+      long endTime = System.currentTimeMillis() + timeOutMs;
+      boolean done = false;
+
+      while (System.currentTimeMillis() < endTime && !done) {
+        DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackId);
+        List<Stack> stacks =
+            awsHelperService.getAllStacks(request.getRegion(), describeStacksRequest, request.getAwsConfig());
+        if (stacks.size() < 1) {
+          String message = String.format(
+              "# Did not get any stacks with id: %s while querying stacks list. Deletion may have completed",
+              stackName);
+          executionLogCallback.saveExecutionLog(message);
+          builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS);
+          done = true;
+          break;
+        }
+        stack = stacks.get(0);
+        stackEventsTs =
+            printStackEvents(request.getRegion(), stackId, request.getAwsConfig(), executionLogCallback, stackEventsTs);
+
+        switch (stack.getStackStatus()) {
+          case "DELETE_COMPLETE": {
+            executionLogCallback.saveExecutionLog("# Completed deletion of stack");
+            builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS);
+            done = true;
+            break;
+          }
+          case "DELETE_FAILED": {
+            String errorMessage = String.format("# Error: %s when deleting stack", stack.getStackStatusReason());
+            executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+            builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+            done = true;
+            break;
+          }
+          case "DELETE_IN_PROGRESS": {
+            break;
+          }
+          default: {
+            String errorMessage = String.format(
+                "# Unexpected status: %s while deleting stack: %s ", stack.getStackStatus(), stack.getStackName());
+            executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
+            builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+            done = true;
+            break;
+          }
+        }
+        sleep(ofSeconds(10));
+      }
+      if (!done) {
+        String errorMessage = String.format("# Timing out while deleting stack: %s", stackName);
+        executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+        builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+      } else {
+        executionLogCallback.saveExecutionLog(
+            "Completed deletion of stack", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
+      }
+    } catch (Exception ex) {
+      String errorMessage =
+          String.format("# Exception: %s while deleting stack: %s", ExceptionUtils.getMessage(ex), stackName);
+      executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+      builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+    }
+
+    printStackResources(request.getRegion(), stackId, request.getAwsConfig(), executionLogCallback);
+    return builder.build();
+  }
+
   @VisibleForTesting
   protected long printStackEvents(CloudFormationCommandRequest request, long stackEventsTs, Stack stack,
       ExecutionLogCallback executionLogCallback) {
@@ -87,7 +182,7 @@ public abstract class CloudFormationCommandTaskHandler {
       long tsForEvent = event.getTimestamp().getTime();
       if (tsForEvent > stackEventsTs) {
         if (!printed) {
-          executionLogCallback.saveExecutionLog("******************** Could Formation Events ********************");
+          executionLogCallback.saveExecutionLog("******************** Cloud Formation Events ********************");
           executionLogCallback.saveExecutionLog("********[Status] [Type] [Logical Id] [Status Reason] ***********");
           printed = true;
         }
@@ -105,9 +200,82 @@ public abstract class CloudFormationCommandTaskHandler {
     return stackEventsTs;
   }
 
+  @VisibleForTesting
+  protected long printStackEvents(String region, String stackId, AwsConfig awsConfig,
+      ExecutionLogCallback executionLogCallback, long stackEventsTs) {
+    List<StackEvent> stackEvents = getStackEvents(region, stackId, awsConfig);
+    boolean printed = false;
+    long currentLatestTs = -1;
+    for (StackEvent event : stackEvents) {
+      long tsForEvent = event.getTimestamp().getTime();
+      if (tsForEvent > stackEventsTs) {
+        if (!printed) {
+          executionLogCallback.saveExecutionLog("******************** Cloud Formation Events ********************");
+          executionLogCallback.saveExecutionLog("********[Status] [Type] [Logical Id] [Status Reason] ***********");
+          printed = true;
+        }
+        executionLogCallback.saveExecutionLog(format("[%s] [%s] [%s] [%s] [%s]", event.getResourceStatus(),
+            event.getResourceType(), event.getLogicalResourceId(), getStatusReason(event.getResourceStatusReason()),
+            event.getPhysicalResourceId()));
+        if (currentLatestTs == -1) {
+          currentLatestTs = tsForEvent;
+        }
+      }
+    }
+    if (currentLatestTs != -1) {
+      stackEventsTs = currentLatestTs;
+    }
+    return stackEventsTs;
+  }
+
+  @VisibleForTesting
+  protected void printStackResources(
+      CloudFormationCommandRequest request, Stack stack, ExecutionLogCallback executionLogCallback) {
+    if (stack == null) {
+      return;
+    }
+    List<StackResource> stackResources = getStackResources(request, stack);
+    executionLogCallback.saveExecutionLog("******************** Cloud Formation Resources ********************");
+    executionLogCallback.saveExecutionLog("********[Status] [Type] [Logical Id] [Status Reason] ***********");
+    stackResources.forEach(resource
+        -> executionLogCallback.saveExecutionLog(format("[%s] [%s] [%s] [%s] [%s]", resource.getResourceStatus(),
+            resource.getResourceType(), resource.getLogicalResourceId(),
+            getStatusReason(resource.getResourceStatusReason()), resource.getPhysicalResourceId())));
+  }
+
+  @VisibleForTesting
+  protected void printStackResources(
+      String region, String stackId, AwsConfig awsConfig, ExecutionLogCallback executionLogCallback) {
+    if (isEmpty(stackId)) {
+      return;
+    }
+    List<StackResource> stackResources = getStackResources(region, stackId, awsConfig);
+    executionLogCallback.saveExecutionLog("******************** Cloud Formation Resources ********************");
+    executionLogCallback.saveExecutionLog("********[Status] [Type] [Logical Id] [Status Reason] ***********");
+    stackResources.forEach(resource
+        -> executionLogCallback.saveExecutionLog(format("[%s] [%s] [%s] [%s] [%s]", resource.getResourceStatus(),
+            resource.getResourceType(), resource.getLogicalResourceId(),
+            getStatusReason(resource.getResourceStatusReason()), resource.getPhysicalResourceId())));
+  }
+
+  private List<StackResource> getStackResources(CloudFormationCommandRequest request, Stack stack) {
+    return awsHelperService.getAllStackResources(request.getRegion(),
+        new DescribeStackResourcesRequest().withStackName(stack.getStackName()), request.getAwsConfig());
+  }
+
+  private List<StackResource> getStackResources(String region, String stackId, AwsConfig awsConfig) {
+    return awsHelperService.getAllStackResources(
+        region, new DescribeStackResourcesRequest().withStackName(stackId), awsConfig);
+  }
+
   private List<StackEvent> getStackEvents(CloudFormationCommandRequest request, Stack stack) {
     return awsHelperService.getAllStackEvents(request.getRegion(),
         new DescribeStackEventsRequest().withStackName(stack.getStackName()), request.getAwsConfig());
+  }
+
+  private List<StackEvent> getStackEvents(String region, String stackName, AwsConfig awsConfig) {
+    return awsHelperService.getAllStackEvents(
+        region, new DescribeStackEventsRequest().withStackName(stackName), awsConfig);
   }
 
   private String getStatusReason(String reason) {

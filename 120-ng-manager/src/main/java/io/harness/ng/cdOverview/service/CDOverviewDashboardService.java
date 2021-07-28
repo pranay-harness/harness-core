@@ -2,16 +2,22 @@ package io.harness.ng.cdOverview.service;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
+import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
+import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
 import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
+import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
 import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
+
+import java.util.List;
 
 @OwnedBy(HarnessTeam.CDC)
 public interface CDOverviewDashboardService {
@@ -40,4 +46,19 @@ public interface CDOverviewDashboardService {
 
   TimeValuePairListDTO<Integer> getServicesGrowthTrend(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startTimeInMs, long endTimeInMs, TimeGroupType timeGroupType);
+
+  InstanceCountDetailsByEnvTypeAndServiceId getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> serviceId);
+
+  ActiveServiceInstanceSummary getActiveServiceInstanceSummary(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
+
+  EnvBuildIdAndInstanceCountInfoList getEnvBuildInstanceCountByServiceId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId);
+
+  InstancesByBuildIdList getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, String envId, List<String> buildIds);
+
+  TimeValuePairListDTO<Integer> getInstanceGrowthTrend(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs);
 }

@@ -1,7 +1,7 @@
 package io.harness.pms.ngpipeline.inputset.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.merger.helpers.MergeHelper.removeRuntimeInputFromYaml;
+import static io.harness.pms.merger.helpers.TemplateHelper.removeRuntimeInputFromYaml;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -51,7 +51,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,6 +70,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -89,6 +89,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @PipelineServiceAuth
+@Slf4j
 public class InputSetResourcePMS {
   private final PMSInputSetService pmsInputSetService;
   private final ValidateAndMergeHelper validateAndMergeHelper;
@@ -105,6 +106,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    log.info(String.format("Retrieving input set with identifier %s for pipeline %s in project %s, org %s, account %s",
+        inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     Optional<InputSetEntity> inputSetEntity = pmsInputSetService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
     String version = "0";
@@ -132,6 +135,9 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    log.info(String.format(
+        "Retrieving overlay input set with identifier %s for pipeline %s in project %s, org %s, account %s",
+        inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     Optional<InputSetEntity> inputSetEntity = pmsInputSetService.get(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetIdentifier, deleted);
     String version = "0";
@@ -158,11 +164,11 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
-    try {
-      yaml = removeRuntimeInputFromYaml(yaml);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
-    }
+    yaml = removeRuntimeInputFromYaml(yaml);
+    InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntity(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    log.info(String.format("Create input set with identifier %s for pipeline %s in project %s, org %s, account %s",
+        entity.getIdentifier(), pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
 
     InputSetErrorWrapperDTOPMS errorWrapperDTO = validateAndMergeHelper.validateInputSet(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, pipelineBranch, pipelineRepoID);
@@ -171,8 +177,6 @@ public class InputSetResourcePMS {
           accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, errorWrapperDTO));
     }
 
-    InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntity(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     InputSetEntity createdEntity = pmsInputSetService.create(entity);
     return ResponseDTO.newResponse(
         createdEntity.getVersion().toString(), PMSInputSetElementMapper.toInputSetResponseDTOPMS(createdEntity));
@@ -190,6 +194,9 @@ public class InputSetResourcePMS {
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml) {
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntityForOverlay(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    log.info(
+        String.format("Create overlay input set with identifier %s for pipeline %s in project %s, org %s, account %s",
+            entity.getIdentifier(), pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
 
     Map<String, String> invalidReferences = validateAndMergeHelper.validateOverlayInputSet(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, entity);
@@ -215,11 +222,9 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @QueryParam("pipelineBranch") String pipelineBranch, @QueryParam("pipelineRepoID") String pipelineRepoID,
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
-    try {
-      yaml = removeRuntimeInputFromYaml(yaml);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
-    }
+    log.info(String.format("Updating input set with identifier %s for pipeline %s in project %s, org %s, account %s",
+        inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
+    yaml = removeRuntimeInputFromYaml(yaml);
 
     InputSetErrorWrapperDTOPMS errorWrapperDTO = validateAndMergeHelper.validateInputSet(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml, pipelineBranch, pipelineRepoID);
@@ -247,6 +252,9 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml) {
+    log.info(
+        String.format("Updating overlay input set with identifier %s for pipeline %s in project %s, org %s, account %s",
+            inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntityForOverlay(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     InputSetEntity entityWithVersion = entity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
@@ -274,6 +282,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
+    log.info(String.format("Deleting input set with identifier %s for pipeline %s in project %s, org %s, account %s",
+        inputSetIdentifier, pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     return ResponseDTO.newResponse(pmsInputSetService.delete(accountId, orgIdentifier, projectIdentifier,
         pipelineIdentifier, inputSetIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
@@ -292,6 +302,8 @@ public class InputSetResourcePMS {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam(NGResourceFilterConstants.SORT_KEY) List<String> sort,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    log.info(String.format("Get List of input sets for pipeline %s in project %s, org %s, account %s",
+        pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
     Criteria criteria = PMSInputSetFilterHelper.createCriteriaForGetList(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetListType, searchTerm, false);
     Pageable pageRequest;
@@ -316,6 +328,8 @@ public class InputSetResourcePMS {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    log.info(String.format("Get template for pipeline %s in project %s, org %s, account %s", pipelineIdentifier,
+        projectIdentifier, orgIdentifier, accountId));
     String pipelineTemplateYaml =
         validateAndMergeHelper.getPipelineTemplate(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     return ResponseDTO.newResponse(

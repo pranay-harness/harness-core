@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.accountpermission.AbstractAccountManagementPermissionMigration;
 
 import software.wings.security.PermissionAttribute.PermissionType;

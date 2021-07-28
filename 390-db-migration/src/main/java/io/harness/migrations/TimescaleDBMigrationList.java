@@ -28,6 +28,7 @@ import io.harness.migrations.timescaledb.AddSystemCostBillingData;
 import io.harness.migrations.timescaledb.AddingToCVDeploymentMetrics;
 import io.harness.migrations.timescaledb.AlterCEUtilizationDataTables;
 import io.harness.migrations.timescaledb.ChangeToTimeStampTZ;
+import io.harness.migrations.timescaledb.CreateAccountTables;
 import io.harness.migrations.timescaledb.CreateAggregatedBillingTable;
 import io.harness.migrations.timescaledb.CreateAnomaliesData;
 import io.harness.migrations.timescaledb.CreateBillingData;
@@ -117,6 +118,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(50, RecommendationsRelatedTables.class))
         .add(Pair.of(51, CreateCeRecommendationTable.class))
         .add(Pair.of(52, CreateNodeInfoTableAndIsAliveFunction.class))
+        .add(Pair.of(53, CreateAccountTables.class))
         .build();
   }
 }

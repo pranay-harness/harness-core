@@ -2,6 +2,7 @@ package io.harness.cdng.provision.terraform.steps.rolllback;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_ROLLBACK;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -10,6 +11,7 @@ import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -27,7 +29,9 @@ import lombok.experimental.FieldDefaults;
 @JsonTypeName(TERRAFORM_ROLLBACK)
 public class TerraformRollbackStepInfo implements CDStepInfo {
   @NotNull String provisionerIdentifier;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> delegateSelectors;
+  @YamlSchemaTypes(value = {runtime})
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> delegateSelectors;
 
   @Override
   public StepType getStepType() {

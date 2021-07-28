@@ -38,6 +38,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.utils.CryptoUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -302,6 +303,24 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateFolderPathIsUnique(ygs);
     validateFoldersAreIndependant(ygs);
     validateAPIAccessFieldPresence(ygs);
+    validateThatHarnessStringComesOnce(ygs);
+  }
+
+  @VisibleForTesting
+  void validateThatHarnessStringComesOnce(YamlGitConfigDTO ygs) {
+    if (ygs.getRootFolders() == null) {
+      return;
+    }
+    for (YamlGitConfigDTO.RootFolder folder : ygs.getRootFolders()) {
+      int harnessStringCount = getHarnessStringCount(folder.getRootFolder());
+      if (harnessStringCount > 1) {
+        throw new InvalidRequestException("The .harness should come only once in the folder path");
+      }
+    }
+  }
+
+  private int getHarnessStringCount(String folderPath) {
+    return folderPath.split(".harness", -1).length - 1;
   }
 
   private void validateAPIAccessFieldPresence(YamlGitConfigDTO ygs) {
@@ -417,7 +436,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   public List<YamlGitConfigDTO> getByRepo(String repo) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = new ArrayList<>();
 
-    Set<YamlGitConfig> yamlGitConfigs = new HashSet<>(yamlGitConfigRepository.findByRepo(repo));
+    List<YamlGitConfig> yamlGitConfigs = yamlGitConfigRepository.findByRepoOrderByCreatedAtDesc(repo);
     yamlGitConfigs.forEach(
         yamlGitConfig -> yamlGitConfigDTOs.add(YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig)));
     return yamlGitConfigDTOs;

@@ -115,38 +115,43 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	var err, errCg error
 	cgDir := fmt.Sprintf(cgDir, r.tmpFilePath)
+	testSt := time.Now()
 	for i := int32(1); i <= r.numRetries; i++ {
 		if err = r.execute(ctx, i); err == nil {
-			st := time.Now()
+			cgSt := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
-			// work even if the other one fails.
-			errCg = collectCgFn(ctx, r.id, cgDir, r.log)
+			// work even if the other one fails
+			errCg = collectCgFn(ctx, r.id, cgDir, time.Since(testSt).Milliseconds(), r.log)
+			cgTime := time.Since(cgSt)
+			repoSt := time.Now()
 			err = collectTestReportsFn(ctx, r.reports, r.id, r.log)
+			repoTime := time.Since(repoSt)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
 				// the step will be marked as an error
-				r.log.Errorw("unable to collect callgraph", zap.Error(errCg))
+				r.log.Errorw(fmt.Sprintf("unable to collect callgraph. Time taken: %s", cgTime), zap.Error(errCg))
 				if err != nil {
-					r.log.Errorw("unable to collect tests reports", zap.Error(err))
+					r.log.Errorw(fmt.Sprintf("unable to collect tests reports. Time taken: %s", repoTime), zap.Error(err))
 				}
 				return r.numRetries, errCg
 			}
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
-				r.log.Errorw("unable to collect test reports", zap.Error(err))
+				r.log.Errorw(fmt.Sprintf("unable to collect test reports. Time taken: %s", repoTime), zap.Error(err))
 				return r.numRetries, err
 			}
 			if len(r.reports) > 0 {
-				r.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
+				r.log.Infow(fmt.Sprintf("successfully collected test reports in %s time", repoTime))
 			}
+			r.log.Infow(fmt.Sprintf("successfully uploaded partial callgraph in %s time", cgTime))
 			return i, nil
 		}
 	}
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect callgraph and reports, ignore any errors during collection steps itself
-		errCg = collectCgFn(ctx, r.id, cgDir, r.log)
+		errCg = collectCgFn(ctx, r.id, cgDir, time.Since(testSt).Milliseconds(), r.log)
 		errc := collectTestReportsFn(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))
@@ -236,6 +241,12 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 }
 
 func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
+	//tests = []types.RunnableTest{
+	//	{Pkg: "io.harness.pms.pipeline.service", Class: "PMSPipelineServiceImplTest"},
+	//	{Pkg: "software.wings.service.impl.trigger", Class: "TriggerServiceTest"},
+	//	{Pkg: "software.wings.service.impl.workflow", Class: "WorkflowServiceTest"},
+	//	{Pkg: "software.wings.service.impl.verification", Class: "CVConfigurationServiceImplTest"},
+	//}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
@@ -276,30 +287,49 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 			// Hack to get bazel rules for portal
 			// TODO: figure out how to generically get rules to be executed from a package and a class
 			// Example commands:
-			//     find . -path "*pkg.class"
+			//     find . -path "*pkg.class" -> can have multiple tests (eg helper/base tests)
 			//     export fullname=$(bazelisk query path.java)
 			//     bazelisk query "attr('srcs', $fullname, ${fullname//:*/}:*)" --output=label_kind | grep "java_test rule"
-			c = fmt.Sprintf(
-				"export fullname=$(%s query `find . -path '*%s/%s*' | sed -e \"s/^\\.\\///g\"`)\n"+
-					"%s query \"attr('srcs', $fullname, ${fullname//:*/}:*)\" --output=label_kind | grep 'java_test rule'",
-				bazelCmd, strings.Replace(pkgs[i], ".", "/", -1), clss[i], bazelCmd)
-			cmdArgs = []string{"-c", c}
-			resp2, err2 := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
-			if err2 != nil || len(resp2) == 0 {
-				r.log.Errorw(fmt.Sprintf("could not find an appropriate rule in failback for pkgs %s and class %s", pkgs[i], clss[i]))
+
+			// Get list of paths for the tests
+			pathCmd := fmt.Sprintf(`find . -path '*%s/%s*' | sed -e "s/^\.\///g"`, strings.Replace(pkgs[i], ".", "/", -1), clss[i])
+			cmdArgs = []string{"-c", pathCmd}
+			pathResp, pathErr := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
+			if pathErr != nil {
+				r.log.Errorw(fmt.Sprintf("could not find path for pkgs %s and class %s", pkgs[i], clss[i]), zap.Error(pathErr))
 				continue
-				// TODO: if we can't figure out a rule, we should run the default command.
-				// Not returning error for now to avoid running all the tests most of the time.
-				// return defaultCmd, nil
 			}
-			t := strings.Fields(string(resp2))
-			resp = []byte(t[2])
+			// Iterate over the paths and try to find the relevant rules
+			for _, p := range strings.Split(string(pathResp), "\n") {
+				p = strings.TrimSpace(p)
+				if len(p) == 0 || !strings.Contains(p, "src/test") {
+					continue
+				}
+				c = fmt.Sprintf("export fullname=$(%s query %s)\n"+
+					"%s query \"attr('srcs', $fullname, ${fullname//:*/}:*)\" --output=label_kind | grep 'java_test rule'",
+					bazelCmd, p, bazelCmd)
+				cmdArgs = []string{"-c", c}
+				resp2, err2 := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
+				if err2 != nil || len(resp2) == 0 {
+					r.log.Errorw(fmt.Sprintf("could not find an appropriate rule in failback for path %s", p), zap.Error(err2))
+					continue
+				}
+				t := strings.Fields(string(resp2))
+				resp = []byte(t[2])
+				r := strings.TrimSuffix(string(resp), "\n")
+				if _, ok := rulesM[r]; !ok {
+					rules = append(rules, r)
+					rulesM[r] = struct{}{}
+				}
+			}
+		} else {
+			r := strings.TrimSuffix(string(resp), "\n")
+			if _, ok := rulesM[r]; !ok {
+				rules = append(rules, r)
+				rulesM[r] = struct{}{}
+			}
 		}
-		r := strings.TrimSuffix(string(resp), "\n")
-		if _, ok := rulesM[r]; !ok {
-			rules = append(rules, r)
-			rulesM[r] = struct{}{}
-		}
+
 	}
 	if len(rules) == 0 {
 		return fmt.Sprintf("echo \"Could not find any relevant test rules. Skipping the run\""), nil

@@ -83,7 +83,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
             () -> upsertSecretInternal(name, plaintext, null, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -104,7 +104,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(10),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(10),
             () -> upsertSecretInternal(name, plaintext, existingRecord, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -125,7 +125,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
             () -> renameSecretInternal(name, existingRecord, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -168,7 +168,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
             () -> fetchSecretValueInternal(encryptedRecord, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;

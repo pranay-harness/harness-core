@@ -16,25 +16,17 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
-import io.harness.ngtriggers.beans.source.webhook.v2.awscodecommit.AwsCodeCommitSpec;
-import io.harness.ngtriggers.beans.source.webhook.v2.awscodecommit.event.AwsCodeCommitEventSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.awscodecommit.event.AwsCodeCommitTriggerEvent;
-import io.harness.ngtriggers.beans.source.webhook.v2.bitbucket.BitbucketSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.bitbucket.action.BitbucketPRAction;
-import io.harness.ngtriggers.beans.source.webhook.v2.bitbucket.event.BitbucketEventSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.bitbucket.event.BitbucketTriggerEvent;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAction;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAware;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitEvent;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.PayloadAware;
-import io.harness.ngtriggers.beans.source.webhook.v2.github.GithubSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.github.action.GithubIssueCommentAction;
 import io.harness.ngtriggers.beans.source.webhook.v2.github.action.GithubPRAction;
-import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubEventSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubTriggerEvent;
-import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.GitlabSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.action.GitlabPRAction;
-import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.event.GitlabEventSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.event.GitlabTriggerEvent;
 
 import java.util.ArrayList;
@@ -88,101 +80,20 @@ public class WebhookConfigHelper {
       return null;
     }
 
-    GitAware gitAware = null;
-    if (webhookTriggerConfig.getType() == GITHUB) {
-      GithubSpec githubSpec = (GithubSpec) webhookTriggerConfig.getSpec();
-      GithubEventSpec gitEventSpec = githubSpec.getSpec();
-      if (GitAware.class.isAssignableFrom(gitEventSpec.getClass())) {
-        gitAware = (GitAware) gitEventSpec;
-      }
-    } else if (webhookTriggerConfig.getType() == GITLAB) {
-      GitlabSpec gitlabSpec = (GitlabSpec) webhookTriggerConfig.getSpec();
-      GitlabEventSpec gitlabEventSpec = gitlabSpec.getSpec();
-      if (GitAware.class.isAssignableFrom(gitlabEventSpec.getClass())) {
-        gitAware = (GitAware) gitlabEventSpec;
-      }
-    } else if (webhookTriggerConfig.getType() == BITBUCKET) {
-      BitbucketSpec bitbucketSpec = (BitbucketSpec) webhookTriggerConfig.getSpec();
-      BitbucketEventSpec bitbucketEventSpec = bitbucketSpec.getSpec();
-      if (GitAware.class.isAssignableFrom(bitbucketEventSpec.getClass())) {
-        gitAware = (GitAware) bitbucketEventSpec;
-      }
-    } else if (webhookTriggerConfig.getType() == AWS_CODECOMMIT) {
-      AwsCodeCommitSpec awsCodeCommitSpec = (AwsCodeCommitSpec) webhookTriggerConfig.getSpec();
-      AwsCodeCommitEventSpec awsCodeCommitEventSpec = awsCodeCommitSpec.getSpec();
-      if (GitAware.class.isAssignableFrom(awsCodeCommitEventSpec.getClass())) {
-        gitAware = (GitAware) awsCodeCommitEventSpec;
-      }
-    }
-
-    return gitAware;
+    return webhookTriggerConfig.getSpec().fetchGitAware();
   }
 
   public PayloadAware retrievePayloadAware(WebhookTriggerConfigV2 webhookTriggerConfig) {
-    if (!isGitSpec(webhookTriggerConfig)) {
-      return null;
-    }
-
-    PayloadAware payloadAware = null;
-    if (webhookTriggerConfig.getType() == GITHUB) {
-      GithubSpec githubSpec = (GithubSpec) webhookTriggerConfig.getSpec();
-      GithubEventSpec gitEventSpec = githubSpec.getSpec();
-      if (PayloadAware.class.isAssignableFrom(gitEventSpec.getClass())) {
-        payloadAware = (PayloadAware) gitEventSpec;
-      }
-    } else if (webhookTriggerConfig.getType() == GITLAB) {
-      GitlabSpec gitlabSpec = (GitlabSpec) webhookTriggerConfig.getSpec();
-      GitlabEventSpec gitlabEventSpec = gitlabSpec.getSpec();
-      if (PayloadAware.class.isAssignableFrom(gitlabEventSpec.getClass())) {
-        payloadAware = (PayloadAware) gitlabEventSpec;
-      }
-    } else if (webhookTriggerConfig.getType() == BITBUCKET) {
-      BitbucketSpec bitbucketSpec = (BitbucketSpec) webhookTriggerConfig.getSpec();
-      BitbucketEventSpec bitbucketEventSpec = bitbucketSpec.getSpec();
-      if (PayloadAware.class.isAssignableFrom(bitbucketEventSpec.getClass())) {
-        payloadAware = (PayloadAware) bitbucketEventSpec;
-      }
-    } else if (webhookTriggerConfig.getType() == AWS_CODECOMMIT) {
-      AwsCodeCommitSpec awsCodeCommitSpec = (AwsCodeCommitSpec) webhookTriggerConfig.getSpec();
-      AwsCodeCommitEventSpec awsCodeCommitEventSpec = awsCodeCommitSpec.getSpec();
-      if (PayloadAware.class.isAssignableFrom(awsCodeCommitEventSpec.getClass())) {
-        payloadAware = (PayloadAware) awsCodeCommitEventSpec;
-      }
-    } else if (webhookTriggerConfig.getType() == WebhookTriggerType.CUSTOM) {
-      payloadAware = (PayloadAware) webhookTriggerConfig.getSpec();
-    }
-
-    return payloadAware;
-  }
-
-  public List<TriggerEventDataCondition> retrievePayloadConditions(WebhookTriggerConfigV2 webhookTriggerConfig) {
-    PayloadAware payloadAware = null;
-    payloadAware = retrievePayloadAware(webhookTriggerConfig);
-    if (payloadAware != null) {
-      return payloadAware.fetchPayloadConditions();
-    }
-
-    return emptyList();
+    return webhookTriggerConfig.getSpec().fetchPayloadAware();
   }
 
   public List<TriggerEventDataCondition> retrieveHeaderConditions(WebhookTriggerConfigV2 webhookTriggerConfig) {
-    PayloadAware payloadAware = null;
-    payloadAware = retrievePayloadAware(webhookTriggerConfig);
+    PayloadAware payloadAware = retrievePayloadAware(webhookTriggerConfig);
     if (payloadAware != null) {
       return payloadAware.fetchHeaderConditions();
     }
 
     return emptyList();
-  }
-
-  public String retrieveJexlExpression(WebhookTriggerConfigV2 webhookTriggerConfig) {
-    PayloadAware payloadAware = null;
-    payloadAware = retrievePayloadAware(webhookTriggerConfig);
-    if (payloadAware != null) {
-      return payloadAware.fetchJexlCondition();
-    }
-
-    return null;
   }
 
   public boolean isGitSpec(WebhookTriggerConfigV2 webhookTriggerConfig) {

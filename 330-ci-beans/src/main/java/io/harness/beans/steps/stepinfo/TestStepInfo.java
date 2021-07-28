@@ -9,6 +9,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -42,7 +43,8 @@ public class TestStepInfo implements CIStepInfo {
           .stepType(StepType.newBuilder().setType(CIStepInfoType.TEST.name()).build())
           .build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.TEST.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.TEST.name()).setStepCategory(StepCategory.STEP).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

@@ -74,7 +74,7 @@ public class AnomalyDetectionProcessor
           returnAnomaly = anomalyFromService;
         }
       }
-      log.info("finally after processing, isAnomaly : [{}]", returnAnomaly.isAnomaly());
+      log.debug("finally after processing, isAnomaly : [{}]", returnAnomaly.isAnomaly());
 
       if (returnAnomaly.isAnomaly()) {
         if (anomalyHashSet.contains(AnomalyDetectionHelper.getHash(returnAnomaly, false))) {
@@ -88,13 +88,13 @@ public class AnomalyDetectionProcessor
             /*Near by duplicates are marked with actual cost as negative value, removed in duplicate anomalies step*/
             returnAnomaly.setActualCost(-10.0);
           } else {
-            log.info("writing anomaly into db ");
+            log.debug("writing anomaly into db ");
           }
         } else {
-          log.info("writing anomaly into db ");
+          log.debug("writing anomaly into db ");
         }
       } else {
-        log.info("not writing anomaly into db since it is not anomaly");
+        log.debug("not writing anomaly into db since it is not anomaly");
       }
     }
 

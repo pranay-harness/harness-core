@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.capability.ProcessExecutionCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
@@ -25,9 +26,11 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @Value
 @Builder
+@Slf4j
 @OwnedBy(CDP)
 public class TerraformTaskNGParameters
     implements TaskParameters, ExecutionCapabilityDemander, NestedAnnotationResolver {
@@ -60,12 +63,18 @@ public class TerraformTaskNGParameters
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
         configFile.getGitStoreDelegateConfig().getEncryptedDataDetails(), maskingEvaluator);
+    log.info("Adding Required Execution Capabilities");
     if (configFile != null) {
       capabilities.add(GitConnectionNGCapability.builder()
                            .gitConfig((GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO())
                            .encryptedDataDetails(configFile.getGitStoreDelegateConfig().getEncryptedDataDetails())
                            .sshKeySpecDTO(configFile.getGitStoreDelegateConfig().getSshKeySpecDTO())
                            .build());
+
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO();
+      if (isNotEmpty(gitConfigDTO.getDelegateSelectors())) {
+        capabilities.add(SelectorCapability.builder().selectors(gitConfigDTO.getDelegateSelectors()).build());
+      }
     }
     if (varFileInfos != null && isNotEmpty(varFileInfos)) {
       for (TerraformVarFileInfo varFileInfo : varFileInfos) {
@@ -77,6 +86,11 @@ public class TerraformTaskNGParameters
                   .encryptedDataDetails(gitFetchFilesConfig.getGitStoreDelegateConfig().getEncryptedDataDetails())
                   .sshKeySpecDTO(gitFetchFilesConfig.getGitStoreDelegateConfig().getSshKeySpecDTO())
                   .build());
+
+          GitConfigDTO gitConfigDTO = (GitConfigDTO) gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO();
+          if (isNotEmpty(gitConfigDTO.getDelegateSelectors())) {
+            capabilities.add(SelectorCapability.builder().selectors(gitConfigDTO.getDelegateSelectors()).build());
+          }
         }
       }
     }

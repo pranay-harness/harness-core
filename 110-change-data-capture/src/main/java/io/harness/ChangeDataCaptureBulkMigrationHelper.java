@@ -62,7 +62,7 @@ public class ChangeDataCaptureBulkMigrationHelper {
         for (ChangeDataCapture changeDataCapture : dataCaptures) {
           ChangeHandler changeHandler = cdcEntity.getChangeHandler(changeDataCapture.handler());
           CDCEntityBulkMigrationTask<T> cdcEntityBulkMigrationTask = new CDCEntityBulkMigrationTask<>(
-              changeHandler, document, changeDataCapture.table(), changeDataCapture.fields());
+              changeHandler, subscriptionEntity, document, changeDataCapture.table(), changeDataCapture.fields());
           taskFutures.add(boundedExecutorService.submit(cdcEntityBulkMigrationTask));
         }
       }

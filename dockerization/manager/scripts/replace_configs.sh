@@ -281,9 +281,6 @@ if [[ "" != "$jwtNextGenManagerSecret" ]]; then
   yq write -i $CONFIG_FILE portal.jwtNextGenManagerSecret "$jwtNextGenManagerSecret"
 fi
 
-if [[ "" != "$jwtNextGenManagerSecret" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.cvNgServiceSecret "$jwtNextGenManagerSecret"
-fi
 
 if [[ "" != "$FEATURES" ]]; then
   yq write -i $CONFIG_FILE featuresEnabled "$FEATURES"
@@ -311,6 +308,10 @@ fi
 
 if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
+fi
+
+if [[ "" != "$SMTP_USE_SSL" ]]; then
+  yq write -i $CONFIG_FILE smtp.useSSL "$SMTP_USE_SSL"
 fi
 
 if [[ "" != "$MARKETO_ENABLED" ]]; then
@@ -459,10 +460,10 @@ if [[ "" != "$ALLOW_TRIAL_REGISTRATION" ]]; then
   yq write -i $CONFIG_FILE trialRegistrationAllowed "$ALLOW_TRIAL_REGISTRATION"
 fi
 
-if [[ "" != "$NG_MANAGER_AVAILABLE" ]]; then
-  yq write -i $CONFIG_FILE ngManagerAvailable "$NG_MANAGER_AVAILABLE"
+if [[ "" != "$EVENTS_FRAMEWORK_AVAILABLE_IN_ONPREM" ]]; then
+  yq write -i $CONFIG_FILE eventsFrameworkAvailableInOnPrem "$EVENTS_FRAMEWORK_AVAILABLE_IN_ONPREM"
 else
-  yq write -i $CONFIG_FILE ngManagerAvailable "false"
+  yq write -i $CONFIG_FILE eventsFrameworkAvailableInOnPrem "false"
 fi
 
 if [[ "" != "$ALLOW_TRIAL_REGISTRATION_FOR_BUGATHON" ]]; then
@@ -836,6 +837,10 @@ if [[ "" != "$ACCESS_CONTROL_SECRET" ]]; then
   yq write -i $CONFIG_FILE accessControlClient.accessControlServiceSecret $ACCESS_CONTROL_SECRET
 fi
 
+if [[ "" != "$ENABLE_AUDIT" ]]; then
+  yq write -i $CONFIG_FILE enableAudit $ENABLE_AUDIT
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
@@ -857,10 +862,6 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
-fi
-
-if [[ "" != "$CVNG_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
 fi
 
 if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then

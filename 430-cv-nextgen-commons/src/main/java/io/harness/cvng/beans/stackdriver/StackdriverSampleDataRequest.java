@@ -46,8 +46,7 @@ public class StackdriverSampleDataRequest extends StackdriverRequest {
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
     StackDriverMetricDefinition.Aggregation aggregation = metricDefinition.getAggregation();
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), METRIC_SCOPE);
     dslEnvVariables.put(
         AggregationKeys.alignmentPeriod, checkForNullAndReturnValue(aggregation.getAlignmentPeriod(), "60s"));
     dslEnvVariables.put(

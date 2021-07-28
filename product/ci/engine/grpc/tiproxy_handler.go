@@ -195,6 +195,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if cgDir == "" {
 		return res, fmt.Errorf("cgDir not present in request")
 	}
+	timeMs := req.GetTimeMs()
 	files, err := h.getCgFiles(cgDir)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to fetch files inside the directory")
@@ -206,11 +207,6 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 		return res, errors.Wrap(err, "failed to parse callgraph")
 	}
 	h.log.Infow(fmt.Sprintf("size of nodes parsed is: %d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
-	if len(cg.Nodes) == 0 && len(cg.Relations) == 0 {
-		// Skip uploading partial CG if nothing is there to be uploaded
-		h.log.Infow("skipping partial CG upload as there are no nodes and relations")
-		return res, nil
-	}
 	cgMap := cg.ToStringMap()
 	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 	if err != nil {
@@ -244,7 +240,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if err != nil {
 		return res, errors.Wrap(err, "stage id not found")
 	}
-	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target, encBytes)
+	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target, timeMs, encBytes)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}

@@ -44,4 +44,8 @@ public enum ModuleType {
   public String getDisplayName() {
     return displayName;
   }
+
+  public boolean isInternal() {
+    return internal;
+  }
 }

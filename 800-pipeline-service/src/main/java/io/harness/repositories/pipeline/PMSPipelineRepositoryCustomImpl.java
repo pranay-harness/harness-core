@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.common.helper.EntityDistinctElementHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
@@ -50,8 +51,13 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   OutboxService outboxService;
 
   @Override
-  public Page<PipelineEntity> findAll(
-      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, boolean getDistinctFromBranches) {
+    if (getDistinctFromBranches) {
+      return EntityDistinctElementHelper.getDistinctElementPage(mongoTemplate, criteria, pageable, PipelineEntity.class,
+          PipelineEntityKeys.accountId, PipelineEntityKeys.orgIdentifier, PipelineEntityKeys.projectIdentifier,
+          PipelineEntityKeys.identifier);
+    }
     List<PipelineEntity> pipelineEntities = gitAwarePersistence.find(
         criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, PipelineEntity.class);
     return PageableExecutionUtils.getPage(pipelineEntities, pageable,

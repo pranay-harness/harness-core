@@ -29,6 +29,7 @@ public abstract class ContainerParams implements NestedAnnotationResolver {
   private ContainerSecrets containerSecrets;
   private Integer runAsUser;
   private boolean privileged;
+  private String imagePullPolicy;
 
   public abstract ContainerParams.Type getType();
 
