@@ -23,6 +23,7 @@ import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
+import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.DeleteResourcesWrapper;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
 import io.harness.cdng.k8s.K8sCanaryOutcome;
@@ -204,5 +205,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(StoreConfigWrapper.class, 8045);
 
     kryo.register(K8sExecutionPassThroughData.class, 12546);
+    kryo.register(DeploymentInfoOutcome.class, 12547);
   }
 }
