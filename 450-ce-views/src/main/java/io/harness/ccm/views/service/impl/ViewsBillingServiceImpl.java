@@ -370,22 +370,35 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   @Override
   public boolean isClusterPerspective(List<QLCEViewFilterWrapper> filters) {
+    boolean dataSourceCondition = false;
+    boolean ruleCondition = true;
+    List<ViewRule> viewRuleList = new ArrayList<>();
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
     if (viewMetadataFilter.isPresent()) {
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
       final String viewId = metadataFilter.getViewId();
       if (!metadataFilter.isPreview()) {
         CEView ceView = viewService.get(viewId);
+        viewRuleList = ceView.getViewRules();
         List<ViewFieldIdentifier> dataSources;
         try {
           dataSources = ceView.getDataSources();
         } catch (Exception e) {
           dataSources = null;
         }
-        return dataSources != null && dataSources.size() == 1 && dataSources.get(0).equals(CLUSTER);
+        dataSourceCondition = dataSources != null && dataSources.size() == 1 && dataSources.get(0).equals(CLUSTER);
       }
     }
-    return false;
+    for (ViewRule rule : viewRuleList) {
+      for (ViewCondition condition : rule.getViewConditions()) {
+        ViewIdCondition viewIdCondition = (ViewIdCondition) condition;
+        ViewFieldIdentifier viewFieldIdentifier = viewIdCondition.getViewField().getIdentifier();
+        if (!viewFieldIdentifier.equals(CLUSTER)) {
+          ruleCondition = false;
+        }
+      }
+    }
+    return dataSourceCondition && ruleCondition;
   }
 
   @Override
