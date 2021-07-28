@@ -202,11 +202,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   public MonitoredServiceDTO getMonitoredServiceDTO(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     MonitoredServiceResponse monitoredServiceResponse = get(accountId, orgIdentifier, projectIdentifier, identifier);
-    if (monitoredServiceResponse == null) {
-      return null;
-    } else {
-      return monitoredServiceResponse.getMonitoredServiceDTO();
-    }
+    return monitoredServiceResponse.getMonitoredServiceDTO();
   }
 
   @Override
