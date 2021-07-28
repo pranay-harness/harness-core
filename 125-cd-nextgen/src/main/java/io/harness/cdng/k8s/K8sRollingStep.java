@@ -3,6 +3,8 @@ package io.harness.cdng.k8s;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.instance.info.InstanceInfoService;
+import io.harness.cdng.instance.mappers.K8sPodToServiceInstanceInfoMapper;
 import io.harness.cdng.k8s.K8sRollingBaseStepInfo.K8sRollingBaseStepInfoKeys;
 import io.harness.cdng.k8s.K8sRollingOutcome.K8sRollingOutcomeBuilder;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
@@ -34,6 +36,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
@@ -54,6 +57,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
 
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject private InstanceInfoService instanceInfoService;
 
   @Override
   public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
@@ -172,11 +176,12 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
     executionSweepingOutputService.consume(
         ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STEP.name());
 
+    StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(
+        ambiance, K8sPodToServiceInstanceInfoMapper.toServerInstanceInfoList(k8sTaskResponse.getK8sPodList()));
+
     return stepResponseBuilder.status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.OUTPUT)
-                         .outcome(k8sRollingOutcome)
-                         .build())
+        .stepOutcome(StepOutcome.builder().name(OutcomeExpressionConstants.OUTPUT).outcome(k8sRollingOutcome).build())
+        .stepOutcome(stepOutcome)
         .build();
   }
 }

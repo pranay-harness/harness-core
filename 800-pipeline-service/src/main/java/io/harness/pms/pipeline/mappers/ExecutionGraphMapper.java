@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class ExecutionGraphMapper {
   public ExecutionNode toExecutionNode(GraphVertexDTO graphVertex) {
-    String basefqn = PlanExecutionUtils.getFQNUsingLevels(graphVertex.getAmbiance().getLevels());
+    String basefqn = PlanExecutionUtils.getFQNUsingLevelDTOs(graphVertex.getAmbiance().getLevels());
     return ExecutionNode.builder()
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())
