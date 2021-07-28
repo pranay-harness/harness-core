@@ -1,7 +1,9 @@
 package software.wings.beans.trigger;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -15,6 +17,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ManifestTriggerConditionKeys")
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ManifestTriggerCondition extends TriggerCondition {
   @NotEmpty private String appManifestId;
   private String serviceId;
