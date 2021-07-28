@@ -24,9 +24,19 @@ http_archive(
 )
 
 # Load and call the dependencies
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
+load("@io_bazel_rules_go//go:deps.bzl", "go_download_sdk", "go_register_toolchains", "go_rules_dependencies")
 
 go_rules_dependencies()
+
+go_download_sdk(
+    name = "go_sdk",
+    sdks = {
+        "darwin_amd64": ("go1.16.4.darwin-amd64.tar.gz", "18fe94775763db3878717393b6d41371b0b45206055e49b3838328120c977d13"),
+        "darwin_arm64": ("go1.16.4.darwin-arm64.tar.gz", "cb6b972cc42e669f3585c648198cd5b6f6d7a0811d413ad64b50c02ba06ccc3a"),
+        "linux_amd64": ("go1.16.4.linux-amd64.tar.gz", "7154e88f5a8047aad4b80ebace58a059e36e7e2e4eb3b383127a28c711b4ff59"),
+        "windows_amd64": ("go1.16.4.windows-amd64.zip", "d40139b7ade8a3008e3240a6f86fe8f899a9c465c917e11dac8758af216f5eb0"),
+    },
+)
 
 # Register go toolchains
 go_register_toolchains(nogo = "@//:nogo_vet")
