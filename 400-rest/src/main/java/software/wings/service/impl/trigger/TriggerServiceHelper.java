@@ -104,7 +104,7 @@ import org.quartz.CronScheduleBuilder;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceHelper {
   public static final String EXECUTION_TYPE = "EXECUTION_TYPE";
   public static final String TRIGGER_NAME = "TRIGGER_NAME";
