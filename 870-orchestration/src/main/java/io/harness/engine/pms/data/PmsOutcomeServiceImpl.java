@@ -13,6 +13,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.outcomes.OutcomeException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
+import org.apache.commons.jexl3.JexlException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -188,7 +190,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
           .found(true)
           .outcome(value == null ? null : RecastOrchestrationUtils.toJson(value))
           .build();
-    } catch (OutcomeException ignore) {
+    } catch (UnresolvedExpressionsException | JexlException ignore) {
       return OptionalOutcome.builder().found(false).build();
     }
   }
