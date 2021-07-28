@@ -74,8 +74,9 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 		}
 		return response, err
 	case *enginepb.UnitStep_RunTests:
-		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
+		stepOutput, numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
+			Output:     stepOutput,
 			NumRetries: numRetries,
 		}
 		rl.Writer.Close()
