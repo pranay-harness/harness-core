@@ -21,6 +21,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
@@ -29,12 +30,14 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.shellscript.provision.ShellScriptProvisionOutputVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -90,6 +93,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject protected FeatureFlagService featureFlagService;
   @Getter @Setter private String provisionerId;
   @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
@@ -170,12 +174,18 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     if (executionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       String output = executionData.getOutput();
       Map<String, Object> outputMap = parseOutput(output);
-      outputInfoElement.addOutPuts(outputMap);
+      handleSweepingOutput(sweepingOutputService, context, outputMap);
+
+      if (featureFlagService.isEnabled(
+              FeatureName.SAVE_SHELL_SCRIPT_PROVISION_OUTPUTS_TO_SWEEPING_OUTPUT, context.getAccountId())) {
+        saveOutputs(context, outputMap);
+      } else {
+        outputInfoElement.addOutPuts(outputMap);
+      }
       ManagerExecutionLogCallback managerExecutionCallback =
           infrastructureProvisionerService.getManagerExecutionCallback(context.getAppId(), activityId, COMMAND_UNIT);
       infrastructureProvisionerService.regenerateInfrastructureMappings(
           provisionerId, context, outputMap, Optional.of(managerExecutionCallback), Optional.empty());
-      handleSweepingOutput(sweepingOutputService, context, outputMap);
     }
 
     activityService.updateStatus(activityId, context.getAppId(), executionData.getExecutionStatus());
@@ -186,6 +196,34 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
         .executionStatus(executionData.getExecutionStatus())
         .errorMessage(executionData.getErrorMsg())
         .build();
+  }
+
+  private void saveOutputs(ExecutionContext context, Map<String, Object> outputMap) {
+    ShellScriptProvisionerOutputElement outputInfoElement =
+        context.getContextElement(ContextElementType.SHELL_SCRIPT_PROVISION);
+    SweepingOutputInstance instance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
+                                       .name(ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME)
+                                       .build());
+    ShellScriptProvisionOutputVariables scriptProvisionOutputVariables = instance != null
+        ? (ShellScriptProvisionOutputVariables) instance.getValue()
+        : new ShellScriptProvisionOutputVariables();
+
+    scriptProvisionOutputVariables.putAll(outputMap);
+    if (outputInfoElement != null && outputInfoElement.getOutputVariables() != null) {
+      // Ensure that we're not missing any variables during migration from context element to sweeping output
+      // can be removed with the next releases
+      scriptProvisionOutputVariables.putAll(outputInfoElement.getOutputVariables());
+    }
+
+    if (instance != null) {
+      sweepingOutputService.deleteById(context.getAppId(), instance.getUuid());
+    }
+
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(scriptProvisionOutputVariables)
+                                   .build());
   }
 
   @VisibleForTesting
