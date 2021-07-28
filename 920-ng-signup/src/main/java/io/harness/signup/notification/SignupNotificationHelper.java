@@ -45,7 +45,7 @@ public class SignupNotificationHelper {
                                       .recipients(Lists.newArrayList(userInfo.getEmail()))
                                       .templateId(templateId)
                                       .templateData(ImmutableMap.of("url", url))
-                                      .userGroupIds(Collections.emptyList());
+                                      .userGroups(Collections.emptyList());
     notificationClient.sendNotificationAsync(builder.build());
   }
 

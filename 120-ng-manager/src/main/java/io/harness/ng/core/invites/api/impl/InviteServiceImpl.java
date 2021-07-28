@@ -525,7 +525,7 @@ public class InviteServiceImpl implements InviteService {
                                                   .recipients(Collections.singletonList(invite.getEmail()))
                                                   .team(Team.PL)
                                                   .templateId("email_invite")
-                                                  .userGroupIds(Collections.emptyList());
+                                                  .userGroups(Collections.emptyList());
     Map<String, String> templateData = new HashMap<>();
     templateData.put("url", url);
     if (!isBlank(invite.getProjectIdentifier())) {
