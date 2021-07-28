@@ -7,7 +7,9 @@ import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.beans.trigger.ScheduledTriggerCondition;
@@ -31,6 +33,7 @@ import org.quartz.TriggerBuilder;
  */
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ScheduledTriggerJob implements Job {
   public static final String GROUP = "SCHEDULED_TRIGGER_CRON_GROUP";
 

@@ -2,7 +2,9 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
 
@@ -13,6 +15,7 @@ import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 @JsonTypeName("GITLAB")
 @Value
 @Builder

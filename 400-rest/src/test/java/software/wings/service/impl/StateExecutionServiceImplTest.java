@@ -24,7 +24,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskDetails;
-import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -35,7 +34,6 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.beans.ServiceInstance;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionInterruptEffect;
@@ -63,8 +61,6 @@ import org.mockito.Mock;
 public class StateExecutionServiceImplTest extends WingsBaseTest {
   private static final String RANDOM = "RANDOM";
 
-  @Mock private FeatureFlagService featureFlagService;
-  @Mock private AppService appService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Inject private HPersistence persistence;
 
@@ -72,8 +68,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    Reflect.on(stateExecutionService).set("featureFlagService", featureFlagService);
-    Reflect.on(stateExecutionService).set("appService", appService);
     Reflect.on(stateExecutionService).set("sweepingOutputService", sweepingOutputService);
     Reflect.on(stateExecutionService).set("wingsPersistence", persistence);
   }
@@ -107,8 +101,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     doReturn(Collections.singletonList(previousStateExecutionInstance))
         .when(stateExecutionService)
         .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
-    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
-    doReturn(true).when(featureFlagService).isEnabled(any(), any());
 
     List<ServiceInstance> hostExclusionList =
         stateExecutionService.getHostExclusionList(stateExecutionInstance, phaseElement, null);
@@ -125,8 +117,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     doReturn(Collections.emptyList())
         .when(stateExecutionService)
         .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
-    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
-    doReturn(true).when(featureFlagService).isEnabled(any(), any());
 
     List<ServiceInstance> hostExclusionList =
         stateExecutionService.getHostExclusionList(stateExecutionInstance, phaseElement, null);
@@ -161,8 +151,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     doReturn(Collections.singletonList(previousStateExecutionInstance))
         .when(stateExecutionService)
         .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
-    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
-    doReturn(false).when(featureFlagService).isEnabled(any(), any());
 
     List<ServiceInstance> hostExclusionList =
         stateExecutionService.getHostExclusionList(stateExecutionInstance, phaseElement, null);
