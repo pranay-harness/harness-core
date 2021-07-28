@@ -1,18 +1,15 @@
 package tasks
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/addon/resolver"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -120,36 +117,6 @@ func (r *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	return nil, r.numRetries, err
 }
 
-// Fetches map of env variable and value from OutputFile. OutputFile stores all env variable and value
-func (r *runTask) fetchOutputVariables(outputFile string) (map[string]string, error) {
-	envVarMap := make(map[string]string)
-	f, err := r.fs.Open(outputFile)
-	if err != nil {
-		r.log.Errorw("Failed to open output file", zap.Error(err))
-		return nil, err
-	}
-	defer f.Close()
-
-	s := bufio.NewScanner(f)
-	for s.Scan() {
-		line := s.Text()
-		sa := strings.Split(line, " ")
-		if len(sa) < 2 {
-			r.log.Warnw(
-				"output variable does not exist",
-				"variable", sa[0],
-			)
-		} else {
-			envVarMap[sa[0]] = line[len(sa[0])+1:]
-		}
-	}
-	if err := s.Err(); err != nil {
-		r.log.Errorw("Failed to create scanner from output file", zap.Error(err))
-		return nil, err
-	}
-	return envVarMap, nil
-}
-
 func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]string, error) {
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(r.timeoutSecs))
@@ -161,7 +128,7 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 		return nil, err
 	}
 
-	envVars, err := r.resolveExprInEnv(ctx)
+	envVars, err := resolveExprInEnv(r.environment)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +145,7 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	stepOutput := make(map[string]string)
 	if len(r.envVarOutputs) != 0 {
 		var err error
-		outputVars, err := r.fetchOutputVariables(outputFile)
+		outputVars, err := fetchOutputVariables(outputFile, r.fs, r.log)
 		if err != nil {
 			logCommandExecErr(r.log, "error encountered while fetching output of run step", r.id, cmdToExecute, retryCount, start, err)
 			return nil, err
@@ -202,7 +169,7 @@ func (r *runTask) getScript(ctx context.Context, outputVarFile string) (string, 
 		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
 
-	resolvedCmd, err := r.resolveExprInCmd(ctx)
+	resolvedCmd, err := resolveExprInCmd(r.command)
 	if err != nil {
 		return "", err
 	}
@@ -218,37 +185,6 @@ func (r *runTask) getShell() string {
 		return "bash"
 	}
 	return "sh"
-}
-
-// resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables
-func (r *runTask) resolveExprInEnv(ctx context.Context) (map[string]string, error) {
-	envVarMap := getEnvVars()
-	for k, v := range r.environment {
-		envVarMap[k] = v
-	}
-
-	// Resolves secret in environment variables e.g. foo-${ngSecretManager.obtain("secret", 1234)}
-	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(envVarMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return resolvedSecretMap, nil
-}
-
-// resolveExprInCmd resolves JEXL expressions & secret present in command
-func (r *runTask) resolveExprInCmd(ctx context.Context) (string, error) {
-	c, err := resolver.ResolveJEXLInString(ctx, r.command, r.id, r.prevStepOutputs, r.log)
-	if err != nil {
-		return "", err
-	}
-
-	resolvedCmd, err := resolver.ResolveSecretInString(c)
-	if err != nil {
-		return "", err
-	}
-
-	return resolvedCmd, nil
 }
 
 func logCommandExecErr(log *zap.SugaredLogger, errMsg, stepID, args string, retryCount int32, startTime time.Time, err error) {
