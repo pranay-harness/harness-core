@@ -17,7 +17,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedTypeException;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -58,11 +57,13 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
   @Override
   public StepResponse executeSync(Ambiance ambiance, ManifestStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
-    NGLogCallback logCallback = serviceStepsHelper.getServiceLogCallback(ambiance);
-    logCallback.saveExecutionLog(format("Processing manifest [%s]...", stepParameters.getIdentifier()));
+    // NOTE(sahil): Commented these log lines as we are not doing anything and
+    // they were causing confusion with artifact step logs as they were running in parallel.
+    // NGLogCallback logCallback = serviceStepsHelper.getServiceLogCallback(ambiance);
+    // logCallback.saveExecutionLog(format("Processing manifest [%s]...", stepParameters.getIdentifier()));
     ManifestAttributes finalManifest = applyManifestsOverlay(stepParameters);
     getConnector(finalManifest, ambiance);
-    logCallback.saveExecutionLog(format("Processed manifest [%s]", stepParameters.getIdentifier()));
+    // logCallback.saveExecutionLog(format("Processed manifest [%s]", stepParameters.getIdentifier()));
     return StepResponse.builder()
         .status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder()
