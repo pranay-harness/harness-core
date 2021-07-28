@@ -137,16 +137,24 @@ public class BudgetServiceImpl implements BudgetService {
       throw new InvalidRequestException(BudgetUtils.INVALID_PERSPECTIVE_ID_EXCEPTION);
     }
     List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    long startTime = BudgetUtils.getStartTimeForForecasting();
     long endTime = BudgetUtils.getEndOfMonthForCurrentBillingCycle();
     filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
-    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartTimeForForecasting(), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(startTime, AFTER));
     filters.add(viewsQueryHelper.getPerspectiveTimeFilter(endTime, BEFORE));
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    ViewCostData currentCostData = viewsBillingService.getCostData(bigQueryService.get(), filters,
-        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false);
+    ViewCostData costDataForForecast =
+        ViewCostData.builder()
+            .cost(viewsBillingService
+                      .getCostData(bigQueryService.get(), filters,
+                          viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false)
+                      .getCost())
+            .minStartTime(1000 * startTime)
+            .maxStartTime(1000 * BudgetUtils.getStartOfCurrentDay() - BudgetUtils.ONE_DAY_MILLIS)
+            .build();
     double costTillNow = getActualCostForPerspectiveBudget(accountId, perspectiveId);
     return viewsQueryHelper.getRoundedDoubleValue(
-        costTillNow + viewsQueryHelper.getForecastCost(currentCostData, Instant.ofEpochMilli(endTime)));
+        costTillNow + viewsQueryHelper.getForecastCost(costDataForForecast, Instant.ofEpochMilli(endTime)));
   }
 
   @Override

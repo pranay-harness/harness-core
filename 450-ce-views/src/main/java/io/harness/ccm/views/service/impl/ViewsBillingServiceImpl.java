@@ -573,10 +573,11 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       forecastCostDescription = format(COST_DESCRIPTION, startInstantFormat, endInstantFormat);
       forecastCostValue =
           format(COST_VALUE, viewsQueryHelper.formatNumber(viewsQueryHelper.getRoundedDoubleValue(forecastCost)));
-      statsTrend = viewsQueryHelper.getRoundedDoubleValue((forecastCost - totalCost / totalCost) * 100);
+      statsTrend = viewsQueryHelper.getRoundedDoubleValue(((forecastCost - totalCost) / totalCost) * 100);
     } else {
       forecastCost = 0.0;
     }
+
     return QLCEViewTrendInfo.builder()
         .statsLabel(FORECAST_COST_LABEL)
         .statsTrend(statsTrend)
@@ -691,7 +692,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     // account id is not passed in current gen queries
     if (accountId != null) {
       if (isClusterPerspective(filters) || isClusterQuery) {
-        log.info("we heer");
         if (isInstanceDetailsQuery(modifiedGroupBy)) {
           idFilters.add(getFilterForInstanceDetails(modifiedGroupBy));
         }
@@ -916,7 +916,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       entityStatsDataPoints.add(dataPointBuilder.build());
     }
     if (isInstanceDetailsData && !isUsedByTimeSeriesStats) {
-      log.info(getInstanceType(instanceTypes));
       return QLCEViewGridData.builder()
           .data(instanceDetailsHelper.getInstanceDetails(entityStatsDataPoints, getInstanceType(instanceTypes)))
           .fields(fieldNames)
