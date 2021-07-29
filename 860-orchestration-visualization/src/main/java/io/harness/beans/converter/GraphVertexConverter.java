@@ -8,6 +8,7 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.utils.PmsExecutionUtils;
 
@@ -54,7 +55,7 @@ public class GraphVertexConverter {
   }
 
   public GraphVertex convertFrom(
-      NodeExecution nodeExecution, Map<String, OrchestrationMap> outcomes, Map<String, OrchestrationMap> stepDetails) {
+      NodeExecution nodeExecution, Map<String, PmsOutcome> outcomes, Map<String, OrchestrationMap> stepDetails) {
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
             nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
