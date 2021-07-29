@@ -3,6 +3,8 @@ package io.harness.states.codebase;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -22,6 +24,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CI)
 public class CodeBaseStep implements ChildExecutable<CodeBaseStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType("CI_CODEBASE").setStepCategory(StepCategory.STEP).build();

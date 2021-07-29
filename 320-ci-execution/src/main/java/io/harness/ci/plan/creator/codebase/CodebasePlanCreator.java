@@ -32,9 +32,9 @@ import java.util.List;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@UtilityClass
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
-@UtilityClass
 public class CodebasePlanCreator {
   public List<PlanNode> createPlanForCodeBase(
       PlanCreationContext ctx, YamlField ciCodeBaseField, String childNodeId, KryoSerializer kryoSerializer) {
