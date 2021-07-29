@@ -18,7 +18,7 @@ import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.output.PmsSweepingOutput;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -60,7 +60,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
       throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
     }
 
-    return instance.getOutputValue();
+    return instance.getOutputValueJson();
   }
 
   @Override
@@ -88,7 +88,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
     if (instance == null) {
       return RawOptionalSweepingOutput.builder().found(false).build();
     }
-    return RawOptionalSweepingOutput.builder().found(true).output(instance.getOutputValue()).build();
+    return RawOptionalSweepingOutput.builder().found(true).output(instance.getOutputValueJson()).build();
   }
 
   private ExecutionSweepingOutputInstance getInstance(Ambiance ambiance, RefObject refObject) {
@@ -119,7 +119,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
                                    .planExecutionId(ambiance.getPlanExecutionId())
                                    .levels(ambiance.getLevelsList())
                                    .name(name)
-                                   .valueOutput(OrchestrationMap.parse(RecastOrchestrationUtils.fromJson(value)))
+                                   .valueOutput(PmsSweepingOutput.parse(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
