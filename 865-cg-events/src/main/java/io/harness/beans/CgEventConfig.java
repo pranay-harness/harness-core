@@ -32,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -75,6 +76,24 @@ public class CgEventConfig
 
   @JsonIgnore @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
+
+  private transient String summary;
+
+  public String getSummary() {
+    StringBuilder builder = new StringBuilder();
+    if (CgEventRule.CgRuleType.ALL.equals(rule.getType())) {
+      return builder.append("Send Everything!").toString();
+    }
+
+    if (CgEventRule.CgRuleType.PIPELINE.equals(rule.getType())) {
+      return getPipelineSummary(rule.getPipelineRule());
+    }
+
+    if (CgEventRule.CgRuleType.WORKFLOW.equals(rule.getType())) {
+      return getWorkflowSummary(rule.getWorkflowRule());
+    }
+    return builder.toString();
+  }
 
   @Override
   public String getName() {
@@ -134,5 +153,53 @@ public class CgEventConfig
   @UtilityClass
   public static final class CgEventConfigKeys {
     public static final String uuid = "uuid";
+  }
+
+  private static String getPipelineSummary(CgEventRule.PipelineRule pipelineRule) {
+    StringBuilder builder = new StringBuilder();
+    if (pipelineRule.isAllEvents() && pipelineRule.isAllPipelines()) {
+      return builder.append("All events for all pipelines").toString();
+    }
+    if (!pipelineRule.isAllEvents() && pipelineRule.isAllPipelines()) {
+      String events = StringUtils.join(pipelineRule.getEvents(), ", ");
+      return builder.append("Events ").append(events).append(" for all pipelines").toString();
+    }
+    if (pipelineRule.isAllEvents() && !pipelineRule.isAllPipelines()) {
+      return builder.append("All events for select")
+          .append(pipelineRule.getPipelineIds().size())
+          .append(" pipeline(s)")
+          .toString();
+    }
+    String events = StringUtils.join(pipelineRule.getEvents(), ", ");
+    return builder.append("Events ")
+        .append(events)
+        .append(" ")
+        .append(pipelineRule.getPipelineIds().size())
+        .append(" pipeline(s)")
+        .toString();
+  }
+
+  private static String getWorkflowSummary(CgEventRule.WorkflowRule workflowRule) {
+    StringBuilder builder = new StringBuilder();
+    if (workflowRule.isAllEvents() && workflowRule.isAllWorkflows()) {
+      return builder.append("All events for all workflows").toString();
+    }
+    if (!workflowRule.isAllEvents() && workflowRule.isAllWorkflows()) {
+      String events = StringUtils.join(workflowRule.getEvents(), ", ");
+      return builder.append("Events ").append(events).append(" for all workflows").toString();
+    }
+    if (workflowRule.isAllEvents() && !workflowRule.isAllWorkflows()) {
+      return builder.append("All events for select")
+          .append(workflowRule.getWorkflowIds().size())
+          .append(" workflow(s)")
+          .toString();
+    }
+    String events = StringUtils.join(workflowRule.getEvents(), ", ");
+    return builder.append("Events ")
+        .append(events)
+        .append(" ")
+        .append(workflowRule.getWorkflowIds().size())
+        .append(" workflow(s)")
+        .toString();
   }
 }
