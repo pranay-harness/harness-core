@@ -21,6 +21,7 @@ import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -188,6 +189,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   private int applicationPort;
   private boolean sslEnabled;
+  private StartupMode startupMode;
 
   private static final String IS_OPTION_HEAD_HTTP_METHOD_BLOCKED = "IS_OPTION_HEAD_REQUEST_METHOD_BLOCKED";
 
@@ -282,5 +284,13 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
      * @return the resource path to uri mappings
      */
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
+  }
+
+  public boolean isManager() {
+    return startupMode == null || StartupMode.MANGER.equals(startupMode);
+  }
+
+  public boolean isDelegateServiceApp() {
+    return startupMode == null || StartupMode.DELEGATE_MANAGER.equals(startupMode);
   }
 }
