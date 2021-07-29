@@ -336,7 +336,7 @@ public class InviteServiceImpl implements InviteService {
   private URI getUserInfoSubmitUrl(String email, String jwtToken, InviteAcceptResponse inviteAcceptResponse) {
     String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
     try {
-      String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s",
+      String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s&generation=NG",
           accountIdentifier, email, jwtToken, getResourceUrl(inviteAcceptResponse));
       String baseUrl = getBaseUrl(accountIdentifier);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
@@ -585,10 +585,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private List<NameValuePair> getParameterList(Invite invite) throws UnsupportedEncodingException {
-    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
     return Arrays.asList(new BasicNameValuePair("accountIdentifier", invite.getAccountIdentifier()),
-        new BasicNameValuePair("accountName", account.getName()),
-        new BasicNameValuePair("company", account.getCompanyName()),
         new BasicNameValuePair("email", URLEncoder.encode(invite.getEmail(), "UTF-8")),
         new BasicNameValuePair("token", invite.getInviteToken()));
   }

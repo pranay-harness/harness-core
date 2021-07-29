@@ -16,6 +16,8 @@ import static io.harness.ng.core.common.beans.Generation.NG;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_EXPIRED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
@@ -27,6 +29,7 @@ import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.security.JWT_CATEGORY.INVITE_SECRET;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
 import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
@@ -105,6 +108,8 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.version.VersionInfoManager;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
@@ -219,6 +224,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -230,7 +236,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -277,12 +282,15 @@ public class UserServiceImpl implements UserService {
   private static final String EXC_USER_ALREADY_REGISTERED = "User is already registered";
   private static final String INCORRECT_PORTAL_SETUP = "Incorrect portal setup";
   private static final String RESET_ERROR = "Reset password email couldn't be sent";
+  private static final String NG_AUTH_UI_INVITE_PATH_FORMAT = "gateway/api/users/invites/verify";
   private static final String INVITE_URL_FORMAT = "/invite?email=%s&inviteId=%s";
   private static final String LOGIN_URL_FORMAT = "/login?company=%s&account=%s&email=%s";
   private static final String HARNESS_ISSUER = "Harness Inc";
   private static final int MINIMAL_ORDER_QUANTITY = 1;
   private static final String SYSTEM = "system";
   private static final String SETUP_ACCOUNT_FROM_MARKETPLACE = "Account Setup from Marketplace";
+  private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
+
 
   /**
    * The Executor service.
@@ -773,6 +781,48 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken) throws URISyntaxException {
+    String accountId = userInvite.getAccountId();
+    log.info("Getting redirect url for {} - {}", accountId, inviteResponse.getType());
+    if (ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD.equals(inviteResponse)) {
+      return getUserInfoSubmitUrl(accountId, userInvite.getEmail(), jwtToken);
+    } else if (FAIL.equals(inviteResponse)) {
+      return getLoginPageUrl(accountId, "");
+    } else if (INVITE_EXPIRED.equals(inviteResponse) || INVITE_INVALID.equals(inviteResponse)) {
+      return getLoginPageUrl(accountId, inviteResponse.getType());
+    } else {
+      return getCGDashboardUrl(accountId);
+    }
+  }
+
+  private URI getUserInfoSubmitUrl(String accountId, String email, String jwtToken) throws URISyntaxException {
+    String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&generation=CG",
+            accountId, email, jwtToken);
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
+    uriBuilder.setFragment("/accept-invite?" + accountCreationFragment);
+    return uriBuilder.build();
+  }
+
+  private URI getLoginPageUrl(String accountId, String errorCode) throws URISyntaxException {
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
+    if (isNotEmpty(errorCode)) {
+      uriBuilder.setFragment("/signin?errorCode=" + errorCode);
+    }
+    return uriBuilder.build();
+  }
+
+  private URI getCGDashboardUrl(String accountId) throws URISyntaxException {
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setFragment(String.format("/account/%s/dashboard", accountId));
+    return uriBuilder.build();
+  }
+
+  @Override
   public User registerNewUser(User user, Account account) {
     String accountId = account.getUuid();
 
@@ -881,7 +931,8 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, String> getUserInvitationToSsoTemplateModel(Account account, User user)
       throws URISyntaxException {
-    String loginUrl =
+
+    String loginUrl = configuration.isNgAuthUIEnabled() ? getLoginPageUrl(account.getUuid(), "").toString() :
         buildAbsoluteUrl(format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
             account.getUuid());
     Map<String, String> model = getTemplateModel(user.getName(), loginUrl);
@@ -972,6 +1023,14 @@ public class UserServiceImpl implements UserService {
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setPath(path);
     uriBuilder.setFragment(fragment);
+    return uriBuilder.toString();
+  }
+
+  private String buildAbsoluteUrl(String path, List<NameValuePair> params, String accountId) throws URISyntaxException {
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(path);
+    uriBuilder.setParameters(params);
     return uriBuilder.toString();
   }
 
@@ -1284,7 +1343,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account, User user)
-      throws URISyntaxException {
+          throws URISyntaxException {
     String inviteUrl = getUserInviteUrl(userInvite, account);
     Map<String, String> model = getTemplateModel(userInvite.getEmail(), inviteUrl);
     model.put("company", account.getCompanyName());
@@ -1302,10 +1361,26 @@ public class UserServiceImpl implements UserService {
     if (userInvite == null) {
       return null;
     }
-    return buildAbsoluteUrl(
-        format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()),
-        account.getUuid());
+
+    String accountId = account.getUuid();
+    String encodedEmail = userInvite.getEmail();
+    try {
+      encodedEmail = URLEncoder.encode(userInvite.getEmail(), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      log.error("Unable to encode email for invite url, using the invite one instead", e);
+    }
+    if (configuration.isNgAuthUIEnabled()) {
+      String jwtToken = secretManager.generateJWTToken(Collections.singletonMap(UserInvite.UUID_KEY, userInvite.getUuid()), INVITE_SECRET);
+      return buildAbsoluteUrl(NG_AUTH_UI_INVITE_PATH_FORMAT, Arrays.asList(
+              new BasicNameValuePair("accountId", accountId),
+              new BasicNameValuePair("email", encodedEmail),
+              new BasicNameValuePair("token", jwtToken)), accountId);
+    } else {
+      return buildAbsoluteUrl(
+              format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", accountId,
+                      account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()),
+              accountId);
+    }
   }
 
   @Override
@@ -1934,6 +2009,25 @@ public class UserServiceImpl implements UserService {
                                  .filter(UserInviteKeys.accountId, accountId)
                                  .filter(UserInviteKeys.email, email);
     return wingsPersistence.delete(userInvitesQuery);
+  }
+
+  @Override
+  public String getInviteIdFromToken(String jwtToken) {
+    String jwtPasswordSecret = secretManager.getJWTSecret(INVITE_SECRET);
+    if (jwtPasswordSecret == null) {
+      throw new InvalidRequestException(INCORRECT_PORTAL_SETUP);
+    }
+
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer(HARNESS_ISSUER).build();
+      verifier.verify(jwtToken);
+      return JWT.decode(jwtToken).getClaim(UserInvite.UUID_KEY).asString();
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new GeneralException("JWTToken validation failed");
+    } catch (JWTDecodeException | SignatureVerificationException e) {
+      throw new InvalidCredentialsException("Invalid JWTToken received, failed to decode the token", USER);
+    }
   }
 
   @Override
@@ -3451,18 +3545,18 @@ public class UserServiceImpl implements UserService {
 
     UserInvite existingInvite = getInvite(userInvite.getUuid());
     if (existingInvite == null) {
-      throw new NoSuchElementException(ErrorCode.USER_INVITATION_DOES_NOT_EXIST.toString());
+      return INVITE_INVALID;
     }
     User user = getUserByEmail(existingInvite.getEmail());
     Account account = accountService.get(userInvite.getAccountId());
 
     if (account == null || user == null) {
-      throw new NoSuchElementException("User or account does not exist");
+      log.error("User or account does not exist - " + userInvite.getAccountId());
+      return INVITE_INVALID;
     }
 
     if (existingInvite.isCompleted()) {
-      log.warn("User invite {} is already completed", userInvite.getUuid());
-      return FAIL;
+      return USER_ALREADY_ADDED;
     }
 
     eventPublishHelper.publishUserInviteVerifiedFromAccountEvent(account.getUuid(), user.getEmail());

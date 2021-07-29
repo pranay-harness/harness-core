@@ -21,6 +21,7 @@ import static software.wings.utils.Utils.urlDecode;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.auth0.jwt.interfaces.Claim;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -41,6 +42,7 @@ import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
+import io.harness.security.JWTTokenServiceUtils;
 import io.harness.security.annotations.PublicApi;
 
 import software.wings.app.MainConfiguration;
@@ -60,6 +62,7 @@ import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
 import software.wings.scheduler.AccountPasswordExpirationJob;
+import software.wings.security.JWT_CATEGORY;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
@@ -87,6 +90,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -1156,8 +1160,58 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> completeInviteAndSignIn(
-      @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInviteDTO userInvite) {
-    return new RestResponse<>(userService.completeNGInviteAndSignIn(userInvite));
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("generation") Generation gen, @NotNull UserInviteDTO userInviteDTO) {
+    if (gen != null && gen.equals(Generation.NG)) {
+      return new RestResponse<>(userService.completeNGInviteAndSignIn(userInviteDTO));
+    } else {
+      Account account = accountService.get(accountId);
+      String inviteId = userService.getInviteIdFromToken(userInviteDTO.getToken());
+      UserInvite userInvite = UserInvite.UserInviteBuilder.anUserInvite()
+                                        .withAccountId(accountId)
+                                        .withEmail(userInviteDTO.getEmail())
+                                        .withName(userInviteDTO.getName())
+                                        .withAccountName(account.getAccountName())
+                                        .withCompanyName(account.getCompanyName())
+                                        .withUuid(inviteId)
+                                        .build();
+      userInvite.setAccountId(accountId);
+      userInvite.setUuid(inviteId);
+      userInvite.setPassword(userInviteDTO.getPassword().toCharArray());
+      return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+    }
+
+  }
+
+  /**
+   * The backend URL for invite which will be added in
+   *
+   * @param accountId the account ID
+   * @param jwtToken JWT token corresponding to the invite
+   * @param email Email id for the user
+   * @return the rest response
+   */
+  @PublicApi
+  @GET
+  @Path("invites/verify")
+  @Timed
+  @ExceptionMetered
+  public Response acceptInviteAndRedirect(
+          @QueryParam("accountId") @NotEmpty String accountId,
+          @QueryParam("token") @NotNull String jwtToken, @QueryParam("email") @NotNull String email) {
+    UserInvite userInvite = new UserInvite();
+    String inviteId = userService.getInviteIdFromToken(jwtToken);
+    userInvite.setAccountId(accountId);
+    userInvite.setEmail(email);
+    userInvite.setUuid(inviteId);
+    InviteOperationResponse inviteResponse = userService.checkInviteStatus(userInvite, Generation.CG);
+    URI redirectURL = null;
+    try {
+      redirectURL = userService.getInviteAcceptRedirectURL(inviteResponse, userInvite, jwtToken);
+      return Response.seeOther(redirectURL).build();
+    } catch (URISyntaxException e) {
+      log.error("Unable to create redirect url for invite", e);
+      throw new InvalidRequestException("URI syntax error");
+    }
   }
 
   @PublicApi

@@ -40,6 +40,8 @@ import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -446,6 +448,12 @@ public interface UserService extends OwnedByAccount {
   boolean deleteInvites(@NotBlank String accountId, @NotBlank String email);
 
   /**
+   * Given a JWT encoded token from the invite email, get the mongo id corresponding to it
+   * @param jwtToken  the JWT token encoded in email
+   * @return the String
+   */
+  String getInviteIdFromToken(String jwtToken);
+  /**
    * Gets user account role.
    *
    * @param userId    the user id
@@ -618,4 +626,6 @@ public interface UserService extends OwnedByAccount {
   void setUserEmailVerified(String userId);
 
   boolean isUserPasswordPresent(String accountId, String emailId);
+
+  URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken) throws URISyntaxException;
 }
