@@ -502,10 +502,10 @@ public class HeatMapServiceImpl implements HeatMapService {
                                       .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
                                       .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                       .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
-                                      .field(HeatMapKeys.heatMapBucketStartTime)
-                                      .lessThanOrEq(startTime)
                                       .field(HeatMapKeys.heatMapBucketEndTime)
-                                      .greaterThan(startTime);
+                                      .greaterThan(startTime)
+                                      .field(HeatMapKeys.heatMapBucketEndTime)
+                                      .lessThanOrEq(startTime.plus(heatMapResolution.getBucketSize()));
 
     Criteria criterias[] = new Criteria[size];
 
