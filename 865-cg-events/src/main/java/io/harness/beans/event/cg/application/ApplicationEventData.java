@@ -1,9 +1,8 @@
-package io.harness.beans;
+package io.harness.beans.event.cg.application;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.event.EventPayloadData;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,9 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventPayload {
+public class ApplicationEventData {
   private String id;
-  private String version = "v1";
-  private String eventType;
-  private EventPayloadData data;
+  private String name;
 }
