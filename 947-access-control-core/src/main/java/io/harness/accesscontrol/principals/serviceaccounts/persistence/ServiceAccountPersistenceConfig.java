@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.principals.users.persistence;
+package io.harness.accesscontrol.principals.serviceaccounts.persistence;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
