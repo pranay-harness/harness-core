@@ -21,7 +21,6 @@ import static software.wings.utils.Utils.urlDecode;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.auth0.jwt.interfaces.Claim;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -84,6 +83,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.signup.BugsnagErrorReporter;
 import software.wings.utils.AccountPermissionUtils;
 
+import com.auth0.jwt.interfaces.Claim;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.collect.Lists;
@@ -1176,27 +1176,26 @@ public class UserResource {
   @Path("invites/ngsignin")
   @Timed
   @ExceptionMetered
-  public RestResponse<User> completeInviteAndSignIn(
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("generation") Generation gen, @NotNull UserInviteDTO userInviteDTO) {
+  public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("generation") Generation gen, @NotNull UserInviteDTO userInviteDTO) {
     if (gen != null && gen.equals(Generation.NG)) {
       return new RestResponse<>(userService.completeNGInviteAndSignIn(userInviteDTO));
     } else {
       Account account = accountService.get(accountId);
       String inviteId = userService.getInviteIdFromToken(userInviteDTO.getToken());
       UserInvite userInvite = UserInvite.UserInviteBuilder.anUserInvite()
-                                        .withAccountId(accountId)
-                                        .withEmail(userInviteDTO.getEmail())
-                                        .withName(userInviteDTO.getName())
-                                        .withAccountName(account.getAccountName())
-                                        .withCompanyName(account.getCompanyName())
-                                        .withUuid(inviteId)
-                                        .build();
+                                  .withAccountId(accountId)
+                                  .withEmail(userInviteDTO.getEmail())
+                                  .withName(userInviteDTO.getName())
+                                  .withAccountName(account.getAccountName())
+                                  .withCompanyName(account.getCompanyName())
+                                  .withUuid(inviteId)
+                                  .build();
       userInvite.setAccountId(accountId);
       userInvite.setUuid(inviteId);
       userInvite.setPassword(userInviteDTO.getPassword().toCharArray());
       return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
     }
-
   }
 
   /**
@@ -1212,13 +1211,20 @@ public class UserResource {
   @Path("invites/verify")
   @Timed
   @ExceptionMetered
-  public Response acceptInviteAndRedirect(
-          @QueryParam("accountId") @NotEmpty String accountId,
-          @QueryParam("token") @NotNull String jwtToken, @QueryParam("email") @NotNull String email) {
+  public Response acceptInviteAndRedirect(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("token") @NotNull String jwtToken, @QueryParam("email") @NotNull String email) {
     UserInvite userInvite = new UserInvite();
+    String decodedEmail = email;
+    try {
+      decodedEmail = URLDecoder.decode(email, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      log.error("Unsupported encoding exception for " + accountId, e);
+      throw new InvalidRequestException("Malformed email received");
+    }
+
     String inviteId = userService.getInviteIdFromToken(jwtToken);
     userInvite.setAccountId(accountId);
-    userInvite.setEmail(email);
+    userInvite.setEmail(decodedEmail);
     userInvite.setUuid(inviteId);
     InviteOperationResponse inviteResponse = userService.checkInviteStatus(userInvite, Generation.CG);
     URI redirectURL = null;
