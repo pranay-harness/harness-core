@@ -35,7 +35,6 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredential
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
@@ -184,10 +183,8 @@ public class SecretSpecBuilder {
 
     log.info(
         "Decrypting git connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
-    secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitConnector.getEncryptedDataDetails());
-
-    GitAuthType gitAuthType = gitConfigDTO.getGitAuthType();
-    if (gitAuthType == GitAuthType.HTTP) {
+    if (gitConfigDTO.getGitAuthType() == GitAuthType.HTTP) {
+      secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitConnector.getEncryptedDataDetails());
       GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
 
       String key = DRONE_NETRC_PASSWORD;
@@ -197,16 +194,17 @@ public class SecretSpecBuilder {
               .value(encodeBase64(new String(gitHTTPAuthenticationDTO.getPasswordRef().getDecryptedValue())))
               .type(TEXT)
               .build());
-    } else if (gitAuthType == GitAuthType.SSH) {
-      GitSSHAuthenticationDTO gitSSHAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
-
-      String key = "SSH_KEY";
-      secretData.put(key,
-          SecretParams.builder()
-              .secretKey(key)
-              .value(encodeBase64(gitSSHAuthenticationDTO.getEncryptedSshKey().getDecryptedValue()))
-              .type(TEXT)
-              .build());
+    } else if (gitConfigDTO.getGitAuthType() == GitAuthType.SSH) {
+      SSHKeyDetails sshKeyDetails = gitConnector.getSshKeyDetails();
+      secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
+      SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
+      if (key == null || isEmpty(key.getDecryptedValue())) {
+        throw new CIStageExecutionException("Git connector should have not empty sshKey");
+      }
+      char[] sshKey = key.getDecryptedValue();
+      secretData.put(DRONE_SSH_KEY,
+          SecretParams.builder().secretKey(DRONE_SSH_KEY).value(encodeBase64(sshKey)).type(TEXT).build());
     }
     return secretData;
   }
