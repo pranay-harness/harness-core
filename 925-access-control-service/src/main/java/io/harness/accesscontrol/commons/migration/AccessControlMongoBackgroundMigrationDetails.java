@@ -3,6 +3,7 @@ package io.harness.accesscontrol.commons.migration;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.roleassignments.migration.RoleAssignmentScopeAdditionMigration;
+import io.harness.accesscontrol.scopes.harness.migration.ScopeMigration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.MigrationDetails;
 import io.harness.migration.NGMigration;
@@ -28,6 +29,7 @@ public class AccessControlMongoBackgroundMigrationDetails implements MigrationDe
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
         .add(Pair.of(1, RoleAssignmentScopeAdditionMigration.class))
+        .add(Pair.of(2, ScopeMigration.class))
         .build();
   }
 }

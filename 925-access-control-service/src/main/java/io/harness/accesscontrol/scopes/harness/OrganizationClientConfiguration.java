@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.support;
+package io.harness.accesscontrol.scopes.harness;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -8,7 +8,7 @@ import lombok.Value;
 
 @OwnedBy(HarnessTeam.PL)
 @Value
-public class AccountClientConfiguration {
-  ServiceHttpClientConfig accountServiceConfig;
-  String accountServiceSecret;
+public class OrganizationClientConfiguration {
+  ServiceHttpClientConfig organizationServiceConfig;
+  String organizationServiceSecret;
 }

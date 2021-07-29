@@ -15,7 +15,7 @@ import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidati
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
-import io.harness.accesscontrol.scopes.harness.ScopeDTOMapper;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.utils.CryptoUtils;
 
@@ -48,7 +48,7 @@ public class RoleAssignmentDTOMapper {
                             .roleIdentifier(object.getRoleIdentifier())
                             .disabled(object.isDisabled())
                             .build())
-        .scope(ScopeDTOMapper.toDTO(scope))
+        .scope(ScopeMapper.toDTO(scope))
         .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
