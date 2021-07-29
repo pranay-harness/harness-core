@@ -163,8 +163,6 @@ public class PerspectivesQuery {
     long timePeriod = perspectiveTimeSeriesHelper.getTimePeriod(groupBy);
     isClusterQuery = isClusterQuery != null && isClusterQuery;
 
-    log.info("IS cluster query {}", isClusterQuery);
-
     PerspectiveTimeSeriesData data = perspectiveTimeSeriesHelper.fetch(
         viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
             cloudProviderTableName, accountId, includeOthers, limit, isClusterQuery),

@@ -74,7 +74,7 @@ if [ -z "${ghprbTargetBranch}" ]
 then
   if which hub > /dev/null
   then
-    ghprbTargetBranch=`hub pr show --format=%B`
+    ghprbTargetBranch=`hub pr show --format=%B` || true
   fi
 fi
 
@@ -105,5 +105,6 @@ then
     --team-filter ${HARNESS_TEAM} \
     --kind-filter AutoAction \
     --kind-filter Error \
+    --kind-filter Warning \
     --exit-code
 fi

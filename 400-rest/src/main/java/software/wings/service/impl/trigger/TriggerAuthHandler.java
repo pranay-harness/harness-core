@@ -9,7 +9,9 @@ import static software.wings.security.AuthRuleFilter.getAllowedAppIds;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.TriggerException;
 import io.harness.exception.UnauthorizedException;
@@ -36,6 +38,7 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 @Singleton
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerAuthHandler {
   @Inject private AuthHandler authHandler;
   @Inject private DeploymentAuthHandler deploymentAuthHandler;

@@ -23,7 +23,6 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("PagerDuty")
 public class PagerDutyChannel implements Channel {
   List<String> pagerDutyIntegrationKeys;
-  List<String> userGroupIds;
   List<UserGroup> userGroups;
   Map<String, String> templateData;
   String templateId;
@@ -32,7 +31,6 @@ public class PagerDutyChannel implements Channel {
   public Object toObjectofProtoSchema() {
     return PagerDuty.newBuilder()
         .addAllPagerDutyIntegrationKeys(pagerDutyIntegrationKeys)
-        .addAllUserGroupIds(userGroupIds)
         .putAllTemplateData(templateData)
         .setTemplateId(templateId)
         .addAllUserGroup(NotificationUserGroupMapper.toProto(userGroups))
@@ -48,7 +46,6 @@ public class PagerDutyChannel implements Channel {
   public static PagerDutyChannel toPagerDutyEntity(PagerDuty pagerDutyDetails) {
     return PagerDutyChannel.builder()
         .pagerDutyIntegrationKeys(pagerDutyDetails.getPagerDutyIntegrationKeysList())
-        .userGroupIds(pagerDutyDetails.getUserGroupIdsList())
         .templateData(pagerDutyDetails.getTemplateDataMap())
         .templateId(pagerDutyDetails.getTemplateId())
         .userGroups(NotificationUserGroupMapper.toEntity(pagerDutyDetails.getUserGroupList()))

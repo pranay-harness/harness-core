@@ -185,11 +185,7 @@ public class MSTeamsServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     MSTeam msTeamDetails = notificationRequest.getMsTeam();
     List<String> recipients = new ArrayList<>(msTeamDetails.getMsTeamKeysList());
-    if (isNotEmpty(msTeamDetails.getUserGroupIdsList())) {
-      List<String> microsoftTeamWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
-          msTeamDetails.getUserGroupIdsList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
-      recipients.addAll(microsoftTeamWebHookUrls);
-    } else {
+    if (isNotEmpty(msTeamDetails.getUserGroupList())) {
       List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
           msTeamDetails.getUserGroupList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);

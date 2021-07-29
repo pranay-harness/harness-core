@@ -96,6 +96,8 @@ import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.EventPayload;
+import io.harness.beans.EventType;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -108,6 +110,13 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
+import io.harness.beans.event.cg.CgPipelineStartPayload;
+import io.harness.beans.event.cg.application.ApplicationEventData;
+import io.harness.beans.event.cg.entities.EnvironmentEntity;
+import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
+import io.harness.beans.event.cg.entities.ServiceEntity;
+import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
+import io.harness.beans.event.cg.pipeline.PipelineEventData;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -130,6 +139,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
+import io.harness.service.EventService;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -316,6 +326,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.sun.istack.internal.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -342,7 +353,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -421,6 +431,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject @AccountExpiryCheck private PreDeploymentChecker accountExpirationChecker;
   @Inject private WorkflowStatusPropagatorFactory workflowStatusPropagatorFactory;
   @Inject private WorkflowExecutionUpdate executionUpdate;
+
+  @Inject private EventService eventService;
 
   @Override
   public HIterator<WorkflowExecution> executions(
@@ -1503,6 +1515,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution.setAccountId(app.getAccountId());
     wingsPersistence.save(workflowExecution);
+    sendEvent(app, executionArgs, workflowExecution);
     log.info("Created workflow execution {}", workflowExecution.getUuid());
     WorkflowExecution finalWorkflowExecution = workflowExecution;
     if (parameterizedArtifactStreamsPresent(executionArgs.getArtifactVariables())) {
@@ -1526,6 +1539,51 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements);
     }
     return workflowExecution;
+  }
+
+  private void sendEvent(Application app, ExecutionArgs executionArgs, WorkflowExecution execution) {
+    if (!featureFlagService.isEnabled(FeatureName.APP_TELEMETRY, app.getAccountId())) {
+      return;
+    }
+    if (PIPELINE.equals(executionArgs.getWorkflowType())) {
+      PipelineSummary summary = execution.getPipelineSummary();
+      if (summary != null) {
+        eventService.deliverEvent(app.getAccountId(), app.getUuid(),
+            EventPayload.builder()
+                .eventType(EventType.PIPELINE_START.getEventValue())
+                .data(CgPipelineStartPayload.builder()
+                          .application(ApplicationEventData.builder().id(app.getAppId()).name(app.getName()).build())
+                          .executionId(execution.getUuid())
+                          .services(isEmpty(execution.getServiceIds())
+                                  ? Collections.emptyList()
+                                  : execution.getServiceIds()
+                                        .stream()
+                                        .map(id -> ServiceEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .infraDefinitions(isEmpty(execution.getInfraDefinitionIds())
+                                  ? Collections.emptyList()
+                                  : execution.getInfraDefinitionIds()
+                                        .stream()
+                                        .map(id -> InfraDefinitionEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .environments(isEmpty(execution.getEnvIds())
+                                  ? Collections.emptyList()
+                                  : execution.getEnvIds()
+                                        .stream()
+                                        .map(id -> EnvironmentEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .pipeline(PipelineEventData.builder()
+                                        .id(summary.getPipelineId())
+                                        .name(summary.getPipelineName())
+                                        .build())
+                          .startedAt(execution.getCreatedAt())
+                          .triggeredByType(execution.getCreatedByType())
+                          .triggeredBy(execution.getCreatedBy())
+                          .executionArgs(ExecutionArgsEventData.builder().notes(executionArgs.getNotes()).build())
+                          .build())
+                .build());
+      }
+    }
   }
 
   @VisibleForTesting
@@ -2828,6 +2886,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
+    // TODO: @deepakputhraya Handle events
     String executionUuid = executionInterrupt.getExecutionUuid();
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);

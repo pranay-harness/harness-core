@@ -23,7 +23,6 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("MicrosoftTeams")
 public class MicrosoftTeamsChannel implements Channel {
   List<String> msTeamKeys;
-  List<String> userGroupIds;
   List<UserGroup> userGroups;
   Map<String, String> templateData;
   String templateId;
@@ -32,7 +31,6 @@ public class MicrosoftTeamsChannel implements Channel {
   public Object toObjectofProtoSchema() {
     return MSTeam.newBuilder()
         .addAllMsTeamKeys(msTeamKeys)
-        .addAllUserGroupIds(userGroupIds)
         .putAllTemplateData(templateData)
         .setTemplateId(templateId)
         .addAllUserGroup(NotificationUserGroupMapper.toProto(userGroups))
@@ -48,7 +46,6 @@ public class MicrosoftTeamsChannel implements Channel {
   public static MicrosoftTeamsChannel toMicrosoftTeamsEntity(MSTeam msTeamDetails) {
     return MicrosoftTeamsChannel.builder()
         .msTeamKeys(msTeamDetails.getMsTeamKeysList())
-        .userGroupIds(msTeamDetails.getUserGroupIdsList())
         .templateData(msTeamDetails.getTemplateDataMap())
         .templateId(msTeamDetails.getTemplateId())
         .userGroups(NotificationUserGroupMapper.toEntity(msTeamDetails.getUserGroupList()))

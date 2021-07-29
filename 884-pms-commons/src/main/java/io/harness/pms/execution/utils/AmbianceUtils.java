@@ -1,10 +1,14 @@
 package io.harness.pms.execution.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.StepType;
@@ -21,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(PIPELINE)
 public class AmbianceUtils {
   public static Ambiance cloneForFinish(@NonNull Ambiance ambiance) {
     return clone(ambiance, ambiance.getLevelsList().size() - 1);
@@ -123,5 +128,13 @@ public class AmbianceUtils {
       throw new InvalidRequestException("Ambiance.levels is empty");
     }
     return currLevel.getStartTs();
+  }
+
+  public NGAccess getNgAccess(Ambiance ambiance) {
+    return BaseNGAccess.builder()
+        .accountIdentifier(getAccountId(ambiance))
+        .orgIdentifier(getOrgIdentifier(ambiance))
+        .projectIdentifier(getProjectIdentifier(ambiance))
+        .build();
   }
 }

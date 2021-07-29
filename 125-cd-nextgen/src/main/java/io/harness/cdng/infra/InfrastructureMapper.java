@@ -6,7 +6,6 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
@@ -18,6 +17,7 @@ import io.harness.cdng.service.steps.ServiceStepOutcome;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.environment.EnvironmentOutcome;
 
 import javax.annotation.Nonnull;
 import lombok.experimental.UtilityClass;

@@ -1,10 +1,17 @@
 package software.wings.beans.trigger;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public enum WebhookCustomExpression {
   BIT_BUCKET_PULL_REQUEST_ID("Pull Request Id", "${pullrequest.id}", WebhookSource.BITBUCKET),
   BIT_BUCKET_PULL_REQUEST_TITLE("Pull Request Title", "${pullrequest.title}", WebhookSource.BITBUCKET),
@@ -55,6 +62,7 @@ public enum WebhookCustomExpression {
   @Getter private String value;
   @Getter private String displayName;
   private WebhookSource type;
+
   WebhookCustomExpression(String displayName, String value, WebhookSource type) {
     this.value = value;
     this.displayName = displayName;

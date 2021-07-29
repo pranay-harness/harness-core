@@ -2,7 +2,9 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,8 @@ import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public enum WebhookSource {
   GITHUB,
   GITLAB,
@@ -166,6 +170,7 @@ public enum WebhookSource {
     COMPLETED("completed");
 
     @Getter private String value;
+
     AzureDevopsPullRequestStatus(String value) {
       this.value = value;
       WebhookSource.AzureDevopsPullRequestStatus.AzureDevOpsPullRequestStatusHolder.map.put(value, this);
@@ -187,6 +192,7 @@ public enum WebhookSource {
     @Getter private String displayName;
     @Getter private String value;
     @Getter private WebhookEventType eventType;
+
     AzureDevOpsEventType(String displayName, String value, WebhookEventType eventType) {
       this.displayName = displayName;
       this.value = value;
