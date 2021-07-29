@@ -248,6 +248,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.ConstraintViolation;
 import javax.validation.executable.ValidateOnExecution;
@@ -726,10 +727,14 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
     return DelegateStatus.builder()
-        .publishedVersions(delegateConfiguration.getDelegateVersions())
+        .publishedVersions(delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
         .scalingGroups(scalingGroups)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
+  }
+
+  private List<String> delegateVersionListWithoutPatch(List<String> delegateVersions) {
+    return delegateVersions.stream().map(version -> substringBefore(version, "-")).collect(toList());
   }
 
   @NotNull
