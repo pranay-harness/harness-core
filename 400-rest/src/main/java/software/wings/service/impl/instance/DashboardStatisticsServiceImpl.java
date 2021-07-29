@@ -120,13 +120,20 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FindOptions;
@@ -1244,7 +1251,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             .group(Group.id(grouping(InstanceKeys.serviceId), grouping(InstanceKeys.envId),
                        grouping(InstanceKeys.lastArtifactBuildNum), grouping(InstanceKeys.infraMappingId),
                        grouping(InstanceKeys.lastWorkflowExecutionId)),
-                grouping(InstanceKeys.serviceName, first(Instance.InstanceKeys.serviceName)),
+                grouping(InstanceKeys.serviceName, first(InstanceKeys.serviceName)),
                 grouping(InstanceKeys.lastWorkflowExecutionName, first(InstanceKeys.lastWorkflowExecutionName)),
                 grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)))
             .group(Group.id(grouping(InstanceKeys.serviceId, "_id." + InstanceKeys.serviceId)),
@@ -1252,7 +1259,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceName, first(InstanceKeys.serviceName)),
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceInfoSummaries,
                     grouping("$push", projection(ServiceInfoSummaryKeys.serviceName, InstanceKeys.serviceName),
-                        projection("envId", "_id." + InstanceKeys.envId),
+                        projection(ServiceInfoSummaryKeys.envId, "_id." + InstanceKeys.envId),
                         projection(
                             ServiceInfoSummaryKeys.lastArtifactBuildNum, "_id." + InstanceKeys.lastArtifactBuildNum),
                         projection(ServiceInfoSummaryKeys.lastWorkflowExecutionId,
@@ -1308,11 +1315,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private Query<Instance> getQueryForCompareServicesByEnvironment(
       String accountId, String appId, String envId1, String envId2) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.filter(Instance.InstanceKeys.accountId, accountId);
-    query.filter(Instance.InstanceKeys.isDeleted, false);
-    query.and(query.criteria(Instance.InstanceKeys.appId).equal(appId),
-        query.or(query.criteria(Instance.InstanceKeys.envId).equal(envId1),
-            query.criteria(Instance.InstanceKeys.envId).equal(envId2)));
+    query.filter(InstanceKeys.accountId, accountId);
+    query.filter(InstanceKeys.isDeleted, false);
+    query.and(query.criteria(InstanceKeys.appId).equal(appId),
+        query.or(query.criteria(InstanceKeys.envId).equal(envId1),
+            query.criteria(InstanceKeys.envId).equal(envId2)));
     return query;
   }
 }
