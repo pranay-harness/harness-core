@@ -542,7 +542,7 @@ public class K8sStepHelperTest extends CategoryTest {
         GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
     GitStoreDelegateConfig gitStoreDelegateConfig =
         k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
-            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+            sshKeySpecDTO, gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
     GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
@@ -566,7 +566,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
     GitStoreDelegateConfig gitStoreDelegateConfig =
         k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
-            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+            sshKeySpecDTO, gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
     GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
@@ -587,7 +587,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
     try {
       k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO,
-          gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+          gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
     } catch (Exception thrown) {
       assertThat(thrown).isNotNull();
       assertThat(thrown).isInstanceOf(InvalidRequestException.class);
@@ -612,7 +612,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
     GitStoreDelegateConfig gitStoreDelegateConfig =
         k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
-            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+            sshKeySpecDTO, gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
 
     assertThat(gitStoreDelegateConfig.getBranch()).isEqualTo("branch");
     assertThat(gitStoreDelegateConfig.getCommitId()).isEqualTo("commitId");

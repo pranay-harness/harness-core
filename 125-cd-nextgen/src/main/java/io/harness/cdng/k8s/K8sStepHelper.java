@@ -306,14 +306,14 @@ public class K8sStepHelper {
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
         return K8sManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(
-                k8sManifestOutcome.getStore(), ambiance, manifestOutcome.getType(), manifestOutcome.getType()))
+                k8sManifestOutcome.getStore(), ambiance, manifestOutcome, manifestOutcome.getType()))
             .build();
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
         return HelmChartManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance,
-                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance, manifestOutcome,
+                manifestOutcome.getType() + " manifest"))
             .chartName(getParameterFieldValue(helmChartManifestOutcome.getChartName()))
             .chartVersion(getParameterFieldValue(helmChartManifestOutcome.getChartVersion()))
             .helmVersion(helmChartManifestOutcome.getHelmVersion())
@@ -329,8 +329,8 @@ public class K8sStepHelper {
         }
         GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
         return KustomizeManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
-                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance, manifestOutcome,
+                manifestOutcome.getType() + " manifest"))
             .pluginPath(getParameterFieldValue(kustomizeManifestOutcome.getPluginPath()))
             .kustomizeDirPath(getParameterFieldValue(gitStoreConfig.getFolderPath()))
             .build();
@@ -338,8 +338,8 @@ public class K8sStepHelper {
       case ManifestType.OpenshiftTemplate:
         OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
         return OpenshiftManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(openshiftManifestOutcome.getStore(), ambiance,
-                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .storeDelegateConfig(getStoreDelegateConfig(openshiftManifestOutcome.getStore(), ambiance, manifestOutcome,
+                manifestOutcome.getType() + " manifest"))
             .build();
 
       default:
@@ -348,7 +348,7 @@ public class K8sStepHelper {
   }
 
   public StoreDelegateConfig getStoreDelegateConfig(
-      StoreConfig storeConfig, Ambiance ambiance, String manifestType, String validationErrorMessage) {
+      StoreConfig storeConfig, Ambiance ambiance, ManifestOutcome manifestOutcome, String validationErrorMessage) {
     if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
       GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStoreConfig.getConnectorRef()), ambiance);
@@ -360,9 +360,9 @@ public class K8sStepHelper {
       List<EncryptedDataDetail> encryptedDataDetails =
           gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
-      List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestType);
-      return getGitStoreDelegateConfig(
-          gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
+      List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
+      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO,
+          manifestOutcome, gitFilePaths);
     }
 
     if (ManifestStoreType.HTTP.equals(storeConfig.getKind())) {
@@ -417,7 +417,8 @@ public class K8sStepHelper {
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStoreConfig gitstoreConfig,
       @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
-      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, String manifestType, List<String> paths) {
+      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, ManifestOutcome manifestOutcome,
+      List<String> paths) {
     convertToRepoGitConfig(gitstoreConfig, gitConfigDTO);
     return GitStoreDelegateConfig.builder()
         .gitConfigDTO(gitConfigDTO)
@@ -428,6 +429,8 @@ public class K8sStepHelper {
         .commitId(trim(getParameterFieldValue(gitstoreConfig.getCommitId())))
         .paths(trimStrings(paths))
         .connectorName(connectorDTO.getName())
+        .manifestType(manifestOutcome.getType())
+        .manifestId(manifestOutcome.getIdentifier())
         .build();
   }
 
@@ -645,9 +648,8 @@ public class K8sStepHelper {
     for (OpenshiftParamManifestOutcome openshiftParamManifest : openshiftParamManifests) {
       if (ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind())) {
         String validationMessage = format("Openshift Param file with Id [%s]", openshiftParamManifest.getIdentifier());
-        GitFetchFilesConfig gitFetchFilesConfig =
-            getGitFetchFilesConfig(ambiance, openshiftParamManifest.getIdentifier(), openshiftParamManifest.getStore(),
-                validationMessage, ManifestType.OpenshiftParam);
+        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(
+            ambiance, openshiftParamManifest.getStore(), validationMessage, openshiftParamManifest);
         gitFetchFilesConfigs.add(gitFetchFilesConfig);
       }
     }
@@ -693,14 +695,14 @@ public class K8sStepHelper {
 
     GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
     if (ManifestType.K8Manifest.equals(k8sManifestOutcome.getType()) && hasOnlyOne(gitStoreConfig.getPaths())) {
-      gitFetchFilesConfigs.add(mapK8sOrHelmValuesManifestToGitFetchFileConfig(
-          valuesManifestOutcome, ambiance, k8sManifestOutcome.getType()));
+      gitFetchFilesConfigs.add(
+          mapK8sOrHelmValuesManifestToGitFetchFileConfig(valuesManifestOutcome, ambiance, k8sManifestOutcome));
       orderedValuesManifests.addFirst(valuesManifestOutcome);
     }
 
     if (ManifestType.HelmChart.equals(k8sManifestOutcome.getType())) {
-      gitFetchFilesConfigs.add(mapK8sOrHelmValuesManifestToGitFetchFileConfig(
-          valuesManifestOutcome, ambiance, k8sManifestOutcome.getType()));
+      gitFetchFilesConfigs.add(
+          mapK8sOrHelmValuesManifestToGitFetchFileConfig(valuesManifestOutcome, ambiance, k8sManifestOutcome));
       orderedValuesManifests.addFirst(valuesManifestOutcome);
     }
 
@@ -716,10 +718,10 @@ public class K8sStepHelper {
   }
 
   private GitFetchFilesConfig mapK8sOrHelmValuesManifestToGitFetchFileConfig(
-      ValuesManifestOutcome valuesManifestOutcome, Ambiance ambiance, String k8sManifestType) {
+      ValuesManifestOutcome valuesManifestOutcome, Ambiance ambiance, ManifestOutcome k8sManifestOutcome) {
     String validationMessage = format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier());
     return getValuesGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(),
-        valuesManifestOutcome.getStore(), validationMessage, k8sManifestType);
+        valuesManifestOutcome.getStore(), validationMessage, k8sManifestOutcome);
   }
 
   private List<GitFetchFilesConfig> mapValuesManifestToGitFetchFileConfig(
@@ -727,8 +729,8 @@ public class K8sStepHelper {
     return aggregatedValuesManifests.stream()
         .filter(valuesManifestOutcome -> ManifestStoreType.isInGitSubset(valuesManifestOutcome.getStore().getKind()))
         .map(valuesManifestOutcome
-            -> getGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(), valuesManifestOutcome.getStore(),
-                format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier()), ManifestType.VALUES))
+            -> getGitFetchFilesConfig(ambiance, valuesManifestOutcome.getStore(),
+                format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier()), valuesManifestOutcome))
         .collect(Collectors.toList());
   }
 
@@ -822,7 +824,7 @@ public class K8sStepHelper {
   }
 
   private GitFetchFilesConfig getGitFetchFilesConfig(
-      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
+      Ambiance ambiance, StoreConfig store, String validationMessage, ManifestOutcome manifestOutcome) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
@@ -834,20 +836,20 @@ public class K8sStepHelper {
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
-    List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestType);
+    List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
     GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
+        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestOutcome, gitFilePaths);
 
     return GitFetchFilesConfig.builder()
-        .identifier(identifier)
-        .manifestType(manifestType)
+        .identifier(manifestOutcome.getIdentifier())
+        .manifestType(manifestOutcome.getType())
         .succeedIfFileNotFound(false)
         .gitStoreDelegateConfig(gitStoreDelegateConfig)
         .build();
   }
 
-  private GitFetchFilesConfig getValuesGitFetchFilesConfig(
-      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
+  private GitFetchFilesConfig getValuesGitFetchFilesConfig(Ambiance ambiance, String identifier, StoreConfig store,
+      String validationMessage, ManifestOutcome k8sManifestOutcome) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
@@ -859,9 +861,9 @@ public class K8sStepHelper {
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
-    List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, manifestType);
-    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
+    List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, k8sManifestOutcome.getType());
+    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(gitStoreConfig, connectorDTO,
+        encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, k8sManifestOutcome, gitFilePaths);
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
