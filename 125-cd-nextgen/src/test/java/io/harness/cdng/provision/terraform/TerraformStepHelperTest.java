@@ -21,10 +21,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.cdng.k8s.K8sStepHelper;
+import io.harness.cdng.manifest.yaml.BitBucketStoreDTO;
+import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitLabStoreDTO;
+import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
+import io.harness.cdng.manifest.yaml.GitStoreDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.GithubStoreDTO;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigType;
@@ -40,6 +44,7 @@ import io.harness.delegate.task.terraform.InlineTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
 import io.harness.ng.core.EntityDetail;
@@ -61,6 +66,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -338,7 +344,8 @@ public class TerraformStepHelperTest extends CategoryTest {
                                          .repoName("terraform")
                                          .paths(Collections.singletonList("VarFiles/"))
                                          .connectorRef("terraform")
-                                         .gitFetchType(FetchType.BRANCH)
+                                         .gitFetchType(FetchType.COMMIT)
+                                         .commitId("commit")
                                          .build();
 
     TerraformVarFileConfig inlineFileConfig =
@@ -370,6 +377,37 @@ public class TerraformStepHelperTest extends CategoryTest {
             .isEqualTo("https://github.com/wings-software/terraform");
       }
     }
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testPrepareTerraformVarFileInfoEmpty() {
+    Ambiance ambiance = getAmbiance();
+    List<TerraformVarFileConfig> varFileConfigs = new LinkedList<>();
+    List<TerraformVarFileInfo> terraformVarFileInfos = helper.prepareTerraformVarFileInfo(varFileConfigs, ambiance);
+    assertThat(terraformVarFileInfos).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testToTerraformVarFileConfigEmpty() {
+    Ambiance ambiance = getAmbiance();
+    Map<String, TerraformVarFile> varFilesMap = new HashMap<>();
+    TerraformTaskNGResponse terraformTaskNGResponse = TerraformTaskNGResponse.builder().build();
+    List<TerraformVarFileConfig> terraformVarFileConfig =
+        helper.toTerraformVarFileConfig(varFilesMap, terraformTaskNGResponse, ambiance);
+    assertThat(terraformVarFileConfig).isEmpty();
+  }
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testToTerraformVarFileInfoEmpty() {
+    Ambiance ambiance = getAmbiance();
+    Map<String, TerraformVarFile> varFilesMap = new HashMap<>();
+    List<TerraformVarFileInfo> terraformVarFileInfo = helper.toTerraformVarFileInfo(varFilesMap, ambiance);
+    assertThat(terraformVarFileInfo).isEmpty();
   }
 
   @Test(expected = NullPointerException.class)
@@ -604,5 +642,174 @@ public class TerraformStepHelperTest extends CategoryTest {
     } catch (InvalidRequestException invalidRequestException) {
       assertThat(invalidRequestException.getMessage()).isEqualTo(str);
     }
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testValidateApplyStepParamsInline() {
+    TerraformApplyStepParameters stepParameters =
+        TerraformApplyStepParameters.infoBuilder()
+            .configuration(
+                TerraformStepConfigurationParameters.builder().type(TerraformStepConfigurationType.INLINE).build())
+            .build();
+    helper.validateApplyStepParamsInline(stepParameters);
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testValidateApplyStepParamsInlineNegativeScenario() {
+    TerraformApplyStepParameters stepParameters =
+        TerraformApplyStepParameters.infoBuilder()
+            .configuration(
+                TerraformStepConfigurationParameters.builder().type(TerraformStepConfigurationType.INLINE).build())
+            .build();
+    try {
+      helper.validateApplyStepParamsInline(stepParameters);
+    } catch (GeneralException generalException) {
+      assertThat(generalException.getMessage()).isEqualTo("Apply Step configuration is NULL");
+    }
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testValidateDestroyStepParamsInline() {
+    TerraformDestroyStepParameters stepParameters =
+        TerraformDestroyStepParameters.infoBuilder()
+            .configuration(
+                TerraformStepConfigurationParameters.builder().type(TerraformStepConfigurationType.INLINE).build())
+            .build();
+    helper.validateDestroyStepParamsInline(stepParameters);
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testValidateDestroyStepParamsInlineNegativeScenario() {
+    TerraformDestroyStepParameters stepParameters = new TerraformDestroyStepParameters();
+    try {
+      helper.validateDestroyStepParamsInline(stepParameters);
+    } catch (GeneralException generalException) {
+      assertThat(generalException.getMessage()).isEqualTo("Destroy Step configuration is NULL");
+    }
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testValidateDestroyStepConfigFilesInline() {
+    TerraformConfigFilesWrapper configFilesWrapper = new TerraformConfigFilesWrapper();
+    configFilesWrapper.setStore(StoreConfigWrapper.builder()
+                                    .spec(GithubStore.builder()
+                                              .branch(ParameterField.createValueField("master"))
+                                              .gitFetchType(FetchType.BRANCH)
+                                              .connectorRef(ParameterField.createValueField("terraform"))
+                                              .folderPath(ParameterField.createValueField("Config/"))
+                                              .build())
+                                    .type(StoreConfigType.GITHUB)
+                                    .build());
+    TerraformDestroyStepParameters stepParameters =
+        TerraformDestroyStepParameters.infoBuilder()
+            .configuration(TerraformStepConfigurationParameters.builder()
+                               .type(TerraformStepConfigurationType.INLINE)
+                               .spec(TerraformExecutionDataParameters.builder().configFiles(configFilesWrapper).build())
+                               .build())
+            .build();
+    helper.validateDestroyStepConfigFilesInline(stepParameters);
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testValidateDestroyStepConfigFilesInlineNegativeScenario() {
+    TerraformConfigFilesWrapper configFilesWrapper = new TerraformConfigFilesWrapper();
+    TerraformDestroyStepParameters stepParameters =
+        TerraformDestroyStepParameters.infoBuilder()
+            .configuration(TerraformStepConfigurationParameters.builder()
+                               .type(TerraformStepConfigurationType.INLINE)
+                               .spec(TerraformExecutionDataParameters.builder().configFiles(configFilesWrapper).build())
+                               .build())
+            .build();
+    try {
+      helper.validateDestroyStepConfigFilesInline(stepParameters);
+    } catch (GeneralException generalException) {
+      assertThat(generalException.getMessage()).isEqualTo("Destroy Step Spec does not have Config files store");
+    }
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testParseTerraformOutputs() {
+    String terraformOutputString = "demo";
+
+    Map<String, Object> response = helper.parseTerraformOutputs(terraformOutputString);
+    assertThat(response.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testSaveRollbackDestroyConfigInlineOtherStore() {
+    Ambiance ambiance = getAmbiance();
+    TerraformConfigFilesWrapper configFilesWrapper = new TerraformConfigFilesWrapper();
+    configFilesWrapper.setStore(StoreConfigWrapper.builder()
+                                    .spec(BitbucketStore.builder()
+                                              .branch(ParameterField.createValueField("master"))
+                                              .gitFetchType(FetchType.BRANCH)
+                                              .folderPath(ParameterField.createValueField("Config/"))
+                                              .build())
+                                    .type(StoreConfigType.BITBUCKET)
+                                    .build());
+    RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
+    remoteTerraformVarFileSpec.setStore(StoreConfigWrapper.builder()
+                                            .spec(GitStore.builder()
+                                                      .branch(ParameterField.createValueField("master"))
+                                                      .gitFetchType(FetchType.BRANCH)
+                                                      .folderPath(ParameterField.createValueField("VarFiles/"))
+                                                      .build())
+                                            .type(StoreConfigType.GIT)
+                                            .build());
+    LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
+    varFilesMap.put("var-file-1",
+        TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(remoteTerraformVarFileSpec).build());
+    TerraformApplyStepParameters parameters = TerraformApplyStepParameters.infoBuilder()
+                                                  .provisionerIdentifier(ParameterField.createValueField("provId_$"))
+                                                  .configuration(TerraformStepConfigurationParameters.builder()
+                                                                     .type(TerraformStepConfigurationType.INLINE)
+                                                                     .spec(TerraformExecutionDataParameters.builder()
+                                                                               .configFiles(configFilesWrapper)
+                                                                               .varFiles(varFilesMap)
+                                                                               .build())
+                                                                     .build())
+                                                  .build();
+    TerraformTaskNGResponse response =
+        TerraformTaskNGResponse.builder()
+            .commitIdForConfigFilesMap(ImmutableMap.of(TerraformStepHelper.TF_CONFIG_FILES, "commit-1",
+                String.format(TerraformStepHelper.TF_VAR_FILES, 1), "commit-2"))
+            .build();
+    helper.saveRollbackDestroyConfigInline(parameters, response, ambiance);
+    ArgumentCaptor<TerraformConfig> captor = ArgumentCaptor.forClass(TerraformConfig.class);
+    verify(terraformConfigDAL).saveTerraformConfig(captor.capture());
+    TerraformConfig config = captor.getValue();
+    assertThat(config).isNotNull();
+    GitStoreConfigDTO configFiles = config.getConfigFiles();
+    assertThat(configFiles instanceof BitBucketStoreDTO).isTrue();
+    BitBucketStoreDTO bitBucketStoreDTO = (BitBucketStoreDTO) configFiles;
+    assertThat(bitBucketStoreDTO.getGitFetchType()).isEqualTo(FetchType.COMMIT);
+    assertThat(bitBucketStoreDTO.getCommitId()).isEqualTo("commit-1");
+    List<TerraformVarFileConfig> varFileConfigs = config.getVarFileConfigs();
+    assertThat(varFileConfigs).isNotNull();
+    assertThat(varFileConfigs.size()).isEqualTo(1);
+    TerraformVarFileConfig terraformVarFileConfig = varFileConfigs.get(0);
+    assertThat(terraformVarFileConfig instanceof TerraformRemoteVarFileConfig).isTrue();
+    TerraformRemoteVarFileConfig remoteVarFileConfig = (TerraformRemoteVarFileConfig) terraformVarFileConfig;
+    GitStoreConfigDTO gitStoreConfigDTO = remoteVarFileConfig.getGitStoreConfigDTO();
+    assertThat(gitStoreConfigDTO instanceof GitStoreDTO).isTrue();
+    GitStoreDTO gitStoreDTO = (GitStoreDTO) gitStoreConfigDTO;
+    assertThat(gitStoreDTO.getGitFetchType()).isEqualTo(FetchType.COMMIT);
+    assertThat(gitStoreDTO.getCommitId()).isEqualTo("commit-2");
   }
 }
