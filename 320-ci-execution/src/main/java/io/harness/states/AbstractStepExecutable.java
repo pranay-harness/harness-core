@@ -42,7 +42,6 @@ import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
 import io.harness.encryption.Scope;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logstreaming.LogStreamingHelper;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -164,7 +163,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
                                         .build())
             .build();
     githubApiTokenEvaluator.resolve(
-        ciStepInfo, AmbianceHelper.getNgAccess(ambiance), ambiance.getExpressionFunctorToken());
+        ciStepInfo, AmbianceUtils.getNgAccess(ambiance), ambiance.getExpressionFunctorToken());
   }
 
   @Override

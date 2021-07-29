@@ -1,4 +1,4 @@
-package io.harness.cdng.environment;
+package io.harness.steps.environment;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

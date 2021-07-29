@@ -1,4 +1,4 @@
-package io.harness.steps.common.script;
+package io.harness.steps.shellscript;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -7,10 +7,6 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.common.step.StepHelper;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.k8s.K8sStepHelper;
-import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
@@ -22,7 +18,6 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.k8s.K8sConstants;
 import io.harness.logging.CommandExecutionStatus;
@@ -32,7 +27,6 @@ import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
@@ -43,8 +37,9 @@ import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -54,6 +49,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.ScriptType;
 import io.harness.shell.ShellExecutionData;
+import io.harness.steps.OutputExpressionConstants;
+import io.harness.steps.StepHelper;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
@@ -74,17 +72,14 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskResponseNG> {
-  public static final StepType STEP_TYPE = StepType.newBuilder()
-                                               .setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType())
-                                               .setStepCategory(StepCategory.STEP)
-                                               .build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(StepSpecTypeConstants.SHELL_SCRIPT).setStepCategory(StepCategory.STEP).build();
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private SecretCrudService secretCrudService;
   @Inject private SshKeySpecDTOHelper sshKeySpecDTOHelper;
-  @Inject private OutcomeService outcomeService;
-  @Inject private K8sStepHelper k8sStepHelper;
   @Inject private StepHelper stepHelper;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -102,13 +97,13 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     String shellScript = getShellScript(shellScriptStepParameters);
 
     if (shellScript.contains(K8sConstants.HARNESS_KUBE_CONFIG_PATH)) {
-      InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
-          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-      if (infrastructureOutcome == null) {
-        throw new InvalidRequestException("Infrastructure not available");
+      OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(ambiance,
+          RefObjectUtils.getSweepingOutputRefObject(OutputExpressionConstants.K8S_INFRA_DELEGATE_CONFIG_OUTPUT_NAME));
+      if (optionalSweepingOutput.isFound()) {
+        K8sInfraDelegateConfigOutput k8sInfraDelegateConfigOutput =
+            (K8sInfraDelegateConfigOutput) optionalSweepingOutput.getOutput();
+        taskParametersNGBuilder.k8sInfraDelegateConfig(k8sInfraDelegateConfigOutput.getK8sInfraDelegateConfig());
       }
-      taskParametersNGBuilder.k8sInfraDelegateConfig(
-          k8sStepHelper.getK8sInfraDelegateConfig(infrastructureOutcome, ambiance));
     }
 
     if (!shellScriptStepParameters.onDelegate.getValue()) {
@@ -119,8 +114,8 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
       String sshKeyRef = executionTarget.getConnectorRef().getValue();
 
       IdentifierRef identifierRef =
-          IdentifierRefHelper.getIdentifierRef(sshKeyRef, AmbianceHelper.getAccountId(ambiance),
-              AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
+          IdentifierRefHelper.getIdentifierRef(sshKeyRef, AmbianceUtils.getAccountId(ambiance),
+              AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance));
       Optional<SecretResponseWrapper> secretResponseWrapper =
           secretCrudService.get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
               identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
@@ -130,7 +125,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
       SecretDTOV2 secret = secretResponseWrapper.get().getSecret();
 
       SSHKeySpecDTO secretSpec = (SSHKeySpecDTO) secret.getSpec();
-      NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+      NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
       List<EncryptedDataDetail> sshKeyEncryptionDetails =
           sshKeySpecDTOHelper.getSSHKeyEncryptionDetails(secretSpec, ngAccess);
 
@@ -144,16 +139,15 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
         getEnvironmentVariables(shellScriptStepParameters.getEnvironmentVariables());
     List<String> outputVars = getOutputVars(shellScriptStepParameters.getOutputVariables());
 
-    ShellScriptTaskParametersNG taskParameters =
-        taskParametersNGBuilder.accountId(AmbianceHelper.getAccountId(ambiance))
-            .executeOnDelegate(shellScriptStepParameters.onDelegate.getValue())
-            .environmentVariables(environmentVariables)
-            .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
-            .outputVars(outputVars)
-            .script(shellScript)
-            .scriptType(scriptType)
-            .workingDirectory(workingDirectory)
-            .build();
+    ShellScriptTaskParametersNG taskParameters = taskParametersNGBuilder.accountId(AmbianceUtils.getAccountId(ambiance))
+                                                     .executeOnDelegate(shellScriptStepParameters.onDelegate.getValue())
+                                                     .environmentVariables(environmentVariables)
+                                                     .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
+                                                     .outputVars(outputVars)
+                                                     .script(shellScript)
+                                                     .scriptType(scriptType)
+                                                     .workingDirectory(workingDirectory)
+                                                     .build();
 
     TaskData taskData =
         TaskData.builder()
@@ -271,7 +265,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
         ShellScriptOutcome shellScriptOutcome =
             prepareShellScriptOutcome(shellScriptStepParameters, sweepingOutputEnvVariables);
         stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
-                                            .name(OutcomeExpressionConstants.OUTPUT)
+                                            .name(OutputExpressionConstants.OUTPUT)
                                             .outcome(shellScriptOutcome)
                                             .build());
       }

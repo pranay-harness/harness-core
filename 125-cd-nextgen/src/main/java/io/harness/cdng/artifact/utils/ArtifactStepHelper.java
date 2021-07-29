@@ -23,9 +23,9 @@ import io.harness.exception.InvalidConnectorTypeException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.NGAccess;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
@@ -49,7 +49,7 @@ public class ArtifactStepHelper {
   public ArtifactSourceDelegateRequest toSourceDelegateRequest(ArtifactConfig artifactConfig, Ambiance ambiance) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     ConnectorInfoDTO connectorDTO;
-    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
     switch (artifactConfig.getSourceType()) {
       case DOCKER_REGISTRY:
         DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
@@ -104,7 +104,7 @@ public class ArtifactStepHelper {
   }
 
   private ConnectorInfoDTO getConnector(String connectorIdentifierRef, Ambiance ambiance) {
-    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifierRef,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(connectorRef.getAccountIdentifier(),

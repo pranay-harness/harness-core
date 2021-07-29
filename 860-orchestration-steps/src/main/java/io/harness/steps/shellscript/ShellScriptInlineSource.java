@@ -1,4 +1,4 @@
-package io.harness.steps.common.script;
+package io.harness.steps.shellscript;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
