@@ -1,6 +1,7 @@
 package io.harness.ci.plan.creator.stage;
 
 import static io.harness.common.CICommonPodConstants.POD_NAME_PREFIX;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI_CODE_BASE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
@@ -55,6 +56,7 @@ import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -82,11 +84,13 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
 
     YamlField ciCodeBaseField = getCodebaseYamlField(ctx);
     if (ciCodeBaseField != null) {
-      PlanNode codeBasePlanNode = CodebasePlanCreator.createPlanForCodeBase(
+      List<PlanNode> codeBasePlanNodeList = CodebasePlanCreator.createPlanForCodeBase(
           ctx, ciCodeBaseField, executionField.getNode().getUuid(), kryoSerializer);
-      if (codeBasePlanNode != null) {
-        planCreationResponseMap.put(ciCodeBaseField.getNode().getUuid(),
-            PlanCreationResponse.builder().node(ciCodeBaseField.getNode().getUuid(), codeBasePlanNode).build());
+      if (isNotEmpty(codeBasePlanNodeList)) {
+        for (PlanNode planNode : codeBasePlanNodeList) {
+          planCreationResponseMap.put(
+              planNode.getUuid(), PlanCreationResponse.builder().node(planNode.getUuid(), planNode).build());
+        }
         childNodeId = ciCodeBaseField.getNode().getUuid();
       }
     }

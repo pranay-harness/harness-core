@@ -1,11 +1,8 @@
 package io.harness.ci.plan.creator.codebase;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
-import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -25,9 +22,13 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.serializer.KryoSerializer;
 import io.harness.states.codebase.CodeBaseStep;
 import io.harness.states.codebase.CodeBaseStepParameters;
+import io.harness.states.codebase.CodeBaseTaskStep;
+import io.harness.states.codebase.CodeBaseTaskStepParameters;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.protobuf.ByteString;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 @UtilityClass
 public class CodebasePlanCreator {
-  public PlanNode createPlanForCodeBase(
+  public List<PlanNode> createPlanForCodeBase(
       PlanCreationContext ctx, YamlField ciCodeBaseField, String childNodeId, KryoSerializer kryoSerializer) {
     PlanCreationContextValue planCreationContextValue = ctx.getGlobalContext().get("metadata");
     ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
@@ -47,21 +48,29 @@ public class CodebasePlanCreator {
     ExecutionSource executionSource =
         IntegrationStageUtils.buildExecutionSource(triggerInfo, triggerPayload, "codebase", ciCodeBase.getBuild());
 
-    if (executionSource.getType() == ExecutionSource.Type.MANUAL) {
-      if (isNotEmpty(((ManualExecutionSource) executionSource).getPrNumber())
-          || isNotEmpty(((ManualExecutionSource) executionSource).getBranch())) {
-        return PlanNode.builder()
+    List<PlanNode> planNodeList = new ArrayList<>();
+    PlanNode codeBaseDelegateTask = createPlanForCodeBaseTask(
+        ciCodeBase, executionSource, OrchestrationFacilitatorType.TASK, ciCodeBaseField.getNode().getUuid());
+    planNodeList.add(codeBaseDelegateTask);
+    PlanNode codeBaseSyncTask = createPlanForCodeBaseTask(
+        ciCodeBase, executionSource, OrchestrationFacilitatorType.SYNC, ciCodeBaseField.getNode().getUuid());
+    planNodeList.add(codeBaseSyncTask);
+
+    planNodeList.add(
+        PlanNode.builder()
             .uuid(ciCodeBaseField.getNode().getUuid())
             .stepType(CodeBaseStep.STEP_TYPE)
             .name("codebase_node")
             .identifier("codebase_node")
             .stepParameters(CodeBaseStepParameters.builder()
+                                .codeBaseSyncTaskId(codeBaseSyncTask.getUuid())
+                                .codeBaseDelegateTaskId(codeBaseDelegateTask.getUuid())
                                 .connectorRef(ciCodeBase.getConnectorRef())
                                 .executionSource(executionSource)
                                 .build())
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()
-                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
                     .build())
             .adviserObtainment(
                 AdviserObtainment.newBuilder()
@@ -70,9 +79,29 @@ public class CodebasePlanCreator {
                         kryoSerializer.asBytes(OnSuccessAdviserParameters.builder().nextNodeId(childNodeId).build())))
                     .build())
             .skipGraphType(SkipType.SKIP_NODE)
-            .build();
-      }
-    }
-    return null;
+            .build());
+
+    return planNodeList;
+  }
+
+  public PlanNode createPlanForCodeBaseTask(
+      CodeBase ciCodeBase, ExecutionSource executionSource, String facilitatorType, String codeBaseId) {
+    CodeBaseTaskStepParameters codeBaseTaskStepParameters = CodeBaseTaskStepParameters.builder()
+                                                                .connectorRef(ciCodeBase.getConnectorRef())
+                                                                .repoUrl(ciCodeBase.getRepoName())
+                                                                .executionSource(executionSource)
+                                                                .build();
+
+    return PlanNode.builder()
+        .uuid(codeBaseId + "-" + facilitatorType.toLowerCase())
+        .stepType(CodeBaseTaskStep.STEP_TYPE)
+        .identifier("codebase"
+            + "-" + facilitatorType.toLowerCase())
+        .stepParameters(codeBaseTaskStepParameters)
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
+                                   .setType(FacilitatorType.newBuilder().setType(facilitatorType).build())
+                                   .build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
   }
 }
