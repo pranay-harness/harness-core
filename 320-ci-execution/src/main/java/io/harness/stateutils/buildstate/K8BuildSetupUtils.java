@@ -203,7 +203,7 @@ public class K8BuildSetupUtils {
     ParameterField<String> timeout = k8sDirectInfraYaml.getSpec().getInitTimeout();
 
     int podWaitUntilReadyTimeout = POD_MAX_WAIT_UNTIL_READY_SECS;
-    if (timeout != null && timeout.fetchFinalValue() != null) {
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
       long timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis();
       podWaitUntilReadyTimeout = (int) (timeoutInMillis / 1000);
     }

@@ -5,6 +5,7 @@ import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_C
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.states.LiteEngineTaskStep.LE_STATUS_TASK_TYPE;
 import static io.harness.steps.StepUtils.buildAbstractions;
 
@@ -121,7 +122,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     long timeoutInMillis = ciStepInfo.getDefaultTimeout();
     String stringTimeout = "2h";
 
-    if (timeout != null && timeout.fetchFinalValue() != null) {
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
       timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis() + bufferTimeMillis;
       stringTimeout = (String) timeout.fetchFinalValue();
     }
