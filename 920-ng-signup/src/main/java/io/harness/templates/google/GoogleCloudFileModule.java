@@ -1,8 +1,8 @@
-package io.harness.cloud.google;
+package io.harness.templates.google;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cloud.google.impl.GoogleCloudFileServiceImpl;
+import io.harness.templates.google.impl.GoogleCloudFileServiceImpl;
 
 import com.google.inject.AbstractModule;
 
