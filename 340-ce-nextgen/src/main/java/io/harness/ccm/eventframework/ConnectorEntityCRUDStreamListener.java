@@ -38,7 +38,9 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
     if (message != null && message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
 
-      updateCEMetadataRecord(metadataMap, getEntityChangeDTO(message));
+      if (isUpdateCEMetadataRecordRequired(metadataMap)) {
+        updateCEMetadataRecord(metadataMap, getEntityChangeDTO(message));
+      }
 
       if (hasRequiredMetadata(metadataMap)) {
         EntityChangeDTO entityChangeDTO = getEntityChangeDTO(message);
@@ -108,6 +110,14 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   private static boolean hasRequiredMetadata(Map<String, String> metadataMap) {
     return metadataMap != null && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
         && (ConnectorType.KUBERNETES_CLUSTER.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE))
+            || ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE)));
+  }
+
+  private static boolean isUpdateCEMetadataRecordRequired(Map<String, String> metadataMap) {
+    return metadataMap != null && CONNECTOR_ENTITY.equals(metadataMap.get(ENTITY_TYPE))
+        && (ConnectorType.CE_AWS.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE))
+            || ConnectorType.CE_AZURE.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE))
+            || ConnectorType.GCP_CLOUD_COST.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE))
             || ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(metadataMap.get(CONNECTOR_ENTITY_TYPE)));
   }
 
