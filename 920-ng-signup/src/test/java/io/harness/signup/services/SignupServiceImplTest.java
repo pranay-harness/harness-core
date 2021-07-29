@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
@@ -70,6 +71,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Mock SignupValidator signupValidator;
   @Mock AccountService accountService;
   @Mock UserClient userClient;
+  @Mock AccessControlClient accessControlClient;
   @Mock ReCaptchaVerifier reCaptchaVerifier;
   @Mock TelemetryReporter telemetryReporter;
   @Mock SignupNotificationHelper signupNotificationHelper;
@@ -87,7 +89,8 @@ public class SignupServiceImplTest extends CategoryTest {
   public void setup() throws IllegalAccessException {
     initMocks(this);
     signupServiceImpl = new SignupServiceImpl(accountService, userClient, signupValidator, reCaptchaVerifier,
-        telemetryReporter, signupNotificationHelper, featureFlagService, verificationTokenRepository, executorService);
+        telemetryReporter, signupNotificationHelper, featureFlagService, verificationTokenRepository, executorService,
+        accessControlClient);
   }
 
   @Test
