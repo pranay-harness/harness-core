@@ -108,8 +108,6 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.version.VersionInfoManager;
 
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountJoinRequest;
@@ -251,7 +249,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.CriteriaContainer;
 import org.mongodb.morphia.query.FindOptions;
@@ -290,7 +290,6 @@ public class UserServiceImpl implements UserService {
   private static final String SYSTEM = "system";
   private static final String SETUP_ACCOUNT_FROM_MARKETPLACE = "Account Setup from Marketplace";
   private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
-
 
   /**
    * The Executor service.
@@ -781,7 +780,8 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken) throws URISyntaxException {
+  public URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken)
+      throws URISyntaxException {
     String accountId = userInvite.getAccountId();
     log.info("Getting redirect url for {} - {}", accountId, inviteResponse.getType());
     if (ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD.equals(inviteResponse)) {
@@ -796,8 +796,14 @@ public class UserServiceImpl implements UserService {
   }
 
   private URI getUserInfoSubmitUrl(String accountId, String email, String jwtToken) throws URISyntaxException {
-    String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&generation=CG",
-            accountId, email, jwtToken);
+    String encodedEmail = email;
+    try {
+      encodedEmail = URLEncoder.encode(email, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      log.error("Unable to encode email for userInfoSubmitUrl, using the invite one instead", e);
+    }
+    String accountCreationFragment =
+        String.format("accountIdentifier=%s&email=%s&token=%s&generation=CG", accountId, encodedEmail, jwtToken);
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
@@ -931,9 +937,10 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, String> getUserInvitationToSsoTemplateModel(Account account, User user)
       throws URISyntaxException {
-
-    String loginUrl = configuration.isNgAuthUIEnabled() ? getLoginPageUrl(account.getUuid(), "").toString() :
-        buildAbsoluteUrl(format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
+    String loginUrl = configuration.isNgAuthUIEnabled()
+        ? getLoginPageUrl(account.getUuid(), "").toString()
+        : buildAbsoluteUrl(
+            format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
             account.getUuid());
     Map<String, String> model = getTemplateModel(user.getName(), loginUrl);
     model.put("company", account.getCompanyName());
@@ -1343,7 +1350,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account, User user)
-          throws URISyntaxException {
+      throws URISyntaxException {
     String inviteUrl = getUserInviteUrl(userInvite, account);
     Map<String, String> model = getTemplateModel(userInvite.getEmail(), inviteUrl);
     model.put("company", account.getCompanyName());
@@ -1370,16 +1377,17 @@ public class UserServiceImpl implements UserService {
       log.error("Unable to encode email for invite url, using the invite one instead", e);
     }
     if (configuration.isNgAuthUIEnabled()) {
-      String jwtToken = secretManager.generateJWTToken(Collections.singletonMap(UserInvite.UUID_KEY, userInvite.getUuid()), INVITE_SECRET);
-      return buildAbsoluteUrl(NG_AUTH_UI_INVITE_PATH_FORMAT, Arrays.asList(
-              new BasicNameValuePair("accountId", accountId),
-              new BasicNameValuePair("email", encodedEmail),
-              new BasicNameValuePair("token", jwtToken)), accountId);
+      String jwtToken = secretManager.generateJWTToken(
+          Collections.singletonMap(UserInvite.UUID_KEY, userInvite.getUuid()), INVITE_SECRET);
+      return buildAbsoluteUrl(NG_AUTH_UI_INVITE_PATH_FORMAT,
+          Arrays.asList(new BasicNameValuePair("accountId", accountId), new BasicNameValuePair("email", encodedEmail),
+              new BasicNameValuePair("token", jwtToken)),
+          accountId);
     } else {
       return buildAbsoluteUrl(
-              format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", accountId,
-                      account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()),
-              accountId);
+          format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", accountId, account.getAccountName(),
+              account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()),
+          accountId);
     }
   }
 
