@@ -74,12 +74,13 @@ public class ValidateAndMergeHelper {
     return pipelineYaml;
   }
 
-  public Map<String, String> validateOverlayInputSet(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, InputSetEntity entity) {
-    if (EmptyPredicate.isEmpty(entity.getIdentifier())) {
+  public Map<String, String> validateOverlayInputSet(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String yaml) {
+    String identifier = InputSetYamlHelper.getStringField(yaml, "identifier", "overlayInputSet");
+    if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
-    List<String> inputSetReferences = entity.getInputSetReferences();
+    List<String> inputSetReferences = InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml);
     if (inputSetReferences.isEmpty()) {
       throw new InvalidRequestException("Input Set References can't be empty");
     }

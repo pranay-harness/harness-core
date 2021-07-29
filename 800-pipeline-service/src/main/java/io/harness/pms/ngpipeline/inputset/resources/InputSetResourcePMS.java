@@ -199,7 +199,7 @@ public class InputSetResourcePMS {
             entity.getIdentifier(), pipelineIdentifier, projectIdentifier, orgIdentifier, accountId));
 
     Map<String, String> invalidReferences = validateAndMergeHelper.validateOverlayInputSet(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, entity);
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     if (!invalidReferences.isEmpty()) {
       return ResponseDTO.newResponse(
           PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(entity, true, invalidReferences));
@@ -260,7 +260,7 @@ public class InputSetResourcePMS {
     InputSetEntity entityWithVersion = entity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
 
     Map<String, String> invalidReferences = validateAndMergeHelper.validateOverlayInputSet(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, entityWithVersion);
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     if (!invalidReferences.isEmpty()) {
       return ResponseDTO.newResponse(
           PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(entityWithVersion, true, invalidReferences));
