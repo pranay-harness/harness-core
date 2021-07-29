@@ -40,9 +40,9 @@ import io.harness.security.annotations.PublicApi;
 import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
-import io.harness.tracing.MongoRedisTracer;
 import io.harness.token.TokenClientModule;
 import io.harness.token.remote.TokenClient;
+import io.harness.tracing.MongoRedisTracer;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
