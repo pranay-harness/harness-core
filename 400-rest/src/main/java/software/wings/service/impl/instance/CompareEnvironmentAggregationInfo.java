@@ -18,6 +18,7 @@ import org.mongodb.morphia.annotations.Id;
 public class CompareEnvironmentAggregationInfo {
   @Id private ID _id;
   private String serviceId;
+  private String serviceName;
   private List<ServiceInfoSummary> serviceInfoSummaries;
 
   @Data
@@ -33,6 +34,7 @@ public class CompareEnvironmentAggregationInfo {
   @UtilityClass
   public static final class CompareEnvironmentAggregationInfoKeys {
     public static final String serviceId = "serviceId";
+    public static final String serviceName = "serviceName";
     public static final String serviceInfoSummaries = "serviceInfoSummaries";
   }
 }

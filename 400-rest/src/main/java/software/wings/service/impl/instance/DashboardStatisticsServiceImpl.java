@@ -19,6 +19,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import static software.wings.features.DeploymentHistoryFeature.FEATURE_NAME;
 
 import static java.util.Collections.emptyList;
@@ -93,6 +94,8 @@ import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.api.RestrictedFeature;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys;
+import software.wings.service.impl.instance.ServiceInfoSummary.ServiceInfoSummaryKeys;
 import software.wings.service.impl.instance.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -117,20 +120,13 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.FindOptions;
@@ -1245,32 +1241,26 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         wingsPersistence.getDatastore(query.getEntityClass())
             .createAggregation(Instance.class)
             .match(query)
-            .group(Group.id(grouping(Instance.InstanceKeys.serviceId), grouping(Instance.InstanceKeys.envId),
-                       grouping(Instance.InstanceKeys.lastArtifactBuildNum),
-                       grouping(Instance.InstanceKeys.infraMappingId),
-                       grouping(Instance.InstanceKeys.lastWorkflowExecutionId)),
-                grouping(Instance.InstanceKeys.serviceName, first(Instance.InstanceKeys.serviceName)),
-                grouping(Instance.InstanceKeys.lastWorkflowExecutionName,
-                    first(Instance.InstanceKeys.lastWorkflowExecutionName)),
-                grouping(Instance.InstanceKeys.infraMappingName, first(Instance.InstanceKeys.infraMappingName)))
-            .group(Group.id(grouping(Instance.InstanceKeys.serviceId, "_id." + Instance.InstanceKeys.serviceId)),
-                grouping(CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys.serviceId,
-                    first("_id." + Instance.InstanceKeys.serviceId)),
-                grouping(CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys.serviceInfoSummaries,
-                    grouping("$push",
+            .group(Group.id(grouping(InstanceKeys.serviceId), grouping(InstanceKeys.envId),
+                       grouping(InstanceKeys.lastArtifactBuildNum), grouping(InstanceKeys.infraMappingId),
+                       grouping(InstanceKeys.lastWorkflowExecutionId)),
+                grouping(InstanceKeys.serviceName, first(Instance.InstanceKeys.serviceName)),
+                grouping(InstanceKeys.lastWorkflowExecutionName, first(InstanceKeys.lastWorkflowExecutionName)),
+                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)))
+            .group(Group.id(grouping(InstanceKeys.serviceId, "_id." + InstanceKeys.serviceId)),
+                grouping(CompareEnvironmentAggregationInfoKeys.serviceId, first("_id." + InstanceKeys.serviceId)),
+                grouping(CompareEnvironmentAggregationInfoKeys.serviceName, first(InstanceKeys.serviceName)),
+                grouping(CompareEnvironmentAggregationInfoKeys.serviceInfoSummaries,
+                    grouping("$push", projection(ServiceInfoSummaryKeys.serviceName, InstanceKeys.serviceName),
+                        projection("envId", "_id." + InstanceKeys.envId),
                         projection(
-                            ServiceInfoSummary.ServiceInfoSummaryKeys.serviceName, Instance.InstanceKeys.serviceName),
-                        projection("envId", "_id." + Instance.InstanceKeys.envId),
-                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.lastArtifactBuildNum,
-                            "_id." + Instance.InstanceKeys.lastArtifactBuildNum),
-                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.lastWorkflowExecutionId,
-                            "_id." + Instance.InstanceKeys.lastWorkflowExecutionId),
-                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.lastWorkflowExecutionName,
-                            Instance.InstanceKeys.lastWorkflowExecutionName),
-                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.infraMappingId,
-                            "_id." + Instance.InstanceKeys.infraMappingId),
-                        projection(ServiceInfoSummary.ServiceInfoSummaryKeys.infraMappingName,
-                            Instance.InstanceKeys.infraMappingName))));
+                            ServiceInfoSummaryKeys.lastArtifactBuildNum, "_id." + InstanceKeys.lastArtifactBuildNum),
+                        projection(ServiceInfoSummaryKeys.lastWorkflowExecutionId,
+                            "_id." + InstanceKeys.lastWorkflowExecutionId),
+                        projection(
+                            ServiceInfoSummaryKeys.lastWorkflowExecutionName, InstanceKeys.lastWorkflowExecutionName),
+                        projection(ServiceInfoSummaryKeys.infraMappingId, "_id." + InstanceKeys.infraMappingId),
+                        projection(ServiceInfoSummaryKeys.infraMappingName, InstanceKeys.infraMappingName))));
 
     aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
@@ -1283,13 +1273,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     for (CompareEnvironmentAggregationInfo instanceInfo : instanceInfoList) {
       responseList.add(CompareEnvironmentAggregationResponseInfo.builder()
                            .serviceId(instanceInfo.getServiceId())
+                           .serviceName(instanceInfo.getServiceName())
                            .envInfo(emptyIfNull(instanceInfo.getServiceInfoSummaries())
                                         .stream()
                                         .collect(Collectors.groupingBy(ServiceInfoSummary::getEnvId,
                                             Collectors.mapping(item
-                                                -> ServiceInfoSummary.builder()
-                                                       .envId(item.getEnvId())
-                                                       .serviceName(item.getServiceName())
+                                                -> ServiceInfoResponseSummary.builder()
                                                        .lastArtifactBuildNum(item.getLastArtifactBuildNum())
                                                        .lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
                                                        .lastWorkflowExecutionName(item.getLastWorkflowExecutionName())
@@ -1299,6 +1288,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                                 toList()))))
                            .build());
     }
+
+    emptyIfNull(responseList)
+        .stream()
+        .map(item -> {
+          item.envInfo.computeIfAbsent(envId1, k -> new ArrayList<>());
+          item.envInfo.computeIfAbsent(envId2, k -> new ArrayList<>());
+          return item;
+        })
+        .collect(toList());
 
     return aPageResponse()
         .withResponse(responseList)
