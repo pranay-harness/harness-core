@@ -286,10 +286,12 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
   }
 
+  @JsonIgnore
   public boolean isManager() {
     return startupMode == null || StartupMode.MANGER.equals(startupMode);
   }
 
+  @JsonIgnore
   public boolean isDelegateServiceApp() {
     return startupMode == null || StartupMode.DELEGATE_MANAGER.equals(startupMode);
   }
