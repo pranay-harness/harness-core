@@ -29,6 +29,7 @@ public class FailureStrategy {
   private List<String> specificSteps;
   private Long manualInterventionTimeout;
   private ExecutionInterruptType actionAfterTimeout;
+  private boolean rollbackPreDeploymentStepsAtEnd;
 
   @Data
   @NoArgsConstructor
@@ -44,11 +45,13 @@ public class FailureStrategy {
     private List<String> specificSteps = new ArrayList<>();
     private String actionAfterTimeout;
     private Long manualInterventionTimeout;
+    private boolean rollbackPreDeploymentStepsAtEnd;
 
     @Builder
     public Yaml(List<String> failureTypes, String executionScope, String repairActionCode, int retryCount,
         List<Integer> retryIntervals, String repairActionCodeAfterRetry, FailureCriteria failureCriteria,
-        List<String> specificSteps, String actionAfterTimeout, Long manualInterventionTimeout) {
+        List<String> specificSteps, String actionAfterTimeout, Long manualInterventionTimeout,
+        boolean rollbackPreDeploymentStepsAtEnd) {
       this.failureTypes = failureTypes;
       this.executionScope = executionScope;
       this.repairActionCode = repairActionCode;
@@ -59,6 +62,7 @@ public class FailureStrategy {
       this.specificSteps = specificSteps;
       this.actionAfterTimeout = actionAfterTimeout;
       this.manualInterventionTimeout = manualInterventionTimeout;
+      this.rollbackPreDeploymentStepsAtEnd = rollbackPreDeploymentStepsAtEnd;
     }
   }
 }
