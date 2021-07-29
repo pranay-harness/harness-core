@@ -18,11 +18,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedTypeException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.core.NGAccess;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -115,7 +115,7 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
           "Connector ref field not present in manifest with identifier " + manifestAttributes.getIdentifier());
     }
     String connectorIdentifierRef = manifestAttributes.getStoreConfig().getConnectorReference().getValue();
-    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifierRef,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(connectorRef.getAccountIdentifier(),

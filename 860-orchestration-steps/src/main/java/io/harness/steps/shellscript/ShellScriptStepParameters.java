@@ -1,4 +1,4 @@
-package io.harness.steps.common.script;
+package io.harness.steps.shellscript;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

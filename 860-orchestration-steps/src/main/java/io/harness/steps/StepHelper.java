@@ -1,16 +1,15 @@
-package io.harness.cdng.common.step;
+package io.harness.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.ng.core.environment.beans.EnvironmentType.Production;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
-import io.harness.cdng.environment.EnvironmentOutcome;
-import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
+import io.harness.steps.environment.EnvironmentOutcome;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,7 +21,7 @@ public class StepHelper {
 
   public EnvironmentType getEnvironmentType(Ambiance ambiance) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputResolver.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.ENVIRONMENT));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutputExpressionConstants.ENVIRONMENT));
     if (!optionalSweepingOutput.isFound()) {
       return EnvironmentType.ALL;
     }

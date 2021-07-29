@@ -28,7 +28,6 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -132,6 +131,7 @@ import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
@@ -147,6 +147,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.EntityReferenceExtractorUtils;
+import io.harness.steps.StepHelper;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
@@ -237,7 +238,7 @@ public class K8sStepHelper {
   }
 
   public ConnectorInfoDTO getConnector(String connectorId, Ambiance ambiance) {
-    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         connectorId, ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
@@ -354,7 +355,7 @@ public class K8sStepHelper {
       validateManifest(storeConfig.getKind(), connectorDTO, validationErrorMessage);
 
       GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-      NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+      NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
       SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
       List<EncryptedDataDetail> encryptedDataDetails =
           gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
@@ -374,7 +375,7 @@ public class K8sStepHelper {
           .repoName(helmConnectorDTO.getIdentifier())
           .repoDisplayName(helmConnectorDTO.getName())
           .httpHelmConnector((HttpHelmConnectorDTO) helmConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(helmConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .encryptedDataDetails(getEncryptionDataDetails(helmConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
           .build();
     }
 
@@ -391,7 +392,7 @@ public class K8sStepHelper {
           .region(getParameterFieldValue(s3StoreConfig.getRegion()))
           .folderPath(getParameterFieldValue(s3StoreConfig.getFolderPath()))
           .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(awsConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .encryptedDataDetails(getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
           .build();
     }
 
@@ -407,7 +408,7 @@ public class K8sStepHelper {
           .bucketName(getParameterFieldValue(gcsStoreConfig.getBucketName()))
           .folderPath(getParameterFieldValue(gcsStoreConfig.getFolderPath()))
           .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
           .build();
     }
 
@@ -552,7 +553,7 @@ public class K8sStepHelper {
         return DirectK8sInfraDelegateConfig.builder()
             .namespace(k8SDirectInfrastructure.getNamespace())
             .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceUtils.getNgAccess(ambiance)))
             .build();
 
       case KUBERNETES_GCP:
@@ -565,7 +566,7 @@ public class K8sStepHelper {
             .namespace(k8sGcpInfrastructure.getNamespace())
             .cluster(k8sGcpInfrastructure.getCluster())
             .gcpConnectorDTO((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .encryptionDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
             .build();
 
       default:
@@ -577,7 +578,7 @@ public class K8sStepHelper {
   public List<EncryptedDataDetail> getEncryptedDataDetails(
       @Nonnull GitConfigDTO gitConfigDTO, @Nonnull Ambiance ambiance) {
     return secretManagerClientService.getEncryptionDetails(
-        AmbianceHelper.getNgAccess(ambiance), gitConfigDTO.getGitAuth());
+        AmbianceUtils.getNgAccess(ambiance), gitConfigDTO.getGitAuth());
   }
 
   public TaskChainResponse queueK8sTask(StepElementParameters stepElementParameters, K8sDeployRequest k8sDeployRequest,
@@ -828,7 +829,7 @@ public class K8sStepHelper {
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
     SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
@@ -853,7 +854,7 @@ public class K8sStepHelper {
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
     SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
