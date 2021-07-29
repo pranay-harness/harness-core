@@ -24,6 +24,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,10 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     final AwsTaskParams awsTaskParams = (AwsTaskParams) parameters;
     final AwsTaskType awsTaskType = awsTaskParams.getAwsTaskType();
+    if (Objects.isNull(awsTaskType)) {
+      throw new InvalidRequestException("Task type not provided");
+    }
+
     final List<EncryptedDataDetail> encryptionDetails = awsTaskParams.getEncryptionDetails();
     switch (awsTaskType) {
       // TODO: we can move this to factory method using guice mapbinder later
