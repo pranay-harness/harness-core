@@ -105,8 +105,11 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
       return this.startTime.compareTo(o.startTime);
     }
 
-    public int getRiskValue() {
-      return (int) (riskScore * 100);
+    public Integer getHealthScore() {
+      if (riskScore < 0) {
+        return null;
+      }
+      return Integer.valueOf(100 - (int) (100 * riskScore));
     }
 
     public Risk getRiskStatus() {
