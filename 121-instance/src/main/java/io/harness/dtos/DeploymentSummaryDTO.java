@@ -9,10 +9,10 @@ import io.harness.entities.ArtifactDetails;
 import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
 
 @OwnedBy(HarnessTeam.DX)
-@Value
+@Getter
 @Builder
 public class DeploymentSummaryDTO {
   String id;
@@ -33,4 +33,8 @@ public class DeploymentSummaryDTO {
   long deployedAt;
   long createdAt;
   long lastModifiedAt;
+
+  public void setServerInstanceInfoList(List<ServerInstanceInfo> serverInstanceInfoList) {
+    this.serverInstanceInfoList = serverInstanceInfoList;
+  }
 }
