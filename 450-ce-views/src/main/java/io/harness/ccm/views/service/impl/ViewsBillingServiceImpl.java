@@ -370,22 +370,35 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   @Override
   public boolean isClusterPerspective(List<QLCEViewFilterWrapper> filters) {
+    boolean dataSourceCondition = false;
+    boolean ruleCondition = true;
+    List<ViewRule> viewRuleList = new ArrayList<>();
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
     if (viewMetadataFilter.isPresent()) {
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
       final String viewId = metadataFilter.getViewId();
       if (!metadataFilter.isPreview()) {
         CEView ceView = viewService.get(viewId);
+        viewRuleList = ceView.getViewRules();
         List<ViewFieldIdentifier> dataSources;
         try {
           dataSources = ceView.getDataSources();
         } catch (Exception e) {
           dataSources = null;
         }
-        return dataSources != null && dataSources.size() == 1 && dataSources.get(0).equals(CLUSTER);
+        dataSourceCondition = dataSources != null && dataSources.size() == 1 && dataSources.get(0).equals(CLUSTER);
       }
     }
-    return false;
+    for (ViewRule rule : viewRuleList) {
+      for (ViewCondition condition : rule.getViewConditions()) {
+        ViewIdCondition viewIdCondition = (ViewIdCondition) condition;
+        ViewFieldIdentifier viewFieldIdentifier = viewIdCondition.getViewField().getIdentifier();
+        if (!viewFieldIdentifier.equals(CLUSTER)) {
+          ruleCondition = false;
+        }
+      }
+    }
+    return dataSourceCondition && ruleCondition;
   }
 
   @Override
@@ -573,10 +586,11 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       forecastCostDescription = format(COST_DESCRIPTION, startInstantFormat, endInstantFormat);
       forecastCostValue =
           format(COST_VALUE, viewsQueryHelper.formatNumber(viewsQueryHelper.getRoundedDoubleValue(forecastCost)));
-      statsTrend = viewsQueryHelper.getRoundedDoubleValue((forecastCost - totalCost / totalCost) * 100);
+      statsTrend = viewsQueryHelper.getRoundedDoubleValue(((forecastCost - totalCost) / totalCost) * 100);
     } else {
       forecastCost = 0.0;
     }
+
     return QLCEViewTrendInfo.builder()
         .statsLabel(FORECAST_COST_LABEL)
         .statsTrend(statsTrend)
@@ -691,7 +705,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     // account id is not passed in current gen queries
     if (accountId != null) {
       if (isClusterPerspective(filters) || isClusterQuery) {
-        log.info("we heer");
         if (isInstanceDetailsQuery(modifiedGroupBy)) {
           idFilters.add(getFilterForInstanceDetails(modifiedGroupBy));
         }
@@ -916,7 +929,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       entityStatsDataPoints.add(dataPointBuilder.build());
     }
     if (isInstanceDetailsData && !isUsedByTimeSeriesStats) {
-      log.info(getInstanceType(instanceTypes));
       return QLCEViewGridData.builder()
           .data(instanceDetailsHelper.getInstanceDetails(entityStatsDataPoints, getInstanceType(instanceTypes)))
           .fields(fieldNames)

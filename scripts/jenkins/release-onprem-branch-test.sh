@@ -27,10 +27,9 @@ NOT_MERGED=`comm -23 release_onprem.txt release_saas.txt | tr '\n' ' '`
 
 if [ -z "$NOT_MERGED" ]
 then
-      echo "All onprem hotfixes are exist in ${SAAS_BRANCH} saas branch "
+      echo "All onprem hotfixes are exist in ${SAAS_BRANCH} saas branch " > envvars
 else
-      echo "These are the not merged JIRA tickets : ${NOT_MERGED} , Please merge them into ${SAAS_BRANCH} branch"
-      exit 1
+      echo NOT_MERGED="${NOT_MERGED}" > envvars
 fi
 
 

@@ -3,7 +3,9 @@ package software.wings.beans.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.mongo.index.FdIndex;
@@ -24,6 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "triggerExecutions")

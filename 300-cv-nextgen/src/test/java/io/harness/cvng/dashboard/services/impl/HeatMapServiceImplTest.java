@@ -798,7 +798,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(historicalTrendList.size()).isEqualTo(1);
     assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(2);
     historicalTrendList.get(0).getHealthScores().forEach(score -> {
-      assertThat(score.getRiskValue()).isEqualTo(10);
+      assertThat(score.getHealthScore()).isEqualTo(90);
       assertThat(score.getRiskStatus()).isEqualTo(Risk.LOW);
     });
   }
@@ -826,10 +826,10 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(historicalTrendList.size()).isEqualTo(1);
     assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(2);
 
-    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getRiskValue()).isEqualTo(10);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getHealthScore()).isEqualTo(90);
     assertThat(historicalTrendList.get(0).getHealthScores().get(0).getRiskStatus()).isEqualTo(Risk.LOW);
 
-    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getRiskValue()).isEqualTo(50);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getHealthScore()).isEqualTo(50);
     assertThat(historicalTrendList.get(0).getHealthScores().get(1).getRiskStatus()).isEqualTo(Risk.HIGH);
   }
 
@@ -854,11 +854,11 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(48);
 
     for (int i = 0; i < 24; i++) {
-      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskValue()).isEqualTo(50);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore()).isEqualTo(50);
       assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.HIGH);
     }
     for (int i = 24; i < 48; i++) {
-      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskValue()).isEqualTo(10);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore()).isEqualTo(90);
       assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.LOW);
     }
   }
@@ -892,14 +892,14 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(historicalTrendList.get(0).getHealthScores().size()).isEqualTo(2);
     assertThat(historicalTrendList.get(1).getHealthScores().size()).isEqualTo(2);
 
-    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getRiskValue()).isEqualTo(10);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(0).getHealthScore()).isEqualTo(90);
     assertThat(historicalTrendList.get(0).getHealthScores().get(0).getRiskStatus()).isEqualTo(Risk.LOW);
-    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getRiskValue()).isEqualTo(10);
+    assertThat(historicalTrendList.get(0).getHealthScores().get(1).getHealthScore()).isEqualTo(90);
     assertThat(historicalTrendList.get(0).getHealthScores().get(1).getRiskStatus()).isEqualTo(Risk.LOW);
 
-    assertThat(historicalTrendList.get(1).getHealthScores().get(0).getRiskValue()).isEqualTo(55);
+    assertThat(historicalTrendList.get(1).getHealthScores().get(0).getHealthScore()).isEqualTo(45);
     assertThat(historicalTrendList.get(1).getHealthScores().get(0).getRiskStatus()).isEqualTo(Risk.HIGH);
-    assertThat(historicalTrendList.get(1).getHealthScores().get(1).getRiskValue()).isEqualTo(55);
+    assertThat(historicalTrendList.get(1).getHealthScores().get(1).getHealthScore()).isEqualTo(45);
     assertThat(historicalTrendList.get(1).getHealthScores().get(1).getRiskStatus()).isEqualTo(Risk.HIGH);
   }
 
@@ -935,16 +935,16 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(historicalTrendList.get(1).getHealthScores().size()).isEqualTo(48);
 
     for (int i = 0; i < 24; i++) {
-      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskValue()).isEqualTo(40);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore().intValue()).isEqualTo(60);
       assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.MEDIUM);
     }
     for (int i = 24; i < 48; i++) {
-      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskValue()).isEqualTo(10);
+      assertThat(historicalTrendList.get(0).getHealthScores().get(i).getHealthScore().intValue()).isEqualTo(90);
       assertThat(historicalTrendList.get(0).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.LOW);
     }
 
     for (int i = 0; i < 48; i++) {
-      assertThat(historicalTrendList.get(1).getHealthScores().get(i).getRiskValue()).isEqualTo(55);
+      assertThat(historicalTrendList.get(1).getHealthScores().get(i).getHealthScore().intValue()).isEqualTo(45);
       assertThat(historicalTrendList.get(1).getHealthScores().get(i).getRiskStatus()).isEqualTo(Risk.HIGH);
     }
   }
@@ -967,7 +967,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.LOW);
-    assertThat(riskDataList.get(0).getRiskValue()).isEqualTo(25);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(75);
   }
 
   @Test
@@ -985,7 +985,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
-    assertThat(riskDataList.get(0).getRiskValue()).isEqualTo(-2);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(null);
   }
 
   @Test
@@ -1009,7 +1009,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.NO_DATA);
-    assertThat(riskDataList.get(0).getRiskValue()).isEqualTo(-2);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(null);
   }
 
   @Test
@@ -1035,7 +1035,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     assertThat(riskDataList.size()).isEqualTo(1);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HIGH);
-    assertThat(riskDataList.get(0).getRiskValue()).isEqualTo(65);
+    assertThat(riskDataList.get(0).getHealthScore().intValue()).isEqualTo(35);
   }
 
   @Test
@@ -1062,10 +1062,10 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     assertThat(riskDataList.size()).isEqualTo(2);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.LOW);
-    assertThat(riskDataList.get(0).getRiskValue()).isEqualTo(25);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(75);
 
     assertThat(riskDataList.get(1).getRiskStatus()).isEqualTo(Risk.MEDIUM);
-    assertThat(riskDataList.get(1).getRiskValue()).isEqualTo(37);
+    assertThat(riskDataList.get(1).getHealthScore()).isEqualTo(63);
   }
 
   @Test
@@ -1101,10 +1101,10 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     assertThat(riskDataList.size()).isEqualTo(2);
     assertThat(riskDataList.get(0).getRiskStatus()).isEqualTo(Risk.HIGH);
-    assertThat(riskDataList.get(0).getRiskValue()).isEqualTo(65);
+    assertThat(riskDataList.get(0).getHealthScore()).isEqualTo(35);
 
     assertThat(riskDataList.get(1).getRiskStatus()).isEqualTo(Risk.MEDIUM);
-    assertThat(riskDataList.get(1).getRiskValue()).isEqualTo(37);
+    assertThat(riskDataList.get(1).getHealthScore()).isEqualTo(63);
   }
 
   private void setStartTimeEndTimeAndRiskScoreWith30MinBucket(HeatMap heatMap, Instant endTime, double riskScore) {

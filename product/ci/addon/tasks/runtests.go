@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -66,6 +67,8 @@ type runTestsTask struct {
 	packages             string // Packages ti will generate callgraph for
 	annotations          string // Annotations to identify tests for instrumentation
 	runOnlySelectedTests bool   // Flag to be used for disabling testIntelligence and running all tests
+	envVarOutputs        []string
+	environment          map[string]string
 	logMetrics           bool
 	log                  *zap.SugaredLogger
 	addonLogger          *zap.SugaredLogger
@@ -103,6 +106,8 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 		packages:             r.GetPackages(),
 		annotations:          r.GetTestAnnotations(),
 		runOnlySelectedTests: r.GetRunOnlySelectedTests(),
+		envVarOutputs:        r.GetEnvVarOutputs(),
+		environment:          r.GetEnvironment(),
 		cmdContextFactory:    exec.OsCommandContextGracefulWithLog(log),
 		logMetrics:           logMetrics,
 		log:                  log,
@@ -112,12 +117,13 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 }
 
 // Execute commands with timeout and retry handling
-func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
+func (r *runTestsTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	var err, errCg error
+	var o map[string]string
 	cgDir := fmt.Sprintf(cgDir, r.tmpFilePath)
 	testSt := time.Now()
 	for i := int32(1); i <= r.numRetries; i++ {
-		if err = r.execute(ctx, i); err == nil {
+		if o, err = r.execute(ctx, i); err == nil {
 			cgSt := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails
@@ -133,19 +139,19 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 				if err != nil {
 					r.log.Errorw(fmt.Sprintf("unable to collect tests reports. Time taken: %s", repoTime), zap.Error(err))
 				}
-				return r.numRetries, errCg
+				return nil, r.numRetries, errCg
 			}
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
 				r.log.Errorw(fmt.Sprintf("unable to collect test reports. Time taken: %s", repoTime), zap.Error(err))
-				return r.numRetries, err
+				return nil, r.numRetries, err
 			}
 			if len(r.reports) > 0 {
 				r.log.Infow(fmt.Sprintf("successfully collected test reports in %s time", repoTime))
 			}
 			r.log.Infow(fmt.Sprintf("successfully uploaded partial callgraph in %s time", cgTime))
-			return i, nil
+			return o, i, nil
 		}
 	}
 	if err != nil {
@@ -159,9 +165,9 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 		if errCg != nil {
 			r.log.Errorw("error while collecting callgraph", zap.Error(errCg))
 		}
-		return r.numRetries, err
+		return nil, r.numRetries, err
 	}
-	return r.numRetries, err
+	return nil, r.numRetries, err
 }
 
 // createJavaAgentArg creates the ini file which is required as input to the java agent
@@ -347,7 +353,7 @@ func valid(tests []types.RunnableTest) bool {
 	return true
 }
 
-func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
+func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string, error) {
 	// Get the tests that need to be run if we are running selected tests
 	var selection types.SelectTestsResp
 	var files []types.File
@@ -396,39 +402,64 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("build tool %s is not suported", r.buildTool)
 	}
 
-	// TMPDIR needs to be set for some build tools like bazel
-	command := fmt.Sprintf("set -e\nexport TMPDIR=%s\n%s\n%s\n%s", r.tmpFilePath, r.preCommand, testCmd, r.postCommand)
-	logCmd, err := utils.GetLoggableCmd(command)
-	if err != nil {
-		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
-		return fmt.Sprintf("echo '---%s'\n%s", command, command), nil
+	outputVarCmd := ""
+	for _, o := range r.envVarOutputs {
+		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
-	return logCmd, nil
+
+	// TMPDIR needs to be set for some build tools like bazel
+	command := fmt.Sprintf("set -xe\nexport TMPDIR=%s\n%s\n%s\n%s%s", r.tmpFilePath, r.preCommand, testCmd, r.postCommand, outputVarCmd)
+	resolvedCmd, err := resolveExprInCmd(command)
+	if err != nil {
+		return "", err
+	}
+
+	return resolvedCmd, nil
 }
 
-func (r *runTestsTask) execute(ctx context.Context, retryCount int32) error {
+func (r *runTestsTask) execute(ctx context.Context, retryCount int32) (map[string]string, error) {
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(r.timeoutSecs))
 	defer cancel()
 
-	cmdToExecute, err := r.getCmd(ctx)
+	outputFile := filepath.Join(r.tmpFilePath, fmt.Sprintf("%s%s", r.id, outputEnvSuffix))
+	cmdToExecute, err := r.getCmd(ctx, outputFile)
 	if err != nil {
 		r.log.Errorw("could not create run command", zap.Error(err))
-		return err
+		return nil, err
 	}
+
+	envVars, err := resolveExprInEnv(r.environment)
+	if err != nil {
+		return nil, err
+	}
+
 	cmdArgs := []string{"-c", cmdToExecute}
 
 	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
-		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(nil)
+		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
 	err = runCmdFn(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	stepOutput := make(map[string]string)
+	if len(r.envVarOutputs) != 0 {
+		var err error
+		outputVars, err := fetchOutputVariables(outputFile, r.fs, r.log)
+		if err != nil {
+			logCommandExecErr(r.log, "error encountered while fetching output of runtest step", r.id, cmdToExecute, retryCount, start, err)
+			return nil, err
+		}
+
+		stepOutput = outputVars
 	}
 
 	r.addonLogger.Infow(
 		"successfully executed run tests step",
 		"arguments", cmdToExecute,
+		"output", stepOutput,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
-	return nil
+	return stepOutput, nil
 }

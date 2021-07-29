@@ -10,11 +10,9 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.DelegateServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateInsightsType;
-import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -39,7 +37,6 @@ public class DelegateInsightsSummaryJobTest extends DelegateServiceTestBase {
   private static final String TEST_DELEGATE_ID = generateUuid();
   private static final String TEST_DELEGATE_GROUP_ID = generateUuid();
 
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateInsightsSummaryJob delegateInsightsSummaryJob;
   @Inject private HPersistence persistence;
@@ -59,7 +56,6 @@ public class DelegateInsightsSummaryJobTest extends DelegateServiceTestBase {
     long assertTimestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(20L);
     long timestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(120L);
 
-    when(featureFlagService.isGlobalEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED)).thenReturn(true);
     when(delegateCache.get(accountId, TEST_DELEGATE_ID, false))
         .thenReturn(Delegate.builder().delegateGroupId(TEST_DELEGATE_GROUP_ID).build());
 
@@ -96,7 +92,6 @@ public class DelegateInsightsSummaryJobTest extends DelegateServiceTestBase {
     long assertTimestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(20L);
     long timestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(8L);
 
-    when(featureFlagService.isGlobalEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED)).thenReturn(true);
     when(delegateCache.get(accountId, TEST_DELEGATE_ID, false))
         .thenReturn(Delegate.builder().delegateGroupId(TEST_DELEGATE_GROUP_ID).build());
 
@@ -169,7 +164,6 @@ public class DelegateInsightsSummaryJobTest extends DelegateServiceTestBase {
 
     long assertTimestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(20L);
 
-    when(featureFlagService.isGlobalEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED)).thenReturn(true);
     when(delegateCache.get(accountId, delegate1Id, false))
         .thenReturn(Delegate.builder().delegateGroupId(delegateGroup1Id).build());
     when(delegateCache.get(accountId, delegate2Id, false))

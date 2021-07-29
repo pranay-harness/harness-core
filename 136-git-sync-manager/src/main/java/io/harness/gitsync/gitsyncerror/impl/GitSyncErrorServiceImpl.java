@@ -13,6 +13,7 @@ import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
@@ -42,7 +43,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public void deleteByAccountIdOrgIdProjectIdAndFilePath(
       String accountId, String orgId, String projectId, List<String> yamlFilePath) {
-    gitSyncErrorRepository.removeByAccountIdAndOrganizationIdAndProjectIdAndYamlFilePathIn(
+    gitSyncErrorRepository.removeByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndCompleteFilePathIn(
         accountId, orgId, projectId, yamlFilePath);
   }
 
@@ -57,8 +58,9 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     log.info("Upsert git to harness sync issue for file: [{}]", failedGitFileChange.getFilePath());
 
     GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
-    final GitSyncError previousGitSyncError = gitSyncErrorRepository.findByAccountIdAndYamlFilePathAndGitSyncDirection(
-        failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(), GIT_TO_HARNESS);
+    final GitSyncError previousGitSyncError =
+        gitSyncErrorRepository.findByAccountIdentifierAndCompleteFilePathAndErrorType(
+            failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(), GitSyncErrorType.GIT_TO_HARNESS);
     addPreviousCommitDetailsToErrorDetails(failedGitFileChange, gitToHarnessErrorDetails, previousGitSyncError);
     gitSyncErrorRepository.upsertGitError(failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(),
         GIT_TO_HARNESS, errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info",

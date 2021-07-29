@@ -23,7 +23,6 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("Email")
 public class EmailChannel implements Channel {
   List<String> emailIds;
-  List<String> userGroupIds;
   List<UserGroup> userGroups;
   Map<String, String> templateData;
   String templateId;
@@ -32,7 +31,6 @@ public class EmailChannel implements Channel {
   public Object toObjectofProtoSchema() {
     return Email.newBuilder()
         .addAllEmailIds(emailIds)
-        .addAllUserGroupIds(userGroupIds)
         .putAllTemplateData(templateData)
         .setTemplateId(templateId)
         .addAllUserGroup(NotificationUserGroupMapper.toProto(userGroups))
@@ -48,7 +46,6 @@ public class EmailChannel implements Channel {
   public static EmailChannel toEmailEntity(Email emailDetails) {
     return EmailChannel.builder()
         .emailIds(emailDetails.getEmailIdsList())
-        .userGroupIds(emailDetails.getUserGroupIdsList())
         .templateData(emailDetails.getTemplateDataMap())
         .templateId(emailDetails.getTemplateId())
         .userGroups(NotificationUserGroupMapper.toEntity(emailDetails.getUserGroupList()))
