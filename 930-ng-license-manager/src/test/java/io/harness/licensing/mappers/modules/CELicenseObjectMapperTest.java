@@ -23,22 +23,12 @@ public class CELicenseObjectMapperTest extends CategoryTest {
   private CEModuleLicense moduleLicense;
   private CEModuleLicenseDTO moduleLicenseDTO;
   private static final long DEFAULT_SPEND = 250000;
-  private static final int DEFAULT_CLUSTERS = 2;
-  private static final int DEFAULT_RETENTIOn = 30;
 
   @Before
   public void setUp() {
     initMocks(this);
-    moduleLicense = CEModuleLicense.builder()
-                        .numberOfCluster(DEFAULT_CLUSTERS)
-                        .spendLimit(DEFAULT_SPEND)
-                        .dataRetentionInDays(DEFAULT_RETENTIOn)
-                        .build();
-    moduleLicenseDTO = CEModuleLicenseDTO.builder()
-                           .numberOfCluster(DEFAULT_CLUSTERS)
-                           .spendLimit(DEFAULT_SPEND)
-                           .dataRetentionInDays(DEFAULT_RETENTIOn)
-                           .build();
+    moduleLicense = CEModuleLicense.builder().spendLimit(DEFAULT_SPEND).build();
+    moduleLicenseDTO = CEModuleLicenseDTO.builder().spendLimit(DEFAULT_SPEND).build();
   }
 
   @Test
