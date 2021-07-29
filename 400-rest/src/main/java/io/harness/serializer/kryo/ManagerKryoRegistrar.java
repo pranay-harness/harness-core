@@ -1733,9 +1733,8 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ExecutionWaitCallback.class, 40012);
     kryo.register(AzureContainerRegistry.class, 40013);
     kryo.register(StackStatus.class, 40113);
-    kryo.register(PerpetualTaskBroadcastEvent.class, 40114);
     kryo.register(EventsDeliveryCallback.class, 40014);
-
+    kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
     kryo.register(ShellScriptProvisionOutputVariables.class, 40021);
   }
 }
