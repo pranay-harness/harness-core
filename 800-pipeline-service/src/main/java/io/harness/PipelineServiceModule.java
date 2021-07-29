@@ -109,6 +109,7 @@ import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionInfoManager;
+import io.harness.webhook.WebhookEventClientModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -225,6 +226,8 @@ public class PipelineServiceModule extends AbstractModule {
             PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));
     install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, PIPELINE_SERVICE.getServiceId(), false));
     install(new TokenClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
+        this.configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new WebhookEventClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
 
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);

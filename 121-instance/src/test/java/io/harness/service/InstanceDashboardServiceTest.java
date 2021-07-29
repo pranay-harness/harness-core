@@ -9,7 +9,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.entities.ArtifactDetails;
-import io.harness.entities.instance.Instance;
+import io.harness.entities.Instance;
+import io.harness.entities.instanceinfo.ReferenceInstanceInfo;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
@@ -55,6 +56,7 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
         .deletedAt(10L)
         .createdAt(0L)
         .lastModifiedAt(0L)
+        .instanceInfo(ReferenceInstanceInfo.builder().podName("dummy").build())
         .build();
   }
 
@@ -181,8 +183,11 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
     });
 
     InstanceCountDetailsByEnvTypeBase instanceCountDetailsByEnvTypeBase =
-        instanceDashboardService.getActiveServiceInstanceCountBreakdown(
-            ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, Arrays.asList(SERVICE_IDENTIFIER), 5)
+            .getInstanceCountDetailsByEnvTypeBaseMap()
+            .get(SERVICE_IDENTIFIER);
     assertThat(instanceCountDetailsByEnvTypeBase.getTotalInstances()).isEqualTo(mockList.size());
     assertThat(instanceCountDetailsByEnvTypeBase.getNonProdInstances()).isEqualTo(3);
     assertThat(instanceCountDetailsByEnvTypeBase.getProdInstances()).isEqualTo(1);

@@ -49,7 +49,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.experimental.UtilityClass;
 
@@ -105,11 +104,12 @@ public class InfrastructurePmsPlanCreator {
         getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer);
 
     // adding RC dependency
-    YamlField rcYamlField = constructResourceConstraintYamlField(infraSectionNode);
-    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
-        infrastructure.getAllowSimultaneousDeployments(), rcYamlField);
+    boolean allowSimultaneousDeployments =
+        ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(infrastructure.getAllowSimultaneousDeployments());
 
-    if (!allowSimultaneousDeployments && rcYamlField != null) {
+    if (!allowSimultaneousDeployments) {
+      YamlField rcYamlField = constructResourceConstraintYamlField(infraSectionNode);
+
       adviserObtainments = getAdviserObtainmentFromMetaDataToResourceConstraint(rcYamlField, kryoSerializer);
 
       planCreationResponseMap.put(rcYamlField.getNode().getUuid(),
@@ -127,24 +127,10 @@ public class InfrastructurePmsPlanCreator {
     return planCreationResponseMap;
   }
 
-  @Nullable
   private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
-    String resourceUnit = obtainResourceUnitFromInfrastructure(infraNode);
-    if (resourceUnit == null) {
-      return null;
-    }
+    final String resourceUnit = "<+INFRA_KEY>";
     JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
     return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
-  }
-
-  @Nullable
-  private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
-    JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
-    if (infrastructureKey == null || EmptyPredicate.isEmpty(infrastructureKey.asText())) {
-      return null;
-    }
-
-    return infrastructureKey.asText();
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaDataToExecution(
@@ -168,16 +154,12 @@ public class InfrastructurePmsPlanCreator {
   private List<AdviserObtainment> getAdviserObtainmentFromMetaDataToResourceConstraint(
       YamlField resourceConstraintField, KryoSerializer kryoSerializer) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
-    if (resourceConstraintField != null && resourceConstraintField.getNode().getUuid() != null) {
-      adviserObtainments.add(
-          AdviserObtainment.newBuilder()
-              .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
-              .setParameters(ByteString.copyFrom(
-                  kryoSerializer.asBytes(OnSuccessAdviserParameters.builder()
-                                             .nextNodeId(resourceConstraintField.getNode().getUuid())
-                                             .build())))
-              .build());
-    }
+    adviserObtainments.add(
+        AdviserObtainment.newBuilder()
+            .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+            .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                OnSuccessAdviserParameters.builder().nextNodeId(resourceConstraintField.getNode().getUuid()).build())))
+            .build());
     adviserObtainments.add(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build());
     return adviserObtainments;
   }

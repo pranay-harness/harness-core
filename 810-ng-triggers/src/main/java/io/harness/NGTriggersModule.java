@@ -5,8 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
 import io.harness.ngtriggers.service.NGTriggerYamlSchemaService;
 import io.harness.ngtriggers.service.impl.NGTriggerServiceImpl;
+import io.harness.ngtriggers.service.impl.NGTriggerWebhookRegistrationServiceImpl;
 import io.harness.ngtriggers.service.impl.NGTriggerYamlSchemaServiceImpl;
 import io.harness.ngtriggers.utils.AwsCodeCommitDataObtainer;
 import io.harness.ngtriggers.utils.GitProviderBaseDataObtainer;
@@ -37,6 +39,7 @@ public class NGTriggersModule extends AbstractModule {
   protected void configure() {
     install(SCMJavaClientModule.getInstance());
     bind(NGTriggerService.class).to(NGTriggerServiceImpl.class);
+    bind(NGTriggerWebhookRegistrationService.class).to(NGTriggerWebhookRegistrationServiceImpl.class);
     bind(NGTriggerYamlSchemaService.class).to(NGTriggerYamlSchemaServiceImpl.class);
     bind(WebhookConfigProvider.class).toInstance(new WebhookConfigProvider() {
       @Override

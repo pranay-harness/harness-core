@@ -3,6 +3,8 @@ package io.harness.event;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.DelegateInfoHelper;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.data.structure.CollectionUtils;
@@ -21,6 +23,7 @@ import com.google.inject.Singleton;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class GraphStatusUpdateHelper {
@@ -84,8 +87,9 @@ public class GraphStatusUpdateHelper {
     });
   }
 
+  // Todo: Update only properties that will be changed. No need to construct full
   public GraphVertex convertFromNodeExecution(GraphVertex prevValue, NodeExecution nodeExecution) {
-    return GraphVertex.builder()
+    return prevValue.toBuilder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
         .planNodeId(nodeExecution.getNode().getUuid())

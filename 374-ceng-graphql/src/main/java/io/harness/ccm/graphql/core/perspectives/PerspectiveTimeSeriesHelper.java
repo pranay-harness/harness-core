@@ -146,7 +146,6 @@ public class PerspectiveTimeSeriesHelper {
       addDataPointToMap(id, "AVG", "UTILIZATION", memoryUtilizationValue, memoryUtilizationValueDataPointsMap,
           startTimeTruncatedTimestamp);
     }
-    log.info(cpuLimitDataPointsMap.toString());
     return PerspectiveTimeSeriesData.builder()
         .stats(convertTimeSeriesPointsMapToList(costDataPointsMap))
         .cpuLimit(convertTimeSeriesPointsMapToList(cpuLimitDataPointsMap))

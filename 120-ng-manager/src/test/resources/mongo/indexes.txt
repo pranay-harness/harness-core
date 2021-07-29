@@ -3,8 +3,6 @@
 !!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 !!!custom_delegateTaskProgressResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
 !!!custom_delegateTaskProgressResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-InfrastructureMappingNG {"name": "infrastructureKey_1", "unique": true} {"infrastructureKey": 1}
-InfrastructureMappingNG {"name": "unique_account_org_project_id", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 accounts {"name": "accountBackgroundJobCheckIteration_1", "background": true} {"accountBackgroundJobCheckIteration": 1}
 accounts {"name": "accountDeletionIteration_1", "background": true} {"accountDeletionIteration": 1}
 accounts {"name": "accountName_1", "unique": true} {"accountName": 1}
@@ -169,9 +167,6 @@ cvFeedbackRecords {"name": "cvConfigId_1", "background": true} {"cvConfigId": 1}
 cvFeedbackRecords {"name": "envId_1", "background": true} {"envId": 1}
 cvFeedbackRecords {"name": "serviceId_1", "background": true} {"serviceId": 1}
 cvFeedbackRecords {"name": "stateExecutionId_1", "background": true} {"stateExecutionId": 1}
-cvngVerificationTasks {"name": "activityId_1", "background": true} {"activityId": 1}
-cvngVerificationTasks {"name": "iterator", "background": true} {"status": 1, "cvngVerificationTaskIteration": 1}
-cvngVerificationTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 dashboardSettings {"name": "accountId_1", "background": true} {"accountId": 1}
 delayQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 delayQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
@@ -420,6 +415,8 @@ infrastructureMapping {"name": "createdAt_1", "background": true} {"createdAt": 
 infrastructureMapping {"name": "infra_mapping_appId_envId_serviceId", "background": true} {"appId": 1, "envId": 1, "serviceId": 1, "createdAt": -1}
 infrastructureMapping {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 infrastructureMapping {"name": "yaml", "unique": true} {"appId": 1, "envId": 1, "name": 1}
+infrastructureMappingNG {"name": "accountId_orgId_projectId_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
+infrastructureMappingNG {"name": "infrastructureKey_1", "unique": true} {"infrastructureKey": 1}
 infrastructureProvisioner {"name": "accountIdCreatedAtIdx", "background": true} {"accountId": 1, "createdAt": -1}
 infrastructureProvisioner {"name": "accountId_1", "background": true} {"accountId": 1}
 infrastructureProvisioner {"name": "appId_1", "background": true} {"appId": 1}
@@ -443,6 +440,8 @@ instanceChangeQueue {"name": "earliestGet_1", "background": true, "expireAfterSe
 instanceChangeQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 instanceEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 instanceEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+instanceNG {"name": "accountId_orgId_projectId_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
+instanceNG {"name": "instanceKey_1", "unique": true} {"instanceKey": 1}
 instanceStats {"name": "appId_1", "background": true} {"appId": 1}
 instanceStats {"name": "createdAt_1", "background": true} {"createdAt": 1}
 instanceStats {"name": "timestamp_1", "background": true} {"timestamp": 1}
@@ -450,7 +449,7 @@ instanceStats {"name": "unique_account_timestamp", "unique": true} {"accountId":
 instanceSyncPerpetualTasksInfo {"name": "accountId_1", "background": true} {"accountId": 1}
 instanceSyncPerpetualTasksInfo {"name": "infrastructureMappingId_1", "background": true} {"infrastructureMappingId": 1}
 instanceSyncPerpetualTasksInfoNG {"name": "infrastructureMappingId_1", "unique": true} {"infrastructureMappingId": 1}
-instances {"name": "unique_account_org_project_id", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
+instanceSyncPerpetualTasksInfoNG {"name": "perpetualTaskId_1", "unique": true} {"perpetualTaskId": 1}
 invites {"name": "ng_invite_account_org_project_identifiers_email_role_deleted", "background": true} {"deleted": 1, "email": 1, "accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 invites {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 kmsTransitionEvent2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
@@ -581,7 +580,6 @@ perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "ass
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "rebalanceIterator", "background": true} {"state": 1, "rebalanceIteration": 1}
 personalization {"name": "unique_identification", "unique": true} {"accountId": 1, "userId": 1}
-pipelineExecutionSummary {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}
 pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pipelineExecutions {"name": "pipelineId_1", "background": true} {"pipelineId": 1}
@@ -590,7 +588,6 @@ pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "c
 pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
-pipelinesNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
 preferences {"name": "appId_1", "background": true} {"appId": 1}
 preferences {"name": "createdAt_1", "background": true} {"createdAt": 1}
 preferences {"name": "preference_index", "background": true} {"accountId": 1, "userId": 1, "name": 1}
@@ -689,6 +686,7 @@ services {"name": "accountId_1", "background": true} {"accountId": 1}
 services {"name": "appId_1", "background": true} {"appId": 1}
 services {"name": "artifactStreamIds_1", "background": true} {"artifactStreamIds": 1}
 services {"name": "createdAt_1", "background": true} {"createdAt": 1}
+services {"name": "deploymentTypeIndex", "background": true} {"deploymentType": 1}
 services {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 servicesNG {"name": "index_accountId_orgId_projectId_createdAt_deleted_deletedAt", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "createdAt": 1, "deleted": 1, "deletedAt": 1}
 servicesNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_serviceIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
@@ -941,6 +939,7 @@ workflows {"name": "appId_1", "background": true} {"appId": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
 workflows {"name": "linkedArtifactStreamIds_1", "background": true} {"linkedArtifactStreamIds": 1}
 workflows {"name": "linkedTemplateUuids_1", "background": true} {"linkedTemplateUuids": 1}
+workflows {"name": "workflowTypeIndex", "background": true} {"workflowType": 1}
 yamlChangeSet {"name": "accountId_createdAt_index", "background": true} {"accountId": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_queuekey_status_createdAt_index", "background": true} {"accountId": 1, "queueKey": 1, "status": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_status_gitToHarness_createdAt_index", "background": true} {"accountId": 1, "status": 1, "gitToHarness": 1, "createdAt": 1}

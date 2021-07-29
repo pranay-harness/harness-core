@@ -19,6 +19,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OrchestrationAdjacencyListGenerator {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private GraphVertexConverter graphVertexConverter;
+  @Inject private PmsGraphStepDetailsService pmsGraphStepDetailsService;
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
@@ -234,8 +236,10 @@ public class OrchestrationAdjacencyListGenerator {
         } else {
           outcomes = new LinkedHashMap<>();
         }
+        Map<String, OrchestrationMap> stepDetails =
+            pmsGraphStepDetailsService.getStepDetails(nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId);
 
-        GraphVertex graphVertex = graphVertexConverter.convertFrom(nodeExecution, outcomes);
+        GraphVertex graphVertex = graphVertexConverter.convertFrom(nodeExecution, outcomes, stepDetails);
 
         if (graphVertexMap.containsKey(graphVertex.getUuid())) {
           continue;

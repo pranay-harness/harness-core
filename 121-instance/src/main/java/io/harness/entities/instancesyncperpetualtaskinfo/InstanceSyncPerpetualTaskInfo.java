@@ -33,7 +33,7 @@ public class InstanceSyncPerpetualTaskInfo {
   String accountIdentifier;
   @FdUniqueIndex String infrastructureMappingId;
   List<DeploymentInfoDetails> deploymentInfoDetailsList;
-  String perpetualTaskId;
+  @FdUniqueIndex String perpetualTaskId;
   @CreatedDate long createdAt;
   @LastModifiedDate long lastUpdatedAt;
 }

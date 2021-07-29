@@ -31,6 +31,7 @@ import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -183,20 +185,35 @@ public class DefaultOrganizationManager {
   }
 
   private Collection<UserInfo> getCGUsers(String accountId) {
-    int offset = 0;
-    int limit = 500;
-    int maxIterations = 50;
     Set<UserInfo> users = new HashSet<>();
-    while (maxIterations > 0) {
-      PageResponse<UserInfo> usersPage = RestClientUtils.getResponse(
-          userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null, true));
-      if (isEmpty(usersPage.getResponse())) {
-        break;
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    while (users.isEmpty() && stopwatch.elapsed(TimeUnit.SECONDS) <= 5) {
+      // From CG side, account setup event is fired before setting up users in the account first. To handle that, we are
+      // waiting up to 5 seconds for users to get setup correctly on CG side.
+      sleep();
+      int offset = 0;
+      int limit = 500;
+      int maxIterations = 50;
+      while (maxIterations > 0) {
+        PageResponse<UserInfo> usersPage = RestClientUtils.getResponse(
+            userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null, true));
+        if (isEmpty(usersPage.getResponse())) {
+          break;
+        }
+        users.addAll(usersPage.getResponse());
+        maxIterations--;
+        offset += limit;
       }
-      users.addAll(usersPage.getResponse());
-      maxIterations--;
-      offset += limit;
     }
     return users;
+  }
+
+  private void sleep() {
+    try {
+      TimeUnit.SECONDS.sleep(1);
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      log.warn("Thread Interrupted", ex);
+    }
   }
 }

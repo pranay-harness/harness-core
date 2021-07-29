@@ -1,10 +1,14 @@
 package io.harness.event;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationEventLog;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.engine.observers.PlanStatusUpdateObserver;
+import io.harness.engine.observers.StepDetailsUpdateInfo;
+import io.harness.engine.observers.StepDetailsUpdateObserver;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
@@ -22,9 +26,10 @@ import java.sql.Date;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class OrchestrationLogPublisher
-    implements NodeUpdateObserver, NodeStatusUpdateObserver, PlanStatusUpdateObserver {
+    implements NodeUpdateObserver, NodeStatusUpdateObserver, PlanStatusUpdateObserver, StepDetailsUpdateObserver {
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject @Named(EventsFrameworkConstants.ORCHESTRATION_LOG) private Producer producer;
@@ -60,5 +65,11 @@ public class OrchestrationLogPublisher
     OrchestrationLogEvent orchestrationLogEvent =
         OrchestrationLogEvent.newBuilder().setPlanExecutionId(planExecutionId).build();
     producer.send(Message.newBuilder().setData(orchestrationLogEvent.toByteString()).build());
+  }
+
+  @Override
+  public void onStepDetailsUpdate(StepDetailsUpdateInfo stepDetailsUpdateInfo) {
+    createAndHandleEventLog(stepDetailsUpdateInfo.getPlanExecutionId(), stepDetailsUpdateInfo.getNodeExecutionId(),
+        OrchestrationEventType.STEP_DETAILS_UPDATE);
   }
 }

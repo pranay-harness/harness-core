@@ -7,8 +7,10 @@ import io.harness.annotations.dev.OwnedBy;
 
 import java.io.IOException;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(DEL)
+@Slf4j
 public final class FibonacciBackOff {
   private static final int[] FIBONACCI = new int[] {1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144};
 
@@ -19,7 +21,7 @@ public final class FibonacciBackOff {
       try {
         return fn.execute();
       } catch (IOException e) {
-        handleFailure(attempt);
+        handleFailure(attempt, e);
       }
     }
     throw new RuntimeException("Failed to communicate.");
@@ -30,7 +32,7 @@ public final class FibonacciBackOff {
       try {
         return fn.execute();
       } catch (IOException e) {
-        handleFailure(attempt);
+        handleFailure(attempt, e);
       }
     }
     int attempt = FIBONACCI.length - 1;
@@ -38,12 +40,13 @@ public final class FibonacciBackOff {
       try {
         return fn.execute();
       } catch (IOException e) {
-        handleFailure(attempt);
+        handleFailure(attempt, e);
       }
     }
   }
 
-  private static void handleFailure(int attempt) {
+  private static void handleFailure(int attempt, IOException e) {
+    log.error("error while executing", e);
     sleep(Duration.ofSeconds(FIBONACCI[attempt]));
   }
 

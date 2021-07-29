@@ -129,6 +129,7 @@ public class CILiteEngineStepGroupUtils {
       String uuid = generateUuid();
       String jsonString = JsonPipelineUtils.writeJsonString(StepElementConfig.builder()
                                                                 .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+                                                                .name(LITE_ENGINE_TASK + liteEngineCounter)
                                                                 .uuid(generateUuid())
                                                                 .type("liteEngineTask")
                                                                 .stepSpecType(liteEngineTaskStepInfo)

@@ -21,7 +21,6 @@ import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.client.CVNGClientConfig;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -175,7 +174,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
   @JsonProperty(value = "jobsFrequencyConfig") private JobsFrequencyConfig jobsFrequencyConfig;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
-  @JsonProperty("cvngClientConfig") private CVNGClientConfig cvngClientConfig;
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
   @JsonProperty("numberOfRemindersBeforeAccountDeletion") private int numberOfRemindersBeforeAccountDeletion;
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;

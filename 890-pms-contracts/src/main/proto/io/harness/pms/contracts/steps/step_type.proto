@@ -4,6 +4,12 @@ package io.harness.pms.contracts.steps;
 
 option java_multiple_files = true;
 
+message SdkStep {
+  StepType stepType = 1;
+  StepInfo stepInfo = 2;
+  bool isPartOfStepPallete = 3;
+}
+
 message StepType {
   string type = 1;
   StepCategory stepCategory = 2;

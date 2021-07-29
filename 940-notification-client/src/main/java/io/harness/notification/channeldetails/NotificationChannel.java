@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class NotificationChannel {
   String accountId;
+  // Don't use userGroupIds field, it is deprecated.
   List<String> userGroupIds;
   List<NotificationRequest.UserGroup> userGroups;
   String templateId;

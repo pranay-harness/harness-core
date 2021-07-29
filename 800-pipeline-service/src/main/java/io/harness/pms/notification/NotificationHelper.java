@@ -72,8 +72,7 @@ public class NotificationHelper {
     try {
       notificationRules = getNotificationRulesFromYaml(yaml);
     } catch (IOException exception) {
-      // Todo: throw Execution exception over here.
-      log.error("", exception);
+      log.error("Unable to parse yaml to get notification objects", exception);
     }
     if (EmptyPredicate.isEmpty(notificationRules)) {
       return;
@@ -120,7 +119,7 @@ public class NotificationHelper {
         if (stages.contains(identifier) || stages.contains("AllStages")) {
           return true;
         }
-      } else if (thisEventType == pipelineEventType && !pipelineEventTypeLevel.equals("Stage")) {
+      } else if (thisEventType == pipelineEventType) {
         return true;
       }
     }

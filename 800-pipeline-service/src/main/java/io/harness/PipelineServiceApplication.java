@@ -39,6 +39,8 @@ import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
+import io.harness.graph.stepDetail.PmsGraphStepDetailsServiceImpl;
+import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -317,6 +319,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private static void registerObservers(Injector injector) {
+    PmsGraphStepDetailsServiceImpl pmsGraphStepDetailsService =
+        (PmsGraphStepDetailsServiceImpl) injector.getInstance(Key.get(PmsGraphStepDetailsService.class));
+    pmsGraphStepDetailsService.getStepDetailsUpdateObserverSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+
     // Register Pipeline Observers
     PMSPipelineServiceImpl pmsPipelineService =
         (PMSPipelineServiceImpl) injector.getInstance(Key.get(PMSPipelineService.class));
@@ -392,7 +399,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(OrchestrationEndGraphHandler.class)));
     orchestrationEngine.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(OrchestrationEndInterruptHandler.class)));
-
+    orchestrationEngine.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(NotificationInformHandler.class)));
     GraphGenerationServiceImpl graphGenerationService =
         (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
     graphGenerationService.getGraphNodeUpdateObserverSubject().register(
@@ -404,20 +412,18 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerAuthFilters(PipelineServiceConfiguration config, Environment environment, Injector injector) {
-    if (config.isEnableAuth()) {
-      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
-      Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
-      serviceToSecretMapping.put(
-          AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
-      serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
-      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
-          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
-    }
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+        -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+        || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
+    serviceToSecretMapping.put(
+        AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

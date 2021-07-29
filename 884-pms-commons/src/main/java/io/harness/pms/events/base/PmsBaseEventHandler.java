@@ -2,6 +2,8 @@ package io.harness.pms.events.base;
 
 import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
@@ -24,6 +26,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public abstract class PmsBaseEventHandler<T extends Message> {
   public static String LISTENER_END_METRIC = "%s_queue_time";
   public static String LISTENER_START_METRIC = "%s_time_in_queue";
@@ -68,6 +71,10 @@ public abstract class PmsBaseEventHandler<T extends Message> {
         log.error("Exception occurred while handling {}", event.getClass().getSimpleName(), ex);
       }
       throw ex;
+    } finally {
+      try (AutoLogContext autoLogContext = autoLogContext(event)) {
+        log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event", event.getClass().getSimpleName());
+      }
     }
   }
 

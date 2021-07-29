@@ -875,7 +875,9 @@ public class K8sStepHelperTest extends CategoryTest {
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
+    OptionalOutcome manifestsOutcome =
+        OptionalOutcome.builder().found(true).outcome(new ManifestsOutcome(manifestOutcomeMap)).build();
+    doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(
@@ -943,7 +945,9 @@ public class K8sStepHelperTest extends CategoryTest {
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
+    OptionalOutcome manifestsOutcome =
+        OptionalOutcome.builder().found(true).outcome(new ManifestsOutcome(manifestOutcomeMap)).build();
+    doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(
@@ -1015,7 +1019,9 @@ public class K8sStepHelperTest extends CategoryTest {
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
+    OptionalOutcome manifestsOutcome =
+        OptionalOutcome.builder().found(true).outcome(new ManifestsOutcome(manifestOutcomeMap)).build();
+    doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(Optional.of(
@@ -1090,7 +1096,9 @@ public class K8sStepHelperTest extends CategoryTest {
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
+    OptionalOutcome manifestsOutcome =
+        OptionalOutcome.builder().found(true).outcome(new ManifestsOutcome(manifestOutcomeMap)).build();
+    doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(Optional.of(
@@ -1161,7 +1169,9 @@ public class K8sStepHelperTest extends CategoryTest {
 
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
-    doReturn(new ManifestsOutcome(manifestOutcomeMap)).when(outcomeService).resolve(eq(ambiance), eq(manifests));
+    OptionalOutcome manifestsOutcome =
+        OptionalOutcome.builder().found(true).outcome(new ManifestsOutcome(manifestOutcomeMap)).build();
+    doReturn(manifestsOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(
@@ -1470,13 +1480,62 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(k8sEntities).when(entityReferenceExtractorUtils).extractReferredEntities(ambiance, k8s.getStore());
     doReturn(values2Entities).when(entityReferenceExtractorUtils).extractReferredEntities(ambiance, values2.getStore());
     doThrow(runtimeAccessFailure).when(pipelineRbacHelper).checkRuntimePermissions(ambiance, allEntities);
-    doReturn(manifests)
+    OptionalOutcome manifestsOutcome =
+        OptionalOutcome.builder().found(true).outcome(new ManifestsOutcome(manifests)).build();
+    doReturn(manifestsOutcome)
         .when(outcomeService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
 
     assertThatThrownBy(
         () -> k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, StepElementParameters.builder().build()))
         .isSameAs(runtimeAccessFailure);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testStartChainLinkOrderedValues() {
+    K8sDirectInfrastructureOutcome k8sDirectInfrastructureOutcome =
+        K8sDirectInfrastructureOutcome.builder().namespace("default").build();
+    Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", manifestWith("k8s", "K8sManifest", -1),
+        "values2", manifestWith("values2", "Values", 2), "values3", manifestWith("values3", "Values", 3), "values1",
+        manifestWith("values1", "Values", 1), "values4", manifestWith("values4", "Values", 4));
+    RefObject manifests = RefObject.newBuilder()
+                              .setName(OutcomeExpressionConstants.MANIFESTS)
+                              .setKey(OutcomeExpressionConstants.MANIFESTS)
+                              .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                              .build();
+
+    RefObject infra = RefObject.newBuilder()
+                          .setName(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setKey(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME)
+                          .setRefType(RefType.newBuilder().setType(OrchestrationRefType.OUTCOME).build())
+                          .build();
+
+    StepElementParameters rollingStepElementParams =
+        StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
+    OptionalOutcome optionalOutcome =
+        OptionalOutcome.builder().outcome(new ManifestsOutcome(manifestOutcomeMap)).found(true).build();
+    doReturn(optionalOutcome).when(outcomeService).resolveOptional(eq(ambiance), eq(manifests));
+    doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
+
+    doReturn(
+        Optional.of(ConnectorResponseDTO.builder()
+                        .connector(ConnectorInfoDTO.builder()
+                                       .connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                       .name("test")
+                                       .build())
+
+                        .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    TaskChainResponse taskChainResponse =
+        k8sStepHelper.startChainLink(k8sStepExecutor, ambiance, rollingStepElementParams);
+    assertThat(taskChainResponse.getPassThroughData()).isInstanceOf(K8sStepPassThroughData.class);
+    K8sStepPassThroughData stepPassThroughData = (K8sStepPassThroughData) taskChainResponse.getPassThroughData();
+    assertThat(stepPassThroughData.getValuesManifestOutcomes().stream().map(ManifestOutcome::getIdentifier))
+        .containsExactly("k8s", "values1", "values2", "values3", "values4");
   }
 
   private GitStore sampleGitStore(String identifier) {
@@ -1486,5 +1545,23 @@ public class K8sStepHelperTest extends CategoryTest {
         .gitFetchType(FetchType.BRANCH)
         .branch(ParameterField.createValueField("master"))
         .build();
+  }
+
+  private ManifestOutcome manifestWith(String identifier, String type, int order) {
+    GitStore store = GitStore.builder()
+                         .connectorRef(ParameterField.createValueField(identifier))
+                         .paths(ParameterField.createValueField(asList("dir/templates")))
+                         .gitFetchType(FetchType.BRANCH)
+                         .branch(ParameterField.createValueField("master"))
+                         .build();
+
+    switch (type) {
+      case "K8sManifest":
+        return K8sManifestOutcome.builder().identifier(identifier).store(store).build();
+      case "Values":
+        return ValuesManifestOutcome.builder().identifier(identifier).store(store).order(order).build();
+      default:
+        throw new UnsupportedOperationException("Type " + type + " not supported");
+    }
   }
 }

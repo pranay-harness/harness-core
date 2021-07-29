@@ -285,13 +285,13 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
 
+    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.addBundle(new SwaggerBundle<CIManagerConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(CIManagerConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
-    configureObjectMapper(bootstrap.getObjectMapper());
     log.info("bootstrapping done.");
   }
 

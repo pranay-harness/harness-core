@@ -19,6 +19,8 @@ then
      ;;
      "CCE") export HARNESS_TEAM="CE"
      ;;
+     "PIP") export HARNESS_TEAM="PIPELINE"
+     ;;
      "CCM") export HARNESS_TEAM="CE"
      ;;
      "CDC") export HARNESS_TEAM="CDC"

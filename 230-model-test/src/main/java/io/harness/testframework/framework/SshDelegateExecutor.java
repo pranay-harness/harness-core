@@ -7,6 +7,8 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.resource.Project;
@@ -46,6 +48,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class SshDelegateExecutor {
   private boolean failedAlready;
   private static final String LOCAL_STORAGE = "local-storage";
@@ -234,7 +237,7 @@ public class SshDelegateExecutor {
     try {
       final File directory = new File(directoryPath);
       final Path delegateJarSource = Paths.get(directory.getPath(), "260-delegate", "target", "delegate-capsule.jar");
-      final Path watcherJarSource = Paths.get(directory.getPath(), "250-watcher", "target", "watcher-capsule.jar");
+      final Path watcherJarSource = Paths.get(directory.getPath(), "960-watcher", "target", "watcher-capsule.jar");
       final Path watcherJarDestination =
           Paths.get(directory.getPath(), LOCAL_STORAGE, WINGS_WATCHERS, "watcher", "watcher.jar");
       final Path delegateJarDestination =

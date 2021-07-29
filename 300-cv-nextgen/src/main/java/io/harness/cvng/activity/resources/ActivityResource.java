@@ -10,9 +10,12 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -161,5 +164,29 @@ public class ActivityResource {
   public RestResponse<Set<DatasourceTypeDTO>> getDatasourceTypes(
       @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId) {
     return new RestResponse(activityService.getDataSourcetypes(accountId, activityId));
+  }
+
+  @GET
+  @Path("/{activityId}/clusters")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisClusters")
+  public RestResponse<List<LogAnalysisClusterChartDTO>> getDeploymentLogAnalysisClusters(
+      @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
+      @QueryParam("hostName") String hostName) {
+    return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(accountId, activityId, hostName));
+  }
+
+  @Path("/{activityId}/deployment-log-analysis-data")
+  @GET
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisResult")
+  public RestResponse<PageResponse<LogAnalysisClusterDTO>> getDeploymentLogAnalysisResult(
+      @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
+      @QueryParam("label") Integer label, @NotNull @QueryParam("pageNumber") int pageNumber,
+      @NotNull @QueryParam("pageSize") int pageSize, @QueryParam("hostName") String hostName) {
+    return new RestResponse(activityService.getDeploymentActivityLogAnalysisResult(
+        accountId, activityId, label, pageNumber, pageSize, hostName));
   }
 }

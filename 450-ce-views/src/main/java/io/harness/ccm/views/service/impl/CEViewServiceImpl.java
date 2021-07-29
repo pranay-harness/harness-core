@@ -64,8 +64,8 @@ public class CEViewServiceImpl implements CEViewService {
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(100) has been reached";
   private static final String DEFAULT_AZURE_VIEW_NAME = "Azure";
-  private static final String DEFAULT_AZURE_FIELD_ID = "azureServiceName";
-  private static final String DEFAULT_AZURE_FIELD_NAME = "Service name";
+  private static final String DEFAULT_AZURE_FIELD_ID = "azureSubscriptionGuid";
+  private static final String DEFAULT_AZURE_FIELD_NAME = "Subscription id";
 
   private static final String DEFAULT_AWS_VIEW_NAME = "Aws";
   private static final String DEFAULT_AWS_FIELD_ID = "awsUsageAccountId";
@@ -254,6 +254,20 @@ public class CEViewServiceImpl implements CEViewService {
         .build();
   }
 
+  private ViewVisualization getDefaultViewVisualization(
+      String fieldId, String fieldName, ViewFieldIdentifier identifier) {
+    return ViewVisualization.builder()
+        .granularity(ViewTimeGranularity.DAY)
+        .chartType(ViewChartType.STACKED_TIME_SERIES)
+        .groupBy(ViewField.builder()
+                     .fieldId(fieldId)
+                     .fieldName(fieldName)
+                     .identifier(identifier)
+                     .identifierName(identifier.getDisplayName())
+                     .build())
+        .build();
+  }
+
   private CEView getDefaultView(String accountId, String viewName) {
     return CEView.builder()
         .accountId(accountId)
@@ -268,22 +282,31 @@ public class CEViewServiceImpl implements CEViewService {
   public void createDefaultView(String accountId, ViewFieldIdentifier viewFieldIdentifier) {
     ViewIdCondition condition = null;
     CEView defaultView = null;
+    ViewVisualization viewVisualization = null;
     switch (viewFieldIdentifier) {
       case AZURE:
         condition = getDefaultViewIdCondition(DEFAULT_AZURE_FIELD_ID, DEFAULT_AZURE_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_AZURE_FIELD_ID, DEFAULT_AZURE_FIELD_NAME, viewFieldIdentifier);
         defaultView = getDefaultView(accountId, DEFAULT_AZURE_VIEW_NAME);
         break;
       case AWS:
         condition = getDefaultViewIdCondition(DEFAULT_AWS_FIELD_ID, DEFAULT_AWS_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_AWS_FIELD_ID, DEFAULT_AWS_FIELD_NAME, viewFieldIdentifier);
         defaultView = getDefaultView(accountId, DEFAULT_AWS_VIEW_NAME);
         break;
       case GCP:
         condition = getDefaultViewIdCondition(DEFAULT_GCP_FIELD_ID, DEFAULT_GCP_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_GCP_FIELD_ID, DEFAULT_GCP_FIELD_NAME, viewFieldIdentifier);
         defaultView = getDefaultView(accountId, DEFAULT_GCP_VIEW_NAME);
         break;
       case CLUSTER:
         condition =
             getDefaultViewIdCondition(DEFAULT_CLUSTER_FIELD_ID, DEFAULT_CLUSTER_FIELD_NAME, viewFieldIdentifier);
+        viewVisualization =
+            getDefaultViewVisualization(DEFAULT_CLUSTER_FIELD_ID, DEFAULT_CLUSTER_FIELD_NAME, viewFieldIdentifier);
         defaultView = getDefaultView(accountId, DEFAULT_CLUSTER_VIEW_NAME);
         break;
       default:
@@ -293,6 +316,7 @@ public class CEViewServiceImpl implements CEViewService {
     if (null != condition && null != defaultView) {
       ViewRule rule = ViewRule.builder().viewConditions(Collections.singletonList(condition)).build();
       defaultView.setViewRules(Collections.singletonList(rule));
+      defaultView.setViewVisualization(viewVisualization);
       modifyCEViewAndSetDefaults(defaultView);
       ceViewDao.save(defaultView);
     }

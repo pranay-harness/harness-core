@@ -6,7 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationKryoRegister;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.morphia.CgOrchestrationMorphiaRegistrar;
+import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.SweepingOutputConverter;
 
 import com.google.common.collect.ImmutableList;
@@ -26,6 +28,7 @@ public class CgOrchestrationRegistrars {
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
           .add(CgOrchestrationKryoRegister.class)
           .add(CgOrchestrationBeansKryoRegistrar.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -34,6 +37,7 @@ public class CgOrchestrationRegistrars {
           .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
           .addAll(OrchestrationDelayRegistrars.morphiaRegistrars)
           .add(CgOrchestrationMorphiaRegistrar.class)
+          .add(CommonEntitiesMorphiaRegister.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

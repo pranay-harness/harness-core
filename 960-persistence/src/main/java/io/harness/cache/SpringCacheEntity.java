@@ -41,6 +41,8 @@ public class SpringCacheEntity implements PersistentEntity {
   // audit fields
   @Wither @FdIndex @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastUpdatedAt;
+  Long entityUpdatedAt;
+
   @Version Long version;
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 }

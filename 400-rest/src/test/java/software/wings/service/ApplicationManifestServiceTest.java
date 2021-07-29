@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -30,6 +31,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -72,6 +74,7 @@ import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class ApplicationManifestServiceTest extends WingsBaseTest {
   private static final String GIT_CONNECTOR_ID = "gitConnectorId";
   private static final String BRANCH = "branch";
@@ -248,8 +251,6 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
                                       .build();
     applicationManifest.setStoreType(Remote);
     applicationManifest.setGitFileConfig(gitFileConfig);
-    Service service = Service.builder().deploymentType(DeploymentType.KUBERNETES).build();
-    doReturn(service).when(serviceResourceService).getWithDetails(any(), any());
     ApplicationManifest savedApplicationManifest = applicationManifestService.update(applicationManifest);
     assertThat(savedApplicationManifest.getUuid()).isNotNull();
     assertThat(savedApplicationManifest.getEnvId()).isNull();

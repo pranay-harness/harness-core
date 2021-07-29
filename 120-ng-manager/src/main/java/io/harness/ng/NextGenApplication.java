@@ -22,6 +22,7 @@ import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.orchestration.NgStepRegistrar;
+import io.harness.cdng.pipeline.executions.CdngOrchestrationExecutionEventHandlerRegistrar;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -450,6 +451,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
+        .engineEventHandlersMap(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .build();
   }
 

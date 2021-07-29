@@ -16,6 +16,7 @@ import lombok.experimental.UtilityClass;
 public class InstanceSyncPerpetualTaskInfoMapper {
   public InstanceSyncPerpetualTaskInfoDTO toDTO(InstanceSyncPerpetualTaskInfo instanceSyncPerpetualTaskInfo) {
     return InstanceSyncPerpetualTaskInfoDTO.builder()
+        .id(instanceSyncPerpetualTaskInfo.getId())
         .accountIdentifier(instanceSyncPerpetualTaskInfo.getAccountIdentifier())
         .infrastructureMappingId(instanceSyncPerpetualTaskInfo.getInfrastructureMappingId())
         .deploymentInfoDetailsDTOList(

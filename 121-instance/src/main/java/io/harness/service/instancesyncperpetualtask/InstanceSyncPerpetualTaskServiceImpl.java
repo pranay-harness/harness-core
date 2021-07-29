@@ -43,6 +43,12 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
         PerpetualTaskId.newBuilder().setId(perpetualTaskId).build(), null);
   }
 
+  @Override
+  public void deletePerpetualTask(String accountIdentifier, String perpetualTaskId) {
+    delegateServiceGrpcClient.deletePerpetualTask(AccountId.newBuilder().setId(accountIdentifier).build(),
+        PerpetualTaskId.newBuilder().setId(perpetualTaskId).build());
+  }
+
   // --------------------------- PRIVATE METHODS -------------------------------
 
   private PerpetualTaskClientContextDetails preparePerpetualTaskClientContext(

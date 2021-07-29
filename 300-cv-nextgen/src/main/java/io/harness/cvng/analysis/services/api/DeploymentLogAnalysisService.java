@@ -19,7 +19,7 @@ public interface DeploymentLogAnalysisService {
       String accountId, String verificationJobInstanceId, String hostName);
 
   PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
-      String accountId, String verificationJobInstanceId, Integer label, int pageNumber, String hostName);
+      String accountId, String verificationJobInstanceId, Integer label, int pageNumber, int pageSize, String hostName);
 
   Optional<Risk> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
 

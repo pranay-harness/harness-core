@@ -436,3 +436,31 @@ func TestExists(t *testing.T) {
 	assert.Equal(t, mr.Exists(key), false)
 	assert.NotNil(t, rdb.Exists(ctx, key))
 }
+
+func TestListPrefixes(t *testing.T) {
+	ctx := context.Background()
+
+	mr, err := miniredis.Run()
+	if err != nil {
+		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mr.Close()
+
+	client = redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+
+	rdb := &Redis{
+		Client: client,
+	}
+
+	mr.XAdd("key1", "*", []string{"k1", "v1"})
+	mr.XAdd("key2", "*", []string{"k1", "v1"})
+	mr.XAdd("differentPrefix", "*", []string{"k1", "v1"})
+
+	l, err := rdb.ListPrefix(ctx, "key")
+	assert.Nil(t, err)
+	assert.Equal(t, len(l), 2)
+	assert.Contains(t, l, "key1")
+	assert.Contains(t, l, "key2")
+}

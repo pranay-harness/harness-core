@@ -92,6 +92,25 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testExecuteAsync_whenHealthSourcesAreEmpty() {
+    monitoredServiceService.createDefault(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    Ambiance ambiance = getAmbiance();
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String callbackId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callbackId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    assertThat(cvngStepTask.isSkip()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testExecuteAsync_skipWhenMonitoredServiceRefIsEmpty() {
     Ambiance ambiance = getAmbiance();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();

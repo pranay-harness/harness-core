@@ -281,9 +281,6 @@ if [[ "" != "$jwtNextGenManagerSecret" ]]; then
   yq write -i $CONFIG_FILE portal.jwtNextGenManagerSecret "$jwtNextGenManagerSecret"
 fi
 
-if [[ "" != "$jwtNextGenManagerSecret" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.cvNgServiceSecret "$jwtNextGenManagerSecret"
-fi
 
 if [[ "" != "$FEATURES" ]]; then
   yq write -i $CONFIG_FILE featuresEnabled "$FEATURES"
@@ -311,6 +308,10 @@ fi
 
 if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
+fi
+
+if [[ "" != "$SMTP_USE_SSL" ]]; then
+  yq write -i $CONFIG_FILE smtp.useSSL "$SMTP_USE_SSL"
 fi
 
 if [[ "" != "$MARKETO_ENABLED" ]]; then
@@ -861,10 +862,6 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
-fi
-
-if [[ "" != "$CVNG_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
 fi
 
 if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then

@@ -8,7 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
-import io.harness.exception.InvalidYamlException;
+import io.harness.pms.exception.runtime.InvalidYamlRuntimeException;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -40,7 +40,7 @@ public class FilterCreatorHelper {
         String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
         errorMsg = errorMsg + ". FQN: " + fqn;
       }
-      throw new InvalidYamlException(errorMsg);
+      throw new InvalidYamlRuntimeException(errorMsg);
     }
   }
 
@@ -57,7 +57,7 @@ public class FilterCreatorHelper {
     if (!connectorRef.isExpression()) {
       String connectorRefString = connectorRef.getValue();
       if (EmptyPredicate.isEmpty(connectorRefString)) {
-        throw new InvalidYamlException(
+        throw new InvalidYamlRuntimeException(
             String.format("Connector ref is not present for property: %s", fullQualifiedDomainName));
       }
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
@@ -69,7 +69,7 @@ public class FilterCreatorHelper {
     } else {
       String expression = connectorRef.getExpressionValue();
       if (EmptyPredicate.isEmpty(expression)) {
-        throw new InvalidYamlException(
+        throw new InvalidYamlRuntimeException(
             String.format("Connector ref is not present for property: %s", fullQualifiedDomainName));
       }
       metadata.put(PreFlightCheckMetadata.EXPRESSION, expression);

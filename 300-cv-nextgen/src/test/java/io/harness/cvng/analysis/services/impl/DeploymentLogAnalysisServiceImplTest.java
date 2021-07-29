@@ -95,7 +95,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, 10, null);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse.getTotalPages()).isEqualTo(0);
@@ -125,7 +125,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, 1, 0, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, 1, 0, 10, null);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse.getTotalPages()).isEqualTo(0);
@@ -146,7 +146,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, 15, 0, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, 15, 0, 10, null);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse.getTotalPages()).isEqualTo(0);
@@ -165,7 +165,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, "node2");
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, 10, "node2");
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse.getTotalPages()).isEqualTo(0);
@@ -184,7 +184,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse = deploymentLogAnalysisService.getLogAnalysisResult(
-        accountId, verificationJobInstanceId, null, 0, generateUuid());
+        accountId, verificationJobInstanceId, null, 0, 10, generateUuid());
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse.getTotalPages()).isEqualTo(0);
@@ -208,7 +208,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis2);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, 10, null);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse.getTotalPages()).isEqualTo(0);
@@ -236,7 +236,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse1 =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, 10, null);
 
     assertThat(pageResponse1.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse1.getTotalPages()).isEqualTo(2);
@@ -244,7 +244,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(pageResponse1.getContent().size()).isEqualTo(10);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse2 =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 1, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 1, 10, null);
 
     assertThat(pageResponse2.getPageIndex()).isEqualTo(1);
     assertThat(pageResponse2.getTotalPages()).isEqualTo(2);
@@ -252,7 +252,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(pageResponse2.getContent().size()).isEqualTo(10);
 
     PageResponse<LogAnalysisClusterDTO> pageResponse3 =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 2, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 2, 10, null);
 
     assertThat(pageResponse3.getPageIndex()).isEqualTo(2);
     assertThat(pageResponse3.getTotalPages()).isEqualTo(2);
@@ -266,7 +266,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
   public void testGetLogAnalysisResult_withoutDeploymentLogAnalysis() {
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     PageResponse<LogAnalysisClusterDTO> pageResponse =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceId, null, 0, 10, null);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
     assertThat(pageResponse.getTotalPages()).isEqualTo(0);
@@ -278,7 +278,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetLogAnalysisResult_withWrongVerificationJobInstanceId() {
     PageResponse<LogAnalysisClusterDTO> pageResponse =
-        deploymentLogAnalysisService.getLogAnalysisResult(accountId, generateUuid(), null, 0, null);
+        deploymentLogAnalysisService.getLogAnalysisResult(accountId, generateUuid(), null, 0, 10, null);
     assertThat(pageResponse.getContent()).isEmpty();
   }
 

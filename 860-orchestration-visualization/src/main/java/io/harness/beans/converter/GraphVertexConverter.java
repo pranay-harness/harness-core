@@ -53,7 +53,8 @@ public class GraphVertexConverter {
         .build();
   }
 
-  public GraphVertex convertFrom(NodeExecution nodeExecution, Map<String, OrchestrationMap> outcomes) {
+  public GraphVertex convertFrom(
+      NodeExecution nodeExecution, Map<String, OrchestrationMap> outcomes, Map<String, OrchestrationMap> stepDetails) {
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
             nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
@@ -82,6 +83,7 @@ public class GraphVertexConverter {
         .unitProgresses(nodeExecution.getUnitProgresses())
         .progressData(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
         .graphDelegateSelectionLogParams(graphDelegateSelectionLogParamsList)
+        .stepDetails(stepDetails)
         .build();
   }
 }

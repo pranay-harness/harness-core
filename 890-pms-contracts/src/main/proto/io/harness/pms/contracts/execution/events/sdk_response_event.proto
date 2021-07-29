@@ -30,6 +30,7 @@ message SdkResponseEventProto {
     SpawnChildRequest spawnChildRequest = 14;
     SpawnChildrenRequest spawnChildrenRequest = 15;
     HandleProgressRequest progressRequest = 16;
+    AddStepDetailsInstanceRequest stepDetailsInstanceRequest = 17;
   }
 }
 
@@ -87,6 +88,11 @@ message QueueTaskRequest {
   io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 5;
 }
 
+message AddStepDetailsInstanceRequest {
+  string stepDetails = 1;
+  string name = 2;
+}
+
 message HandleProgressRequest {
   string progressJson = 3;
 }
@@ -104,4 +110,5 @@ enum SdkResponseEventType {
   QUEUE_TASK = 11;
   SPAWN_CHILDREN = 12;
   HANDLE_PROGRESS = 13;
+  ADD_STEP_DETAILS_INSTANCE_REQUEST = 14;
 }

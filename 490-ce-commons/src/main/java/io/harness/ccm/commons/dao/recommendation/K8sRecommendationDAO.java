@@ -367,6 +367,7 @@ public class K8sRecommendationDAO {
         .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
         .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
         .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName) // for updating older rows having clusterId instead
         .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
         .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
         .execute();
@@ -392,6 +393,7 @@ public class K8sRecommendationDAO {
         .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
         .set(CE_RECOMMENDATIONS.MONTHLYSAVING, stats.getTotalMonthlySaving())
         .set(CE_RECOMMENDATIONS.ISVALID, true)
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, clusterName) // for updating older rows having clusterId instead
         .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
         .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
         .execute();
@@ -423,5 +425,12 @@ public class K8sRecommendationDAO {
                                    .filter(K8sNodeRecommendationKeys.accountId, accountIdentifier)
                                    .filter(K8sNodeRecommendationKeys.uuid, new ObjectId(uuid))
                                    .get());
+  }
+
+  public int fetchRecommendationsCount(@NonNull String accountId, Condition condition) {
+    Condition nonNullCondition = firstNonNull(condition, DSL.noCondition());
+    return TimescaleUtils.retryRun(()
+                                       -> dslContext.fetchCount(CE_RECOMMENDATIONS,
+                                           CE_RECOMMENDATIONS.ACCOUNTID.eq(accountId).and(nonNullCondition)));
   }
 }

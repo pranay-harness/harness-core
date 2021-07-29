@@ -445,6 +445,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return true;
   }
 
+  @Override
+  public long count(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = filterService.createCriteriaFromConnectorFilter(
+        accountIdentifier, orgIdentifier, projectIdentifier, null, null, null, null);
+    return connectorRepository.count(criteria);
+  }
+
   private void checkThatTheConnectorIsNotUsedByOthers(Connector connector) {
     boolean isEntityReferenced;
     IdentifierRef identifierRef = IdentifierRef.builder()

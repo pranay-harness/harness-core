@@ -124,4 +124,9 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   public Optional<Connector> findOne(Criteria criteria, String repo, String branch) {
     return gitAwarePersistence.findOne(criteria, repo, branch, Connector.class);
   }
+
+  @Override
+  public long count(Criteria criteria) {
+    return mongoTemplate.count(new Query(criteria), Connector.class);
+  }
 }

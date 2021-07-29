@@ -45,6 +45,7 @@ metadata:
   namespace: harness-delegate-ng
 spec:
   replicas: ${delegateReplicas}
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       harness.io/app: harness-delegate

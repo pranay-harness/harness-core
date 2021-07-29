@@ -25,11 +25,13 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
+import io.harness.ngtriggers.beans.entity.metadata.WebhookRegistrationStatus;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
 import io.harness.repositories.spring.NGTriggerRepository;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.repositories.spring.TriggerWebhookEventRepository;
@@ -45,6 +47,7 @@ import com.mongodb.client.result.UpdateResult;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -64,17 +67,32 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
   private final TriggerEventHistoryRepository triggerEventHistoryRepository;
   private final ConnectorResourceClient connectorResourceClient;
+  private final NGTriggerWebhookRegistrationService ngTriggerWebhookRegistrationService;
+  private final ExecutorService executorService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
   @Override
   public NGTriggerEntity create(NGTriggerEntity ngTriggerEntity) {
     try {
-      return ngTriggerRepository.save(ngTriggerEntity);
+      NGTriggerEntity savedNgTriggerEntity = ngTriggerRepository.save(ngTriggerEntity);
+      registerWebhookAsync(ngTriggerEntity);
+      return savedNgTriggerEntity;
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
           String.format(DUP_KEY_EXP_FORMAT_STRING, ngTriggerEntity.getIdentifier()), USER_SRE, e);
     }
+  }
+
+  private void registerWebhookAsync(NGTriggerEntity ngTriggerEntity) {
+    if (!ngTriggerEntity.getAutoRegister()) {
+      return;
+    }
+    executorService.submit(() -> {
+      WebhookRegistrationStatus registrationStatus =
+          ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);
+      updateWebhookRegistrationStatus(ngTriggerEntity, registrationStatus);
+    });
   }
 
   @Override
@@ -94,6 +112,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       throw new InvalidRequestException(
           String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
     }
+    registerWebhookAsync(updatedEntity);
     return updatedEntity;
   }
 
@@ -336,6 +355,18 @@ public class NGTriggerServiceImpl implements NGTriggerService {
         return;
       default:
         return; // not implemented
+    }
+  }
+
+  private void updateWebhookRegistrationStatus(
+      NGTriggerEntity ngTriggerEntity, WebhookRegistrationStatus registrationStatus) {
+    Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
+    ngTriggerEntity.getMetadata().getWebhook().setRegistrationStatus(registrationStatus);
+
+    NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+    if (updatedEntity == null) {
+      throw new InvalidRequestException(
+          String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
     }
   }
 

@@ -21,7 +21,7 @@ public class AwsAccountConnectionDetailsHelper {
   private static final String stackNameValue = "harness-ce-iam-role-stack";
   public AwsAccountConnectionDetail getAwsAccountConnectorDetail(String accountId) {
     String harnessAccountId = configuration.getAwsConfig().getHarnessAwsAccountId();
-    String externalId = String.format(EXTERNAL_ID_TEMPLATE, harnessAccountId, accountId);
+    String externalId = String.format(EXTERNAL_ID_TEMPLATE, getProcessedAccountId(harnessAccountId), accountId);
     String stackLaunchTemplateLink =
         String.format(stackBaseTemplate, stackNameValue, configuration.getAwsConfig().getAwsConnectorTemplate());
     return AwsAccountConnectionDetail.builder()

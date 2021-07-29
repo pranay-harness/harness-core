@@ -24,7 +24,7 @@ container_image(
         "no-ide",
     ],
     tars = [
-        "//250-watcher/container:watcher_jar",
+        "//960-watcher/container:watcher_jar",
     ],
 )
 

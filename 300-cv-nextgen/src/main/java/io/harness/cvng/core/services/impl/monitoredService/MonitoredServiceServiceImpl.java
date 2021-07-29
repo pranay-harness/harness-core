@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl.monitoredService;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
@@ -20,6 +21,7 @@ import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;
@@ -44,6 +46,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private HealthSourceService healthSourceService;
   @Inject private HPersistence hPersistence;
   @Inject private HeatMapService heatMapService;
+  @Inject private NextGenService nextGenService;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -320,11 +323,28 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         PageUtils.offsetAndLimit(monitoredServiceListItemDTOS, offset, pageSize);
 
     List<Pair<String, String>> serviceEnvironmentIdentifiers = new ArrayList();
+    List<String> serviceIdentifiers = new ArrayList<>();
+    List<String> environmentIdentifiers = new ArrayList<>();
+
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
       serviceEnvironmentIdentifiers.add(
           Pair.of(monitoredServiceListDTOBuilder.getServiceRef(), monitoredServiceListDTOBuilder.getEnvironmentRef()));
+      serviceIdentifiers.add(monitoredServiceListDTOBuilder.getServiceRef());
+      environmentIdentifiers.add(monitoredServiceListDTOBuilder.getEnvironmentRef());
     }
+    Map<String, String> serviceIdNameMap = new HashMap<>();
+    Map<String, String> environmentIdNameMap = new HashMap<>();
+
+    nextGenService.listService(accountId, orgIdentifier, projectIdentifier, serviceIdentifiers)
+        .forEach(serviceResponse
+            -> serviceIdNameMap.put(
+                serviceResponse.getService().getIdentifier(), serviceResponse.getService().getName()));
+    nextGenService.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
+        .forEach(environmentResponse
+            -> environmentIdNameMap.put(
+                environmentResponse.getEnvironment().getIdentifier(), environmentResponse.getEnvironment().getName()));
+
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
     List<RiskData> currentRiskScoreList =
@@ -334,11 +354,16 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     int index = 0;
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
+      String serviceName = serviceIdNameMap.get(monitoredServiceListDTOBuilder.getServiceRef());
+      String environmentName = environmentIdNameMap.get(monitoredServiceListDTOBuilder.getEnvironmentRef());
       HistoricalTrend historicalTrend = historicalTrendList.get(index);
       RiskData riskData = currentRiskScoreList.get(index);
       index++;
-      monitoredServiceListDTOS.add(
-          monitoredServiceListDTOBuilder.historicalTrend(historicalTrend).currentHealthScore(riskData).build());
+      monitoredServiceListDTOS.add(monitoredServiceListDTOBuilder.historicalTrend(historicalTrend)
+                                       .currentHealthScore(riskData)
+                                       .serviceName(serviceName)
+                                       .environmentName(environmentName)
+                                       .build());
     }
     return PageResponse.<MonitoredServiceListItemDTO>builder()
         .pageSize(pageSize)
@@ -395,14 +420,19 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
-  public List<String> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier) {
-    return hPersistence.createQuery(MonitoredService.class)
-        .filter(MonitoredServiceKeys.accountId, accountId)
-        .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
-        .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
-        .asList()
+  public List<EnvironmentResponse> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier) {
+    List<String> environmentIdentifiers = hPersistence.createQuery(MonitoredService.class)
+                                              .filter(MonitoredServiceKeys.accountId, accountId)
+                                              .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
+                                              .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
+                                              .asList()
+                                              .stream()
+                                              .map(monitoredService -> monitoredService.getEnvironmentIdentifier())
+                                              .collect(Collectors.toList());
+
+    return nextGenService.listEnvironment(accountId, orgIdentifier, projectIdentifier, environmentIdentifiers)
         .stream()
-        .map(monitoredService -> monitoredService.getEnvironmentIdentifier())
+        .distinct()
         .collect(Collectors.toList());
   }
 

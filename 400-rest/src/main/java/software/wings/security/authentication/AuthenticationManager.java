@@ -372,19 +372,15 @@ public class AuthenticationManager {
       }
 
     } catch (WingsException we) {
-      log.error("Failed to login via default mechanism", we);
+      log.error("Failed to login via default mechanism with raised exception", we);
       User user = userService.getUserByEmail(userName);
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
         authService.auditUnsuccessfulLogin(accountId, user);
       }
-      if (NON_INVALID_CREDENTIALS_ERROR_CODES.contains(we.getCode())) {
-        throw we;
-      } else {
-        throw new WingsException(INVALID_CREDENTIAL, USER);
-      }
+      throw we;
     } catch (Exception e) {
-      log.error("Failed to login via default mechanism", e);
+      log.error("Failed to login via default mechanism due to unknown failure", e);
       User user = userService.getUserByEmail(userName);
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
