@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -25,6 +24,7 @@ import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
+import static software.wings.beans.appmanifest.StoreType.VALUES_YAML_FROM_HELM_REPO;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
@@ -51,6 +51,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -106,7 +107,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.CDP)
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Spy @InjectMocks private GitFileConfigHelperService gitFileConfigHelperService;
@@ -145,6 +146,9 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
 
     applicationManifest.setStoreType(HelmSourceRepo);
+    applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
+
+    applicationManifest.setStoreType(VALUES_YAML_FROM_HELM_REPO);
     applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
 
     applicationManifest.setKind(K8S_MANIFEST);
