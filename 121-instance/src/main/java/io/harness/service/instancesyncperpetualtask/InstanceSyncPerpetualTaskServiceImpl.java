@@ -33,7 +33,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
         AccountId.newBuilder().setId(infrastructureMappingDTO.getAccountIdentifier()).build(),
         abstractInstanceSyncHandler.getPerpetualTaskType(), preparePerpetualTaskSchedule(),
         preparePerpetualTaskClientContext(infrastructureMappingDTO), false,
-        abstractInstanceSyncHandler.getPerpetualTaskDescription(infrastructureMappingDTO));
+        getPerpetualTaskDescription(infrastructureMappingDTO));
     return perpetualTaskId.getId();
   }
 
@@ -67,5 +67,13 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
         .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
         .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
         .build();
+  }
+
+  private String getPerpetualTaskDescription(InfrastructureMappingDTO infrastructureMappingDTO) {
+    return String.format(
+        "OrgIdentifier: [%s], ProjectIdentifier: [%s], ServiceIdentifier: [%s], EnvironmentIdentifier: [%s], InfrastructureKey: [%s]",
+        infrastructureMappingDTO.getOrgIdentifier(), infrastructureMappingDTO.getProjectIdentifier(),
+        infrastructureMappingDTO.getServiceIdentifier(), infrastructureMappingDTO.getEnvIdentifier(),
+        infrastructureMappingDTO.getInfrastructureKey());
   }
 }
