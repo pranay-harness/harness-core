@@ -17,4 +17,5 @@ public interface InfrastructureOutcome extends Outcome, PassThroughData {
   String getKind();
   EnvironmentOutcome getEnvironment();
   String getInfrastructureKey();
+  String getConnectorRef();
 }
