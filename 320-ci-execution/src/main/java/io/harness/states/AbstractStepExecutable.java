@@ -195,7 +195,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
 
     log.info("Received step {} response {} with type {} in {} milliseconds ", stepIdentifier,
         stepStatus.getStepExecutionStatus(), ((CIStepInfo) stepParameters.getSpec()).getStepType().getType(),
-        currentTime - startTime);
+        (currentTime - startTime) / 1000);
 
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
       if (stepStatus.getOutput() != null) {

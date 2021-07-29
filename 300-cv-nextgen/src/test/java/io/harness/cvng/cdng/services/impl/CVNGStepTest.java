@@ -111,11 +111,10 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testExecuteAsync_skipWhenMonitoredServiceRefIsEmpty() {
+  public void testExecuteAsync_skipWhenMonitoredServiceDoesNotExists() {
     Ambiance ambiance = getAmbiance();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
-    cvngStepParameter.setMonitoredServiceRef(ParameterField.createValueField(""));
     AsyncExecutableResponse asyncExecutableResponse =
         cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
     assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
@@ -142,21 +141,6 @@ public class CVNGStepTest extends CvNextGenTestBase {
     CVNGStepTask cvngStepTask =
         hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
     assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testExecuteAsync_monitoringServiceRefDoesNotMatch() {
-    Ambiance ambiance = getAmbiance();
-    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
-    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
-    cvngStepParameter.setMonitoredServiceRef(ParameterField.createValueField("monitoredService"));
-    assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Invalid monitored service identifier for service %s and env %s", serviceIdentifier, envIdentifier);
   }
 
   @Test
@@ -346,7 +330,6 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .envIdentifier(ParameterField.createValueField(envIdentifier))
         .verificationJobBuilder(getVerificationJobBuilder())
         .deploymentTag(spec.getDeploymentTag())
-        .monitoredServiceRef(ParameterField.createValueField(monitoredServiceDTO.getIdentifier()))
         .build();
   }
 

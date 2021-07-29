@@ -1,5 +1,9 @@
 package software.wings.beans.trigger;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import java.util.HashMap;
@@ -8,6 +12,8 @@ import java.util.Map;
 /**
  * Created by sgurubelli on 8/5/18.
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public enum GithubAction {
   CLOSED("Closed", "closed"),
   EDITED("Edited", "edited"),

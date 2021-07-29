@@ -1,5 +1,7 @@
 package io.harness.governance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -26,6 +28,7 @@ import org.codehaus.jackson.annotate.JsonCreator;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @ParametersAreNonnullByDefault
+@OwnedBy(HarnessTeam.CDC)
 public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   // if freezeForAllApps=true, ignore appIds
   @Setter private TimeRange timeRange;
@@ -62,6 +65,9 @@ public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
     if (timeRange == null) {
       log.warn("Time range is null for deployment freeze window: " + getUuid());
       return false;
+    }
+    if (timeRange.getFreezeOccurrence() != null) {
+      return timeRange.isInRange();
     }
     return currentTime <= getTimeRange().getTo() && currentTime >= getTimeRange().getFrom();
   }

@@ -15,7 +15,7 @@ public class HistoricalTrend {
   public HistoricalTrend(int size) {
     healthScores = new ArrayList<>();
     for (int i = 0; i < size; i++) {
-      healthScores.add(RiskData.builder().riskStatus(Risk.NO_DATA).riskValue(-2).build());
+      healthScores.add(RiskData.builder().riskStatus(Risk.NO_DATA).healthScore(null).build());
     }
   }
 }

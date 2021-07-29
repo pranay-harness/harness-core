@@ -1,5 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateTaskDetails;
@@ -17,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface StateExecutionService {
   Map<String, StateExecutionInstance> executionStatesMap(String appId, String executionUuid);
 

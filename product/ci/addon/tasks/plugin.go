@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
@@ -186,18 +185,4 @@ func logPluginErr(log *zap.SugaredLogger, errMsg, stepID string, cmds []string, 
 		"elapsed_time_ms", utils.TimeSince(startTime),
 		zap.Error(err),
 	)
-}
-
-// Returns environment variables as a map with key as environment variable name
-// and value as environment variable value.
-func getEnvVars() map[string]string {
-	m := make(map[string]string)
-	// os.Environ returns a copy of strings representing the environment in form
-	// "key=value". Converting it into a map.
-	for _, e := range os.Environ() {
-		if i := strings.Index(e, "="); i >= 0 {
-			m[e[:i]] = e[i+1:]
-		}
-	}
-	return m
 }

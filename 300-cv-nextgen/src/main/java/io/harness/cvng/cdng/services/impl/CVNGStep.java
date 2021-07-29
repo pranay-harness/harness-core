@@ -74,25 +74,17 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     validate(stepParameters);
     String serviceIdentifier = stepParameters.getServiceIdentifier();
     String envIdentifier = stepParameters.getEnvIdentifier();
-    String monitoredServiceIdentifier = stepParameters.getMonitoredServiceRef().getValue();
     CVNGStepTaskBuilder cvngStepTaskBuilder = CVNGStepTask.builder();
-    if (monitoredServiceIdentifier.isEmpty()) { // UI will set  this to empty in the runtime screen if not defined.
+    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    if (monitoredServiceDTO == null || monitoredServiceDTO.getSources().getHealthSources().isEmpty()) {
       cvngStepTaskBuilder.skip(true);
       cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());
     } else {
-      MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
-          accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
-      if (monitoredServiceDTO == null || monitoredServiceDTO.getSources().getHealthSources().isEmpty()) {
-        cvngStepTaskBuilder.skip(true);
-        cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());
-      } else {
-        Preconditions.checkState(monitoredServiceIdentifier.equals(monitoredServiceDTO.getIdentifier()),
-            "Invalid monitored service identifier for service %s and env %s", serviceIdentifier, envIdentifier);
-        DeploymentActivity deploymentActivity =
-            getDeploymentActivity(stepParameters, accountId, projectIdentifier, orgIdentifier, monitoredServiceDTO);
-        String activityUuid = activityService.register(deploymentActivity);
-        cvngStepTaskBuilder.activityId(activityUuid).callbackId(activityUuid);
-      }
+      DeploymentActivity deploymentActivity =
+          getDeploymentActivity(stepParameters, accountId, projectIdentifier, orgIdentifier, monitoredServiceDTO);
+      String activityUuid = activityService.register(deploymentActivity);
+      cvngStepTaskBuilder.activityId(activityUuid).callbackId(activityUuid);
     }
     CVNGStepTask cvngStepTask =
         cvngStepTaskBuilder.accountId(accountId).status(CVNGStepTask.Status.IN_PROGRESS).build();

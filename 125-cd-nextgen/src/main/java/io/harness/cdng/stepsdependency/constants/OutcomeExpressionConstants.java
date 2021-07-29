@@ -23,4 +23,5 @@ public class OutcomeExpressionConstants {
   public final String ENVIRONMENT = "env";
   public final String OUTPUT = "output";
   public final String TERRAFORM_CONFIG = "terraformConfig";
+  public final String DEPLOYMENT_INFO_OUTCOME = "deploymentInfoOutcome";
 }

@@ -2,6 +2,7 @@ package io.harness.repositories.gitSyncError;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType.GIT_TO_HARNESS;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
@@ -48,25 +49,26 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
       String errorMessage, boolean fullSyncPath, ChangeType changeType, GitSyncErrorDetails gitSyncErrorDetails,
       String gitConnector, String repo, String branchName, String rootFolder, String yamlGitConfigId, String projectId,
       String orgId) {
-    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountId)
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountId)
-                            .and(GitSyncErrorKeys.yamlFilePath)
+                            .and(GitSyncErrorKeys.completeFilePath)
                             .is(yamlFilePath)
-                            .and(GitSyncErrorKeys.gitSyncDirection)
-                            .is(gitSyncDirection);
-    Update update = update(GitSyncErrorKeys.gitConnectorId, gitConnector)
+                            .and(GitSyncErrorKeys.errorType)
+                            .is(GIT_TO_HARNESS);
+    // todo @Deepak: Revisit this file while creating the git error service
+    Update update = update(GitSyncErrorKeys.yamlGitConfigRef, gitConnector)
                         .set(GitSyncErrorKeys.branchName, branchName)
-                        .set(GitSyncErrorKeys.repo, repo)
+                        .set(GitSyncErrorKeys.repoURL, repo)
                         .set(GitSyncErrorKeys.rootFolder, rootFolder)
                         .set(GitSyncErrorKeys.fullSyncPath, fullSyncPath)
-                        .set(GitSyncErrorKeys.yamlGitConfigId, yamlGitConfigId);
+                        .set(GitSyncErrorKeys.yamlGitConfigRef, yamlGitConfigId);
     update.setOnInsert(GitSyncErrorKeys.uuid, generateUuid())
-        .set(GitSyncErrorKeys.accountId, accountId)
-        .set(GitSyncErrorKeys.gitSyncDirection, gitSyncDirection)
-        .set(GitSyncErrorKeys.yamlFilePath, yamlFilePath)
+        .set(GitSyncErrorKeys.accountIdentifier, accountId)
+        .set(GitSyncErrorKeys.errorType, GIT_TO_HARNESS)
+        .set(GitSyncErrorKeys.completeFilePath, yamlFilePath)
         .set(GitSyncErrorKeys.failureReason, errorMessage != null ? errorMessage : "Reason could not be captured.")
-        .set(GitSyncErrorKeys.projectId, projectId)
-        .set(GitSyncErrorKeys.organizationId, orgId)
+        .set(GitSyncErrorKeys.projectIdentifier, projectId)
+        .set(GitSyncErrorKeys.orgIdentifier, orgId)
         .set(GitSyncErrorKeys.additionalErrorDetails, gitSyncErrorDetails)
         .set(GitSyncErrorKeys.changeType, changeType);
 
@@ -76,20 +78,19 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
   @Override
   public List<GitSyncError> getActiveGitSyncError(String accountId, long fromTimestamp,
       GitSyncDirection gitSyncDirection, String gitConnectorId, String repo, String branchName, String rootFolder) {
-    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountId)
+    // todo @Deepak: Revisit this file while creating the git error service
+    Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountId)
                             .and(GitSyncErrorKeys.createdAt)
                             .gt(fromTimestamp)
-                            .and(GitSyncErrorKeys.gitSyncDirection)
-                            .is(gitSyncDirection)
+                            .and(GitSyncErrorKeys.errorType)
+                            .is(GIT_TO_HARNESS)
                             .and(GitSyncErrorKeys.status)
                             .is(GitSyncErrorStatus.ACTIVE)
                             .and(GitSyncErrorKeys.branchName)
                             .is(branchName)
-                            .and(GitSyncErrorKeys.repo)
-                            .is(repo)
-                            .and(GitSyncErrorKeys.gitConnectorId)
-                            .is(gitConnectorId);
+                            .and(GitSyncErrorKeys.repoURL)
+                            .is(repo);
     if (rootFolder != null) {
       criteria.and(GitSyncErrorKeys.rootFolder).is(rootFolder);
     }
