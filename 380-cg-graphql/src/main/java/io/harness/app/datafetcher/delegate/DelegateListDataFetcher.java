@@ -30,7 +30,7 @@ public class DelegateListDataFetcher
     extends AbstractConnectionV2DataFetcher<QLDelegateFilter, QLNoOpSortCriteria, QLDelegateList> {
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
-  protected QLDelegateList fetchConnection(List<QLDelegateFilter> qlDelegateFilters,
+  public QLDelegateList fetchConnection(List<QLDelegateFilter> qlDelegateFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Delegate> delegateQuery = populateFilters(wingsPersistence, qlDelegateFilters, Delegate.class, true)
                                         .order(Sort.descending(DelegateKeys.createdAt));
@@ -51,10 +51,10 @@ public class DelegateListDataFetcher
     }
     qlDelegateFilters.forEach(qlDelegateFilter -> {
       FieldEnd<? extends Query<Delegate>> delegateField;
-      if (isEmpty(qlDelegateFilter.getAccountId())) {
+      if (!isEmpty(qlDelegateFilter.getAccountId())) {
         utils.setStringFilter(delegateQuery.field(DelegateKeys.accountId), qlDelegateFilter.getAccountId());
       }
-      if (isEmpty(qlDelegateFilter.getDelegateName())) {
+      if (!isEmpty(qlDelegateFilter.getDelegateName())) {
         utils.setStringFilter(delegateQuery.field(DelegateKeys.delegateName), qlDelegateFilter.getDelegateName());
       }
       if (qlDelegateFilter.getDelegateStatus() != null) {
