@@ -26,7 +26,7 @@ public abstract class AbstractInstanceSyncHandler implements IInstanceSyncHandle
    * Refer {@link software.wings.beans.InfrastructureMappingType}
    * Need to do similar mapping in NG
    */
-  public abstract String getinfrastructureKind();
+  public abstract String getInfrastructureKind();
 
   public abstract DeploymentInfoDTO getDeploymentInfo(
       InfrastructureOutcome infrastructureOutcome, List<ServerInstanceInfo> serverInstanceInfoList);

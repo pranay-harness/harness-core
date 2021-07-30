@@ -5,14 +5,11 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.instance.info.InstanceInfoService;
-import io.harness.cdng.instance.mappers.K8sPodToServiceInstanceInfoMapper;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
-import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -33,7 +30,6 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
@@ -55,7 +51,6 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
 
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
-  @Inject private InstanceInfoService instanceInfoService;
 
   @Override
   public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
@@ -147,12 +142,7 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
           K8sCanaryDeleteOutcome.builder().build(), StepOutcomeGroup.STEP.name());
     }
 
-    K8sCanaryDeployResponse k8sNGTaskResponse =
-        (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-    StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(
-        ambiance, K8sPodToServiceInstanceInfoMapper.toServerInstanceInfoList(k8sNGTaskResponse.getK8sPodList()));
-
-    return responseBuilder.status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
+    return responseBuilder.status(Status.SUCCEEDED).build();
   }
 
   @Override

@@ -81,7 +81,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
             .serviceIdentifier(serviceOutcome.getIdentifier())
             .envIdentifier(infrastructureOutcome.getEnvironment().getIdentifier())
             .infrastructureKey(infrastructureOutcome.getInfrastructureKey())
-            .infrastructureKind(abstractInstanceSyncHandler.getinfrastructureKind())
+            .infrastructureKind(abstractInstanceSyncHandler.getInfrastructureKind())
             .build();
 
     Optional<InfrastructureMappingDTO> infrastructureMappingDTOOptional =
