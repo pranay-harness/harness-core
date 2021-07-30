@@ -153,10 +153,9 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations")
-  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Get OrganizationAggregateDTO list", nickname = "getOrganizationAggregateDTOList")
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -236,7 +235,7 @@ public class NGAggregateResource {
     List<PermissionCheckDTO> permissionChecks = orgIdentifiers.stream()
                                                     .map(oi
                                                         -> PermissionCheckDTO.builder()
-                                                               .permission(VIEW_PROJECT_PERMISSION)
+                                                               .permission(VIEW_ORGANIZATION_PERMISSION)
                                                                .resourceIdentifier(oi)
                                                                .resourceScope(resourceScope)
                                                                .resourceType(ORGANIZATION)
