@@ -55,10 +55,10 @@ type Node struct {
 	Method          string    `json:"method" bson:"method"`
 	Id              int       `json:"id" bson:"id"`
 	Params          string    `json:"params" bson:"params"`
+	File            string    `json:"file" bson:"file"` // Only populated if the type is resource
 	Class           string    `json:"class" bson:"class"`
-	Type            string    `json:"type" bson:"type"`
+	Type            string    `json:"type" bson:"type"` // Can be test | source | resource
 	CallsReflection bool      `json:"callsReflection" bson:"callsReflection"`
-	File            string    `json:"file" bson:"file"`
 	Acct            string    `json:"account" bson:"account"`
 	Proj            string    `json:"project" bson:"project"`
 	Org             string    `json:"organization" bson:"organization"`
@@ -89,12 +89,12 @@ func NewNode(id int, pkg, method, params, class, typ, file string, callsReflecti
 		Params:          params,
 		Class:           class,
 		Type:            typ,
+		File:            file,
 		CallsReflection: callsReflection,
 		Acct:            acc,
 		Org:             org,
 		Proj:            proj,
 		VCSInfo:         vcs,
-		File:            file,
 	}
 }
 
@@ -146,41 +146,63 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 	return &MongoDb{Client: client, Database: client.Database(dbName), Log: log}, nil
 }
 
-// queryHelper gets the tests that need to be run corresponding to the packages and classes
-func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []string, account string) ([]types.RunnableTest, error) {
-	if len(pkgs) != len(classes) {
-		return nil, fmt.Errorf("Length of pkgs: %d and length of classes: %d don't match", len(pkgs), len(classes))
-	}
-	if len(pkgs) == 0 {
-		mdb.Log.Warnw("did not receive any pkg/classes to query DB")
-		return []types.RunnableTest{}, nil
-	}
+// queryHelper gets the tests that need to be run corresponding to the parsed file nodes
+// We return true if all the tests need to be selected
+func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, account string) ([]types.RunnableTest, bool, error) {
 	result := []types.RunnableTest{}
 	// Query 1
-	// Get nodes corresponding to the packages and classes
+	// Get node IDs corresponding to the packages, classes and resources by iterating over the parsed file nodes
 	nodes := []Node{}
+	mResources := make(map[string]struct{})
 	allowedPairs := []interface{}{}
-	for idx, pkg := range pkgs {
-		cls := classes[idx]
-		allowedPairs = append(allowedPairs,
-			bson.M{"package": pkg, "class": cls,
-				"vcs_info.repo":   repo,
-				"vcs_info.branch": targetBranch,
-				"account":         account})
+	for _, n := range fn {
+		if n.Type == utils.NodeType_SOURCE {
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "source", "package": n.Pkg, "class": n.Class,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": targetBranch,
+					"account":         account})
+		} else if n.Type == utils.NodeType_RESOURCE {
+			// There can be multiple resource files with the same name
+			if _, ok := mResources[n.File]; ok {
+				continue
+			}
+			mResources[n.File] = struct{}{}
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "resource", "file": n.File,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": targetBranch,
+					"account":         account})
+		}
+	}
+	if len(allowedPairs) == 0 {
+		// Nothing to query in DB
+		return result, false, nil
 	}
 	err := mgm.Coll(&Node{}).SimpleFind(&nodes, bson.M{"$or": allowedPairs})
 	if err != nil {
-		return nil, err
-	}
-	if len(nodes) == 0 {
-		// Log error message for debugging if no nodes are found
-		mdb.Log.Errorw("could not find any nodes corresponding to the pkgs and classes",
-			"pkgs", pkgs, "classes", classes, "repo", repo, "branch", targetBranch)
+		return nil, false, err
 	}
 
 	nids := []int{}
+	nMap := make(map[int]struct{})
+	rCount := 0
+	// Get unique node IDs corresponding to the conditions.
+	// If the number of resources from the query is less than the number of resources changed,
+	// some of the resources have not been mapped.
 	for _, n := range nodes {
+		if _, ok := nMap[n.Id]; ok {
+			continue
+		}
+		nMap[n.Id] = struct{}{}
 		nids = append(nids, n.Id)
+		// Check whether all the resource nodes are present in the mapping or not.
+		if n.Type == "resource" {
+			rCount++
+		}
+	}
+	if rCount < len(mResources) { // Run all the tests
+		return result, true, nil
 	}
 
 	// Query 2
@@ -192,7 +214,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 			"vcs_info.repo":   repo,
 			"account":         account})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	mtids := make(map[int]struct{})
 	tids := []int{}
@@ -215,7 +237,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 			"vcs_info.repo":   repo,
 			"account":         account})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if len(tnodes) != len(tids) {
 		// Log error message for debugging if we don't find a test ID in the node list
@@ -226,7 +248,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 		result = append(result, types.RunnableTest{Pkg: t.Package, Class: t.Class})
 	}
 
-	return result, nil
+	return result, false, nil
 }
 
 // isValid checks whether the test is valid or not
@@ -268,7 +290,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 	res := types.SelectTestsResp{}
 	totalTests := 0
-	nodes, err := utils.ParseFileNames(fileNames)
+	fnodes, err := utils.ParseFileNames(fileNames)
 	if err != nil {
 		return res, err
 	}
@@ -307,12 +329,10 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 
 	m := make(map[types.RunnableTest]struct{}) // Get unique tests to run
 	l := []types.RunnableTest{}
-	var pkgs []string
-	var cls []string
 	var selectAll bool
 	updated := 0
 	new := 0 // Keep track of new files. Don't count them in the current total. The count will get updated using partial CG
-	for _, node := range nodes {
+	for _, node := range fnodes {
 		// A file which is not recognized. Need to add logic for handling these type of files
 		if !utils.IsSupported(node) {
 			// A list with a single empty element indicates that all tests need to be run
@@ -347,10 +367,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 					m[t] = struct{}{}
 				}
 			}
-		} else {
-			// Source file
-			pkgs = append(pkgs, node.Pkg)
-			cls = append(cls, node.Class)
 		}
 	}
 	if selectAll == true {
@@ -363,9 +379,19 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 		}, nil
 	}
 
-	tests, err := mdb.queryHelper(req.TargetBranch, req.Repo, pkgs, cls, account)
+	// Get tests corresponding to parsed source and resource file nodes
+	tests, runAll, err := mdb.queryHelper(req.TargetBranch, req.Repo, fnodes, account)
 	if err != nil {
 		return res, err
+	}
+	if runAll {
+		return types.SelectTestsResp{
+			SelectAll:     true,
+			TotalTests:    totalTests,
+			SelectedTests: totalTests,
+			UpdatedTests:  updated,
+			SrcCodeTests:  totalTests - updated,
+		}, nil
 	}
 	for _, t := range tests {
 		if !isValid(t) {
