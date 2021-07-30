@@ -45,15 +45,9 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 	// Setup nodes
-	n1 := NewNode(1, "pkg", "m", "p", "c", "source", false,
-		getVCSInfo(),
-		"acct", "org", "proj")
-	n2 := NewNode(2, "pkg", "m", "p", "c", "source", false,
-		getVCSInfo(),
-		"acct", "org", "proj")
-	oldNode := NewNode(10, "pkg", "m", "p", "c", "source", false,
-		getVCSInfoWithCommit("oldCommit"),
-		"acct", "org", "proj")
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	oldNode := NewNode(10, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithCommit("oldCommit"), "acct", "org", "proj")
 	n := []interface{}{n1, n2, oldNode}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
 
@@ -106,14 +100,10 @@ func TestMongoDb_MergeCgForNodes(t *testing.T) {
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 	// Setup nodes
-	n1 := NewNode(1, "pkg", "m", "p", "c", "source", false,
-		getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg", "m", "p", "c", "source", false,
-		getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg", "m", "p", "c", "source", false,
-		getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
-	n4 := NewNode(1, "pkg", "m", "p", "c", "source", false,
-		getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n3 := NewNode(3, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n4 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
 
@@ -289,15 +279,15 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", false,
+	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
+	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", false,
+	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", false,
+	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", false,
+	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -322,15 +312,15 @@ func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", false,
+	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
+	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", false,
+	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", false,
+	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", false,
+	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -376,26 +366,16 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m2", "param", "cls1", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m1", "param", "cls2", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "path.to.pkg2", "m1", "param", "Xyz", "source", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n6 := NewNode(6, "path.to.test2", "m1", "param", "XyzTest", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n7 := NewNode(7, "path.to.test3", "m1", "param", "DefTest", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n8 := NewNode(8, "path.to.src4", "m1", "param", "Ghi", "source", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n9 := NewNode(9, "path.to.test4", "m1", "param", "GhiTest", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n3 := NewNode(3, "pkg2", "m2", "param", "cls1", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n4 := NewNode(4, "pkg2", "m1", "param", "cls2", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n5 := NewNode(5, "path.to.pkg2", "m1", "param", "Xyz", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n6 := NewNode(6, "path.to.test2", "m1", "param", "XyzTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n7 := NewNode(7, "path.to.test3", "m1", "param", "DefTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n8 := NewNode(8, "path.to.src4", "m1", "param", "Ghi", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n9 := NewNode(9, "path.to.test4", "m1", "param", "GhiTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
 
@@ -437,10 +417,8 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
-		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
-		getVCSInfo(), "acct", "org", "proj")
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
 
@@ -476,14 +454,14 @@ func Test_GetTestsToRun_WithNewTests_SameIds(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 	// n3 and n4 have same IDs as n2. They should be ignored
-	n3 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
+	n3 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
+	n4 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4}
 	db.Database.Collection("nodes").InsertMany(ctx, n)

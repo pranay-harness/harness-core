@@ -58,6 +58,7 @@ type Node struct {
 	Class           string    `json:"class" bson:"class"`
 	Type            string    `json:"type" bson:"type"`
 	CallsReflection bool      `json:"callsReflection" bson:"callsReflection"`
+	File            string    `json:"file" bson:"file"`
 	Acct            string    `json:"account" bson:"account"`
 	Proj            string    `json:"project" bson:"project"`
 	Org             string    `json:"organization" bson:"organization"`
@@ -80,7 +81,7 @@ type VCSInfo struct {
 }
 
 // NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
+func NewNode(id int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
 		Id:              id,
 		Package:         pkg,
@@ -93,6 +94,7 @@ func NewNode(id int, pkg, method, params, class, typ string, callsReflection boo
 		Org:             org,
 		Proj:            proj,
 		VCSInfo:         vcs,
+		File:            file,
 	}
 }
 
@@ -430,7 +432,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.CallsReflection, info, account, org, proj)
+		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}
