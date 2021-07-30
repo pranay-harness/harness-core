@@ -78,6 +78,11 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
                 .name("accId_sourcerepo_index")
                 .field(NGTriggerEntityKeys.accountId)
                 .field("metadata.webhook.type")
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("accId_signature_index")
+                .field(NGTriggerEntityKeys.accountId)
+                .field("metadata.buildMetadata.signature")
                 .build())
         .build();
   }
