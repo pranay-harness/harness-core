@@ -157,7 +157,8 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
 
     List<Organization> organizations = getOrganizations(accountIdentifier, 3);
-    when(organizationService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(organizations, 3));
+    when(organizationService.listPermittedOrgs(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(organizations, 3));
 
     Map<String, Integer> projectsCount = new HashMap<>();
     organizations.forEach(organization -> projectsCount.put(organization.getIdentifier(), 3));
@@ -189,7 +190,8 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
 
     List<Organization> organizations = getOrganizations(accountIdentifier, 3);
-    when(organizationService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(organizations, 3));
+    when(organizationService.listPermittedOrgs(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(organizations, 3));
 
     when(projectService.getProjectsCountPerOrganization(eq(accountIdentifier), any())).thenReturn(emptyMap());
 

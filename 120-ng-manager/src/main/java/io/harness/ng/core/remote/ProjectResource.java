@@ -23,11 +23,6 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
-import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
-import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.AccessControlDTO;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
-import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
@@ -38,11 +33,8 @@ import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -55,8 +47,6 @@ import io.swagger.annotations.ApiResponses;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -74,8 +64,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @Api("projects")
@@ -91,8 +81,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @NextGenManagerAuth
 public class ProjectResource {
   private final ProjectService projectService;
-  private final OrganizationService organizationService;
-  private final AccessControlClient accessControlClient;
 
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
@@ -137,18 +125,17 @@ public class ProjectResource {
           SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
-    Set<String> permittedOrgIds = getPermittedOrganizations(accountIdentifier, orgIdentifier);
-    ProjectFilterDTO projectFilterDTO = ProjectFilterDTO.builder()
-                                            .searchTerm(searchTerm)
-                                            .orgIdentifiers(permittedOrgIds)
-                                            .hasModule(hasModule)
-                                            .moduleType(moduleType)
-                                            .identifiers(identifiers)
-                                            .build();
-    Page<ProjectResponse> projects =
-        projectService.list(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO)
-            .map(ProjectMapper::toResponseWrapper);
-    return ResponseDTO.newResponse(getNGPageResponse(projects));
+    ProjectFilterDTO projectFilterDTO =
+        ProjectFilterDTO.builder()
+            .searchTerm(searchTerm)
+            .orgIdentifiers(StringUtils.isNotBlank(orgIdentifier) ? Collections.singleton(orgIdentifier) : null)
+            .hasModule(hasModule)
+            .moduleType(moduleType)
+            .identifiers(identifiers)
+            .build();
+    Page<Project> projects =
+        projectService.listPermittedProjects(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(projects.map(ProjectMapper::toResponseWrapper)));
   }
 
   @PUT
@@ -177,36 +164,5 @@ public class ProjectResource {
           DEFAULT_ORG_IDENTIFIER) @OrgIdentifier String orgIdentifier) {
     return ResponseDTO.newResponse(projectService.delete(
         accountIdentifier, orgIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
-  }
-
-  private Set<String> getPermittedOrganizations(@NotNull String accountIdentifier, String orgIdentifier) {
-    Set<String> orgIdentifiers;
-    if (isEmpty(orgIdentifier)) {
-      Criteria orgCriteria = Criteria.where(OrganizationKeys.accountIdentifier)
-                                 .is(accountIdentifier)
-                                 .and(OrganizationKeys.deleted)
-                                 .ne(Boolean.TRUE);
-      List<Organization> organizations = organizationService.list(orgCriteria);
-      orgIdentifiers = organizations.stream().map(Organization::getIdentifier).collect(Collectors.toSet());
-    } else {
-      orgIdentifiers = Collections.singleton(orgIdentifier);
-    }
-
-    List<PermissionCheckDTO> permissionChecks =
-        orgIdentifiers.stream()
-            .map(oi
-                -> PermissionCheckDTO.builder()
-                       .permission(VIEW_PROJECT_PERMISSION)
-                       .resourceScope(
-                           ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(oi).build())
-                       .resourceType(PROJECT)
-                       .build())
-            .collect(Collectors.toList());
-    AccessCheckResponseDTO accessCheckResponse = accessControlClient.checkForAccess(permissionChecks);
-    return accessCheckResponse.getAccessControlList()
-        .stream()
-        .filter(AccessControlDTO::isPermitted)
-        .map(x -> x.getResourceScope().getOrgIdentifier())
-        .collect(Collectors.toSet());
   }
 }
