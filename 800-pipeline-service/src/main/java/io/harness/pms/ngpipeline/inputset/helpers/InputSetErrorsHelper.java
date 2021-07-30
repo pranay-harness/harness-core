@@ -47,8 +47,8 @@ public class InputSetErrorsHelper {
     }
 
     String errorPipelineYaml = getErrorPipelineYaml(invalidFQNs.keySet(), pipelineYaml);
-    Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap =
-        getUuidToErrorResponseMap(invalidFQNs, InputSetYamlHelper.getInputSetIdentifier(inputSetYaml));
+    Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap = getUuidToErrorResponseMap(
+        invalidFQNs, InputSetYamlHelper.getStringField(inputSetYaml, "identifier", "inputSet"));
     return InputSetErrorWrapperDTOPMS.builder()
         .errorPipelineYaml(errorPipelineYaml)
         .uuidToErrorResponseMap(uuidToErrorResponseMap)
