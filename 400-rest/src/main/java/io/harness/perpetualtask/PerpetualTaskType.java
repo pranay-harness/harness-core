@@ -1,5 +1,9 @@
 package io.harness.perpetualtask;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CDP)
 public final class PerpetualTaskType {
   public static final String K8S_WATCH = "K8S_WATCH";
   public static final String ECS_CLUSTER = "ECS_CLUSTER";
@@ -19,6 +23,9 @@ public final class PerpetualTaskType {
   public static final String MANIFEST_COLLECTION = "MANIFEST_COLLECTION";
   public static final String CONNECTOR_TEST_CONNECTION = "CONNECTOR_TEST_CONNECTION";
   public static final String AZURE_WEB_APP_INSTANCE_SYNC = "AZURE_WEB_APP_INSTANCE_SYNC";
+
+  // NG
+  public static final String K8S_INSTANCE_SYNC = "K8S_INSTANCE_SYNC";
 
   private PerpetualTaskType() {}
 }

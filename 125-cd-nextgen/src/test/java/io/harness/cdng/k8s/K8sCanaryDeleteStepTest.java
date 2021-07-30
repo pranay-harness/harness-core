@@ -21,12 +21,9 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.instance.info.InstanceInfoService;
-import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
-import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -45,7 +42,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
-import java.util.Collections;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +54,6 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(CDP)
 public class K8sCanaryDeleteStepTest extends CategoryTest {
   @Mock private K8sStepHelper k8sStepHelper;
-  @Mock private InstanceInfoService instanceInfoService;
 
   @InjectMocks private K8sCanaryDeleteStep canaryDeleteStep;
 
@@ -130,22 +125,14 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
-    K8sDeployResponse responseData =
-        K8sDeployResponse.builder()
-            .commandExecutionStatus(SUCCESS)
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .k8sNGTaskResponse(K8sCanaryDeployResponse.builder().k8sPodList(Collections.emptyList()).build())
-            .build();
-    StepResponse.StepOutcome stepOutcome = StepResponse.StepOutcome.builder()
-                                               .name(OutcomeExpressionConstants.DEPLOYMENT_INFO_OUTCOME)
-                                               .outcome(DeploymentInfoOutcome.builder().build())
-                                               .build();
-    doReturn(stepOutcome).when(instanceInfoService).saveServerInstancesIntoSweepingOutput(any(), any());
+    K8sDeployResponse responseData = K8sDeployResponse.builder()
+                                         .commandExecutionStatus(SUCCESS)
+                                         .commandUnitsProgress(UnitProgressData.builder().build())
+                                         .build();
 
     StepResponse stepResponse =
         canaryDeleteStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
-    assertThat(stepResponse.getStepOutcomes()).contains(stepOutcome);
   }
 
   @SneakyThrows
