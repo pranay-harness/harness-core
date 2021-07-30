@@ -1,7 +1,10 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 
@@ -50,6 +53,7 @@ import javax.ws.rs.QueryParam;
 @Path("/dash-stats")
 @Produces("application/json")
 @Scope(ResourceType.APPLICATION)
+@OwnedBy(DX)
 public class DashboardStatisticsResource {
   public static final double DEFAULT_PERCENTILE = 95.0D;
 
@@ -251,6 +255,7 @@ public class DashboardStatisticsResource {
 
   @GET
   @Path("service-compare-environment")
+  @ExceptionMetered
   public RestResponse<PageResponse<CompareEnvironmentAggregationInfo>> getCompareServicesByEnvironment(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, @QueryParam("envId1") String envId1,
       @QueryParam("envId2") String envId2, @QueryParam("offset") @DefaultValue("-1") int offset,

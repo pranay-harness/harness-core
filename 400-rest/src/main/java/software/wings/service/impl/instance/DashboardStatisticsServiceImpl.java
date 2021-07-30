@@ -1248,15 +1248,28 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         wingsPersistence.getDatastore(query.getEntityClass())
             .createAggregation(Instance.class)
             .match(query)
+            .group(Group.id(grouping(InstanceKeys.serviceId)),
+                grouping(CompareEnvironmentAggregationInfoKeys.count, accumulator("$sum", 1)),
+                grouping(InstanceKeys.serviceId, first(InstanceKeys.serviceId)),
+                grouping(InstanceKeys.envId, first(InstanceKeys.envId)),
+                grouping(InstanceKeys.lastArtifactBuildNum, first(InstanceKeys.lastArtifactBuildNum)),
+                grouping(InstanceKeys.infraMappingId, first(InstanceKeys.infraMappingId)),
+                grouping(InstanceKeys.lastWorkflowExecutionId, first(InstanceKeys.lastWorkflowExecutionId)),
+                grouping(InstanceKeys.serviceName, first(InstanceKeys.serviceName)),
+                grouping(InstanceKeys.lastWorkflowExecutionName, first(InstanceKeys.lastWorkflowExecutionName)),
+                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)))
             .group(Group.id(grouping(InstanceKeys.serviceId), grouping(InstanceKeys.envId),
                        grouping(InstanceKeys.lastArtifactBuildNum), grouping(InstanceKeys.infraMappingId),
                        grouping(InstanceKeys.lastWorkflowExecutionId)),
                 grouping(InstanceKeys.serviceName, first(InstanceKeys.serviceName)),
                 grouping(InstanceKeys.lastWorkflowExecutionName, first(InstanceKeys.lastWorkflowExecutionName)),
-                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)))
+                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)),
+                grouping(
+                    CompareEnvironmentAggregationInfoKeys.count, first(CompareEnvironmentAggregationInfoKeys.count)))
             .group(Group.id(grouping(InstanceKeys.serviceId, "_id." + InstanceKeys.serviceId)),
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceId, first("_id." + InstanceKeys.serviceId)),
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceName, first(InstanceKeys.serviceName)),
+                grouping(CompareEnvironmentAggregationInfoKeys.count, first("count")),
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceInfoSummaries,
                     grouping("$push", projection(ServiceInfoSummaryKeys.serviceName, InstanceKeys.serviceName),
                         projection(ServiceInfoSummaryKeys.envId, "_id." + InstanceKeys.envId),
@@ -1281,6 +1294,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       responseList.add(CompareEnvironmentAggregationResponseInfo.builder()
                            .serviceId(instanceInfo.getServiceId())
                            .serviceName(instanceInfo.getServiceName())
+                           .count(instanceInfo.getCount())
                            .envInfo(emptyIfNull(instanceInfo.getServiceInfoSummaries())
                                         .stream()
                                         .collect(Collectors.groupingBy(ServiceInfoSummary::getEnvId,
@@ -1315,11 +1329,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private Query<Instance> getQueryForCompareServicesByEnvironment(
       String accountId, String appId, String envId1, String envId2) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.filter(InstanceKeys.accountId, accountId);
+    //   query.filter(InstanceKeys.accountId, accountId);
     query.filter(InstanceKeys.isDeleted, false);
     query.and(query.criteria(InstanceKeys.appId).equal(appId),
-        query.or(query.criteria(InstanceKeys.envId).equal(envId1),
-            query.criteria(InstanceKeys.envId).equal(envId2)));
+        query.or(query.criteria(InstanceKeys.envId).equal(envId1), query.criteria(InstanceKeys.envId).equal(envId2)));
     return query;
   }
 }

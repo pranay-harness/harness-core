@@ -1,5 +1,8 @@
 package software.wings.service.intfc.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 
 import software.wings.beans.infrastructure.instance.Instance;
@@ -19,6 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Serves all the service and infrastructure dashboard related statistics
  * @author rktummala on 08/13/17
  */
+@OwnedBy(DX)
 public interface DashboardStatisticsService {
   /**
    * Gets the total instance summary stats for the given apps.

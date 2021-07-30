@@ -19,6 +19,7 @@ public class CompareEnvironmentAggregationInfo {
   @Id private ID _id;
   private String serviceId;
   private String serviceName;
+  private String count;
   private List<ServiceInfoSummary> serviceInfoSummaries;
 
   @Data
@@ -35,6 +36,7 @@ public class CompareEnvironmentAggregationInfo {
   public static final class CompareEnvironmentAggregationInfoKeys {
     public static final String serviceId = "serviceId";
     public static final String serviceName = "serviceName";
+    public static final String count = "count";
     public static final String serviceInfoSummaries = "serviceInfoSummaries";
   }
 }
