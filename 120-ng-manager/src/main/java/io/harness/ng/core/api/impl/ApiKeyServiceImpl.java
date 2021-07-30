@@ -73,6 +73,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public ApiKeyDTO createApiKey(ApiKeyDTO apiKeyDTO) {
     validateApiKeyRequest(
         apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier());
+    validateApiKeyLimit(apiKeyDTO.getAccountIdentifier());
     Optional<ApiKey> optionalApiKey =
         apiKeyRepository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
@@ -96,6 +97,9 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
     }
+  }
+
+  private void validateApiKeyLimit(String accountIdentifier) {
     ServiceAccountConfig serviceAccountConfig = accountService.getAccount(accountIdentifier).getServiceAccountConfig();
     long apiKeyLimit = serviceAccountConfig != null ? serviceAccountConfig.getApiKeyLimit() : DEFAULT_API_KEY_LIMIT;
     long existingAPIKeyCount = apiKeyRepository.count();
