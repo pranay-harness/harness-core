@@ -74,6 +74,16 @@ public class TokenServiceImpl implements TokenService {
   public String createToken(TokenDTO tokenDTO) {
     validateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
         tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
+    Optional<Token> optionalToken =
+        tokenRepository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+                tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
+                tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier(),
+                tokenDTO.getIdentifier());
+    if (optionalToken.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Duplicate token present in API Key for identifier: " + tokenDTO.getIdentifier()));
+    }
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder($2A, 10);
     String tokenString = passwordEncoder.encode(randomString);
