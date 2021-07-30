@@ -247,6 +247,31 @@ public class TerragruntProvisionTaskHelperTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
+  public void testDownloadTfStateFileForRemoteStateFile() throws IOException {
+    TerragruntProvisionParameters provisionParameters = TerragruntProvisionParameters.builder()
+                                                            .workspace("default")
+                                                            .currentStateFileId("stateFileId")
+                                                            .accountId(ACCOUNT_ID)
+                                                            .build();
+
+    InputStream fileContent = IOUtils.toInputStream("", Charset.defaultCharset());
+    doReturn(fileContent).when(delegateFileManager).downloadByFileId(any(), any(), any());
+
+    File tfStateFile = Paths
+                           .get(TERRAFORM_CONFIG_FILE_DIRECTORY,
+                               format(WORKSPACE_STATE_FILE_PATH_FORMAT, provisionParameters.getWorkspace()))
+                           .toFile();
+
+    terragruntProvisionTaskHelper.downloadTfStateFile(provisionParameters, "configFileDirectory");
+    verify(delegateFileManager)
+        .downloadByFileId(
+            TERRAFORM_STATE, provisionParameters.getCurrentStateFileId(), provisionParameters.getAccountId());
+    assertThat(tfStateFile).doesNotExist();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
   public void testGetTargetArgs() {
     List<String> targets = asList("target1", "target2");
     assertThat(terragruntProvisionTaskHelper.getTargetArgs(emptyList())).isEqualTo("");
