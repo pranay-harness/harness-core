@@ -36,7 +36,7 @@ public class PMSInputSetElementMapper {
         .build();
   }
   public InputSetEntity toInputSetEntity(String accountId, String yaml) {
-    String topKey = InputSetYamlHelper.getTopKey(yaml);
+    String topKey = InputSetYamlHelper.getRootNodeOfInputSetYaml(yaml);
     String orgIdentifier = InputSetYamlHelper.getStringField(yaml, "orgIdentifier", topKey);
     String projectIdentifier = InputSetYamlHelper.getStringField(yaml, "projectIdentifier", topKey);
     if (topKey.equals("inputSet")) {
