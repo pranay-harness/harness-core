@@ -1,13 +1,16 @@
-PROJECTS="ART|BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|FFM|OPS|PIP|PL|SEC|SWAT|GTM|ONP|ART"
+#!/bin/bash
 
-KEY=`git log --pretty=oneline --abbrev-commit -1 |\
-  grep -o -iE "\[(${PROJECTS})-[0-9]+]:" | grep -o -iE "(${PROJECTS})-[0-9]+"`
+set +e
 
-if [ -z "$KEY" ]; then
-  KEY=`git rev-parse --abbrev-ref HEAD | grep -o -iE "(${PROJECTS})-[0-9]+"`
+PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PIP|PL|SEC|SWAT|GTM|FFM|ONP|LWG|ART"
+
+# Check commit message if there's a single commit
+if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then
+    ghprbPullTitle=$(git log -1 --format="%s" $ghprbActualCommit)
 fi
+KEY=`echo "${ghprbPullTitle}" | grep -o -iE "\[(${PROJECTS})-[0-9]+]:" | grep -o -iE "(${PROJECTS})-[0-9]+"`
 
-echo $KEY
+echo "JIRA Key is : $KEY "
 
 jira_response=`curl -X GET -H "Content-Type: application/json" https://harness.atlassian.net/rest/api/2/issue/${KEY}?fields=issuetype,customfield_10687,customfield_10709,customfield_10748,customfield_10763,customfield_10785 --user $JIRA_USERNAME:$JIRA_PASSWORD`
 
@@ -56,3 +59,5 @@ then
       fi
       exit 1
 fi
+
+echo "JIRA Key is : $KEY is having all the mandatory details"
