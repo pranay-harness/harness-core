@@ -90,7 +90,6 @@ if [[ "$OSTYPE" == linux* ]]; then
     export OVERRIDE_TMP_PROPS="-Djava.io.tmpdir=$DIR/tmp"
     echo $OVERRIDE_TMP_PROPS
     export JAVA_OPTS
-    echo $JAVA_OPTS
   fi
 fi
 
@@ -248,3 +247,4 @@ else
   fi
 fi ) 2>&1 | tee -a logs/log_clean.log && sed '/######################################################################## 100.0%/d' logs/log_clean.log >> logs/startscript.log
 rm logs/log_clean.log
+echo $JAVA_OPTS
