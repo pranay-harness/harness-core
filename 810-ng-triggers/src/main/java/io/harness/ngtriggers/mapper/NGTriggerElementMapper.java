@@ -177,22 +177,20 @@ public class NGTriggerElementMapper {
 
   public NGTriggerEntity toTriggerEntity(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, NGTriggerConfigV2 config, String yaml) {
-    NGTriggerEntityBuilder entityBuilder =
-        NGTriggerEntity.builder()
-            .name(config.getName())
-            .identifier(config.getIdentifier())
-            .description(config.getDescription())
-            .yaml(yaml)
-            .type(config.getSource().getType())
-            .accountId(accountIdentifier)
-            .orgIdentifier(orgIdentifier)
-            .projectIdentifier(projectIdentifier)
-            .targetIdentifier(config.getPipelineIdentifier())
-            .targetType(TargetType.PIPELINE)
-            .metadata(toMetadata(config.getSource()))
-            .enabled(config.getEnabled())
-            .autoRegister(config.getAutoRegister() != null && config.getAutoRegister())
-            .tags(TagMapper.convertToList(config.getTags()));
+    NGTriggerEntityBuilder entityBuilder = NGTriggerEntity.builder()
+                                               .name(config.getName())
+                                               .identifier(config.getIdentifier())
+                                               .description(config.getDescription())
+                                               .yaml(yaml)
+                                               .type(config.getSource().getType())
+                                               .accountId(accountIdentifier)
+                                               .orgIdentifier(orgIdentifier)
+                                               .projectIdentifier(projectIdentifier)
+                                               .targetIdentifier(config.getPipelineIdentifier())
+                                               .targetType(TargetType.PIPELINE)
+                                               .metadata(toMetadata(config.getSource()))
+                                               .enabled(config.getEnabled())
+                                               .tags(TagMapper.convertToList(config.getTags()));
     if (config.getSource().getType() == NGTriggerType.SCHEDULED) {
       entityBuilder.nextIterations(new ArrayList<>());
     }
