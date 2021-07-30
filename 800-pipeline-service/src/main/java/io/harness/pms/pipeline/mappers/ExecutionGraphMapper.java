@@ -13,7 +13,7 @@ import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.PlanExecutionUtils;
-import io.harness.pms.utils.PmsExecutionUtils;
+import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -33,10 +33,10 @@ public class ExecutionGraphMapper {
         .failureInfo(graphVertex.getFailureInfo())
         .skipInfo(graphVertex.getSkipInfo())
         .nodeRunInfo(graphVertex.getNodeRunInfo())
-        .stepParameters(PmsExecutionUtils.extractToOrchestrationMap(graphVertex.getStepParameters()))
+        .stepParameters(graphVertex.getStepParameters())
         .name(graphVertex.getName())
         .baseFqn(basefqn)
-        .outcomes(PmsExecutionUtils.convertToOrchestrationMap(graphVertex.getOutcomes()))
+        .outcomes(OrchestrationMapBackwardCompatibilityUtils.convertToOrchestrationMap(graphVertex.getOutcomes()))
         .startTs(graphVertex.getStartTs())
         .endTs(graphVertex.getEndTs())
         .identifier(graphVertex.getIdentifier())
@@ -46,7 +46,7 @@ public class ExecutionGraphMapper {
         .setupId(graphVertex.getPlanNodeId())
         .executableResponses(graphVertex.getExecutableResponses())
         .unitProgresses(graphVertex.getUnitProgresses())
-        .progressData(PmsExecutionUtils.extractToOrchestrationMap(graphVertex.getProgressData()))
+        .progressData(graphVertex.getProgressData())
         .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
         .interruptHistories(graphVertex.getInterruptHistories())
         .stepDetails(graphVertex.getStepDetails())
