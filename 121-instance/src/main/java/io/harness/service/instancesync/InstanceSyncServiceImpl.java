@@ -70,8 +70,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
                InstanceSyncConstants.INSTANCE_SYNC_LOCK_TIMEOUT, InstanceSyncConstants.INSTANCE_SYNC_WAIT_TIMEOUT)) {
         InfrastructureMappingDTO infrastructureMappingDTO = deploymentSummaryDTO.getInfrastructureMapping();
         AbstractInstanceSyncHandler abstractInstanceSyncHandler =
-            instanceSyncHandlerFactoryService.getInstanceSyncHandler(
-                infrastructureMappingDTO.getInfrastructureMappingType());
+            instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureMappingDTO.getInfrastructureKind());
 
         // check if existing instance sync perpetual task info record exists or not for incoming infrastructure mapping
         Optional<InstanceSyncPerpetualTaskInfoDTO> instanceSyncPerpetualTaskInfoDTOOptional =
@@ -182,8 +181,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
       InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO,
       InfrastructureMappingDTO infrastructureMappingDTO, List<ServerInstanceInfo> serverInstanceInfoList,
       boolean isNewDeploymentSync) {
-    AbstractInstanceSyncHandler instanceSyncHandler = instanceSyncHandlerFactoryService.getInstanceSyncHandler(
-        infrastructureMappingDTO.getInfrastructureMappingType());
+    AbstractInstanceSyncHandler instanceSyncHandler =
+        instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureMappingDTO.getInfrastructureKind());
     List<InstanceDTO> instancesInDB = instanceService.getActiveInstancesByInfrastructureMappingId(
         infrastructureMappingDTO.getAccountIdentifier(), infrastructureMappingDTO.getOrgIdentifier(),
         infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getId(), System.currentTimeMillis());
@@ -450,7 +449,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
             .instanceType(abstractInstanceSyncHandler.getInstanceType())
             .instanceKey(abstractInstanceSyncHandler.getInstanceKey(instanceInfoDTO))
             .primaryArtifact(deploymentSummaryDTO.getArtifactDetails())
-            .infraMappingType(infrastructureMappingDTO.getInfrastructureMappingType())
+            .infraMappingType(infrastructureMappingDTO.getInfrastructureKind())
             .connectorRef(infrastructureMappingDTO.getConnectorRef())
             .lastPipelineExecutionName(deploymentSummaryDTO.getPipelineExecutionName())
             .lastDeployedByName(deploymentSummaryDTO.getDeployedByName())
