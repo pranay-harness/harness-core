@@ -19,7 +19,7 @@ then
      ;;
      "CCE") export HARNESS_TEAM="CE"
      ;;
-     "PIP") export HARNESS_TEAM="PIPELINE"
+     "PIE") export HARNESS_TEAM="PIPELINE"
      ;;
      "CCM") export HARNESS_TEAM="CE"
      ;;
