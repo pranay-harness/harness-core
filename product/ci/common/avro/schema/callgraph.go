@@ -100,5 +100,5 @@ type _bintree_t struct {
 }
 
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
-	"callgraph.avsc": &_bintree_t{callgraph_avsc, map[string]*_bintree_t{}},
+	"callgraph.avsc": {callgraph_avsc, map[string]*_bintree_t{}},
 }}

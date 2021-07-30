@@ -7,6 +7,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -37,6 +38,7 @@ func TestMain(m *testing.M) {
 	}
 	os.Exit(m.Run())
 }
+
 
 func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 	ctx := context.Background()
@@ -488,6 +490,89 @@ func Test_GetTestsToRun_WithNewTests_SameIds(t *testing.T) {
 	assert.Equal(t, resp.SelectedTests, 0) // don't factor in new tests here. they will be upserted after uploading of PCG
 	assert.Equal(t, resp.SrcCodeTests, 0)
 	assert.Equal(t, resp.UpdatedTests, 0)
+}
+
+func Test_GetTestsToRun_WithResources_PartialSelection(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	// Insert source and tests
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n3 := NewNode(3, "path.to.test2", "m3", "param", "XyzTest", "test", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	// n3 and n4 have same IDs as n2. They should be ignored
+	n4 := NewNode(4, "", "", "", "", "resource", "abc.json", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n := []interface{}{n1, n2, n3, n4}
+	db.Database.Collection("nodes").InsertMany(ctx, n)
+
+	// Add relation between them
+	r1 := NewRelation(1, []int{2}, getVCSInfo(), "acct", "org", "proj")
+	r2 := NewRelation(4, []int{3}, getVCSInfo(), "acct", "org", "proj")
+	db.Database.Collection("relations").InsertMany(ctx, []interface{}{r1, r2})
+
+	chFiles := []types.File{{Name: "src/test/resources/data/abc.json", Status: types.FileModified},
+		{Name: "src/test/resources/different/path/abc.json", Status: types.FileModified},
+		{Name: "src/main/java/path/to/pkg/Abc.java", Status: types.FileModified},
+		{Name: "src/abc.xml", Status: types.FileModified}}
+	ticonfig := types.TiConfig{}
+	ticonfig.Config.Ignore = []string{"**/*.xml"}
+
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct", false)
+	assert.Nil(t, err)
+	assert.Equal(t, resp.SelectAll, false)
+	assert.Equal(t, resp.TotalTests, 2)    // new tests will get factored after CG
+	assert.Equal(t, resp.SelectedTests, 2) // don't factor in new tests here. they will be upserted after uploading of PCG
+	assert.Equal(t, resp.SrcCodeTests, 2)
+	assert.Equal(t, resp.UpdatedTests, 0)
+}
+
+func Test_GetTestsToRun_WithResources_FullSelection(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	// Insert source and tests
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n3 := NewNode(3, "path.to.test2", "m3", "param", "XyzTest", "test", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	// n3 and n4 have same IDs as n2. They should be ignored
+	n4 := NewNode(4, "", "", "", "", "resource", "abc.json", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n5 := NewNode(5, "path.to.another.test", "m2", "param", "XyzTest", "test", "", false,
+		getVCSInfo(), "acct", "org", "proj")
+	n := []interface{}{n1, n2, n3, n4, n5}
+	db.Database.Collection("nodes").InsertMany(ctx, n)
+
+	// Add relation between them
+	r1 := NewRelation(1, []int{2}, getVCSInfo(), "acct", "org", "proj")
+	r2 := NewRelation(4, []int{3}, getVCSInfo(), "acct", "org", "proj")
+	db.Database.Collection("relations").InsertMany(ctx, []interface{}{r1, r2})
+
+	chFiles := []types.File{{Name: "src/test/resources/data/abc.json", Status: types.FileModified},
+		{Name: "src/test/resources/different/path/abc.json", Status: types.FileModified},
+		{Name: "src/main/java/path/to/pkg/Abc.java", Status: types.FileModified},
+		{Name: "src/test/resources/different/path/abc2.json", Status: types.FileModified}}
+
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct", false)
+	assert.Nil(t, err)
+	assert.Equal(t, resp.SelectAll, true)
+	assert.Equal(t, resp.TotalTests, 3)    // new tests will get factored after CG
+	assert.Equal(t, resp.SelectedTests, 3) // don't factor in new tests here. they will be upserted after uploading of PCG
+	assert.Equal(t, resp.SrcCodeTests, 3)
+	assert.Equal(t, resp.UpdatedTests, 0)
+
 }
 
 func filterRelations(src int, relations []Relation) Relation {
