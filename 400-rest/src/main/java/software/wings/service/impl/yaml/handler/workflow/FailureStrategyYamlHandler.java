@@ -104,6 +104,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
         .specificSteps(bean.getSpecificSteps())
         .actionAfterTimeout(actionAfterTimeout)
         .manualInterventionTimeout(bean.getManualInterventionTimeout())
+        .rollbackPreDeploymentStepsAtEnd(bean.getRollbackPreDeploymentStepsAtEnd())
         .build();
   }
 
