@@ -1313,60 +1313,6 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(delegateGroup.getIdentifier()).isEqualTo("_name1");
   }
 
-  @Test
-  @Owner(developers = BOJAN)
-  @Category(UnitTests.class)
-  public void ngDelegateShouldMismatchTrue() {
-    Delegate delegate = createDelegateBuilder().build();
-    delegate.setNg(true);
-    persistence.save(delegate);
-
-    when(delegateCache.get(ACCOUNT_ID, delegate.getUuid(), false)).thenReturn(delegate);
-
-    boolean mismatch = delegateService.checkMismatch(ACCOUNT_ID, delegate.getUuid(), false);
-
-    assertThat(mismatch).isTrue();
-  }
-
-  @Test
-  @Owner(developers = BOJAN)
-  @Category(UnitTests.class)
-  public void ngDelegateShouldMismatchFalse() {
-    Delegate delegate = createDelegateBuilder().build();
-    delegate.setNg(true);
-    persistence.save(delegate);
-    boolean mismatch = delegateService.checkMismatch(ACCOUNT_ID, delegate.getUuid(), true);
-
-    assertThat(mismatch).isFalse();
-  }
-
-  @Test
-  @Owner(developers = BOJAN)
-  @Category(UnitTests.class)
-  public void cgDelegateShouldMismatchTrue() {
-    Delegate delegate = createDelegateBuilder().build();
-    delegate.setNg(false);
-    persistence.save(delegate);
-
-    when(delegateCache.get(ACCOUNT_ID, delegate.getUuid(), false)).thenReturn(delegate);
-
-    boolean mismatch = delegateService.checkMismatch(ACCOUNT_ID, delegate.getUuid(), true);
-
-    assertThat(mismatch).isTrue();
-  }
-
-  @Test
-  @Owner(developers = BOJAN)
-  @Category(UnitTests.class)
-  public void cgDelegateShouldMismatchFalse() {
-    Delegate delegate = createDelegateBuilder().build();
-    delegate.setNg(false);
-    persistence.save(delegate);
-    boolean mismatch = delegateService.checkMismatch(ACCOUNT_ID, delegate.getUuid(), false);
-
-    assertThat(mismatch).isFalse();
-  }
-
   private List<String> setUpDelegatesForInitializationTest() {
     List<String> delegateIds = new ArrayList<>();
 

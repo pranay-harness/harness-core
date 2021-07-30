@@ -145,8 +145,6 @@ public interface DelegateService extends OwnedByAccount {
 
   boolean filter(String accountId, String delegateId);
 
-  boolean checkMismatch(String accountId, String delegateId, boolean isNg);
-
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
 
   Delegate handleEcsDelegateRequest(Delegate delegate);
