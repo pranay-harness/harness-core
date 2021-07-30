@@ -79,8 +79,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
                 apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier(),
                 apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier(), apiKeyDTO.getIdentifier());
-    Preconditions.checkState(
-        !optionalApiKey.isPresent(), "Duplicate api key present in scope for identifier: " + apiKeyDTO.getIdentifier());
+    if (optionalApiKey.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Duplicate api key present in scope for identifier: " + apiKeyDTO.getIdentifier()));
+    }
     ApiKey apiKey = ApiKeyDTOMapper.getApiKeyFromDTO(apiKeyDTO);
     validate(apiKey);
     return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {

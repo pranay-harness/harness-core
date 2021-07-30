@@ -16,6 +16,7 @@ import io.harness.NgManagerTestBase;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.api.ApiKeyService;
@@ -89,7 +90,7 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
         .getAccount(any());
 
     assertThatThrownBy(() -> apiKeyService.createApiKey(apiKeyDTO))
-        .isInstanceOf(IllegalStateException.class)
+        .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Duplicate api key present in scope for identifier: " + identifier);
   }
 
