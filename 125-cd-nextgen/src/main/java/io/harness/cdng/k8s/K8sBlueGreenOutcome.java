@@ -17,10 +17,10 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sBlueGreenOutcome")
 @JsonTypeName("k8sBlueGreenOutcome")
 public class K8sBlueGreenOutcome implements Outcome, ExecutionSweepingOutput {
-  private int releaseNumber;
-  private String releaseName;
-  private String primaryServiceName;
-  private String stageServiceName;
-  private String stageColor;
-  private String primaryColor;
+  int releaseNumber;
+  String releaseName;
+  String primaryServiceName;
+  String stageServiceName;
+  String stageColor;
+  String primaryColor;
 }

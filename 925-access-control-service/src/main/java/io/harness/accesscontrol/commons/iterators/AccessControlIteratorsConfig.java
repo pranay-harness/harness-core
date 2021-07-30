@@ -16,4 +16,5 @@ public class AccessControlIteratorsConfig {
   IteratorConfig userIteratorConfig;
   IteratorConfig serviceAccountIteratorConfig;
   IteratorConfig supportPreferenceIteratorConfig;
+  IteratorConfig scopeIteratorConfig;
 }

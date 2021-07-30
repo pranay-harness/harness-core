@@ -17,6 +17,10 @@ import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ff.FeatureFlagService;
@@ -74,6 +78,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Created by anubhaw on 4/4/16.
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @ValidateOnExecution
 @Singleton
 @Slf4j

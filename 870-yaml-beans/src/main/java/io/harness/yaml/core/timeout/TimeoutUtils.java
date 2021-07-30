@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.timeout.TimeoutParameters;
 
 import java.util.concurrent.TimeUnit;
 import lombok.experimental.UtilityClass;
@@ -11,8 +12,6 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(PIPELINE)
 public class TimeoutUtils {
-  public static final String DEFAULT_TIMEOUT = "10h";
-
   public long getTimeoutInSeconds(Timeout timeout, long defaultTimeoutInSeconds) {
     if (timeout == null) {
       return defaultTimeoutInSeconds;
@@ -29,7 +28,7 @@ public class TimeoutUtils {
   }
 
   public String getTimeoutString(ParameterField<Timeout> timeout) {
-    String timeoutString = DEFAULT_TIMEOUT;
+    String timeoutString = TimeoutParameters.DEFAULT_TIMEOUT_STRING;
     if (!ParameterField.isNull(timeout)) {
       if (timeout.isExpression()) {
         timeoutString = timeout.getExpressionValue();
@@ -42,7 +41,7 @@ public class TimeoutUtils {
 
   public ParameterField<Timeout> getTimeout(ParameterField<Timeout> timeout) {
     if (ParameterField.isNull(timeout)) {
-      return ParameterField.createValueField(Timeout.fromString(DEFAULT_TIMEOUT));
+      return ParameterField.createValueField(Timeout.fromString(TimeoutParameters.DEFAULT_TIMEOUT_STRING));
     }
     return timeout;
   }

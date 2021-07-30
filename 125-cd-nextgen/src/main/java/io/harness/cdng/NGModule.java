@@ -17,6 +17,8 @@ import io.harness.cdng.buckets.resources.s3.S3ResourceService;
 import io.harness.cdng.buckets.resources.s3.S3ResourceServiceImpl;
 import io.harness.cdng.buckets.resources.service.GcsResourceService;
 import io.harness.cdng.buckets.resources.service.GcsResourceServiceImpl;
+import io.harness.cdng.instance.info.InstanceInfoService;
+import io.harness.cdng.instance.info.InstanceInfoServiceImpl;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.k8s.resources.gcp.service.GcpResourceService;
@@ -56,5 +58,6 @@ public class NGModule extends AbstractModule {
     bind(GcpResourceService.class).to(GcpResourceServiceImpl.class);
     bind(S3ResourceService.class).to(S3ResourceServiceImpl.class);
     bind(GcsResourceService.class).to(GcsResourceServiceImpl.class);
+    bind(InstanceInfoService.class).to(InstanceInfoServiceImpl.class);
   }
 }

@@ -1,13 +1,10 @@
 package io.harness.accesscontrol.resources.resourcegroups;
 
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ACCOUNT_LEVEL_PARAM_NAME;
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ORG_LEVEL_PARAM_NAME;
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.PROJECT_LEVEL_PARAM_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.core.ScopeParams;
-import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.client.NGRestUtils;
@@ -34,7 +31,6 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
   private final ResourceGroupClient resourceGroupClient;
   private final ResourceGroupFactory resourceGroupFactory;
   private final ResourceGroupService resourceGroupService;
-  private final ScopeParamsFactory scopeParamsFactory;
 
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the resource group with the given identifier on attempt %s",
@@ -43,22 +39,19 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
 
   @Inject
   public HarnessResourceGroupServiceImpl(@Named("PRIVILEGED") ResourceGroupClient resourceGroupClient,
-      ResourceGroupFactory resourceGroupFactory, ResourceGroupService resourceGroupService,
-      ScopeParamsFactory scopeParamsFactory) {
+      ResourceGroupFactory resourceGroupFactory, ResourceGroupService resourceGroupService) {
     this.resourceGroupClient = resourceGroupClient;
     this.resourceGroupFactory = resourceGroupFactory;
     this.resourceGroupService = resourceGroupService;
-    this.scopeParamsFactory = scopeParamsFactory;
   }
 
   @Override
   public void sync(String identifier, Scope scope) {
-    ScopeParams scopeParams = scopeParamsFactory.buildScopeParams(scope);
+    HarnessScopeParams scopeParams = ScopeMapper.toParams(scope);
     try {
       Optional<ResourceGroupResponse> resourceGroupResponse = Failsafe.with(retryPolicy).get(() -> {
         ResourceGroupResponse response = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(identifier,
-            scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME), scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
-            scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME)));
+            scopeParams.getAccountIdentifier(), scopeParams.getOrgIdentifier(), scopeParams.getProjectIdentifier()));
         return Optional.ofNullable(response);
       });
       if (resourceGroupResponse.isPresent()) {

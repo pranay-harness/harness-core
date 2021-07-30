@@ -216,11 +216,11 @@ logging:
       stackdriverLogEnabled: false
     - type: file
       threshold: TRACE
-      currentLogFilename: portal.log
+      currentLogFilename: delegate-service.log
       archive: true
       archivedFileCount: 15
       maxFileSize: 150MB
-      archivedLogFilenamePattern: portal.%d.%i.log
+      archivedLogFilenamePattern: delegate-service.%d.%i.log
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
 
 timescaledb:
@@ -570,9 +570,6 @@ ngManagerServiceHttpClientConfig:
   readTimeOutSeconds: 15
   enableHttpLogging: true
 
-cvngClientConfig:
-  baseUrl: https://localhost:6060/cv/
-  cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 eventsFramework:
   redis:

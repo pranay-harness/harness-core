@@ -18,7 +18,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.manifest.yaml.GitStoreDTO;
 import io.harness.cdng.provision.terraform.TerraformConfig;
 import io.harness.cdng.provision.terraform.TerraformConfigDAL;
@@ -41,6 +40,7 @@ import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
+import io.harness.steps.StepHelper;
 import io.harness.steps.StepUtils;
 
 import java.util.Collections;

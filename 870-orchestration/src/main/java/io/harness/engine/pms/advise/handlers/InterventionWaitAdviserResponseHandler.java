@@ -18,14 +18,12 @@ import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.registries.timeout.TimeoutRegistry;
-import io.harness.serializer.KryoSerializer;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.TimeoutInstance;
 import io.harness.timeout.TimeoutParameters;
 import io.harness.timeout.TimeoutTracker;
 import io.harness.timeout.TimeoutTrackerFactory;
-import io.harness.timeout.contracts.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
@@ -41,7 +39,6 @@ import java.util.concurrent.TimeUnit;
 public class InterventionWaitAdviserResponseHandler implements AdviserResponseHandler {
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutRegistry timeoutRegistry;
   @Inject private TimeoutEngine timeoutEngine;
 
@@ -52,17 +49,13 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
     timeoutEngine.deleteTimeouts(nodeExecution.getTimeoutInstanceIds());
     TimeoutCallback timeoutCallback =
         new InterventionWaitTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
-    TimeoutObtainment timeoutObtainment =
-        TimeoutObtainment.newBuilder()
-            .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-            .setParameters(ByteString.copyFrom(
-                kryoSerializer.asBytes(AbsoluteTimeoutParameters.builder()
-                                           .timeoutMillis(getTimeoutInMillis(interventionWaitAdvise.getTimeout()))
-                                           .build())))
-            .build();
-    TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(timeoutObtainment.getDimension());
-    TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
-        (TimeoutParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray()));
+    TimeoutTrackerFactory<AbsoluteTimeoutParameters> timeoutTrackerFactory =
+        (TimeoutTrackerFactory<AbsoluteTimeoutParameters>) timeoutRegistry.obtain(
+            AbsoluteTimeoutTrackerFactory.DIMENSION);
+    TimeoutTracker timeoutTracker =
+        timeoutTrackerFactory.create(AbsoluteTimeoutParameters.builder()
+                                         .timeoutMillis(getTimeoutInMillis(interventionWaitAdvise.getTimeout()))
+                                         .build());
     TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
 
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), INTERVENTION_WAITING,

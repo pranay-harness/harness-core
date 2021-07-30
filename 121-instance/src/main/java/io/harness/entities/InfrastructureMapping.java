@@ -45,7 +45,6 @@ public class InfrastructureMapping {
   private String infrastructureMappingType;
   private String connectorRef;
   private String envId;
-  private String deploymentType;
   private String serviceId;
   @FdUniqueIndex private String infrastructureKey;
 }

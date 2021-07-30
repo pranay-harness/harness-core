@@ -31,6 +31,8 @@ public class NGRegexValidatorConstantsTest {
     assertTrue(pattern.matcher("<+input>").matches());
     assertTrue(pattern.matcher("<+input>.allowedValues()").matches());
     assertTrue(pattern.matcher("<+input>.regex()").matches());
+    assertTrue(pattern.matcher("<+2+8>s").matches());
+    assertTrue(pattern.matcher("<+random>").matches());
 
     // Invalid cases
     assertFalse(pattern.matcher("1m  20s").matches());
@@ -43,7 +45,6 @@ public class NGRegexValidatorConstantsTest {
     assertFalse(pattern.matcher("1m ").matches());
     assertFalse(pattern.matcher("1 m").matches());
     assertFalse(pattern.matcher("1a").matches());
-    assertFalse(pattern.matcher("<+random>").matches());
     assertFalse(pattern.matcher("random").matches());
   }
 }

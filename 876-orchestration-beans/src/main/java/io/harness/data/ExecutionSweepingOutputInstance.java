@@ -1,6 +1,6 @@
 package io.harness.data;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import static java.time.Duration.ofDays;
 
@@ -15,7 +15,7 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.output.PmsSweepingOutput;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -37,7 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Value
 @Builder
 @Entity(value = "executionSweepingOutput", noClassnameStored = true)
@@ -66,16 +66,16 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   String levelRuntimeIdIdx;
 
   @Deprecated Map<String, Object> value; // use valueOutput instead
-  OrchestrationMap valueOutput;
+  PmsSweepingOutput valueOutput;
   @Wither @CreatedDate Long createdAt;
 
   @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   @Wither @Version Long version;
 
-  public String getOutputValue() {
+  public String getOutputValueJson() {
     if (!EmptyPredicate.isEmpty(valueOutput)) {
-      return RecastOrchestrationUtils.toJson(valueOutput);
+      return valueOutput.toJson();
     }
 
     return RecastOrchestrationUtils.toJson(value);

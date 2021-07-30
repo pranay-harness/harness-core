@@ -2,7 +2,9 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.EntityType;
 
@@ -15,6 +17,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "ArtifactSelectionKeys")
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerArtifactVariable {
   @NotEmpty private String variableName;
 
@@ -23,28 +26,4 @@ public class TriggerArtifactVariable {
   private transient String entityName;
 
   private TriggerArtifactSelectionValue variableValue;
-
-  //  @Data
-  //  @NoArgsConstructor
-  //  @EqualsAndHashCode(callSuper = true)
-  //  public static final class Yaml extends BaseYaml {
-  //    String type;
-  //    private String artifactStreamName;
-  //    private boolean regex;
-  //    private String artifactFilter;
-  //    String workflowName;
-  //    String serviceName;
-  //
-  //    @lombok.Builder
-  //    public Yaml(String type, String artifactStreamName, String workflowName, String artifactFilter, String
-  //    serviceName,
-  //        boolean regex) {
-  //      this.artifactStreamName = artifactStreamName;
-  //      this.workflowName = workflowName;
-  //      this.artifactFilter = artifactFilter;
-  //      this.type = type;
-  //      this.regex = regex;
-  //      this.serviceName = serviceName;
-  //    }
-  //  }
 }

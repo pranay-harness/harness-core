@@ -14,7 +14,7 @@ import java.util.Map;
 public class OrchestrationMap extends LinkedHashMap<String, Object> implements Map<String, Object> {
   public OrchestrationMap() {}
 
-  private OrchestrationMap(Map<String, Object> map) {
+  protected OrchestrationMap(Map<String, Object> map) {
     super(map);
   }
 

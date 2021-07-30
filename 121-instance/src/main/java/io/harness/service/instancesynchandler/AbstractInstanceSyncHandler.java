@@ -2,8 +2,8 @@ package io.harness.service.instancesynchandler;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
-import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.dtos.InstanceDTO;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 import io.harness.dtos.instanceinfo.InstanceInfoDTO;
@@ -20,12 +20,16 @@ public abstract class AbstractInstanceSyncHandler implements IInstanceSyncHandle
    */
   public abstract String getPerpetualTaskType();
 
-  /**
-   * Return informative textual description based on the deployment type for the perpetual task
-   */
-  public abstract String getPerpetualTaskDescription(InfrastructureMappingDTO infrastructureMappingDTO);
-
   public abstract InstanceType getInstanceType();
+
+  /**
+   * Refer {@link software.wings.beans.InfrastructureMappingType}
+   * Need to do similar mapping in NG
+   */
+  public abstract String getInfrastructureMappingType();
+
+  public abstract DeploymentInfoDTO getDeploymentInfo(
+      InfrastructureOutcome infrastructureOutcome, List<ServerInstanceInfo> serverInstanceInfoList);
 
   protected abstract InstanceInfoDTO getInstanceInfoForServerInstance(ServerInstanceInfo serverInstanceInfo);
 

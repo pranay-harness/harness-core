@@ -35,6 +35,7 @@ import io.harness.ng.cdOverview.dto.DeploymentStatusInfoList;
 import io.harness.ng.cdOverview.dto.EntityStatusDetails;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfo;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
+import io.harness.ng.cdOverview.dto.EnvIdCountPair;
 import io.harness.ng.cdOverview.dto.ExecutionDeployment;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
 import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
@@ -1241,18 +1242,22 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public ActiveServiceInstanceSummary getActiveServiceInstanceSummary(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     final long currentTime = getCurrentTime();
+
+    InstanceCountDetailsByEnvTypeBase defaultInstanceCountDetails =
+        InstanceCountDetailsByEnvTypeBase.builder().envTypeVsInstanceCountMap(new HashMap<>()).build();
+
     InstanceCountDetailsByEnvTypeBase currentCountDetails =
         instanceDashboardService
             .getActiveServiceInstanceCountBreakdown(
                 accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), currentTime)
             .getInstanceCountDetailsByEnvTypeBaseMap()
-            .get(serviceId);
+            .getOrDefault(serviceId, defaultInstanceCountDetails);
     InstanceCountDetailsByEnvTypeBase prevCountDetails =
         instanceDashboardService
             .getActiveServiceInstanceCountBreakdown(
                 accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), timestampInMs)
             .getInstanceCountDetailsByEnvTypeBaseMap()
-            .get(serviceId);
+            .getOrDefault(serviceId, defaultInstanceCountDetails);
 
     double changeRate =
         calculateChangeRate(prevCountDetails.getTotalInstances(), currentCountDetails.getTotalInstances());
@@ -1273,7 +1278,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
 
     final String query =
-        "select reportedat, SUM(instancecount) as count from instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat order by reportedat asc";
+        "select reportedat, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat order by reportedat asc";
 
     int totalTries = 0;
     boolean successfulOperation = false;
@@ -1294,6 +1299,53 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
               resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
           final int count = Integer.parseInt(resultSet.getString("count"));
           timeValuePairList.add(new TimeValuePair<>(timestamp, count));
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return new TimeValuePairListDTO<>(timeValuePairList);
+  }
+
+  /*
+    Returns a list of time value pairs where value is a pair of envid and instance count
+  */
+  @Override
+  public TimeValuePairListDTO<EnvIdCountPair> getInstanceCountHistory(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
+    List<TimeValuePair<EnvIdCountPair>> timeValuePairList = new ArrayList<>();
+
+    final long tunedStartTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(startTimeInMs);
+    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
+
+    final String query =
+        "select reportedat, envid, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat, envid order by reportedat asc";
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountIdentifier);
+        statement.setString(2, orgIdentifier);
+        statement.setString(3, projectIdentifier);
+        statement.setString(4, serviceId);
+        statement.setTimestamp(5, new Timestamp(tunedStartTimeInMs), DateUtils.getDefaultCalendar());
+        statement.setTimestamp(6, new Timestamp(tunedEndTimeInMs), DateUtils.getDefaultCalendar());
+
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          final long timestamp =
+              resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
+          final String envId = resultSet.getString(TimescaleConstants.ENV_ID.getKey());
+          final int count = Integer.parseInt(resultSet.getString("count"));
+
+          EnvIdCountPair envIdCountPair = EnvIdCountPair.builder().envId(envId).count(count).build();
+          timeValuePairList.add(new TimeValuePair<>(timestamp, envIdCountPair));
         }
         successfulOperation = true;
       } catch (SQLException ex) {

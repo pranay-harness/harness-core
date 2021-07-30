@@ -3,7 +3,10 @@ package io.harness.serializer.kryo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.output.PmsSweepingOutput;
 import io.harness.pms.execution.facilitator.DefaultFacilitatorParams;
+import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.pms.yaml.validation.InputSetValidatorType;
@@ -22,5 +25,8 @@ public class PmsCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(DefaultFacilitatorParams.class, 2515);
 
     kryo.register(OrchestrationMap.class, 88401);
+    kryo.register(PmsOutcome.class, 88402);
+    kryo.register(PmsSweepingOutput.class, 88403);
+    kryo.register(AbsoluteSdkTimeoutTrackerParameters.class, 88404);
   }
 }

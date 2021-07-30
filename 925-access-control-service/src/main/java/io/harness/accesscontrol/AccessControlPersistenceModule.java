@@ -6,8 +6,8 @@ import io.harness.accesscontrol.acl.ACLPersistenceConfig;
 import io.harness.accesscontrol.commons.outbox.OutboxPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
 import io.harness.accesscontrol.preference.persistence.AccessControlPreferencePersistenceConfig;
+import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountPersistenceConfig;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupPersistenceConfig;
-import io.harness.accesscontrol.principals.users.persistence.ServiceAccountPersistenceConfig;
 import io.harness.accesscontrol.principals.users.persistence.UserPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
@@ -15,6 +15,7 @@ import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentPersis
 import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentMorphiaRegistrar;
 import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentsPersistenceConfig;
 import io.harness.accesscontrol.roles.persistence.RolePersistenceConfig;
+import io.harness.accesscontrol.scopes.core.persistence.ScopePersistenceConfig;
 import io.harness.accesscontrol.support.persistence.SupportMorphiaRegistrar;
 import io.harness.accesscontrol.support.persistence.SupportPersistenceConfig;
 import io.harness.aggregator.AggregatorPersistenceConfig;
@@ -102,10 +103,10 @@ public class AccessControlPersistenceModule extends PersistenceModule {
   @Override
   protected Class<?>[] getConfigClasses() {
     return new Class[] {OutboxPersistenceConfig.class, ResourceTypePersistenceConfig.class,
-        ResourceGroupPersistenceConfig.class, UserPersistenceConfig.class, ServiceAccountPersistenceConfig.class,
-        UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class, RolePersistenceConfig.class,
-        RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class, AggregatorPersistenceConfig.class,
-        AccessControlPreferencePersistenceConfig.class, PrivilegedRoleAssignmentsPersistenceConfig.class,
-        SupportPersistenceConfig.class};
+        ResourceGroupPersistenceConfig.class, ScopePersistenceConfig.class, UserPersistenceConfig.class,
+        ServiceAccountPersistenceConfig.class, UserGroupPersistenceConfig.class, PermissionPersistenceConfig.class,
+        RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class, ACLPersistenceConfig.class,
+        AggregatorPersistenceConfig.class, AccessControlPreferencePersistenceConfig.class,
+        PrivilegedRoleAssignmentsPersistenceConfig.class, SupportPersistenceConfig.class};
   }
 }

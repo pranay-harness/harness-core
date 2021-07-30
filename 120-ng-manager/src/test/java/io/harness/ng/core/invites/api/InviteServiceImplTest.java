@@ -3,7 +3,7 @@ package io.harness.ng.core.invites.api;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.invites.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
-import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
@@ -276,15 +276,15 @@ public class InviteServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void acceptInvite_InvalidJWTToken() {
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(null);
-    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(FAIL);
+    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(INVITE_INVALID);
 
     inviteAcceptResponse = inviteService.acceptInvite("");
-    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(FAIL);
+    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(INVITE_INVALID);
 
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.emptyMap());
 
     inviteAcceptResponse = inviteService.acceptInvite("sadfs");
-    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(FAIL);
+    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(INVITE_INVALID);
   }
 
   @Test
