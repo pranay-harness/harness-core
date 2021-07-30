@@ -104,8 +104,14 @@ func convCgph(inps []Input) (map[int][]int, map[int]Node) {
 		testID := test.ID
 		nodeMap[testID] = test
 		// processing relmap
-		source := inp.Source
-		source.Type = "source"
+		var source Node
+		if inp.Source == (Node{}) {
+			source = inp.Resource
+			source.Type = "resource"
+		} else {
+			source = inp.Source
+			source.Type = "source"
+		}
 		sourceID := source.ID
 		nodeMap[sourceID] = source
 		relMap[sourceID] = append(relMap[sourceID], testID)

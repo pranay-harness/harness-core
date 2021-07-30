@@ -47,6 +47,7 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentials
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
@@ -411,8 +412,21 @@ public class ConnectorUtils {
     List<EncryptedDataDetail> encryptedDataDetails;
     GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
     GitAuthenticationDTO gitAuth = gitConfigDTO.getGitAuth();
-    encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitAuth);
-    return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    if (gitConfigDTO.getGitAuthType() == GitAuthType.HTTP) {
+      encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitAuth);
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (gitConfigDTO.getGitAuthType() == GitAuthType.SSH) {
+      GitSSHAuthenticationDTO gitSSHAuthenticationDTO = (GitSSHAuthenticationDTO) gitAuth;
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitSSHAuthenticationDTO.getEncryptedSshKey());
+      connectorDetailsBuilder.sshKeyDetails(sshKey);
+      if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
+        throw new CIStageExecutionException(
+            "Unsupported ssh key format, passphrase is unsupported in git connector: " + gitConfigDTO.getGitAuthType());
+      }
+      return connectorDetailsBuilder.build();
+    } else {
+      throw new CIStageExecutionException("Unsupported git connector auth" + gitConfigDTO.getGitAuthType());
+    }
   }
 
   private ConnectorDetails getDockerConnectorDetails(

@@ -10,7 +10,6 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentModule;
 import io.harness.accesscontrol.roles.RoleModule;
 import io.harness.accesscontrol.scopes.ScopeModule;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
-import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.AbstractModule;
@@ -48,7 +47,6 @@ public class AccessControlCoreModule extends AbstractModule {
   private void registerRequiredBindings() {
     requireBinding(TransactionTemplate.class);
     requireBinding(MongoTemplate.class);
-    requireBinding(ScopeParamsFactory.class);
     requireBinding(Key.get(new TypeLiteral<Map<String, ScopeLevel>>() {}));
   }
 }

@@ -3,11 +3,14 @@ package io.harness.helper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InfrastructureMappingDTO;
+import io.harness.dtos.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfoDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.service.instancesyncperpetualtask.InstanceSyncPerpetualTaskService;
+import io.harness.service.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfoService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,8 +21,17 @@ import lombok.AllArgsConstructor;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceSyncHelper {
+  private final InstanceSyncPerpetualTaskInfoService instanceSyncPerpetualTaskInfoService;
+  private final InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
   private final ServiceEntityService serviceEntityService;
   private final EnvironmentService environmentService;
+
+  public void cleanUpInstanceSyncPerpetualTaskInfo(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO) {
+    instanceSyncPerpetualTaskService.deletePerpetualTask(
+        instanceSyncPerpetualTaskInfoDTO.getAccountIdentifier(), instanceSyncPerpetualTaskInfoDTO.getPerpetualTaskId());
+    instanceSyncPerpetualTaskInfoService.deleteById(
+        instanceSyncPerpetualTaskInfoDTO.getAccountIdentifier(), instanceSyncPerpetualTaskInfoDTO.getId());
+  }
 
   public ServiceEntity fetchService(InfrastructureMappingDTO infrastructureMappingDTO) {
     Optional<ServiceEntity> serviceEntityOptional = serviceEntityService.get(

@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.core.account.ServiceAccountConfig.DEFAULT_TOKEN_LIMIT;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -9,11 +10,13 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.BCryptVersion.$2A;
 
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.AccountOrgProjectValidator;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.common.beans.ApiKeyType;
@@ -63,6 +66,7 @@ public class TokenServiceImpl implements TokenService {
   @Inject private AccountOrgProjectValidator accountOrgProjectValidator;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
   @Inject private NgUserService ngUserService;
+  @Inject private AccountService accountService;
 
   private static final String deliminator = ".";
 
@@ -70,6 +74,16 @@ public class TokenServiceImpl implements TokenService {
   public String createToken(TokenDTO tokenDTO) {
     validateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
         tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
+    Optional<Token> optionalToken =
+        tokenRepository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+                tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
+                tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier(),
+                tokenDTO.getIdentifier());
+    if (optionalToken.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Duplicate token present in API Key for identifier: " + tokenDTO.getIdentifier()));
+    }
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder($2A, 10);
     String tokenString = passwordEncoder.encode(randomString);
@@ -93,6 +107,12 @@ public class TokenServiceImpl implements TokenService {
       throw new InvalidArgumentsException(String.format("Project [%s] in Org [%s] and Account [%s] does not exist",
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
+    }
+    ServiceAccountConfig serviceAccountConfig = accountService.getAccount(accountIdentifier).getServiceAccountConfig();
+    long tokenLimit = serviceAccountConfig != null ? serviceAccountConfig.getTokenLimit() : DEFAULT_TOKEN_LIMIT;
+    long existingTokenCount = tokenRepository.count();
+    if (existingTokenCount >= tokenLimit) {
+      throw new InvalidRequestException(String.format("Maximum limit has reached"));
     }
     apiKeyService.getApiKey(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);

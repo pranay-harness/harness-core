@@ -12,6 +12,8 @@ import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -41,13 +43,13 @@ public class GraphVertexDTO {
   FailureInfoDTO failureInfo;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
-  OrchestrationMap stepParameters;
+  PmsStepParameters stepParameters;
   ExecutionMode mode;
 
   List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
-  Map<String, OrchestrationMap> outcomes;
+  Map<String, PmsOutcome> outcomes;
   List<String> retryIds;
 
   List<UnitProgress> unitProgresses;

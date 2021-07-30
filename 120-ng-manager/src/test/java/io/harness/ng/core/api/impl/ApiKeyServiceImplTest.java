@@ -13,10 +13,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.NgManagerTestBase;
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.AccountOrgProjectValidator;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.api.ApiKeyService;
+import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.ApiKeyDTO;
 import io.harness.ng.core.entities.ApiKey;
 import io.harness.repositories.ng.core.spring.ApiKeyRepository;
@@ -42,6 +46,7 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
   private String parentIdentifier;
   private ApiKeyDTO apiKeyDTO;
   private AccountOrgProjectValidator accountOrgProjectValidator;
+  private AccountService accountService;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -53,6 +58,7 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
     apiKeyRepository = mock(ApiKeyRepository.class);
     apiKeyService = new ApiKeyServiceImpl();
     accountOrgProjectValidator = mock(AccountOrgProjectValidator.class);
+    accountService = mock(AccountService.class);
 
     apiKeyDTO = ApiKeyDTO.builder()
                     .accountIdentifier(accountIdentifier)
@@ -66,6 +72,7 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
     when(accountOrgProjectValidator.isPresent(any(), any(), any())).thenReturn(true);
     FieldUtils.writeField(apiKeyService, "apiKeyRepository", apiKeyRepository, true);
     FieldUtils.writeField(apiKeyService, "accountOrgProjectValidator", accountOrgProjectValidator, true);
+    FieldUtils.writeField(apiKeyService, "accountService", accountService, true);
   }
 
   @Test
@@ -76,9 +83,14 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
         .when(apiKeyRepository)
         .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier, SERVICE_ACCOUNT, parentIdentifier, identifier);
+    doReturn(AccountDTO.builder()
+                 .serviceAccountConfig(ServiceAccountConfig.builder().apiKeyLimit(5).tokenLimit(5).build())
+                 .build())
+        .when(accountService)
+        .getAccount(any());
 
     assertThatThrownBy(() -> apiKeyService.createApiKey(apiKeyDTO))
-        .isInstanceOf(IllegalStateException.class)
+        .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Duplicate api key present in scope for identifier: " + identifier);
   }
 
@@ -90,6 +102,11 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
         .when(apiKeyRepository)
         .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier, SERVICE_ACCOUNT, parentIdentifier, identifier);
+    doReturn(AccountDTO.builder()
+                 .serviceAccountConfig(ServiceAccountConfig.builder().apiKeyLimit(5).tokenLimit(5).build())
+                 .build())
+        .when(accountService)
+        .getAccount(any());
 
     assertThatThrownBy(() -> apiKeyService.updateApiKey(apiKeyDTO))
         .isInstanceOf(IllegalStateException.class)

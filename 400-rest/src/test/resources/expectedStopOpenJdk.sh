@@ -60,7 +60,7 @@ if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
   stopped=0
   while [ "$i" -le 30 ]; do
     if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then
-      pgrep -f "\-Dwatchersourcedir=$DIR" | xargs kill -3
+      pgrep -f "\-Dwatchersourcedir=$DIR" | xargs kill
       if [ "$i" -gt 0 ]; then
         sleep 1
       fi
@@ -92,7 +92,7 @@ if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
   i=0
   while [ "$i" -le 30 ]; do
     if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`; then
-      pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill -3
+      pgrep -f "\-Ddelegatesourcedir=$DIR" | xargs kill
       if [ "$i" -gt 0 ]; then
         sleep 1
       fi

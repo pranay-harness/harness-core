@@ -9,6 +9,8 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.logging.CommandExecutionStatus;
 
+import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,5 +25,5 @@ public class HelmValuesFetchTaskResponse implements DelegateTaskNotifyResponseDa
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
 
-  private String valuesFileContent;
+  private Map<String, List<String>> mapK8sValuesLocationToContent;
 }

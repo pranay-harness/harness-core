@@ -15,6 +15,8 @@ import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -46,13 +48,13 @@ public class GraphVertex implements Serializable {
   private String stepType;
   private Status status;
   private FailureInfo failureInfo;
-  private OrchestrationMap stepParameters;
+  private PmsStepParameters stepParameters;
   private ExecutionMode mode;
 
   private List<ExecutableResponse> executableResponses;
   private List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   private List<InterruptEffect> interruptHistories;
-  private Map<String, OrchestrationMap> outcomeDocuments;
+  private Map<String, PmsOutcome> outcomeDocuments;
   private List<String> retryIds;
 
   private Map<String, List<ProgressData>> progressDataMap;

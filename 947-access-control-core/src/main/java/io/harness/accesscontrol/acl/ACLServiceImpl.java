@@ -7,9 +7,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.persistence.ACLDAO;
-import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
-import io.harness.accesscontrol.clients.AccessControlDTO;
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
@@ -42,30 +39,30 @@ public class ACLServiceImpl implements ACLService {
         permissionService.list(permissionFilter).stream().map(Permission::getIdentifier).collect(Collectors.toSet());
   }
 
-  private AccessControlDTO getAccessControlDTO(PermissionCheckDTO permissionCheckDTO, boolean permitted) {
-    return AccessControlDTO.builder()
-        .permission(permissionCheckDTO.getPermission())
-        .resourceIdentifier(permissionCheckDTO.getResourceIdentifier())
-        .resourceScope(permissionCheckDTO.getResourceScope())
-        .resourceType(permissionCheckDTO.getResourceType())
+  private PermissionCheckResult getPermissionCheckResult(PermissionCheck permissionCheck, boolean permitted) {
+    return PermissionCheckResult.builder()
+        .permission(permissionCheck.getPermission())
+        .resourceIdentifier(permissionCheck.getResourceIdentifier())
+        .resourceScope(permissionCheck.getResourceScope())
+        .resourceType(permissionCheck.getResourceType())
         .permitted(permitted)
         .build();
   }
 
   @Override
-  public AccessCheckResponseDTO checkAccess(Principal principal, List<PermissionCheckDTO> permissionChecks) {
+  public List<PermissionCheckResult> checkAccess(Principal principal, List<PermissionCheck> permissionChecks) {
     List<Boolean> allowedAccessList = aclDAO.checkForAccess(principal, permissionChecks);
-    List<AccessControlDTO> accessControlDTOList = new ArrayList<>();
+    List<PermissionCheckResult> permissionCheckResults = new ArrayList<>();
 
     for (int i = 0; i < permissionChecks.size(); i++) {
-      PermissionCheckDTO permissionCheckDTO = permissionChecks.get(i);
-      if (disabledPermissions.contains(permissionCheckDTO.getPermission())) {
-        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, true));
+      PermissionCheck permissionCheck = permissionChecks.get(i);
+      if (disabledPermissions.contains(permissionCheck.getPermission())) {
+        permissionCheckResults.add(getPermissionCheckResult(permissionCheck, true));
       } else {
-        accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, allowedAccessList.get(i)));
+        permissionCheckResults.add(getPermissionCheckResult(permissionCheck, allowedAccessList.get(i)));
       }
     }
 
-    return AccessCheckResponseDTO.builder().principal(principal).accessControlList(accessControlDTOList).build();
+    return permissionCheckResults;
   }
 }

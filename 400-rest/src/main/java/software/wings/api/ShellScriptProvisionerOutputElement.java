@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 
 import software.wings.sm.ContextElement;
@@ -8,8 +10,11 @@ import software.wings.sm.ExecutionContext;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @Builder
+@OwnedBy(HarnessTeam.CDP)
 public class ShellScriptProvisionerOutputElement implements ContextElement {
   public static String KEY = "shellScriptProvisioner";
   private Map<String, Object> outputVariables;

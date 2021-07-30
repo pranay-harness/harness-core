@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	mexec "github.com/wings-software/portal/commons/go/lib/exec"
 	"os"
 	"testing"
 	"time"
@@ -14,9 +13,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	mexec "github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	"github.com/wings-software/portal/commons/go/lib/utils"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -207,6 +206,7 @@ func TestGetCmd_WithNoFilesChanged(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -262,15 +262,12 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // If no errors, we should run only selected tests
 	assert.Equal(t, got, want)
@@ -280,6 +277,7 @@ func TestGetCmd_SelectAll(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -335,15 +333,12 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // Since selection returns all the tests
 	assert.Equal(t, got, want)
@@ -353,6 +348,7 @@ func TestGetCmd_RunAll(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -403,15 +399,12 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // Since there was an error in execution
 	assert.Equal(t, got, want)
@@ -421,6 +414,7 @@ func TestGetCmd_ManualExecution(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -471,15 +465,12 @@ instrPackages: p1, p2, p3`
 		return true
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // Since it's a manual execution
 	assert.Equal(t, got, want)
@@ -489,6 +480,7 @@ func TestGetCmd_ErrorIncorrectBuildTool(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -539,7 +531,7 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	_, err := r.getCmd(ctx)
+	_, err := r.getCmd(ctx, outputFile)
 	assert.NotNil(t, err)
 }
 
@@ -676,7 +668,7 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, called, 2) // Make sure both CG collection and report collection are called
 }
@@ -778,7 +770,7 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Equal(t, err, expErr)
 	assert.Equal(t, called, 2) // makes ure both functions are called even on failure
 }
@@ -877,7 +869,7 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Equal(t, err, errCg)
 }
 
@@ -975,6 +967,6 @@ instrPackages: p1, p2, p3`
 		return errReport
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Equal(t, err, errReport)
 }

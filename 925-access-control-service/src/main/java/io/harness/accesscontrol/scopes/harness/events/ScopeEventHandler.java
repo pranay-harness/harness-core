@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.scopes.harness.events;
 
-import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
@@ -9,14 +8,10 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.accesscontrol.commons.events.EventHandler;
-import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
-import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
-import io.harness.accesscontrol.roles.RoleService;
-import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.core.ScopeParams;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeService;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
@@ -33,16 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class ScopeEventHandler implements EventHandler {
-  private final RoleAssignmentService roleAssignmentService;
-  private final RoleService roleService;
-  private final ScopeService scopeService;
+  private final HarnessScopeService harnessScopeService;
 
   @Inject
-  public ScopeEventHandler(
-      RoleAssignmentService roleAssignmentService, RoleService roleService, ScopeService scopeService) {
-    this.roleAssignmentService = roleAssignmentService;
-    this.roleService = roleService;
-    this.scopeService = scopeService;
+  public ScopeEventHandler(HarnessScopeService harnessScopeService) {
+    this.harnessScopeService = harnessScopeService;
   }
 
   @Override
@@ -57,10 +47,7 @@ public class ScopeEventHandler implements EventHandler {
       } else if (entityType.equals(ACCOUNT.getEventEntityName())) {
         scope = buildAccountScope(message);
       }
-      if (scope.isPresent()) {
-        deleteRoleAssignments(scope.get());
-        deleteRoles(scope.get());
-      }
+      scope.ifPresent(harnessScopeService::deleteIfPresent);
     } catch (Exception e) {
       log.error("Could not process the message due to error", e);
       return false;
@@ -78,10 +65,10 @@ public class ScopeEventHandler implements EventHandler {
     if (Objects.isNull(accountEntityChangeDTO)) {
       return Optional.empty();
     }
-    ScopeParams scopeParams =
+    HarnessScopeParams scopeParams =
         HarnessScopeParams.builder().accountIdentifier(stripToNull(accountEntityChangeDTO.getAccountId())).build();
     log.info("Handling delete event for Account {}", scopeParams);
-    return Optional.of(scopeService.buildScopeFromParams(scopeParams));
+    return Optional.of(ScopeMapper.fromParams(scopeParams));
   }
 
   private Optional<Scope> buildOrganizationScope(Message message) {
@@ -94,12 +81,13 @@ public class ScopeEventHandler implements EventHandler {
     if (Objects.isNull(organizationEntityChangeDTO)) {
       return Optional.empty();
     }
-    ScopeParams scopeParams = HarnessScopeParams.builder()
-                                  .accountIdentifier(stripToNull(organizationEntityChangeDTO.getAccountIdentifier()))
-                                  .orgIdentifier(stripToNull(organizationEntityChangeDTO.getIdentifier()))
-                                  .build();
+    HarnessScopeParams scopeParams =
+        HarnessScopeParams.builder()
+            .accountIdentifier(stripToNull(organizationEntityChangeDTO.getAccountIdentifier()))
+            .orgIdentifier(stripToNull(organizationEntityChangeDTO.getIdentifier()))
+            .build();
     log.info("Handling Delete event for Organization {}", scopeParams);
-    return Optional.of(scopeService.buildScopeFromParams(scopeParams));
+    return Optional.of(ScopeMapper.fromParams(scopeParams));
   }
 
   private Optional<Scope> buildProjectScope(Message message) {
@@ -112,22 +100,12 @@ public class ScopeEventHandler implements EventHandler {
     if (Objects.isNull(projectEntityChangeDTO)) {
       return Optional.empty();
     }
-    ScopeParams scopeParams = HarnessScopeParams.builder()
-                                  .accountIdentifier(stripToNull(projectEntityChangeDTO.getAccountIdentifier()))
-                                  .orgIdentifier(stripToNull(projectEntityChangeDTO.getOrgIdentifier()))
-                                  .projectIdentifier(stripToNull(projectEntityChangeDTO.getIdentifier()))
-                                  .build();
+    HarnessScopeParams scopeParams = HarnessScopeParams.builder()
+                                         .accountIdentifier(stripToNull(projectEntityChangeDTO.getAccountIdentifier()))
+                                         .orgIdentifier(stripToNull(projectEntityChangeDTO.getOrgIdentifier()))
+                                         .projectIdentifier(stripToNull(projectEntityChangeDTO.getIdentifier()))
+                                         .build();
     log.info("Handling Delete event for Project {}", scopeParams);
-    return Optional.of(scopeService.buildScopeFromParams(scopeParams));
-  }
-
-  private void deleteRoleAssignments(Scope scope) {
-    RoleAssignmentFilter roleAssignmentFilter = RoleAssignmentFilter.builder().scopeFilter(scope.toString()).build();
-    roleAssignmentService.deleteMulti(roleAssignmentFilter);
-  }
-
-  private void deleteRoles(Scope scope) {
-    RoleFilter roleFilter = RoleFilter.builder().scopeIdentifier(scope.toString()).managedFilter(ONLY_CUSTOM).build();
-    roleService.deleteMulti(roleFilter);
+    return Optional.of(ScopeMapper.fromParams(scopeParams));
   }
 }

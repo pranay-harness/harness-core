@@ -100,11 +100,12 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   @Override
   public Page<OrganizationAggregateDTO> listOrganizationAggregateDTO(
       String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO) {
-    Page<Organization> organizations = organizationService.list(accountIdentifier, pageable, organizationFilterDTO);
-    List<Organization> organizationList = organizations.toList();
+    Page<Organization> permittedOrgs =
+        organizationService.listPermittedOrgs(accountIdentifier, pageable, organizationFilterDTO);
+    List<Organization> organizationList = permittedOrgs.getContent();
 
     List<Callable<OrganizationAggregateDTO>> tasks = new ArrayList<>();
-    organizations.forEach(org -> tasks.add(() -> buildAggregateDTO(org)));
+    organizationList.forEach(org -> tasks.add(() -> buildAggregateDTO(org)));
 
     List<Future<OrganizationAggregateDTO>> futures;
     try {
@@ -136,6 +137,6 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
       }
     }
 
-    return new PageImpl<>(aggregates, organizations.getPageable(), organizations.getTotalElements());
+    return new PageImpl<>(aggregates, permittedOrgs.getPageable(), permittedOrgs.getTotalElements());
   }
 }

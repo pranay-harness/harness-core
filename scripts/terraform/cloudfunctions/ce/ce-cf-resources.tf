@@ -432,7 +432,7 @@ resource "google_cloudfunctions_function" "ce-clusterdata-function" {
       event_type = "google.storage.object.finalize"
       resource   = "clusterdata-${var.deployment}"
       failure_policy {
-        retry = true
+        retry = false
       }
     }
 }

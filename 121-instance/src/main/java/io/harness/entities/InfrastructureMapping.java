@@ -42,10 +42,9 @@ public class InfrastructureMapping {
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
-  private String infrastructureMappingType;
+  private String infrastructureKind;
   private String connectorRef;
   private String envId;
-  private String deploymentType;
   private String serviceId;
   @FdUniqueIndex private String infrastructureKey;
 }

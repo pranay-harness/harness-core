@@ -59,7 +59,7 @@ public class InputSetValidationObserver implements PipelineActionObserver {
   private void checkIfOverlayInputSetIsValid(InputSetEntity overlayInputSet, PipelineEntity pipelineEntity) {
     Map<String, String> invalidReferences =
         validateAndMergeHelper.validateOverlayInputSet(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
-            pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), overlayInputSet);
+            pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), overlayInputSet.getYaml());
     if (!invalidReferences.isEmpty()) {
       markAsInvalid(overlayInputSet);
     } else {

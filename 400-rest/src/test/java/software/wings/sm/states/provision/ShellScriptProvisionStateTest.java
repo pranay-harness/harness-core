@@ -4,6 +4,7 @@ import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.PARDHA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -12,6 +13,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -27,15 +29,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
@@ -43,6 +49,7 @@ import io.harness.tasks.ResponseData;
 import software.wings.WingsBaseTest;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
+import software.wings.api.shellscript.provision.ShellScriptProvisionOutputVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -53,6 +60,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -61,9 +69,12 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,6 +83,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDP)
 public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ActivityService activityService;
@@ -79,6 +91,9 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock protected FeatureFlagService featureFlagService;
+  @Mock protected ManagerExecutionLogCallback logCallback;
+
   @Inject private KryoSerializer kryoSerializer;
 
   @InjectMocks
@@ -87,6 +102,11 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
+    Reflect.on(state).set("kryoSerializer", kryoSerializer);
+    state.setProvisionerId(PROVISIONER_ID);
+    doReturn(logCallback)
+        .when(infrastructureProvisionerService)
+        .getManagerExecutionCallback(eq(APP_ID), eq(ACTIVITY_ID), anyString());
     doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
@@ -111,9 +131,11 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testValidation() {
-    assertThat(state.validateFields().size()).isNotEqualTo(0);
-    state.setProvisionerId("test provisioner");
-    assertThat(state.validateFields().size()).isEqualTo(0);
+    ShellScriptProvisionState provisionState =
+        new ShellScriptProvisionState(InfrastructureProvisionerType.SHELL_SCRIPT.name());
+    assertThat(provisionState.validateFields().size()).isNotEqualTo(0);
+    provisionState.setProvisionerId("test provisioner");
+    assertThat(provisionState.validateFields().size()).isEqualTo(0);
   }
 
   @Test
@@ -167,8 +189,6 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
-    Reflect.on(state).set("kryoSerializer", kryoSerializer);
-    state.setProvisionerId(PROVISIONER_ID);
     state.setSweepingOutputName("${expression}");
     state.setSweepingOutputScope(Scope.PHASE);
     ShellScriptProvisionExecutionData executionData = ShellScriptProvisionExecutionData.builder()
@@ -176,7 +196,6 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
                                                           .output("{\"key\": \"value\"}")
                                                           .build();
     Map<String, ResponseData> responseData = ImmutableMap.of(ACTIVITY_ID, executionData);
-    ManagerExecutionLogCallback logCallback = mock(ManagerExecutionLogCallback.class);
     Map<String, Object> expectedOutputMap = ImmutableMap.of("key", "value");
     ShellScriptProvisionerOutputElement outputElement = ShellScriptProvisionerOutputElement.builder().build();
 
@@ -184,9 +203,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     doReturn(APP_ID).when(executionContext).getAppId();
     doReturn("rendered-expression").when(executionContext).renderExpression("${expression}");
     doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(Scope.PHASE);
-    doReturn(logCallback)
-        .when(infrastructureProvisionerService)
-        .getManagerExecutionCallback(eq(APP_ID), eq(ACTIVITY_ID), anyString());
+
     ExecutionResponse response = state.handleAsyncResponse(executionContext, responseData);
 
     ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
@@ -206,7 +223,6 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testCreateActivity() {
-    state.setProvisionerId(PROVISIONER_ID);
     ShellScriptInfrastructureProvisioner provisioner = ShellScriptInfrastructureProvisioner.builder().build();
     Environment env = Environment.Builder.anEnvironment()
                           .uuid(ENV_ID)
@@ -273,5 +289,99 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     ShellScriptProvisionParameters populatedParameters =
         (ShellScriptProvisionParameters) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
     assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList(runTimeValueAbc));
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSaveProvisionerOutputsOnResponse() {
+    String provisionerOutput = "{  \"dockerLabels\": {\n"
+        + "    \"com.datadoghq.tags.env\": \"poc1\",\n"
+        + "    \"com.datadoghq.tags.service\": \"magicbus\",\n"
+        + "    \"com.datadoghq.tags.version\": \"755626d45887ba25426c58972686b63d438c4239\"\n"
+        + "  }}";
+
+    Map<String, ResponseData> responseData =
+        prepareTestWithResponseDataMap(provisionerOutput, Collections.emptyMap(), null);
+
+    state.handleAsyncResponse(executionContext, responseData);
+
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(2)).save(instanceCaptor.capture());
+    List<SweepingOutputInstance> outputInstances = instanceCaptor.getAllValues();
+    assertThat(outputInstances).hasSize(2);
+    assertThat(outputInstances.stream().map(SweepingOutputInstance::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("rendered-expression", "shellScriptProvisioner");
+
+    assertThat(outputInstances.get(1).getValue()).isInstanceOf(ShellScriptProvisionOutputVariables.class);
+    ShellScriptProvisionOutputVariables storedOutputVariables =
+        (ShellScriptProvisionOutputVariables) outputInstances.get(1).getValue();
+    assertThat(storedOutputVariables.get("dockerLabels")).isInstanceOf(Map.class);
+    Map<String, String> complexVarValue = (Map<String, String>) storedOutputVariables.get("dockerLabels");
+    assertThat(complexVarValue.keySet()).hasSize(3);
+    assertThat(complexVarValue.keySet())
+        .containsExactlyInAnyOrder(
+            "com.datadoghq.tags.env", "com.datadoghq.tags.service", "com.datadoghq.tags.version");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSaveProvisionerOutputsOnResponseWithExistingOutputs() {
+    String provisionerOutput = "{\"key\": \"value\"}";
+    Map<String, Object> outputVariablesFromContextElement = new HashMap<>();
+    outputVariablesFromContextElement.put("outputVariableFromContext", "value");
+    ShellScriptProvisionOutputVariables existingOutputVariables = new ShellScriptProvisionOutputVariables();
+    existingOutputVariables.put("existing", "value");
+    SweepingOutputInstance existingVariablesOutputs =
+        SweepingOutputInstance.builder()
+            .name(ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME)
+            .value(existingOutputVariables)
+            .uuid(UUID)
+            .build();
+    Map<String, ResponseData> responseData =
+        prepareTestWithResponseDataMap(provisionerOutput, outputVariablesFromContextElement, existingVariablesOutputs);
+
+    state.handleAsyncResponse(executionContext, responseData);
+
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(2)).save(instanceCaptor.capture());
+    List<SweepingOutputInstance> outputInstances = instanceCaptor.getAllValues();
+    assertThat(outputInstances).hasSize(2);
+    assertThat(outputInstances.stream().map(SweepingOutputInstance::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("rendered-expression", "shellScriptProvisioner");
+
+    assertThat(outputInstances.get(1).getValue()).isInstanceOf(ShellScriptProvisionOutputVariables.class);
+    ShellScriptProvisionOutputVariables storedOutputVariables =
+        (ShellScriptProvisionOutputVariables) outputInstances.get(1).getValue();
+    assertThat(storedOutputVariables.keySet())
+        .containsExactlyInAnyOrder("existing", "outputVariableFromContext", "key");
+  }
+
+  private Map<String, ResponseData> prepareTestWithResponseDataMap(String provisionerOutput,
+      Map<String, Object> outputVariablesFromContextElement, SweepingOutputInstance existingSweepingOutput) {
+    state.setSweepingOutputName("${expression}");
+    state.setSweepingOutputScope(Scope.PHASE);
+    ShellScriptProvisionExecutionData executionData = ShellScriptProvisionExecutionData.builder()
+                                                          .executionStatus(ExecutionStatus.SUCCESS)
+                                                          .output(provisionerOutput)
+                                                          .build();
+    Map<String, ResponseData> responseData = ImmutableMap.of(ACTIVITY_ID, executionData);
+
+    ShellScriptProvisionerOutputElement outputElement =
+        ShellScriptProvisionerOutputElement.builder().outputVariables(outputVariablesFromContextElement).build();
+
+    doReturn(existingSweepingOutput).when(sweepingOutputService).find(any());
+    doReturn(true)
+        .when(featureFlagService)
+        .isEnabled(eq(FeatureName.SAVE_SHELL_SCRIPT_PROVISION_OUTPUTS_TO_SWEEPING_OUTPUT), anyString());
+    doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(outputElement).when(executionContext).getContextElement(ContextElementType.SHELL_SCRIPT_PROVISION);
+    doReturn(APP_ID).when(executionContext).getAppId();
+    doReturn("rendered-expression").when(executionContext).renderExpression("${expression}");
+    doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(any());
+    return responseData;
   }
 }

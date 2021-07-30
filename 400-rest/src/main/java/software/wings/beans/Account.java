@@ -22,6 +22,7 @@ import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -157,6 +158,9 @@ public class Account extends Base implements PersistentRegularIterable {
   @Getter @Setter private TrialSignupOptions trialSignupOptions;
 
   @Getter @Setter private Long serviceGuardLimit = SERVICE_GUAARD_LIMIT;
+
+  @Getter @Setter ServiceAccountConfig serviceAccountConfig;
+
   private transient Map<String, String> defaults = new HashMap<>();
   /**
    * Default mechanism is USER_PASSWORD
@@ -523,6 +527,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private AccountPreferences accountPreferences;
     private DefaultExperience defaultExperience;
     private boolean createdFromNG;
+    private ServiceAccountConfig serviceAccountConfig;
 
     private Builder() {}
 
@@ -670,6 +675,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withServiceAccountConfig(ServiceAccountConfig serviceAccountConfig) {
+      this.serviceAccountConfig = serviceAccountConfig;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -696,7 +706,8 @@ public class Account extends Base implements PersistentRegularIterable {
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
           .withDefaultExperience(defaultExperience)
           .withCreatedFromNG(createdFromNG)
-          .withAccountPreferences(accountPreferences);
+          .withAccountPreferences(accountPreferences)
+          .withServiceAccountConfig(serviceAccountConfig);
     }
 
     public Account build() {
@@ -729,6 +740,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setDefaultExperience(defaultExperience);
       account.setCreatedFromNG(createdFromNG);
       account.setAccountPreferences(accountPreferences);
+      account.setServiceAccountConfig(serviceAccountConfig);
       return account;
     }
   }

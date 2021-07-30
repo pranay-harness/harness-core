@@ -22,4 +22,5 @@ public class GitToHarnessProcessMsvcStepRequest {
   List<GitFileChangeDTO> gitFileChangeDTOList;
   List<GitDiffResultFileDTO> gitDiffResultFileDTOList;
   GitToHarnessProgressDTO progressRecord;
+  String processingCommitId;
 }

@@ -67,8 +67,10 @@ public class DeploymentFreezeDeactivationHandlerTest extends WingsBaseTest {
   public void shouldDoNothingForNoMatchingWindows() {
     GovernanceConfig governanceConfig =
         GovernanceConfig.builder()
-            .timeRangeBasedFreezeConfigs(Arrays.asList(
-                TimeRangeBasedFreezeConfig.builder().timeRange(new TimeRange(1000, 2000, "Asia/Kolkatta")).build()))
+            .timeRangeBasedFreezeConfigs(
+                Arrays.asList(TimeRangeBasedFreezeConfig.builder()
+                                  .timeRange(new TimeRange(1000, 2000, "Asia/Kolkatta", false, null, null, null, false))
+                                  .build()))
             .build();
     deploymentFreezeDeactivationHandler.handle(governanceConfig);
     Mockito.verify(deploymentFreezeUtils, Mockito.never()).handleDeActivationEvent(any(), Matchers.anyString());
@@ -79,15 +81,17 @@ public class DeploymentFreezeDeactivationHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldHandleActivationEventForMatchingWindows() {
     TimeRangeBasedFreezeConfig window1 =
-        TimeRangeBasedFreezeConfig.builder().timeRange(new TimeRange(1000, 2000, "Asia/Kolkatta")).build();
-    TimeRangeBasedFreezeConfig window2 =
         TimeRangeBasedFreezeConfig.builder()
-            .timeRange(new TimeRange(mockCurrentTime - 5000, mockCurrentTime - 1000, "Asia/Kolkatta"))
+            .timeRange(new TimeRange(1000, 2000, "Asia/Kolkatta", false, null, null, null, false))
             .build();
-    TimeRangeBasedFreezeConfig window3 =
-        TimeRangeBasedFreezeConfig.builder()
-            .timeRange(new TimeRange(mockCurrentTime - 5000, mockCurrentTime - 1000, "Asia/Kolkatta"))
-            .build();
+    TimeRangeBasedFreezeConfig window2 = TimeRangeBasedFreezeConfig.builder()
+                                             .timeRange(new TimeRange(mockCurrentTime - 5000, mockCurrentTime - 1000,
+                                                 "Asia/Kolkatta", false, null, null, null, false))
+                                             .build();
+    TimeRangeBasedFreezeConfig window3 = TimeRangeBasedFreezeConfig.builder()
+                                             .timeRange(new TimeRange(mockCurrentTime - 5000, mockCurrentTime - 1000,
+                                                 "Asia/Kolkatta", false, null, null, null, false))
+                                             .build();
     GovernanceConfig governanceConfig = GovernanceConfig.builder()
                                             .accountId(ACCOUNT_ID)
                                             .timeRangeBasedFreezeConfigs(Arrays.asList(window1, window2, window3))

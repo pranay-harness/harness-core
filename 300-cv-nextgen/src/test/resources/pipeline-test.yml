@@ -1,45 +1,76 @@
 pipeline:
-  identifier: p1
-  name: pipeline1
+  name: testNewYAML
+  identifier: testNewYAML
+  projectIdentifier: raghu_p
+  orgIdentifier: harness_test
+  tags: {}
   stages:
     - stage:
-        identifier: managerDeployment
-        type: deployment
-        name: managerDeployment
+        name: stage1
+        identifier: stage1
+        description: ""
+        type: Deployment
         spec:
-          service:
-            identifier: manager
-            name: manager
+          serviceConfig:
             serviceDefinition:
-              type: k8s
+              type: Kubernetes
               spec:
-                field11: value1
-                field12: value2
+                manifestOverrideSets: []
+                manifests: []
+                artifacts:
+                  sidecars: []
+                variables: []
+            serviceRef: $serviceRef
           infrastructure:
-            environment:
-              identifier: stagingInfra
-              type: preProduction
-              name: staging
+            environmentRef: $environmentRef
             infrastructureDefinition:
-              type: k8sDirect
+              type: KubernetesDirect
               spec:
-                connectorRef: pEIkEiNPSgSUsbWDDyjNKw
-                namespace: harness
-                releaseName: testingqa
+                connectorRef: playground
+                namespace: default
+                releaseName: release
+            allowSimultaneousDeployments: false
+            infrastructureKey: key
           execution:
             steps:
               - step:
                   type: Verify
-                  name: verification
-                  identifier: verification
-                  timeout: 20s
+                  name: Verify
+                  identifier: Verify
+                  timeout: 2h
                   spec:
-                    monitoredServiceRef: cv_nextgen
-                    type: Canary
-                    healthSources:
-                      - identifier: appd
-                      - identifier: newrelic
+                    type: LoadTest
                     spec:
-                      deploymentTag: <+artifact.buildno>
-                      sensitivity: low
-                      duration: 10m
+                      deploymentTag: tag
+                      duration: 5m
+                      sensitivity: HIGH
+                      baseline: LAST
+                  failureStrategies:
+                    - onFailure:
+                        errors:
+                          - Verification
+                        action:
+                          type: ManualIntervention
+                          spec:
+                            timeout: 2h
+                            onTimeout:
+                              action:
+                                type: StageRollback
+                    - onFailure:
+                        errors:
+                          - Unknown
+                        action:
+                          type: ManualIntervention
+                          spec:
+                            timeout: 2h
+                            onTimeout:
+                              action:
+                                type: Ignore
+            rollbackSteps: []
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback

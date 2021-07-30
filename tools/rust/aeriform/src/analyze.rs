@@ -30,6 +30,7 @@ enum Explanation {
     Empty,
     TeamIsMissing,
     DeprecatedModule,
+    UsedInDeprecatedClass,
     BreakDependencyOnModule,
 }
 
@@ -47,6 +48,13 @@ promotion/demotion without the need to discover them the hard way. The list
 of the available modules is in io.harness.annotations.dev.HarnessModule.
 WARNING: Add target modules with cation. If wrong targets are specified
          this could lead to all sorts of inappropriate error reports.";
+
+pub const EXPLANATION_CLASS_USED_DEPRECATED_CLASS: &str =
+    "When a class is deprecated, every class that it depends on should be
+removed. Obviously removing the deprecated class all together will eliminate this
+issue. In the spirit of allowing for iterative progress though, we report that
+need independently. This is especially useful when big registration classes are
+deprecated and removing dependencies class by class make more sense.";
 
 pub const EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS: &str =
     "Please resolve the necessary issues so your issue points drop under the expected limit.
@@ -103,7 +111,7 @@ pub struct Analyze {
     issue_points_per_class_limit: Option<f64>,
 
     #[clap(short, long)]
-    indirect: bool,
+    indirect: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -268,22 +276,18 @@ pub fn analyze(opts: Analyze) {
     println!("Detecting indirectly involved classes...");
 
     let indirect_classes: &mut HashSet<&String> = &mut HashSet::new();
-    if opts.indirect {
-        loop {
-            let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
+    for _ in 0..opts.indirect.unwrap_or(0) {
+        let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
 
-            results
-                .iter()
-                .filter(|&report| {
-                    filter_report(&opts, report, &class_locations) || original.contains(&report.for_class)
-                })
-                .for_each(|report| {
-                    indirect_classes.extend(&report.indirect_classes);
-                });
+        results
+            .iter()
+            .filter(|&report| filter_report(&opts, report, &class_locations) || original.contains(&report.for_class))
+            .for_each(|report| {
+                indirect_classes.extend(&report.indirect_classes);
+            });
 
-            if original.len() == indirect_classes.len() {
-                break;
-            }
+        if original.len() == indirect_classes.len() {
+            break;
         }
     }
 
@@ -331,6 +335,10 @@ pub fn analyze(opts: Analyze) {
     if explanations.contains(Explanation::DeprecatedModule) {
         println!();
         println!("{}", EXPLANATION_CLASS_IN_DEPRECATED_MODULE);
+    }
+    if explanations.contains(Explanation::UsedInDeprecatedClass) {
+        println!();
+        println!("{}", EXPLANATION_CLASS_USED_DEPRECATED_CLASS);
     }
 
     if explanations.contains(Explanation::BreakDependencyOnModule) {
@@ -825,6 +833,27 @@ fn check_for_demotion(
             let &dependee_class = classes
                 .get(dependee)
                 .expect(&format!("The source {} is not find in any module", dependee));
+
+            if dependee_class.deprecated {
+                issue = true;
+
+                let indirect_classes = [dependee_class.name.clone()].iter().cloned().collect();
+
+                results.push(Report {
+                    kind: Kind::Warning,
+                    explanation: Explanation::UsedInDeprecatedClass,
+                    message: format!(
+                        "{} is deprecated and depends on {}, this dependency has to be broken",
+                        dependee_class.name, class.name,
+                    ),
+                    action: Default::default(),
+                    for_class: class.name.clone(),
+                    for_team: class.team(module, &class.target_module_team(modules)),
+                    indirect_classes: indirect_classes,
+                    for_modules: [module.name.clone()].iter().cloned().collect(),
+                });
+                return ();
+            }
 
             let &dependee_real_module = class_modules
                 .get(dependee_class)

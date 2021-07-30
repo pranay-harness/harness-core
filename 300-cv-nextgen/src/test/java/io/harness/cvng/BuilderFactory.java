@@ -183,8 +183,6 @@ public class BuilderFactory {
 
   public CVNGStepInfoBuilder cvngStepInfoBuilder() {
     return CVNGStepInfo.builder()
-        .monitoredServiceRef(
-            ParameterField.createValueField(context.getServiceIdentifier() + "_" + context.getEnvIdentifier()))
         .type("LoadTest")
         .spec(TestVerificationJobSpec.builder()
                   .duration(ParameterField.createValueField("5m"))

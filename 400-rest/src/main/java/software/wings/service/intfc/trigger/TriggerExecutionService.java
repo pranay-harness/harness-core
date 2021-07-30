@@ -2,7 +2,9 @@ package software.wings.service.intfc.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -16,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public interface TriggerExecutionService {
   @ValidationGroups(Create.class) TriggerExecution save(@Valid TriggerExecution triggerExecution);
 
