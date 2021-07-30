@@ -1,21 +1,16 @@
 package io.harness.event.usagemetrics;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
-
-import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 
-import io.harness.beans.PageRequest;
-import io.harness.beans.SearchFilter.Operator;
+import io.harness.annotations.dev.OwnedBy;
 
-import software.wings.beans.Account;
-import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
@@ -31,7 +26,6 @@ import software.wings.verification.CVConfiguration.CVConfigurationKeys;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,6 +36,7 @@ import org.mongodb.morphia.query.Query;
  * Created by Pranjal on 01/10/2019
  */
 @Singleton
+@OwnedBy(PL)
 public class UsageMetricsHelper {
   @Inject private WingsPersistence wingsPersistence;
 
@@ -73,14 +68,6 @@ public class UsageMetricsHelper {
                                   .get();
     notNullCheck("Environment does not exist", environment, USER);
     return environment.getName();
-  }
-
-  public List<Account> listAllAccountsWithDefaults() {
-    PageRequest<Account> pageRequest = aPageRequest()
-                                           .addFieldsIncluded(Account.ID_KEY2, AccountKeys.accountName)
-                                           .addFilter(EnvironmentKeys.appId, Operator.EQ, GLOBAL_APP_ID)
-                                           .build();
-    return wingsPersistence.getAllEntities(pageRequest, () -> wingsPersistence.query(Account.class, pageRequest));
   }
 
   public Map<String, Integer> getAllValidInstanceCounts() {

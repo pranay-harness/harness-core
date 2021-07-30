@@ -115,7 +115,7 @@ public class Base implements PersistentEntity, UuidAware, CreatedAtAware, Create
       this.appId = uuid;
     }
     EmbeddedUser embeddedUser = ThreadLocalUserProvider.threadLocalUser();
-    if (createdBy == null && !(this instanceof Account)) {
+    if (createdBy == null) {
       createdBy = embeddedUser;
     }
     final long currentTime = currentTimeMillis();

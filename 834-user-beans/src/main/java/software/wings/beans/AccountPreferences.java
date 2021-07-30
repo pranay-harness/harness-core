@@ -21,5 +21,5 @@ import lombok.experimental.FieldNameConstants;
 @TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 @OwnedBy(HarnessTeam.PL)
 public class AccountPreferences {
-  Integer delegateSecretsCacheTTLInHours = 1;
+  private Integer delegateSecretsCacheTTLInHours = 1;
 }

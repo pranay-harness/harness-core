@@ -1,6 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
@@ -13,6 +16,7 @@ import org.slf4j.LoggerFactory;
  * @author rktummala on 08/29/18
  */
 // Note: This is intentionally not made enum
+@OwnedBy(PL)
 public interface AccountType {
   Logger log = LoggerFactory.getLogger(AccountType.class);
 

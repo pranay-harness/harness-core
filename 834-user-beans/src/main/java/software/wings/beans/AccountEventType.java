@@ -1,5 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PL)
 public enum AccountEventType {
   APP_CREATED,
   SERVICE_CREATED,

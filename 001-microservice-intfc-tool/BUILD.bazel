@@ -48,6 +48,7 @@ java_binary(
         "//820-platform-service:module",
         "//830-notification-service:module",
         "//830-resource-group:module",
+        "//834-user-beans:module",
         "//835-notification-senders:module",
         "//840-template-service:module",
         "//850-ng-pipeline-commons:module",

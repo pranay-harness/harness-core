@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonTypeName("ARTIFACT")
+@OwnedBy(PL)
 public class ArtifactStreamAllowedValueYaml implements AllowedValueYaml {
   private String artifactServerName;
   private String artifactStreamName;

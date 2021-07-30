@@ -1,5 +1,6 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -7,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.ExceptionUtils;
@@ -14,7 +16,6 @@ import io.harness.migrations.Migration;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -49,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
  * Finally we decided to go with option 3.
  */
 @Slf4j
+@OwnedBy(PL)
 public abstract class EntityNameValidationMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 
@@ -73,7 +75,7 @@ public abstract class EntityNameValidationMigration implements Migration {
     PageRequest<Account> request =
         aPageRequest().withLimit(UNLIMITED).addFieldsIncluded("uuid").addFilter("appId", EQ, GLOBAL_APP_ID).build();
     List<Account> accounts = wingsPersistence.query(Account.class, request).getResponse();
-    return accounts.stream().map(Base::getUuid).collect(Collectors.toList());
+    return accounts.stream().map(Account::getUuid).collect(Collectors.toList());
   }
 
   private String getValidName(Set<String> namesAlreadyTaken, String currentName) {

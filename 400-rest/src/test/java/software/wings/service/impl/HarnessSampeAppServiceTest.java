@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.UNKNOWN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -26,6 +27,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -67,6 +69,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class HarnessSampeAppServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SampleDataProviderService sampleDataProviderService;
@@ -304,36 +307,47 @@ public class HarnessSampeAppServiceTest extends WingsBaseTest {
   }
 
   private Application createHarnessSampleApp() {
-    Account savedAccount = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build());
+    Account account = anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build();
+
+    String savedAccount = wingsPersistence.save(account);
+    Account getAccount = wingsPersistence.get(Account.class, savedAccount);
+
+    //    Account savedAccount = wingsPersistence.saveAndGet(
+    //        Account.class, build);
     assertThat(savedAccount).isNotNull();
 
-    sampleDataProviderService.createK8sV2SampleApp(savedAccount);
-    Application app = appService.getAppByName(savedAccount.getUuid(), HARNESS_SAMPLE_APP);
+    sampleDataProviderService.createK8sV2SampleApp(getAccount);
+    Application app = appService.getAppByName(getAccount.getUuid(), HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;
   }
 
   private Application createHarnessSampleAppV2WithMultiArtifactSupport() throws IllegalAccessException {
     FieldUtils.writeField(sampleDataProviderService, "featureFlagService", featureFlagService, true);
-    Account savedAccount = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build());
-    assertThat(savedAccount).isNotNull();
-    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, savedAccount.getUuid())).thenReturn(true);
 
-    sampleDataProviderService.createK8sV2SampleApp(savedAccount);
-    Application app = appService.getAppByName(savedAccount.getUuid(), HARNESS_SAMPLE_APP);
+    Account account = anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build();
+
+    String savedAccount = wingsPersistence.save(account);
+    Account getAccount = wingsPersistence.get(Account.class, savedAccount);
+
+    assertThat(savedAccount).isNotNull();
+    when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, getAccount.getUuid())).thenReturn(true);
+
+    sampleDataProviderService.createK8sV2SampleApp(getAccount);
+    Application app = appService.getAppByName(getAccount.getUuid(), HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;
   }
 
   private Application createHarnessSampleAppV2() {
-    Account savedAccount = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build());
+    Account account = anAccount().withAccountName(ACCOUNT_NAME).withUuid(ACCOUNT_ID).build();
+
+    String savedAccount = wingsPersistence.save(account);
+    Account getAccount = wingsPersistence.get(Account.class, savedAccount);
     assertThat(savedAccount).isNotNull();
 
-    sampleDataProviderService.createK8sV2SampleApp(savedAccount);
-    Application app = appService.getAppByName(savedAccount.getUuid(), HARNESS_SAMPLE_APP);
+    sampleDataProviderService.createK8sV2SampleApp(getAccount);
+    Application app = appService.getAppByName(getAccount.getUuid(), HARNESS_SAMPLE_APP);
     assertThat(app).isNotNull();
     return app;
   }

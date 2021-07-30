@@ -1,6 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor
+@OwnedBy(PL)
 public class TrialSignupOptions {
   @Getter @Setter private List<Products> productsSelected = new ArrayList<>();
 

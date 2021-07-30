@@ -1,10 +1,7 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys;
-
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys.delegateVersions;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.ChangeDataCapture;
@@ -23,14 +20,23 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.account.ServiceAccountConfig;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
+import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UuidAware;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
+import io.harness.validation.Update;
 
+import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +48,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,16 +57,21 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 
-@OwnedBy(DX)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@OwnedBy(PL)
 @TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @ChangeDataCapture(table = "accounts", fields = {}, handler = "Account")
-public class Account extends Base implements PersistentRegularIterable {
+public class Account implements PersistentRegularIterable, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
+                                UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -71,6 +83,17 @@ public class Account extends Base implements PersistentRegularIterable {
   }
 
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+  public static final long SERVICE_GUAARD_LIMIT = 20;
+  public static final String ID_KEY2 = "_id";
+
+  @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
+  @FdIndex @NotNull @SchemaIgnore protected String appId;
+  @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore @FdIndex private long createdAt;
+
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   @NotNull private String companyName;
 
@@ -372,19 +395,25 @@ public class Account extends Base implements PersistentRegularIterable {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    if (!super.equals(o)) {
-      return false;
-    }
 
     Account account = (Account) o;
+
+    if (uuid != null ? !uuid.equals(account.uuid) : account.uuid != null) {
+      return false;
+    }
+    if (appId != null ? !appId.equals(account.appId) : account.appId != null) {
+      return false;
+    }
 
     return accountName != null ? accountName.equals(account.accountName) : account.accountName == null;
   }
 
   @Override
   public int hashCode() {
-    int result = super.hashCode();
+    int result = 31;
     result = 31 * result + (accountName != null ? accountName.hashCode() : 0);
+    result = 31 * result + (uuid != null ? uuid.hashCode() : 0);
+    result = 31 * result + (appId != null ? appId.hashCode() : 0);
     return result;
   }
 
@@ -778,6 +807,6 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";
     public static final String instanceStatsMetricsPublisherInteration = "instanceStatsMetricsPublisherIteration";
     public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
-        delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
+        delegateConfiguration + "." + delegateVersions;
   }
 }

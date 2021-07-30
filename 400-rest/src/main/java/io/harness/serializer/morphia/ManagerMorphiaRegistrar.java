@@ -148,7 +148,6 @@ import software.wings.audit.AuditRecord;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.ARMInfrastructureProvisioner;
-import software.wings.beans.Account;
 import software.wings.beans.ActionableNotification;
 import software.wings.beans.Activity;
 import software.wings.beans.ApiKeyEntry;
@@ -246,7 +245,6 @@ import software.wings.beans.PrometheusConfig;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintNotification;
 import software.wings.beans.ResourceLookup;
-import software.wings.beans.Role;
 import software.wings.beans.RollingOrchestrationWorkflow;
 import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SSHExecutionCredential;
@@ -807,7 +805,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerClasses(Set<Class> set) {
-    set.add(Account.class);
     set.add(AcrArtifactStream.class);
     set.add(ActionableNotification.class);
     set.add(Activity.class);
@@ -990,7 +987,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ResourceConstraintInstance.class);
     set.add(ResourceConstraintNotification.class);
     set.add(ResourceLookup.class);
-    set.add(Role.class);
     set.add(SamlSettings.class);
     set.add(Schema.class);
     set.add(SearchDistributedLock.class);

@@ -1,5 +1,6 @@
 package io.harness.event.usagemetrics;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -11,6 +12,7 @@ import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
 import static java.util.function.Function.identity;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -50,6 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(PL)
 public class UsageMetricsService {
   @Inject private UsageMetricsHelper usageMetricsHelper;
   @Inject private ServiceResourceService serviceResourceService;
@@ -124,10 +127,6 @@ public class UsageMetricsService {
         new String[] {properties.get(ACCOUNT_ID), properties.get(VERIFICATION_STATE_TYPE),
             String.valueOf(properties.get(IS_24X7_ENABLED))},
         metricValue);
-  }
-
-  protected List<Account> getAllAccounts() {
-    return usageMetricsHelper.listAllAccountsWithDefaults();
   }
 
   protected List<String> getAppIds(String accountId) {
