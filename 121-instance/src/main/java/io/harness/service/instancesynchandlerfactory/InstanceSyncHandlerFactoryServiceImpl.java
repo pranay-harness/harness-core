@@ -11,12 +11,12 @@ import com.google.inject.Singleton;
 @OwnedBy(HarnessTeam.DX)
 public class InstanceSyncHandlerFactoryServiceImpl implements InstanceSyncHandlerFactoryService {
   @Override
-  public AbstractInstanceSyncHandler getInstanceSyncHandler(final String infrastructureMappingType) {
-    switch (infrastructureMappingType) {
+  public AbstractInstanceSyncHandler getInstanceSyncHandler(final String infrastructureKind) {
+    switch (infrastructureKind) {
       // TODO register the handler here
       default:
         throw new UnexpectedException(
-            "No instance sync handler registered for infra mapping type: " + infrastructureMappingType);
+            "No instance sync handler registered for infrastructure kind : " + infrastructureKind);
     }
   }
 }
