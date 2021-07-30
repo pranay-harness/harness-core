@@ -16,6 +16,5 @@ public class CodeBaseStepParameters implements StepParameters {
   String codeBaseDelegateTaskId;
 
   String connectorRef;
-  String repoUrl;
   ExecutionSource executionSource;
 }

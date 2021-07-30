@@ -49,12 +49,15 @@ import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
@@ -85,7 +88,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
         connectorUtils.getConnectorDetails(AmbianceUtils.getNgAccess(ambiance), stepParameters.getConnectorRef());
 
     ScmGitRefTaskParams scmGitRefTaskParams =
-        obtainTaskParameters(manualExecutionSource, connectorDetails, stepParameters.getRepoUrl());
+        obtainTaskParameters(manualExecutionSource, connectorDetails, stepParameters.getRepoName());
 
     final TaskData taskData = TaskData.builder()
                                   .async(true)
@@ -97,7 +100,38 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
-  private ScmGitRefTaskParams obtainTaskParameters(
+  @Override
+  public StepResponse handleTaskResult(Ambiance ambiance, CodeBaseTaskStepParameters stepParameters,
+      ThrowingSupplier<ScmGitRefTaskResponseData> responseDataSupplier) throws Exception {
+    ScmGitRefTaskResponseData scmGitRefTaskResponseData = responseDataSupplier.get();
+    CodebaseSweepingOutput codebaseSweepingOutput = null;
+    if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.PULL_REQUEST_WITH_COMMITS) {
+      codebaseSweepingOutput = buildPRCodebaseSweepingOutput(scmGitRefTaskResponseData);
+    } else if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.LATEST_COMMIT_ID) {
+      codebaseSweepingOutput = buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData);
+    }
+    saveCodebaseSweepingOutput(ambiance, codebaseSweepingOutput);
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
+  }
+
+  @Override
+  public StepResponse executeSync(Ambiance ambiance, CodeBaseTaskStepParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
+    ExecutionSource executionSource = stepParameters.getExecutionSource();
+
+    CodebaseSweepingOutput codebaseSweepingOutput = null;
+    if (executionSource.getType() == MANUAL) {
+      codebaseSweepingOutput = buildManualCodebaseSweepingOutput((ManualExecutionSource) executionSource);
+    } else if (executionSource.getType() == WEBHOOK) {
+      codebaseSweepingOutput = buildWebhookCodebaseSweepingOutput((WebhookExecutionSource) executionSource);
+    }
+    saveCodebaseSweepingOutput(ambiance, codebaseSweepingOutput);
+
+    return StepResponse.builder().status(Status.SUCCEEDED).build();
+  }
+
+  @VisibleForTesting
+  ScmGitRefTaskParams obtainTaskParameters(
       ManualExecutionSource manualExecutionSource, ConnectorDetails connectorDetails, String repoName) {
     ScmConnector scmConnector = (ScmConnector) connectorDetails.getConnectorConfig();
     String completeUrl = scmConnector.getUrl();
@@ -127,80 +161,118 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     }
   }
 
-  @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, CodeBaseTaskStepParameters stepParameters,
-      ThrowingSupplier<ScmGitRefTaskResponseData> responseDataSupplier) throws Exception {
-    ScmGitRefTaskResponseData scmGitRefTaskResponseData = responseDataSupplier.get();
-    CodebaseSweepingOutput codebaseSweepingOutput = null;
+  @VisibleForTesting
+  CodebaseSweepingOutput buildCommitShaCodebaseSweepingOutput(ScmGitRefTaskResponseData scmGitRefTaskResponseData)
+      throws InvalidProtocolBufferException {
+    CodebaseSweepingOutput codebaseSweepingOutput;
+    final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getGetLatestCommitResponse();
+    if (isEmpty(getLatestCommitResponseByteArray)) {
+      throw new CIStageExecutionException("Codebase git information can't be obtained");
+    }
+    GetLatestCommitResponse getLatestCommitResponse =
+        GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
 
-    if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.PULL_REQUEST_WITH_COMMITS) {
-      final byte[] findPRResponseByteArray = scmGitRefTaskResponseData.getFindPRResponse();
-      final byte[] listCommitsInPRResponseByteArray = scmGitRefTaskResponseData.getListCommitsInPRResponse();
+    codebaseSweepingOutput = CodebaseSweepingOutput.builder()
+                                 .branch(scmGitRefTaskResponseData.getBranch())
+                                 .commitSha(getLatestCommitResponse.getCommitId())
+                                 .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
+                                 .build();
+    return codebaseSweepingOutput;
+  }
 
-      if (findPRResponseByteArray == null || listCommitsInPRResponseByteArray == null) {
-        throw new CIStageExecutionException("Codebase git information can't be obtained");
-      }
+  @VisibleForTesting
+  CodebaseSweepingOutput buildWebhookCodebaseSweepingOutput(WebhookExecutionSource webhookExecutionSource) {
+    if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
+      PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
+      return CodebaseSweepingOutput.builder()
+          .branch(prWebhookEvent.getTargetBranch())
+          .targetBranch(prWebhookEvent.getTargetBranch())
+          .sourceBranch(prWebhookEvent.getSourceBranch())
+          .prNumber(String.valueOf(prWebhookEvent.getPullRequestId()))
+          .prTitle(prWebhookEvent.getTitle())
+          .commitSha(prWebhookEvent.getBaseAttributes().getAfter())
+          .baseCommitSha(prWebhookEvent.getBaseAttributes().getBefore())
+          .repoUrl(prWebhookEvent.getRepository().getLink())
+          .pullRequestLink(prWebhookEvent.getPullRequestLink())
+          .gitUser(prWebhookEvent.getBaseAttributes().getAuthorName())
+          .gitUserEmail(prWebhookEvent.getBaseAttributes().getAuthorEmail())
+          .gitUserAvatar(prWebhookEvent.getBaseAttributes().getAuthorAvatar())
+          .gitUserId(prWebhookEvent.getBaseAttributes().getAuthorLogin())
+          .build();
+    } else if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
+      BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
+      return CodebaseSweepingOutput.builder()
+          .branch(branchWebhookEvent.getBranchName())
+          .targetBranch(branchWebhookEvent.getBranchName())
+          .commitSha(branchWebhookEvent.getBaseAttributes().getAfter())
+          .repoUrl(branchWebhookEvent.getRepository().getLink())
+          .gitUser(branchWebhookEvent.getBaseAttributes().getAuthorName())
+          .gitUserEmail(branchWebhookEvent.getBaseAttributes().getAuthorEmail())
+          .gitUserAvatar(branchWebhookEvent.getBaseAttributes().getAuthorAvatar())
+          .gitUserId(branchWebhookEvent.getBaseAttributes().getAuthorLogin())
+          .build();
+    }
+    return CodebaseSweepingOutput.builder().build();
+  }
 
-      FindPRResponse findPRResponse = FindPRResponse.parseFrom(findPRResponseByteArray);
-      ListCommitsInPRResponse listCommitsInPRResponse =
-          ListCommitsInPRResponse.parseFrom(listCommitsInPRResponseByteArray);
-      PullRequest pr = findPRResponse.getPr();
-      List<Commit> commits = listCommitsInPRResponse.getCommitsList();
-      List<CodebaseSweepingOutput.CodeBaseCommit> codeBaseCommits = new ArrayList<>();
-      for (Commit commit : commits) {
-        codeBaseCommits.add(CodebaseSweepingOutput.CodeBaseCommit.builder()
-                                .id(commit.getSha())
-                                .message(commit.getMessage())
-                                .link(commit.getLink())
-                                .timeStamp(commit.getCommitter().getDate().getSeconds())
-                                .ownerEmail(commit.getAuthor().getEmail())
-                                .ownerId(commit.getAuthor().getLogin())
-                                .ownerName(commit.getAuthor().getName())
-                                .build());
-      }
+  @VisibleForTesting
+  CodebaseSweepingOutput buildManualCodebaseSweepingOutput(ManualExecutionSource manualExecutionSource) {
+    return CodebaseSweepingOutput.builder()
+        .branch(manualExecutionSource.getBranch())
+        .tag(manualExecutionSource.getTag())
+        .commitSha(manualExecutionSource.getCommitSha())
+        .build();
+  }
 
-      String state = "open";
-      if (pr.getClosed()) {
-        state = "closed";
-      } else if (pr.getMerged()) {
-        state = "merged";
-      }
-      codebaseSweepingOutput =
-          CodebaseSweepingOutput.builder()
-              .branch(pr.getTarget())
-              .sourceBranch(pr.getSource())
-              .targetBranch(pr.getTarget())
-              .prNumber(String.valueOf(pr.getNumber()))
-              .prTitle(pr.getTitle())
-              .commitSha(pr.getSha())
-              .baseCommitSha(pr.getBase().getSha())
-              .commitRef(pr.getRef())
-              .repoUrl(stepParameters.getRepoUrl()) // Add repo url to scm.PullRequest and get it from there
-              .gitUser(pr.getAuthor().getName())
-              .gitUserAvatar(pr.getAuthor().getAvatar())
-              .gitUserEmail(pr.getAuthor().getEmail())
-              .gitUserId(pr.getAuthor().getLogin())
-              .pullRequestLink(pr.getLink())
-              .commits(codeBaseCommits)
-              .state(state)
-              .build();
+  @VisibleForTesting
+  CodebaseSweepingOutput buildPRCodebaseSweepingOutput(ScmGitRefTaskResponseData scmGitRefTaskResponseData)
+      throws InvalidProtocolBufferException {
+    CodebaseSweepingOutput codebaseSweepingOutput;
+    final byte[] findPRResponseByteArray = scmGitRefTaskResponseData.getFindPRResponse();
+    final byte[] listCommitsInPRResponseByteArray = scmGitRefTaskResponseData.getListCommitsInPRResponse();
+    final String repoUrl = scmGitRefTaskResponseData.getRepoUrl();
 
-    } else if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.LATEST_COMMIT_ID) {
-      final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getGetLatestCommitResponse();
-      if (isEmpty(getLatestCommitResponseByteArray)) {
-        throw new CIStageExecutionException("Codebase git information can't be obtained");
-      }
-      GetLatestCommitResponse getLatestCommitResponse =
-          GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
-
-      codebaseSweepingOutput = CodebaseSweepingOutput.builder()
-                                   .branch(scmGitRefTaskResponseData.getBranch())
-                                   .commitSha(getLatestCommitResponse.getCommitId())
-                                   .build();
+    if (findPRResponseByteArray == null || listCommitsInPRResponseByteArray == null) {
+      throw new CIStageExecutionException("Codebase git information can't be obtained");
     }
 
-    saveCodebaseSweepingOutput(ambiance, codebaseSweepingOutput);
-    return StepResponse.builder().status(Status.SUCCEEDED).build();
+    FindPRResponse findPRResponse = FindPRResponse.parseFrom(findPRResponseByteArray);
+    ListCommitsInPRResponse listCommitsInPRResponse =
+        ListCommitsInPRResponse.parseFrom(listCommitsInPRResponseByteArray);
+    PullRequest pr = findPRResponse.getPr();
+    List<Commit> commits = listCommitsInPRResponse.getCommitsList();
+    List<CodebaseSweepingOutput.CodeBaseCommit> codeBaseCommits = new ArrayList<>();
+    for (Commit commit : commits) {
+      codeBaseCommits.add(CodebaseSweepingOutput.CodeBaseCommit.builder()
+                              .id(commit.getSha())
+                              .message(commit.getMessage())
+                              .link(commit.getLink())
+                              .timeStamp(commit.getCommitter().getDate().getSeconds())
+                              .ownerEmail(commit.getAuthor().getEmail())
+                              .ownerId(commit.getAuthor().getLogin())
+                              .ownerName(commit.getAuthor().getName())
+                              .build());
+    }
+
+    codebaseSweepingOutput = CodebaseSweepingOutput.builder()
+                                 .branch(pr.getTarget())
+                                 .sourceBranch(pr.getSource())
+                                 .targetBranch(pr.getTarget())
+                                 .prNumber(String.valueOf(pr.getNumber()))
+                                 .prTitle(pr.getTitle())
+                                 .commitSha(pr.getSha())
+                                 .baseCommitSha(pr.getBase().getSha())
+                                 .commitRef(pr.getRef())
+                                 .repoUrl(repoUrl) // Add repo url to scm.PullRequest and get it from there
+                                 .gitUser(pr.getAuthor().getName())
+                                 .gitUserAvatar(pr.getAuthor().getAvatar())
+                                 .gitUserEmail(pr.getAuthor().getEmail())
+                                 .gitUserId(pr.getAuthor().getLogin())
+                                 .pullRequestLink(pr.getLink())
+                                 .commits(codeBaseCommits)
+                                 .state(getState(pr))
+                                 .build();
+    return codebaseSweepingOutput;
   }
 
   private void saveCodebaseSweepingOutput(Ambiance ambiance, CodebaseSweepingOutput codebaseSweepingOutput) {
@@ -216,54 +288,14 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     }
   }
 
-  @Override
-  public StepResponse executeSync(Ambiance ambiance, CodeBaseTaskStepParameters stepParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData) {
-    ExecutionSource executionSource = stepParameters.getExecutionSource();
-
-    CodebaseSweepingOutput codebaseSweepingOutput = null;
-    if (executionSource.getType() == MANUAL) {
-      ManualExecutionSource manualExecutionSource = (ManualExecutionSource) executionSource;
-      codebaseSweepingOutput = CodebaseSweepingOutput.builder()
-                                   .branch(manualExecutionSource.getBranch())
-                                   .tag(manualExecutionSource.getTag())
-                                   .commitSha(manualExecutionSource.getCommitSha())
-                                   .build();
-    } else if (executionSource.getType() == WEBHOOK) {
-      WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
-      if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
-        PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
-
-        codebaseSweepingOutput = CodebaseSweepingOutput.builder()
-                                     .branch(prWebhookEvent.getSourceBranch())
-                                     .targetBranch(prWebhookEvent.getTargetBranch())
-                                     .sourceBranch(prWebhookEvent.getSourceBranch())
-                                     .prNumber(String.valueOf(prWebhookEvent.getPullRequestId()))
-                                     .prTitle(prWebhookEvent.getTitle())
-                                     .commitSha(prWebhookEvent.getBaseAttributes().getAfter())
-                                     .baseCommitSha(prWebhookEvent.getBaseAttributes().getBefore())
-                                     .repoUrl(prWebhookEvent.getRepository().getLink())
-                                     .gitUser(prWebhookEvent.getBaseAttributes().getAuthorName())
-                                     .gitUserEmail(prWebhookEvent.getBaseAttributes().getAuthorEmail())
-                                     .gitUserAvatar(prWebhookEvent.getBaseAttributes().getAuthorAvatar())
-                                     .gitUserAvatar(prWebhookEvent.getBaseAttributes().getAuthorLogin())
-                                     .build();
-      } else if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
-        BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
-        codebaseSweepingOutput = CodebaseSweepingOutput.builder()
-                                     .branch(branchWebhookEvent.getBranchName())
-                                     .targetBranch(branchWebhookEvent.getBranchName())
-                                     .commitSha(branchWebhookEvent.getBaseAttributes().getAfter())
-                                     .repoUrl(branchWebhookEvent.getRepository().getLink())
-                                     .gitUser(branchWebhookEvent.getBaseAttributes().getAuthorName())
-                                     .gitUserEmail(branchWebhookEvent.getBaseAttributes().getAuthorEmail())
-                                     .gitUserAvatar(branchWebhookEvent.getBaseAttributes().getAuthorAvatar())
-                                     .gitUserAvatar(branchWebhookEvent.getBaseAttributes().getAuthorLogin())
-                                     .build();
-      }
+  @NotNull
+  private String getState(PullRequest pr) {
+    String state = "open";
+    if (pr.getClosed()) {
+      state = "closed";
+    } else if (pr.getMerged()) {
+      state = "merged";
     }
-    saveCodebaseSweepingOutput(ambiance, codebaseSweepingOutput);
-
-    return StepResponse.builder().status(Status.SUCCEEDED).build();
+    return state;
   }
 }

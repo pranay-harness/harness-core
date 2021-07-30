@@ -85,6 +85,7 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
                 scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getPrNumber(), SCMGrpc.newBlockingStub(c)));
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .repoUrl(scmGitRefTaskParams.getScmConnector().getUrl())
             .findPRResponse(findPRResponse.toByteArray())
             .listCommitsInPRResponse(listCommitsInPRResponse.toByteArray())
             .build();
@@ -107,6 +108,7 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
             latestCommitResponse.getStatus(), latestCommitResponse.getError());
         return ScmGitRefTaskResponseData.builder()
             .branch(scmGitRefTaskParams.getBranch())
+            .repoUrl(scmGitRefTaskParams.getScmConnector().getUrl())
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .getLatestCommitResponse(latestCommitResponse.toByteArray())
             .build();

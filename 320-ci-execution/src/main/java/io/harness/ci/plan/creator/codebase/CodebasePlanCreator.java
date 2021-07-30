@@ -26,11 +26,13 @@ import io.harness.states.codebase.CodeBaseTaskStep;
 import io.harness.states.codebase.CodeBaseTaskStepParameters;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @UtilityClass
 @Slf4j
@@ -48,17 +50,25 @@ public class CodebasePlanCreator {
     ExecutionSource executionSource =
         IntegrationStageUtils.buildExecutionSource(triggerInfo, triggerPayload, "codebase", ciCodeBase.getBuild());
 
+    return buildCodebasePlanNodes(
+        ciCodeBaseField.getNode().getUuid(), childNodeId, kryoSerializer, ciCodeBase, executionSource);
+  }
+
+  @NotNull
+  @VisibleForTesting
+  List<PlanNode> buildCodebasePlanNodes(String ciCodeBaseFieldUuid, String childNodeId, KryoSerializer kryoSerializer,
+      CodeBase ciCodeBase, ExecutionSource executionSource) {
     List<PlanNode> planNodeList = new ArrayList<>();
-    PlanNode codeBaseDelegateTask = createPlanForCodeBaseTask(
-        ciCodeBase, executionSource, OrchestrationFacilitatorType.TASK, ciCodeBaseField.getNode().getUuid());
+    PlanNode codeBaseDelegateTask =
+        createPlanForCodeBaseTask(ciCodeBase, executionSource, OrchestrationFacilitatorType.TASK, ciCodeBaseFieldUuid);
     planNodeList.add(codeBaseDelegateTask);
-    PlanNode codeBaseSyncTask = createPlanForCodeBaseTask(
-        ciCodeBase, executionSource, OrchestrationFacilitatorType.SYNC, ciCodeBaseField.getNode().getUuid());
+    PlanNode codeBaseSyncTask =
+        createPlanForCodeBaseTask(ciCodeBase, executionSource, OrchestrationFacilitatorType.SYNC, ciCodeBaseFieldUuid);
     planNodeList.add(codeBaseSyncTask);
 
     planNodeList.add(
         PlanNode.builder()
-            .uuid(ciCodeBaseField.getNode().getUuid())
+            .uuid(ciCodeBaseFieldUuid)
             .stepType(CodeBaseStep.STEP_TYPE)
             .name("codebase_node")
             .identifier("codebase_node")
@@ -84,11 +94,13 @@ public class CodebasePlanCreator {
     return planNodeList;
   }
 
-  public PlanNode createPlanForCodeBaseTask(
+  @NotNull
+  @VisibleForTesting
+  PlanNode createPlanForCodeBaseTask(
       CodeBase ciCodeBase, ExecutionSource executionSource, String facilitatorType, String codeBaseId) {
     CodeBaseTaskStepParameters codeBaseTaskStepParameters = CodeBaseTaskStepParameters.builder()
                                                                 .connectorRef(ciCodeBase.getConnectorRef())
-                                                                .repoUrl(ciCodeBase.getRepoName())
+                                                                .repoName(ciCodeBase.getRepoName())
                                                                 .executionSource(executionSource)
                                                                 .build();
 

@@ -13,6 +13,6 @@ import lombok.Value;
 @OwnedBy(HarnessTeam.CI)
 public class CodeBaseTaskStepParameters implements StepParameters {
   String connectorRef;
-  String repoUrl;
+  String repoName;
   ExecutionSource executionSource;
 }
