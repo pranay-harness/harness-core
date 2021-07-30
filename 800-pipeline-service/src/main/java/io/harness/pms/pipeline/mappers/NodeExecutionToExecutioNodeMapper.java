@@ -14,7 +14,7 @@ import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
-import io.harness.pms.utils.PmsExecutionUtils;
+import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,7 +49,8 @@ public class NodeExecutionToExecutioNodeMapper {
         .setupId(nodeExecution.getNode().getUuid())
         .name(nodeExecution.getNode().getName())
         .identifier(nodeExecution.getNode().getIdentifier())
-        .stepParameters(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getResolvedStepInputs()))
+        .stepParameters(
+            OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(nodeExecution.getResolvedStepInputs()))
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())
         .stepType(nodeExecution.getNode().getStepType().getType())
@@ -60,8 +61,9 @@ public class NodeExecutionToExecutioNodeMapper {
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .executableResponses(nodeExecution.getExecutableResponses())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
-        .outcomes(PmsExecutionUtils.convertToOrchestrationMap(outcomes))
+        .progressData(
+            OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
+        .outcomes(OrchestrationMapBackwardCompatibilityUtils.convertToOrchestrationMap(outcomes))
         .baseFqn(null)
         .delegateInfoList(delegateInfoList)
         .build();

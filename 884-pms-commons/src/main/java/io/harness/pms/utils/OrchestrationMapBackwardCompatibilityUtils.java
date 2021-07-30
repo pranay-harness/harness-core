@@ -1,5 +1,7 @@
 package io.harness.pms.utils;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.data.OrchestrationMap;
 
 import java.util.Map;
@@ -8,9 +10,10 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 @Slf4j
-public class PmsExecutionUtils {
+public class OrchestrationMapBackwardCompatibilityUtils {
   /**
    * This method is used for backward compatibility
    * @param object can be of type {@link Document} (before)
