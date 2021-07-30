@@ -74,6 +74,8 @@ public class TokenServiceImpl implements TokenService {
   public String createToken(TokenDTO tokenDTO) {
     validateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
         tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
+    validateTokenLimit(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
+        tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder($2A, 10);
     String tokenString = passwordEncoder.encode(randomString);
@@ -98,14 +100,21 @@ public class TokenServiceImpl implements TokenService {
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
     }
+    apiKeyService.getApiKey(
+        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
+  }
+
+  private void validateTokenLimit(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String parentIdentifier, String apiKeyIdentifier) {
     ServiceAccountConfig serviceAccountConfig = accountService.getAccount(accountIdentifier).getServiceAccountConfig();
     long tokenLimit = serviceAccountConfig != null ? serviceAccountConfig.getTokenLimit() : DEFAULT_TOKEN_LIMIT;
-    long existingTokenCount = tokenRepository.count();
+    long existingTokenCount =
+        tokenRepository
+            .countByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndParentIdentifierAndApiKeyIdentifier(
+                accountIdentifier, orgIdentifier, projectIdentifier, parentIdentifier, apiKeyIdentifier);
     if (existingTokenCount >= tokenLimit) {
       throw new InvalidRequestException(String.format("Maximum limit has reached"));
     }
-    apiKeyService.getApiKey(
-        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
   }
 
   private void validateUpdateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
