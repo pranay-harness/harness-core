@@ -304,7 +304,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       final String messageId = gitSyncConfigEventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", accountId, GitSyncConfigChangeEventConstants.EVENT_TYPE,
-                  eventType.name(), GitSyncConfigChangeEventConstants.CONFIG_SWITCh_TYPE, configSwitchType.name()))
+                  eventType.name(), GitSyncConfigChangeEventConstants.CONFIG_SWITCH_TYPE, configSwitchType.name()))
               .setData(entityScopeInfoBuilder.build().toByteString())
               .build());
       log.info(

@@ -6,6 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(DX)
 public interface GitSyncConfigChangeEventConstants {
-  public static final String EVENT_TYPE = "event_type";
-  public static final String CONFIG_SWITCh_TYPE = "config_switch_type";
+  String EVENT_TYPE = "event_type";
+  String CONFIG_SWITCH_TYPE = "config_switch_type";
 }
