@@ -231,7 +231,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     registerWebhookAsync(gitSyncConfigDTO);
     YamlGitConfig savedYamlGitConfig = null;
     try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
-             getYamlGitConfigScopeKey(gitSyncConfigDTO), Duration.ofMinutes(2), Duration.ofMinutes(3))) {
+             getYamlGitConfigScopeKey(gitSyncConfigDTO), Duration.ofMinutes(1), Duration.ofMinutes(2))) {
       final boolean wasGitSyncEnabled = isGitSyncEnabled(
           accountId, gitSyncConfigDTO.getOrganizationIdentifier(), gitSyncConfigDTO.getProjectIdentifier());
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
