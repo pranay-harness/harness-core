@@ -70,7 +70,7 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM,
-              getGitSyncSdkConfiguration().getServiceHeader().getServiceId(),
+              getGitSyncSdkConfiguration().getServiceHeader().getServiceId() + GIT_SYNC_SDK,
               getGitSyncSdkConfiguration().getEventsRedisConfig(),
               EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE));
