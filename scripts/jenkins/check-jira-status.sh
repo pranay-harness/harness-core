@@ -18,8 +18,14 @@ issuetype=`echo "${jira_response}" | jq ".fields.issuetype.name" | tr -d '"'`
 bug_resolution=`echo "${jira_response}" | jq ".fields.customfield_10687" | tr -d '"'`
 jira_resolved_as=`echo "${jira_response}" | jq ".fields.customfield_10709" | tr -d '"'`
 phase_injected=`echo "${jira_response}" | jq ".fields.customfield_10748" | tr -d '"'`
-what_changed=`echo "${jira_response}" | jq ".fields.customfield_10763" | tr -d '"'`
-ff_added=`echo "${jira_response}" | jq ".fields.customfield_10785.value" | tr -d '"'`
+if [[ $KEY == BT-* ]]
+then
+  what_changed="n/a"
+  ff_added="n/a"
+else
+  what_changed=`echo "${jira_response}" | jq ".fields.customfield_10763" | tr -d '"'`
+  ff_added=`echo "${jira_response}" | jq ".fields.customfield_10785.value" | tr -d '"'`
+fi
 
 echo "issueType is ${issuetype}"
 
