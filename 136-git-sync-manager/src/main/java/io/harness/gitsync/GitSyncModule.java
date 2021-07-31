@@ -8,6 +8,7 @@ import io.harness.SCMJavaClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
+import io.harness.gitsync.common.events.BranchSyncEventListener;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchSyncServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
@@ -46,12 +47,14 @@ import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.impl.GitSyncErrorServiceImpl;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -112,7 +115,17 @@ public class GitSyncModule extends AbstractModule {
     bind(GitBranchSyncService.class).to(GitBranchSyncServiceImpl.class);
     bind(GitToHarnessProgressService.class).to(GitToHarnessProgressServiceImpl.class);
     bind(YamlChangeSetLifeCycleManagerService.class).to(YamlChangeSetLifeCycleManagerServiceImpl.class);
+    bindGitSyncConfigMessageListeners();
+
     registerRequiredBindings();
+  }
+
+  private void bindGitSyncConfigMessageListeners() {
+    Multibinder<MessageListener> gitSyncConfigChangeMessageListener =
+        Multibinder.newSetBinder(binder(), MessageListener.class);
+    gitSyncConfigChangeMessageListener.addBinding().to(BranchSyncEventListener.class);
+    // todo(abhinav): add webhook listener and full sync listener when ready
+    //    gitSyncConfigChangeMessageListener.addBinding().to(WebhookRegistrationEventListener.class);
   }
 
   private void registerRequiredBindings() {

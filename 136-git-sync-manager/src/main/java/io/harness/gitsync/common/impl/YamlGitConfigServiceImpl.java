@@ -243,15 +243,13 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
               gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
     }
 
-    executorService.submit(() -> {
-      gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
-          gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(), gitSyncConfigDTO.getRepo(),
-          gitSyncConfigDTO.getIdentifier());
-      gitBranchService.updateBranchSyncStatus(
-          accountId, gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch(), SYNCED);
-    });
-
+    markDefaultBranchAsSynced(gitSyncConfigDTO);
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
+  }
+
+  private void markDefaultBranchAsSynced(YamlGitConfigDTO gitSyncConfigDTO) {
+    gitBranchService.updateBranchSyncStatus(
+        gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch(), SYNCED);
   }
 
   private void registerWebhookAsync(YamlGitConfigDTO gitSyncConfigDTO) {
@@ -292,7 +290,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private void sendEventForGitSyncConfigChange(YamlGitConfigDTO yamlGitConfigDTO,
       GitSyncConfigChangeEventType eventType, GitSyncConfigSwitchType configSwitchType) {
     String accountId = yamlGitConfigDTO.getAccountIdentifier();
-    final EntityScopeInfo.Builder entityScopeInfoBuilder = EntityScopeInfo.newBuilder().setAccountId(accountId);
+    final EntityScopeInfo.Builder entityScopeInfoBuilder =
+        EntityScopeInfo.newBuilder().setAccountId(accountId).setEntityIdentifier(yamlGitConfigDTO.getIdentifier());
     if (isNotEmpty(yamlGitConfigDTO.getOrganizationIdentifier())) {
       entityScopeInfoBuilder.setOrgId(StringValue.of(yamlGitConfigDTO.getOrganizationIdentifier()));
     }
