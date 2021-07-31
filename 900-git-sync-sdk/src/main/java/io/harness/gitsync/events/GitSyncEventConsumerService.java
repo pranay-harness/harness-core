@@ -3,6 +3,7 @@ package io.harness.gitsync.events;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME;
+import static io.harness.gitsync.AbstractGitSyncSdkModule.GIT_SYNC_SDK;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -22,8 +23,8 @@ public class GitSyncEventConsumerService implements Managed {
 
   @Override
   public void start() throws Exception {
-    gitSyncConfigConsumerService =
-        Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(GIT_CONFIG_STREAM).build());
+    gitSyncConfigConsumerService = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder().setNameFormat(GIT_CONFIG_STREAM + GIT_SYNC_SDK).build());
     gitSyncConfigConsumerService.execute(gitSyncConfigStreamConsumer);
   }
 
