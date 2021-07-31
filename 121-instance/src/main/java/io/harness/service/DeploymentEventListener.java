@@ -46,14 +46,19 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
   public void handleEvent(OrchestrationEvent event) {
     try {
       Ambiance ambiance = event.getAmbiance();
-      ServiceOutcome serviceOutcome = getServiceOutcomeFromAmbiance(ambiance);
-      InfrastructureOutcome infrastructureOutcome = getInfrastructureOutcomeFromAmbiance(ambiance);
+
+      if (!(event.getResolvedStepParameters() instanceof StepSpecType)) {
+        return;
+      }
 
       List<ServerInstanceInfo> serverInstanceInfoList = instanceInfoService.listServerInstances(
-          ambiance, ((StepSpecType) event.getResolvedStepParameters()).getStepType());
+              ambiance, ((StepSpecType) event.getResolvedStepParameters()).getStepType());
       if (serverInstanceInfoList.isEmpty()) {
         return;
       }
+
+      ServiceOutcome serviceOutcome = getServiceOutcomeFromAmbiance(ambiance);
+      InfrastructureOutcome infrastructureOutcome = getInfrastructureOutcomeFromAmbiance(ambiance);
 
       InfrastructureMappingDTO infrastructureMappingDTO =
           createInfrastructureMappingIfNotExists(ambiance, serviceOutcome, infrastructureOutcome);
