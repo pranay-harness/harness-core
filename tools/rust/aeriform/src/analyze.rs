@@ -1,6 +1,8 @@
 use clap::Clap;
 use enumset::{EnumSet, EnumSetType};
 use multimap::MultiMap;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
 use std::process::exit;
@@ -9,7 +11,7 @@ use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
-use crate::java_module::{modules, JavaModule, JavaModuleTraits};
+use crate::java_module::{JavaModule, JavaModuleTraits, modules};
 use crate::team::UNKNOWN_TEAM;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -29,6 +31,7 @@ static WEIGHTS: [i32; 7] = [5, 3, 2, 1, 2, 1, 1];
 enum Explanation {
     Empty,
     TeamIsMissing,
+    ClassAlreadyInTheTargetModule,
     DeprecatedModule,
     UsedInDeprecatedClass,
     BreakDependencyOnModule,
@@ -38,6 +41,12 @@ pub const EXPLANATION_TEAM_IS_MISSING: &str =
     "Please use the source level java annotation io.harness.annotations.dev.OwnedBy
 to specify which team is the owner of the class. The list of teams is in the
 enum io.harness.annotations.dev.HarnessTeam.";
+
+pub const EXPLANATION_CLASS_IS_ALREADY_IN_THE_TARGET_MODULE: &str =
+    "When class has a target module that is consistent with the module that it is
+already in, this could mean one of these two:
+    1. The annotation was left during the promotion/demotion - please remove it
+    2. The target module is wrong - please correct the module";
 
 pub const EXPLANATION_CLASS_IN_DEPRECATED_MODULE: &str =
     "When a module is deprecated, every class that is still in use should be
@@ -61,8 +70,8 @@ pub const EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS: &str =
 Note resolving some of the issues with higher issue points weight might be harder,
 but you will need to resolve less of those.";
 
-pub const EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE: &str = "
-When class from a module that needs to break dependency from another module,
+pub const EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE: &str =
+    "When class from a module that needs to break dependency from another module,
 depends on class from such module, this dependency needs to be broken.
 This can be done with breaking the dependency of the two classes or moving the
 classes accordingly, so they do not belong to module that should not depend to each other.";
@@ -112,6 +121,9 @@ pub struct Analyze {
 
     #[clap(short, long)]
     indirect: Option<u32>,
+
+    #[clap(long)]
+    top_blockers: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -314,6 +326,11 @@ pub fn analyze(opts: Analyze) {
             explanations.insert(report.explanation);
         });
 
+    if opts.top_blockers.unwrap_or(0) > 0 {
+        println!();
+        report_blockers(opts.top_blockers.unwrap(), &results);
+    }
+
     println!();
 
     if total_count == 0 {
@@ -331,6 +348,10 @@ pub fn analyze(opts: Analyze) {
     if explanations.contains(Explanation::TeamIsMissing) {
         println!();
         println!("{}", EXPLANATION_TEAM_IS_MISSING);
+    }
+    if explanations.contains(Explanation::ClassAlreadyInTheTargetModule) {
+        println!();
+        println!("{}", EXPLANATION_CLASS_IS_ALREADY_IN_THE_TARGET_MODULE);
     }
     if explanations.contains(Explanation::DeprecatedModule) {
         println!();
@@ -360,6 +381,67 @@ pub fn analyze(opts: Analyze) {
     if opts.exit_code {
         exit(1);
     }
+}
+
+pub struct Blocker {
+    class: String,
+    operations: usize,
+}
+
+fn report_blockers(top: u32, results: &Vec<Report>) {
+    let mut blockers_map: HashMap<&String, HashSet<&String>> = HashMap::new();
+
+    results.iter().for_each(|result| {
+        result.indirect_classes.iter().for_each(|blocker| {
+            let blockers = blockers_map.entry(blocker).or_insert(HashSet::new());
+            blockers.insert(&result.for_class);
+        })
+    });
+
+    let mut unstable: HashSet<&String> = blockers_map.keys().map(|&class| class).collect();
+
+    while unstable.len() > 0 {
+        let extended: HashMap<&String, HashSet<&String>> = blockers_map
+            .par_iter()
+            .map(|(&class, blocked)| {
+                let mut extended = HashSet::new();
+                extended.extend(blocked);
+
+                let x: HashSet<&String> = blocked
+                    .par_iter()
+                    .map(|class| blockers_map.get(class))
+                    .filter(|option| option.is_some())
+                    .map(|option| option.unwrap())
+                    .flatten()
+                    .map(|&class| class)
+                    .collect();
+
+                extended.extend(x);
+
+                (extended.len() == blocked.len(), class, extended)
+            })
+            .filter(|(stable, _, _)| !stable)
+            .map(|(_, class, extended)| (class, extended))
+            .collect();
+
+        unstable = extended.keys().map(|&class| class).collect();
+        blockers_map.extend(extended);
+    }
+
+    let mut blockers: Vec<Blocker> = blockers_map
+        .iter()
+        .map(|(&class, blocked)| Blocker {
+            class: class.clone(),
+            operations: blocked.len(),
+        })
+        .collect();
+
+    blockers.sort_by(|a, b| b.operations.cmp(&a.operations));
+
+    blockers
+        .iter()
+        .take(top as usize)
+        .for_each(|blocker| println!("Class {} blocks {} operations", blocker.class, blocker.operations))
 }
 
 fn report(
@@ -544,12 +626,9 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule, target_module
     } else {
         if module.name.eq(target_module.unwrap()) {
             results.push(Report {
-                kind: Kind::AutoAction,
-                explanation: Explanation::Empty,
-                message: format!(
-                    "{} target module is where it already is - remove the annotation",
-                    class.name
-                ),
+                kind: Kind::Warning,
+                explanation: Explanation::ClassAlreadyInTheTargetModule,
+                message: format!("{} target module is the same as the module of the class", class.name),
                 action: Default::default(),
                 for_class: class.name.clone(),
                 for_team: class.team(module, target_module_team),
@@ -1138,7 +1217,7 @@ fn check_for_deprecation(
                 action: Default::default(),
                 for_class: dependent_class.name.clone(),
                 for_team: dependent_class.team(dependent_module, &dependent_class.target_module_team(modules)),
-                indirect_classes: [class.name.clone()].iter().cloned().collect(),
+                indirect_classes: Default::default(),
                 for_modules: [dependent_module.name.clone()].iter().cloned().collect(),
             });
         });

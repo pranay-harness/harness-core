@@ -90,6 +90,7 @@ scripts/bazel/prepare_aeriform.sh
 
 scripts/bazel/aeriform.sh analyze \
   --kind-filter Critical \
+  --top-blockers=25 \
   --exit-code
 
 if [ ! -z "$TRACK_FILES" ]
