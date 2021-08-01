@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.instance.info.InstanceInfoService;
-import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.service.steps.ServiceStepOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
 import io.harness.dtos.DeploymentSummaryDTO;
@@ -12,8 +12,12 @@ import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.entities.ArtifactDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.models.DeploymentEvent;
+import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -23,9 +27,9 @@ import io.harness.service.infrastructuremapping.InfrastructureMappingService;
 import io.harness.service.instancesync.InstanceSyncService;
 import io.harness.service.instancesynchandler.AbstractInstanceSyncHandler;
 import io.harness.service.instancesynchandlerfactory.InstanceSyncHandlerFactoryService;
-import io.harness.yaml.core.StepSpecType;
 
 import com.google.inject.Inject;
+
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -45,25 +49,23 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
   @Override
   public void handleEvent(OrchestrationEvent event) {
     try {
-      Ambiance ambiance = event.getAmbiance();
-
-      if (!(event.getResolvedStepParameters() instanceof StepSpecType)) {
-        return;
+      if (!StatusUtils.isFinalStatus(event.getStatus())) {
+        return ;
       }
 
-      List<ServerInstanceInfo> serverInstanceInfoList = instanceInfoService.listServerInstances(
-              ambiance, ((StepSpecType) event.getResolvedStepParameters()).getStepType());
+      Ambiance ambiance = event.getAmbiance();
+      StepType stepType = AmbianceUtils.getCurrentStepType(ambiance);
+      List<ServerInstanceInfo> serverInstanceInfoList = instanceInfoService.listServerInstances(ambiance, stepType);
       if (serverInstanceInfoList.isEmpty()) {
         return;
       }
-
-      ServiceOutcome serviceOutcome = getServiceOutcomeFromAmbiance(ambiance);
+      ServiceStepOutcome serviceStepOutcome = getServiceOutcomeFromAmbiance(ambiance);
       InfrastructureOutcome infrastructureOutcome = getInfrastructureOutcomeFromAmbiance(ambiance);
 
       InfrastructureMappingDTO infrastructureMappingDTO =
-          createInfrastructureMappingIfNotExists(ambiance, serviceOutcome, infrastructureOutcome);
+          createInfrastructureMappingIfNotExists(ambiance, serviceStepOutcome, infrastructureOutcome);
       DeploymentSummaryDTO deploymentSummaryDTO = createDeploymentSummary(
-          ambiance, serviceOutcome, infrastructureOutcome, infrastructureMappingDTO, serverInstanceInfoList);
+          ambiance, serviceStepOutcome, infrastructureOutcome, infrastructureMappingDTO, serverInstanceInfoList);
 
       instanceSyncService.processInstanceSyncForNewDeployment(new DeploymentEvent(deploymentSummaryDTO, null));
     } catch (Exception exception) {
@@ -74,7 +76,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
   // --------------------- PRIVATE METHODS ------------------------
 
   private InfrastructureMappingDTO createInfrastructureMappingIfNotExists(
-      Ambiance ambiance, ServiceOutcome serviceOutcome, InfrastructureOutcome infrastructureOutcome) {
+      Ambiance ambiance, ServiceStepOutcome serviceOutcome, InfrastructureOutcome infrastructureOutcome) {
     AbstractInstanceSyncHandler abstractInstanceSyncHandler =
         instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureOutcome.getKind());
 
@@ -87,6 +89,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
             .envIdentifier(infrastructureOutcome.getEnvironment().getIdentifier())
             .infrastructureKey(infrastructureOutcome.getInfrastructureKey())
             .infrastructureKind(abstractInstanceSyncHandler.getInfrastructureKind())
+                .connectorRef(infrastructureOutcome.getConnectorRef())
             .build();
 
     Optional<InfrastructureMappingDTO> infrastructureMappingDTOOptional =
@@ -99,7 +102,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
     }
   }
 
-  private DeploymentSummaryDTO createDeploymentSummary(Ambiance ambiance, ServiceOutcome serviceOutcome,
+  private DeploymentSummaryDTO createDeploymentSummary(Ambiance ambiance, ServiceStepOutcome serviceOutcome,
       InfrastructureOutcome infrastructureOutcome, InfrastructureMappingDTO infrastructureMappingDTO,
       List<ServerInstanceInfo> serverInstanceInfoList) {
     AbstractInstanceSyncHandler abstractInstanceSyncHandler =
@@ -114,23 +117,39 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
             .pipelineExecutionName(ambiance.getMetadata().getPipelineIdentifier())
             .deployedByName(ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getIdentifier())
             .deployedById(ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getUuid())
-            .artifactDetails(ArtifactDetails.builder()
-                                 .artifactId(serviceOutcome.getArtifactsResult().getPrimary().getIdentifier())
-                                 .tag(serviceOutcome.getArtifactsResult().getPrimary().getTag())
-                                 .build())
             .infrastructureMappingId(infrastructureMappingDTO.getId())
-            .infrastructureMapping(infrastructureMappingDTO)
             .deploymentInfoDTO(
                 abstractInstanceSyncHandler.getDeploymentInfo(infrastructureOutcome, serverInstanceInfoList))
             .build();
+    setArtifactDetails(ambiance, deploymentSummaryDTO);
     deploymentSummaryDTO = deploymentSummaryService.save(deploymentSummaryDTO);
+
     deploymentSummaryDTO.setServerInstanceInfoList(serverInstanceInfoList);
+    deploymentSummaryDTO.setInfrastructureMapping(infrastructureMappingDTO);
 
     return deploymentSummaryDTO;
   }
 
-  private ServiceOutcome getServiceOutcomeFromAmbiance(Ambiance ambiance) {
-    return (ServiceOutcome) outcomeService.resolve(
+  private void setArtifactDetails(Ambiance ambiance, DeploymentSummaryDTO deploymentSummaryDTO) {
+    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
+            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.ARTIFACTS));
+    if (!optionalOutcome.isFound()) {
+      deploymentSummaryDTO.setArtifactDetails(ArtifactDetails.builder()
+              .artifactId("")
+              .tag("")
+              .build());
+      return ;
+    }
+
+    ArtifactsOutcome artifactsOutcome = (ArtifactsOutcome) optionalOutcome.getOutcome();
+    deploymentSummaryDTO.setArtifactDetails(ArtifactDetails.builder()
+            .tag(artifactsOutcome.getPrimary().getTag())
+            .artifactId(artifactsOutcome.getPrimary().getIdentifier())
+            .build());
+  }
+
+  private ServiceStepOutcome getServiceOutcomeFromAmbiance(Ambiance ambiance) {
+    return (ServiceStepOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
   }
 

@@ -2,6 +2,7 @@ package io.harness.service.instancesynchandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -24,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(HarnessTeam.CDP)
+@Singleton
 public class K8sInstanceSyncHandler extends AbstractInstanceSyncHandler {
   @Override
   public String getPerpetualTaskType() {
