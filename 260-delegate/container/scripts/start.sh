@@ -318,4 +318,4 @@ else
     fi
   fi
 fi
-echo $JAVA_OPTS
+

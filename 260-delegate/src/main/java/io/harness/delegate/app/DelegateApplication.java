@@ -129,6 +129,10 @@ public class DelegateApplication {
 
       initializeLogging();
       log.info("Starting Delegate");
+      List<String> params = ManagementFactory.getRuntimeMXBean().getInputArguments();
+      for (String param : params){
+        log.info(param);
+      }
       log.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
       DelegateApplication delegateApplication = new DelegateApplication();
       delegateApplication.run(configuration, watcherProcess);
