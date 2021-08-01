@@ -5,6 +5,7 @@ import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_C
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.states.LiteEngineTaskStep.LE_STATUS_TASK_TYPE;
 import static io.harness.steps.StepUtils.buildAbstractions;
 
@@ -42,7 +43,6 @@ import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
 import io.harness.encryption.Scope;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logstreaming.LogStreamingHelper;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -122,7 +122,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     long timeoutInMillis = ciStepInfo.getDefaultTimeout();
     String stringTimeout = "2h";
 
-    if (timeout != null && timeout.fetchFinalValue() != null) {
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
       timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis() + bufferTimeMillis;
       stringTimeout = (String) timeout.fetchFinalValue();
     }
@@ -164,7 +164,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
                                         .build())
             .build();
     githubApiTokenEvaluator.resolve(
-        ciStepInfo, AmbianceHelper.getNgAccess(ambiance), ambiance.getExpressionFunctorToken());
+        ciStepInfo, AmbianceUtils.getNgAccess(ambiance), ambiance.getExpressionFunctorToken());
   }
 
   @Override
@@ -195,7 +195,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
 
     log.info("Received step {} response {} with type {} in {} milliseconds ", stepIdentifier,
         stepStatus.getStepExecutionStatus(), ((CIStepInfo) stepParameters.getSpec()).getStepType().getType(),
-        currentTime - startTime);
+        (currentTime - startTime) / 1000);
 
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
       if (stepStatus.getOutput() != null) {

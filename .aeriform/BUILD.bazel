@@ -46,10 +46,6 @@ aeriform("//220-graphql-test:tests")
 
 aeriform("//230-model-test:module")
 
-aeriform("//250-watcher:module")
-
-aeriform("//250-watcher:tests")
-
 aeriform("//260-delegate:module")
 
 aeriform("//260-delegate:tests")
@@ -204,6 +200,8 @@ aeriform("//865-cg-events:module")
 
 aeriform("//865-cg-events:tests")
 
+aeriform("//867-polling-contracts:module")
+
 aeriform("//870-cg-orchestration:module")
 
 aeriform("//870-cg-orchestration:tests")
@@ -273,8 +271,6 @@ aeriform("//920-ng-signup:tests")
 aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
-
-aeriform("//925-watcher-beans:module")
 
 aeriform("//930-delegate-tasks:module")
 
@@ -452,6 +448,10 @@ aeriform("//960-persistence:supporter-test")
 
 aeriform("//960-persistence:tests")
 
+aeriform("//960-watcher:module")
+
+aeriform("//960-watcher:tests")
+
 aeriform("//960-yaml-sdk:module")
 
 aeriform("//960-yaml-sdk:tests")
@@ -475,6 +475,8 @@ aeriform("//970-ng-commons:tests")
 aeriform("//970-rbac-core:module")
 
 aeriform("//970-telemetry-beans:module")
+
+aeriform("//970-watcher-beans:module")
 
 aeriform("//980-commons:module")
 

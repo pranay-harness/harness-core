@@ -8,6 +8,14 @@ import lombok.Data;
 @Data
 @Builder
 public class RiskData {
-  int riskValue;
+  Integer healthScore;
   Risk riskStatus;
+
+  public int getRiskValue() {
+    int riskValue = -2;
+    if (healthScore != null) {
+      riskValue = 100 - healthScore.intValue();
+    }
+    return riskValue;
+  }
 }

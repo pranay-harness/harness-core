@@ -56,6 +56,14 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
                  .field(HeatMapKeys.heatMapBucketStartTime)
                  .field(HeatMapKeys.heatMapBucketEndTime)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(HeatMapKeys.accountId)
+                 .field(HeatMapKeys.orgIdentifier)
+                 .field(HeatMapKeys.projectIdentifier)
+                 .field(HeatMapKeys.heatMapResolution)
+                 .field(HeatMapKeys.heatMapBucketEndTime)
+                 .build())
         .build();
   }
 
@@ -105,8 +113,11 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
       return this.startTime.compareTo(o.startTime);
     }
 
-    public int getRiskValue() {
-      return (int) (riskScore * 100);
+    public Integer getHealthScore() {
+      if (riskScore < 0) {
+        return null;
+      }
+      return Integer.valueOf(100 - (int) (100 * riskScore));
     }
 
     public Risk getRiskStatus() {

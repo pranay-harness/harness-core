@@ -11,6 +11,7 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.ACLService;
+import io.harness.accesscontrol.acl.PermissionCheckResult;
 import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
@@ -112,8 +113,15 @@ public class ACLResource {
           Principal.of(fromSecurityPrincipalType(contextPrincipal.getType()), contextPrincipal.getName());
     }
 
+    List<PermissionCheckResult> permissionCheckResults = aclService.checkAccess(principalToCheckPermissionsFor,
+        permissionChecks.stream().map(PermissionCheckDTOMapper::fromDTO).collect(Collectors.toList()));
+
     AccessCheckResponseDTO accessCheckResponseDTO =
-        aclService.checkAccess(principalToCheckPermissionsFor, permissionChecks);
+        AccessCheckResponseDTO.builder()
+            .principal(principalToCheckPermissionsFor)
+            .accessControlList(
+                permissionCheckResults.stream().map(PermissionCheckDTOMapper::toDTO).collect(Collectors.toList()))
+            .build();
 
     if (accountIdentifierOptional.isPresent()) {
       io.harness.accesscontrol.principals.Principal principal =

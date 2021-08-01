@@ -10,8 +10,8 @@ import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.accesscontrol.resources.resourcetypes.ResourceType;
 import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -47,12 +47,10 @@ import javax.ws.rs.QueryParam;
     })
 public class PermissionResource {
   private final PermissionService permissionService;
-  private final ScopeService scopeService;
 
   @Inject
-  public PermissionResource(PermissionService permissionService, ScopeService scopeService) {
+  public PermissionResource(PermissionService permissionService) {
     this.permissionService = permissionService;
-    this.scopeService = scopeService;
   }
 
   @GET
@@ -87,7 +85,7 @@ public class PermissionResource {
   private List<Permission> getPermissions(HarnessScopeParams scopeParams, boolean scopeFilterDisabled) {
     Set<String> scopeFilter = new HashSet<>();
     if (!scopeFilterDisabled) {
-      Scope scope = scopeService.buildScopeFromParams(scopeParams);
+      Scope scope = ScopeMapper.fromParams(scopeParams);
       scopeFilter.add(scope.getLevel().toString());
     }
     PermissionFilter query = PermissionFilter.builder()

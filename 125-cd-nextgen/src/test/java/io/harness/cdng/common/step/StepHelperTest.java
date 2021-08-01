@@ -10,8 +10,6 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.environment.EnvironmentOutcome;
-import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
@@ -20,6 +18,9 @@ import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
+import io.harness.steps.OutputExpressionConstants;
+import io.harness.steps.StepHelper;
+import io.harness.steps.environment.EnvironmentOutcome;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,8 +44,8 @@ public class StepHelperTest extends CategoryTest {
     EnvironmentOutcome environmentOutcome = EnvironmentOutcome.builder().type(EnvironmentType.Production).build();
 
     RefObject envRef = RefObject.newBuilder()
-                           .setName(OutcomeExpressionConstants.ENVIRONMENT)
-                           .setKey(OutcomeExpressionConstants.ENVIRONMENT)
+                           .setName(OutputExpressionConstants.ENVIRONMENT)
+                           .setKey(OutputExpressionConstants.ENVIRONMENT)
                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.SWEEPING_OUTPUT).build())
                            .build();
 
@@ -64,8 +65,8 @@ public class StepHelperTest extends CategoryTest {
     EnvironmentOutcome environmentOutcome = EnvironmentOutcome.builder().type(EnvironmentType.PreProduction).build();
 
     RefObject envRef = RefObject.newBuilder()
-                           .setName(OutcomeExpressionConstants.ENVIRONMENT)
-                           .setKey(OutcomeExpressionConstants.ENVIRONMENT)
+                           .setName(OutputExpressionConstants.ENVIRONMENT)
+                           .setKey(OutputExpressionConstants.ENVIRONMENT)
                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.SWEEPING_OUTPUT).build())
                            .build();
 
@@ -85,8 +86,8 @@ public class StepHelperTest extends CategoryTest {
     EnvironmentOutcome environmentOutcome = EnvironmentOutcome.builder().build();
 
     RefObject envRef = RefObject.newBuilder()
-                           .setName(OutcomeExpressionConstants.ENVIRONMENT)
-                           .setKey(OutcomeExpressionConstants.ENVIRONMENT)
+                           .setName(OutputExpressionConstants.ENVIRONMENT)
+                           .setKey(OutputExpressionConstants.ENVIRONMENT)
                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.SWEEPING_OUTPUT).build())
                            .build();
 
@@ -104,8 +105,8 @@ public class StepHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetEnvTypeForNullEnvOutcome() {
     RefObject envRef = RefObject.newBuilder()
-                           .setName(OutcomeExpressionConstants.ENVIRONMENT)
-                           .setKey(OutcomeExpressionConstants.ENVIRONMENT)
+                           .setName(OutputExpressionConstants.ENVIRONMENT)
+                           .setKey(OutputExpressionConstants.ENVIRONMENT)
                            .setRefType(RefType.newBuilder().setType(OrchestrationRefType.SWEEPING_OUTPUT).build())
                            .build();
 

@@ -51,10 +51,10 @@ public class DelegateListDataFetcher
     }
     qlDelegateFilters.forEach(qlDelegateFilter -> {
       FieldEnd<? extends Query<Delegate>> delegateField;
-      if (isEmpty(qlDelegateFilter.getAccountId())) {
+      if (!isEmpty(qlDelegateFilter.getAccountId())) {
         utils.setStringFilter(delegateQuery.field(DelegateKeys.accountId), qlDelegateFilter.getAccountId());
       }
-      if (isEmpty(qlDelegateFilter.getDelegateName())) {
+      if (!isEmpty(qlDelegateFilter.getDelegateName())) {
         utils.setStringFilter(delegateQuery.field(DelegateKeys.delegateName), qlDelegateFilter.getDelegateName());
       }
       if (qlDelegateFilter.getDelegateStatus() != null) {

@@ -7,6 +7,10 @@ import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -47,6 +51,8 @@ import org.mongodb.morphia.annotations.Transient;
 @ToString(exclude = {"password", "sshSettingAttribute"})
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._959_CG_BEANS)
 public class GitConfig extends SettingValue implements EncryptableSetting {
   public static final String HARNESS_IO_KEY_ = "Harness.io";
   public static final String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";

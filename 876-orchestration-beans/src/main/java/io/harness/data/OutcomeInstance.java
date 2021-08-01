@@ -13,7 +13,7 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
 
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
@@ -71,7 +71,7 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   @NotEmpty @Trimmed String name;
   String levelRuntimeIdIdx;
   @Deprecated org.bson.Document outcome;
-  OrchestrationMap outcomeValue;
+  PmsOutcome outcomeValue;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());

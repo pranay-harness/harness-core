@@ -68,6 +68,7 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * The Class WorkflowExecution.
  */
+@TargetModule(HarnessModule._959_CG_BEANS)
 @OwnedBy(CDC)
 @Data
 @Builder
@@ -75,7 +76,6 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
                                           CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

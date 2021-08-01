@@ -156,4 +156,7 @@ enum DataFetcherEnum {
   createEventsConfig
   updateEventsConfig
   deleteEventsConfig
+  eventsConfig
+  eventsConfigConnection
+  eventsConfigByName
 }

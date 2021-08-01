@@ -137,17 +137,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
         log.info("Batch saved successfully");
       } else {
-        batch.getDelegateSelectionLogs()
-            .stream()
-            .map(selectionLog
-                -> String.format(
-                    "Delegate selection log: delegates %s for account: %s and taskId: %s %s with note: %s at: %s",
-                    selectionLog.getDelegateIds(), selectionLog.getAccountId(), selectionLog.getTaskId(),
-                    selectionLog.getConclusion(), selectionLog.getMessage(),
-                    LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(selectionLog.getEventTimestamp()), ZoneId.systemDefault())))
-            .distinct()
-            .forEach(log::info);
+        batch.getDelegateSelectionLogs().stream().map(this::constructSelectionLogString).distinct().forEach(log::info);
       }
     } catch (Exception exception) {
       log.error("Error while saving into Database ", exception);
@@ -441,5 +431,20 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     }
 
     return delegateSelectionLogParamsList;
+  }
+
+  private String constructSelectionLogString(DelegateSelectionLog selectionLog) {
+    return new StringBuilder()
+        .append("Delegate selection log: delegates ")
+        .append(selectionLog.getDelegateIds())
+        .append(" for account: ")
+        .append(selectionLog.getAccountId())
+        .append(" and taskId: ")
+        .append(String.join(" ", selectionLog.getTaskId(), selectionLog.getConclusion()))
+        .append("with note: ")
+        .append(selectionLog.getMessage())
+        .append(" at ")
+        .append(LocalDateTime.ofInstant(Instant.ofEpochMilli(selectionLog.getEventTimestamp()), ZoneId.systemDefault()))
+        .toString();
   }
 }

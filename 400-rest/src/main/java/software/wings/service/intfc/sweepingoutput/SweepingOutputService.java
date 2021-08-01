@@ -1,8 +1,9 @@
 package software.wings.service.intfc.sweepingoutput;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.deployment.InstanceDetails;
@@ -15,7 +16,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.mongodb.morphia.query.Query;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface SweepingOutputService {
   SweepingOutputInstance save(@Valid SweepingOutputInstance sweepingOutputInstance);
 

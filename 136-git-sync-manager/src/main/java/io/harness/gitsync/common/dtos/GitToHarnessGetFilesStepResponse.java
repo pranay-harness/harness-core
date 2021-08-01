@@ -18,4 +18,5 @@ public class GitToHarnessGetFilesStepResponse {
   List<GitFileChangeDTO> gitFileChangeDTOList;
   List<GitDiffResultFileDTO> gitDiffResultFileDTOList;
   GitToHarnessProgressDTO progressRecord;
+  String processingCommitId;
 }

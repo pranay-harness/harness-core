@@ -15,9 +15,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGPipelineSummaryCDConstants;
 import io.harness.cd.NGServiceConstants;
+import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
+import io.harness.models.constants.TimescaleConstants;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
@@ -33,6 +35,7 @@ import io.harness.ng.cdOverview.dto.DeploymentStatusInfoList;
 import io.harness.ng.cdOverview.dto.EntityStatusDetails;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfo;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
+import io.harness.ng.cdOverview.dto.EnvIdCountPair;
 import io.harness.ng.cdOverview.dto.ExecutionDeployment;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
 import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
@@ -44,9 +47,11 @@ import io.harness.ng.cdOverview.dto.ServiceDeploymentInfo;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsDTO;
+import io.harness.ng.cdOverview.dto.ServiceDetailsDTO.ServiceDetailsDTOBuilder;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
 import io.harness.ng.cdOverview.dto.ServicePipelineInfo;
 import io.harness.ng.cdOverview.dto.TimeAndStatusDeployment;
+import io.harness.ng.cdOverview.dto.TimeValuePair;
 import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.cdOverview.dto.TotalDeploymentInfo;
 import io.harness.ng.cdOverview.dto.WorkloadCountInfo;
@@ -69,14 +74,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -87,6 +96,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject ServiceEntityService serviceEntityService;
   @Inject InstanceDashboardService instanceDashboardService;
+  @Inject ServiceEntityService ServiceEntityServiceImpl;
 
   private String tableNameCD = "pipeline_execution_summary_cd";
   private String tableNameServiceAndInfra = "service_infra_info";
@@ -515,6 +525,76 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return ExecutionDeploymentInfo.builder().executionDeploymentList(executionDeployments).build();
   }
 
+  private Map<String, String> getLastPipeline(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> serviceIds) {
+    Map<String, String> serviceIdToPipelineId = new HashMap<>();
+
+    String query = "select distinct on(service_id) service_id, pipeline_execution_summary_cd_id, service_startts from "
+        + "service_infra_info where accountid=? and orgidentifier=? and projectidentifier=? and service_id in (?) "
+        + "order by service_id, service_startts desc";
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountIdentifier);
+        statement.setString(2, orgIdentifier);
+        statement.setString(3, projectIdentifier);
+        statement.setArray(4, connection.createArrayOf("VARCHAR", serviceIds.toArray()));
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          String service_id = resultSet.getString("service_id");
+          String pipeline_execution_summary_cd_id = resultSet.getString("pipeline_execution_summary_cd_id");
+          serviceIdToPipelineId.putIfAbsent(service_id, pipeline_execution_summary_cd_id);
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+
+    return serviceIdToPipelineId;
+  }
+
+  private Map<String, Set<String>> getDeploymentType(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> serviceIds) {
+    Map<String, Set<String>> serviceIdToDeploymentType = new HashMap<>();
+
+    String query = "select service_id, deployment_type from service_infra_info where accountid=? and orgidentifier=? "
+        + "and projectidentifier=? and service_id in (?) group by service_id, deployment_type";
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountIdentifier);
+        statement.setString(2, orgIdentifier);
+        statement.setString(3, projectIdentifier);
+        statement.setArray(4, connection.createArrayOf("VARCHAR", serviceIds.toArray()));
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          String service_id = resultSet.getString("service_id");
+          String deployment_type = resultSet.getString("deployment_type");
+          serviceIdToDeploymentType.putIfAbsent(service_id, new HashSet<>());
+          serviceIdToDeploymentType.get(service_id).add(deployment_type);
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+
+    return serviceIdToDeploymentType;
+  }
+
   @Override
   public ServiceDetailsInfoDTO getServiceDetailsList(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startTime, long endTime) throws Exception {
@@ -522,51 +602,86 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     endTime = getStartTimeOfNextDay(endTime);
 
     long numberOfDays = getNumberOfDays(startTime, endTime);
-
     if (numberOfDays < 0) {
       throw new Exception("start date should be less than or equal to end date");
     }
     long previousStartTime = getStartTimeOfPreviousInterval(startTime, numberOfDays);
-    DashboardWorkloadDeployment dashboardWorkloadDeployment = getDashboardWorkloadDeployment(
-        accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime, previousStartTime, null);
 
-    List<WorkloadDeploymentInfo> workloadDeploymentInfoList =
-        dashboardWorkloadDeployment.getWorkloadDeploymentInfoList();
+    List<ServiceEntity> services =
+        ServiceEntityServiceImpl.getAllServices(accountIdentifier, orgIdentifier, projectIdentifier);
 
-    // Stores pipeline details corresponding to a pipeline execution id
-    Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap = new HashMap<>();
+    List<WorkloadDeploymentInfo> workloadDeploymentInfoList = getDashboardWorkloadDeployment(
+        accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime, previousStartTime, null)
+                                                                  .getWorkloadDeploymentInfoList();
+    Map<String, WorkloadDeploymentInfo> serviceIdToWorkloadDeploymentInfo = new HashMap<>();
+    workloadDeploymentInfoList.forEach(
+        item -> serviceIdToWorkloadDeploymentInfo.putIfAbsent(item.getServiceId(), item));
+
+    List<String> serviceIdentifiers = services.stream().map(ServiceEntity::getIdentifier).collect(Collectors.toList());
+    List<String> servicesDeployedBeforePrevTime = new ArrayList<>(serviceIdentifiers);
+    servicesDeployedBeforePrevTime.removeAll(
+        workloadDeploymentInfoList.stream().map(WorkloadDeploymentInfo::getServiceId).collect(Collectors.toList()));
+
+    Map<String, String> serviceIdToPipelineIdMapForOldDeployments =
+        getLastPipeline(accountIdentifier, orgIdentifier, projectIdentifier, servicesDeployedBeforePrevTime);
     List<String> pipelineExecutionIdList = workloadDeploymentInfoList.stream()
                                                .map(WorkloadDeploymentInfo::getLastPipelineExecutionId)
                                                .collect(Collectors.toList());
+    List<String> oldPipelineExecutionIdList =
+        serviceIdToPipelineIdMapForOldDeployments.values().stream().collect(Collectors.toList());
 
     // Gets all the details for the pipeline execution id's in the list and stores it in a map.
-    getPipelineExecutionDetails(pipelineExecutionDetailsMap, pipelineExecutionIdList);
+    Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap =
+        getPipelineExecutionDetails(Stream.concat(pipelineExecutionIdList.stream(), oldPipelineExecutionIdList.stream())
+                                        .collect(Collectors.toList()));
+
+    Map<String, Set<String>> serviceIdToDeploymentTypeMap =
+        getDeploymentType(accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifiers);
+
+    Map<String, InstanceCountDetailsByEnvTypeBase> serviceIdToInstanceCountDetails =
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifiers, getCurrentTime())
+            .getInstanceCountDetailsByEnvTypeBaseMap();
 
     List<ServiceDetailsDTO> serviceDeploymentInfoList =
-        workloadDeploymentInfoList.stream()
-            .map(item
-                -> ServiceDetailsDTO.builder()
-                       .serviceName(item.getServiceName())
-                       .serviceIdentifier(item.getServiceId())
-                       .deploymentTypeList(item.getDeploymentTypeList())
-                       .totalDeployments(item.getTotalDeployments())
-                       .totalDeploymentChangeRate(item.getTotalDeploymentChangeRate())
-                       .successRate(item.getPercentSuccess())
-                       .successRateChangeRate(item.getRateSuccess())
-                       .failureRate(item.getFailureRate())
-                       .failureRateChangeRate(item.getFailureRateChangeRate())
-                       .frequency(item.getFrequency())
-                       .frequencyChangeRate(item.getFrequencyChangeRate())
-                       .lastPipelineExecuted(
-                           pipelineExecutionDetailsMap.getOrDefault(item.getLastPipelineExecutionId(), null))
-                       .build())
+        services.stream()
+            .map(service -> {
+              final String serviceId = service.getIdentifier();
+              ServiceDetailsDTOBuilder serviceDetailsDTOBuilder = ServiceDetailsDTO.builder();
+              serviceDetailsDTOBuilder.serviceName(service.getName());
+              serviceDetailsDTOBuilder.serviceIdentifier(serviceId);
+              serviceDetailsDTOBuilder.deploymentTypeList(serviceIdToDeploymentTypeMap.getOrDefault(serviceId, null));
+              serviceDetailsDTOBuilder.instanceCountDetails(
+                  serviceIdToInstanceCountDetails.getOrDefault(serviceId, null));
+
+              if (serviceIdToWorkloadDeploymentInfo.containsKey(serviceId)) {
+                final WorkloadDeploymentInfo workloadDeploymentInfo = serviceIdToWorkloadDeploymentInfo.get(serviceId);
+                serviceDetailsDTOBuilder.totalDeployments(workloadDeploymentInfo.getTotalDeployments());
+                serviceDetailsDTOBuilder.totalDeploymentChangeRate(
+                    workloadDeploymentInfo.getTotalDeploymentChangeRate());
+                serviceDetailsDTOBuilder.successRate(workloadDeploymentInfo.getPercentSuccess());
+                serviceDetailsDTOBuilder.successRateChangeRate(workloadDeploymentInfo.getRateSuccess());
+                serviceDetailsDTOBuilder.failureRate(workloadDeploymentInfo.getFailureRate());
+                serviceDetailsDTOBuilder.failureRateChangeRate(workloadDeploymentInfo.getFailureRateChangeRate());
+                serviceDetailsDTOBuilder.frequency(workloadDeploymentInfo.getFrequency());
+                serviceDetailsDTOBuilder.frequencyChangeRate(workloadDeploymentInfo.getFrequencyChangeRate());
+                serviceDetailsDTOBuilder.lastPipelineExecuted(pipelineExecutionDetailsMap.getOrDefault(
+                    workloadDeploymentInfo.getLastPipelineExecutionId(), null));
+              } else if (pipelineExecutionDetailsMap.containsKey(serviceId)) {
+                serviceDetailsDTOBuilder.lastPipelineExecuted(
+                    pipelineExecutionDetailsMap.getOrDefault(pipelineExecutionDetailsMap.get(serviceId), null));
+              }
+
+              return serviceDetailsDTOBuilder.build();
+            })
             .collect(Collectors.toList());
 
     return ServiceDetailsInfoDTO.builder().serviceDeploymentDetailsList(serviceDeploymentInfoList).build();
   }
 
-  private void getPipelineExecutionDetails(
-      Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap, List<String> pipelineExecutionIdList) {
+  private Map<String, ServicePipelineInfo> getPipelineExecutionDetails(List<String> pipelineExecutionIdList) {
+    Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap = new HashMap<>();
     int totalTries = 0;
     boolean successfulOperation = false;
     String sql = "select * from " + tableNameCD + " where id = any (?);";
@@ -602,6 +717,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
+    return pipelineExecutionDetailsMap;
   }
 
   @Override
@@ -1237,22 +1353,118 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public ActiveServiceInstanceSummary getActiveServiceInstanceSummary(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     final long currentTime = getCurrentTime();
+
+    InstanceCountDetailsByEnvTypeBase defaultInstanceCountDetails =
+        InstanceCountDetailsByEnvTypeBase.builder().envTypeVsInstanceCountMap(new HashMap<>()).build();
+
     InstanceCountDetailsByEnvTypeBase currentCountDetails =
         instanceDashboardService
             .getActiveServiceInstanceCountBreakdown(
                 accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), currentTime)
             .getInstanceCountDetailsByEnvTypeBaseMap()
-            .get(serviceId);
+            .getOrDefault(serviceId, defaultInstanceCountDetails);
     InstanceCountDetailsByEnvTypeBase prevCountDetails =
         instanceDashboardService
             .getActiveServiceInstanceCountBreakdown(
                 accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId), timestampInMs)
             .getInstanceCountDetailsByEnvTypeBaseMap()
-            .get(serviceId);
+            .getOrDefault(serviceId, defaultInstanceCountDetails);
 
     double changeRate =
         calculateChangeRate(prevCountDetails.getTotalInstances(), currentCountDetails.getTotalInstances());
 
     return ActiveServiceInstanceSummary.builder().countDetails(currentCountDetails).changeRate(changeRate).build();
+  }
+
+  /*
+    Returns a list of time value pairs where value represents count of instances for given account+org+project+service
+    within provided time interval
+  */
+  @Override
+  public TimeValuePairListDTO<Integer> getInstanceGrowthTrend(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
+    List<TimeValuePair<Integer>> timeValuePairList = new ArrayList<>();
+
+    final long tunedStartTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(startTimeInMs);
+    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
+
+    final String query =
+        "select reportedat, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat order by reportedat asc";
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountIdentifier);
+        statement.setString(2, orgIdentifier);
+        statement.setString(3, projectIdentifier);
+        statement.setString(4, serviceId);
+        statement.setTimestamp(5, new Timestamp(tunedStartTimeInMs), DateUtils.getDefaultCalendar());
+        statement.setTimestamp(6, new Timestamp(tunedEndTimeInMs), DateUtils.getDefaultCalendar());
+
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          final long timestamp =
+              resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
+          final int count = Integer.parseInt(resultSet.getString("count"));
+          timeValuePairList.add(new TimeValuePair<>(timestamp, count));
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return new TimeValuePairListDTO<>(timeValuePairList);
+  }
+
+  /*
+    Returns a list of time value pairs where value is a pair of envid and instance count
+  */
+  @Override
+  public TimeValuePairListDTO<EnvIdCountPair> getInstanceCountHistory(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
+    List<TimeValuePair<EnvIdCountPair>> timeValuePairList = new ArrayList<>();
+
+    final long tunedStartTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(startTimeInMs);
+    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
+
+    final String query =
+        "select reportedat, envid, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat, envid order by reportedat asc";
+
+    int totalTries = 0;
+    boolean successfulOperation = false;
+    while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
+      ResultSet resultSet = null;
+      try (Connection connection = timeScaleDBService.getDBConnection();
+           PreparedStatement statement = connection.prepareStatement(query)) {
+        statement.setString(1, accountIdentifier);
+        statement.setString(2, orgIdentifier);
+        statement.setString(3, projectIdentifier);
+        statement.setString(4, serviceId);
+        statement.setTimestamp(5, new Timestamp(tunedStartTimeInMs), DateUtils.getDefaultCalendar());
+        statement.setTimestamp(6, new Timestamp(tunedEndTimeInMs), DateUtils.getDefaultCalendar());
+
+        resultSet = statement.executeQuery();
+        while (resultSet != null && resultSet.next()) {
+          final long timestamp =
+              resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
+          final String envId = resultSet.getString(TimescaleConstants.ENV_ID.getKey());
+          final int count = Integer.parseInt(resultSet.getString("count"));
+
+          EnvIdCountPair envIdCountPair = EnvIdCountPair.builder().envId(envId).count(count).build();
+          timeValuePairList.add(new TimeValuePair<>(timestamp, envIdCountPair));
+        }
+        successfulOperation = true;
+      } catch (SQLException ex) {
+        totalTries++;
+      } finally {
+        DBUtils.close(resultSet);
+      }
+    }
+    return new TimeValuePairListDTO<>(timeValuePairList);
   }
 }

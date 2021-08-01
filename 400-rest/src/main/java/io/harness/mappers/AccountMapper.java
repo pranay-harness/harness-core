@@ -22,6 +22,7 @@ public class AccountMapper {
         .companyName(account.getCompanyName())
         .defaultExperience(account.getDefaultExperience())
         .authenticationMechanism(account.getAuthenticationMechanism())
+        .serviceAccountConfig(account.getServiceAccountConfig())
         .build();
   }
 
@@ -31,6 +32,7 @@ public class AccountMapper {
         .withAccountName(dto.getName())
         .withCompanyName(dto.getCompanyName())
         .withDefaultExperience(dto.getDefaultExperience())
+        .withServiceAccountConfig(dto.getServiceAccountConfig())
         .build();
   }
 

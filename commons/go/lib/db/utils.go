@@ -14,8 +14,16 @@ func logQuery(log *zap.SugaredLogger, start time.Time, query string, args []inte
 		logw = log.Errorw
 	}
 
+	// Log only the first 100 args to avoid spamming the logs
 	logw("sql query execute", "sql.query", collapseSpaces(query), "sql.hash", hash(query),
-		"sql.parameters", args, "query_time_ms", ms(time.Since(start)), zap.Error(err))
+		"logQuerysql.parameters", truncate(args, 100), "query_time_ms", ms(time.Since(start)), zap.Error(err))
+}
+
+func truncate(inp []interface{}, to int) []interface{} {
+	if len(inp) > to {
+		return inp[:to]
+	}
+	return inp
 }
 
 // collapseSpaces standardizes string by removing multiple spaces between words

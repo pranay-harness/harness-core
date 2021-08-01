@@ -18,7 +18,5 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.license.entities.module.CEModuleLicense")
 public class CEModuleLicense extends ModuleLicense {
-  private Integer numberOfCluster;
   private Long spendLimit;
-  private Integer dataRetentionInDays;
 }

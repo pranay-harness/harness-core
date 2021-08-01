@@ -146,4 +146,16 @@ public class GitFileConfigHelperService {
       throw new InvalidRequestException("Repository name not provided for Account level git connector.", USER);
     }
   }
+
+  public void validateEcsGitfileConfig(GitFileConfig gitFileConfig) {
+    notNullCheck("gitFileConfig has to be specified", gitFileConfig, USER);
+    if (isBlank(gitFileConfig.getTaskSpecFilePath())) {
+      throw new InvalidRequestException("File Path to Task Definition cannot be empty.", USER);
+    }
+    if (!gitFileConfig.isUseInlineServiceDefinition()) {
+      if (isBlank(gitFileConfig.getServiceSpecFilePath())) {
+        throw new InvalidRequestException("File Path to Service Definition cannot be empty.", USER);
+      }
+    }
+  }
 }

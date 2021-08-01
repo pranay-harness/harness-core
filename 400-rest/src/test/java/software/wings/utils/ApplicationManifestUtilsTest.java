@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -48,6 +49,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -109,6 +112,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(HarnessTeam.CDP)
 public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Mock private DeploymentExecutionContext context;
   @Mock private ApplicationManifestService applicationManifestService;
@@ -135,6 +139,28 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     when(context.renderExpression(anyString())).thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
     when(context.renderExpression(anyString(), any(StateExecutionContext.class)))
         .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testGetMapK8sValuesLocationToNonEmptyContents() {
+    ApplicationManifestUtils applicationManifestUtilsMock = mock(ApplicationManifestUtils.class);
+    Map<String, List<String>> mapK8sValuesLocationToContents = new HashMap<>();
+    mapK8sValuesLocationToContents.put(
+        ServiceOverride.name(), asList("ServiceOverrideValuesYaml1", "ServiceOverrideValuesYaml2"));
+    mapK8sValuesLocationToContents.put(Environment.name(), asList("", ""));
+    mapK8sValuesLocationToContents.put(EnvironmentGlobal.name(), asList("EnvGlobalValuesYaml1", ""));
+
+    when(applicationManifestUtilsMock.getMapK8sValuesLocationToNonEmptyContents(anyMap())).thenCallRealMethod();
+
+    Map<K8sValuesLocation, List<String>> k8sValuesLocationToNonEmptyContentsMap =
+        applicationManifestUtilsMock.getMapK8sValuesLocationToNonEmptyContents(mapK8sValuesLocationToContents);
+
+    assertThat(k8sValuesLocationToNonEmptyContentsMap.get(ServiceOverride))
+        .isEqualTo(asList("ServiceOverrideValuesYaml1", "ServiceOverrideValuesYaml2"));
+    assertThat(k8sValuesLocationToNonEmptyContentsMap.get(EnvironmentGlobal)).isEqualTo(asList("EnvGlobalValuesYaml1"));
+    assertThat(k8sValuesLocationToNonEmptyContentsMap.containsKey(Environment)).isEqualTo(false);
   }
 
   @Test

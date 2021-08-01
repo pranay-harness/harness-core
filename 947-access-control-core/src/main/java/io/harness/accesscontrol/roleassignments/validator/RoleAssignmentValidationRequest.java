@@ -14,6 +14,7 @@ import lombok.Value;
 @Builder
 public class RoleAssignmentValidationRequest {
   @NotNull @Valid RoleAssignment roleAssignment;
+  @Builder.Default boolean validateScope = true;
   @Builder.Default boolean validatePrincipal = true;
   @Builder.Default boolean validateRole = true;
   @Builder.Default boolean validateResourceGroup = true;
