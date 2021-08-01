@@ -2,8 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.beans.NgSetupFields.NG;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -64,15 +62,11 @@ public class DelegateTaskBroadcastHelper {
       return;
     }
 
-    boolean isTaskNg = !isEmpty(delegateTask.getSetupAbstractions())
-        && Boolean.parseBoolean(delegateTask.getSetupAbstractions().get(NG));
-
     DelegateTaskBroadcast delegateTaskBroadcast = DelegateTaskBroadcast.builder()
                                                       .version(delegateTask.getVersion())
                                                       .accountId(delegateTask.getAccountId())
                                                       .taskId(delegateTask.getUuid())
                                                       .async(delegateTask.getData().isAsync())
-                                                      .ng(isTaskNg)
                                                       .preAssignedDelegateId(delegateTask.getPreAssignedDelegateId())
                                                       .alreadyTriedDelegates(delegateTask.getAlreadyTriedDelegates())
                                                       .build();
