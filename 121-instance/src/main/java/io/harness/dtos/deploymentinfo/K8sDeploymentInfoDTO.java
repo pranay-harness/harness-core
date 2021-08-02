@@ -2,9 +2,6 @@ package io.harness.dtos.deploymentinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import static java.lang.String.join;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.util.InstanceSyncKey;
 
@@ -27,13 +24,6 @@ public class K8sDeploymentInfoDTO extends DeploymentInfoDTO {
 
   @Override
   public String prepareInstanceSyncHandlerKey() {
-    return InstanceSyncKey
-        .builder()
-        // TODO @Ivan remove mandatory clazz field
-        .clazz(K8sDeploymentInfoDTO.class)
-        .part(join(EMPTY, this.namespaces))
-        .part(this.releaseName)
-        .build()
-        .toString();
+    return InstanceSyncKey.builder().part(releaseName).build().toString();
   }
 }

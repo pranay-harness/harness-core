@@ -35,7 +35,7 @@ public class InstanceSyncKeyTest extends CategoryTest {
     String instanceSyncHandlerKey = k8sDeploymentInfoDTO.prepareInstanceSyncHandlerKey();
 
     assertThat(instanceSyncHandlerKey).isNotBlank();
-    assertThat(instanceSyncHandlerKey).isEqualTo("K8sDeploymentInfoDTO_namespace1namespace2namespace3_releaseName");
+    assertThat(instanceSyncHandlerKey).isEqualTo("releaseName");
   }
 
   @Test
@@ -53,7 +53,7 @@ public class InstanceSyncKeyTest extends CategoryTest {
     String instanceKey = k8sInstanceInfoDTO.prepareInstanceKey();
 
     assertThat(instanceSyncHandlerKey).isNotBlank();
-    assertThat(instanceSyncHandlerKey).isEqualTo("K8sDeploymentInfoDTO_namespace_releaseName");
+    assertThat(instanceSyncHandlerKey).isEqualTo("releaseName");
 
     assertThat(instanceKey).isNotBlank();
     assertThat(instanceKey).isEqualTo("K8sInstanceInfoDTO_podName_namespace_image1image2");
