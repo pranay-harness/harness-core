@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.nexusconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -9,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import java.io.IOException;
 
+@OwnedBy(CDC)
 public class NexusAuthDTODeserializer extends StdDeserializer<NexusAuthenticationDTO> {
   public NexusAuthDTODeserializer() {
     super(NexusAuthDTODeserializer.class);

@@ -51,7 +51,7 @@ import org.mongodb.morphia.annotations.Transient;
 @ToString(exclude = {"password", "sshSettingAttribute"})
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 @Slf4j
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.CDP)
 @TargetModule(HarnessModule._959_CG_BEANS)
 public class GitConfig extends SettingValue implements EncryptableSetting {
   public static final String HARNESS_IO_KEY_ = "Harness.io";
