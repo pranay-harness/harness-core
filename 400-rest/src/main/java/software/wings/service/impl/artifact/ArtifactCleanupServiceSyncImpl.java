@@ -1,5 +1,9 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.delegatetasks.buildsource.BuildSourceCleanupHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -12,6 +16,7 @@ import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactCleanupServiceSyncImpl implements ArtifactCleanupService {
