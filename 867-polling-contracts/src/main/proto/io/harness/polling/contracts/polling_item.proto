@@ -20,6 +20,20 @@ message Qualifier {
   string signature = 4;
 }
 
+message PollingResponse {
+  repeated string signatures = 1;
+  string accountId = 2;
+  io.harness.polling.contracts.Type type = 3;
+  oneof PollInfo {
+    BuildInfo buildInfo = 4;
+  }
+}
+
+message BuildInfo {
+  string name = 1;
+  repeated string versions = 2;
+}
+
 enum Category {
   ARTIFACT = 0;
   MANIFEST = 1;
