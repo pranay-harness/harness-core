@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.UtilityClass;
 
 @Value
 @Builder
