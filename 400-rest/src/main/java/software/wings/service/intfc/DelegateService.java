@@ -105,13 +105,13 @@ public interface DelegateService extends OwnedByAccount {
       String hostname, String delegateGroupName, String delegateProfile, String tokenName) throws IOException;
   Delegate add(Delegate delegate);
 
-  void delete(String accountId, String delegateId, boolean forceDelete) throws InvalidRequestException;
+  void delete(String accountId, String delegateId);
 
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
 
-  void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete);
+  void deleteDelegateGroup(String accountId, String delegateGroupId);
 
-  void deleteDelegateGroupV2(String accountId, String orgId, String projectId, String identifier, boolean forceDelete);
+  void deleteDelegateGroupV2(String accountId, String orgId, String projectId, String identifier);
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
