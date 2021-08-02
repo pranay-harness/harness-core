@@ -10,6 +10,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 import io.harness.threading.Morpheus;
@@ -31,12 +32,15 @@ public class PipelineServiceFeatureFlagConsumer implements Runnable {
 
   Consumer eventConsumer;
   MessageListener pipelineFeatureFlagListener;
+  QueueController queueController;
 
   @Inject
   public PipelineServiceFeatureFlagConsumer(@Named(FEATURE_FLAG_STREAM) Consumer redisConsumer,
-      @Named(PIPELINE_ENTITY + FEATURE_FLAG_STREAM) MessageListener pipelineFeatureFlagListener) {
+      @Named(PIPELINE_ENTITY + FEATURE_FLAG_STREAM) MessageListener pipelineFeatureFlagListener,
+      QueueController queueController) {
     this.eventConsumer = redisConsumer;
     this.pipelineFeatureFlagListener = pipelineFeatureFlagListener;
+    this.queueController = queueController;
   }
 
   @Override
@@ -45,6 +49,12 @@ public class PipelineServiceFeatureFlagConsumer implements Runnable {
     SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info(this.getClass().getSimpleName()
+              + " is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
         Morpheus.sleep(Duration.ofSeconds(10));
       }
