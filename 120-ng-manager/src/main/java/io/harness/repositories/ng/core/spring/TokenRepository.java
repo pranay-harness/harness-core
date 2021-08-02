@@ -25,7 +25,7 @@ public interface TokenRepository extends PagingAndSortingRepository<Token, Strin
   findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, ApiKeyType apiKeyType,
       String parentIdentifier, String apiKeyIdentifier, String identifier);
-  long countByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndParentIdentifierAndApiKeyIdentifier(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String parentIdentifier,
-      String apiKeyIdentifier);
+  long countByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, ApiKeyType apiKeyType,
+      String parentIdentifier, String apiKeyIdentifier);
 }
