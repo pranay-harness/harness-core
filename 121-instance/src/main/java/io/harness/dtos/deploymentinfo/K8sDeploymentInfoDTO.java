@@ -27,7 +27,9 @@ public class K8sDeploymentInfoDTO extends DeploymentInfoDTO {
 
   @Override
   public String prepareInstanceSyncHandlerKey() {
-    return InstanceSyncKey.builder()
+    return InstanceSyncKey
+        .builder()
+        // TODO @Ivan remove mandatory clazz field
         .clazz(K8sDeploymentInfoDTO.class)
         .part(join(EMPTY, this.namespaces))
         .part(this.releaseName)
