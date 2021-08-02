@@ -26,8 +26,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
-import static org.mongodb.morphia.aggregation.Group.first;
-import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Group.*;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
@@ -1248,28 +1247,17 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         wingsPersistence.getDatastore(query.getEntityClass())
             .createAggregation(Instance.class)
             .match(query)
-            .group(Group.id(grouping(InstanceKeys.serviceId)),
-                grouping(CompareEnvironmentAggregationInfoKeys.count, accumulator("$sum", 1)),
-                grouping(InstanceKeys.serviceId, first(InstanceKeys.serviceId)),
-                grouping(InstanceKeys.envId, first(InstanceKeys.envId)),
-                grouping(InstanceKeys.lastArtifactBuildNum, first(InstanceKeys.lastArtifactBuildNum)),
-                grouping(InstanceKeys.infraMappingId, first(InstanceKeys.infraMappingId)),
-                grouping(InstanceKeys.lastWorkflowExecutionId, first(InstanceKeys.lastWorkflowExecutionId)),
-                grouping(InstanceKeys.serviceName, first(InstanceKeys.serviceName)),
-                grouping(InstanceKeys.lastWorkflowExecutionName, first(InstanceKeys.lastWorkflowExecutionName)),
-                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)))
             .group(Group.id(grouping(InstanceKeys.serviceId), grouping(InstanceKeys.envId),
                        grouping(InstanceKeys.lastArtifactBuildNum), grouping(InstanceKeys.infraMappingId),
                        grouping(InstanceKeys.lastWorkflowExecutionId)),
+                grouping("count", accumulator("$sum", 1)),
                 grouping(InstanceKeys.serviceName, first(InstanceKeys.serviceName)),
                 grouping(InstanceKeys.lastWorkflowExecutionName, first(InstanceKeys.lastWorkflowExecutionName)),
-                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)),
-                grouping(
-                    CompareEnvironmentAggregationInfoKeys.count, first(CompareEnvironmentAggregationInfoKeys.count)))
+                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)))
             .group(Group.id(grouping(InstanceKeys.serviceId, "_id." + InstanceKeys.serviceId)),
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceId, first("_id." + InstanceKeys.serviceId)),
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceName, first(InstanceKeys.serviceName)),
-                grouping(CompareEnvironmentAggregationInfoKeys.count, first("count")),
+                grouping(CompareEnvironmentAggregationInfoKeys.count, sum(CompareEnvironmentAggregationInfoKeys.count)),
                 grouping(CompareEnvironmentAggregationInfoKeys.serviceInfoSummaries,
                     grouping("$push", projection(ServiceInfoSummaryKeys.serviceName, InstanceKeys.serviceName),
                         projection(ServiceInfoSummaryKeys.envId, "_id." + InstanceKeys.envId),
@@ -1329,7 +1317,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private Query<Instance> getQueryForCompareServicesByEnvironment(
       String accountId, String appId, String envId1, String envId2) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    //   query.filter(InstanceKeys.accountId, accountId);
+    query.filter(InstanceKeys.accountId, accountId);
     query.filter(InstanceKeys.isDeleted, false);
     query.and(query.criteria(InstanceKeys.appId).equal(appId),
         query.or(query.criteria(InstanceKeys.envId).equal(envId1), query.criteria(InstanceKeys.envId).equal(envId2)));
