@@ -1,12 +1,14 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.beans.InputSetValidatorType.ALLOWED_VALUES;
+import static io.harness.beans.InputSetValidatorType.REGEX;
 import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineComponent;
 import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
-import static io.harness.pms.yaml.validation.InputSetValidatorType.ALLOWED_VALUES;
-import static io.harness.pms.yaml.validation.InputSetValidatorType.REGEX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.InputSetValidator;
+import io.harness.beans.ParameterField;
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -19,9 +21,7 @@ import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.merger.helpers.YamlSubMapExtractor;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.pms.yaml.validation.InputSetValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;

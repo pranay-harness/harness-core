@@ -23,7 +23,7 @@ import io.harness.exception.AccessDeniedException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.rbac.PipelineRbacHelper;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;

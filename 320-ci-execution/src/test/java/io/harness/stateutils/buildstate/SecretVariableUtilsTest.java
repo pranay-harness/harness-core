@@ -9,6 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
@@ -22,7 +23,6 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;

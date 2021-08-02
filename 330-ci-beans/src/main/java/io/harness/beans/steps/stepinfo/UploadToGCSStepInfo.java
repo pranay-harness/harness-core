@@ -1,11 +1,12 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
-import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -13,7 +14,6 @@ import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.extended.ci.container.ContainerResource;

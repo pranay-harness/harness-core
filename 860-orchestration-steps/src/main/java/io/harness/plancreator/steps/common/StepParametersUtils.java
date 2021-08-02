@@ -4,14 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.StageElementParameters.StageElementParametersBuilder;
 import io.harness.plancreator.steps.common.StepElementParameters.StepElementParametersBuilder;
 import io.harness.pms.tags.TagUtils;
-import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.utils.NGVariablesUtils;
 
 import lombok.experimental.UtilityClass;

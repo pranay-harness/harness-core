@@ -3,6 +3,7 @@ package io.harness.beans.steps.stepinfo;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -15,7 +16,6 @@ import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;

@@ -7,6 +7,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.service.steps.ServiceStepsHelper;
@@ -28,7 +29,6 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;

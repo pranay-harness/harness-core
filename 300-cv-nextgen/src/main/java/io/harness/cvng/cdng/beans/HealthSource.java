@@ -1,7 +1,7 @@
 package io.harness.cvng.cdng.beans;
 
-import io.harness.beans.common.SwaggerConstants;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.beans.ParameterField;
+import io.harness.beans.SwaggerConstants;
 
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;

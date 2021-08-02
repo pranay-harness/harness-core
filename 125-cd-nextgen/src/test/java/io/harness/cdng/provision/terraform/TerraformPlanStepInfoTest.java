@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GitLabStore;
@@ -19,7 +20,6 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.TrimmerFunctor;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.variables.StringNGVariable;
 

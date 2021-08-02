@@ -3,9 +3,9 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
-import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collections;

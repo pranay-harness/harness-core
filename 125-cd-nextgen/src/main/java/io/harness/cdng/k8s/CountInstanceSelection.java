@@ -5,8 +5,8 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.integer;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

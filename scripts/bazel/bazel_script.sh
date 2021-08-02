@@ -83,19 +83,19 @@ BAZEL_MODULES="\
   //835-notification-senders:module \
   //835-notification-senders:module \
   //840-template-service:module \
-  //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
   //865-cg-events:module \
   //870-cg-orchestration:module \
   //870-orchestration:module \
-  //870-yaml-beans:module \
   //874-orchestration-delay:module \
   //876-orchestration-beans:module \
   //878-pipeline-service-utilities:module \
+  //878-pms-coupling:module \
   //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
+  //889-yaml-commons:module \
   //890-pms-contracts:module \
   //890-sm-core:module \
   //900-git-sync-sdk:module \
@@ -354,19 +354,19 @@ build_bazel_module 815-cg-triggers
 build_bazel_module 830-notification-service
 build_bazel_module 830-resource-group
 build_bazel_module 835-notification-senders
-build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 865-cg-events
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-cg-orchestration
 build_bazel_module 870-orchestration
-build_bazel_module 870-yaml-beans
 build_bazel_module 874-orchestration-delay
 build_bazel_module 876-orchestration-beans
 build_bazel_module 878-pipeline-service-utilities
+build_bazel_module 878-pms-coupling
 build_bazel_module 879-pms-sdk
 build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
+build_bazel_module 889-yaml-commons
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
 build_bazel_module 900-git-sync-sdk

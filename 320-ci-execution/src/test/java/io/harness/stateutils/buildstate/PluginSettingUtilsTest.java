@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -20,7 +21,6 @@ import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTestBase;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.Collections;

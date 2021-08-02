@@ -1,7 +1,7 @@
 package io.harness.pms.sample.steps;
 
+import io.harness.beans.ParameterField;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.yaml.ParameterField;
 
 import java.util.Map;
 import lombok.Builder;

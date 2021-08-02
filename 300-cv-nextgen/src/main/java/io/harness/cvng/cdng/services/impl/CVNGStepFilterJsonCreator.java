@@ -2,6 +2,7 @@ package io.harness.cvng.cdng.services.impl;
 
 import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
+import io.harness.beans.ParameterField;
 import io.harness.common.NGExpressionUtils;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -13,7 +14,6 @@ import io.harness.filters.GenericStepPMSFilterJsonCreator;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;

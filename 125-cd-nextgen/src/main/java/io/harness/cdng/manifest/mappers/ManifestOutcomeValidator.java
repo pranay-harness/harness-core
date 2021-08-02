@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
@@ -19,7 +20,6 @@ import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.pms.yaml.ParameterField;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;

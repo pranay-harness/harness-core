@@ -41,7 +41,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>850-ng-pipeline-commons</artifactId>
+            <artifactId>878-pms-coupling</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

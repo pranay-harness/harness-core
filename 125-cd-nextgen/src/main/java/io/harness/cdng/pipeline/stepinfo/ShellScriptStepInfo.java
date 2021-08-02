@@ -4,7 +4,8 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.ParameterField;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
 import io.harness.data.structure.CollectionUtils;
@@ -13,7 +14,6 @@ import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.shellscript.ExecutionTarget;
 import io.harness.steps.shellscript.ShellScriptBaseStepInfo;
 import io.harness.steps.shellscript.ShellScriptSourceWrapper;

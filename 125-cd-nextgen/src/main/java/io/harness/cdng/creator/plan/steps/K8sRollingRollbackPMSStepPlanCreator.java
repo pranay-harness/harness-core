@@ -11,7 +11,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.utils.TimeoutUtils;
 
 import com.google.common.collect.Sets;
 import java.util.Collections;

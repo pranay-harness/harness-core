@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CvNextGenTestBase;
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
@@ -17,7 +18,6 @@ import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext.FilterCreationContextBuilder;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;

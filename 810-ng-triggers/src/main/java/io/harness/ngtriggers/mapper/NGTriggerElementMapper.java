@@ -63,9 +63,9 @@ import io.harness.ngtriggers.beans.target.TargetType;
 import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
+import io.harness.utils.YamlPipelineUtils;
 import io.harness.webhook.WebhookConfigProvider;
 import io.harness.webhook.WebhookHelper;
-import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;

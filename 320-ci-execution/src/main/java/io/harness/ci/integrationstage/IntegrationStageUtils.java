@@ -9,6 +9,7 @@ import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
@@ -28,7 +29,6 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.util.WebhookTriggerProcessorUtils;
