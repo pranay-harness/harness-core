@@ -14,7 +14,7 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/ti-service/handler",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/addon/ti:go_default_library",
+        "//product/ci/addon/parser/cg:go_default_library",
         "//product/ci/common/avro:go_default_library",
         "//product/ci/ti-service/config:go_default_library",
         "//product/ci/ti-service/db:go_default_library",

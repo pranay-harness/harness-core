@@ -8,7 +8,7 @@ import (
 	"github.com/kamva/mgm/v3"
 	"github.com/mattn/go-zglob"
 	"github.com/pkg/errors"
-	"github.com/wings-software/portal/product/ci/addon/ti"
+	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -436,7 +436,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 }
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
-func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
 	resp := types.SelectTestsResp{}
 	if len(cg.Nodes) == 0 && len(cg.Relations) == 0 {
 		// Don't delete the existing callgraph, this might happen in case of some issues with the setup

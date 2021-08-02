@@ -66,10 +66,10 @@ func collectCg(ctx context.Context, stepID, cgDir string, timeMs int64, log *zap
 		Sha:    sha,
 		Source: source,
 		Target: target,
-		CgDir:  cgDir,
+		DataDir:  cgDir,
 		TimeMs: timeMs,
 	}
-	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetCgDir()))
+	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetDataDir()))
 	_, err = client.Client().UploadCg(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "failed to upload cg to ti server")

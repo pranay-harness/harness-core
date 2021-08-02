@@ -1,6 +1,6 @@
 // This file implements a parser for callgraph file. It reads all the files
 // in the callgraph directory, dedupes the data, and then returns Callgraph object
-package ti
+package cg
 
 import (
 	"bufio"

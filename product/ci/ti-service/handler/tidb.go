@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wings-software/portal/product/ci/addon/ti"
+	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	cgSchemaPath = "callgraph.avsc"
+	cgSchemaType = "callgraph"
 )
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
@@ -230,7 +230,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteBadRequest(w, err)
 		}
 
-		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
+		cgSer, err := avro.NewCgphSerialzer(cgSchemaType)
 		if err != nil {
 			log.Errorw("failed to create callgraph serializer instance", accountIDParam, acc,
 				repoParam, info.Repo, sourceBranchParam, info.Branch, zap.Error(err))
@@ -246,7 +246,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			return
 		}
 
-		cg, err := ti.FromStringMap(cgString.(map[string]interface{}))
+		cg, err := cgp.FromStringMap(cgString.(map[string]interface{}))
 		if err != nil {
 			log.Errorw("failed to construct callgraph object from interface object",
 				accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, zap.Error(err))
@@ -273,5 +273,14 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+
+func HandleUploadVg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_ = tidb
+		_ = db
+		_ = log
 	}
 }
