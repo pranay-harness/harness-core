@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package io.harness.gitsync;
+
+option java_multiple_files = true;
+
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_scope_info.proto";
+
+service FullSyncService {
+  rpc getEntitiesForFullSync(ScopeDetails) returns (FileChanges);
+}
+
+message FileChanges {
+  string yaml = 1;
+  string file_path = 2;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 3;
+}
+
+message ScopeDetails {
+  io.harness.eventsframework.schemas.entity.EntityScopeInfo entity_scope = 1;
+  map<string, string> log_context = 2;
+}
