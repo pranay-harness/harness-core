@@ -366,6 +366,8 @@ public class NgUserServiceImpl implements NgUserService {
     Optional<UserInfo> userInfoOptional = getUserById(userId);
     UserInfo userInfo = userInfoOptional.orElseThrow(
         () -> new InvalidRequestException(String.format("User with id %s doesn't exists", userId)));
+
+    userMetadataRepository.deleteByEmail(userInfo.getEmail());
     UserMetadata userMetadata = UserMetadata.builder()
                                     .userId(userInfo.getUuid())
                                     .name(userInfo.getName())

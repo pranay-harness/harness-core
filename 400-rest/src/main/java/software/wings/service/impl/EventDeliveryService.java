@@ -37,6 +37,7 @@ import software.wings.service.intfc.DelegateService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -85,11 +86,14 @@ public class EventDeliveryService {
         featureFlagService.isEnabled(FeatureName.HTTP_HEADERS_CAPABILITY_CHECK, accountId);
 
     WebHookEventConfig webHookEventConfig = eventConfig.getConfig();
+    List<KeyValuePair> headers =
+        isNotEmpty(eventConfig.getConfig().getHeaders()) ? eventConfig.getConfig().getHeaders() : new ArrayList<>();
+    headers.add(KeyValuePair.builder().key("Content-Type").value("application/json").build());
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .method("POST")
                                                 .body(JsonUtils.asJson(event.getPayload()))
                                                 .url(eventConfig.getConfig().getUrl())
-                                                .headers(eventConfig.getConfig().getHeaders())
+                                                .headers(headers)
                                                 .socketTimeoutMillis(eventConfig.getConfig().getSocketTimeoutMillis())
                                                 .useProxy(eventConfig.getConfig().isUseProxy())
                                                 .isCertValidationRequired(isCertValidationRequired)

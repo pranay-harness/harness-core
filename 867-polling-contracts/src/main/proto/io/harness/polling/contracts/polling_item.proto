@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package io.harness.polling.contracts;
+
+option java_multiple_files = true;
+
+import "io/harness/polling/contracts/payload_type.proto";
+
+message PollingItem {
+  Category category = 1;
+  Qualifier qualifier = 2;
+  string connectorRef = 3;
+  io.harness.polling.contracts.PayloadType payloadType = 4;
+}
+
+message Qualifier {
+  string accountId = 1;
+  string organizationId = 2;
+  string projectId = 3;
+  string signature = 4;
+}
+
+enum Category {
+  ARTIFACT = 0;
+  MANIFEST = 1;
+}

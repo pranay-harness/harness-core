@@ -93,7 +93,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
     infrastructureMapping.setOrgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance));
     infrastructureMapping.setProjectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance));
     infrastructureMapping.setServiceId(serviceOutcome.getIdentifier());
-    infrastructureMapping.setInfrastructureMappingType(infrastructureOutcome.getKind());
+    infrastructureMapping.setInfrastructureKind(infrastructureOutcome.getKind());
     infrastructureMapping.setEnvId(infrastructureOutcome.getEnvironment().getIdentifier());
 
     // TODO set deployment type and id

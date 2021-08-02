@@ -26,8 +26,9 @@ const (
 )
 
 const (
-	JAVA_SRC_PATH  = "src/main/java/"
-	JAVA_TEST_PATH = "src/test/java/"
+	JAVA_SRC_PATH      = "src/main/java/"
+	JAVA_TEST_PATH     = "src/test/java/"
+	JAVA_RESOURCE_PATH = "src/test/resources/"
 )
 
 //Node holds data about a source code
@@ -35,6 +36,7 @@ type Node struct {
 	Pkg    string
 	Class  string
 	Method string
+	File   string
 	Lang   LangType
 	Type   NodeType
 }
@@ -61,7 +63,7 @@ func IsTest(node Node) bool {
 
 // IsSupported checks whether we can perform an action for the node type or not.
 func IsSupported(node Node) bool {
-	return node.Type == NodeType_TEST || node.Type == NodeType_SOURCE
+	return node.Type == NodeType_TEST || node.Type == NodeType_SOURCE || node.Type == NodeType_RESOURCE
 }
 
 //ParseJavaNode extracts the pkg and class names from a Java file path
@@ -75,28 +77,38 @@ func ParseJavaNode(filename string) (*Node, error) {
 	node.Type = NodeType_OTHER
 
 	filename = strings.TrimSpace(filename)
-	if !strings.HasSuffix(filename, ".java") {
-		return &node, nil
-	}
-	node.Lang = LangType_JAVA
 
 	var r *regexp.Regexp
-	if strings.Contains(filename, JAVA_SRC_PATH) {
+	if strings.Contains(filename, JAVA_SRC_PATH) && strings.HasSuffix(filename, ".java") {
 		r = regexp.MustCompile(`^.*src/main/java/`)
 		node.Type = NodeType_SOURCE
-	} else if strings.Contains(filename, JAVA_TEST_PATH) {
+		rr := r.ReplaceAllString(filename, "${1}") //extract the 2nd part after matching the src/main/java prefix
+		rr = strings.TrimSuffix(rr, ".java")
+
+		parts := strings.Split(rr, "/")
+		p := parts[:len(parts)-1]
+		node.Class = parts[len(parts)-1]
+		node.Lang = LangType_JAVA
+		node.Pkg = strings.Join(p, ".")
+	} else if strings.Contains(filename, JAVA_TEST_PATH) && strings.HasSuffix(filename, ".java") {
 		r = regexp.MustCompile(`^.*src/test/java/`)
 		node.Type = NodeType_TEST
+		rr := r.ReplaceAllString(filename, "${1}") //extract the 2nd part after matching the src/test/java prefix
+		rr = strings.TrimSuffix(rr, ".java")
+
+		parts := strings.Split(rr, "/")
+		p := parts[:len(parts)-1]
+		node.Class = parts[len(parts)-1]
+		node.Lang = LangType_JAVA
+		node.Pkg = strings.Join(p, ".")
+	} else if strings.Contains(filename, JAVA_RESOURCE_PATH) {
+		node.Type = NodeType_RESOURCE
+		parts := strings.Split(filename, "/")
+		node.File = parts[len(parts)-1]
+		node.Lang = LangType_JAVA
 	} else {
 		return &node, nil
 	}
-	rr := r.ReplaceAllString(filename, "${1}") //extract the 2nd part after matching the src/test prefix
-	rr = strings.TrimSuffix(rr, ".java")
-
-	parts := strings.Split(rr, "/")
-	p := parts[:len(parts)-1]
-	node.Class = parts[len(parts)-1]
-	node.Pkg = strings.Join(p, ".")
 
 	return &node, nil
 }

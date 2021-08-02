@@ -49,6 +49,7 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
     projectService = mock(ProjectService.class);
     organizationService = mock(OrganizationService.class);
     ngUserService = mock(NgUserService.class);
+
     ExecutorService executorService = Executors.newFixedThreadPool(1);
     aggregateProjectService =
         spy(new AggregateProjectServiceImpl(projectService, organizationService, ngUserService, executorService));
@@ -162,7 +163,8 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
 
     List<Project> projects = getProjects(accountIdentifier, orgIdentifier1, 2);
     projects.addAll(getProjects(accountIdentifier, orgIdentifier2, 3));
-    when(projectService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(projects, 5));
+    when(projectService.listPermittedProjects(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(projects, 5));
 
     when(organizationService.get(accountIdentifier, orgIdentifier1))
         .thenReturn(getOrganization(accountIdentifier, orgIdentifier1));
@@ -198,7 +200,8 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
 
     List<Project> projects = getProjects(accountIdentifier, orgIdentifier1, 2);
     projects.addAll(getProjects(accountIdentifier, orgIdentifier2, 3));
-    when(projectService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(projects, 5));
+    when(projectService.listPermittedProjects(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(projects, 5));
 
     when(organizationService.get(any(), any())).thenReturn(Optional.empty());
 

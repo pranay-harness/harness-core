@@ -21,10 +21,8 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
@@ -64,7 +62,6 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 @NoArgsConstructor
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   @Override

@@ -22,6 +22,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
@@ -229,7 +230,7 @@ public class OrchestrationAdjacencyListGenerator {
         String currentNodeId = queue.removeFirst();
         NodeExecution nodeExecution = nodeExIdMap.get(currentNodeId);
 
-        Map<String, OrchestrationMap> outcomes;
+        Map<String, PmsOutcome> outcomes;
         if (isOutcomePresent) {
           outcomes = PmsOutcomeMapper.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
               nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));

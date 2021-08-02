@@ -6,8 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-// TODO this should go to yaml commons
-@TargetModule(HarnessModule._884_PMS_COMMONS)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 public interface NGFailureActionTypeConstants {
   String IGNORE = "Ignore";
   String RETRY = "Retry";

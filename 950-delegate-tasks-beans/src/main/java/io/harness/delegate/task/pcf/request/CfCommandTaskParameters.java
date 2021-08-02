@@ -5,9 +5,7 @@ import static io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelpe
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
@@ -28,7 +26,6 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class CfCommandTaskParameters
     implements TaskParameters, ActivityAccess, Cd1ApplicationAccess, ExecutionCapabilityDemander {

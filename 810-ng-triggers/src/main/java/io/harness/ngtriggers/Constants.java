@@ -66,4 +66,6 @@ public interface Constants {
   String TRIGGER_KEY = "triggerIdentifier";
 
   String DOT_GIT = ".git";
+  String MANIFEST = "Manifest";
+  String ARTIFACT = "Artifact";
 }

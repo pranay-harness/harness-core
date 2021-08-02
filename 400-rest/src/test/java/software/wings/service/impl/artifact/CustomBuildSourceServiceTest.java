@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.rule.Owner;
@@ -38,6 +40,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class CustomBuildSourceServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;

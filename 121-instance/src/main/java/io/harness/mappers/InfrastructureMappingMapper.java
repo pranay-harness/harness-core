@@ -16,12 +16,11 @@ public class InfrastructureMappingMapper {
         .orgIdentifier(infrastructureMapping.getOrgIdentifier())
         .projectIdentifier(infrastructureMapping.getProjectIdentifier())
         .connectorRef(infrastructureMapping.getConnectorRef())
-        .deploymentType(infrastructureMapping.getDeploymentType())
         .envIdentifier(infrastructureMapping.getEnvId())
         .id(infrastructureMapping.getId())
         .infrastructureKey(infrastructureMapping.getInfrastructureKey())
         .serviceIdentifier(infrastructureMapping.getServiceId())
-        .infrastructureMappingType(infrastructureMapping.getInfrastructureMappingType())
+        .infrastructureKind(infrastructureMapping.getInfrastructureKind())
         .build();
   }
 
@@ -31,10 +30,9 @@ public class InfrastructureMappingMapper {
         .orgIdentifier(infrastructureMappingDTO.getOrgIdentifier())
         .projectIdentifier(infrastructureMappingDTO.getProjectIdentifier())
         .connectorRef(infrastructureMappingDTO.getConnectorRef())
-        .deploymentType(infrastructureMappingDTO.getDeploymentType())
         .envId(infrastructureMappingDTO.getEnvIdentifier())
         .infrastructureKey(infrastructureMappingDTO.getInfrastructureKey())
-        .infrastructureMappingType(infrastructureMappingDTO.getInfrastructureMappingType())
+        .infrastructureKind(infrastructureMappingDTO.getInfrastructureKind())
         .serviceId(infrastructureMappingDTO.getServiceIdentifier())
         .build();
   }

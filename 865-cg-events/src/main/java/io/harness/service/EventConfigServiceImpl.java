@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CgEventConfig;
 import io.harness.beans.CgEventConfig.CgEventConfigKeys;
 import io.harness.beans.CgEventRule;
+import io.harness.beans.EventType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -154,7 +155,7 @@ public class EventConfigServiceImpl implements EventConfigService {
     }
 
     Optional<String> invalidEvent =
-        pipelineRule.getEvents().stream().filter(e -> !CgEventRule.PIPELINE_EVENTS.contains(e)).findFirst();
+        pipelineRule.getEvents().stream().filter(e -> !EventType.getPipelineEvents().contains(e)).findFirst();
     if (invalidEvent.isPresent()) {
       throw new InvalidRequestException("For Event rule type Pipeline we found invalid event - " + invalidEvent.get());
     }
@@ -175,7 +176,7 @@ public class EventConfigServiceImpl implements EventConfigService {
     }
 
     Optional<String> invalidEvent =
-        workflowRule.getEvents().stream().filter(e -> !CgEventRule.WORKFLOW_EVENTS.contains(e)).findFirst();
+        workflowRule.getEvents().stream().filter(e -> !EventType.getWorkflowEvents().contains(e)).findFirst();
     if (invalidEvent.isPresent()) {
       throw new InvalidRequestException("For Event rule type Workflow we found invalid event - " + invalidEvent.get());
     }

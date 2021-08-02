@@ -124,6 +124,10 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     ApiKey apiKey = ApiKey.builder().defaultTimeToExpireToken(Duration.ofDays(2).toMillis()).build();
     apiKey.setUuid(randomAlphabetic(10));
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
+    doReturn(Optional.empty())
+        .when(tokenRepository)
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+            any(), any(), any(), any(), any(), any(), any());
     AccountDTO accountDTO =
         AccountDTO.builder()
             .serviceAccountConfig(ServiceAccountConfig.builder().apiKeyLimit(5).tokenLimit(5).build())
@@ -145,6 +149,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     apiKey.setUuid(randomAlphabetic(10));
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
     doReturn(Optional.of(TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis())))
+        .doReturn(Optional.empty())
         .when(tokenRepository)
         .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
             any(), any(), any(), any(), any(), any(), any());
@@ -175,6 +180,10 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     ApiKey apiKey = ApiKey.builder().defaultTimeToExpireToken(Duration.ofDays(2).toMillis()).build();
     apiKey.setUuid(randomAlphabetic(10));
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
+    doReturn(Optional.empty())
+        .when(tokenRepository)
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+            any(), any(), any(), any(), any(), any(), any());
     Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
     newToken.setUuid(randomAlphabetic(10));
     doReturn(newToken).when(tokenRepository).save(any());
@@ -201,6 +210,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     apiKey.setUuid(randomAlphabetic(10));
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
     doReturn(Optional.of(TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis())))
+        .doReturn(Optional.empty())
         .when(tokenRepository)
         .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
             any(), any(), any(), any(), any(), any(), any());

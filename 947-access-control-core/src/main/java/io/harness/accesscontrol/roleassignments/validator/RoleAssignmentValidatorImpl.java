@@ -14,6 +14,7 @@ import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult.RoleAssignmentValidationResultBuilder;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
@@ -29,22 +30,29 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
   private final Map<PrincipalType, PrincipalValidator> principalValidatorByType;
   private final RoleService roleService;
   private final ResourceGroupService resourceGroupService;
+  private final ScopeService scopeService;
 
   @Inject
   public RoleAssignmentValidatorImpl(Map<PrincipalType, PrincipalValidator> principalValidatorByType,
-      RoleService roleService, ResourceGroupService resourceGroupService) {
+      RoleService roleService, ResourceGroupService resourceGroupService, ScopeService scopeService) {
     this.principalValidatorByType = principalValidatorByType;
     this.roleService = roleService;
     this.resourceGroupService = resourceGroupService;
+    this.scopeService = scopeService;
   }
 
   @Override
   public RoleAssignmentValidationResult validate(RoleAssignmentValidationRequest request) {
     RoleAssignment assignment = request.getRoleAssignment();
     RoleAssignmentValidationResultBuilder builder = RoleAssignmentValidationResult.builder()
+                                                        .scopeValidationResult(VALID)
                                                         .principalValidationResult(VALID)
                                                         .resourceGroupValidationResult(VALID)
                                                         .roleValidationResult(VALID);
+    if (request.isValidateScope()) {
+      builder.scopeValidationResult(validateScope(assignment.getScopeIdentifier()));
+    }
+
     if (request.isValidatePrincipal()) {
       builder.principalValidationResult(validatePrincipal(Principal.builder()
                                                               .principalIdentifier(assignment.getPrincipalIdentifier())
@@ -60,6 +68,16 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
       builder.roleValidationResult(validateRole(assignment.getRoleIdentifier(), assignment.getScopeIdentifier()));
     }
     return builder.build();
+  }
+
+  private ValidationResult validateScope(String scopeIdentifier) {
+    if (scopeService.isPresent(scopeIdentifier)) {
+      return ValidationResult.builder().valid(true).build();
+    }
+    return ValidationResult.builder()
+        .valid(false)
+        .errorMessage(String.format("Invalid scope %s", scopeIdentifier))
+        .build();
   }
 
   private ValidationResult validatePrincipal(Principal principal, String scopeIdentifier) {

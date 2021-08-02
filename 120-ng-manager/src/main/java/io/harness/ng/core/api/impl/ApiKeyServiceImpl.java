@@ -73,13 +73,17 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   public ApiKeyDTO createApiKey(ApiKeyDTO apiKeyDTO) {
     validateApiKeyRequest(
         apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier());
+    validateApiKeyLimit(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
+        apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getParentIdentifier());
     Optional<ApiKey> optionalApiKey =
         apiKeyRepository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
                 apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier(),
                 apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier(), apiKeyDTO.getIdentifier());
-    Preconditions.checkState(
-        !optionalApiKey.isPresent(), "Duplicate api key present in scope for identifier: " + apiKeyDTO.getIdentifier());
+    if (optionalApiKey.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Duplicate api key present in scope for identifier: " + apiKeyDTO.getIdentifier()));
+    }
     ApiKey apiKey = ApiKeyDTOMapper.getApiKeyFromDTO(apiKeyDTO);
     validate(apiKey);
     return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
@@ -96,9 +100,15 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
     }
+  }
+
+  private void validateApiKeyLimit(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String parentIdentifier) {
     ServiceAccountConfig serviceAccountConfig = accountService.getAccount(accountIdentifier).getServiceAccountConfig();
     long apiKeyLimit = serviceAccountConfig != null ? serviceAccountConfig.getApiKeyLimit() : DEFAULT_API_KEY_LIMIT;
-    long existingAPIKeyCount = apiKeyRepository.count();
+    long existingAPIKeyCount =
+        apiKeyRepository.countByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndParentIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier, parentIdentifier);
     if (existingAPIKeyCount >= apiKeyLimit) {
       throw new InvalidRequestException(String.format("Maximum limit has reached"));
     }

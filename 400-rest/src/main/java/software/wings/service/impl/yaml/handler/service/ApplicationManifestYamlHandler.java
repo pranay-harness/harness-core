@@ -5,6 +5,8 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, ApplicationManifest> {
   @Inject YamlHelper yamlHelper;
   @Inject ApplicationManifestService applicationManifestService;
@@ -59,6 +62,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .customSourceConfig(applicationManifest.getCustomSourceConfig())
         .skipVersioningForAllK8sObjects(applicationManifest.getSkipVersioningForAllK8sObjects())
         .helmCommandFlag(applicationManifest.getHelmCommandFlag())
+        .helmValuesYamlFilePaths(applicationManifest.getHelmValuesYamlFilePaths())
         .build();
   }
 
@@ -130,6 +134,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .customSourceConfig(customSourceConfig)
                                        .skipVersioningForAllK8sObjects(yaml.getSkipVersioningForAllK8sObjects())
                                        .helmCommandFlag(yaml.getHelmCommandFlag())
+                                       .helmValuesYamlFilePaths(yaml.getHelmValuesYamlFilePaths())
                                        .build();
 
     manifest.setAppId(appId);

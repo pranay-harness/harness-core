@@ -89,6 +89,8 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   private String ngTriggerYaml_awscodecommit_push;
   private String ngTriggerYaml_custom;
   private String ngTriggerYaml_cron;
+  private String ngTriggerYaml_artifact;
+  private String ngTriggerYaml_manifest;
 
   private List<TriggerEventDataCondition> payloadConditions;
   private List<TriggerEventDataCondition> headerConditions;
@@ -135,6 +137,12 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
         Objects.requireNonNull(classLoader.getResource("ng-trigger-custom-v2.yaml")), StandardCharsets.UTF_8);
     ngTriggerYaml_cron = Resources.toString(
         Objects.requireNonNull(classLoader.getResource("ng-trigger-cron-v2.yaml")), StandardCharsets.UTF_8);
+
+    ngTriggerYaml_artifact = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact.yaml")), StandardCharsets.UTF_8);
+
+    ngTriggerYaml_manifest = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-manifest.yaml")), StandardCharsets.UTF_8);
 
     payloadConditions = asList(TriggerEventDataCondition.builder().key("k1").operator(EQUALS).value("v1").build(),
         TriggerEventDataCondition.builder().key("k2").operator(NOT_EQUALS).value("v2").build(),
@@ -576,6 +584,28 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     ngTriggerEntity.setType(SCHEDULED);
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testArtifactTriggerToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_artifact).getNgTriggerEntity();
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testManifestTriggerToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_manifest).getNgTriggerEntity();
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
   }
 
   private TriggerEventHistory generateEventHistoryWithTimestamp(SimpleDateFormat formatter6, String sDate1)

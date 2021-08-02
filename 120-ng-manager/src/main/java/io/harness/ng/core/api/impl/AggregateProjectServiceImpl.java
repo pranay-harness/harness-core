@@ -66,11 +66,12 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   @Override
   public Page<ProjectAggregateDTO> listProjectAggregateDTO(
       String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO) {
-    Page<Project> projects = projectService.list(accountIdentifier, pageable, projectFilterDTO);
-    List<Project> projectList = projects.toList();
+    Page<Project> permittedProjects =
+        projectService.listPermittedProjects(accountIdentifier, pageable, projectFilterDTO);
+    List<Project> projectList = permittedProjects.getContent();
 
     List<Callable<ProjectAggregateDTO>> tasks = new ArrayList<>();
-    projects.forEach(project -> tasks.add(() -> buildAggregateDTO(project)));
+    projectList.forEach(project -> tasks.add(() -> buildAggregateDTO(project)));
 
     List<Future<ProjectAggregateDTO>> futures;
     try {
@@ -100,7 +101,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
       }
     }
 
-    return new PageImpl<>(aggregates, projects.getPageable(), projects.getTotalElements());
+    return new PageImpl<>(aggregates, permittedProjects.getPageable(), permittedProjects.getTotalElements());
   }
 
   private ProjectAggregateDTO buildAggregateDTO(Project project) {

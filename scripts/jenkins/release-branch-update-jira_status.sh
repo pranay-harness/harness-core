@@ -14,15 +14,12 @@ fi
 
 for KEY in ${KEYS}
 do
-    echo $KEY
 
     status=`curl -X GET -H "Content-Type: application/json" https://harness.atlassian.net/rest/api/2/issue/${KEY}?fields=status --user $JIRA_USERNAME:$JIRA_PASSWORD | jq ".fields.status.name" | tr -d '"'`
 
-    echo $status
-
-    if [[ "${status}" = "QA Test" || "${status}" = "Done" ]]
+    if [[ "${status}" = "QA Test" || "${status}" = "Done" || "${status}" = "Under investigation"  ]]
             then
-               echo " ${KEY}  is in Done or QA-Test status, Hence no update"
+               echo " ${KEY}  is in ${status} status, Hence no update needed"
             else
                echo " ${KEY}  is in  ${status} , Hence moving to ${STATUS_ID} status"
                curl \

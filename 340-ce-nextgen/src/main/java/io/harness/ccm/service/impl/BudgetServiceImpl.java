@@ -21,7 +21,6 @@ import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewTimeGroupType;
 import io.harness.ccm.views.graphql.QLCEViewTimeTruncGroupBy;
-import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
 import io.harness.ccm.views.graphql.ViewCostData;
 import io.harness.ccm.views.graphql.ViewsQueryHelper;
 import io.harness.ccm.views.service.CEViewService;
@@ -138,15 +137,24 @@ public class BudgetServiceImpl implements BudgetService {
       throw new InvalidRequestException(BudgetUtils.INVALID_PERSPECTIVE_ID_EXCEPTION);
     }
     List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    long startTime = BudgetUtils.getStartTimeForForecasting();
     long endTime = BudgetUtils.getEndOfMonthForCurrentBillingCycle();
     filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
-    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartTimeForForecasting(), AFTER));
+    filters.add(viewsQueryHelper.getPerspectiveTimeFilter(startTime, AFTER));
     filters.add(viewsQueryHelper.getPerspectiveTimeFilter(endTime, BEFORE));
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    ViewCostData currentCostData = viewsBillingService.getCostData(bigQueryService.get(), filters,
-        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false);
-
-    return viewsQueryHelper.getForecastCost(currentCostData, Instant.ofEpochMilli(endTime));
+    ViewCostData costDataForForecast =
+        ViewCostData.builder()
+            .cost(viewsBillingService
+                      .getCostData(bigQueryService.get(), filters,
+                          viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false)
+                      .getCost())
+            .minStartTime(1000 * startTime)
+            .maxStartTime(1000 * BudgetUtils.getStartOfCurrentDay() - BudgetUtils.ONE_DAY_MILLIS)
+            .build();
+    double costTillNow = getActualCostForPerspectiveBudget(accountId, perspectiveId);
+    return viewsQueryHelper.getRoundedDoubleValue(
+        costTillNow + viewsQueryHelper.getForecastCost(costDataForForecast, Instant.ofEpochMilli(endTime)));
   }
 
   @Override
@@ -231,13 +239,16 @@ public class BudgetServiceImpl implements BudgetService {
     }
   }
 
-  private double getActualCostForPerspectiveBudget(Budget budget) {
-    String viewId = budget.getScope().getEntityIds().get(0);
+  private double getActualCostForPerspectiveBudget(String accountId, String perspectiveId) {
     List<QLCEViewFilterWrapper> filters = new ArrayList<>();
-    filters.add(viewsQueryHelper.getViewMetadataFilter(viewId));
+    filters.add(viewsQueryHelper.getViewMetadataFilter(perspectiveId));
     filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getStartOfMonthForCurrentBillingCycle(), AFTER));
     filters.add(viewsQueryHelper.getPerspectiveTimeFilter(BudgetUtils.getEndOfMonthForCurrentBillingCycle(), BEFORE));
-    return getCostForPerspective(budget.getAccountId(), filters);
+    return getCostForPerspective(accountId, filters);
+  }
+
+  private double getActualCostForPerspectiveBudget(Budget budget) {
+    return getActualCostForPerspectiveBudget(budget.getAccountId(), budget.getScope().getEntityIds().get(0));
   }
 
   private double getLastMonthCostForPerspectiveBudget(Budget budget) {
@@ -250,9 +261,9 @@ public class BudgetServiceImpl implements BudgetService {
 
   private double getCostForPerspective(String accountId, List<QLCEViewFilterWrapper> filters) {
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
-    QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
-        bigQueryService.get(), filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable);
-    return trendData.getValue().doubleValue();
+    ViewCostData costData = viewsBillingService.getCostData(bigQueryService.get(), filters,
+        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false);
+    return costData.getCost();
   }
 
   private List<TimeSeriesDataPoints> getPerspectiveBudgetMonthlyCostData(

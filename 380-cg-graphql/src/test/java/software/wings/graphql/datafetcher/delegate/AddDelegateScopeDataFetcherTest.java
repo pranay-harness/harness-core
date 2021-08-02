@@ -61,7 +61,7 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
             .environment(null)
             .service(null)
             .environmentTypes(Collections.singletonList(QLEnvironmentType.NON_PROD))
-            .taskGroups(Collections.singletonList(QLTaskGroup.APPDYNAMICS));
+            .taskGroup(QLTaskGroup.APPDYNAMICS);
     QLAddDelegateScopePayload addDelegateScopePayload = delegateScopeDataFetcher.mutateAndFetch(
         qlAddDelegateScopeInputBuilder.build(), MutationContext.builder().accountId(accountId).build());
     Assert.notNull(addDelegateScopePayload.getDelegateScope());
@@ -87,7 +87,7 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
             .environment(environmentFilter)
             .service(servicesFilter)
             .environmentTypes(Collections.singletonList(QLEnvironmentType.NON_PROD))
-            .taskGroups(Collections.singletonList(QLTaskGroup.APPDYNAMICS));
+            .taskGroup(QLTaskGroup.APPDYNAMICS);
     QLAddDelegateScopePayload addDelegateScopePayload = delegateScopeDataFetcher.mutateAndFetch(
         qlAddDelegateScopeInputBuilder.build(), MutationContext.builder().accountId(accountId).build());
     Assert.notNull(addDelegateScopePayload.getDelegateScope());

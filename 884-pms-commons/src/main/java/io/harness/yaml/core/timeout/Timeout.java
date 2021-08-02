@@ -3,10 +3,8 @@ package io.harness.yaml.core.timeout;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.timeout.TimeoutParameters;
 
@@ -22,8 +20,6 @@ import org.apache.commons.lang3.tuple.Pair;
 @Data
 @Builder
 @OwnedBy(HarnessTeam.PIPELINE)
-// TODO this should go to yaml commons
-@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class Timeout {
   private static final String TIMEOUT_STRING = "timeout";
   private static final String SPACE = " ";

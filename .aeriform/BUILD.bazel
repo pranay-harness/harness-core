@@ -200,6 +200,8 @@ aeriform("//865-cg-events:module")
 
 aeriform("//865-cg-events:tests")
 
+aeriform("//867-polling-contracts:module")
+
 aeriform("//870-cg-orchestration:module")
 
 aeriform("//870-cg-orchestration:tests")

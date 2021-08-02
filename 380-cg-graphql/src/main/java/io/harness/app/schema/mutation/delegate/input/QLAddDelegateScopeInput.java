@@ -23,7 +23,7 @@ public class QLAddDelegateScopeInput implements QLMutationInput {
   String accountId;
   String name;
   List<QLEnvironmentType> environmentTypes;
-  List<QLTaskGroup> taskGroups;
+  QLTaskGroup taskGroup;
   QLIdFilter application;
   QLIdFilter service;
   QLIdFilter environment;

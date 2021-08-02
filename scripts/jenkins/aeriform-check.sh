@@ -19,7 +19,7 @@ then
      ;;
      "CCE") export HARNESS_TEAM="CE"
      ;;
-     "PIP") export HARNESS_TEAM="PIPELINE"
+     "PIE") export HARNESS_TEAM="PIPELINE"
      ;;
      "CCM") export HARNESS_TEAM="CE"
      ;;
@@ -74,7 +74,7 @@ if [ -z "${ghprbTargetBranch}" ]
 then
   if which hub > /dev/null
   then
-    ghprbTargetBranch=`hub pr show --format=%B`
+    ghprbTargetBranch=`hub pr show --format=%B` || true
   fi
 fi
 
@@ -90,6 +90,7 @@ scripts/bazel/prepare_aeriform.sh
 
 scripts/bazel/aeriform.sh analyze \
   --kind-filter Critical \
+  --top-blockers=25 \
   --exit-code
 
 if [ ! -z "$TRACK_FILES" ]
@@ -105,5 +106,6 @@ then
     --team-filter ${HARNESS_TEAM} \
     --kind-filter AutoAction \
     --kind-filter Error \
+    --kind-filter Warning \
     --exit-code
 fi

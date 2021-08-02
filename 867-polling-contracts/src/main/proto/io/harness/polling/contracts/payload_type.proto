@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package io.harness.polling.contracts;
+
+option java_multiple_files = true;
+
+message PayloadType {
+  Type type = 1;
+  oneof Payload {
+    HttpHelmPayload httpHelmPayload = 2;
+  }
+}
+
+enum Type {
+  UNDEFINED = 0;
+  HTTP_HELM = 1;
+}
+
+message HttpHelmPayload {
+  string chartName = 1;
+  string chartVersion = 2;
+}

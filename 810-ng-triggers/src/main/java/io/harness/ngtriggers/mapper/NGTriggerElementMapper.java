@@ -9,7 +9,10 @@ import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.BITBUCKET;
@@ -42,6 +45,7 @@ import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
+import io.harness.ngtriggers.beans.entity.metadata.BuildMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CronMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
@@ -177,22 +181,20 @@ public class NGTriggerElementMapper {
 
   public NGTriggerEntity toTriggerEntity(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, NGTriggerConfigV2 config, String yaml) {
-    NGTriggerEntityBuilder entityBuilder =
-        NGTriggerEntity.builder()
-            .name(config.getName())
-            .identifier(config.getIdentifier())
-            .description(config.getDescription())
-            .yaml(yaml)
-            .type(config.getSource().getType())
-            .accountId(accountIdentifier)
-            .orgIdentifier(orgIdentifier)
-            .projectIdentifier(projectIdentifier)
-            .targetIdentifier(config.getPipelineIdentifier())
-            .targetType(TargetType.PIPELINE)
-            .metadata(toMetadata(config.getSource()))
-            .enabled(config.getEnabled())
-            .autoRegister(config.getAutoRegister() != null && config.getAutoRegister())
-            .tags(TagMapper.convertToList(config.getTags()));
+    NGTriggerEntityBuilder entityBuilder = NGTriggerEntity.builder()
+                                               .name(config.getName())
+                                               .identifier(config.getIdentifier())
+                                               .description(config.getDescription())
+                                               .yaml(yaml)
+                                               .type(config.getSource().getType())
+                                               .accountId(accountIdentifier)
+                                               .orgIdentifier(orgIdentifier)
+                                               .projectIdentifier(projectIdentifier)
+                                               .targetIdentifier(config.getPipelineIdentifier())
+                                               .targetType(TargetType.PIPELINE)
+                                               .metadata(toMetadata(config.getSource()))
+                                               .enabled(config.getEnabled())
+                                               .tags(TagMapper.convertToList(config.getTags()));
     if (config.getSource().getType() == NGTriggerType.SCHEDULED) {
       entityBuilder.nextIterations(new ArrayList<>());
     }
@@ -228,6 +230,14 @@ public class NGTriggerElementMapper {
         CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
         return NGTriggerMetadata.builder()
             .cron(CronMetadata.builder().expression(cronTriggerSpec.getExpression()).build())
+            .build();
+      case ARTIFACT:
+        return NGTriggerMetadata.builder()
+            .buildMetadata(BuildMetadata.builder().type(ARTIFACT).signature(generateUuid()).build())
+            .build();
+      case MANIFEST:
+        return NGTriggerMetadata.builder()
+            .buildMetadata(BuildMetadata.builder().type(MANIFEST).signature(generateUuid()).build())
             .build();
       default:
         throw new InvalidRequestException("Type " + triggerSource.getType().toString() + " is invalid");

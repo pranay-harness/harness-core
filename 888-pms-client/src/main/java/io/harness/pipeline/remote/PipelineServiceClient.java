@@ -4,9 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.inputset.MergeInputSetResponseDTOPMS;
@@ -21,7 +19,6 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-@TargetModule(HarnessModule._888_PMS_CLIENT)
 @OwnedBy(PIPELINE)
 public interface PipelineServiceClient {
   String PIPELINE_ENDPOINT = "pipelines/";

@@ -48,14 +48,13 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
+import io.harness.pms.timeout.SdkTimeoutObtainment;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
-import io.harness.timeout.TimeoutParameters;
-import io.harness.timeout.contracts.TimeoutObtainment;
-import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
@@ -64,6 +63,7 @@ import io.harness.yaml.core.failurestrategy.NGFailureActionType;
 import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -130,10 +130,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
             .whenCondition(isStepInsideRollback ? RunInfoUtils.getRunConditionForRollback(stepElement.getWhen())
                                                 : RunInfoUtils.getRunCondition(stepElement.getWhen()))
             .timeoutObtainment(
-                TimeoutObtainment.newBuilder()
-                    .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-                    .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                        AbsoluteTimeoutParameters.builder().timeoutMillis(getTimeoutInMillis(stepElement)).build())))
+                SdkTimeoutObtainment.builder()
+                    .dimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                    .parameters(
+                        AbsoluteSdkTimeoutTrackerParameters.builder().timeout(getTimeoutString(stepElement)).build())
                     .build())
             .skipUnresolvedExpressionsCheck(stepElement.getStepSpecType().skipUnresolvedExpressionsCheck())
             .build();
@@ -173,18 +173,14 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return nodeName;
   }
 
-  protected long getTimeoutInMillis(StepElementConfig stepElement) {
-    long timeoutInMillis;
-    if (ParameterField.isNull(stepElement.getTimeout())) {
-      timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
-    } else if (stepElement.getTimeout().isExpression()) {
-      throw new InvalidRequestException(
-          String.format("Timeout needs to be a fixed value. It cannot be an expression: %s",
-              stepElement.getTimeout().getExpressionValue()));
+  protected ParameterField<String> getTimeoutString(StepElementConfig stepElement) {
+    ParameterField<Timeout> timeout = TimeoutUtils.getTimeout(stepElement.getTimeout());
+    if (timeout.isExpression()) {
+      return ParameterField.createExpressionField(
+          true, timeout.getExpressionValue(), timeout.getInputSetValidator(), true);
     } else {
-      timeoutInMillis = stepElement.getTimeout().getValue().getTimeoutInMillis();
+      return ParameterField.createValueField(timeout.getValue().getTimeoutString());
     }
-    return timeoutInMillis;
   }
 
   protected List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
