@@ -11,7 +11,7 @@
 // go-bindata -o callgraph.go callgraph.avsc
 // Without this, none of the changes will take effect.
 
-package ti
+package cg
 
 import (
 	"errors"
@@ -147,4 +147,16 @@ type Input struct {
 type Relation struct {
 	Source int
 	Tests  []int
+}
+
+// TODO -- not required. Delete it as now visgraph format only contains id's instead of node information
+func NewNode(id int, typ, pkg, class, method, params string) *Node {
+	return &Node{
+		Package: pkg,
+		Method:  method,
+		ID:      id,
+		Params:  params,
+		Class:   class,
+		Type:    typ,
+	}
 }
