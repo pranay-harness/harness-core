@@ -19,13 +19,4 @@ public class ServiceInfoResponseSummary {
   String lastWorkflowExecutionName;
   String infraMappingId;
   String infraMappingName;
-
-  @UtilityClass
-  public static final class ServiceInfoResponseSummaryKeys {
-    public static final String lastArtifactBuildNum = "lastArtifactBuildNum";
-    public static final String lastWorkflowExecutionId = "lastWorkflowExecutionId";
-    public static final String lastWorkflowExecutionName = "lastWorkflowExecutionName";
-    public static final String infraMappingId = "infraMappingId";
-    public static final String infraMappingName = "infraMappingName";
-  }
 }
