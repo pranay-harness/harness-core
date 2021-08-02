@@ -4,6 +4,7 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dtos.deploymentinfo.K8sDeploymentInfoDTO;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.util.InstanceSyncKey;
 
@@ -39,8 +40,10 @@ public class K8sInstanceInfoDTO extends InstanceInfoDTO {
 
   @Override
   public String prepareInstanceSyncHandlerKey() {
-    return InstanceSyncKey.builder()
-        .clazz(K8sInstanceInfoDTO.class)
+    return InstanceSyncKey
+        .builder()
+        // TODO @Ivan remove mandatory clazz field
+        .clazz(K8sDeploymentInfoDTO.class)
         .part(namespace)
         .part(releaseName)
         .build()
