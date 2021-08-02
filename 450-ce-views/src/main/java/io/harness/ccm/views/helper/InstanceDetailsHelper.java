@@ -157,8 +157,8 @@ public class InstanceDetailsHelper {
           .storageUnallocatedCost(costDataEntry.getClusterData().getStorageUnallocatedCost())
           .memoryUnallocatedCost(costDataEntry.getClusterData().getMemoryUnallocatedCost())
           .cpuUnallocatedCost(costDataEntry.getClusterData().getCpuUnallocatedCost())
-          .memoryIdleCost(costDataEntry.getClusterData().getMemoryIdleCost())
-          .cpuIdleCost(costDataEntry.getClusterData().getCpuIdleCost())
+          .memoryIdleCost(costDataEntry.getClusterData().getMemoryActualIdleCost())
+          .cpuIdleCost(costDataEntry.getClusterData().getCpuActualIdleCost())
           .networkCost(costDataEntry.getClusterData().getNetworkCost())
           .storageCost(viewsQueryHelper.getRoundedDoubleValue(costDataEntry.getClusterData().getStorageCost()))
           .storageActualIdleCost(
