@@ -310,6 +310,12 @@ public class BillingDataServiceImpl {
                   .avgMemoryUtilizationValue(resultSet.getDouble("AVGMEMORYUTILIZATIONVALUE"))
                   .networkCost(resultSet.getDouble("NETWORKCOST"))
                   .pricingSource(resultSet.getString("PRICINGSOURCE"))
+                  .storageRequest(resultSet.getDouble("STORAGEREQUEST"))
+                  .storageUtilizationValue(resultSet.getDouble("STORAGEUTILIZATIONVALUE"))
+                  .storageMbSeconds(resultSet.getDouble("STORAGEMBSECONDS"))
+                  .storageBillingAmount(resultSet.getBigDecimal("STORAGECOST"))
+                  .storageActualIdleCost(resultSet.getBigDecimal("STORAGEACTUALIDLECOST"))
+                  .storageUnallocatedCost(resultSet.getBigDecimal("STORAGEUNALLOCATEDCOST"))
                   .build());
         }
         return instanceBillingDataList;
