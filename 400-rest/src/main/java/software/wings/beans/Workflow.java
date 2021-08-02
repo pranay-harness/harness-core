@@ -66,7 +66,11 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
                  .field(WorkflowKeys.accountId)
                  .descSortField(WorkflowKeys.createdAt)
                  .build())
-        .add(CompoundMongoIndex.builder().name("workflowTypeIndex").field(WorkflowKeys.workflowType).build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_workflowTypeIndex")
+                 .field(WorkflowKeys.accountId)
+                 .field(WorkflowKeys.workflowType)
+                 .build())
         .build();
   }
   public static final String NAME_KEY = "name";
