@@ -10,16 +10,13 @@ import io.harness.service.instancesynchandler.K8sInstanceSyncHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
 
 @Singleton
 @OwnedBy(HarnessTeam.DX)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceSyncHandlerFactoryServiceImpl implements InstanceSyncHandlerFactoryService {
   private final K8sInstanceSyncHandler k8sInstanceSyncHandler;
-
-  @Inject
-  public InstanceSyncHandlerFactoryServiceImpl(K8sInstanceSyncHandler k8sInstanceSyncHandler) {
-    this.k8sInstanceSyncHandler = k8sInstanceSyncHandler;
-  }
 
   @Override
   public AbstractInstanceSyncHandler getInstanceSyncHandler(final String infrastructureKind) {

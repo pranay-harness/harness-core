@@ -530,7 +530,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     Map<String, String> serviceIdToPipelineId = new HashMap<>();
 
     String query = "select distinct on(service_id) service_id, pipeline_execution_summary_cd_id, service_startts from "
-        + "service_infra_info where accountid=? and orgidentifier=? and projectidentifier=? and service_id in (?) "
+        + "service_infra_info where accountid=? and orgidentifier=? and projectidentifier=? and service_id = any (?) "
         + "order by service_id, service_startts desc";
 
     int totalTries = 0;
@@ -565,7 +565,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     Map<String, Set<String>> serviceIdToDeploymentType = new HashMap<>();
 
     String query = "select service_id, deployment_type from service_infra_info where accountid=? and orgidentifier=? "
-        + "and projectidentifier=? and service_id in (?) group by service_id, deployment_type";
+        + "and projectidentifier=? and service_id = any (?) group by service_id, deployment_type";
 
     int totalTries = 0;
     boolean successfulOperation = false;

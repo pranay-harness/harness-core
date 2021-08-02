@@ -330,9 +330,9 @@ public class MergeHelperTest extends CategoryTest {
     String pipelineYaml = readFile(yamlFile);
 
     String trimYamlFile = "pipeline-with-trimmed-values.yaml";
-    String trimmedCorrectPipelineYaml = readFile(trimYamlFile);
+    String trimmedExpectedPipelineYaml = readFile(trimYamlFile);
 
-    String trimmedOutputPipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
-    assertThat(trimmedCorrectPipelineYaml).isEqualTo(trimmedOutputPipelineYaml);
+    String trimmedActualPipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
+    assertThat(trimmedActualPipelineYaml).isEqualTo(trimmedExpectedPipelineYaml);
   }
 }

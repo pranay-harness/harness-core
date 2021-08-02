@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.POOJA;
@@ -42,6 +43,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.category.element.UnitTests;
@@ -94,6 +96,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PipelineServiceImpl.class)
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(CDC)
 public class PipelineServiceImplTest extends WingsBaseTest {
   @Mock AppService mockAppService;
   @Mock WingsPersistence mockWingsPersistence;
@@ -1074,7 +1077,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
             .build();
 
-    when(featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, ACCOUNT_ID)).thenReturn(true);
     List<Variable> pipelineVars = new ArrayList<>();
     pipelineServiceImpl.setPipelineVariables(workflow, pipelineStageElement, pipelineVars, false);
     assertThat(pipelineVars).isNotEmpty();
@@ -1104,7 +1106,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
             .build();
 
-    when(featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, ACCOUNT_ID)).thenReturn(true);
     List<Variable> pipelineVars = new ArrayList<>();
     Variable existNonEntityVar = aVariable().name("nonEntityVal").build();
     existNonEntityVar.setRuntimeInput(false);
@@ -1140,7 +1141,6 @@ public class PipelineServiceImplTest extends WingsBaseTest {
             .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build())
             .build();
 
-    when(featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, ACCOUNT_ID)).thenReturn(true);
     List<Variable> pipelineVars = new ArrayList<>();
     Variable existNonEntityVar = aVariable().name("nonEntityVal").build();
     existNonEntityVar.setRuntimeInput(true);

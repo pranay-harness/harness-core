@@ -10,6 +10,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 @OwnedBy(HarnessTeam.DX)
 @Getter
@@ -22,19 +23,15 @@ public class DeploymentSummaryDTO {
   String pipelineExecutionId;
   String pipelineExecutionName;
   // TODO create dto for artifact details
-  ArtifactDetails artifactDetails;
+  @Setter ArtifactDetails artifactDetails;
   String deployedById;
   String deployedByName;
   String infrastructureMappingId;
-  @Nullable InfrastructureMappingDTO infrastructureMapping;
+  @Setter @Nullable InfrastructureMappingDTO infrastructureMapping;
   // list of newly created server instances in fresh deployment
-  List<ServerInstanceInfo> serverInstanceInfoList;
+  @Setter List<ServerInstanceInfo> serverInstanceInfoList;
   DeploymentInfoDTO deploymentInfoDTO;
   long deployedAt;
   long createdAt;
   long lastModifiedAt;
-
-  public void setServerInstanceInfoList(List<ServerInstanceInfo> serverInstanceInfoList) {
-    this.serverInstanceInfoList = serverInstanceInfoList;
-  }
 }

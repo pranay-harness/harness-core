@@ -47,6 +47,7 @@ public class AwsDataFetcherHelper {
                 () -> new InvalidRequestException("No ec2IamCredentials provided with the request."));
 
             configBuilder.useEc2IamCredentials(true);
+            configBuilder.useIRSA(false);
             configBuilder.tag(credentials.getDelegateSelector().getValue().orElseThrow(
                 () -> new InvalidRequestException("No delegateSelector provided with the request.")));
             RequestField<QLUsageScope> usageRestrictions = credentials.getUsageScope();
@@ -60,6 +61,7 @@ public class AwsDataFetcherHelper {
                 () -> new InvalidRequestException("No manualCredentials provided with the request."));
 
             configBuilder.useEc2IamCredentials(false);
+            configBuilder.useIRSA(false);
             validateAccessKeyFields(credentials.getAccessKey(), credentials.getAccessKeySecretId(), false);
             credentials.getAccessKey().getValue().map(String::toCharArray).ifPresent(accessKey -> {
               configBuilder.accessKey(accessKey);
@@ -119,6 +121,7 @@ public class AwsDataFetcherHelper {
         switch (credentialsType) {
           case EC2_IAM: {
             config.setUseEc2IamCredentials(true);
+            config.setUseIRSA(false);
             config.setAccessKey(null);
             config.setEncryptedSecretKey(null);
             input.getEc2IamCredentials()
@@ -137,6 +140,7 @@ public class AwsDataFetcherHelper {
           } break;
           case MANUAL: {
             config.setUseEc2IamCredentials(false);
+            config.setUseIRSA(false);
             config.setTag(null);
             input.getManualCredentials().getValue().ifPresent(credentials -> {
               validateAccessKeyFields(credentials.getAccessKey(), credentials.getAccessKeySecretId(), true);

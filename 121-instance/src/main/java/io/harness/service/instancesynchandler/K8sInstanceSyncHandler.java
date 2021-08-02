@@ -17,6 +17,7 @@ import io.harness.entities.InstanceType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.perpetualtask.PerpetualTaskType;
 
+import com.google.inject.Singleton;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(HarnessTeam.CDP)
+@Singleton
 public class K8sInstanceSyncHandler extends AbstractInstanceSyncHandler {
   @Override
   public String getPerpetualTaskType() {

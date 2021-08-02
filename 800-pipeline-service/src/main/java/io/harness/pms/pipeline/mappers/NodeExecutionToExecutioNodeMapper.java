@@ -49,8 +49,7 @@ public class NodeExecutionToExecutioNodeMapper {
         .setupId(nodeExecution.getNode().getUuid())
         .name(nodeExecution.getNode().getName())
         .identifier(nodeExecution.getNode().getIdentifier())
-        .stepParameters(
-            OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(nodeExecution.getResolvedStepInputs()))
+        .stepParameters(nodeExecution.getPmsStepParameters())
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())
         .stepType(nodeExecution.getNode().getStepType().getType())
@@ -61,8 +60,7 @@ public class NodeExecutionToExecutioNodeMapper {
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .executableResponses(nodeExecution.getExecutableResponses())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(
-            OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
+        .progressData(nodeExecution.getPmsProgressData())
         .outcomes(OrchestrationMapBackwardCompatibilityUtils.convertToOrchestrationMap(outcomes))
         .baseFqn(null)
         .delegateInfoList(delegateInfoList)

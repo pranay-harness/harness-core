@@ -221,7 +221,7 @@ import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";

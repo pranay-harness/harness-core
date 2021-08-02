@@ -13,11 +13,9 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
-import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -105,16 +103,14 @@ public class GraphStatusUpdateHelper {
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
-        .stepParameters(PmsStepParameters.parse(OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(
-            nodeExecution.getResolvedStepInputs())))
+        .stepParameters(nodeExecution.getPmsStepParameters())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(
-            OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
+        .progressData(nodeExecution.getPmsProgressData())
         .build();
   }
 }

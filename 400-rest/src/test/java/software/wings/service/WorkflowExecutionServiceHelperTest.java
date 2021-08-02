@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.POOJA;
@@ -26,6 +27,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -60,6 +62,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
@@ -554,7 +557,7 @@ public class WorkflowExecutionServiceHelperTest extends WingsBaseTest {
   }
 
   private Variable prepareVariable(int index, VariableType type, EntityType entityType) {
-    Variable variable = aVariable().name("var" + index).type(type).build();
+    Variable variable = aVariable().name("var" + index).type(type).mandatory(true).build();
     if (VariableType.ENTITY == type) {
       variable.setMetadata(singletonMap(Variable.ENTITY_TYPE, entityType));
     }

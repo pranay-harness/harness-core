@@ -39,12 +39,7 @@ public class K8sInstanceInfoDTO extends InstanceInfoDTO {
 
   @Override
   public String prepareInstanceSyncHandlerKey() {
-    return InstanceSyncKey.builder()
-        .clazz(K8sInstanceInfoDTO.class)
-        .part(namespace)
-        .part(releaseName)
-        .build()
-        .toString();
+    return InstanceSyncKey.builder().part(releaseName).build().toString();
   }
 
   private String getImageInStringFormat() {

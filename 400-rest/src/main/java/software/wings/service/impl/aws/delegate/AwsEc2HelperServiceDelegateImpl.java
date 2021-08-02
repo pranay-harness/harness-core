@@ -99,7 +99,7 @@ public class AwsEc2HelperServiceDelegateImpl
       if (amazonEC2Exception.getStatusCode() == 401) {
         AwsEc2ValidateCredentialsResponseBuilder responseBuilder =
             AwsEc2ValidateCredentialsResponse.builder().valid(false).executionStatus(SUCCESS);
-        if (!awsConfig.isUseEc2IamCredentials()) {
+        if (!awsConfig.isUseEc2IamCredentials() && !awsConfig.isUseIRSA()) {
           if (isEmpty(awsConfig.getAccessKey())) {
             responseBuilder.errorMessage("Access Key should not be empty");
           } else if (isEmpty(awsConfig.getSecretKey())) {

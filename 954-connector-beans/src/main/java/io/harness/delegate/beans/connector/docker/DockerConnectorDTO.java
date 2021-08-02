@@ -1,7 +1,9 @@
 package io.harness.delegate.beans.connector.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.connector.docker.DockerAuthType.ANONYMOUS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -21,6 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotBlank;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @NoArgsConstructor

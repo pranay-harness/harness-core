@@ -6,6 +6,8 @@ import io.harness.dtos.instancesyncperpetualtaskinfo.DeploymentInfoDetailsDTO;
 import io.harness.entities.instancesyncperpetualtaskinfo.DeploymentInfoDetails;
 import io.harness.mappers.deploymentinfomapper.DeploymentInfoMapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.DX)
@@ -15,6 +17,7 @@ public class DeploymentInfoDetailsMapper {
     return DeploymentInfoDetailsDTO.builder()
         .deploymentInfoDTO(DeploymentInfoMapper.toDTO(deploymentInfoDetails.getDeploymentInfo()))
         .lastUsedAt(deploymentInfoDetails.getLastUsedAt())
+        .deploymentSummaryId(deploymentInfoDetails.getDeploymentSummaryId())
         .build();
   }
 
@@ -22,6 +25,23 @@ public class DeploymentInfoDetailsMapper {
     return DeploymentInfoDetails.builder()
         .deploymentInfo(DeploymentInfoMapper.toEntity(deploymentInfoDetailsDTO.getDeploymentInfoDTO()))
         .lastUsedAt(deploymentInfoDetailsDTO.getLastUsedAt())
+        .deploymentSummaryId(deploymentInfoDetailsDTO.getDeploymentSummaryId())
         .build();
+  }
+
+  public List<DeploymentInfoDetails> toDeploymentInfoDetailsEntityList(
+      List<DeploymentInfoDetailsDTO> deploymentInfoDetailsDTOList) {
+    List<DeploymentInfoDetails> deploymentInfoDetailsList = new ArrayList<>();
+    deploymentInfoDetailsDTOList.forEach(deploymentInfoDetailsDTO
+        -> deploymentInfoDetailsList.add(DeploymentInfoDetailsMapper.toEntity(deploymentInfoDetailsDTO)));
+    return deploymentInfoDetailsList;
+  }
+
+  public List<DeploymentInfoDetailsDTO> toDeploymentInfoDetailsDTOList(
+      List<DeploymentInfoDetails> deploymentInfoDetailsList) {
+    List<DeploymentInfoDetailsDTO> deploymentInfoDetailsDTOList = new ArrayList<>();
+    deploymentInfoDetailsList.forEach(deploymentInfoDetails
+        -> deploymentInfoDetailsDTOList.add(DeploymentInfoDetailsMapper.toDTO(deploymentInfoDetails)));
+    return deploymentInfoDetailsDTOList;
   }
 }

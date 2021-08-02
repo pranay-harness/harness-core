@@ -3,6 +3,7 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
@@ -16,12 +17,15 @@ import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.stepdetails.PmsStepDetails;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
+import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -66,8 +70,30 @@ public class GraphVertex implements Serializable {
 
   private List<UnitProgress> unitProgresses;
   private OrchestrationMap progressData;
-  private Map<String, OrchestrationMap> stepDetails;
+  private Map<String, PmsStepDetails> stepDetails;
 
   // UI
   @Builder.Default RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;
+
+  public PmsStepParameters getPmsStepParameters() {
+    return PmsStepParameters.parse(
+        OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(stepParameters));
+  }
+
+  public Map<String, PmsOutcome> getPmsOutcomes() {
+    if (EmptyPredicate.isEmpty(outcomeDocuments)) {
+      return new LinkedHashMap<>();
+    }
+
+    Map<String, PmsOutcome> outcomes = new LinkedHashMap<>();
+    for (Map.Entry<String, ?> entry : outcomeDocuments.entrySet()) {
+      outcomes.put(
+          entry.getKey(), entry.getValue() == null ? null : PmsOutcome.parse((Map<String, Object>) entry.getValue()));
+    }
+    return outcomes;
+  }
+
+  public OrchestrationMap getPmsProgressData() {
+    return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
+  }
 }

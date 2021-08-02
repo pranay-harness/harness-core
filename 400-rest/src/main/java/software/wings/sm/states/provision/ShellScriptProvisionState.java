@@ -78,9 +78,11 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
+@FieldNameConstants(onlyExplicitlyIncluded = true, innerTypeName = "ShellScriptProvisionStateKeys")
 @OwnedBy(CDP)
 @Slf4j
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
@@ -95,7 +97,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject protected FeatureFlagService featureFlagService;
   @Getter @Setter private String provisionerId;
-  @Getter @Setter private List<NameValuePair> variables;
+  @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private List<String> delegateSelectors;

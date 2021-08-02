@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	"github.com/wings-software/portal/product/ci/addon/ti"
+	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -57,8 +57,8 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 	newNode := getNode(3)
 	// this should be added in nodes collection as one entry already exist with ID 1
 	nodeWithDuplicateId := getNode(1)
-	cg := ti.Callgraph{
-		Nodes: []ti.Node{newNode, nodeWithDuplicateId},
+	cg := cgp.Callgraph{
+		Nodes: []cgp.Node{newNode, nodeWithDuplicateId},
 	}
 	db.UploadPartialCg(ctx, &cg,
 		getVCSInfo(),
@@ -230,8 +230,8 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 	newRelation := getRelation(3, []int{8})
 	// this should be added in rel collection as one entry already exist with ID 1
 	relWithDuplicateSrc := getRelation(1, []int{3, 2})
-	cg := ti.Callgraph{
-		Relations: []ti.Relation{newRelation, relWithDuplicateSrc},
+	cg := cgp.Callgraph{
+		Relations: []cgp.Relation{newRelation, relWithDuplicateSrc},
 	}
 	db.UploadPartialCg(ctx, &cg,
 		getVCSInfo(),
@@ -584,8 +584,8 @@ func filterRelations(src int, relations []Relation) Relation {
 	return Relation{}
 }
 
-func getRelation(src int, tests []int) ti.Relation {
-	return ti.Relation{
+func getRelation(src int, tests []int) cgp.Relation {
+	return cgp.Relation{
 		Source: src,
 		Tests:  tests,
 	}
@@ -633,8 +633,8 @@ func getVCSInfoWithCommit(commit string) VCSInfo {
 	return getCustomVCSInfo("repo.git", "branch", commit)
 }
 
-func getNode(id int) ti.Node {
-	return ti.Node{
+func getNode(id int) cgp.Node {
+	return cgp.Node{
 		Package: "pkg",
 		Method:  "m",
 		ID:      id,

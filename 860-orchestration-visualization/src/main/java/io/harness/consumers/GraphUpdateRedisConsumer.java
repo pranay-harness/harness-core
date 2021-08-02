@@ -15,6 +15,7 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.visualisation.log.OrchestrationLogEvent;
 import io.harness.pms.events.base.PmsRedisConsumer;
+import io.harness.queue.QueueController;
 import io.harness.service.GraphGenerationService;
 
 import com.google.common.collect.ImmutableMap;
@@ -37,13 +38,15 @@ public class GraphUpdateRedisConsumer implements PmsRedisConsumer {
 
   Consumer eventConsumer;
   GraphGenerationService graphGenerationService;
+  QueueController queueController;
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   @Inject
-  public GraphUpdateRedisConsumer(
-      @Named(ORCHESTRATION_LOG) Consumer redisConsumer, GraphGenerationService graphGenerationService) {
+  public GraphUpdateRedisConsumer(@Named(ORCHESTRATION_LOG) Consumer redisConsumer,
+      GraphGenerationService graphGenerationService, QueueController queueController) {
     this.eventConsumer = redisConsumer;
     this.graphGenerationService = graphGenerationService;
+    this.queueController = queueController;
   }
 
   @Override
@@ -58,6 +61,13 @@ public class GraphUpdateRedisConsumer implements PmsRedisConsumer {
         while (getMaintenanceFlag()) {
           sleep(ofSeconds(1));
         }
+        if (queueController.isNotPrimary()) {
+          log.info(this.getClass().getSimpleName()
+              + " is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
+
         readEventsFrameworkMessages();
       } while (!Thread.currentThread().isInterrupted() && !shouldStop.get());
     } catch (Exception ex) {
