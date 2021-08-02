@@ -141,9 +141,11 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 
+@FieldNameConstants(onlyExplicitlyIncluded = true, innerTypeName = "TerragruntProvisionStateKeys")
 @OwnedBy(CDP)
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
@@ -173,9 +175,13 @@ public abstract class TerragruntProvisionState extends State {
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
-  @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
-  @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
-  @Getter @Setter private List<NameValuePair> environmentVariables;
+  @Attributes(title = "Variables") @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
+  @Attributes(title = "Backend Configs")
+  @FieldNameConstants.Include
+  @Getter
+  @Setter
+  private List<NameValuePair> backendConfigs;
+  @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> environmentVariables;
   @Getter @Setter private List<String> targets;
 
   @Getter @Setter private List<String> tfVarFiles;
