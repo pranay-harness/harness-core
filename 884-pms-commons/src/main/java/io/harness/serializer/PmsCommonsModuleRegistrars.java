@@ -31,6 +31,7 @@ import io.harness.serializer.spring.converters.steptype.StepTypeWriteConverter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
@@ -38,10 +39,16 @@ import org.springframework.core.convert.converter.Converter;
 @OwnedBy(PIPELINE)
 public class PmsCommonsModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(PmsCommonsKryoRegistrar.class).build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .add(PmsCommonsKryoRegistrar.class)
+          .addAll(NGCommonsRegistrars.kryoRegistrars)
+          .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().add(PmsCommonsMorphiaRegistrar.class).build();
+      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+          .add(PmsCommonsMorphiaRegistrar.class)
+          .addAll(NGCommonsRegistrars.morphiaRegistrars)
+          .build();
 
   public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.of(StepTypeReadConverter.class, StepTypeWriteConverter.class, AmbianceWriteConverter.class,

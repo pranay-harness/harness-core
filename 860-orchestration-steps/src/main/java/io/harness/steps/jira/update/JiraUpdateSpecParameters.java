@@ -3,8 +3,8 @@ package io.harness.steps.jira.update;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.plancreator.steps.common.SpecParameters;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.jira.update.beans.TransitionTo;
 
 import java.util.Map;

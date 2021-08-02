@@ -2,11 +2,11 @@ package io.harness.plancreator.steps.internal;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.ParameterField;
+import io.harness.beans.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.cf.FlagConfigurationStepParameters;
 import io.harness.steps.cf.PatchInstruction;

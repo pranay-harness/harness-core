@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.beans.execution.PublishedImageArtifact;
 import io.harness.beans.steps.outcome.StepArtifacts;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
@@ -16,7 +17,6 @@ import io.harness.delegate.task.stepstatus.artifact.DockerArtifactDescriptor;
 import io.harness.delegate.task.stepstatus.artifact.DockerArtifactMetadata;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

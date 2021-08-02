@@ -4,7 +4,7 @@ import static java.util.Objects.isNull;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.beans.ParameterField;
 
 import lombok.experimental.UtilityClass;
 

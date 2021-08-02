@@ -1,13 +1,14 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
-import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
-import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -18,7 +19,6 @@ import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.core.variables.OutputNGVariable;
 import io.harness.yaml.extended.ci.container.ContainerResource;
@@ -80,9 +80,8 @@ public class RunTestsStepInfo implements CIStepInfo {
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> envVariables;
-
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> preCommand;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> postCommand;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> preCommand;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> postCommand;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
   @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ImagePullPolicy")
@@ -96,8 +95,8 @@ public class RunTestsStepInfo implements CIStepInfo {
       ParameterField<TILanguage> language, ParameterField<TIBuildTool> buildTool, ParameterField<String> image,
       ParameterField<String> connectorRef, ContainerResource resources, UnitTestReport reports,
       ParameterField<String> testAnnotations, ParameterField<String> packages,
-      ParameterField<Boolean> runOnlySelectedTests, io.harness.pms.yaml.ParameterField<String> preCommand,
-      io.harness.pms.yaml.ParameterField<String> postCommand, List<OutputNGVariable> outputVariables,
+      ParameterField<Boolean> runOnlySelectedTests, ParameterField<String> preCommand,
+      ParameterField<String> postCommand, List<OutputNGVariable> outputVariables,
       ParameterField<Map<String, String>> envVariables, ParameterField<Boolean> privileged,
       ParameterField<Integer> runAsUser, ParameterField<ImagePullPolicy> imagePullPolicy) {
     this.identifier = identifier;

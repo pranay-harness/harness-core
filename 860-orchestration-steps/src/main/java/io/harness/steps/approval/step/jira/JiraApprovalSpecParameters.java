@@ -3,8 +3,8 @@ package io.harness.steps.approval.step.jira;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.plancreator.steps.common.SpecParameters;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 
 import javax.validation.constraints.NotNull;

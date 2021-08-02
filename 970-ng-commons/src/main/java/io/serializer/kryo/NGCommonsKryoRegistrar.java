@@ -3,6 +3,9 @@ package io.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.InputSetValidator;
+import io.harness.beans.InputSetValidatorType;
+import io.harness.beans.ParameterField;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
@@ -37,6 +40,11 @@ import com.esotericsoftware.kryo.Kryo;
 public class NGCommonsKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
+    // keeping ids same
+    kryo.register(ParameterField.class, 35001);
+    kryo.register(InputSetValidator.class, 35002);
+    kryo.register(InputSetValidatorType.class, 35008);
+
     kryo.register(NGTag.class, 22001);
     kryo.register(BaseNGAccess.class, 54324);
     kryo.register(SecretRefData.class, 3003);

@@ -2,10 +2,10 @@ package io.harness.cdng.service.steps;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.pms.yaml.ParameterField;
 
 import lombok.Builder;
 import lombok.Value;

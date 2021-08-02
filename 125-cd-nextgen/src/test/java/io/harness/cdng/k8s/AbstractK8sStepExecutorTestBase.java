@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
@@ -21,7 +22,6 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
-import io.harness.pms.yaml.ParameterField;
 
 import org.junit.Before;
 import org.mockito.ArgumentCaptor;
