@@ -2757,7 +2757,7 @@ public class WorkflowServiceHelper {
   }
 
   public static void checkWorkflowVariablesOverrides(PipelineStageElement stageElement, List<Variable> variables,
-      Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables, boolean isRuntimeEnabled) {
+      Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables) {
     if (isEmpty(variables) || stageElement.checkDisableAssertion()) {
       return;
     }
@@ -2775,7 +2775,7 @@ public class WorkflowServiceHelper {
       boolean isEntity = variable.obtainEntityType() != null;
       String workflowVariableValue = extractMapValue(workflowStepVariables, variable.getName());
       String finalValue;
-      boolean isRuntimeVar = isRuntimeEnabled && isNotEmpty(runtimeVars) && runtimeVars.contains(variable.getName());
+      boolean isRuntimeVar = isNotEmpty(runtimeVars) && runtimeVars.contains(variable.getName());
       if (isEmpty(workflowVariableValue)) {
         finalValue = extractMapValue(pipelineVariables, variable.getName());
       } else {

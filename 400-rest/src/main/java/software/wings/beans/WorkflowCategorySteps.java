@@ -16,6 +16,6 @@ import lombok.Value;
 @Value
 @Builder
 public class WorkflowCategorySteps {
-  private Map<String, WorkflowStepMeta> steps;
-  private List<WorkflowCategoryStepsMeta> categories;
+  private Map<String, software.wings.beans.WorkflowStepMeta> steps;
+  private List<software.wings.beans.WorkflowCategoryStepsMeta> categories;
 }
