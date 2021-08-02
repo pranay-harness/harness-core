@@ -163,7 +163,6 @@ if [[ "$OSTYPE" == linux* ]]; then
   if [ ! $? -eq 0 ]; then
     echo "/tmp is mounted noexec. Overriding tmpdir"
     export OVERRIDE_TMP_PROPS="-Djava.io.tmpdir=$DIR/tmp"
-    echo $OVERRIDE_TMP_PROPS
     export JAVA_OPTS
   fi
 fi
