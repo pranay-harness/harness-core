@@ -14,6 +14,7 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -39,7 +40,9 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
 public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
@@ -103,6 +106,11 @@ public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
     String infraMappingId = clientParams.get(INFRASTRUCTURE_MAPPING_ID);
     AwsLambdaInfraStructureMapping infraMapping =
         (AwsLambdaInfraStructureMapping) infraMappingService.get(appId, infraMappingId);
+    if (infraMapping == null) {
+      String msg = "Unable to find infra mapping for " + infraMappingId;
+      log.warn(msg);
+      throw new InvalidRequestException(msg);
+    }
 
     SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
