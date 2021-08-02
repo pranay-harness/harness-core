@@ -46,6 +46,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -135,6 +136,7 @@ import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
   @Mock WingsPersistence mockWingsPersistence;
   @Mock ExecutionContext executionContext;
