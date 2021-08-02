@@ -361,7 +361,6 @@ public class NGTriggerElementMapper {
                               : StringUtils.EMPTY)
             .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
             .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
-            .registrationStatus(ngTriggerEntity.getMetadata().getWebhook().getRegistrationStatus())
             .webhookUrl(webhookUrl);
 
     // Webhook Details
@@ -369,6 +368,8 @@ public class NGTriggerElementMapper {
       WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
       webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();
       ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails.build());
+      ngTriggerDetailsResponseDTO.registrationStatus(
+          ngTriggerEntity.getMetadata().getWebhook().getRegistrationStatus());
     }
 
     Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);
