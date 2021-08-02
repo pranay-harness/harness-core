@@ -22,7 +22,7 @@
       },
       "timeout" : {
         "type" : "string",
-        "pattern" : "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*)|(.*<\\+.*>.*))$"
+        "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
       },
       "type" : {
         "type" : "string"
@@ -1231,7 +1231,7 @@
             },
             "timeout" : {
               "type" : "string",
-              "pattern" : "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*)|(.*<\\+.*>.*))$"
+              "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
             },
             "type" : {
               "type" : "string",
