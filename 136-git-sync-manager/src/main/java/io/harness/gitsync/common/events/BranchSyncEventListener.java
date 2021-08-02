@@ -12,6 +12,7 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.event.MessageListener;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +58,7 @@ public class BranchSyncEventListener implements MessageListener {
     final EntityScopeInfo entityScopeInfo = getEntityScopeInfo(message);
     return yamlGitConfigService.get(getStringFromStringValue(entityScopeInfo.getProjectId()),
         getStringFromStringValue(entityScopeInfo.getOrgId()), entityScopeInfo.getAccountId(),
-        entityScopeInfo.getAccountId(), entityScopeInfo.getEntityIdentifier());
+        entityScopeInfo.getEntityIdentifier());
   }
 
   private String getStringFromStringValue(StringValue stringValue) {
