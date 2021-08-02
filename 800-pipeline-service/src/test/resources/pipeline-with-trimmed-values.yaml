@@ -33,6 +33,54 @@ pipeline:
         execution:
           steps:
           - step:
+              identifier: "tf_plan"
+              type: "TerraformPlan"
+              name: "Terraform Plan"
+              timeout: "10m"
+              spec:
+                provisionerIdentifier: "vbtest1"
+                configuration:
+                  command: "Apply"
+                  workspace: "w1"
+                  backendConfig:
+                    type: "Inline"
+                    spec:
+                      content: "bucket=\"terraform-test-vaibhav\"\nkey=\"ng-test-10.tfstate\"\
+                        \naccess_key=\"<+secrets.getValue(\"account.access_key\")>\"\
+                        \nsecret_key=\"<+secrets.getValue(\"account.secret_key\")>\""
+                  varFiles:
+                  - varFile:
+                      identifier: "file2"
+                      type: "Remote"
+                      spec:
+                        store:
+                          type: "Github"
+                          spec:
+                            connectorRef: "<+pipeline.variables.connectorRef>"
+                            gitFetchType: "Branch"
+                            branch: "master"
+                            paths:
+                            - "test/remoteState/values.tfvars"
+                  - varFile:
+                      identifier: "file1"
+                      type: "Inline"
+                      spec:
+                        content: "aws_access_key = \"<+secrets.getValue(\"account.access_key\"\
+                          )>\"\naws_secret_key = \"<+secrets.getValue(\"account.secret_key\"\
+                          )>\"\ninstance_type=\"test\"\ntag_name=\"vb-local\""
+                  configFiles:
+                    store:
+                      type: "Github"
+                      spec:
+                        branch: "master"
+                        connectorRef: "<+pipeline.variables.connectorRef>"
+                        gitFetchType: "Branch"
+                        folderPath: "test/remoteState/"
+                  secretManagerRef: "account.harnessSecretManager"
+              when:
+                stageStatus: "Success"
+                condition: "true"
+          - step:
               identifier: "shell1"
               type: "ShellScript"
               name: "shell1"
