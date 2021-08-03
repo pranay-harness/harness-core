@@ -1,5 +1,7 @@
 package io.harness.plancreator.pipeline;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
@@ -24,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfig> {
   @Override
   public String getStartingNodeId(PipelineInfoConfig field) {
@@ -55,6 +58,7 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
     StepParameters stepParameters =
         PipelineSetupStepParameters.getStepParameters(ctx, config, stagesYamlNode.getUuid());
 
+    // TODO (Alexei - [PIE-151]) Add timeout to Plan node
     return PlanNode.builder()
         .uuid(config.getUuid())
         .identifier(YAMLFieldNameConstants.PIPELINE)
