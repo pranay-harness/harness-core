@@ -67,6 +67,11 @@ public class PipelineServiceEventsFrameworkModule extends AbstractModule {
               redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
       bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.POLLING_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
+              redisConfig, EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.POLLING_EVENTS_STREAM_BATCH_SIZE));
+      bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
               redisConfig, EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME,

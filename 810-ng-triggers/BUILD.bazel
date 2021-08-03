@@ -8,6 +8,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//867-polling-contracts:module",
         "//870-orchestration:module",
         "//876-orchestration-beans:module",
         "//884-pms-commons:module",
