@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;
@@ -99,6 +100,10 @@ public interface DelegateAgentManagerClient {
   @POST("agent/delegates/instance-sync/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishInstanceSyncResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body DelegateResponseData responseData);
+
+  @POST("agent/delegates/instance-sync-ng/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> processInstanceSyncNGResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body InstanceSyncPerpetualTaskResponse responseData);
 
   // Query for a specific set of delegate properties for a given account.
   // Request: GetDelegatePropertiesRequest

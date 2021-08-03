@@ -1,4 +1,4 @@
-package io.harness.cdng.instance.mappers;
+package io.harness.delegate.beans.instancesync.mapper;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
