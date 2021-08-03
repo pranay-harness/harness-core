@@ -759,6 +759,9 @@ public class WingsApplication extends Application<MainConfiguration> {
         featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
       }
     }
+    if (enabled.contains("NEXT_GEN_ENABLED")) {
+      injector.getInstance(AccountService.class).updateNextGenEnabled(onPremAccount.get().getUuid(), true);
+    }
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {

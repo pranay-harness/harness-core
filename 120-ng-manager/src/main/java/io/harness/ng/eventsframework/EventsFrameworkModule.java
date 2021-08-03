@@ -44,7 +44,7 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
+          .annotatedWith(Names.named(EventsFrameworkConstants.NG_ACCOUNT_SETUP))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Producer.class)
@@ -102,10 +102,10 @@ public class EventsFrameworkModule extends AbstractModule {
               EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, NG_MANAGER.getServiceId(),
-              redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.FEATURE_FLAG_READ_BATCH_SIZE));
+          .annotatedWith(Names.named(EventsFrameworkConstants.NG_ACCOUNT_SETUP))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, "NG_ACCOUNT_SETUP_GROUP", redisConfig,
+              EventsFrameworkConstants.NG_ACCOUNT_SETUP_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.NG_ACCOUNT_SETUP_READ_BATCH_SIZE));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.USERMEMBERSHIP, NG_MANAGER.getServiceId(), redisConfig,

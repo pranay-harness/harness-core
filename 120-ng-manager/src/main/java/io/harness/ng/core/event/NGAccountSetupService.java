@@ -50,7 +50,7 @@ import org.springframework.dao.DuplicateKeyException;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
-public class DefaultOrganizationManager {
+public class NGAccountSetupService {
   private final OrganizationService organizationService;
   private final AccountOrgProjectValidator accountOrgProjectValidator;
   private final AccessControlAdminClient accessControlAdminClient;
@@ -58,13 +58,16 @@ public class DefaultOrganizationManager {
   private final UserClient userClient;
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlMigrationService accessControlMigrationService;
+  private final HarnessSMManager harnessSMManager;
+  private final CIDefaultEntityManager ciDefaultEntityManager;
 
   @Inject
-  public DefaultOrganizationManager(OrganizationService organizationService,
+  public NGAccountSetupService(OrganizationService organizationService,
       AccountOrgProjectValidator accountOrgProjectValidator,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, NgUserService ngUserService,
       UserClient userClient, ResourceGroupClient resourceGroupClient,
-      AccessControlMigrationService accessControlMigrationService) {
+      AccessControlMigrationService accessControlMigrationService, HarnessSMManager harnessSMManager,
+      CIDefaultEntityManager ciDefaultEntityManager) {
     this.organizationService = organizationService;
     this.accountOrgProjectValidator = accountOrgProjectValidator;
     this.accessControlAdminClient = accessControlAdminClient;
@@ -72,20 +75,24 @@ public class DefaultOrganizationManager {
     this.userClient = userClient;
     this.resourceGroupClient = resourceGroupClient;
     this.accessControlMigrationService = accessControlMigrationService;
+    this.harnessSMManager = harnessSMManager;
+    this.ciDefaultEntityManager = ciDefaultEntityManager;
   }
 
-  public void createDefaultOrganization(String accountIdentifier) {
+  public void setupAccountForNG(String accountIdentifier) {
     if (!accountOrgProjectValidator.isPresent(accountIdentifier, null, null)) {
       log.info(String.format(
           "Account with accountIdentifier %s not found, skipping creation of Default Organization", accountIdentifier));
       return;
     }
 
-    Organization defaultOrg = ensureDefaultOrg(accountIdentifier);
-    setupAccount(defaultOrg.getAccountIdentifier(), defaultOrg.getIdentifier());
+    Organization defaultOrg = createDefaultOrg(accountIdentifier);
+    setupRBAC(defaultOrg.getAccountIdentifier(), defaultOrg.getIdentifier());
+    harnessSMManager.createHarnessSecretManager(accountIdentifier, null, null);
+    ciDefaultEntityManager.createCIDefaultEntities(accountIdentifier, null, null);
   }
 
-  private Organization ensureDefaultOrg(String accountIdentifier) {
+  private Organization createDefaultOrg(String accountIdentifier) {
     Optional<Organization> organization = organizationService.get(accountIdentifier, DEFAULT_ORG_IDENTIFIER);
     if (organization.isPresent()) {
       log.info(String.format("Default Organization for account %s already present", accountIdentifier));
@@ -100,7 +107,7 @@ public class DefaultOrganizationManager {
     return organizationService.create(accountIdentifier, createOrganizationDTO);
   }
 
-  private void setupAccount(String accountIdentifier, String orgIdentifier) {
+  private void setupRBAC(String accountIdentifier, String orgIdentifier) {
     NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, null, null));
     NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, orgIdentifier, null));
 
@@ -210,7 +217,7 @@ public class DefaultOrganizationManager {
 
   private void sleep() {
     try {
-      TimeUnit.SECONDS.sleep(1);
+      TimeUnit.MILLISECONDS.sleep(500);
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       log.warn("Thread Interrupted", ex);

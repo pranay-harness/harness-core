@@ -2063,9 +2063,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldDownloadKubernetesWithCiEnabled() throws IOException, TemplateException {
-    when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    featureTestHelper.enableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
+    Account account = anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).withNextGenEnabled(true).build();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    when(accountService.isNextGenEnabled(ACCOUNT_ID)).thenReturn(true);
     File gzipFile = delegateService.downloadKubernetes(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "", null);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
@@ -2086,7 +2086,6 @@ public class DelegateServiceTest extends WingsBaseTest {
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
     }
-    featureTestHelper.disableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
   }
 
   @Test
