@@ -682,10 +682,10 @@ serviceVariables {"name": "encryptedValue_1", "background": true} {"encryptedVal
 serviceVariables {"name": "serviceVariableUniqueIdx", "unique": true} {"entityId": 1, "templateId": 1, "overrideType": 1, "instances": 1, "expression": 1, "type": 1, "name": 1}
 services {"name": "accountCreatedAtIndex", "background": true} {"accountId": 1, "createdAt": -1}
 services {"name": "accountId_1", "background": true} {"accountId": 1}
+services {"name": "account_deploymentTypeIndex", "background": true} {"accountId": 1, "deploymentType": 1}
 services {"name": "appId_1", "background": true} {"appId": 1}
 services {"name": "artifactStreamIds_1", "background": true} {"artifactStreamIds": 1}
 services {"name": "createdAt_1", "background": true} {"createdAt": 1}
-services {"name": "deploymentTypeIndex", "background": true} {"deploymentType": 1}
 services {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 servicesNG {"name": "index_accountId_orgId_projectId_createdAt_deleted_deletedAt", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "createdAt": 1, "deleted": 1, "deletedAt": 1}
 servicesNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_serviceIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
@@ -934,11 +934,11 @@ workflowVerificationResults {"name": "stateExecutionId_1", "unique": true} {"sta
 workflowVerificationResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflows {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 workflows {"name": "accountId_1", "background": true} {"accountId": 1}
+workflows {"name": "account_orchestrationWorkflowTypeIndex", "background": true} {"accountId": 1, "orchestration.orchestrationWorkflowType": 1}
 workflows {"name": "appId_1", "background": true} {"appId": 1}
 workflows {"name": "createdAt_1", "background": true} {"createdAt": 1}
 workflows {"name": "linkedArtifactStreamIds_1", "background": true} {"linkedArtifactStreamIds": 1}
 workflows {"name": "linkedTemplateUuids_1", "background": true} {"linkedTemplateUuids": 1}
-workflows {"name": "workflowTypeIndex", "background": true} {"workflowType": 1}
 yamlChangeSet {"name": "accountId_createdAt_index", "background": true} {"accountId": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_queuekey_status_createdAt_index", "background": true} {"accountId": 1, "queueKey": 1, "status": 1, "createdAt": -1}
 yamlChangeSet {"name": "accountId_status_gitToHarness_createdAt_index", "background": true} {"accountId": 1, "status": 1, "gitToHarness": 1, "createdAt": 1}

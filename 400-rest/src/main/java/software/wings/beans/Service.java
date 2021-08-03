@@ -77,7 +77,11 @@ public class Service
                  .field(ServiceKeys.accountId)
                  .descSortField(ServiceKeys.createdAt)
                  .build())
-        .add(CompoundMongoIndex.builder().name("deploymentTypeIndex").field(ServiceKeys.deploymentType).build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_deploymentTypeIndex")
+                 .field(ServiceKeys.accountId)
+                 .field(ServiceKeys.deploymentType)
+                 .build())
         .build();
   }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";

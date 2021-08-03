@@ -46,7 +46,8 @@ public class DeploymentStatsQueryMetaData {
     INSTANCES_DEPLOYED("INSTANCES_DEPLOYED", DataType.INTEGER, QLFilterKind.SIMPLE),
     TAGS("TAGS", DataType.HSTORE, QLFilterKind.HSTORE),
     DEPLOYMENT_TYPE("DEPLOYMENT_TYPE", DataType.STRING, QLFilterKind.ARRAY),
-    WORKFLOW_TYPE("WORKFLOW_TYPE", DataType.STRING, QLFilterKind.ARRAY);
+    WORKFLOW_TYPE("WORKFLOW_TYPE", DataType.STRING, QLFilterKind.ARRAY),
+    ORCHESTRATION_WORKFLOW_TYPE("ORCHESTRATION_WORKFLOW_TYPE", DataType.STRING, QLFilterKind.ARRAY);
 
     private DataType dataType;
     private String fieldName;
