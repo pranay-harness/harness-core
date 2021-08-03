@@ -78,6 +78,8 @@ import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConvert
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
 import io.harness.serializer.spring.converters.principal.ExecutionPrincipalInfoReadConverter;
 import io.harness.serializer.spring.converters.principal.ExecutionPrincipalInfoWriteConverter;
+import io.harness.serializer.spring.converters.progressdata.PmsProgressDataReadConverter;
+import io.harness.serializer.spring.converters.progressdata.PmsProgressDataWriteConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectReadConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectWriteConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
@@ -192,7 +194,8 @@ public class OrchestrationRegistrars {
       OrchestrationMapWriteConverter.class, SdkStepWriteConverter.class, SdkStepReadConverter.class,
       PmsOutcomeReadConverter.class, PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class,
       PmsSweepingOutputWriteConverter.class, PmsStepParametersReadConverter.class,
-      PmsStepParametersWriteConverter.class, PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class);
+      PmsStepParametersWriteConverter.class, PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class,
+      PmsProgressDataReadConverter.class, PmsProgressDataWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

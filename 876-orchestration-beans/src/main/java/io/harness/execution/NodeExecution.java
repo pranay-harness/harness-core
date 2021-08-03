@@ -24,7 +24,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.progressdata.PmsProgressData;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -214,7 +214,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
         OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
   }
 
-  public OrchestrationMap getPmsProgressData() {
-    return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
+  public PmsProgressData getPmsProgressData() {
+    return PmsProgressData.parse(OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData));
   }
 }

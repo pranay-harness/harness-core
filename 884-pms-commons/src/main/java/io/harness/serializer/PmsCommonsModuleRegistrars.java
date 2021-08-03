@@ -20,6 +20,8 @@ import io.harness.serializer.spring.converters.outputs.PmsSweepingOutputReadConv
 import io.harness.serializer.spring.converters.outputs.PmsSweepingOutputWriteConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
+import io.harness.serializer.spring.converters.progressdata.PmsProgressDataReadConverter;
+import io.harness.serializer.spring.converters.progressdata.PmsProgressDataWriteConverter;
 import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
 import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
 import io.harness.serializer.spring.converters.stepdetails.PmsStepDetailsReadConverter;
@@ -50,13 +52,13 @@ public class PmsCommonsModuleRegistrars {
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .build();
 
-  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.of(StepTypeReadConverter.class, StepTypeWriteConverter.class, AmbianceWriteConverter.class,
-          AmbianceReadConverter.class, FacilitatorResponseReadConverter.class, FacilitatorResponseWriteConverter.class,
-          PlanNodeProtoReadConverter.class, PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class,
-          NodeExecutionWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
-          OrchestrationMapReadConverter.class, OrchestrationMapWriteConverter.class, PmsOutcomeReadConverter.class,
-          PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class, PmsSweepingOutputWriteConverter.class,
-          PmsStepParametersReadConverter.class, PmsStepParametersWriteConverter.class,
-          PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class);
+  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
+      StepTypeReadConverter.class, StepTypeWriteConverter.class, AmbianceWriteConverter.class,
+      AmbianceReadConverter.class, FacilitatorResponseReadConverter.class, FacilitatorResponseWriteConverter.class,
+      PlanNodeProtoReadConverter.class, PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class,
+      NodeExecutionWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
+      OrchestrationMapReadConverter.class, OrchestrationMapWriteConverter.class, PmsOutcomeReadConverter.class,
+      PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class, PmsSweepingOutputWriteConverter.class,
+      PmsStepParametersReadConverter.class, PmsStepParametersWriteConverter.class, PmsStepDetailsReadConverter.class,
+      PmsStepDetailsWriteConverter.class, PmsProgressDataReadConverter.class, PmsProgressDataWriteConverter.class);
 }

@@ -15,8 +15,8 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
-import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.progressdata.PmsProgressData;
 import io.harness.pms.data.stepdetails.PmsStepDetails;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
@@ -69,7 +69,7 @@ public class GraphVertex implements Serializable {
   private SkipType skipType;
 
   private List<UnitProgress> unitProgresses;
-  private OrchestrationMap progressData;
+  private PmsProgressData progressData;
   private Map<String, PmsStepDetails> stepDetails;
 
   // UI
@@ -93,7 +93,7 @@ public class GraphVertex implements Serializable {
     return outcomes;
   }
 
-  public OrchestrationMap getPmsProgressData() {
-    return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
+  public PmsProgressData getPmsProgressData() {
+    return PmsProgressData.parse(OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData));
   }
 }

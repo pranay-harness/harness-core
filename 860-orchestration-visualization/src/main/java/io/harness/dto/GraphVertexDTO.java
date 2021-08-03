@@ -13,6 +13,7 @@ import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.progressdata.PmsProgressData;
 import io.harness.pms.data.stepdetails.PmsStepDetails;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
@@ -55,7 +56,7 @@ public class GraphVertexDTO {
   List<String> retryIds;
 
   List<UnitProgress> unitProgresses;
-  OrchestrationMap progressData;
+  PmsProgressData progressData;
   Map<String, PmsStepDetails> stepDetails;
 
   // skip
@@ -70,5 +71,9 @@ public class GraphVertexDTO {
 
   public Map<String, OrchestrationMap> getOrchestrationMapStepDetails() {
     return OrchestrationMapBackwardCompatibilityUtils.convertToOrchestrationMap(stepDetails);
+  }
+
+  public OrchestrationMap getOrchestrationMapProgressData() {
+    return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
   }
 }

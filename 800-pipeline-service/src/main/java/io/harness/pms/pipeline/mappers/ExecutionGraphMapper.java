@@ -45,7 +45,7 @@ public class ExecutionGraphMapper {
         .setupId(graphVertex.getPlanNodeId())
         .executableResponses(graphVertex.getExecutableResponses())
         .unitProgresses(graphVertex.getUnitProgresses())
-        .progressData(graphVertex.getProgressData())
+        .progressData(graphVertex.getOrchestrationMapProgressData())
         .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
         .interruptHistories(graphVertex.getInterruptHistories())
         .stepDetails(graphVertex.getOrchestrationMapStepDetails())
