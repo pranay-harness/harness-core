@@ -8,15 +8,35 @@ message PayloadType {
   Type type = 1;
   oneof Payload {
     HttpHelmPayload httpHelmPayload = 2;
+    DockerEcrPayload dockerEcrPayload = 3;
+    GcsHelmPayload gcsHelmPayload = 4;
+    S3HelmPayload s3HelmPayload = 5;
   }
 }
 
 enum Type {
   UNDEFINED = 0;
   HTTP_HELM = 1;
+  DOCKER_ECR = 2;
+  GCS_HELM = 3;
+  S3_HELM = 4;
 }
 
 message HttpHelmPayload {
   string chartName = 1;
-  string chartVersion = 2;
+}
+
+message DockerEcrPayload {
+  string imageName = 1;
+}
+
+message GcsHelmPayload {
+  string chartName = 1;
+  string bucketName = 2;
+}
+
+message S3HelmPayload {
+  string chartName = 1;
+  string bucketName = 2;
+  string region = 3;
 }

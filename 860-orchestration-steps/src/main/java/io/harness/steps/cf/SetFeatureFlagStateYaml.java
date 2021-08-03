@@ -1,7 +1,7 @@
 package io.harness.steps.cf;
 
-import io.harness.beans.common.SwaggerConstants;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.beans.ParameterField;
+import io.harness.beans.SwaggerConstants;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;

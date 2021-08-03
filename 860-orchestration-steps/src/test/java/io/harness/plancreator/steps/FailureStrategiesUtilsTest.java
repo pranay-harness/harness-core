@@ -8,10 +8,11 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.failure.FailureType;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.timeout.Timeout;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureType;
@@ -20,7 +21,6 @@ import io.harness.yaml.core.failurestrategy.abort.AbortFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.ignore.IgnoreFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureSpecConfig;
-import io.harness.yaml.core.timeout.Timeout;
 
 import java.util.Collection;
 import java.util.Collections;

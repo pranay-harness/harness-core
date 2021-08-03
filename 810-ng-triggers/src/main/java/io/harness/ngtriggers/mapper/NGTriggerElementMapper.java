@@ -63,9 +63,9 @@ import io.harness.ngtriggers.beans.target.TargetType;
 import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
+import io.harness.utils.YamlPipelineUtils;
 import io.harness.webhook.WebhookConfigProvider;
 import io.harness.webhook.WebhookHelper;
-import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -361,7 +361,6 @@ public class NGTriggerElementMapper {
                               : StringUtils.EMPTY)
             .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
             .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
-            .registrationStatus(ngTriggerEntity.getMetadata().getWebhook().getRegistrationStatus())
             .webhookUrl(webhookUrl);
 
     // Webhook Details
@@ -369,6 +368,8 @@ public class NGTriggerElementMapper {
       WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
       webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();
       ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails.build());
+      ngTriggerDetailsResponseDTO.registrationStatus(
+          ngTriggerEntity.getMetadata().getWebhook().getRegistrationStatus());
     }
 
     Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);

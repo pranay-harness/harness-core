@@ -2,7 +2,7 @@ package io.harness.cdng.provision.terraform;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.beans.ParameterField;
 
 import java.util.LinkedHashMap;
 import java.util.List;

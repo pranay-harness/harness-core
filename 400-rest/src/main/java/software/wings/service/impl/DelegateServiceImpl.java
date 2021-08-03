@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.DO_DELEGATE_PHYSICAL_DELETE;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
@@ -2021,7 +2020,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void delete(String accountId, String delegateId, boolean forceDelete) throws InvalidRequestException {
+  public void delete(String accountId, String delegateId) {
     Delegate existingDelegate = persistence.createQuery(Delegate.class)
                                     .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.uuid, delegateId)
@@ -2048,35 +2047,10 @@ public class DelegateServiceImpl implements DelegateService {
       throw new InvalidRequestException("Unable to fetch delegate with delegate id " + delegateId);
     }
 
-    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
-      Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
-                                          .filter(DelegateKeys.accountId, accountId)
-                                          .filter(DelegateKeys.uuid, delegateId);
-      boolean deleted = persistence.delete(delegateQuery);
-      if (!deleted) {
-        throw new InvalidRequestException("Unable to perform delete on delegate delegate id " + delegateId);
-      }
-      log.info("Delegate: {} deleted.", delegateId);
-    } else {
-      Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
-                                        .filter(DelegateKeys.accountId, accountId)
-                                        .filter(DelegateKeys.uuid, delegateId);
-
-      UpdateOperations<Delegate> updateOperations =
-          persistence.createUpdateOperations(Delegate.class)
-              .set(DelegateKeys.status, DelegateInstanceStatus.DELETED)
-              .set(
-                  DelegateKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
-
-      Delegate delegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
-      if (delegate == null || delegate.getStatus() != DelegateInstanceStatus.DELETED) {
-        throw new InvalidRequestException("Unable to set status as deleted delegate id " + delegateId);
-      }
-      log.info("Delegate: {} marked as deleted.", delegateId);
-
-      broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
-      log.warn("Sent self destruct command to logically deleted delegate {}.", delegateId);
-    }
+    persistence.delete(persistence.createQuery(Delegate.class)
+                           .filter(DelegateKeys.accountId, accountId)
+                           .filter(DelegateKeys.uuid, delegateId));
+    log.info("Delegate: {} deleted.", delegateId);
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, existingDelegate);
     log.info("Auditing deleting of Delegate for accountId={}", accountId);
   }
@@ -2094,7 +2068,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete) {
+  public void deleteDelegateGroup(String accountId, String delegateGroupId) {
     log.info("Deleting delegate group: {} and all belonging delegates.", delegateGroupId);
     List<Delegate> groupDelegates = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, accountId)
@@ -2104,7 +2078,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     for (Delegate delegate : groupDelegates) {
       try {
-        delete(accountId, delegate.getUuid(), forceDelete);
+        delete(accountId, delegate.getUuid());
       } catch (InvalidRequestException exception) {
         log.error("Unable to delete delegate ", exception);
       }
@@ -2117,28 +2091,10 @@ public class DelegateServiceImpl implements DelegateService {
       return;
     }
 
-    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
-      persistence.delete(persistence.createQuery(DelegateGroup.class)
-                             .filter(DelegateGroupKeys.accountId, accountId)
-                             .filter(DelegateGroupKeys.uuid, delegateGroupId));
-      log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupId);
-    } else {
-      Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
-                                             .filter(DelegateGroupKeys.accountId, accountId)
-                                             .filter(DelegateGroupKeys.uuid, delegateGroupId);
-
-      UpdateOperations<DelegateGroup> updateOperations =
-          persistence.createUpdateOperations(DelegateGroup.class)
-              .set(DelegateGroupKeys.status, DelegateGroupStatus.DELETED)
-              .set(DelegateGroupKeys.validUntil,
-                  Date.from(OffsetDateTime.now()
-                                .plusDays(Delegate.TTL.toDays()) // Delegate.TTL is used to make sure TTL duration is
-                                                                 // aligned between group and delegate
-                                .toInstant()));
-
-      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
-      log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", delegateGroupId);
-    }
+    persistence.delete(persistence.createQuery(DelegateGroup.class)
+                           .filter(DelegateGroupKeys.accountId, accountId)
+                           .filter(DelegateGroupKeys.uuid, delegateGroupId));
+    log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupId);
 
     String orgIdentifier = delegateGroup.getOwner() != null
         ? DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateGroup.getOwner().getIdentifier())
@@ -2170,8 +2126,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void deleteDelegateGroupV2(
-      String accountId, String orgId, String projectId, String identifier, boolean forceDelete) {
+  public void deleteDelegateGroupV2(String accountId, String orgId, String projectId, String identifier) {
     log.info("Deleting delegate group: {} and all belonging delegates.", identifier);
     DelegateGroup delegateGroup =
         persistence.createQuery(DelegateGroup.class)
@@ -2193,31 +2148,13 @@ public class DelegateServiceImpl implements DelegateService {
                                         .asList();
 
     for (Delegate delegate : groupDelegates) {
-      delete(accountId, delegate.getUuid(), forceDelete);
+      delete(accountId, delegate.getUuid());
     }
 
-    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
-      persistence.delete(persistence.createQuery(DelegateGroup.class)
-                             .filter(DelegateGroupKeys.accountId, accountId)
-                             .filter(DelegateGroupKeys.uuid, delegateGroupUuid));
-      log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupUuid);
-    } else {
-      Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
-                                             .filter(DelegateGroupKeys.accountId, accountId)
-                                             .filter(DelegateGroupKeys.uuid, delegateGroupUuid);
-
-      UpdateOperations<DelegateGroup> updateOperations =
-          persistence.createUpdateOperations(DelegateGroup.class)
-              .set(DelegateGroupKeys.status, DelegateGroupStatus.DELETED)
-              .set(DelegateGroupKeys.validUntil,
-                  Date.from(OffsetDateTime.now()
-                                .plusDays(Delegate.TTL.toDays()) // Delegate.TTL is used to make sure TTL duration is
-                                // aligned between group and delegate
-                                .toInstant()));
-
-      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
-      log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", identifier);
-    }
+    persistence.delete(persistence.createQuery(DelegateGroup.class)
+                           .filter(DelegateGroupKeys.accountId, accountId)
+                           .filter(DelegateGroupKeys.uuid, delegateGroupUuid));
+    log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupUuid);
 
     outboxService.save(
         DelegateGroupDeleteEvent.builder()
@@ -3339,7 +3276,7 @@ public class DelegateServiceImpl implements DelegateService {
           // Before deleting existing one, copy {TAG/PROFILE/SCOPE} config into new delegate being registered
           // This needs to be done here as this may be the only delegate in db.
           initNewDelegateWithExistingDelegate(delegate, existingInactiveDelegate);
-          delete(existingInactiveDelegate.getAccountId(), existingInactiveDelegate.getUuid(), true);
+          delete(existingInactiveDelegate.getAccountId(), existingInactiveDelegate.getUuid());
         }
 
         Query<DelegateSequenceConfig> sequenceConfigQuery =

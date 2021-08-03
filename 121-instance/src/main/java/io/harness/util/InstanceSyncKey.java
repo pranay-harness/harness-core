@@ -32,6 +32,9 @@ public class InstanceSyncKey {
   }
 
   public String toString() {
+    if (clazz == null) {
+      return join(DEFAULT_DELIMITER, parts);
+    }
     return format(KEY_PATTERN, clazz.getSimpleName(), DEFAULT_DELIMITER, join(DEFAULT_DELIMITER, parts));
   }
 

@@ -2,13 +2,13 @@ package io.harness.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.IdentifierRefProtoUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.utils.IdentifierRefProtoUtils;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
 
 import java.util.Collections;

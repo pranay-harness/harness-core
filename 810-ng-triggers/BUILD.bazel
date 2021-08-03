@@ -9,9 +9,9 @@ java_library(
     deps = [
         "//:lombok",
         "//870-orchestration:module",
-        "//870-yaml-beans:module",
         "//876-orchestration-beans:module",
         "//884-pms-commons:module",
+        "//889-yaml-commons:module",
         "//890-pms-contracts:module",
         "//890-sm-core:module",
         "//930-ng-core-clients:module",

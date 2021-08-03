@@ -3,6 +3,7 @@ package io.harness.pms.yaml;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
+import io.harness.beans.ParameterField;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterDocumentField.ParameterDocumentFieldKeys;
@@ -19,7 +20,8 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 @UtilityClass
 @Slf4j
 public class ParameterDocumentFieldMapper {
-  public ParameterDocumentField fromParameterField(ParameterField<?> parameterField, CastedField castedField) {
+  public ParameterDocumentField fromParameterField(
+      io.harness.beans.ParameterField<?> parameterField, CastedField castedField) {
     boolean skipAutoEvaluation = castedField != null && castedField.getField() != null
         && castedField.getField().isAnnotationPresent(SkipAutoEvaluation.class);
     Class<?> cls = findValueClass(null, castedField);
@@ -47,7 +49,7 @@ public class ParameterDocumentFieldMapper {
         .build();
   }
 
-  public ParameterField<?> toParameterField(ParameterDocumentField documentField) {
+  public io.harness.beans.ParameterField<?> toParameterField(ParameterDocumentField documentField) {
     if (documentField == null) {
       return null;
     }
@@ -55,7 +57,7 @@ public class ParameterDocumentFieldMapper {
     ParameterFieldValueWrapper<?> parameterFieldValueWrapper =
         RecastOrchestrationUtils.fromMap(documentField.getValueDoc(), ParameterFieldValueWrapper.class);
     checkValueClass(documentField, parameterFieldValueWrapper);
-    return ParameterField.builder()
+    return io.harness.beans.ParameterField.builder()
         .expression(documentField.isExpression())
         .expressionValue(documentField.getExpressionValue())
         .value(parameterFieldValueWrapper == null ? null : parameterFieldValueWrapper.getValue())
@@ -95,8 +97,10 @@ public class ParameterDocumentFieldMapper {
 
     Map<String, Object> map = (Map<String, Object>) o;
     Object recastClass = Optional.ofNullable(RecastReflectionUtils.getIdentifier(map)).orElse("");
-    String recasterAliasValue = RecastReflectionUtils.obtainRecasterAliasValueOrNull(ParameterField.class);
-    if (!recastClass.equals(ParameterField.class.getName()) && !recastClass.equals(recasterAliasValue)) {
+    String recasterAliasValue =
+        RecastReflectionUtils.obtainRecasterAliasValueOrNull(io.harness.beans.ParameterField.class);
+    if (!recastClass.equals(io.harness.beans.ParameterField.class.getName())
+        && !recastClass.equals(recasterAliasValue)) {
       return Optional.empty();
     }
 

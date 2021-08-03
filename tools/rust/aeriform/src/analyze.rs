@@ -11,7 +11,7 @@ use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
-use crate::java_module::{JavaModule, JavaModuleTraits, modules};
+use crate::java_module::{modules, JavaModule, JavaModuleTraits};
 use crate::team::UNKNOWN_TEAM;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -306,7 +306,7 @@ pub fn analyze(opts: Analyze) {
     let mut explanations: EnumSet<Explanation> = EnumSet::empty();
     let mut total_count = 0;
 
-    results
+    let filtered : Vec<&Report> = results
         .iter()
         .filter(|&report| {
             filter_report(&opts, report, &class_locations) || indirect_classes.contains(&report.for_class)
@@ -314,21 +314,23 @@ pub fn analyze(opts: Analyze) {
         .filter(|&report| filter_by_kind(&opts, report))
         .filter(|&report| filter_by_auto_actionable(&opts, report))
         .filter(|&report| filter_by_team(&opts, report))
-        .for_each(|report| {
-            println!("{:?}: [{}] {}", &report.kind, &report.for_team, &report.message);
-            if opts.auto_actionable_command && !report.action.is_empty() {
-                println!("   {}", &report.action);
-            }
-            total_count += 1;
-            *kind_summary.entry(report.kind as usize).or_insert(0) += 1;
-            let ts = team_summary.entry(&report.for_team).or_insert(HashMap::new());
-            *ts.entry(report.kind as usize).or_insert(0) += 1;
-            explanations.insert(report.explanation);
-        });
+        .collect();
+
+    filtered.iter().for_each(|&report| {
+        println!("{:?}: [{}] {}", &report.kind, &report.for_team, &report.message);
+        if opts.auto_actionable_command && !report.action.is_empty() {
+            println!("   {}", &report.action);
+        }
+        total_count += 1;
+        *kind_summary.entry(report.kind as usize).or_insert(0) += 1;
+        let ts = team_summary.entry(&report.for_team).or_insert(HashMap::new());
+        *ts.entry(report.kind as usize).or_insert(0) += 1;
+        explanations.insert(report.explanation);
+    });
 
     if opts.top_blockers.unwrap_or(0) > 0 {
         println!();
-        report_blockers(opts.top_blockers.unwrap(), &results);
+        report_blockers(opts.top_blockers.unwrap(), &filtered);
     }
 
     println!();
@@ -388,7 +390,7 @@ pub struct Blocker {
     operations: usize,
 }
 
-fn report_blockers(top: u32, results: &Vec<Report>) {
+fn report_blockers(top: u32, results: &Vec<&Report>) {
     let mut blockers_map: HashMap<&String, HashSet<&String>> = HashMap::new();
 
     results.iter().for_each(|result| {

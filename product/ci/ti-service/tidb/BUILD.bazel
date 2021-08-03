@@ -6,7 +6,7 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/ti-service/tidb",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/addon/ti:go_default_library",
+        "//product/ci/addon/parser/cg:go_default_library",
         "//product/ci/ti-service/tidb/mongodb:go_default_library",
         "//product/ci/ti-service/types:go_default_library",
     ],

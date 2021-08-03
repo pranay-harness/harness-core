@@ -789,11 +789,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDelete() {
-    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String id = persistence.save(createDelegateBuilder().build());
-    delegateService.delete(ACCOUNT_ID, id, false);
+    delegateService.delete(ACCOUNT_ID, id);
     assertThat(persistence.get(Delegate.class, id)).isNull();
-    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
   @Test
@@ -801,7 +799,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldForceDelete() {
     String id = persistence.save(createDelegateBuilder().build());
-    delegateService.delete(ACCOUNT_ID, id, true);
+    delegateService.delete(ACCOUNT_ID, id);
     assertThat(persistence.get(Delegate.class, id)).isNull();
   }
 
@@ -810,18 +808,15 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldMarkDelegateAsDeleted() {
     String id = persistence.save(createDelegateBuilder().build());
-    delegateService.delete(ACCOUNT_ID, id, false);
+    delegateService.delete(ACCOUNT_ID, id);
     Delegate deletedDelegate = persistence.get(Delegate.class, id);
-    assertThat(deletedDelegate).isNotNull();
-    assertThat(deletedDelegate.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate).isNull();
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldDeleteDelegateGroup() {
-    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String accountId = generateUuid();
 
     DelegateGroup delegateGroup =
@@ -850,7 +845,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -880,14 +875,12 @@ public class DelegateServiceTest extends WingsBaseTest {
              .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
     verify(eventProducer, times(2)).send(any());
-
-    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
   @Test
@@ -918,7 +911,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), true);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -953,7 +946,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier(), true);
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -991,22 +984,16 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     DelegateGroup deletedDelegateGroup = persistence.get(DelegateGroup.class, delegateGroup.getUuid());
-    assertThat(deletedDelegateGroup).isNotNull();
-    assertThat(deletedDelegateGroup.getStatus()).isEqualTo(DelegateGroupStatus.DELETED);
-    assertThat(deletedDelegateGroup.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegateGroup).isNull();
 
     Delegate deletedDelegate1 = persistence.get(Delegate.class, d1.getUuid());
-    assertThat(deletedDelegate1).isNotNull();
-    assertThat(deletedDelegate1.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate1.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate1).isNull();
 
     Delegate deletedDelegate2 = persistence.get(Delegate.class, d2.getUuid());
-    assertThat(deletedDelegate2).isNotNull();
-    assertThat(deletedDelegate2.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate2.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate2).isNull();
   }
 
   @Test
@@ -1040,22 +1027,16 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier(), false);
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier());
 
     DelegateGroup deletedDelegateGroup = persistence.get(DelegateGroup.class, delegateGroup.getUuid());
-    assertThat(deletedDelegateGroup).isNotNull();
-    assertThat(deletedDelegateGroup.getStatus()).isEqualTo(DelegateGroupStatus.DELETED);
-    assertThat(deletedDelegateGroup.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegateGroup).isNull();
 
     Delegate deletedDelegate1 = persistence.get(Delegate.class, d1.getUuid());
-    assertThat(deletedDelegate1).isNotNull();
-    assertThat(deletedDelegate1.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate1.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate1).isNull();
 
     Delegate deletedDelegate2 = persistence.get(Delegate.class, d2.getUuid());
-    assertThat(deletedDelegate2).isNotNull();
-    assertThat(deletedDelegate2.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate2.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate2).isNull();
   }
 
   @Test
@@ -3275,7 +3256,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
   public void shouldDeleteDelegateGroupByIdentifier() {
-    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String accountId = generateUuid();
 
     String owner_identifier = "orgId"
@@ -3307,7 +3287,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", "identifier", false);
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", "identifier");
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -3338,14 +3318,12 @@ public class DelegateServiceTest extends WingsBaseTest {
              .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "", "", "identifier", false);
+    delegateService.deleteDelegateGroupV2(accountId, "", "", "identifier");
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
     verify(eventProducer, times(2)).send(any());
-
-    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {

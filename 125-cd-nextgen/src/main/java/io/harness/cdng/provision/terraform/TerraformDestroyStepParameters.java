@@ -2,8 +2,8 @@ package io.harness.cdng.provision.terraform;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.ParameterField;
 import io.harness.plancreator.steps.common.SpecParameters;
-import io.harness.pms.yaml.ParameterField;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

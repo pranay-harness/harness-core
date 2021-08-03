@@ -13,7 +13,6 @@ import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEvent;
 import io.harness.pms.events.InputSetCreateEvent;
 import io.harness.pms.events.InputSetDeleteEvent;
@@ -21,6 +20,7 @@ import io.harness.pms.events.InputSetUpdateEvent;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
+import io.harness.utils.NGObjectMapperHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -32,7 +32,7 @@ public class InputSetEventHandler {
   private final AuditClientService auditClientService;
   @Inject
   InputSetEventHandler(AuditClientService auditClientService) {
-    this.objectMapper = NGPipelineObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
+    this.objectMapper = NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
     this.auditClientService = auditClientService;
   }
 

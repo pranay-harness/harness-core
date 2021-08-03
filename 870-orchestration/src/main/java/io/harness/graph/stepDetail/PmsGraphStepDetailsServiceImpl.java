@@ -7,7 +7,7 @@ import io.harness.engine.observers.StepDetailsUpdateInfo;
 import io.harness.engine.observers.StepDetailsUpdateObserver;
 import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.observer.Subject;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.stepdetails.PmsStepDetails;
 import io.harness.repositories.stepDetail.StepDetailsInstanceRepository;
 
 import com.google.inject.Inject;
@@ -24,7 +24,7 @@ public class PmsGraphStepDetailsServiceImpl implements PmsGraphStepDetailsServic
   @Inject @Getter private final Subject<StepDetailsUpdateObserver> stepDetailsUpdateObserverSubject = new Subject<>();
 
   @Override
-  public void addStepDetail(String nodeExecutionId, String planExecutionId, OrchestrationMap stepDetails, String name) {
+  public void addStepDetail(String nodeExecutionId, String planExecutionId, PmsStepDetails stepDetails, String name) {
     StepDetailInstance stepDetailInstance = StepDetailInstance.builder()
                                                 .name(name)
                                                 .stepDetails(stepDetails)
@@ -37,7 +37,7 @@ public class PmsGraphStepDetailsServiceImpl implements PmsGraphStepDetailsServic
   }
 
   @Override
-  public Map<String, OrchestrationMap> getStepDetails(String planExecutionId, String nodeExecutionId) {
+  public Map<String, PmsStepDetails> getStepDetails(String planExecutionId, String nodeExecutionId) {
     List<StepDetailInstance> stepDetailInstances = stepDetailsInstanceRepository.findByNodeExecutionId(nodeExecutionId);
     return stepDetailInstances.stream().collect(
         Collectors.toMap(StepDetailInstance::getName, StepDetailInstance::getStepDetails));

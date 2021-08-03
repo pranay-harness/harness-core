@@ -182,10 +182,6 @@ aeriform("//840-template-service:module")
 
 aeriform("//840-template-service:tests")
 
-aeriform("//850-ng-pipeline-commons:module")
-
-aeriform("//850-ng-pipeline-commons:tests")
-
 aeriform("//860-orchestration-steps:module")
 
 aeriform("//860-orchestration-steps:tests")
@@ -210,10 +206,6 @@ aeriform("//870-orchestration:module")
 
 aeriform("//870-orchestration:tests")
 
-aeriform("//870-yaml-beans:module")
-
-aeriform("//870-yaml-beans:tests")
-
 aeriform("//874-orchestration-delay:module")
 
 aeriform("//876-orchestration-beans:module")
@@ -223,6 +215,10 @@ aeriform("//876-orchestration-beans:tests")
 aeriform("//878-pipeline-service-utilities:module")
 
 aeriform("//878-pipeline-service-utilities:tests")
+
+aeriform("//878-pms-coupling:module")
+
+aeriform("//878-pms-coupling:tests")
 
 aeriform("//879-pms-sdk:module")
 
@@ -239,6 +235,10 @@ aeriform("//884-pms-commons:module")
 aeriform("//884-pms-commons:tests")
 
 aeriform("//888-pms-client:module")
+
+aeriform("//889-yaml-commons:module")
+
+aeriform("//889-yaml-commons:tests")
 
 aeriform("//890-pms-contracts:module")
 

@@ -1,5 +1,7 @@
 package io.harness.app.beans.entities;
 
+import io.harness.ng.core.dashboard.AuthorInfo;
+
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
