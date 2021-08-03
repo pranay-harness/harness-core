@@ -1,4 +1,4 @@
-package io.harness.instance.mappers;
+package io.harness.instance.mapper;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.IVAN;
@@ -8,9 +8,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.instance.mappers.K8sPodToServiceInstanceInfoMapper;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
 import io.harness.delegate.beans.instancesync.info.K8sServerInstanceInfo;
+import io.harness.delegate.beans.instancesync.mapper.K8sPodToServiceInstanceInfoMapper;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
