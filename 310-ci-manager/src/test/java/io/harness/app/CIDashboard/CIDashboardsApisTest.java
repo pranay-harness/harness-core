@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.app.beans.entities.AuthorInfo;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
@@ -23,6 +22,7 @@ import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
 import io.harness.category.element.UnitTests;
 import io.harness.core.ci.services.CIOverviewDashboardServiceImpl;
+import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;

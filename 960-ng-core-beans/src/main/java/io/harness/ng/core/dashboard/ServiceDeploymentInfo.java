@@ -1,4 +1,4 @@
-package io.harness.ng.cdOverview.dto;
+package io.harness.ng.core.dashboard;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

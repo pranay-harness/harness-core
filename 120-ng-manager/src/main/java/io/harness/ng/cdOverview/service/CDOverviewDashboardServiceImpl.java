@@ -24,13 +24,11 @@ import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
 import io.harness.ng.cdOverview.dto.BuildIdAndInstanceCount;
-import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.Deployment;
 import io.harness.ng.cdOverview.dto.DeploymentCount;
 import io.harness.ng.cdOverview.dto.DeploymentDateAndCount;
 import io.harness.ng.cdOverview.dto.DeploymentInfo;
-import io.harness.ng.cdOverview.dto.DeploymentStatusInfo;
 import io.harness.ng.cdOverview.dto.DeploymentStatusInfoList;
 import io.harness.ng.cdOverview.dto.EntityStatusDetails;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfo;
@@ -43,7 +41,6 @@ import io.harness.ng.cdOverview.dto.HealthDeploymentInfo;
 import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
 import io.harness.ng.cdOverview.dto.LastWorkloadInfo;
 import io.harness.ng.cdOverview.dto.ServiceDeployment;
-import io.harness.ng.cdOverview.dto.ServiceDeploymentInfo;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsDTO;
@@ -59,6 +56,11 @@ import io.harness.ng.cdOverview.dto.WorkloadDateCountInfo;
 import io.harness.ng.cdOverview.dto.WorkloadDeploymentInfo;
 import io.harness.ng.cdOverview.util.GrowthTrendEvaluator;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
+import io.harness.ng.core.dashboard.AuthorInfo;
+import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
+import io.harness.ng.core.dashboard.ExecutionStatusInfo;
+import io.harness.ng.core.dashboard.GitInfo;
+import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
@@ -109,6 +111,24 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       ExecutionStatus.APPROVALWAITING.name(), ExecutionStatus.WAITING.name(), ExecutionStatus.RESOURCEWAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
 
+  public String executionStatusCdTimeScaleColumns() {
+    return "id,"
+        + "name,"
+        + "pipelineidentifier,"
+        + "startts,"
+        + "endTs,"
+        + "status,"
+        + "planexecutionid,"
+        + "moduleinfo_branch_name,"
+        + "source_branch,"
+        + "moduleinfo_branch_commit_message,"
+        + "moduleinfo_branch_commit_id,"
+        + "moduleinfo_event,"
+        + "moduleinfo_repository,"
+        + "trigger_type,"
+        + "moduleinfo_author_id,"
+        + "author_avatar";
+  }
   public String queryBuilderSelectStatusTime(
       String accountId, String orgId, String projectId, long startInterval, long endInterval) {
     String selectStatusQuery = "select status,startts from " + tableNameCD + " where ";
@@ -217,8 +237,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public String queryBuilderStatus(
       String accountId, String orgId, String projectId, long days, List<String> statusList) {
-    String selectStatusQuery =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from " + tableNameCD + " where ";
+    String selectStatusQuery = "select " + executionStatusCdTimeScaleColumns() + " from " + tableNameCD + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
 
@@ -950,6 +969,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<String> identifierList = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
 
+    // CI-Info
+    List<GitInfo> gitInfoList = new ArrayList<>();
+    List<String> triggerTypeList = new ArrayList<>();
+    List<AuthorInfo> authorInfoList = new ArrayList<>();
+
     int totalTries = 0;
     boolean successfulOperation = false;
     while (!successfulOperation && totalTries <= MAX_RETRY_COUNT) {
@@ -969,6 +993,26 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           } else {
             endTs.add(new Date().getTime());
           }
+
+          // GitInfo
+          GitInfo gitInfo = GitInfo.builder()
+                                .targetBranch(resultSet.getString("moduleinfo_branch_name"))
+                                .sourceBranch(resultSet.getString("source_branch"))
+                                .repoName(resultSet.getString("moduleinfo_repository"))
+                                .commit(resultSet.getString("moduleinfo_branch_commit_message"))
+                                .commitID(resultSet.getString("moduleinfo_branch_commit_id"))
+                                .eventType(resultSet.getString("moduleinfo_event"))
+                                .build();
+          gitInfoList.add(gitInfo);
+
+          // TriggerType
+          triggerTypeList.add(resultSet.getString("trigger_type"));
+
+          // AuthorInfo
+          authorInfoList.add(AuthorInfo.builder()
+                                 .name(resultSet.getString("moduleinfo_author_id"))
+                                 .url(resultSet.getString("author_avatar"))
+                                 .build());
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -985,10 +1029,13 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .startTs(startTs)
         .pipelineIdentifierList(identifierList)
         .planExecutionIdList(planExecutionIdList)
+        .gitInfoList(gitInfoList)
+        .triggerType(triggerTypeList)
+        .author(authorInfoList)
         .build();
   }
 
-  public List<DeploymentStatusInfo> getDeploymentStatusInfo(String queryStatus, String queryServiceNameTagId) {
+  public List<ExecutionStatusInfo> getDeploymentStatusInfo(String queryStatus, String queryServiceNameTagId) {
     List<String> objectIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
     List<Long> startTs = new ArrayList<>();
@@ -996,6 +1043,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     List<String> deploymentStatus = new ArrayList<>();
     List<String> planExecutionIdList = new ArrayList<>();
     List<String> pipelineIdentifierList = new ArrayList<>();
+
+    // CI-Info
+    List<GitInfo> gitInfoList = new ArrayList<>();
+    List<String> triggerType = new ArrayList<>();
+    List<AuthorInfo> author = new ArrayList<>();
 
     HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
 
@@ -1008,11 +1060,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
     pipelineIdentifierList = deploymentStatusInfoList.getPipelineIdentifierList();
 
+    gitInfoList = deploymentStatusInfoList.getGitInfoList();
+    triggerType = deploymentStatusInfoList.getTriggerType();
+    author = deploymentStatusInfoList.getAuthor();
+
     String queryServiceTag = queryBuilderServiceTag(queryServiceNameTagId);
 
     serviceTagMap = queryCalculatorServiceTagMag(queryServiceTag);
 
-    List<DeploymentStatusInfo> statusInfo = new ArrayList<>();
+    List<ExecutionStatusInfo> statusInfo = new ArrayList<>();
     for (int i = 0; i < objectIdList.size(); i++) {
       String objectId = objectIdList.get(i);
       long startTime = startTs.get(i);
@@ -1020,47 +1076,48 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       String pipelineIdentifier = pipelineIdentifierList.get(i);
       String planExecutionId = planExecutionIdList.get(i);
       statusInfo.add(this.getDeploymentStatusInfoObject(namePipelineList.get(i), pipelineIdentifier, planExecutionId,
-          startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(objectId)));
+          startTime, endTime, deploymentStatus.get(i), gitInfoList.get(i), triggerType.get(i), author.get(i),
+          serviceTagMap.get(objectId)));
     }
     return statusInfo;
   }
   @Override
-  public DashboardDeploymentActiveFailedRunningInfo getDeploymentActiveFailedRunningInfo(
+  public DashboardExecutionStatusInfo getDeploymentActiveFailedRunningInfo(
       String accountId, String orgId, String projectId, long days) {
     // failed
     String queryFailed = queryBuilderStatus(accountId, orgId, projectId, days, failedStatusList);
     String queryServiceNameTagIdFailed =
         queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, failedStatusList);
-    List<DeploymentStatusInfo> failure = getDeploymentStatusInfo(queryFailed, queryServiceNameTagIdFailed);
+    List<ExecutionStatusInfo> failure = getDeploymentStatusInfo(queryFailed, queryServiceNameTagIdFailed);
 
     // active
     String queryActive = queryBuilderStatus(accountId, orgId, projectId, days, activeStatusList);
     String queryServiceNameTagIdActive =
         queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, activeStatusList);
-    List<DeploymentStatusInfo> active = getDeploymentStatusInfo(queryActive, queryServiceNameTagIdActive);
+    List<ExecutionStatusInfo> active = getDeploymentStatusInfo(queryActive, queryServiceNameTagIdActive);
 
     // pending
     String queryPending = queryBuilderStatus(accountId, orgId, projectId, days, pendingStatusList);
     String queryServiceNameTagIdPending =
         queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, pendingStatusList);
-    List<DeploymentStatusInfo> pending = getDeploymentStatusInfo(queryPending, queryServiceNameTagIdPending);
+    List<ExecutionStatusInfo> pending = getDeploymentStatusInfo(queryPending, queryServiceNameTagIdPending);
 
-    return DashboardDeploymentActiveFailedRunningInfo.builder()
-        .failure(failure)
-        .active(active)
-        .pending(pending)
-        .build();
+    return DashboardExecutionStatusInfo.builder().failure(failure).active(active).pending(pending).build();
   }
 
-  private DeploymentStatusInfo getDeploymentStatusInfoObject(String name, String identfier, String planExecutionId,
-      Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
-    return DeploymentStatusInfo.builder()
-        .name(name)
+  private ExecutionStatusInfo getDeploymentStatusInfoObject(String name, String identfier, String planExecutionId,
+      Long startTime, Long endTime, String status, GitInfo gitInfo, String triggerType, AuthorInfo authorInfo,
+      List<ServiceDeploymentInfo> serviceDeploymentInfos) {
+    return ExecutionStatusInfo.builder()
+        .pipelineName(name)
         .pipelineIdentifier(identfier)
         .planExecutionId(planExecutionId)
         .startTs(startTime)
         .endTs(endTime)
         .status(status)
+        .gitInfo(gitInfo)
+        .triggerType(triggerType)
+        .author(authorInfo)
         .serviceInfoList(serviceDeploymentInfos)
         .build();
   }
