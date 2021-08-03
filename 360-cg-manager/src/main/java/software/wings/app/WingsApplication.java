@@ -54,6 +54,7 @@ import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
@@ -250,6 +251,7 @@ import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
@@ -320,7 +322,13 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
+  @Inject private FeatureFlagService featureFlagService;
 
+  private StartupMode startupMode;
+
+  public WingsApplication(StartupMode startupMode) {
+    this.startupMode = startupMode;
+  }
   /**
    * The entry point of application.
    *
@@ -333,7 +341,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       MaintenanceController.forceMaintenance(true);
     }));
 
-    new WingsApplication().run(args);
+    new WingsApplication(StartupMode.MANGER).run(args);
   }
 
   @Override
@@ -500,6 +508,15 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
+  }
+
+  public boolean isManager() {
+    return startupMode.equals(StartupMode.MANGER);
+  }
+
+  public boolean isDelegateServiceApp() {
+    return startupMode.equals(StartupMode.DELEGATE_SERVICE)
+        || featureFlagService.isGlobalEnabled(FeatureName.USE_DELEGATE_SERVICE_APP);
   }
 
   public void addModules(final MainConfiguration configuration, List<Module> modules) {
