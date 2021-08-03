@@ -78,6 +78,7 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
     addStaticAlias(OrchestrationConstants.ALWAYS, "true");
 
     // Group aliases
+    // TODO: Replace with step category
     addGroupAlias(YAMLFieldNameConstants.STAGE, StepOutcomeGroup.STAGE.name());
     addGroupAlias(YAMLFieldNameConstants.STEP, StepOutcomeGroup.STEP.name());
   }
