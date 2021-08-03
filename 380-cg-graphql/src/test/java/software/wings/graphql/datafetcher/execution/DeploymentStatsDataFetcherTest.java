@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
+import static io.harness.rule.OwnerRule.ALEXANDRU_CIOFU;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -13,7 +14,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +28,11 @@ import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
+import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.DeploymentMetaDataFields;
 import software.wings.graphql.datafetcher.execution.DeploymentStatsQueryMetaData.ResultType;
 import software.wings.graphql.datafetcher.tag.TagHelper;
@@ -59,6 +67,10 @@ import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentType;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
+import software.wings.graphql.schema.type.aggregation.service.QLWorkflowType;
+import software.wings.graphql.schema.type.aggregation.service.QLWorkflowTypeFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 
 import com.google.inject.Inject;
@@ -69,7 +81,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.List;
 import lombok.experimental.FieldNameConstants;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,8 +91,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 
 @OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "DeploymentStatsDataFetcherTestKeys")
@@ -86,8 +103,10 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock QLStatsHelper statsHelper;
   @Mock TagHelper tagHelper;
-  @Inject @InjectMocks DeploymentStatsDataFetcher dataFetcher;
   @Mock ResultSet resultSet;
+  @Mock WingsPersistence wingsPersistence;
+  @Inject @InjectMocks DeploymentStatsDataFetcher dataFetcher;
+
   final int[] count = {0};
   final int[] intVal = {0};
   final long[] longVal = {0};
@@ -1396,5 +1415,196 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
     } catch (Exception e) {
       fail(e.getMessage());
     }
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testDeploymentStatsDataFetcherDeploymentFilters() {
+    QLDeploymentFilter beforeTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter afterTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    QLDeploymentType[] qlDeploymentTypes = new QLDeploymentType[] {QLDeploymentType.KUBERNETES, QLDeploymentType.SSH};
+
+    QLDeploymentFilter deploymentTypesFilter =
+        QLDeploymentFilter.builder()
+            .deploymentType(
+                QLDeploymentTypeFilter.builder().operator(QLEnumOperator.IN).values(qlDeploymentTypes).build())
+            .build();
+
+    DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
+    doReturn(Arrays.asList(new String[] {"sid1", "sid2"}))
+        .when(dataFetcherSpy)
+        .getServiceIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+            new ArrayList<>(Arrays.asList(QLDeploymentType.KUBERNETES.name(), QLDeploymentType.SSH.name())));
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcherSpy.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(beforeTimeFilter, afterTimeFilter, deploymentTypesFilter), null,
+            QLTimeSeriesAggregation.builder()
+                .timeAggregationType(QLTimeAggregationType.HOUR)
+                .timeAggregationValue(1)
+                .build(),
+            null, false);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{sid1}') OR (t0.SERVICES @>'{sid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testDeploymentStatsDataFetcherWorkflowFilters() {
+    QLDeploymentFilter beforeTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter afterTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    QLWorkflowType[] qlWorkflowTypes = new QLWorkflowType[] {QLWorkflowType.ORCHESTRATION};
+
+    QLDeploymentFilter workflowTypesFilter =
+        QLDeploymentFilter.builder()
+            .workflowType(QLWorkflowTypeFilter.builder().operator(QLEnumOperator.IN).values(qlWorkflowTypes).build())
+            .build();
+
+    DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
+    doReturn(Arrays.asList(new String[] {"wid1", "wid2"}))
+        .when(dataFetcherSpy)
+        .getWorkflowIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+            new ArrayList<>(Arrays.asList(QLWorkflowType.ORCHESTRATION.name())));
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcherSpy.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(beforeTimeFilter, afterTimeFilter, workflowTypesFilter), null,
+            QLTimeSeriesAggregation.builder()
+                .timeAggregationType(QLTimeAggregationType.HOUR)
+                .timeAggregationValue(1)
+                .build(),
+            null, false);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.WORKFLOWS @>'{wid1}') OR (t0.WORKFLOWS @>'{wid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testDeploymentStatsDataFetcherDeploymentAndWorkflowFilters() {
+    QLDeploymentFilter beforeTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter afterTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    QLDeploymentType[] qlDeploymentTypes = new QLDeploymentType[] {QLDeploymentType.KUBERNETES, QLDeploymentType.SSH};
+
+    QLDeploymentFilter deploymentTypesFilter =
+        QLDeploymentFilter.builder()
+            .deploymentType(
+                QLDeploymentTypeFilter.builder().operator(QLEnumOperator.IN).values(qlDeploymentTypes).build())
+            .build();
+
+    DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
+    doReturn(Arrays.asList(new String[] {"sid1", "sid2"}))
+        .when(dataFetcherSpy)
+        .getServiceIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+            new ArrayList<>(Arrays.asList(QLDeploymentType.KUBERNETES.name(), QLDeploymentType.SSH.name())));
+
+    QLWorkflowType[] qlWorkflowTypes = new QLWorkflowType[] {QLWorkflowType.ORCHESTRATION};
+
+    QLDeploymentFilter workflowTypesFilter =
+        QLDeploymentFilter.builder()
+            .workflowType(QLWorkflowTypeFilter.builder().operator(QLEnumOperator.IN).values(qlWorkflowTypes).build())
+            .build();
+
+    doReturn(Arrays.asList(new String[] {"wid1", "wid2"}))
+        .when(dataFetcherSpy)
+        .getWorkflowIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+            new ArrayList<>(Arrays.asList(QLWorkflowType.ORCHESTRATION.name())));
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcherSpy.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
+            asList(beforeTimeFilter, afterTimeFilter, deploymentTypesFilter, workflowTypesFilter), null,
+            QLTimeSeriesAggregation.builder()
+                .timeAggregationType(QLTimeAggregationType.HOUR)
+                .timeAggregationValue(1)
+                .build(),
+            null, false);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.WORKFLOWS @>'{wid1}') OR (t0.WORKFLOWS @>'{wid2}')) AND ((t0.SERVICES @>'{sid1}') OR (t0.SERVICES @>'{sid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testGetServiceIds() {
+    List<String> deploymentTypes = Arrays.asList(new String[] {"KUBERNETES", "SSH"});
+
+    Query<Service> serviceQuery = mock(Query.class);
+    doReturn(serviceQuery).when(wingsPersistence).createQuery(Service.class);
+
+    doReturn(serviceQuery).when(serviceQuery).filter(eq(ServiceKeys.accountId), anyString());
+
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+    doReturn(fieldEnd).when(serviceQuery).field(ServiceKeys.deploymentType);
+
+    doReturn(serviceQuery).when(fieldEnd).in(deploymentTypes);
+
+    List<Service> services = new ArrayList<>();
+    services.add(new Service());
+    services.get(0).setUuid("sid1");
+    doReturn(services).when(serviceQuery).asList();
+
+    List<String> expectedServiceIds =
+        dataFetcher.getServiceIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, deploymentTypes);
+
+    assertThat(expectedServiceIds).isEqualTo(Arrays.asList(new String[] {"sid1"}));
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testGetWorkflowIds() {
+    List<String> workflowTypes = Arrays.asList(new String[] {"ORCHESTRATION"});
+
+    Query<Workflow> workflowQuery = mock(Query.class);
+    doReturn(workflowQuery).when(wingsPersistence).createQuery(Workflow.class);
+
+    doReturn(workflowQuery).when(workflowQuery).filter(eq(WorkflowKeys.accountId), anyString());
+
+    FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
+    doReturn(fieldEnd).when(workflowQuery).field(WorkflowKeys.workflowType);
+
+    doReturn(workflowQuery).when(fieldEnd).in(workflowTypes);
+
+    List<Workflow> workflows = new ArrayList<>();
+    workflows.add(new Workflow());
+    workflows.get(0).setUuid("wid1");
+    doReturn(workflows).when(workflowQuery).asList();
+
+    List<String> expectedWorkflowIds =
+        dataFetcher.getWorkflowIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, workflowTypes);
+
+    assertThat(expectedWorkflowIds).isEqualTo(Arrays.asList(new String[] {"wid1"}));
   }
 }

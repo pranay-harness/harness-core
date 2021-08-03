@@ -10,14 +10,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.DelegateServiceTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateInsightsBarDetails;
 import io.harness.delegate.beans.DelegateInsightsDetails;
 import io.harness.delegate.beans.DelegateInsightsType;
-import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
@@ -44,7 +42,6 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   private static final String TEST_DELEGATE_ID = "testDelegateId";
   private static final String TEST_DELEGATE_GROUP_ID = "testDelegateGroupId";
 
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateInsightsServiceImpl delegateInsightsService;
   @Inject private HPersistence persistence;
@@ -59,26 +56,7 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   @Test
   @Owner(developers = NICOLAS)
   @Category(UnitTests.class)
-  public void testOnTaskAssignedFeatureFlagDisabled() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(false);
-
-    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, 60000L);
-
-    DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
-        getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.STARTED);
-    DelegateTaskUsageInsights delegateTaskUsageInsightsUnknownEvent =
-        getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.UNKNOWN);
-
-    assertThat(delegateTaskUsageInsightsCreateEvent).isNull();
-    assertThat(delegateTaskUsageInsightsUnknownEvent).isNull();
-  }
-
-  @Test
-  @Owner(developers = NICOLAS)
-  @Category(UnitTests.class)
   public void testOnTaskAssignedValidValues() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(true);
-
     delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, 120000L);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
@@ -109,8 +87,6 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   @Owner(developers = NICOLAS)
   @Category(UnitTests.class)
   public void testOnTaskCompletedValidValuesSucceeded() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(true);
-
     delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, 0L);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
@@ -140,8 +116,6 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   @Owner(developers = NICOLAS)
   @Category(UnitTests.class)
   public void testOnTaskCompletedValidValuesFailed() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID)).thenReturn(true);
-
     delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, 60000L);
 
     DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
@@ -168,67 +142,12 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
   }
 
   @Test
-  @Owner(developers = NICOLAS)
-  @Category(UnitTests.class)
-  public void testOnTaskCompletedFeatureFlagDisabled() {
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, TEST_ACCOUNT_ID))
-        .thenReturn(true)
-        .thenReturn(false);
-
-    delegateInsightsService.onTaskAssigned(TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, 60000L);
-
-    DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent =
-        getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.STARTED);
-    DelegateTaskUsageInsights delegateTaskUsageInsightsUnknownEvent =
-        getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.UNKNOWN);
-
-    assertThat(delegateTaskUsageInsightsCreateEvent).isNotNull();
-    assertThat(delegateTaskUsageInsightsUnknownEvent).isNotNull();
-
-    delegateInsightsService.onTaskCompleted(
-        TEST_ACCOUNT_ID, TEST_TASK_ID, TEST_DELEGATE_ID, DelegateTaskUsageInsightsEventType.FAILED);
-
-    DelegateTaskUsageInsights delegateTaskUsageInsightsFailedEvent =
-        getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.FAILED);
-
-    assertThat(delegateTaskUsageInsightsFailedEvent).isNull();
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void testRetrieveDelegateInsightsDetailsWithFFDisabled() {
-    String accountId = UUIDGenerator.generateUuid();
-    String delegateGroupId = UUIDGenerator.generateUuid();
-    long timestamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
-
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)).thenReturn(false);
-
-    DelegateInsightsSummary insightsSummary1 =
-        DelegateInsightsSummary.builder()
-            .accountId(accountId)
-            .insightsType(DelegateInsightsType.SUCCESSFUL)
-            .delegateGroupId(delegateGroupId)
-            .periodStartTime(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(8))
-            .count(1)
-            .build();
-    persistence.save(insightsSummary1);
-
-    DelegateInsightsDetails delegateInsightsDetails =
-        delegateInsightsService.retrieveDelegateInsightsDetails(accountId, delegateGroupId, timestamp);
-    assertThat(delegateInsightsDetails).isNotNull();
-    assertThat(delegateInsightsDetails.getInsights()).isEmpty();
-  }
-
-  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testRetrieveDelegateInsightsDetailsWithFFEnabled() {
     String accountId = UUIDGenerator.generateUuid();
     String delegateGroupId = UUIDGenerator.generateUuid();
     long timestamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
-
-    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)).thenReturn(true);
 
     // Insights Bar 1
     long bar1Timestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(8);

@@ -8,6 +8,7 @@ import static io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper.ge
 import static io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer.sanitizeInputSet;
 import static io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer.sanitizeRuntimeInput;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,6 +20,7 @@ import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -318,5 +320,19 @@ public class MergeHelperTest extends CategoryTest {
         .isTrue();
     assertThat(uuidToErrorResponseMap.containsKey("pipeline.stages.qaStage.spec.execution.steps.httpStep2.spec.method"))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testTrimmedValues() {
+    String yamlFile = "pipeline-with-space-values.yaml";
+    String pipelineYaml = readFile(yamlFile);
+
+    String trimYamlFile = "pipeline-with-trimmed-values.yaml";
+    String trimmedCorrectPipelineYaml = readFile(trimYamlFile);
+
+    String trimmedOutputPipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
+    assertThat(trimmedCorrectPipelineYaml).isEqualTo(trimmedOutputPipelineYaml);
   }
 }

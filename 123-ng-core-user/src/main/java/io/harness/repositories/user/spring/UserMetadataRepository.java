@@ -17,4 +17,6 @@ public interface UserMetadataRepository
   Optional<UserMetadata> findDistinctByUserId(String userId);
 
   Optional<UserMetadata> findDistinctByEmail(String email);
+
+  void deleteByEmail(String email);
 }

@@ -55,7 +55,7 @@ public class PerpetualTaskLifecycleManager {
     try {
       HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutMillis), this::call);
     } catch (UncheckedTimeoutException tex) {
-      log.warn("Timed out starting task", tex);
+      log.debug("Timed out starting task", tex);
     } catch (Exception ex) {
       log.error("Exception is ", ex);
     }
@@ -83,7 +83,7 @@ public class PerpetualTaskLifecycleManager {
       decrementTaskCounter();
     } catch (UncheckedTimeoutException tex) {
       perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(408).responseMessage("failed").build();
-      log.warn("Timed out starting task", tex);
+      log.debug("Timed out starting task", tex);
 
       decrementTaskCounter();
     } catch (Exception ex) {

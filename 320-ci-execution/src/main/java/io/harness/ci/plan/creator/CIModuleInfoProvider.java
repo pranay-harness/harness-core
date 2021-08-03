@@ -116,39 +116,27 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       log.error("Failed to retrieve branch and tag for filtering", ex);
     }
 
-    // get codebase sweeping output
-    OptionalSweepingOutput optionalSweepingOutput =
-        executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
-    CodebaseSweepingOutput codebaseSweepingOutput = null;
-    if (optionalSweepingOutput.isFound()) {
-      codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
-    }
-    if (codebaseSweepingOutput != null) {
-      log.info("Codebase sweeping output {}", codebaseSweepingOutput);
+    if (executionSource.getType() == ExecutionSource.Type.MANUAL) {
+      // get codebase sweeping output
+      OptionalSweepingOutput optionalSweepingOutput =
+          executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+      CodebaseSweepingOutput codebaseSweepingOutput = null;
+      if (optionalSweepingOutput.isFound()) {
+        codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+      }
+      if (codebaseSweepingOutput != null) {
+        log.info("Codebase sweeping output {}", codebaseSweepingOutput);
 
-      List<CIBuildCommit> ciBuildCommits = new ArrayList<>();
-      if (isNotEmpty(codebaseSweepingOutput.getCommits())) {
-        for (CodebaseSweepingOutput.CodeBaseCommit commit : codebaseSweepingOutput.getCommits()) {
-          ciBuildCommits.add(CIBuildCommit.builder()
-                                 .id(commit.getId())
-                                 .link(commit.getLink())
-                                 .message(commit.getMessage())
-                                 .ownerEmail(commit.getOwnerEmail())
-                                 .ownerId(commit.getOwnerId())
-                                 .ownerName(commit.getOwnerName())
-                                 .timeStamp(commit.getTimeStamp())
-                                 .build());
+        if (isEmpty(branch)) {
+          branch = codebaseSweepingOutput.getBranch();
         }
-      }
-      if (isEmpty(branch)) {
-        branch = codebaseSweepingOutput.getBranch();
-      }
 
-      return CIPipelineModuleInfo.builder()
-          .branch(branch)
-          .repoName(repoName)
-          .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput, ciBuildCommits))
-          .build();
+        return CIPipelineModuleInfo.builder()
+            .branch(branch)
+            .repoName(repoName)
+            .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput))
+            .build();
+      }
     }
 
     return CIPipelineModuleInfo.builder()
@@ -159,15 +147,29 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .build();
   }
 
-  private CIWebhookInfoDTO getCiExecutionInfoDTO(
-      CodebaseSweepingOutput codebaseSweepingOutput, List<CIBuildCommit> ciBuildCommits) {
+  private CIWebhookInfoDTO getCiExecutionInfoDTO(CodebaseSweepingOutput codebaseSweepingOutput) {
+    List<CIBuildCommit> ciBuildCommits = new ArrayList<>();
+    if (isNotEmpty(codebaseSweepingOutput.getCommits())) {
+      for (CodebaseSweepingOutput.CodeBaseCommit commit : codebaseSweepingOutput.getCommits()) {
+        ciBuildCommits.add(CIBuildCommit.builder()
+                               .id(commit.getId())
+                               .link(commit.getLink())
+                               .message(commit.getMessage())
+                               .ownerEmail(commit.getOwnerEmail())
+                               .ownerId(commit.getOwnerId())
+                               .ownerName(commit.getOwnerName())
+                               .timeStamp(commit.getTimeStamp())
+                               .build());
+      }
+    }
+
     if (isEmpty(codebaseSweepingOutput.getCommits())) {
       return null;
     }
     return CIWebhookInfoDTO.builder()
         .event("pullRequest")
         .author(CIBuildAuthor.builder()
-                    .name(codebaseSweepingOutput.getGitUserName())
+                    .name(codebaseSweepingOutput.getGitUser())
                     .avatar(codebaseSweepingOutput.getGitUserAvatar())
                     .email(codebaseSweepingOutput.getGitUserEmail())
                     .id(codebaseSweepingOutput.getGitUserId())

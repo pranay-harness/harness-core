@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.FeatureName.CUSTOM_MANIFEST;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.OVERRIDE_VALUES_YAML_FROM_HELM_CHART;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -289,7 +290,7 @@ public class HelmDeployState extends State {
     boolean isCustomManifestFeatureEnabled =
         featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
     if (valuesInHelmChartRepo) {
-      return executeHelmValuesFetchTask(context, activity.getUuid(), helmOverrideManifestMap);
+      return executeHelmValuesFetchTask(context, activity.getUuid(), helmOverrideManifestMap, appManifestMap);
     }
     if (valuesInGit) {
       return executeGitTask(context, activity.getUuid(), appManifestMap);
@@ -659,6 +660,7 @@ public class HelmDeployState extends State {
               context, appManifestMap, executionResponse);
       helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
     }
+
     helmDeployStateExecutionData.setZippedManifestFileId(executionResponse.getZippedManifestFileId());
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -688,11 +690,13 @@ public class HelmDeployState extends State {
           .build();
     }
 
-    if (isNotBlank(executionResponse.getValuesFileContent())) {
+    if (isNotEmpty(executionResponse.getMapK8sValuesLocationToContent())) {
       HelmDeployStateExecutionData helmDeployStateExecutionData =
           (HelmDeployStateExecutionData) context.getStateExecutionData();
-      helmDeployStateExecutionData.getValuesFiles().put(
-          K8sValuesLocation.Service, singletonList(executionResponse.getValuesFileContent()));
+      Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToNonEmptyContents =
+          applicationManifestUtils.getMapK8sValuesLocationToNonEmptyContents(
+              executionResponse.getMapK8sValuesLocationToContent());
+      helmDeployStateExecutionData.getValuesFiles().putAll(mapK8sValuesLocationToNonEmptyContents);
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -723,6 +727,7 @@ public class HelmDeployState extends State {
 
     return false;
   }
+
   public String obtainActivityId(ExecutionContext context) {
     return ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
@@ -1451,10 +1456,11 @@ public class HelmDeployState extends State {
   }
 
   public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId,
-      Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) {
+      Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap,
+      Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
     Application app = appService.get(context.getAppId());
-    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
-        getHelmValuesFetchTaskParameters(context, app.getUuid(), activityId, helmOverrideManifestMap);
+    HelmValuesFetchTaskParameters helmValuesFetchTaskParameters = getHelmValuesFetchTaskParameters(
+        context, app.getUuid(), activityId, helmOverrideManifestMap, applicationManifestMap);
 
     String waitId = generateUuid();
     final int expressionFunctorToken = HashGenerator.generateIntegerHash();
@@ -1513,7 +1519,8 @@ public class HelmDeployState extends State {
   }
 
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String appId,
-      String activityId, Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap) {
+      String activityId, Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap,
+      Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, context.fetchInfraMappingId());
 
@@ -1571,6 +1578,12 @@ public class HelmDeployState extends State {
           }
         }
       }
+    }
+
+    if (featureFlagService.isEnabled(OVERRIDE_VALUES_YAML_FROM_HELM_CHART, context.getAccountId())) {
+      Map<String, List<String>> mapK8sValuesLocationToFilePaths =
+          applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(context, applicationManifestMap);
+      helmValuesFetchTaskParameters.setMapK8sValuesLocationToFilePaths(mapK8sValuesLocationToFilePaths);
     }
 
     return helmValuesFetchTaskParameters;

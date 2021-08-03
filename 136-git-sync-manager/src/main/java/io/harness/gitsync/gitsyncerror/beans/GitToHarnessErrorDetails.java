@@ -11,12 +11,10 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitToHarnessErrorDetailsKeys")
-@Document("gitToHarnessErrorDetailsNG")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitToHarnessErrorDetails")
 @OwnedBy(DX)
 public class GitToHarnessErrorDetails implements GitSyncErrorDetails {

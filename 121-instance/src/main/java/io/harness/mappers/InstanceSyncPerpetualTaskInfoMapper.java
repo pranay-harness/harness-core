@@ -16,6 +16,7 @@ import lombok.experimental.UtilityClass;
 public class InstanceSyncPerpetualTaskInfoMapper {
   public InstanceSyncPerpetualTaskInfoDTO toDTO(InstanceSyncPerpetualTaskInfo instanceSyncPerpetualTaskInfo) {
     return InstanceSyncPerpetualTaskInfoDTO.builder()
+        .id(instanceSyncPerpetualTaskInfo.getId())
         .accountIdentifier(instanceSyncPerpetualTaskInfo.getAccountIdentifier())
         .infrastructureMappingId(instanceSyncPerpetualTaskInfo.getInfrastructureMappingId())
         .deploymentInfoDetailsDTOList(
@@ -28,6 +29,7 @@ public class InstanceSyncPerpetualTaskInfoMapper {
 
   public InstanceSyncPerpetualTaskInfo toEntity(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO) {
     return InstanceSyncPerpetualTaskInfo.builder()
+        .id(instanceSyncPerpetualTaskInfoDTO.getId())
         .accountIdentifier(instanceSyncPerpetualTaskInfoDTO.getAccountIdentifier())
         .infrastructureMappingId(instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId())
         .deploymentInfoDetailsList(

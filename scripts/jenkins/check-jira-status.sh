@@ -44,11 +44,15 @@ then
       exit 1
 fi
 
-if [[ "${issuetype}" = "Story" && ( "${ff_added}" = "null" ) ]]
+if [[ "${issuetype}" = "Story" && ( "${ff_added}" = "null" || "${what_changed}" = "null" ) ]]
 then
       if [[ "${ff_added}" = "null" ]]
       then
         echo "FF added is not updated, Please update FF added to proceed"
+      fi
+      if [[ "${what_changed}" = "null" ]]
+      then
+        echo "what_changed is not updated"
       fi
       exit 1
 fi

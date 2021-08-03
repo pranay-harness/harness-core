@@ -13,8 +13,8 @@ import io.harness.exception.InstanceAggregationException;
 import io.harness.exception.InstanceProcessorException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
+import io.harness.models.constants.TimescaleConstants;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.service.stats.Constants;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.graphql.datafetcher.DataFetcherUtils;
@@ -125,14 +125,14 @@ public class InstanceStatsEventListener implements MessageListener {
           Map<String, String> dataMap = dataPointArray[currElementIdx].getDataMap();
           statement.setTimestamp(1, new Timestamp(eventInfo.getTimestamp()), utils.getDefaultCalendar());
           statement.setString(2, eventInfo.getAccountId());
-          statement.setString(3, dataMap.get(Constants.ORG_ID.getKey()));
-          statement.setString(4, dataMap.get(Constants.PROJECT_ID.getKey()));
-          statement.setString(5, dataMap.get(Constants.SERVICE_ID.getKey()));
-          statement.setString(6, dataMap.get(Constants.ENV_ID.getKey()));
-          statement.setString(7, dataMap.get(Constants.CLOUDPROVIDER_ID.getKey()));
-          statement.setString(8, dataMap.get(Constants.INSTANCE_TYPE.getKey()));
-          statement.setInt(9, Integer.parseInt(dataMap.get(Constants.INSTANCECOUNT.getKey())));
-          statement.setString(10, dataMap.get(Constants.ARTIFACT_ID.getKey()));
+          statement.setString(3, dataMap.get(TimescaleConstants.ORG_ID.getKey()));
+          statement.setString(4, dataMap.get(TimescaleConstants.PROJECT_ID.getKey()));
+          statement.setString(5, dataMap.get(TimescaleConstants.SERVICE_ID.getKey()));
+          statement.setString(6, dataMap.get(TimescaleConstants.ENV_ID.getKey()));
+          statement.setString(7, dataMap.get(TimescaleConstants.CLOUDPROVIDER_ID.getKey()));
+          statement.setString(8, dataMap.get(TimescaleConstants.INSTANCE_TYPE.getKey()));
+          statement.setInt(9, Integer.parseInt(dataMap.get(TimescaleConstants.INSTANCECOUNT.getKey())));
+          statement.setString(10, dataMap.get(TimescaleConstants.ARTIFACT_ID.getKey()));
           statement.addBatch();
         } catch (SQLException e) {
           // Ignore this exception for now, as this is the least expected to happen

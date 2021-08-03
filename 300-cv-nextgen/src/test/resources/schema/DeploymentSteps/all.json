@@ -395,21 +395,9 @@
         {
           "type": "object",
           "required": [
-            "healthSources",
-            "monitoredServiceRef",
             "type"
           ],
           "properties": {
-            "healthSources": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/HealthSource"
-              }
-            },
-            "monitoredServiceRef": {
-              "type": "string",
-              "description": "It supports runtime input and expression"
-            },
             "type": {
               "type": "string"
             }
@@ -706,19 +694,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "HealthSource": {
-      "type": "object",
-      "required": [
-        "identifier"
-      ],
-      "properties": {
-        "identifier": {
-          "type": "string",
-          "description": "Health Source identifier"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "HoldingScope": {

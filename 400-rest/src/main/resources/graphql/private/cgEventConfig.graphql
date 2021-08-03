@@ -1,13 +1,13 @@
-#extend type Query {
-#    # Get details about a Events Config
-#    eventsConfig(appId: String!, eventsConfigId: String!): EventsConfig @dataFetcher(name: eventsConfig)
-#
-#    # Get details about Events Configs.
-#    eventsConfigs(appId: String!, filters: [EventsConfigFilter], limit: Int!, offset: Int): EventsConfigConnection @dataFetcher(name: eventsConfigConnection)
-#
-#    # Fetch details about a Events Config by it's name
-#    eventsConfigsByName(appId: String!, name: String!): EventsConfig @dataFetcher(name: eventsConfig)
-#}
+extend type Query {
+  # Get details about a Events Config
+  eventsConfig(appId: String!, eventsConfigId: String!): EventsConfig @dataFetcher(name: eventsConfig)
+
+  # Get details about Events Configs.
+  eventsConfigs(appId: String!): [EventsConfig] @dataFetcher(name: eventsConfigConnection)
+
+  # Fetch details about a Events Config by it's name
+  eventsConfigsByName(appId: String!, name: String!): EventsConfig @dataFetcher(name: eventsConfig)
+}
 
 type EventsConfig {
   id: String
@@ -51,15 +51,6 @@ type EventRule {
   type: String!
   pipelineRule: PipelineRule
   workflowRule: WorkflowRule
-}
-
-type EventsConfigConnection {
-  pageInfo: PageInfo
-  nodes: [EventsConfig]
-}
-
-input EventsConfigFilter {
-  eventsConfig: IdFilter
 }
 
 type PipelineRule {

@@ -12,7 +12,9 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.CI)
 public class CodeBaseStepParameters implements StepParameters {
+  String codeBaseSyncTaskId;
+  String codeBaseDelegateTaskId;
+
   String connectorRef;
-  String repoUrl;
   ExecutionSource executionSource;
 }

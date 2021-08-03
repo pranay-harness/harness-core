@@ -2,11 +2,13 @@ package software.wings.service.impl.yaml.service;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.appmanifest.AppManifestKind.PCF_OVERRIDE;
+import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,16 +17,27 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.Service;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateService;
 
@@ -40,11 +53,16 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(HarnessTeam.DX)
 public class YamlHelperTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock TemplateService templateService;
   @Mock TemplateFolderService templateFolderService;
+  @Mock ServiceResourceService serviceResourceService;
+  @Mock AppService appService;
+  @Mock FeatureFlagService featureFlagService;
+  @Mock ApplicationManifestService applicationManifestService;
   @InjectMocks @Inject private YamlHelper yamlHelper;
 
   @Test
@@ -126,5 +144,20 @@ public class YamlHelperTest extends WingsBaseTest {
     assertThatThrownBy(() -> yamlHelper.getApplicationManifestBasedYamlTypeForFilePath("random path"))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Could not find Yaml Type for file path : [random path]");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetAppManifestByKindForValuesYaml() {
+    when(serviceResourceService.getServiceByName("appId", "ser1"))
+        .thenReturn(Service.builder().uuid("serviceId").build());
+    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, null)).thenReturn(true);
+    when(applicationManifestService.getAppManifest("appId", null, "serviceId", VALUES))
+        .thenReturn(ApplicationManifest.builder().storeType(StoreType.Remote).build());
+    ApplicationManifest applicationManifest =
+        yamlHelper.getApplicationManifest("appId", "Setup/Applications/App1/Services/ser1/Values/values.yaml");
+    assertThat(applicationManifest).isNotNull();
+    verify(applicationManifestService).getAppManifest("appId", null, "serviceId", VALUES);
   }
 }

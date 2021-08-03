@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.event;
 
 import static io.harness.beans.FeatureName.APP_TELEMETRY;
 
-import static software.wings.graphql.schema.type.event.QLEventRule.toEventRule;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -19,7 +18,6 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.event.input.QLCreateEventsConfigInput;
 import software.wings.graphql.schema.mutation.event.payload.QLCreateEventsConfigPayload;
 import software.wings.graphql.schema.type.event.QLEventsConfig;
-import software.wings.graphql.schema.type.event.QLWebhookEventConfig;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
@@ -58,15 +56,7 @@ public class CreateEventsConfigDataFetcher
             .build());
     return QLCreateEventsConfigPayload.builder()
         .clientMutationId(parameter.getClientMutationId())
-        .eventsConfig(QLEventsConfig.builder()
-                          .appId(eventConfig.getAppId())
-                          .name(eventConfig.getName())
-                          .webhookConfig(QLWebhookEventConfig.toWebhookEventConfig(eventConfig.getConfig()))
-                          .rule(toEventRule(eventConfig.getRule()))
-                          .delegateSelectors(eventConfig.getDelegateSelectors())
-                          .enabled(eventConfig.isEnabled())
-                          .id(eventConfig.getUuid())
-                          .build())
+        .eventsConfig(QLEventsConfig.getQLEventsConfig(eventConfig))
         .build();
   }
 }

@@ -17,7 +17,8 @@
         "from":1609372800000,
         "to":1609459200000,
         "timeZone":"Africa/Addis_Ababa",
-        "label":null
+        "durationBased": false,
+        "expires": false
       },
       "name":"freezer",
       "description":"Holiday production freeze",

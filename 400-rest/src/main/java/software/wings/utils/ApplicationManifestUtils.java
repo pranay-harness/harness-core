@@ -228,6 +228,49 @@ public class ApplicationManifestUtils {
     return gitFetchFileConfigMap;
   }
 
+  public Map<K8sValuesLocation, List<String>> getMapK8sValuesLocationToNonEmptyContents(
+      Map<String, List<String>> mapK8sValuesLocationToContents) {
+    Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToNonEmptyContents = new HashMap<>();
+
+    for (Map.Entry entry : mapK8sValuesLocationToContents.entrySet()) {
+      K8sValuesLocation k8sValueLocation = K8sValuesLocation.valueOf((String) entry.getKey());
+      List<String> contents = (List<String>) entry.getValue();
+
+      List<String> nonEmptyContents =
+          contents.stream().filter(content -> isNotBlank(content)).collect(Collectors.toList());
+
+      if (isNotEmpty(nonEmptyContents)) {
+        mapK8sValuesLocationToNonEmptyContents.put(k8sValueLocation, nonEmptyContents);
+      }
+    }
+
+    return mapK8sValuesLocationToNonEmptyContents;
+  }
+
+  public Map<String, List<String>> getHelmFetchTaskMapK8sValuesLocationToFilePaths(
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+
+    for (Entry<K8sValuesLocation, ApplicationManifest> entry : applicationManifestMap.entrySet()) {
+      K8sValuesLocation k8sValuesLocation = entry.getKey();
+      ApplicationManifest applicationManifest = entry.getValue();
+
+      if (StoreType.VALUES_YAML_FROM_HELM_REPO == applicationManifest.getStoreType()) {
+        if (isNotEmpty(applicationManifest.getHelmValuesYamlFilePaths())) {
+          String renderedValuesYamlFilePaths =
+              context.renderExpression(applicationManifest.getHelmValuesYamlFilePaths());
+          List<String> filePaths = Arrays.asList(renderedValuesYamlFilePaths.split(","))
+                                       .stream()
+                                       .map(path -> path.trim())
+                                       .collect(Collectors.toList());
+          mapK8sValuesLocationToFilePaths.put(k8sValuesLocation.name(), filePaths);
+        }
+      }
+    }
+
+    return mapK8sValuesLocationToFilePaths;
+  }
+
   private boolean isRemoteFetchRequiredForManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     if (!appManifestMap.containsKey(K8sValuesLocation.Service)) {
       return true;

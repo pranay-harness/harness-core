@@ -112,7 +112,6 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccess;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
@@ -168,7 +167,7 @@ public class K8BuildSetupUtils {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
 
-    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
     Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
 
     if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
@@ -211,7 +210,7 @@ public class K8BuildSetupUtils {
     ParameterField<String> timeout = k8sDirectInfraYaml.getSpec().getInitTimeout();
 
     int podWaitUntilReadyTimeout = POD_MAX_WAIT_UNTIL_READY_SECS;
-    if (timeout != null && timeout.fetchFinalValue() != null) {
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
       long timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis();
       podWaitUntilReadyTimeout = (int) (timeoutInMillis / 1000);
     }

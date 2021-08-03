@@ -3,13 +3,13 @@ package io.harness.signup;
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cloud.google.GoogleCloudFileModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.signup.notification.SignupNotificationHelper;
 import io.harness.signup.notification.SignupNotificationTemplateLoader;
 import io.harness.signup.services.SignupService;
 import io.harness.signup.services.impl.SignupServiceImpl;
+import io.harness.templates.google.GoogleCloudFileModule;
 import io.harness.user.UserClientModule;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

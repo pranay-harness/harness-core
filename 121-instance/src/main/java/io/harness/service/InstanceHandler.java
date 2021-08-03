@@ -159,9 +159,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
   private U getDeploymentInfrastructureMapping(
       String accountId, String orgId, String projectId, String infrastructureMappingId) {
-    Optional<InfrastructureMapping> infrastructureMappingOptional =
-        infrastructureMappingRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndId(
-            accountId, orgId, projectId, infrastructureMappingId);
+    Optional<InfrastructureMapping> infrastructureMappingOptional = null;
     return validateAndReturnInfrastructureMapping(infrastructureMappingOptional.get());
   }
 

@@ -23,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(CODEBASE)
 public class CodebaseSweepingOutput implements ExecutionSweepingOutput {
   String branch;
+  String tag;
   String targetBranch;
   String sourceBranch;
   String prNumber;
@@ -33,7 +34,7 @@ public class CodebaseSweepingOutput implements ExecutionSweepingOutput {
   String repoUrl;
   String gitUserId;
   String gitUserEmail;
-  String gitUserName;
+  String gitUser;
   String gitUserAvatar;
   String pullRequestLink;
   String pullRequestBody;

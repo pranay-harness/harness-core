@@ -17,6 +17,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -31,6 +32,9 @@ import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 
 import com.google.inject.Inject;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -60,19 +64,22 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
 
       HelmChartConfigParams helmChartConfigParams = taskParams.getHelmChartConfigTaskParams();
 
-      String valuesFileContent = helmTaskHelper.getValuesYamlFromChart(
-          helmChartConfigParams, taskParams.getTimeoutInMillis(), taskParams.getHelmCommandFlag());
+      Map<String, List<String>> mapK8sValuesLocationToContent = helmTaskHelper.getValuesYamlFromChart(
+          helmChartConfigParams, taskParams.getTimeoutInMillis(), taskParams.getHelmCommandFlag(),
+          ((HelmValuesFetchTaskParameters) parameters).getMapK8sValuesLocationToFilePaths());
+
       helmTaskHelper.printHelmChartInfoInExecutionLogs(helmChartConfigParams, executionLogCallback);
 
-      if (null == valuesFileContent) {
+      if (EmptyPredicate.isEmpty(mapK8sValuesLocationToContent)
+          || mapK8sValuesLocationToContent.values().stream().allMatch(Objects::isNull)) {
         executionLogCallback.saveExecutionLog("No values.yaml found", WARN, SUCCESS);
       } else {
-        executionLogCallback.saveExecutionLog("\nSuccessfully fetched values.yaml", INFO, SUCCESS);
+        executionLogCallback.saveExecutionLog("\nSuccessfully fetched values.yaml files", INFO, SUCCESS);
       }
 
       return HelmValuesFetchTaskResponse.builder()
           .commandExecutionStatus(SUCCESS)
-          .valuesFileContent(valuesFileContent)
+          .mapK8sValuesLocationToContent(mapK8sValuesLocationToContent)
           .build();
     } catch (Exception e) {
       log.error("HelmValuesFetchTask execution failed with exception ", e);

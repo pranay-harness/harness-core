@@ -7,6 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
@@ -25,6 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @TargetModule(HarnessModule._980_COMMONS)
+@OwnedBy(HarnessTeam.CDC)
 public class WeeklyRangeTest extends CategoryTest {
   private String accountId = "some-account-uuid-" + RandomStringUtils.randomAlphanumeric(5);
 
@@ -55,7 +58,7 @@ public class WeeklyRangeTest extends CategoryTest {
   @Category(UnitTests.class)
   public void createGovernanceConfig_shouldThrowException() {
     try {
-      TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata");
+      TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata", false, null, null, null, false);
       WeeklyRange weeklyRange = new WeeklyRange(null, "Monday", "7:00 PM", "Tuesday", "5:00 AM", "Asia/Kolkata");
       TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
           new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),

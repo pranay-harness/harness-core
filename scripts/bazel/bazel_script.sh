@@ -108,7 +108,6 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
   //925-access-control-service:module \
-  //925-watcher-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //940-feature-flag:module \
@@ -174,6 +173,7 @@ BAZEL_MODULES="\
   //970-ng-commons:module \
   //970-rbac-core:module \
   //970-telemetry-beans:module \
+  //970-watcher-beans:module \
   //980-commons:module \
   //980-recaster:module \
   //990-commons-test:module \
@@ -374,7 +374,6 @@ build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
-build_bazel_module 925-watcher-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 940-feature-flag
@@ -423,6 +422,7 @@ build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
+build_bazel_module 970-watcher-beans
 build_bazel_module 980-recaster
 build_bazel_module 980-commons
 build_bazel_module 990-commons-test

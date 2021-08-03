@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 import groovy.util.logging.Slf4j;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.data.mongodb.core.FindAndReplaceOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -32,6 +33,12 @@ import org.springframework.data.mongodb.core.query.Query;
 @Slf4j
 public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   private MongoTemplate mongoTemplate;
+
+  @Override
+  public Instance findAndReplace(Criteria criteria, Instance instance) {
+    Query query = new Query(criteria);
+    return mongoTemplate.findAndReplace(query, instance, FindAndReplaceOptions.options().returnNew());
+  }
 
   @Override
   public List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp) {
