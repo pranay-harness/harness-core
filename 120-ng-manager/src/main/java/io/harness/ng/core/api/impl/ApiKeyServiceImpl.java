@@ -16,6 +16,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.accesscontrol.PlatformResourceTypes;
@@ -53,6 +54,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -75,23 +77,19 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier());
     validateApiKeyLimit(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
         apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getParentIdentifier());
-    Optional<ApiKey> optionalApiKey =
-        apiKeyRepository
-            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
-                apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier(),
-                apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier(), apiKeyDTO.getIdentifier());
-    if (optionalApiKey.isPresent()) {
-      throw new InvalidRequestException(
-          String.format("Duplicate api key present in scope for identifier: " + apiKeyDTO.getIdentifier()));
+    try {
+      ApiKey apiKey = ApiKeyDTOMapper.getApiKeyFromDTO(apiKeyDTO);
+      validate(apiKey);
+      return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+        ApiKey savedApiKey = apiKeyRepository.save(apiKey);
+        ApiKeyDTO savedDTO = ApiKeyDTOMapper.getDTOFromApiKey(savedApiKey);
+        outboxService.save(new ApiKeyCreateEvent(savedDTO));
+        return savedDTO;
+      }));
+    } catch (DuplicateKeyException e) {
+      throw new DuplicateFieldException(
+          String.format("Try using different Key name, [%s] already exists", apiKeyDTO.getIdentifier()));
     }
-    ApiKey apiKey = ApiKeyDTOMapper.getApiKeyFromDTO(apiKeyDTO);
-    validate(apiKey);
-    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-      ApiKey savedApiKey = apiKeyRepository.save(apiKey);
-      ApiKeyDTO savedDTO = ApiKeyDTOMapper.getDTOFromApiKey(savedApiKey);
-      outboxService.save(new ApiKeyCreateEvent(savedDTO));
-      return savedDTO;
-    }));
   }
 
   private void validateApiKeyRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier) {

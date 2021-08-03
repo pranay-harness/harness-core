@@ -12,6 +12,7 @@ import static org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.B
 
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -50,6 +51,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -74,16 +76,6 @@ public class TokenServiceImpl implements TokenService {
   public String createToken(TokenDTO tokenDTO) {
     validateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
         tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
-    Optional<Token> optionalToken =
-        tokenRepository
-            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
-                tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
-                tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier(),
-                tokenDTO.getIdentifier());
-    if (optionalToken.isPresent()) {
-      throw new InvalidRequestException(
-          String.format("Duplicate token present in API Key for identifier: " + tokenDTO.getIdentifier()));
-    }
     validateTokenLimit(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
         tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
@@ -92,15 +84,20 @@ public class TokenServiceImpl implements TokenService {
     ApiKey apiKey = apiKeyService.getApiKey(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
         tokenDTO.getProjectIdentifier(), tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(),
         tokenDTO.getApiKeyIdentifier());
-    Token token = TokenDTOMapper.getTokenFromDTO(tokenDTO, apiKey.getDefaultTimeToExpireToken());
-    token.setEncodedPassword(tokenString);
-    validate(token);
-    Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-      Token savedToken = tokenRepository.save(token);
-      outboxService.save(new TokenCreateEvent(TokenDTOMapper.getDTOFromToken(savedToken)));
-      return savedToken;
-    }));
-    return token.getApiKeyType().getValue() + deliminator + newToken.getUuid() + deliminator + randomString;
+    try {
+      Token token = TokenDTOMapper.getTokenFromDTO(tokenDTO, apiKey.getDefaultTimeToExpireToken());
+      token.setEncodedPassword(tokenString);
+      validate(token);
+      Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+        Token savedToken = tokenRepository.save(token);
+        outboxService.save(new TokenCreateEvent(TokenDTOMapper.getDTOFromToken(savedToken)));
+        return savedToken;
+      }));
+      return token.getApiKeyType().getValue() + deliminator + newToken.getUuid() + deliminator + randomString;
+    } catch (DuplicateKeyException e) {
+      throw new DuplicateFieldException(
+          String.format("Try using different token name, [%s] already exists", tokenDTO.getIdentifier()));
+    }
   }
 
   private void validateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
