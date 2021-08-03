@@ -80,7 +80,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -882,7 +881,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     return ServiceDeploymentListInfo.builder()
         .startTime(startTime)
-        .endTime(endTime)
+        .endTime(endTime == -1 ? null : endTime)
         .totalDeployments(totalDeployments)
         .failureRate(failureRate)
         .frequency(frequency)
@@ -991,7 +990,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           if (resultSet.getString("endTs") != null) {
             endTs.add(Long.valueOf(resultSet.getString("endTs")));
           } else {
-            endTs.add(new Date().getTime());
+            endTs.add(-1L);
           }
 
           // GitInfo
@@ -1250,7 +1249,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         }
         LastWorkloadInfo lastWorkloadInfo = LastWorkloadInfo.builder()
                                                 .startTime(lastExecutedStartTs)
-                                                .endTime(lastExecutedEndTs)
+                                                .endTime(lastExecutedEndTs == -1L ? null : lastExecutedEndTs)
                                                 .status(lastStatus)
                                                 .deploymentType(deploymentType)
                                                 .build();

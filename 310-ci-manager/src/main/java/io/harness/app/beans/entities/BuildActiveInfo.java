@@ -14,7 +14,7 @@ public class BuildActiveInfo {
   private String commit;
   private String commitID;
   private AuthorInfo author;
-  private long startTs;
+  private Long startTs;
   private String status;
-  private long endTs;
+  private Long endTs;
 }
