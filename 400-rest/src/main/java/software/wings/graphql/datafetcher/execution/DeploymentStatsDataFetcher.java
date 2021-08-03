@@ -1151,17 +1151,18 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     for (QLDeploymentFilter filter : filters) {
       Set<QLDeploymentFilterType> filterTypes = QLDeploymentFilter.getFilterTypes(filter);
       for (QLDeploymentFilterType type : filterTypes) {
-        if (type == QLDeploymentFilterType.WorkflowType) {
-          List<String> workflowTypes = filters.stream()
-                                           .filter(f -> f.getWorkflowType() != null)
-                                           .map(f -> f.getWorkflowType().getValues())
-                                           .map(q -> Arrays.asList(q))
-                                           .flatMap(List::stream)
-                                           .map(workflowType -> workflowType.name())
-                                           .distinct()
-                                           .collect(Collectors.toList());
+        if (type == QLDeploymentFilterType.OrchestrationWorkflowType) {
+          List<String> orchestrationWorkflowTypes =
+              filters.stream()
+                  .filter(f -> f.getOrchestrationWorkflowType() != null)
+                  .map(f -> f.getOrchestrationWorkflowType().getValues())
+                  .map(q -> Arrays.asList(q))
+                  .flatMap(List::stream)
+                  .map(orchestrationWorkflowType -> orchestrationWorkflowType.name())
+                  .distinct()
+                  .collect(Collectors.toList());
 
-          List<String> workflowIds = getWorkflowIds(accountId, workflowTypes);
+          List<String> workflowIds = getWorkflowIds(accountId, orchestrationWorkflowTypes);
 
           if (!workflowIds.isEmpty()) {
             newList.add(QLDeploymentFilter.builder()
@@ -1182,7 +1183,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   List<String> getWorkflowIds(String accountId, List<String> workflowTypes) {
     Query<Workflow> query = wingsPersistence.createQuery(Workflow.class)
                                 .filter(WorkflowKeys.accountId, accountId)
-                                .field(WorkflowKeys.workflowType)
+                                .field(WorkflowKeys.orchestrationWorkflowType)
                                 .in(workflowTypes);
 
     return query.asList().stream().map(workflow -> workflow.getUuid()).collect(Collectors.toList());

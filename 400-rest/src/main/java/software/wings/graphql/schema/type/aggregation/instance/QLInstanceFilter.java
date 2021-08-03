@@ -10,7 +10,7 @@ import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
-import software.wings.graphql.schema.type.aggregation.service.QLWorkflowTypeFilter;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 import software.wings.graphql.schema.type.instance.QLInstanceType;
 
 import lombok.Builder;
@@ -30,7 +30,7 @@ public class QLInstanceFilter implements EntityFilter {
   private QLInstanceTagFilter tag;
   private QLEnvironmentTypeFilter environmentType;
   private QLDeploymentTypeFilter deploymentType;
-  private QLWorkflowTypeFilter workflowType;
+  private QLOrchestrationWorkflowTypeFilter orchestrationWorkflowType;
   private QLIdFilter workflow;
   private QLIdFilter lastWorkflowExecutionId;
 }

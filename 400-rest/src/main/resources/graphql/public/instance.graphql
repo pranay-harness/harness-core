@@ -41,7 +41,7 @@ input InstanceFilter {
   tag: InstanceTagFilter
   deploymentType: DeploymentTypeFilter
   workflow: IdFilter
-  workflowType: WorkflowTypeFilter
+  orchestrationWorkflowType: OrchestrationWorkflowTypeFilter
   environmentType: EnvironmentTypeFilter
 }
 
