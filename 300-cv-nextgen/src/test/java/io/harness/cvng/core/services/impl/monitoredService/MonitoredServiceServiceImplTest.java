@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -21,6 +22,7 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
@@ -34,6 +36,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -43,24 +46,30 @@ import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject MetricPackService metricPackService;
   @Inject CVConfigService cvConfigService;
   @Inject MonitoredServiceService monitoredServiceService;
   @Inject HPersistence hPersistence;
+  @Inject ServiceDependencyService serviceDependencyService;
   @Mock NextGenService nextGenService;
 
   private BuilderFactory builderFactory;
@@ -210,6 +219,21 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(cvConfigs.size()).isEqualTo(1);
     AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigs.get(0);
     assertCVConfig(cvConfig, CVMonitoringCategory.ERRORS);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testCreate_monitoredServiceNonEmptyDependencies() {
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTOWithDependencies();
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.create(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
+    MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
+    assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
+    Set<ServiceRef> serviceRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier);
+    assertThat(serviceRefs).isEqualTo(monitoredServiceDTO.getDependencies());
   }
 
   @Test
@@ -626,6 +650,23 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                 .healthSources(
                     Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
                 .build())
+        .build();
+  }
+
+  MonitoredServiceDTO createMonitoredServiceDTOWithDependencies() {
+    return builderFactory.monitoredServiceDTOBuilder()
+        .identifier(monitoredServiceIdentifier)
+        .serviceRef(serviceIdentifier)
+        .environmentRef(environmentIdentifier)
+        .name(monitoredServiceName)
+        .tags(tags)
+        .sources(
+            MonitoredServiceDTO.Sources.builder()
+                .healthSources(
+                    Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
+                .build())
+        .dependencies(Sets.newHashSet(ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build(),
+            ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build()))
         .build();
   }
 
