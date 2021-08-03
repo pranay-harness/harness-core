@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package io.harness.polling.contracts.service;
+
+option java_multiple_files = true;
+
+import "io/harness/polling/contracts/polling_item.proto";
+
+service PollingFrameworkService {
+  rpc subscribe(io.harness.polling.contracts.PollingItem) returns (PollingDocument);
+}
+
+message PollingDocument {
+  string pollingDocId = 1;
+}

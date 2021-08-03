@@ -88,6 +88,8 @@ import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsume
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.pollingframework.server.PollingFrameworkGrpcModule;
+import io.harness.pollingframework.server.PollingFrameworkServiceConfiguration;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
@@ -271,6 +273,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
     modules.add(PipelineServiceUtilityModule.getInstance());
 
+    // Polling framework grpc module
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      protected PollingFrameworkServiceConfiguration pfGrpcService() {
+        return PollingFrameworkServiceConfiguration.builder()
+            .grpcServerConfig(appConfig.getPollingFrameworkServerConfig())
+            .build();
+      }
+    });
+    modules.add(PollingFrameworkGrpcModule.getInstance());
+
     CacheModule cacheModule = new CacheModule(appConfig.getCacheConfig());
     modules.add(cacheModule);
 
@@ -279,6 +293,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
     intializeGitSync(injector, appConfig);
+    intializePollingFrameworkGrpcServer(injector);
     if (appConfig.getShouldDeployWithGitSync()) {
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
@@ -381,6 +396,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
       log.info("Git Sync SDK registration complete.");
     }
+  }
+
+  private void intializePollingFrameworkGrpcServer(Injector injector) {
+    log.info("Initializing gRPC server for polling framework...");
+    ServiceManager serviceManager = injector.getInstance(Key.get(ServiceManager.class)).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
   }
 
   public void registerIterators(Injector injector) {

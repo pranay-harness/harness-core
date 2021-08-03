@@ -131,6 +131,14 @@ gitSyncServerConfig:
       certFilePath: cert.pem
     - port: 13002
 
+pollingFrameworkServerConfig:
+  connectors:
+    - port: 17001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 17002
+
 shouldDeployWithGitSync: true
 
 fileServiceConfiguration:
