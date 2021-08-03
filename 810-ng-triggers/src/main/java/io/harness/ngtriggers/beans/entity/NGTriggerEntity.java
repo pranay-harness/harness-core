@@ -99,6 +99,7 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   @NotEmpty String projectIdentifier;
   @NotEmpty String targetIdentifier;
   @NotEmpty TargetType targetType;
+  String signature;
 
   @NotEmpty NGTriggerMetadata metadata;
 

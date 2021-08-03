@@ -7,7 +7,9 @@ import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.pms.event.entitycrud.PMSEntityCRUDStreamConsumer;
+import io.harness.pms.event.pollingevent.PollingEventStreamConsumer;
 import io.harness.pms.event.webhookevent.WebhookEventStreamConsumer;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -26,9 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSEventConsumerService implements Managed {
   @Inject private PMSEntityCRUDStreamConsumer entityCRUDStreamConsumer;
   @Inject private WebhookEventStreamConsumer webhookEventStreamConsumer;
+  @Inject private PollingEventStreamConsumer pollingEventStreamConsumer;
 
   private ExecutorService entityCRUDConsumerService;
   private ExecutorService webhookEventConsumerService;
+  private ExecutorService pollingEventConsumerService;
 
   @Override
   public void start() {
@@ -39,6 +43,10 @@ public class PMSEventConsumerService implements Managed {
     webhookEventConsumerService =
         Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(WEBHOOK_EVENTS_STREAM).build());
     webhookEventConsumerService.execute(webhookEventStreamConsumer);
+
+    pollingEventConsumerService = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder().setNameFormat(EventsFrameworkConstants.POLLING_EVENTS_STREAM).build());
+    pollingEventConsumerService.execute(pollingEventStreamConsumer);
   }
 
   @Override
@@ -49,5 +57,9 @@ public class PMSEventConsumerService implements Managed {
     webhookEventConsumerService.shutdown();
     webhookEventConsumerService.awaitTermination(
         WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+
+    pollingEventConsumerService.shutdown();
+    pollingEventConsumerService.awaitTermination(
+        EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }
 }
