@@ -2,9 +2,9 @@ package io.harness.ng.core.event;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.NG_ACCOUNT_SETUP;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_ENTITY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
@@ -27,82 +27,86 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
-public class FeatureFlagStreamConsumer implements Runnable {
-  private static final int WAIT_TIME_IN_SECONDS = 30;
-  private final Consumer eventConsumer;
+public class NGAccountSetupConsumer implements Runnable {
+  private static final int WAIT_TIME_IN_SECONDS = 10;
+  private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
   private final QueueController queueController;
 
   @Inject
-  public FeatureFlagStreamConsumer(@Named(FEATURE_FLAG_STREAM) Consumer eventConsumer,
-      @Named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM) MessageListener organizationFeatureFlagStreamListener,
-      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener,
+  public NGAccountSetupConsumer(@Named(NG_ACCOUNT_SETUP) Consumer redisConsumer,
+      @Named(ACCOUNT_ENTITY + ENTITY_CRUD) MessageListener organizationEntityCRUDStreamListener,
       QueueController queueController) {
-    this.eventConsumer = eventConsumer;
-    messageListenersList = new ArrayList<>();
-    messageListenersList.add(organizationFeatureFlagStreamListener);
-    messageListenersList.add(connectorFeatureFlagStreamListener);
+    this.redisConsumer = redisConsumer;
     this.queueController = queueController;
+    messageListenersList = new ArrayList<>();
+    messageListenersList.add(organizationEntityCRUDStreamListener);
   }
 
   @Override
   public void run() {
-    log.info("Started the consumer for feature flag stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
+    log.info("Started the consumer for NG account setup");
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         if (queueController.isNotPrimary()) {
-          log.info(
-              "Feature Flag Stream Consumer is not running on primary deployment, will try again after some time...");
+          log.info("NG account setup consumer is not running on primary deployment, will try again after some time...");
           TimeUnit.SECONDS.sleep(30);
           continue;
         }
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
-      log.error("Feature flag stream consumer unexpectedly stopped", ex);
+      log.error("NG account setup consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {
     try {
       pollAndProcessMessages();
     } catch (EventsFrameworkDownException e) {
-      log.error("Events framework is down for Feature flag consumer. Retrying again...", e);
+      log.error("Events framework is down for NG account setup consumer. Retrying again...", e);
       TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
     }
   }
 
   private void pollAndProcessMessages() {
+    List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    List<Message> messages;
-    messages = eventConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
+    messages = redisConsumer.read(Duration.ofSeconds(5));
     for (Message message : messages) {
       messageId = message.getId();
-
       messageProcessed = handleMessage(message);
       if (messageProcessed) {
-        eventConsumer.acknowledge(messageId);
+        redisConsumer.acknowledge(messageId);
       }
     }
   }
 
   private boolean handleMessage(Message message) {
     try {
-      AtomicBoolean success = new AtomicBoolean(true);
-      messageListenersList.forEach(messageListener -> {
-        if (!messageListener.handleMessage(message)) {
-          success.set(false);
-        }
-      });
-      return success.get();
+      return processMessage(message);
     } catch (Exception ex) {
       // This is not evicted from events framework so that it can be processed
       // by other consumer if the error is a runtime error
       log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
       return false;
     }
+  }
+
+  private boolean processMessage(Message message) {
+    AtomicBoolean success = new AtomicBoolean(true);
+    messageListenersList.forEach(messageListener -> {
+      if (!messageListener.handleMessage(message)) {
+        success.set(false);
+      }
+    });
+    return success.get();
   }
 }

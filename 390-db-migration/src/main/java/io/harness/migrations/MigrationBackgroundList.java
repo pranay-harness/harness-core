@@ -2,6 +2,7 @@ package io.harness.migrations;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.migrations.all.AccountNextGenEnabledMigration;
 import io.harness.migrations.all.AddAccountIdToActivityCollection;
 import io.harness.migrations.all.AddAccountIdToBarrierInstanceCollection;
 import io.harness.migrations.all.AddAccountIdToCloudFormationRollBackConfig;
@@ -339,6 +340,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(200, DelegateProfileIdentifierMigration.class))
         .add(Pair.of(201, DelegateGroupIdentifierMigration.class))
         .add(Pair.of(202, DeleteInvalidArtifactStreams.class))
+        .add(Pair.of(203, AccountNextGenEnabledMigration.class))
         .build();
   }
 }

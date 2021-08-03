@@ -22,4 +22,5 @@ public class GatewayAccountRequestDTO {
   String accountName;
   String companyName;
   boolean createdFromNG;
+  boolean isNextGenEnabled;
 }

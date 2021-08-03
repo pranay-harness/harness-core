@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -592,7 +591,7 @@ public class DelegateServiceImpl implements DelegateService {
         version = EMPTY_VERSION;
       }
 
-      boolean isCiEnabled = featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId);
+      boolean isCiEnabled = accountService.isNextGenEnabled(accountId);
 
       DelegateSizeDetails sizeDetails = fetchAvailableSizes()
                                             .stream()
@@ -1719,7 +1718,7 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         version = EMPTY_VERSION;
       }
-      boolean isCiEnabled = featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId);
+      boolean isCiEnabled = accountService.isNextGenEnabled(accountId);
       ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
           ScriptRuntimeParamMapInquiry.builder()
               .accountId(accountId)

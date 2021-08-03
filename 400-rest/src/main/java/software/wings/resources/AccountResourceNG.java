@@ -50,7 +50,7 @@ import retrofit2.http.Body;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public class AccountResourceNG {
   private final AccountService accountService;
   private SubdomainUrlHelper subdomainUrlHelper;
@@ -96,6 +96,12 @@ public class AccountResourceNG {
   public RestResponse<Boolean> isFeatureFlagEnabled(
       @QueryParam("featureName") String featureName, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(accountService.isFeatureFlagEnabled(featureName, accountId));
+  }
+
+  @GET
+  @Path("/{accountId}/nextgen-enabled")
+  public RestResponse<Boolean> isNextGenEnabled(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.isNextGenEnabled(accountId));
   }
 
   @GET

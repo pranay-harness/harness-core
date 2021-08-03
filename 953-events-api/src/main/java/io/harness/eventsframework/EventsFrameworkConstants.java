@@ -13,7 +13,6 @@ public final class EventsFrameworkConstants {
   public static final String DUMMY_REDIS_URL = "dummyRedisUrl";
 
   public static final String ENTITY_CRUD = "entity_crud";
-  public static final String FEATURE_FLAG_STREAM = "harness_internal_feature_flags";
   public static final String SETUP_USAGE = "setup_usage";
   public static final String ENTITY_ACTIVITY = "entity_activity";
   public static final String HARNESS_TO_GIT_PUSH = "harness_to_git_push";
@@ -24,6 +23,7 @@ public final class EventsFrameworkConstants {
   public static final String GIT_BRANCH_HOOK_EVENT_STREAM = "git_branch_hook_event_stream";
   public static final String USERMEMBERSHIP = "usermembership";
   public static final String ORCHESTRATION_LOG = "orchestration_log";
+  public static final String NG_ACCOUNT_SETUP = "ng_account_setup";
   public static final String INSTANCE_SYNC_PERPETUAL_TASK_RESPONSE_STREAM = "instance_sync_perpetual_task_stream";
 
   // created for git sdk, dont use outside sdk.
@@ -69,7 +69,6 @@ public final class EventsFrameworkConstants {
   public static final int DEFAULT_TOPIC_SIZE = 10000;
   public static final int USER_MEMBERSHIP_TOPIC_SIZE = 100000;
   public static final int ENTITY_CRUD_MAX_TOPIC_SIZE = 100000;
-  public static final int FEATURE_FLAG_MAX_TOPIC_SIZE = 50000;
   public static final int SETUP_USAGE_MAX_TOPIC_SIZE = 10000;
   public static final int ENTITY_ACTIVITY_MAX_TOPIC_SIZE = 10000;
   public static final int HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE = 10000;
@@ -82,11 +81,11 @@ public final class EventsFrameworkConstants {
 
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration NG_ACCOUNT_SETUP_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PR_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
-  public static final Duration FEATURE_FLAG_MAX_PROCESSING_TIME = Duration.ofSeconds(15);
   public static final Duration USERMEMBERSHIP_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration SETUP_USAGE_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration ENTITY_ACTIVITY_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
@@ -96,7 +95,7 @@ public final class EventsFrameworkConstants {
 
   public static final int DEFAULT_READ_BATCH_SIZE = 50;
   public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;
-  public static final int FEATURE_FLAG_READ_BATCH_SIZE = 50;
+  public static final int NG_ACCOUNT_SETUP_READ_BATCH_SIZE = 50;
   public static final int ORCHESTRATION_LOG_READ_BATCH_SIZE = 50;
   public static final int USERMEMBERSHIP_READ_BATCH_SIZE = 50;
   public static final int SETUP_USAGE_READ_BATCH_SIZE = 50;

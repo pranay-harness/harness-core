@@ -3,19 +3,21 @@ package io.harness.ng.core.event;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTORE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
-import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+import io.harness.remote.client.RestClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -23,22 +25,18 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class OrganizationEntityCRUDStreamListener implements MessageListener {
+public class AccountSetupListener implements MessageListener {
   private final OrganizationService organizationService;
-  private final DefaultOrganizationManager defaultOrganizationManager;
-
-  @Inject
-  public OrganizationEntityCRUDStreamListener(OrganizationService organizationService,
-      DefaultOrganizationManager defaultOrganizationManager, ResourceGroupClient resourceGroupClient) {
-    this.organizationService = organizationService;
-    this.defaultOrganizationManager = defaultOrganizationManager;
-  }
+  private final NGAccountSetupService ngAccountSetupService;
+  private final AccountClient accountClient;
 
   @Override
   public boolean handleMessage(Message message) {
@@ -66,19 +64,23 @@ public class OrganizationEntityCRUDStreamListener implements MessageListener {
 
   private boolean processAccountEntityChangeEvent(AccountEntityChangeDTO accountEntityChangeDTO, String action) {
     switch (action) {
-      case CREATE_ACTION:
-        return processAccountCreateEvent(accountEntityChangeDTO);
       case DELETE_ACTION:
         return processAccountDeleteEvent(accountEntityChangeDTO);
       case RESTORE_ACTION:
         return processAccountRestoreEvent(accountEntityChangeDTO);
+      case UPDATE_ACTION:
+        return processAccountUpdateEvent(accountEntityChangeDTO);
       default:
     }
     return true;
   }
 
-  private boolean processAccountCreateEvent(AccountEntityChangeDTO accountEntityChangeDTO) {
-    defaultOrganizationManager.createDefaultOrganization(accountEntityChangeDTO.getAccountId());
+  private boolean processAccountUpdateEvent(AccountEntityChangeDTO accountEntityChangeDTO) {
+    AccountDTO account =
+        RestClientUtils.getResponse(accountClient.getAccountDTO(accountEntityChangeDTO.getAccountId()));
+    if (account.isNextGenEnabled()) {
+      ngAccountSetupService.setupAccountForNG(accountEntityChangeDTO.getAccountId());
+    }
     return true;
   }
 

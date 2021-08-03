@@ -19,6 +19,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
@@ -70,6 +73,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Mock SignupValidator signupValidator;
   @Mock AccountService accountService;
   @Mock UserClient userClient;
+  @Mock AccessControlClient accessControlClient;
   @Mock ReCaptchaVerifier reCaptchaVerifier;
   @Mock TelemetryReporter telemetryReporter;
   @Mock SignupNotificationHelper signupNotificationHelper;
@@ -87,7 +91,8 @@ public class SignupServiceImplTest extends CategoryTest {
   public void setup() throws IllegalAccessException {
     initMocks(this);
     signupServiceImpl = new SignupServiceImpl(accountService, userClient, signupValidator, reCaptchaVerifier,
-        telemetryReporter, signupNotificationHelper, featureFlagService, verificationTokenRepository, executorService);
+        telemetryReporter, signupNotificationHelper, featureFlagService, verificationTokenRepository, executorService,
+        accessControlClient);
   }
 
   @Test
@@ -151,7 +156,9 @@ public class SignupServiceImplTest extends CategoryTest {
     SignupVerificationToken verificationToken =
         SignupVerificationToken.builder().email(EMAIL).validUntil(Long.MAX_VALUE).build();
     when(verificationTokenRepository.findByToken("token")).thenReturn(Optional.of(verificationToken));
-
+    when(accessControlClient.hasAccess(
+             ResourceScope.of(ACCOUNT_ID, null, null), Resource.of("USER", null), "core_organization_create"))
+        .thenReturn(true);
     UserInfo userInfo = signupServiceImpl.completeSignupInvite("token");
 
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());
