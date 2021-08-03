@@ -226,7 +226,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public long markLeavesDiscontinuingOnAbort(String planExecutionId, List<String> leafInstanceIds) {
+  public long markLeavesDiscontinuing(String planExecutionId, List<String> leafInstanceIds) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
@@ -240,7 +240,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public long markAllLeavesDiscontinuingOnAbort(String planExecutionId, EnumSet<Status> statuses) {
+  public long markAllLeavesDiscontinuing(String planExecutionId, EnumSet<Status> statuses) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
