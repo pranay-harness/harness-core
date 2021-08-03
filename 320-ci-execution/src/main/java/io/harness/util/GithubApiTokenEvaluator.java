@@ -2,7 +2,6 @@ package io.harness.util;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluator;
@@ -10,6 +9,7 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.ExpressionResolveFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.ng.core.NGAccess;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 
 import java.util.HashMap;

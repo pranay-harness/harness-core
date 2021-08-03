@@ -3,9 +3,9 @@ package io.harness.yaml.core.variables;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.beans.SwaggerConstants;
 import io.harness.common.NGExpressionUtils;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.validator.NGVariableName;
 import io.harness.visitor.helpers.variables.StringVariableVisitorHelper;

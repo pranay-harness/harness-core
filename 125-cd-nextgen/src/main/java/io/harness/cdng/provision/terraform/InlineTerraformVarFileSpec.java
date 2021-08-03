@@ -3,8 +3,8 @@ package io.harness.cdng.provision.terraform;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.beans.SwaggerConstants;
+import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

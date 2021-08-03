@@ -2,8 +2,8 @@ package io.harness.visitor.helpers.variables;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.secrets.SecretEntityUtils;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;

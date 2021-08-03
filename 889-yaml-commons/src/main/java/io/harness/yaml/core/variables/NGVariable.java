@@ -3,7 +3,7 @@ package io.harness.yaml.core.variables;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.beans.ParameterField;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;

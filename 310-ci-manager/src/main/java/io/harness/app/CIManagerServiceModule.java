@@ -27,7 +27,6 @@ import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoPersistence;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
-import io.harness.plancreator.steps.StepSpecType;
 import io.harness.remote.client.ClientMode;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
@@ -37,6 +36,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.tiserviceclient.TIServiceClientModule;
 import io.harness.token.TokenClientModule;
+import io.harness.yaml.core.StepSpecType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;

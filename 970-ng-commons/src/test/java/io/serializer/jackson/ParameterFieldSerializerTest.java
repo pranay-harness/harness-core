@@ -3,11 +3,11 @@ package io.serializer.jackson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.beans.InputSetValidator;
 import io.harness.beans.InputSetValidatorType;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.multiline.MultilineStringMixin;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 

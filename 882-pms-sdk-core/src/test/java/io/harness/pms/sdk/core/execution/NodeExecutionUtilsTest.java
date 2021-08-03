@@ -4,10 +4,10 @@ import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.Map;

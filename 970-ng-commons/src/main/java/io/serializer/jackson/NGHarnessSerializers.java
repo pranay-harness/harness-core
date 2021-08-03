@@ -1,6 +1,6 @@
 package io.serializer.jackson;
 
-import io.harness.beans.ParameterField;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.JsonSerializer;

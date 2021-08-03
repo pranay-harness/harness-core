@@ -3,8 +3,8 @@ package io.harness.beans.plugin.compatible;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.container.ContainerResource;
 
 @OwnedBy(CI)

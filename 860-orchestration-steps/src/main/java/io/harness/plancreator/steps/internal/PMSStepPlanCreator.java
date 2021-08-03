@@ -7,10 +7,10 @@ import io.harness.advisers.manualIntervention.ManualInterventionAdviserWithRollb
 import io.harness.advisers.retry.RetryAdviserRollbackParameters;
 import io.harness.advisers.retry.RetryAdviserWithRollback;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.utils.TimeoutUtils;

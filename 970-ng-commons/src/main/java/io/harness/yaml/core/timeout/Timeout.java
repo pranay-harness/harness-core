@@ -1,4 +1,4 @@
-package io.harness.timeout;
+package io.harness.yaml.core.timeout;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;

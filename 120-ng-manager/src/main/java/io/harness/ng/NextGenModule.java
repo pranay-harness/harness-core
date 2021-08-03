@@ -169,7 +169,6 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
-import io.harness.plancreator.steps.StepSpecType;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
@@ -196,6 +195,7 @@ import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.security.ThreadLocalUserProvider;

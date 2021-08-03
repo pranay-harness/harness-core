@@ -11,7 +11,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
-import io.harness.timeout.Timeout;
 
 import java.util.Objects;
 import org.junit.Test;
@@ -24,30 +23,20 @@ public class TimeoutTest extends CategoryTest {
   @Category(UnitTests.class)
   public void fromStringTest() {
     // Valid cases
-    assertThat(Objects.requireNonNull(io.harness.timeout.Timeout.fromString("1m")).getTimeoutInMillis())
-        .isEqualTo(60000);
-    assertThat(Objects.requireNonNull(io.harness.timeout.Timeout.fromString("1m 20s")).getTimeoutInMillis())
-        .isEqualTo(80000);
-    assertThat(Objects.requireNonNull(io.harness.timeout.Timeout.fromString("1m20s")).getTimeoutInMillis())
-        .isEqualTo(80000);
+    assertThat(Objects.requireNonNull(Timeout.fromString("1m")).getTimeoutInMillis()).isEqualTo(60000);
+    assertThat(Objects.requireNonNull(Timeout.fromString("1m 20s")).getTimeoutInMillis()).isEqualTo(80000);
+    assertThat(Objects.requireNonNull(Timeout.fromString("1m20s")).getTimeoutInMillis()).isEqualTo(80000);
 
     // Invalid cases
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("1m  20s"))
-        .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("1m 8"))
-        .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("18")).isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("m")).isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("20mm"))
-        .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("m20m"))
-        .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString(" 1m"))
-        .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("1m "))
-        .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> io.harness.timeout.Timeout.fromString("1 m"))
-        .isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("1m  20s")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("1m 8")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("18")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("m")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("20mm")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("m20m")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString(" 1m")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("1m ")).isInstanceOf(InvalidArgumentsException.class);
+    assertThatThrownBy(() -> Timeout.fromString("1 m")).isInstanceOf(InvalidArgumentsException.class);
     assertThatThrownBy(() -> Timeout.fromString("1a")).isInstanceOf(InvalidArgumentsException.class);
   }
 }
