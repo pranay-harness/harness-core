@@ -10,12 +10,4 @@ import lombok.Data;
 public class RiskData {
   Integer healthScore;
   Risk riskStatus;
-
-  public int getRiskValue() {
-    int riskValue = -2;
-    if (healthScore != null) {
-      riskValue = 100 - healthScore.intValue();
-    }
-    return riskValue;
-  }
 }
