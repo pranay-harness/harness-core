@@ -205,7 +205,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .commit(commit)
         .commitID(commit_id)
         .startTs(startTs)
-        .endTs(endTs)
+        .endTs(endTs == -1L ? null : endTs)
         .author(author)
         .status(status)
         .build();
@@ -222,7 +222,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .author(author)
         .startTs(startTs)
         .status(status)
-        .endTs(endTs)
+        .endTs(endTs == -1 ? null : endTs)
         .build();
   }
 
@@ -556,7 +556,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       if (totalBuild > 0) {
         LastRepositoryInfo lastRepositoryInfo = LastRepositoryInfo.builder()
                                                     .StartTime(lastCommitTime)
-                                                    .EndTime(lastCommitEndTime)
+                                                    .EndTime(lastCommitEndTime == -1L ? null : lastCommitEndTime)
                                                     .status(lastStatus)
                                                     .author(author)
                                                     .commit(lastCommit)
