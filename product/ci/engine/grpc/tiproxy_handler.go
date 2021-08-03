@@ -227,16 +227,16 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}
 
-	// Upload visGraph to ti server
-	encVg, err := h.getEncodedData("csv", visGraphSchematype, req)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to get avro encoded visGraph")
-	}
-	// Upload callgraph to TI server
-	err = client.UploadVisgraph(org, project, pipeline, build, stage, step, repo, sha, source, target, encVg)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to upload visgraph to ti server")
-	}
+	//// Upload visGraph to ti server
+	//encVg, err := h.getEncodedData("csv", visGraphSchematype, req)
+	//if err != nil {
+	//	return res, errors.Wrap(err, "failed to get avro encoded visGraph")
+	//}
+	//// Upload callgraph to TI server
+	//err = client.UploadVisgraph(org, project, pipeline, build, stage, step, repo, sha, source, target, encVg)
+	//if err != nil {
+	//	return res, errors.Wrap(err, "failed to upload visgraph to ti server")
+	//}
 	return res, nil
 }
 
