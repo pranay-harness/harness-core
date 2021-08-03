@@ -9,7 +9,6 @@ import static io.harness.pms.yaml.YamlNode.UUID_FIELD_NAME;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.CIShellType;
 import io.harness.beans.yaml.extended.ImagePullPolicy;
@@ -17,6 +16,7 @@ import io.harness.beans.yaml.extended.TIBuildTool;
 import io.harness.beans.yaml.extended.TILanguage;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.Build;
 
 import java.util.ArrayList;

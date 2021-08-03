@@ -170,7 +170,6 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
-import io.harness.plancreator.steps.StepSpecType;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -183,6 +182,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import io.harness.waiter.WaiterConfiguration;
 import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.jersey.JsonViews;

@@ -5,7 +5,7 @@ import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.yaml.extended.ci.codebase.BuildTypeConstants.TAG_TYPE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.BuildSpec;
 
 import io.swagger.annotations.ApiModelProperty;

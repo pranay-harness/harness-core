@@ -16,8 +16,8 @@ import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
 import io.harness.cdng.provision.terraform.TerraformDestroyStepInfo;
 import io.harness.cdng.provision.terraform.TerraformPlanStepInfo;
 import io.harness.cdng.provision.terraform.steps.rolllback.TerraformRollbackStepInfo;
-import io.harness.plancreator.steps.StepSpecType;
 import io.harness.plancreator.steps.common.WithStepElementParameters;
+import io.harness.yaml.core.StepSpecType;
 
 import io.swagger.annotations.ApiModel;
 

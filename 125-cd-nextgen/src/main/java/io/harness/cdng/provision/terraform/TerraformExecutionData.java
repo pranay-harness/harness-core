@@ -4,12 +4,12 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.provision.terraform.TerraformExecutionDataParameters.TerraformExecutionDataParametersBuilder;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
 import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.core.variables.NGVariable;

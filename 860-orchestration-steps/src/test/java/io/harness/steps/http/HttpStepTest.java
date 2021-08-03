@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.http.HttpStepResponse;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;

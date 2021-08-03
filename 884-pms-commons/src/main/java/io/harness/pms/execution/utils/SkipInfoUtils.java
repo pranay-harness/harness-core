@@ -1,7 +1,7 @@
 package io.harness.pms.execution.utils;
 
-import io.harness.beans.ParameterField;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.yaml.ParameterField;
 
 import lombok.experimental.UtilityClass;
 

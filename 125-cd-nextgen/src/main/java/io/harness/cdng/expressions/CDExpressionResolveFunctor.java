@@ -3,12 +3,12 @@ package io.harness.cdng.expressions;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionResolveFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.yaml.ParameterField;
 
 @OwnedBy(CDP)
 public class CDExpressionResolveFunctor implements ExpressionResolveFunctor {

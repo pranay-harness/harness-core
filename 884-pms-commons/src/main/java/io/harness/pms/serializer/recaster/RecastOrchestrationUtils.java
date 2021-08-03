@@ -2,13 +2,13 @@ package io.harness.pms.serializer.recaster;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.core.Recast;
 import io.harness.core.Recaster;
 import io.harness.core.RecasterOptions;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exceptions.RecasterException;
 import io.harness.packages.HarnessPackages;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
 import io.harness.serializer.recaster.ParameterFieldRecastTransformer;

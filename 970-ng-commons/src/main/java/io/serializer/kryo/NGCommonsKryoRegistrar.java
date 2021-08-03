@@ -3,9 +3,7 @@ package io.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.InputSetValidator;
 import io.harness.beans.InputSetValidatorType;
-import io.harness.beans.ParameterField;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
@@ -27,6 +25,8 @@ import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestContext;
 import io.harness.request.RequestContextData;

@@ -2,9 +2,9 @@ package io.harness.yaml.core.failurestrategy.retry;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.beans.SwaggerConstants;
-import io.harness.timeout.Timeout;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.core.timeout.Timeout;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;

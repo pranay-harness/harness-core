@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.yaml.ParameterField;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;

@@ -47,7 +47,6 @@ import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
-import io.harness.plancreator.steps.StepSpecType;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
 import io.harness.pms.approval.jira.JiraApprovalHelperServiceImpl;
@@ -110,6 +109,7 @@ import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionInfoManager;
 import io.harness.webhook.WebhookEventClientModule;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 

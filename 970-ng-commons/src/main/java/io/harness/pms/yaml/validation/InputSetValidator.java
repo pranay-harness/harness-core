@@ -1,8 +1,9 @@
-package io.harness.beans;
+package io.harness.pms.yaml.validation;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.InputSetValidatorType;
 
 import lombok.Value;
 

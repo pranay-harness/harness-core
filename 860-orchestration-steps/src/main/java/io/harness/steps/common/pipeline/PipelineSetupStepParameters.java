@@ -3,7 +3,6 @@ package io.harness.steps.common.pipeline;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
@@ -12,6 +11,7 @@ import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.tags.TagUtils;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.yaml.core.properties.NGProperties;
 import io.harness.yaml.core.variables.NGVariable;

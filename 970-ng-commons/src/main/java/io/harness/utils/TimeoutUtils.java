@@ -3,8 +3,8 @@ package io.harness.utils;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ParameterField;
-import io.harness.timeout.Timeout;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.core.timeout.Timeout;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +24,7 @@ public class TimeoutUtils {
     return timeoutLong > 0 ? timeoutLong : defaultTimeoutInSeconds;
   }
 
-  public long getTimeoutInSeconds(ParameterField<io.harness.timeout.Timeout> timeout, long defaultTimeoutInSeconds) {
+  public long getTimeoutInSeconds(ParameterField<Timeout> timeout, long defaultTimeoutInSeconds) {
     if (timeout == null) {
       return defaultTimeoutInSeconds;
     }

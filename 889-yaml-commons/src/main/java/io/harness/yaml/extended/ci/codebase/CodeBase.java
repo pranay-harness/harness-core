@@ -2,7 +2,7 @@ package io.harness.yaml.extended.ci.codebase;
 
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
-import io.harness.beans.ParameterField;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.extended.ci.container.ContainerResource;
 
