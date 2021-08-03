@@ -65,6 +65,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
         stepResponse = taskChainExecutable.finalizeExecution(ambiance, stepParameters,
             chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
       } catch (Exception e) {
+        log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
         stepResponse = strategyHelper.handleException(e);
       }
       sdkNodeExecutionService.handleStepResponse(
@@ -76,6 +77,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
                 chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
         handleResponse(ambiance, stepParameters, chainResponse);
       } catch (Exception e) {
+        log.error("Exception occurred while calling executeNextLink, nodeExecutionId: {}", nodeExecutionId, e);
         sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
             StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
       }
@@ -92,6 +94,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
         stepResponse = taskChainExecutable.finalizeExecution(
             ambiance, stepParameters, taskChainResponse.getPassThroughData(), () -> null);
       } catch (Exception e) {
+        log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
         stepResponse = strategyHelper.handleException(e);
       }
       sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
