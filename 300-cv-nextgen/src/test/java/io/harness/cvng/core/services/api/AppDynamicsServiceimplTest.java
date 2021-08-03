@@ -55,7 +55,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 @OwnedBy(CV)
-public class AppDynamicsServiceTest extends CvNextGenTestBase {
+public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Inject AppDynamicsService appDynamicsService;
   @Inject OnboardingService onboardingService;
   @Inject private MetricPackService metricPackService;
@@ -172,7 +172,7 @@ public class AppDynamicsServiceTest extends CvNextGenTestBase {
     assertThat(metricPacks).isNotEmpty();
 
     String textLoad = Resources.toString(
-        AppDynamicsServiceTest.class.getResource("/timeseries/appd_metric_data_validation.json"), Charsets.UTF_8);
+        AppDynamicsServiceimplTest.class.getResource("/timeseries/appd_metric_data_validation.json"), Charsets.UTF_8);
     JsonUtils.asObject(textLoad, OnboardingResponseDTO.class);
 
     OnboardingService mockOnboardingService = mock(OnboardingService.class);
@@ -190,14 +190,15 @@ public class AppDynamicsServiceTest extends CvNextGenTestBase {
             .findFirst()
             .orElse(null);
     assertThat(errorValidationResponse).isNotNull();
-    assertThat(errorValidationResponse.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
+    assertThat(errorValidationResponse.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.SUCCESS);
     List<AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse> metricValueValidationResponses =
         errorValidationResponse.getValues();
     assertThat(metricValueValidationResponses.size()).isEqualTo(1);
     assertThat(metricValueValidationResponses.get(0))
         .isEqualTo(AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse.builder()
                        .metricName("Number of Errors")
-                       .apiResponseStatus(ThirdPartyApiResponseStatus.NO_DATA)
+                       .apiResponseStatus(ThirdPartyApiResponseStatus.SUCCESS)
+                       .value(233)
                        .build());
 
     // verify performance pack
