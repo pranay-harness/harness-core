@@ -303,16 +303,23 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   private List<GitDiffResultFileDTO> getFilePathsToBeProcessed(
       Set<String> rootFolderList, List<GitDiffResultFileDTO> prFiles) {
     List<GitDiffResultFileDTO> filesToBeProcessed = new ArrayList<>();
-
-    prFiles.forEach(prFile -> {
-      for (String rootFolder : rootFolderList) {
-        if (FilePathUtils.isFilePartOfFolder(rootFolder, prFile.getPath())) {
-          filesToBeProcessed.add(prFile);
-          break;
-        }
+    for (GitDiffResultFileDTO fileDTO : prFiles) {
+      if (isFileMemberOfHarnessFolders(rootFolderList, fileDTO.getPath())) {
+        filesToBeProcessed.add(fileDTO);
+      } else {
+        log.info("Ignoring the file {} as it doesn't belong to the harness folder", fileDTO.getPath());
       }
-    });
+    }
     return filesToBeProcessed;
+  }
+
+  private boolean isFileMemberOfHarnessFolders(Set<String> rootFolderList, String filePath) {
+    for (String rootFolder : rootFolderList) {
+      if (FilePathUtils.isFilePartOfFolder(rootFolder, filePath)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private String getCommitIdToBeProcessed(YamlGitConfigDTO yamlGitConfigDTO, String branch) {

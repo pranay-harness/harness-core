@@ -13,7 +13,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(HarnessTeam.PL)
 public class AccessControlClientUtils {
-  private static boolean serviceContextAndNoPrincipalInBody(
+  public static boolean serviceContextAndNoPrincipalInBody(
       io.harness.security.dto.Principal principalInContext, Principal principalToCheckPermissions) {
     Optional<io.harness.security.dto.Principal> serviceCall =
         Optional.ofNullable(principalInContext).filter(x -> SERVICE.equals(x.getType()));
@@ -51,8 +51,15 @@ public class AccessControlClientUtils {
   public static boolean checkPreconditions(
       io.harness.security.dto.Principal contextPrincipal, Principal principalToCheckPermissionsFor) {
     boolean validContext = checkForValidContext(contextPrincipal);
-    return validContext
-        && (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)
-            || !userContextAndDifferentPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor));
+    if (!validContext) {
+      return false;
+    }
+    if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
+      return true;
+    }
+    if (userContextAndDifferentPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
+      return false;
+    }
+    return true;
   }
 }

@@ -79,6 +79,9 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
           .annotatedWith(Names.named(GIT_PUSH_EVENT_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Producer.class)
@@ -147,6 +150,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM))
           .toInstance(RedisProducer.of(
               WEBHOOK_EVENTS_STREAM, redisConfig, WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.POLLING_EVENTS_STREAM, redisConfig,
+              EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Producer.class)
           .annotatedWith(Names.named(GIT_PUSH_EVENT_STREAM))
           .toInstance(RedisProducer.of(

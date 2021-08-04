@@ -13,6 +13,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class ReferenceInstanceInfoDTO extends InstanceInfoDTO {
   String podName;
+  String namespace;
+  String releaseName;
 
   @Override
   public String prepareInstanceKey() {
