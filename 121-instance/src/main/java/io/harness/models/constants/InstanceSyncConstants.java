@@ -38,4 +38,10 @@ public final class InstanceSyncConstants {
   public static final String INSTANCE_SYNC_PREFIX = "INSTANCE_SYNC:";
   public static final Duration INSTANCE_SYNC_LOCK_TIMEOUT = Duration.ofSeconds(200);
   public static final Duration INSTANCE_SYNC_WAIT_TIMEOUT = Duration.ofSeconds(220);
+
+  // Logging keys
+  public static final String INSTANCE_SYNC_FLOW_KEY = "instanceSyncFlow";
+  public static final String INFRASTRUCTURE_MAPPING_KEY = "infrastructureMappingId";
+  public static final String PERPETUAL_TASK_ID_KEY = "perpetualTaskId";
+  public static final String DEPLOYMENT_EVENT_ID = "deploymentEventId";
 }
