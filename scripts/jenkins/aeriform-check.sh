@@ -84,7 +84,8 @@ then
 fi
 
 BASE_SHA=`git merge-base origin/${ghprbTargetBranch} HEAD`
-TRACK_FILES=`git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print "--location-class-filter "$2}' | tr '\n' ' '`
+git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > raw_list.txt
+TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < raw_list.txt | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
 
 scripts/bazel/prepare_aeriform.sh
 
