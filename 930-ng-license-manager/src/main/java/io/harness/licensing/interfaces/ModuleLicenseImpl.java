@@ -7,7 +7,6 @@ import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.ModuleType;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
-import io.harness.licensing.beans.stats.RuntimeUsageDTO;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 
 import com.google.inject.Inject;
@@ -16,7 +15,7 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.GTM)
 @Singleton
-public class ModuleLicenseInterfaceImpl implements ModuleLicenseInterface {
+public class ModuleLicenseImpl implements ModuleLicenseInterface {
   @Inject Map<ModuleType, ModuleLicenseClient> clientMap;
   public static final long TRIAL_DURATION = 14;
 
@@ -27,11 +26,6 @@ public class ModuleLicenseInterfaceImpl implements ModuleLicenseInterface {
     trialLicense.setAccountIdentifier(accountId);
     checkAndSetDefault(trialLicense, moduleType, licenseType, edition);
     return trialLicense;
-  }
-
-  @Override
-  public RuntimeUsageDTO getRuntimeUsage(String accountId, ModuleType moduleType) {
-    throw new UnsupportedOperationException("getRuntimeUsage not supported");
   }
 
   private void checkAndSetDefault(
