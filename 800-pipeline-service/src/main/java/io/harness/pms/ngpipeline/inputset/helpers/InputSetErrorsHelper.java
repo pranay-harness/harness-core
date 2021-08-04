@@ -63,6 +63,16 @@ public class InputSetErrorsHelper {
     return res.getYaml();
   }
 
+  public Map<String, InputSetErrorResponseDTOPMS> getUuidToErrorResponseMap(
+      String pipelineYaml, String inputSetPipelineComponent) {
+    String templateYaml = createTemplateFromPipeline(pipelineYaml);
+    Map<FQN, String> invalidFQNs = getInvalidFQNsInInputSet(templateYaml, inputSetPipelineComponent);
+    if (EmptyPredicate.isEmpty(invalidFQNs)) {
+      return null;
+    }
+    return getUuidToErrorResponseMap(invalidFQNs, "");
+  }
+
   private Map<String, InputSetErrorResponseDTOPMS> getUuidToErrorResponseMap(
       Map<FQN, String> invalidFQNs, String inputSetIdentifier) {
     Map<String, InputSetErrorResponseDTOPMS> res = new LinkedHashMap<>();
