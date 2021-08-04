@@ -69,4 +69,7 @@ public interface AccountClient {
 
   @GET(HARNESS_USER_GROUP_API + "/supportEnabledStatus")
   Call<RestResponse<Boolean>> checkIfHarnessSupportEnabledForAccount(@Query("accountId") String accountId);
+
+  @GET(ACCOUNT_API + "/isAutoInviteAcceptanceEnabled")
+  Call<RestResponse<Boolean>> checkAutoInviteAcceptanceEnabledForAccount(@Query("accountId") String accountId);
 }

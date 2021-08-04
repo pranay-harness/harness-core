@@ -51,6 +51,7 @@ import io.harness.rule.Owner;
 import io.harness.user.remote.UserClient;
 
 import com.auth0.jwt.interfaces.Claim;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -158,7 +159,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void testCreate_UserAlreadyExists_UserNotInvitedYet() {
+  public void testCreate_UserAlreadyExists_UserNotInvitedYet() throws IOException {
     UserMetadataDTO user = UserMetadataDTO.builder().name(randomAlphabetic(7)).email(emailId).uuid(userId).build();
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.of(user));
     when(inviteRepository.save(any())).thenReturn(getDummyInvite());
@@ -166,6 +167,8 @@ public class InviteServiceImplTest extends CategoryTest {
              any(), any(), any(), any()))
         .thenReturn(Optional.empty());
 
+    when(accountClient.checkAutoInviteAcceptanceEnabledForAccount(any()).execute())
+        .thenReturn(Response.success(new RestResponse(false)));
     InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
 
     assertThat(inviteOperationResponse).isEqualTo(USER_INVITED_SUCCESSFULLY);
@@ -175,13 +178,15 @@ public class InviteServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void testCreate_UserDNE_UserNotInvitedYet() {
+  public void testCreate_UserDNE_UserNotInvitedYet() throws IOException {
     when(ngUserService.getUserByEmail(eq(emailId), anyBoolean())).thenReturn(Optional.empty());
     when(inviteRepository.save(any())).thenReturn(getDummyInvite());
     when(inviteRepository.findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedFalse(
              any(), any(), any(), any()))
         .thenReturn(Optional.empty());
 
+    when(accountClient.checkAutoInviteAcceptanceEnabledForAccount(any()).execute())
+        .thenReturn(Response.success(new RestResponse(false)));
     InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
 
     assertThat(inviteOperationResponse).isEqualTo(USER_INVITED_SUCCESSFULLY);
@@ -355,15 +360,9 @@ public class InviteServiceImplTest extends CategoryTest {
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
   public void completeInvite_InvalidJWTToken() {
-    boolean result = inviteService.completeInvite(null);
-    assertThat(result).isFalse();
-
-    result = inviteService.completeInvite("");
-    assertThat(result).isFalse();
-
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.emptyMap());
 
-    result = inviteService.completeInvite("sadfs");
+    boolean result = inviteService.completeInvite(Optional.empty());
     assertThat(result).isFalse();
   }
 
@@ -378,7 +377,8 @@ public class InviteServiceImplTest extends CategoryTest {
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> inviteService.completeInvite(dummyJWTTOken)).isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> inviteService.completeInvite(Optional.of(getDummyInvite())))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   @Test
@@ -395,7 +395,7 @@ public class InviteServiceImplTest extends CategoryTest {
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.of(user));
-    boolean result = inviteService.completeInvite(dummyJWTTOken);
+    boolean result = inviteService.completeInvite(Optional.of(getDummyInvite()));
 
     assertThat(result).isTrue();
     verify(inviteRepository, times(1)).updateInvite(idCapture.capture(), updateCapture.capture());

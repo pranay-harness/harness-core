@@ -208,7 +208,8 @@ public class InviteResource {
   @Path("complete")
   @ApiOperation(value = "Complete user invite", nickname = "completeInvite", hidden = true)
   public ResponseDTO<Boolean> completeInvite(@QueryParam("token") String token) {
-    return ResponseDTO.newResponse(inviteService.completeInvite(token));
+    Optional<Invite> inviteOpt = inviteService.getInviteFromToken(token, false);
+    return ResponseDTO.newResponse(inviteService.completeInvite(inviteOpt));
   }
 
   @PUT

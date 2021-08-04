@@ -142,6 +142,12 @@ public class AccountResourceNG {
     return new RestResponse(twoFactorAuthenticationManager.getTwoFactorAuthAdminEnforceInfo(accountId));
   }
 
+  @GET
+  @Path("isAutoInviteAcceptanceEnabled")
+  public RestResponse<Boolean> isAutoInviteAcceptanceEnabled(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse(accountService.isAutoInviteAcceptanceEnabled(accountId));
+  }
+
   @Path("/exists/{accountName}")
   public RestResponse<Boolean> doesAccountExist(@PathParam("accountName") String accountName) {
     return new RestResponse<>(accountService.exists(accountName));

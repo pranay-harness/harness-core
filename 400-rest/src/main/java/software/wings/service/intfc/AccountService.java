@@ -229,5 +229,7 @@ public interface AccountService {
 
   boolean isRestrictedAccessEnabled(String accountId);
 
+  boolean isAutoInviteAcceptanceEnabled(String accountId);
+
   Void setDefaultExperience(String accountId, DefaultExperience defaultExperience);
 }
