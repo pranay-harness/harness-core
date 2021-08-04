@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 
 import software.wings.sm.ExecutionContext;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * The type Workflow execution update fake.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class WorkflowExecutionUpdateFake extends WorkflowExecutionUpdate {
   private static Map<String, CountDownLatch> signalIdsMap = new ConcurrentHashMap<>();
 

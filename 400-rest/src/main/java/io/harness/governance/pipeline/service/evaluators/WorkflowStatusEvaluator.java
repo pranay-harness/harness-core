@@ -1,5 +1,7 @@
 package io.harness.governance.pipeline.service.evaluators;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.govern.Switch;
 import io.harness.governance.pipeline.enforce.GovernanceRuleStatus;
 import io.harness.governance.pipeline.service.GovernanceStatusEvaluator;
@@ -14,6 +16,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CDC)
 public class WorkflowStatusEvaluator implements GovernanceStatusEvaluator<Workflow> {
   @Inject private HarnessTagService harnessTagService;
 

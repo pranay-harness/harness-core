@@ -7,6 +7,8 @@ import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -43,6 +45,7 @@ import javax.ws.rs.QueryParam;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Scope(SERVICE)
+@OwnedBy(HarnessTeam.CDC)
 public class ApplicationManifestResource {
   @Inject private ApplicationManifestService applicationManifestService;
 

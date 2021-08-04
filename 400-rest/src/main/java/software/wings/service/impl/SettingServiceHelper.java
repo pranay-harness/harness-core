@@ -50,6 +50,8 @@ import static software.wings.settings.SettingVariableTypes.SPOT_INST;
 import static software.wings.settings.SettingVariableTypes.SUMO;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
@@ -76,6 +78,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class SettingServiceHelper {
   private static final String REFERENCED_SECRET_ERROR_MSG = "Unable to copy encryption details";
   private static final String USE_ENCRYPTED_VALUE_FLAG_FIELD_BASE = "useEncrypted";

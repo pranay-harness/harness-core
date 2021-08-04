@@ -16,6 +16,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -53,6 +55,7 @@ import org.slf4j.Logger;
 @PrepareForTest(
     {ArtifactCollectionHandler.class, ExceptionLogger.class, Logger.class, PersistenceIteratorFactory.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
