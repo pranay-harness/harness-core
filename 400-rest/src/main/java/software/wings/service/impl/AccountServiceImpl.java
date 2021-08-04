@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.AUTO_ACCEPT_SAML_ACCOUNT_INVITES;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -117,6 +118,7 @@ import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
@@ -1840,6 +1842,24 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public boolean isAutoInviteAcceptanceEnabled(String accountId) {
+    if (!featureFlagService.isEnabled(AUTO_ACCEPT_SAML_ACCOUNT_INVITES, accountId)) {
+      // This feature is restricted only to a certain accounts
+      return false;
+    }
+
+    Account account = get(accountId);
+
+    if (!AuthenticationMechanism.SAML.equals(account.getAuthenticationMechanism())) {
+      // Currently this provision is only for SAML authenticated accounts
+      return false;
+    }
+
+    List<SSOSettings> ssoSettings = ssoSettingService.getAllSsoSettings(accountId);
+    return ssoSettings.stream().anyMatch(settings -> settings.getType() == SSOType.SAML);
   }
 
   @Override

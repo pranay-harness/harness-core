@@ -1109,11 +1109,7 @@ public class UserServiceImpl implements UserService {
       String message = "No email provided. Please provide vaild email info";
       throw new InvalidArgumentsException(message);
     }
-    for (String email : userInvite.getEmails()) {
-      UserInvite userInviteClone = kryoSerializer.clone(userInvite);
-      userInviteClone.setEmail(email.trim());
-      inviteOperationResponses.add(inviteUser(userInviteClone, true, false));
-    }
+    inviteUserToAccount(accountId, userInvite, inviteOperationResponses);
 
     List<String> alreadyAddedUsers = new ArrayList<>();
     List<String> alreadyInvitedUsers = new ArrayList<>();
@@ -1142,6 +1138,18 @@ public class UserServiceImpl implements UserService {
     }
 
     return inviteOperationResponses;
+  }
+
+  private void inviteUserToAccount(
+      String accountId, UserInvite userInvite, List<InviteOperationResponse> inviteOperationResponses) {
+    boolean autoInviteAcceptanceEnabled = accountService.isAutoInviteAcceptanceEnabled(accountId);
+
+    for (String email : userInvite.getEmails()) {
+      UserInvite userInviteClone = kryoSerializer.clone(userInvite);
+      userInviteClone.setEmail(email.trim());
+      inviteOperationResponses.add(
+          inviteUser(userInviteClone, !autoInviteAcceptanceEnabled, autoInviteAcceptanceEnabled));
+    }
   }
 
   private void limitCheck(String accountId, String email) {

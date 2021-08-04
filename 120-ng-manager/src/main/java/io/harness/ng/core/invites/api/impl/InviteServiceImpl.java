@@ -283,13 +283,7 @@ public class InviteServiceImpl implements InviteService {
       if (isPasswordRequired) {
         return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
       } else {
-        UserInviteDTO userInviteDTO = UserInviteDTO.builder()
-                                          .accountId(accountIdentifier)
-                                          .email(email)
-                                          .name(email.trim())
-                                          .token(jwtToken)
-                                          .build();
-        RestClientUtils.getResponse(userClient.createUserAndCompleteNGInvite(userInviteDTO));
+        createAndInviteNonPasswordUser(accountIdentifier, jwtToken, email.trim());
         return getResourceUrl(inviteAcceptResponse);
       }
     } else {
@@ -297,10 +291,17 @@ public class InviteServiceImpl implements InviteService {
       if (isPasswordRequired && !isUserPasswordSet) {
         return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
       } else {
-        completeInvite(jwtToken);
+        Optional<Invite> inviteOpt = getInviteFromToken(jwtToken, false);
+        completeInvite(inviteOpt);
         return getResourceUrl(inviteAcceptResponse);
       }
     }
+  }
+
+  private void createAndInviteNonPasswordUser(String accountIdentifier, String jwtToken, String email) {
+    UserInviteDTO userInviteDTO =
+        UserInviteDTO.builder().accountId(accountIdentifier).email(email).name(email).token(jwtToken).build();
+    RestClientUtils.getResponse(userClient.createUserAndCompleteNGInvite(userInviteDTO));
   }
 
   private URI getResourceUrl(InviteAcceptResponse inviteAcceptResponse) {
@@ -506,7 +507,13 @@ public class InviteServiceImpl implements InviteService {
     } catch (UnsupportedEncodingException e) {
       log.error("Invite Email sending failed due to encoding exception. InviteId: " + savedInvite.getId(), e);
     }
-
+    String accountId = invite.getAccountIdentifier();
+    boolean isAutoAcceptInviteEnabled =
+        RestClientUtils.getResponse(accountClient.checkAutoInviteAcceptanceEnabledForAccount(accountId));
+    if (isAutoAcceptInviteEnabled) {
+      String email = invite.getEmail().trim();
+      createAndInviteNonPasswordUser(accountId, invite.getInviteToken(), email);
+    }
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 
@@ -604,8 +611,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public boolean completeInvite(String token) {
-    Optional<Invite> inviteOpt = getInviteFromToken(token, false);
+  public boolean completeInvite(Optional<Invite> inviteOpt) {
     if (!inviteOpt.isPresent()) {
       return false;
     }
