@@ -106,11 +106,29 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testValidateOverlayInputSet() {
-    String overlayInputSetYamlWithoutReferences = getOverlayInputSetYaml(false);
+    String overlayInputSetYamlWithoutReferences = getOverlayInputSetWithAllIds(false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutReferences))
         .hasMessage("Input Set References can't be empty");
+
+    String overlayInputSetYamlWithoutOrgId = getOverlayInputSetYaml(true, false, true, true);
+    assertThatThrownBy(()
+                           -> validateAndMergeHelper.validateOverlayInputSet(
+                               accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutOrgId))
+        .hasMessage("Org identifier in input set does not match");
+
+    String overlayInputSetYamlWithoutProjectId = getOverlayInputSetYaml(true, true, false, true);
+    assertThatThrownBy(()
+                           -> validateAndMergeHelper.validateOverlayInputSet(
+                               accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutProjectId))
+        .hasMessage("Project identifier in input set does not match");
+
+    String overlayInputSetYamlWithoutPipelineId = getOverlayInputSetYaml(true, true, true, false);
+    assertThatThrownBy(()
+                           -> validateAndMergeHelper.validateOverlayInputSet(
+                               accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutPipelineId))
+        .hasMessage("Pipeline identifier in input set does not match");
 
     String inputSetFile1 = "inputset1-with-org-proj-id.yaml";
     String inputSetYaml1 = readFile(inputSetFile1);
@@ -128,7 +146,7 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
         .when(pmsInputSetService)
         .get(accountId, orgId, projectId, pipelineId, identifier2, false);
 
-    String overlayInputSetYaml = getOverlayInputSetYaml(true);
+    String overlayInputSetYaml = getOverlayInputSetWithAllIds(true);
     Map<String, String> noInvalidReferences =
         validateAndMergeHelper.validateOverlayInputSet(accountId, orgId, projectId, pipelineId, overlayInputSetYaml);
     assertThat(noInvalidReferences.size()).isEqualTo(0);
@@ -147,19 +165,23 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     verify(pmsInputSetService, times(2)).get(accountId, orgId, projectId, pipelineId, identifier2, false);
   }
 
-  private String getOverlayInputSetYaml(boolean hasReferences) {
+  private String getOverlayInputSetWithAllIds(boolean hasReferences) {
+    return getOverlayInputSetYaml(hasReferences, true, true, true);
+  }
+
+  private String getOverlayInputSetYaml(boolean hasReferences, boolean hasOrg, boolean hasProj, boolean hasPipeline) {
     String base = "overlayInputSet:\n"
         + "  identifier: overlay1\n"
-        + "  name : thisName\n"
-        + "  orgIdentifier: orgId\n"
-        + "  projectIdentifier: projectId\n"
-        + "  pipelineIdentifier: Test_Pipline11\n";
-    if (hasReferences) {
-      return base + "  inputSetReferences:\n"
-          + "    - input1\n"
-          + "    - thisInputSetIsWrong";
-    } else {
-      return base + "  inputSetReferences: []\n";
-    }
+        + "  name : thisName\n";
+    String orgId = "  orgIdentifier: orgId\n";
+    String projectId = "  projectIdentifier: projectId\n";
+    String pipelineId = "  pipelineIdentifier: Test_Pipline11\n";
+    String references = "  inputSetReferences:\n"
+        + "    - input1\n"
+        + "    - thisInputSetIsWrong";
+    String noReferences = "  inputSetReferences: []\n";
+
+    return base + (hasOrg ? orgId : "") + (hasProj ? projectId : "") + (hasPipeline ? pipelineId : "")
+        + (hasReferences ? references : noReferences);
   }
 }

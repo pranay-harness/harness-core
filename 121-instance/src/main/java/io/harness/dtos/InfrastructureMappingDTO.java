@@ -16,7 +16,7 @@ public class InfrastructureMappingDTO {
   @NonNull private String accountIdentifier;
   @NonNull private String orgIdentifier;
   @NonNull private String projectIdentifier;
-  @NonNull private String infrastructureMappingType;
+  @NonNull private String infrastructureKind;
   @NonNull private String connectorRef;
   @NonNull private String envIdentifier;
   @NonNull private String serviceIdentifier;

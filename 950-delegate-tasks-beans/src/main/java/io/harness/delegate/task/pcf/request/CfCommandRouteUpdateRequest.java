@@ -2,9 +2,7 @@ package io.harness.delegate.task.pcf.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -17,7 +15,6 @@ import lombok.Data;
  * This class contains all required data for PCFCommandTask.SETUP to perform setup task
  */
 @Data
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class CfCommandRouteUpdateRequest extends CfCommandRequest {
   private CfRouteUpdateRequestConfigData pcfRouteUpdateConfigData;

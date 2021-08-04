@@ -151,11 +151,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
 
+@FieldNameConstants(onlyExplicitlyIncluded = true, innerTypeName = "TerraformProvisionStateKeys")
 @Slf4j
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
@@ -186,9 +188,13 @@ public abstract class TerraformProvisionState extends State {
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
-  @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
-  @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
-  @Getter @Setter private List<NameValuePair> environmentVariables;
+  @Attributes(title = "Variables") @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
+  @Attributes(title = "Backend Configs")
+  @FieldNameConstants.Include
+  @Getter
+  @Setter
+  private List<NameValuePair> backendConfigs;
+  @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> environmentVariables;
   @Getter @Setter private List<String> targets;
 
   @Getter @Setter private List<String> tfVarFiles;

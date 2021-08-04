@@ -3,6 +3,7 @@ package io.harness.repositories.core.custom;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.core.entities.Organization;
 
 import java.util.List;
@@ -25,4 +26,6 @@ public interface OrganizationRepositoryCustom {
   List<Organization> findAll(Criteria criteria);
 
   Organization restore(String accountIdentifier, String identifier);
+
+  List<Scope> findAllOrgs(Criteria criteria);
 }

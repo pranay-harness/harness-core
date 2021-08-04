@@ -42,7 +42,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @OwnedBy(CDP)
 @RunWith(MockitoJUnitRunner.class)
 public class InstanceInfoServiceImplTest extends CategoryTest {
-  private static final String POD_ID = "podId";
+  private static final String POD_IP = "podId";
   private static final String POD_NAME = "podName";
   private static final String NAMESPACE = "namespace";
   private static final String RELEASE_NAME = "releaseName";
@@ -65,7 +65,7 @@ public class InstanceInfoServiceImplTest extends CategoryTest {
     assertThat(serverInstanceInfos.size()).isEqualTo(1);
     assertThat(serverInstanceInfos.get(0)).isInstanceOf(K8sServerInstanceInfo.class);
     K8sServerInstanceInfo serverInstanceInfo = (K8sServerInstanceInfo) serverInstanceInfos.get(0);
-    assertThat(serverInstanceInfo.getPodIP()).isEqualTo(POD_ID);
+    assertThat(serverInstanceInfo.getPodIP()).isEqualTo(POD_IP);
     assertThat(serverInstanceInfo.getName()).isEqualTo(POD_NAME);
     assertThat(serverInstanceInfo.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(serverInstanceInfo.getReleaseName()).isEqualTo(RELEASE_NAME);
@@ -106,7 +106,7 @@ public class InstanceInfoServiceImplTest extends CategoryTest {
     assertThat(serverInstanceInfoList.get(0)).isInstanceOf(K8sServerInstanceInfo.class);
 
     K8sServerInstanceInfo serverInstanceInfo = (K8sServerInstanceInfo) serverInstanceInfoList.get(0);
-    assertThat(serverInstanceInfo.getPodIP()).isEqualTo(POD_ID);
+    assertThat(serverInstanceInfo.getPodIP()).isEqualTo(POD_IP);
     assertThat(serverInstanceInfo.getName()).isEqualTo(POD_NAME);
     assertThat(serverInstanceInfo.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(serverInstanceInfo.getReleaseName()).isEqualTo(RELEASE_NAME);
@@ -122,7 +122,7 @@ public class InstanceInfoServiceImplTest extends CategoryTest {
 
   private List<ServerInstanceInfo> getServiceInstanceInfos() {
     return Collections.singletonList(K8sServerInstanceInfo.builder()
-                                         .podIP(POD_ID)
+                                         .podIP(POD_IP)
                                          .name(POD_NAME)
                                          .namespace(NAMESPACE)
                                          .releaseName(RELEASE_NAME)

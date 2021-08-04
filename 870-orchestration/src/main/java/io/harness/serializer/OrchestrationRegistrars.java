@@ -88,8 +88,12 @@ import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
 import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
+import io.harness.serializer.spring.converters.stepdetails.PmsStepDetailsReadConverter;
+import io.harness.serializer.spring.converters.stepdetails.PmsStepDetailsWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefWriteConverter;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersReadConverter;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersWriteConverter;
 import io.harness.serializer.spring.converters.steps.SdkStepReadConverter;
 import io.harness.serializer.spring.converters.steps.SdkStepWriteConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoReadConverter;
@@ -187,7 +191,8 @@ public class OrchestrationRegistrars {
       ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class, OrchestrationMapReadConverter.class,
       OrchestrationMapWriteConverter.class, SdkStepWriteConverter.class, SdkStepReadConverter.class,
       PmsOutcomeReadConverter.class, PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class,
-      PmsSweepingOutputWriteConverter.class);
+      PmsSweepingOutputWriteConverter.class, PmsStepParametersReadConverter.class,
+      PmsStepParametersWriteConverter.class, PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()

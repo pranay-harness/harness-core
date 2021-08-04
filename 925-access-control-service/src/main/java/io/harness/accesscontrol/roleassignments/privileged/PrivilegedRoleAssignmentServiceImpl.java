@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.roleassignments.privileged;
 
-import static io.harness.accesscontrol.acl.api.ACLResourceHelper.getAccessControlDTO;
+import static io.harness.accesscontrol.clients.AccessControlClientUtils.getAccessControlDTO;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 

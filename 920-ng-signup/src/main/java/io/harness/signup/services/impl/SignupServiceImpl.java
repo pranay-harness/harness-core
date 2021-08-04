@@ -5,8 +5,12 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
 
+import static java.lang.Boolean.FALSE;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
@@ -43,7 +47,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -72,6 +80,7 @@ public class SignupServiceImpl implements SignupService {
   private FeatureFlagService featureFlagService;
   private final SignupVerificationTokenRepository verificationTokenRepository;
   private final ExecutorService executorService;
+  private final AccessControlClient accessControlClient;
 
   public static final String FAILED_EVENT_NAME = "SIGNUP_ATTEMPT_FAILED";
   public static final String SUCCEED_EVENT_NAME = "NEW_SIGNUP";
@@ -87,7 +96,8 @@ public class SignupServiceImpl implements SignupService {
       ReCaptchaVerifier reCaptchaVerifier, TelemetryReporter telemetryReporter,
       SignupNotificationHelper signupNotificationHelper, FeatureFlagService featureFlagService,
       SignupVerificationTokenRepository verificationTokenRepository,
-      @Named("NGSignupNotification") ExecutorService executorService) {
+      @Named("NGSignupNotification") ExecutorService executorService,
+      @Named("PRIVILEGED") AccessControlClient accessControlClient) {
     this.accountService = accountService;
     this.userClient = userClient;
     this.signupValidator = signupValidator;
@@ -97,6 +107,7 @@ public class SignupServiceImpl implements SignupService {
     this.featureFlagService = featureFlagService;
     this.verificationTokenRepository = verificationTokenRepository;
     this.executorService = executorService;
+    this.accessControlClient = accessControlClient;
   }
 
   /**
@@ -191,6 +202,14 @@ public class SignupServiceImpl implements SignupService {
 
     try {
       UserInfo userInfo = getResponse(userClient.completeSignupInvite(verificationToken.getEmail()));
+      boolean rbacSetupSuccessful =
+          busyPollUntilAccountRBACSetupCompletes(userInfo.getDefaultAccountId(), userInfo.getUuid());
+      if (FALSE.equals(rbacSetupSuccessful)) {
+        log.error(String.format(
+            "User [%s] couldn't be assigned account admin role in stipulated time", verificationToken.getEmail()));
+        throw new SignupException(String.format(
+            "User [%s] couldn't be assigned account admin role in stipulated time", verificationToken.getEmail()));
+      }
       verificationTokenRepository.delete(verificationToken);
 
       sendSucceedTelemetryEvent(userInfo.getEmail(), null, userInfo.getDefaultAccountId(), userInfo);
@@ -209,6 +228,26 @@ public class SignupServiceImpl implements SignupService {
       sendFailedTelemetryEvent(verificationToken.getEmail(), null, e, null, "Complete Signup Invite");
       throw e;
     }
+  }
+
+  private boolean busyPollUntilAccountRBACSetupCompletes(String accountId, String userId) {
+    RetryConfig config = RetryConfig.custom()
+                             .maxAttempts(100)
+                             .waitDuration(Duration.ofMillis(200))
+                             .retryOnResult(FALSE::equals)
+                             .retryExceptions(Exception.class)
+                             .ignoreExceptions(IOException.class)
+                             .build();
+    Retry retry = Retry.of("check rbac setup", config);
+    Retry.EventPublisher publisher = retry.getEventPublisher();
+    publisher.onRetry(
+        event -> log.info("Retrying check for rbac setup for account {} {}", accountId, event.toString()));
+    return Retry
+        .decorateSupplier(retry,
+            ()
+                -> accessControlClient.hasAccess(
+                    ResourceScope.of(accountId, null, null), Resource.of("USER", userId), "core_organization_create"))
+        .get();
   }
 
   private AccountDTO createAccount(SignupDTO dto) {

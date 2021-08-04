@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfoDTO;
 import io.harness.entities.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfo;
 import io.harness.entities.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys;
+import io.harness.mappers.DeploymentInfoDetailsMapper;
 import io.harness.mappers.InstanceSyncPerpetualTaskInfoMapper;
 import io.harness.repositories.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
 
@@ -58,7 +59,8 @@ public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPer
                             .and(InstanceSyncPerpetualTaskInfoKeys.id)
                             .is(instanceSyncPerpetualTaskInfoDTO.getId());
     Update update = new Update().set(InstanceSyncPerpetualTaskInfoKeys.deploymentInfoDetailsList,
-        instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList());
+        DeploymentInfoDetailsMapper.toDeploymentInfoDetailsEntityList(
+            instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList()));
     return InstanceSyncPerpetualTaskInfoMapper.toDTO(instanceSyncPerpetualTaskRepository.update(criteria, update));
   }
 }

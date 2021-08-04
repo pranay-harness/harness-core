@@ -39,9 +39,9 @@ public interface NodeExecutionService {
 
   NodeExecution save(NodeExecutionProto nodeExecution);
 
-  long markLeavesDiscontinuingOnAbort(String planExecutionId, List<String> leafInstanceIds);
+  long markLeavesDiscontinuing(String planExecutionId, List<String> leafInstanceIds);
 
-  long markAllLeavesDiscontinuingOnAbort(String planExecutionId, EnumSet<Status> statuses);
+  long markAllLeavesDiscontinuing(String planExecutionId, EnumSet<Status> statuses);
 
   boolean markRetried(String nodeExecutionId);
 

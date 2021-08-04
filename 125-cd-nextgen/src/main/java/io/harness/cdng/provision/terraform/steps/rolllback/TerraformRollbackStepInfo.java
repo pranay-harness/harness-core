@@ -5,7 +5,7 @@ import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_ROLLBA
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;

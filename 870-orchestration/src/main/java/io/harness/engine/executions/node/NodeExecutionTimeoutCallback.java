@@ -44,6 +44,8 @@ public class NodeExecutionTimeoutCallback implements TimeoutCallback {
 
     nodeExecutionService.update(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.timeoutDetails, new TimeoutDetails(timeoutInstance)));
+
+    // TODO (Alexei - [PIE-151]) if parent -> EXPIRE_ALL
     interruptManager.register(
         InterruptPackage.builder()
             .planExecutionId(planExecutionId)

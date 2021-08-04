@@ -1,7 +1,10 @@
 package software.wings.delegatetasks.buildsource;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -24,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class BuildSourceCleanupCallback implements OldNotifyCallback {
   private String accountId;

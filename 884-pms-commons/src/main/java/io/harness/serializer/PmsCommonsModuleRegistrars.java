@@ -22,11 +22,16 @@ import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConvert
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
 import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
 import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
+import io.harness.serializer.spring.converters.stepdetails.PmsStepDetailsReadConverter;
+import io.harness.serializer.spring.converters.stepdetails.PmsStepDetailsWriteConverter;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersReadConverter;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersWriteConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeWriteConverter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
@@ -34,10 +39,16 @@ import org.springframework.core.convert.converter.Converter;
 @OwnedBy(PIPELINE)
 public class PmsCommonsModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().add(PmsCommonsKryoRegistrar.class).build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .add(PmsCommonsKryoRegistrar.class)
+          .addAll(NGCommonsRegistrars.kryoRegistrars)
+          .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().add(PmsCommonsMorphiaRegistrar.class).build();
+      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+          .add(PmsCommonsMorphiaRegistrar.class)
+          .addAll(NGCommonsRegistrars.morphiaRegistrars)
+          .build();
 
   public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.of(StepTypeReadConverter.class, StepTypeWriteConverter.class, AmbianceWriteConverter.class,
@@ -45,5 +56,7 @@ public class PmsCommonsModuleRegistrars {
           PlanNodeProtoReadConverter.class, PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class,
           NodeExecutionWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
           OrchestrationMapReadConverter.class, OrchestrationMapWriteConverter.class, PmsOutcomeReadConverter.class,
-          PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class, PmsSweepingOutputWriteConverter.class);
+          PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class, PmsSweepingOutputWriteConverter.class,
+          PmsStepParametersReadConverter.class, PmsStepParametersWriteConverter.class,
+          PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class);
 }

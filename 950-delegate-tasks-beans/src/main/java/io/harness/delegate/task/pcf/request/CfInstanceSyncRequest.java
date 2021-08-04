@@ -2,9 +2,7 @@ package io.harness.delegate.task.pcf.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.pcf.model.CfCliVersion;
@@ -15,7 +13,6 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class CfInstanceSyncRequest extends CfCommandRequest {
   private String pcfApplicationName;

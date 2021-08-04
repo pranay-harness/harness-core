@@ -1974,8 +1974,7 @@ public class TriggerServiceImpl implements TriggerService {
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId())) {
         validateAndSetManifestSelections(trigger, services);
       }
-      if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, trigger.getAccountId())
-          && trigger.isContinueWithDefaultValues()) {
+      if (trigger.isContinueWithDefaultValues()) {
         validateContinueWithDefault(trigger, executePipeline);
       }
     } else if (ORCHESTRATION == trigger.getWorkflowType()) {

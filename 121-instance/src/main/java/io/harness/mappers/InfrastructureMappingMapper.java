@@ -20,7 +20,7 @@ public class InfrastructureMappingMapper {
         .id(infrastructureMapping.getId())
         .infrastructureKey(infrastructureMapping.getInfrastructureKey())
         .serviceIdentifier(infrastructureMapping.getServiceId())
-        .infrastructureMappingType(infrastructureMapping.getInfrastructureMappingType())
+        .infrastructureKind(infrastructureMapping.getInfrastructureKind())
         .build();
   }
 
@@ -32,7 +32,7 @@ public class InfrastructureMappingMapper {
         .connectorRef(infrastructureMappingDTO.getConnectorRef())
         .envId(infrastructureMappingDTO.getEnvIdentifier())
         .infrastructureKey(infrastructureMappingDTO.getInfrastructureKey())
-        .infrastructureMappingType(infrastructureMappingDTO.getInfrastructureMappingType())
+        .infrastructureKind(infrastructureMappingDTO.getInfrastructureKind())
         .serviceId(infrastructureMappingDTO.getServiceIdentifier())
         .build();
   }

@@ -77,7 +77,6 @@ import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.TERRAGRUNT_ROLLBACK;
 import static software.wings.sm.StateType.values;
-import static software.wings.sm.StepType.ARM_CREATE_RESOURCE;
 import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
@@ -4217,18 +4216,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       filteredSelectNode = fetchStepTypeFromInfraMappingTypeForSelectNode(workflowPhase, workflow.getAppId());
     }
     List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
-    filteredStepTypes = filterARMStepTypes(filteredStepTypes, workflow.getAccountId());
-
     StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
     return calculateCategorySteps(workflow.getAccountId(), favorites, recent, stepTypes, workflowPhase,
         workflow.getAppId(), workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-  }
-
-  private List<StepType> filterARMStepTypes(List<StepType> steps, String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_ARM, accountId)) {
-      return steps;
-    }
-    return steps.stream().filter(step -> step != ARM_CREATE_RESOURCE).collect(toList());
   }
 
   public WorkflowCategorySteps calculateCategorySteps(String accountId, Set<String> favorites,

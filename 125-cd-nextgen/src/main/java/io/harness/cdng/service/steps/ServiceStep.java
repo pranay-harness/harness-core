@@ -94,6 +94,8 @@ public class ServiceStep implements SyncExecutable<ServiceStepParameters> {
     }
   }
 
+  // NOTE: Returned service entity shouldn't contain a version. Multiple stages running in parallel might see
+  // DuplicateKeyException if they're trying to deploy the same service.
   private ServiceEntity getServiceEntity(Ambiance ambiance, ServiceStepParameters stepParameters) {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
@@ -105,7 +107,9 @@ public class ServiceStep implements SyncExecutable<ServiceStepParameters> {
       Optional<ServiceEntity> serviceEntity =
           serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, false);
       if (serviceEntity.isPresent()) {
-        return serviceEntity.get();
+        ServiceEntity finalServiceEntity = serviceEntity.get();
+        finalServiceEntity.setVersion(null);
+        return finalServiceEntity;
       } else {
         throw new InvalidRequestException("Service with identifier " + serviceIdentifier + " does not exist");
       }

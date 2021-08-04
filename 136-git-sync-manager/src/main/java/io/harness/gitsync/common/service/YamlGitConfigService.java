@@ -35,9 +35,7 @@ public interface YamlGitConfigService {
 
   @ValidationGroups(Update.class) YamlGitConfigDTO update(@Valid YamlGitConfigDTO yamlGitConfig);
 
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
-
-  Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier);
+  boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier);
 
   Boolean isRepoExists(String repo);
 

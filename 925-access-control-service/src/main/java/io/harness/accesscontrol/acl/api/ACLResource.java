@@ -1,11 +1,7 @@
 package io.harness.accesscontrol.acl.api;
 
-import static io.harness.accesscontrol.acl.api.ACLResourceHelper.checkForValidContextOrThrow;
-import static io.harness.accesscontrol.acl.api.ACLResourceHelper.getAccessControlDTO;
-import static io.harness.accesscontrol.acl.api.ACLResourceHelper.getAccountIdentifier;
-import static io.harness.accesscontrol.acl.api.ACLResourceHelper.notPresent;
-import static io.harness.accesscontrol.acl.api.ACLResourceHelper.serviceContextAndNoPrincipalInBody;
-import static io.harness.accesscontrol.acl.api.ACLResourceHelper.userContextAndDifferentPrincipalInBody;
+import static io.harness.accesscontrol.clients.AccessControlClientUtils.checkPreconditions;
+import static io.harness.accesscontrol.clients.AccessControlClientUtils.getAccessControlDTO;
 import static io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType;
 import static io.harness.exception.WingsException.USER;
 
@@ -17,14 +13,12 @@ import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.preference.services.AccessControlPreferenceService;
-import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.privileged.PrivilegedAccessCheck;
 import io.harness.accesscontrol.roleassignments.privileged.PrivilegedAccessResult;
 import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -48,6 +42,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Path("/acl")
 @Api("/acl")
@@ -67,14 +62,40 @@ public class ACLResource {
   private final AccessControlPreferenceService accessControlPreferenceService;
   private final PrivilegedRoleAssignmentService privilegedRoleAssignmentService;
 
+  private Optional<String> getAccountIdentifier(List<PermissionCheckDTO> permissionCheckDTOList) {
+    if (permissionCheckDTOList.isEmpty()) {
+      return Optional.empty();
+    }
+
+    PermissionCheckDTO permissionCheckDTO = permissionCheckDTOList.get(0);
+    if (permissionCheckDTO.getResourceScope() == null
+        || StringUtils.isEmpty(permissionCheckDTO.getResourceScope().getAccountIdentifier())) {
+      return Optional.of(permissionCheckDTO.getResourceIdentifier());
+    } else {
+      return Optional.of(permissionCheckDTO.getResourceScope().getAccountIdentifier());
+    }
+  }
+
+  private boolean notPresent(Principal principal) {
+    return !Optional.ofNullable(principal).map(Principal::getPrincipalIdentifier).filter(x -> !x.isEmpty()).isPresent();
+  }
+
   @POST
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
   public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
     io.harness.security.dto.Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
     List<PermissionCheckDTO> permissionChecks = dto.getPermissions();
     Principal principalToCheckPermissionsFor = dto.getPrincipal();
-    Optional<String> accountIdentifierOptional = getAccountIdentifier(permissionChecks);
 
+    boolean preconditionsValid = checkPreconditions(contextPrincipal, principalToCheckPermissionsFor);
+
+    if (!preconditionsValid) {
+      throw new InvalidRequestException(
+          "Missing principal in context or User doesn't have permission to check access for a different principal",
+          USER);
+    }
+
+    Optional<String> accountIdentifierOptional = getAccountIdentifier(permissionChecks);
     if (accountIdentifierOptional.isPresent()
         && !accessControlPreferenceService.isAccessControlEnabled(accountIdentifierOptional.get())) {
       return ResponseDTO.newResponse(
@@ -84,28 +105,6 @@ public class ACLResource {
                                      .collect(Collectors.toList()))
               .principal(principalToCheckPermissionsFor)
               .build());
-    }
-
-    checkForValidContextOrThrow(contextPrincipal);
-
-    if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
-      return ResponseDTO.newResponse(
-          AccessCheckResponseDTO.builder()
-              .principal(Principal.builder()
-                             .principalType(PrincipalType.SERVICE)
-                             .principalIdentifier(contextPrincipal.getName())
-                             .build())
-              .accessControlList(permissionChecks.stream()
-                                     .map(permission -> getAccessControlDTO(permission, true))
-                                     .collect(Collectors.toList()))
-              .build());
-    }
-
-    if (userContextAndDifferentPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
-      // a user principal needs elevated permissions to check for permissions of another principal
-      // for now, throwing exception since this is not a valid use case right now
-      throw new AccessDeniedException(
-          "Principal not allowed to check permission of a different principal", ErrorCode.NG_ACCESS_DENIED, USER);
     }
 
     if (notPresent(principalToCheckPermissionsFor)) {

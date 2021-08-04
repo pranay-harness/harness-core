@@ -28,7 +28,7 @@ input DeploymentFilter {
   environment: IdFilter
   environmentType: EnvironmentTypeFilter
   deploymentType: DeploymentTypeFilter
-  workflowType: WorkflowTypeFilter
+  orchestrationWorkflowType: OrchestrationWorkflowTypeFilter
   status: IdFilter
   endTime: TimeFilter
   startTime: TimeFilter

@@ -30,9 +30,10 @@ public class PmsPagerDutyChannel extends PmsNotificationChannel {
       String templateId, Map<String, String> templateData) {
     return PagerDutyChannel.builder()
         .accountId(accountId)
-        .userGroups(userGroups.stream()
-                        .map(e -> NotificationChannelUtils.getUserGroups(e, orgIdentifier, projectIdentifier))
-                        .collect(Collectors.toList()))
+        .userGroups(
+            userGroups.stream()
+                .map(e -> NotificationChannelUtils.getUserGroups(e, accountId, orgIdentifier, projectIdentifier))
+                .collect(Collectors.toList()))
         .team(Team.PIPELINE)
         .templateId(templateId)
         .integrationKeys(Lists.newArrayList(integrationKey))

@@ -1,10 +1,10 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.beans.InputSetValidatorType.ALLOWED_VALUES;
+import static io.harness.beans.InputSetValidatorType.REGEX;
 import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineComponent;
 import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
-import static io.harness.pms.yaml.validation.InputSetValidatorType.ALLOWED_VALUES;
-import static io.harness.pms.yaml.validation.InputSetValidatorType.REGEX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
@@ -47,8 +47,8 @@ public class InputSetErrorsHelper {
     }
 
     String errorPipelineYaml = getErrorPipelineYaml(invalidFQNs.keySet(), pipelineYaml);
-    Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap =
-        getUuidToErrorResponseMap(invalidFQNs, InputSetYamlHelper.getInputSetIdentifier(inputSetYaml));
+    Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap = getUuidToErrorResponseMap(
+        invalidFQNs, InputSetYamlHelper.getStringField(inputSetYaml, "identifier", "inputSet"));
     return InputSetErrorWrapperDTOPMS.builder()
         .errorPipelineYaml(errorPipelineYaml)
         .uuidToErrorResponseMap(uuidToErrorResponseMap)

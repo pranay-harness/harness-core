@@ -5,9 +5,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -32,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class CfRunPluginCommandRequest extends CfCommandRequest
     implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess, Cd1ApplicationAccess {

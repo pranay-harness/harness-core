@@ -1,12 +1,16 @@
 package io.harness.accesscontrol.clients;
 
+import static io.harness.accesscontrol.clients.AccessControlClientUtils.checkPreconditions;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.accesscontrol.Principal;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.remote.client.NGRestUtils;
+import io.harness.security.SecurityContextBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,21 +18,28 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(HarnessTeam.PL)
 public abstract class AbstractAccessControlClient implements AccessControlClient {
-  private AccessControlHttpClient accessControlHttpClient;
   private static final String ORGANIZATION_RESOURCE_TYPE = "ORGANIZATION";
   private static final String ACCOUNT_RESOURCE_TYPE = "ACCOUNT";
   private static final String PROJECT_RESOURCE_TYPE = "PROJECT";
 
-  public AbstractAccessControlClient(AccessControlHttpClient accessControlHttpClient) {
-    this.accessControlHttpClient = accessControlHttpClient;
-  }
+  public AbstractAccessControlClient() {}
+
+  protected abstract AccessCheckResponseDTO checkForAccess(AccessCheckRequestDTO accessCheckRequestDTO);
 
   @Override
   public AccessCheckResponseDTO checkForAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList) {
     AccessCheckRequestDTO accessCheckRequestDTO =
         AccessCheckRequestDTO.builder().principal(principal).permissions(permissionCheckDTOList).build();
-    return NGRestUtils.getResponse(this.accessControlHttpClient.checkForAccess(accessCheckRequestDTO));
+    boolean preconditionsValid =
+        checkPreconditions(SecurityContextBuilder.getPrincipal(), accessCheckRequestDTO.getPrincipal());
+    if (!preconditionsValid) {
+      throw new InvalidRequestException(
+          "Missing principal in context or User doesn't have permission to check access for a different principal",
+          USER);
+    }
+    return checkForAccess(accessCheckRequestDTO);
   }
 
   @Override

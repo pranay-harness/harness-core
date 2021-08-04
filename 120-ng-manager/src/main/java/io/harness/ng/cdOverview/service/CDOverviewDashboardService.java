@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
 import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
-import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
 import io.harness.ng.cdOverview.dto.EnvIdCountPair;
@@ -16,6 +15,7 @@ import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
 import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
+import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public interface CDOverviewDashboardService {
   ExecutionDeploymentInfo getExecutionDeploymentDashboard(
       String accountId, String orgId, String projectId, long startInterval, long endInterval);
 
-  DashboardDeploymentActiveFailedRunningInfo getDeploymentActiveFailedRunningInfo(
+  DashboardExecutionStatusInfo getDeploymentActiveFailedRunningInfo(
       String accountId, String orgId, String projectId, long days);
 
   DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,

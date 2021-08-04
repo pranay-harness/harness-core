@@ -3,7 +3,8 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
-    "//870-yaml-beans:module",
+    "//882-pms-sdk-core:module",
+    "//889-yaml-commons:module",
     "//890-sm-core:module",
     "//900-git-sync-sdk:module",
     "//910-delegate-service-driver:module",

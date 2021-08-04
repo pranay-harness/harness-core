@@ -32,7 +32,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -239,7 +238,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(SUCCEEDED)
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(OrchestrationMap.parse(nodeExecution.getResolvedStepParameters()))
+        .stepParameters(nodeExecution.getPmsStepParameters())
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())

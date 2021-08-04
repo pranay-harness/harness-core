@@ -42,6 +42,9 @@ public interface AccountClient {
   Call<RestResponse<Boolean>> isFeatureFlagEnabled(
       @Query("featureName") String featureName, @Query("accountId") String accountId);
 
+  @GET(ACCOUNT_API + "/{accountId}/nextgen-enabled")
+  Call<RestResponse<Boolean>> isNextGenEnabled(@Path("accountId") String accountId);
+
   @GET(ACCOUNT_BASEURL_API) Call<RestResponse<String>> getBaseUrl(@Query("accountId") String accountId);
 
   @GET(ACCOUNT_ADMIN_API) Call<RestResponse<List<String>>> getAccountAdmins(@Query("accountId") String accountId);

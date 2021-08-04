@@ -85,9 +85,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   private void registerWebhookAsync(NGTriggerEntity ngTriggerEntity) {
-    if (!ngTriggerEntity.getAutoRegister()) {
-      return;
-    }
     executorService.submit(() -> {
       WebhookRegistrationStatus registrationStatus =
           ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);

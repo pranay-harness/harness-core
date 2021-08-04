@@ -24,6 +24,7 @@ const (
 	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s&repo=%s&sha=%s"
 	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
 	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s&timeMs=%d"
+	visGraphEndpoint = "/tests/uploadvis?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -90,6 +91,13 @@ func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, rep
 func (c *HTTPClient) UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target string, timeMs int64, cg []byte) error {
 	path := fmt.Sprintf(cgEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source, target, timeMs)
 	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &cg, nil)
+	return err
+}
+
+// UploadVisgraph uploads avro encoded visualization callgraph to server
+func (c *HTTPClient) UploadVisgraph(org, project, pipeline, build, stage, step, repo, sha, source, target string, vis []byte) error {
+	path := fmt.Sprintf(visGraphEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source, target)
+	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &vis, nil)
 	return err
 }
 

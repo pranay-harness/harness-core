@@ -2,6 +2,7 @@ package io.harness.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.gitsync.AbstractGitSyncSdkModule.GIT_SYNC_SDK;
 
 import io.harness.SCMJavaClientModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -56,7 +57,7 @@ public class GitSyncSdkModule extends AbstractModule {
     bind(EntityKeySource.class).to(EntityLookupHelper.class);
     bind(GitSdkInterface.class).to(ChangeSetHelperServiceImpl.class);
     bind(MessageListener.class)
-        .annotatedWith(Names.named(GIT_CONFIG_STREAM))
+        .annotatedWith(Names.named(GIT_CONFIG_STREAM + GIT_SYNC_SDK))
         .to(GitSyncConfigEventMessageListener.class);
     bind(GitAwarePersistence.class).to(GitAwarePersistenceNewImpl.class);
     bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_MANAGER)).to(ScmManagerGitHelper.class);

@@ -6,12 +6,12 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.InputSetValidatorType;
 import io.harness.category.element.UnitTests;
 import io.harness.core.Recaster;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.ParameterFieldValueWrapper;
 import io.harness.pms.yaml.validation.InputSetValidator;
-import io.harness.pms.yaml.validation.InputSetValidatorType;
 import io.harness.rule.Owner;
 
 import java.util.Collections;

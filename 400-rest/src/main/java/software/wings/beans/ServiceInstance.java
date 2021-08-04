@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Property;
  * The Class ServiceInstance.
  */
 @TargetModule(HarnessModule._959_CG_BEANS)
-@OwnedBy(CDC)
+@OwnedBy(CDP)
 @Entity(value = "serviceInstance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ServiceInstanceKeys")

@@ -15,11 +15,15 @@ import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigType;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.expression.ExpressionEvaluatorUtils;
+import io.harness.expression.TrimmerFunctor;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.yaml.core.variables.StringNGVariable;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +41,7 @@ public class TerraformPlanStepInfoTest extends CategoryTest {
     Assertions.assertThatThrownBy(terraformPlanStepInfo::validateSpecParams)
         .hasMessageContaining("Terraform Plan configuration is NULL");
 
-    TerraformPlanExecutionData terraformPlanExecutionData = new TerraformPlanExecutionData();
+    TerraformPlanExecutionData terraformPlanExecutionData = TerraformPlanExecutionData.builder().build();
     terraformPlanStepInfo.setTerraformPlanExecutionData(terraformPlanExecutionData);
     Assertions.assertThatThrownBy(terraformPlanStepInfo::validateSpecParams)
         .hasMessageContaining("Config files are null");
@@ -67,7 +71,7 @@ public class TerraformPlanStepInfoTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExtractConnectorRefs() {
     TerraformPlanStepInfo terraformPlanStepInfo = new TerraformPlanStepInfo();
-    TerraformPlanExecutionData terraformPlanExecutionData = new TerraformPlanExecutionData();
+    TerraformPlanExecutionData terraformPlanExecutionData = TerraformPlanExecutionData.builder().build();
     TerraformConfigFilesWrapper configFilesWrapper = new TerraformConfigFilesWrapper();
     configFilesWrapper.setStore(StoreConfigWrapper.builder()
                                     .spec(GithubStore.builder()
@@ -110,7 +114,7 @@ public class TerraformPlanStepInfoTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSpecParameters() {
     TerraformPlanStepInfo terraformPlanStepInfo = new TerraformPlanStepInfo();
-    TerraformPlanExecutionData terraformPlanExecutionData = new TerraformPlanExecutionData();
+    TerraformPlanExecutionData terraformPlanExecutionData = TerraformPlanExecutionData.builder().build();
     TerraformConfigFilesWrapper configFilesWrapper = new TerraformConfigFilesWrapper();
     configFilesWrapper.setStore(StoreConfigWrapper.builder()
                                     .spec(GithubStore.builder()
@@ -167,5 +171,43 @@ public class TerraformPlanStepInfoTest extends CategoryTest {
     StepType response = terraformPlanStepInfo.getStepType();
     assertThat(response).isNotNull();
     assertThat(response.getType()).isEqualTo("TerraformPlan");
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testTrimmerFunctor() {
+    TerraformPlanExecutionData terraformPlanExecutionData =
+        TerraformPlanExecutionData.builder()
+            .targets(ParameterField.createValueField(Arrays.asList(" t1", "t2 ")))
+            .environmentVariables(Arrays.asList(
+                StringNGVariable.builder().name(" name").value(ParameterField.createValueField(" value")).build()))
+            .workspace(ParameterField.createExpressionField(true, "<+workspace>  ", null, true))
+            .build();
+
+    TerraformPlanStepInfo terraformPlanStepInfo =
+        TerraformPlanStepInfo.infoBuilder()
+            .provisionerIdentifier(ParameterField.createValueField("  abc  "))
+            .delegateSelectors(ParameterField.createValueField(Arrays.asList(" del1 ", "del2  ")))
+            .terraformPlanExecutionData(terraformPlanExecutionData)
+            .build();
+
+    terraformPlanStepInfo =
+        (TerraformPlanStepInfo) ExpressionEvaluatorUtils.updateExpressions(terraformPlanStepInfo, new TrimmerFunctor());
+
+    assertThat(terraformPlanStepInfo.getProvisionerIdentifier().getValue()).isEqualTo("abc");
+    assertThat(terraformPlanStepInfo.getDelegateSelectors().getValue()).isEqualTo(Arrays.asList("del1", "del2"));
+    assertThat(terraformPlanStepInfo.getTerraformPlanExecutionData().getTargets().getValue())
+        .isEqualTo(Arrays.asList("t1", "t2"));
+    assertThat(terraformPlanStepInfo.getTerraformPlanExecutionData().getEnvironmentVariables().get(0).getName())
+        .isEqualTo("name");
+    assertThat(terraformPlanStepInfo.getTerraformPlanExecutionData()
+                   .getEnvironmentVariables()
+                   .get(0)
+                   .getCurrentValue()
+                   .getValue())
+        .isEqualTo("value");
+    assertThat(terraformPlanStepInfo.getTerraformPlanExecutionData().getWorkspace().getExpressionValue())
+        .isEqualTo("<+workspace>");
   }
 }

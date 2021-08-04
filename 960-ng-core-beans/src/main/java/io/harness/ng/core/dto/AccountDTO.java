@@ -35,17 +35,19 @@ public class AccountDTO {
   DefaultExperience defaultExperience;
   AuthenticationMechanism authenticationMechanism;
   ServiceAccountConfig serviceAccountConfig;
+  boolean isNextGenEnabled;
 
   @Builder
   public AccountDTO(String identifier, String name, String companyName, String cluster,
       DefaultExperience defaultExperience, AuthenticationMechanism authenticationMechanism,
-      ServiceAccountConfig serviceAccountConfig) {
+      ServiceAccountConfig serviceAccountConfig, boolean isNextGenEnabled) {
     this.identifier = identifier;
     this.name = name;
     this.companyName = companyName;
     this.cluster = cluster;
     this.defaultExperience = defaultExperience;
     this.authenticationMechanism = authenticationMechanism;
+    this.isNextGenEnabled = isNextGenEnabled;
     this.serviceAccountConfig = serviceAccountConfig;
   }
 }

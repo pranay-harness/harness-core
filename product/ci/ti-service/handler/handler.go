@@ -58,6 +58,7 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 		sr.Post("/select", HandleSelect(tidb, db, config, log))
 		sr.Get("/overview", HandleOverview(db, log))
 		sr.Post("/uploadcg", HandleUploadCg(tidb, db, log))
+		sr.Post("/uploadvis", HandleUploadVg(tidb, db, log))
 		return sr
 	}())
 

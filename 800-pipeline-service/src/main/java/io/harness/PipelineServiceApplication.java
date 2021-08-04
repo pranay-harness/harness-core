@@ -52,7 +52,6 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.plancreator.pipeline.PipelineConfig;
@@ -127,6 +126,7 @@ import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.token.remote.TokenClient;
 import io.harness.tracing.MongoRedisTracer;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -225,7 +225,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    NGObjectMapperHelper.configureNGObjectMapper(mapper);
     mapper.registerModule(new PmsBeansJacksonModule());
     mapper.registerModule(new PipelineServiceJacksonModule());
   }

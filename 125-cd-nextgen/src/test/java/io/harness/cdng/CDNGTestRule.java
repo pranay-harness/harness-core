@@ -35,7 +35,6 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.api.OutboxService;
 import io.harness.outbox.api.impl.OutboxDaoImpl;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
@@ -63,6 +62,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
@@ -165,7 +165,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       @Singleton
       public ObjectMapper getYamlSchemaObjectMapper() {
         ObjectMapper objectMapper = Jackson.newObjectMapper();
-        NGPipelineObjectMapperHelper.configureNGObjectMapper(objectMapper);
+        NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
         objectMapper.registerModule(new PmsBeansJacksonModule());
         return objectMapper;
       }

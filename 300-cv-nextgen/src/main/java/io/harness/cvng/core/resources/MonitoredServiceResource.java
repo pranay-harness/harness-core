@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -46,7 +47,8 @@ public class MonitoredServiceResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "saves monitored service data", nickname = "saveMonitoredService")
-  public RestResponse<MonitoredServiceResponse> saveMonitoredService(@NotNull @QueryParam("accountId") String accountId,
+  public RestResponse<MonitoredServiceResponse> saveMonitoredService(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body MonitoredServiceDTO monitoredServiceDTO) {
     return new RestResponse<>(monitoredServiceService.create(accountId, monitoredServiceDTO));
   }
@@ -57,10 +59,11 @@ public class MonitoredServiceResource {
   @Path("/create-default")
   @ApiOperation(value = "created default monitored service", nickname = "createDefaultMonitoredService")
   public RestResponse<MonitoredServiceResponse> createDefaultMonitoredService(
-      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
-      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier) {
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier) {
     return new RestResponse<>(monitoredServiceService.createDefault(
         accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier));
   }
@@ -71,7 +74,8 @@ public class MonitoredServiceResource {
   @Path("{identifier}")
   @ApiOperation(value = "updates monitored service data", nickname = "updateMonitoredService")
   public RestResponse<MonitoredServiceResponse> updateMonitoredService(
-      @NotNull @PathParam("identifier") String identifier, @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @PathParam("identifier") String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body MonitoredServiceDTO monitoredServiceDTO) {
     Preconditions.checkArgument(identifier.equals(monitoredServiceDTO.getIdentifier()),
         String.format(
@@ -139,9 +143,10 @@ public class MonitoredServiceResource {
   @ExceptionMetered
   @Path("{identifier}")
   @ApiOperation(value = "delete monitored service data ", nickname = "deleteMonitoredService")
-  public RestResponse<Boolean> delete(@NotNull @PathParam("identifier") String identifier,
-      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+  public RestResponse<Boolean> delete(@ApiParam(required = true) @NotNull @PathParam("identifier") String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
     return new RestResponse<>(monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, identifier));
   }
 

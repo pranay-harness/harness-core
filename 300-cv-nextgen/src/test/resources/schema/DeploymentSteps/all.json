@@ -25,7 +25,7 @@
     },
     "timeout": {
       "type": "string",
-      "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*)|(.*<\\+.*>.*))$"
+      "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
     },
     "type": {
       "type": "string"
@@ -337,7 +337,9 @@
               }
             },
             {
-              "type": "string"
+              "type": "string",
+              "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+              "minLength": 1
             }
           ]
         }
@@ -740,10 +742,19 @@
               "type": "string"
             },
             "delegateSelectors": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
             },
             "headers": {
               "type": "array",
@@ -1566,7 +1577,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*)|(.*<\\+.*>.*))$"
+          "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
         },
         "type": {
           "type": "string"
