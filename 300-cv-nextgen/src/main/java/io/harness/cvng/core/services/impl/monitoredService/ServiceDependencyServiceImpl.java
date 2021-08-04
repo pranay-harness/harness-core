@@ -27,7 +27,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   @Inject private HPersistence hPersistence;
 
   @Override
-  public void createOrDelete(String accountId, String orgIdentifier, String projectIdentifier, String envIdentifier,
+  public void updateDependencies(String accountId, String orgIdentifier, String projectIdentifier, String envIdentifier,
       Set<ServiceRef> fromServiceIdentifiers, String toServiceIdentifier) {
     List<ServiceDependency> dependencies = new ArrayList<>();
     fromServiceIdentifiers.forEach(fromServiceIdentifier -> {
@@ -77,7 +77,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
                                                   .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier)
                                                   .filter(ServiceDependencyKeys.environmentIdentifier, envIdentifier)
                                                   .filter(ServiceDependencyKeys.toServiceIdentifier, serviceIdentifier);
-    hPersistence.deleteOnServer(toServiceQuery);
+    hPersistence.delete(toServiceQuery);
   }
 
   @Override
@@ -102,7 +102,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
                                                .filter(ServiceDependencyKeys.accountId, accountId)
                                                .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
                                                .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
+    hPersistence.delete(deleteQuery);
   }
 
   @Override
@@ -110,13 +110,13 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
     Query<ServiceDependency> deleteQuery = hPersistence.createQuery(ServiceDependency.class)
                                                .filter(ServiceDependencyKeys.accountId, accountId)
                                                .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
+    hPersistence.delete(deleteQuery);
   }
 
   @Override
   public void deleteByAccountIdentifier(Class<ServiceDependency> clazz, String accountId) {
     Query<ServiceDependency> deleteQuery =
         hPersistence.createQuery(ServiceDependency.class).filter(ServiceDependencyKeys.accountId, accountId);
-    hPersistence.deleteOnServer(deleteQuery);
+    hPersistence.delete(deleteQuery);
   }
 }

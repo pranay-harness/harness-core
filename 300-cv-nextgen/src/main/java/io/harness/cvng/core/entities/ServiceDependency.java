@@ -38,10 +38,6 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @FieldNameConstants(innerTypeName = "ServiceDependencyKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "serviceDependencies")
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.CVNG)

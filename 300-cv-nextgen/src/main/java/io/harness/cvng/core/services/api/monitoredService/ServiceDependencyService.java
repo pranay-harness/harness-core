@@ -11,7 +11,7 @@ import java.util.Set;
 
 @OwnedBy(CV)
 public interface ServiceDependencyService extends DeleteEntityByHandler<ServiceDependency> {
-  void createOrDelete(String accountId, String orgIdentifier, String projectIdentifier, String envIdentifier,
+  void updateDependencies(String accountId, String orgIdentifier, String projectIdentifier, String envIdentifier,
       Set<ServiceRef> fromServiceIdentifiers, String toServiceIdentifier);
 
   void deleteDependenciesForService(

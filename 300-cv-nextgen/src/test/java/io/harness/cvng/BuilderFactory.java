@@ -20,6 +20,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -48,6 +49,8 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO.EnvironmentResp
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO.ServiceResponseDTOBuilder;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -127,6 +130,8 @@ public class BuilderFactory {
         .description(generateUuid())
         .serviceRef(context.getServiceIdentifier())
         .environmentRef(context.getEnvIdentifier())
+        .dependencies(Sets.newHashSet(ServiceRef.builder().serviceRef(randomAlphabetic(20)).build(),
+            ServiceRef.builder().serviceRef(randomAlphabetic(20)).build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
                      .build());

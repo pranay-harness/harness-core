@@ -62,7 +62,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
           monitoredServiceDTO.getSources().getHealthSources(), getMonitoredServiceEnableStatus());
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      serviceDependencyService.createOrDelete(accountId, monitoredServiceDTO.getOrgIdentifier(),
+      serviceDependencyService.updateDependencies(accountId, monitoredServiceDTO.getOrgIdentifier(),
           monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getEnvironmentRef(),
           monitoredServiceDTO.getDependencies(), monitoredServiceDTO.getServiceRef());
     }
@@ -115,7 +115,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       updateOperations.set(MonitoredServiceKeys.healthSourceIdentifiers, updatedIdentifiers);
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      serviceDependencyService.createOrDelete(monitoredService.getAccountId(), monitoredService.getOrgIdentifier(),
+      serviceDependencyService.updateDependencies(monitoredService.getAccountId(), monitoredService.getOrgIdentifier(),
           monitoredService.getProjectIdentifier(), monitoredService.getEnvironmentIdentifier(),
           monitoredServiceDTO.getDependencies(), monitoredService.getServiceIdentifier());
     }

@@ -103,7 +103,7 @@ public class ServiceDependencyServiceImplTest extends CvNextGenTestBase {
   }
 
   private void createOrDeleteFromContext(Context context, Set<ServiceRef> serviceRefs) {
-    serviceDependencyService.createOrDelete(context.getAccountId(), context.getOrgIdentifier(),
+    serviceDependencyService.updateDependencies(context.getAccountId(), context.getOrgIdentifier(),
         context.getProjectIdentifier(), context.getEnvIdentifier(), serviceRefs, context.getServiceIdentifier());
   }
 

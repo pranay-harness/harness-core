@@ -653,7 +653,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .build();
   }
 
-  MonitoredServiceDTO createMonitoredServiceDTOWithDependencies() {
+  private MonitoredServiceDTO createMonitoredServiceDTOWithDependencies() {
     return builderFactory.monitoredServiceDTOBuilder()
         .identifier(monitoredServiceIdentifier)
         .serviceRef(serviceIdentifier)
