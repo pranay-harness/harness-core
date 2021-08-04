@@ -1,5 +1,7 @@
 package io.harness.service;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
@@ -13,7 +15,10 @@ import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.entities.ArtifactDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.logging.AccountLogContext;
+import io.harness.logging.AutoLogContext;
 import io.harness.models.DeploymentEvent;
+import io.harness.models.constants.InstanceSyncFlow;
 import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.steps.StepType;
@@ -29,6 +34,7 @@ import io.harness.service.infrastructuremapping.InfrastructureMappingService;
 import io.harness.service.instancesync.InstanceSyncService;
 import io.harness.service.instancesynchandler.AbstractInstanceSyncHandler;
 import io.harness.service.instancesynchandlerfactory.InstanceSyncHandlerFactoryService;
+import io.harness.util.logging.InstanceSyncLogContext;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -54,12 +60,15 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
       return;
     }
 
-    try {
+    Ambiance ambiance = event.getAmbiance();
+    try (AutoLogContext ignore1 = new AccountLogContext(getAccountIdentifier(ambiance), OVERRIDE_ERROR);
+         AutoLogContext ignore2 = InstanceSyncLogContext.builder()
+                                      .instanceSyncFlow(InstanceSyncFlow.NEW_DEPLOYMENT.name())
+                                      .build(OVERRIDE_ERROR)) {
       if (!StatusUtils.isFinalStatus(event.getStatus())) {
         return;
       }
 
-      Ambiance ambiance = event.getAmbiance();
       StepType stepType = AmbianceUtils.getCurrentStepType(ambiance);
       List<ServerInstanceInfo> serverInstanceInfoList = instanceInfoService.listServerInstances(ambiance, stepType);
       if (serverInstanceInfoList.isEmpty()) {
@@ -88,7 +97,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
 
     InfrastructureMappingDTO infrastructureMappingDTO =
         InfrastructureMappingDTO.builder()
-            .accountIdentifier(AmbianceUtils.getAccountId(ambiance))
+            .accountIdentifier(getAccountIdentifier(ambiance))
             .orgIdentifier(AmbianceUtils.getOrgIdentifier(ambiance))
             .projectIdentifier(AmbianceUtils.getProjectIdentifier(ambiance))
             .serviceIdentifier(serviceOutcome.getIdentifier())
@@ -116,7 +125,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
 
     DeploymentSummaryDTO deploymentSummaryDTO =
         DeploymentSummaryDTO.builder()
-            .accountIdentifier(AmbianceUtils.getAccountId(ambiance))
+            .accountIdentifier(getAccountIdentifier(ambiance))
             .orgIdentifier(AmbianceUtils.getOrgIdentifier(ambiance))
             .projectIdentifier(AmbianceUtils.getProjectIdentifier(ambiance))
             .pipelineExecutionId(ambiance.getPlanExecutionId())
@@ -159,5 +168,9 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
   private InfrastructureOutcome getInfrastructureOutcomeFromAmbiance(Ambiance ambiance) {
     return (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
+  }
+
+  private String getAccountIdentifier(Ambiance ambiance) {
+    return AmbianceUtils.getAccountId(ambiance);
   }
 }

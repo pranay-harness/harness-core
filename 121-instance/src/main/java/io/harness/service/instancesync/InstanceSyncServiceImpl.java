@@ -15,8 +15,12 @@ import io.harness.dtos.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskIn
 import io.harness.helper.InstanceSyncHelper;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.AccountLogContext;
+import io.harness.logging.AutoLogContext;
+import io.harness.logging.AutoLogContext.OverrideBehavior;
 import io.harness.models.DeploymentEvent;
 import io.harness.models.constants.InstanceSyncConstants;
+import io.harness.models.constants.InstanceSyncFlow;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.service.deploymentsummary.DeploymentSummaryService;
@@ -26,6 +30,7 @@ import io.harness.service.instancesynchandler.AbstractInstanceSyncHandler;
 import io.harness.service.instancesynchandlerfactory.InstanceSyncHandlerFactoryService;
 import io.harness.service.instancesyncperpetualtask.InstanceSyncPerpetualTaskService;
 import io.harness.service.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfoService;
+import io.harness.util.logging.InstanceSyncLogContext;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -65,10 +70,16 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     int retryCount = 0;
     while (retryCount < NEW_DEPLOYMENT_EVENT_RETRY) {
       DeploymentSummaryDTO deploymentSummaryDTO = deploymentEvent.getDeploymentSummaryDTO();
+      InfrastructureMappingDTO infrastructureMappingDTO = deploymentSummaryDTO.getInfrastructureMapping();
       try (AcquiredLock<?> acquiredLock = persistentLocker.waitToAcquireLock(
                InstanceSyncConstants.INSTANCE_SYNC_PREFIX + deploymentSummaryDTO.getInfrastructureMappingId(),
-               InstanceSyncConstants.INSTANCE_SYNC_LOCK_TIMEOUT, InstanceSyncConstants.INSTANCE_SYNC_WAIT_TIMEOUT)) {
-        InfrastructureMappingDTO infrastructureMappingDTO = deploymentSummaryDTO.getInfrastructureMapping();
+               InstanceSyncConstants.INSTANCE_SYNC_LOCK_TIMEOUT, InstanceSyncConstants.INSTANCE_SYNC_WAIT_TIMEOUT);
+           AutoLogContext ignore1 =
+               new AccountLogContext(infrastructureMappingDTO.getAccountIdentifier(), OverrideBehavior.OVERRIDE_ERROR);
+           AutoLogContext ignore2 = InstanceSyncLogContext.builder()
+                                        .instanceSyncFlow(InstanceSyncFlow.NEW_DEPLOYMENT.name())
+                                        .infrastructureMappingId(infrastructureMappingDTO.getId())
+                                        .build(OverrideBehavior.OVERRIDE_ERROR);) {
         AbstractInstanceSyncHandler abstractInstanceSyncHandler =
             instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureMappingDTO.getInfrastructureKind());
 
@@ -99,55 +110,66 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         performInstanceSync(instanceSyncPerpetualTaskInfoDTO, infrastructureMappingDTO,
             deploymentSummaryDTO.getServerInstanceInfoList(), true);
 
-        // TODO add a success log here
+        log.info("Instance sync completed for infrastructure mapping id : {}", infrastructureMappingDTO.getId());
         return;
       } catch (Exception exception) {
-        // TODO log the exception here with proper error message
+        log.error("Attempt {} : Exception occured during instance sync", retryCount + 1, exception);
         retryCount += 1;
       }
     }
-
-    // TODO add log here to mark the event as failed even after all retries
+    log.error("Instance sync failed after all retry attempts for deployment event : {}", deploymentEvent);
   }
 
   @Override
   public void processInstanceSyncByPerpetualTask(String accountIdentifier, String perpetualTaskId,
       InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse) {
     // TODO add some tag to all logs to denote that the flow is instance sync via perpetual task
+    try (AutoLogContext ignore1 = new AccountLogContext(accountIdentifier, OverrideBehavior.OVERRIDE_ERROR);
+         AutoLogContext ignore2 = InstanceSyncLogContext.builder()
+                                      .instanceSyncFlow(InstanceSyncFlow.PERPETUAL_TASK_FLOW.name())
+                                      .perpetualTaskId(perpetualTaskId)
+                                      .build(OverrideBehavior.OVERRIDE_ERROR)) {
+      if (instanceSyncPerpetualTaskResponse.getServerInstanceDetails() == null) {
+        log.error("server instances details cannot be null");
+        return;
+      }
 
-    if (instanceSyncPerpetualTaskResponse.getServerInstanceDetails() == null) {
-      log.error("server instances details cannot be null");
-      return;
-    }
+      Optional<InstanceSyncPerpetualTaskInfoDTO> instanceSyncPerpetualTaskInfoDTOOptional =
+          instanceSyncPerpetualTaskInfoService.findByPerpetualTaskId(accountIdentifier, perpetualTaskId);
+      if (!instanceSyncPerpetualTaskInfoDTOOptional.isPresent()) {
+        log.error("No instance sync perpetual task info record found for perpetual task id : {}", perpetualTaskId);
+        instanceSyncPerpetualTaskService.deletePerpetualTask(accountIdentifier, perpetualTaskId);
+        return;
+      }
 
-    Optional<InstanceSyncPerpetualTaskInfoDTO> instanceSyncPerpetualTaskInfoDTOOptional =
-        instanceSyncPerpetualTaskInfoService.findByPerpetualTaskId(accountIdentifier, perpetualTaskId);
-    if (!instanceSyncPerpetualTaskInfoDTOOptional.isPresent()) {
-      log.error("No instance sync perpetual task info record found for perpetual task id : {}", perpetualTaskId);
-      instanceSyncPerpetualTaskService.deletePerpetualTask(accountIdentifier, perpetualTaskId);
-      return;
-    }
+      InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO =
+          instanceSyncPerpetualTaskInfoDTOOptional.get();
+      try (AutoLogContext ignore3 =
+               InstanceSyncLogContext.builder()
+                   .infrastructureMappingId(instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId())
+                   .build(OverrideBehavior.OVERRIDE_ERROR);) {
+        Optional<InfrastructureMappingDTO> infrastructureMappingDTO =
+            infrastructureMappingService.getByInfrastructureMappingId(
+                instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId());
+        if (!infrastructureMappingDTO.isPresent()) {
+          log.error("No infrastructure mapping found for infrastructure mapping id : {}",
+              instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId());
+          // delete perpetual task as well as instance sync perpetual task info record
+          instanceSyncHelper.cleanUpInstanceSyncPerpetualTaskInfo(instanceSyncPerpetualTaskInfoDTO);
+          return;
+        }
 
-    InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO = instanceSyncPerpetualTaskInfoDTOOptional.get();
-    Optional<InfrastructureMappingDTO> infrastructureMappingDTO =
-        infrastructureMappingService.getByInfrastructureMappingId(
-            instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId());
-    if (!infrastructureMappingDTO.isPresent()) {
-      log.error("No infrastructure mapping found for infrastructure mapping id : {}",
-          instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId());
-      // delete perpetual task as well as instance sync perpetual task info record
-      instanceSyncHelper.cleanUpInstanceSyncPerpetualTaskInfo(instanceSyncPerpetualTaskInfoDTO);
-      return;
-    }
-
-    try (AcquiredLock<?> acquiredLock = persistentLocker.waitToAcquireLock(
-             InstanceSyncConstants.INSTANCE_SYNC_PREFIX + instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId(),
-             InstanceSyncConstants.INSTANCE_SYNC_LOCK_TIMEOUT, InstanceSyncConstants.INSTANCE_SYNC_WAIT_TIMEOUT)) {
-      performInstanceSync(instanceSyncPerpetualTaskInfoDTO, infrastructureMappingDTO.get(),
-          instanceSyncPerpetualTaskResponse.getServerInstanceDetails(), false);
-      log.info("Instance Sync completed");
-    } catch (Exception exception) {
-      // TODO log the exception here with proper error message
+        try (
+            AcquiredLock<?> acquiredLock = persistentLocker.waitToAcquireLock(InstanceSyncConstants.INSTANCE_SYNC_PREFIX
+                    + instanceSyncPerpetualTaskInfoDTO.getInfrastructureMappingId(),
+                InstanceSyncConstants.INSTANCE_SYNC_LOCK_TIMEOUT, InstanceSyncConstants.INSTANCE_SYNC_WAIT_TIMEOUT)) {
+          performInstanceSync(instanceSyncPerpetualTaskInfoDTO, infrastructureMappingDTO.get(),
+              instanceSyncPerpetualTaskResponse.getServerInstanceDetails(), false);
+          log.info("Instance Sync completed");
+        } catch (Exception exception) {
+          log.error("Exception occured during instance sync", exception);
+        }
+      }
     }
   }
 
