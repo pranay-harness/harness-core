@@ -21,6 +21,8 @@ import io.harness.states.SaveCacheS3Step;
 import io.harness.states.UploadToArtifactoryStep;
 import io.harness.states.UploadToGCSStep;
 import io.harness.states.UploadToS3Step;
+import io.harness.states.codebase.CodeBaseStep;
+import io.harness.states.codebase.CodeBaseTaskStep;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,6 +50,8 @@ public class ExecutionRegistrar {
     engineSteps.put(UploadToArtifactoryStep.STEP_TYPE, UploadToArtifactoryStep.class);
     engineSteps.put(RunTestsStep.STEP_TYPE, RunTestsStep.class);
     engineSteps.put(IntegrationStageStepPMS.STEP_TYPE, IntegrationStageStepPMS.class);
+    engineSteps.put(CodeBaseStep.STEP_TYPE, CodeBaseStep.class);
+    engineSteps.put(CodeBaseTaskStep.STEP_TYPE, CodeBaseTaskStep.class);
     engineSteps.put(CISpecStep.STEP_TYPE, CISpecStep.class);
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;

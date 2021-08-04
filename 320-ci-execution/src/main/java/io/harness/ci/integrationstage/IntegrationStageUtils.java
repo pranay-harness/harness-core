@@ -9,7 +9,6 @@ import static org.springframework.util.StringUtils.trimTrailingCharacter;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
@@ -25,9 +24,9 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
-import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -36,6 +35,8 @@ import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
+import io.harness.yaml.extended.ci.codebase.impl.CommitShaBuildSpec;
+import io.harness.yaml.extended.ci.codebase.impl.PRBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import java.io.IOException;
@@ -78,16 +79,14 @@ public class IntegrationStageUtils {
     }
   }
 
-  public ExecutionSource buildExecutionSource(
-      PlanCreationContextValue planCreationContextValue, String identifier, ParameterField<Build> parameterFieldBuild) {
-    ExecutionTriggerInfo executionTriggerInfo = planCreationContextValue.getMetadata().getTriggerInfo();
-
+  public ExecutionSource buildExecutionSource(ExecutionTriggerInfo executionTriggerInfo, TriggerPayload triggerPayload,
+      String identifier, ParameterField<Build> parameterFieldBuild) {
     if (!executionTriggerInfo.getIsRerun()) {
       if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
           || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+        ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
       } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
         return buildCustomExecutionSource(identifier, parameterFieldBuild);
@@ -97,7 +96,7 @@ public class IntegrationStageUtils {
           || executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.SCHEDULER_CRON) {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK) {
-        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+        ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
       } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
         return buildCustomExecutionSource(identifier, parameterFieldBuild);
@@ -122,6 +121,18 @@ public class IntegrationStageUtils {
         String branchString =
             RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
         return ManualExecutionSource.builder().branch(branchString).build();
+
+      } else if (build.getType().equals(BuildType.PR)) {
+        ParameterField<String> number = ((PRBuildSpec) build.getSpec()).getNumber();
+        String numberString =
+            RunTimeInputHandler.resolveStringParameter("number", "Git Clone", identifier, number, false);
+        return ManualExecutionSource.builder().prNumber(numberString).build();
+
+      } else if (build.getType().equals(BuildType.COMMIT_SHA)) {
+        ParameterField<String> commitSha = ((CommitShaBuildSpec) build.getSpec()).getCommitSha();
+        String commitShaString =
+            RunTimeInputHandler.resolveStringParameter("prNumber", "Git Clone", identifier, commitSha, false);
+        return ManualExecutionSource.builder().commitSha(commitShaString).build();
       }
     }
 
@@ -182,24 +193,37 @@ public class IntegrationStageUtils {
     return trimTrailingCharacter(prefixRegistryPath, '/') + '/' + trimLeadingCharacter(imageName, '/');
   }
 
-  private CustomExecutionSource buildCustomExecutionSource(
+  private ManualExecutionSource buildCustomExecutionSource(
       String identifier, ParameterField<Build> parameterFieldBuild) {
     if (parameterFieldBuild == null) {
-      return CustomExecutionSource.builder().build();
+      return ManualExecutionSource.builder().build();
     }
     Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
     if (build != null) {
       if (build.getType().equals(BuildType.TAG)) {
         ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
         String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
-        return CustomExecutionSource.builder().tag(buildString).build();
+        return ManualExecutionSource.builder().tag(buildString).build();
       } else if (build.getType().equals(BuildType.BRANCH)) {
         ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
         String branchString =
             RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
-        return CustomExecutionSource.builder().branch(branchString).build();
+        return ManualExecutionSource.builder().branch(branchString).build();
+
+      } else if (build.getType().equals(BuildType.PR)) {
+        ParameterField<String> number = ((PRBuildSpec) build.getSpec()).getNumber();
+        String numberString =
+            RunTimeInputHandler.resolveStringParameter("number", "Git Clone", identifier, number, false);
+        return ManualExecutionSource.builder().prNumber(numberString).build();
+
+      } else if (build.getType().equals(BuildType.COMMIT_SHA)) {
+        ParameterField<String> commitSha = ((CommitShaBuildSpec) build.getSpec()).getCommitSha();
+        String commitShaString =
+            RunTimeInputHandler.resolveStringParameter("prNumber", "Git Clone", identifier, commitSha, false);
+        return ManualExecutionSource.builder().commitSha(commitShaString).build();
       }
     }
+
     return null;
   }
 }
