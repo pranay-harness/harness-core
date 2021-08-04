@@ -6,7 +6,6 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.StartupMode;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -56,7 +55,7 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
     List<Module> modules = new ArrayList<>();
     modules.add(new DelegateServiceModule(delegateServiceConfig));
 
-    WingsApplication wingsApplication = new WingsApplication(StartupMode.DELEGATE_SERVICE);
+    WingsApplication wingsApplication = new WingsApplication();
     wingsApplication.addModules(delegateServiceConfig, modules);
     Injector injector = Guice.createInjector(modules);
     wingsApplication.initializeManagerSvc(injector, environment, delegateServiceConfig);
