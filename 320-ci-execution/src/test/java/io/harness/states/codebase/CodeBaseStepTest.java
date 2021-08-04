@@ -36,6 +36,7 @@ public class CodeBaseStepTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
+    
     ambiance = Ambiance.newBuilder()
                    .putSetupAbstractions(SetupAbstractionKeys.accountId, "accountId")
                    .putSetupAbstractions(SetupAbstractionKeys.orgIdentifier, "orgIdentifier")
