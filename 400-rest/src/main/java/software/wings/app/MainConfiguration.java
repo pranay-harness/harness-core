@@ -155,6 +155,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("ngAuthUIEnabled") private boolean ngAuthUIEnabled;
   @JsonProperty("gcpMarketplaceConfig") private GcpMarketplaceConfig gcpMarketplaceConfig;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;

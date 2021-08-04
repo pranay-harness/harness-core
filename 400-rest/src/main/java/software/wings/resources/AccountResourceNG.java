@@ -111,6 +111,12 @@ public class AccountResourceNG {
   }
 
   @GET
+  @Path("/gatewayBaseUrl")
+  public RestResponse<String> getGatewayBaseUrl(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(subdomainUrlHelper.getGatewayBaseUrl(accountId));
+  }
+
+  @GET
   @Path("/account-admins")
   public RestResponse<List<String>> getAccountAdmins(@QueryParam("accountId") String accountId) {
     UserGroup userGroup = userGroupService.getAdminUserGroup(accountId);

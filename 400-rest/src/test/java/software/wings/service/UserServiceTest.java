@@ -1219,7 +1219,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testResendInvitationEmail() {
     when(accountService.get(any())).thenReturn(anAccount().withUuid(UUIDGenerator.generateUuid()).build());
-    when(userInviteQuery.get()).thenReturn(new UserInvite());
+    when(userInviteQuery.get()).thenReturn(anUserInvite().withEmail(USER_EMAIL).build());
     when(query.get()).thenReturn(anUser().build());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
     when(wingsPersistence.delete((Query<PersistentEntity>) any())).thenReturn(true);
@@ -1244,6 +1244,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(userInviteQuery.get())
         .thenReturn(anUserInvite()
                         .withUserGroups(Arrays.asList(UserGroup.builder().uuid(UUIDGenerator.generateUuid()).build()))
+                        .withEmail(TEMPORARY_EMAIL)
                         .build());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
     when(query.get()).thenReturn(user);

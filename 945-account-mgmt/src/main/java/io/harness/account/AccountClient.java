@@ -24,6 +24,7 @@ public interface AccountClient {
   String ACCOUNT_API = "ng/accounts";
   String FEATURE_FLAG_CHECK_API = "ng/accounts/feature-flag-enabled";
   String ACCOUNT_BASEURL_API = "ng/accounts/baseUrl";
+  String ACCOUNT_GATEWAYBASEURL_API = "ng/accounts/gatewayBaseUrl";
   String ACCOUNT_EXISTS = "ng/accounts/exists";
   String ACCOUNT_ADMIN_API = ACCOUNT_API + "/account-admins";
   String FEATURE_FLAG_LIST_API = "ng/user/feature-flags/{accountId}";
@@ -46,6 +47,8 @@ public interface AccountClient {
   Call<RestResponse<Boolean>> isNextGenEnabled(@Path("accountId") String accountId);
 
   @GET(ACCOUNT_BASEURL_API) Call<RestResponse<String>> getBaseUrl(@Query("accountId") String accountId);
+
+  @GET(ACCOUNT_GATEWAYBASEURL_API) Call<RestResponse<String>> getGatewayBaseUrl(@Query("accountId") String accountId);
 
   @GET(ACCOUNT_ADMIN_API) Call<RestResponse<List<String>>> getAccountAdmins(@Query("accountId") String accountId);
 
