@@ -339,6 +339,11 @@ public class ProjectServiceImpl implements ProjectService {
         projectFilterDTO);
     List<Scope> projects = projectRepository.findAllProjects(criteria);
     List<Scope> permittedProjects = scopeAccessHelper.getPermittedScopes(projects);
+
+    if (permittedProjects.isEmpty()) {
+      return Page.empty();
+    }
+
     criteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier);
     Criteria[] subCriteria = permittedProjects.stream()
                                  .map(project
