@@ -272,3 +272,4 @@ public class SamlBasedAuthHandler implements AuthHandler {
     return AuthenticationMechanism.SAML;
   }
 }
+
