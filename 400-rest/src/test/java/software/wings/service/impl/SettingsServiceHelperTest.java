@@ -19,6 +19,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.helper.SettingValueHelper;
@@ -61,6 +63,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class SettingsServiceHelperTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String PAT = "PAT";

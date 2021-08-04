@@ -6,6 +6,8 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.rule.Owner;
 
@@ -20,6 +22,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class WorkflowExecutionServiceImplIntegrationTest extends IntegrationTestBase {
   @Inject WorkflowExecutionServiceImpl workflowExecutionService;
 

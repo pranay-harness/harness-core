@@ -2,6 +2,8 @@ package io.harness.governance;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -18,6 +20,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @ToString
 @EqualsAndHashCode
+@OwnedBy(HarnessTeam.CDC)
 public abstract class GovernanceFreezeConfig implements UuidAware {
   // not used
   @EqualsAndHashCode.Exclude private boolean freezeForAllApps;

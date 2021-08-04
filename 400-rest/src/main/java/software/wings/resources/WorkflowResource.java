@@ -18,6 +18,8 @@ import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -84,6 +86,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.APPLICATION)
 @AuthRule(permissionType = WORKFLOW)
+@OwnedBy(HarnessTeam.CDC)
 public class WorkflowResource {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
 

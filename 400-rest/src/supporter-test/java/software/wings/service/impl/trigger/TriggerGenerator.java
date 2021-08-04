@@ -5,6 +5,8 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 
 import software.wings.beans.trigger.ArtifactTriggerCondition;
@@ -12,6 +14,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.TriggerBuilder;
 import software.wings.beans.trigger.TriggerCondition;
 
+@OwnedBy(HarnessTeam.CDC)
 public class TriggerGenerator {
   public Trigger ensureTrigger(Trigger trigger) {
     final TriggerBuilder triggerBuilder = Trigger.builder();
