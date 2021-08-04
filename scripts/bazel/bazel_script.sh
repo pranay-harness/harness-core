@@ -135,6 +135,7 @@ BAZEL_MODULES="\
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-persistence-tracer:module \
   //950-telemetry:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
@@ -393,6 +394,7 @@ build_bazel_module 950-events-framework
 build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
+build_bazel_module 950-persistence-tracer
 build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor

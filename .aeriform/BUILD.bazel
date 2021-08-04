@@ -354,6 +354,10 @@ aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
 
+aeriform("//950-persistence-tracer:module")
+
+aeriform("//950-persistence-tracer:tests")
+
 aeriform("//950-telemetry:module")
 
 aeriform("//950-telemetry:tests")
