@@ -19,6 +19,8 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ccm.K8sClusterInfo;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -77,10 +79,10 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.CE)
 public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   @Rule public final WireMockRule wireMockRule = new WireMockRule(65217);
 
@@ -88,13 +90,13 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   private DefaultK8sMetricsClient k8sMetricClient;
   private K8SWatchTaskExecutor k8SWatchTaskExecutor;
 
-  @Mock EventPublisher eventPublisher;
-  @Mock K8sWatchServiceDelegate k8sWatchServiceDelegate;
-  @Mock ApiClientFactoryImpl apiClientFactory;
-  @Mock ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Mock K8sConnectorHelper k8sConnectorHelper;
-  @Captor ArgumentCaptor<Message> messageArgumentCaptor;
-  @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
+  @Mock private EventPublisher eventPublisher;
+  @Mock private K8sWatchServiceDelegate k8sWatchServiceDelegate;
+  @Mock private ApiClientFactoryImpl apiClientFactory;
+  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Mock private K8sConnectorHelper k8sConnectorHelper;
+  @Captor private ArgumentCaptor<Message> messageArgumentCaptor;
+  @Captor private ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
   @Inject KryoSerializer kryoSerializer;
 
@@ -114,8 +116,6 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
 
   @Before
   public void setUp() throws Exception {
-    MockitoAnnotations.initMocks(this);
-
     apiClient = new ClientBuilder().setBasePath("http://localhost:" + wireMockRule.port()).build();
     doReturn(apiClient).when(apiClientFactory).getClient(any(KubernetesConfig.class));
 
