@@ -424,6 +424,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     scheduleJobs(injector, configuration);
 
+    scheduleJobsDelegateService(injector, configuration);
+
     registerEventConsumers(injector);
 
     registerObservers(injector);
@@ -448,6 +450,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Register collection iterators
     if (configuration.isEnableIterators()) {
       registerIterators(injector);
+      registerIteratorsDelegateService(injector);
+      registerIteratorsWings(injector);
     }
 
     environment.lifecycle().addServerLifecycleListener(server -> {
@@ -886,11 +890,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
     log.info("Initializing scheduled jobs...");
-    injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(
-            injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
@@ -898,6 +897,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
+    injector.getInstance(NotifierScheduledExecutorService.class)
+        .scheduleWithFixedDelay(
+            injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
+  }
+
+  private void scheduleJobsDelegateService(Injector injector, MainConfiguration configuration) {
+    log.info("Initializing delegate service scheduled jobs ...");
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
 
     ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
         ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()
@@ -1043,26 +1051,38 @@ public class WingsApplication extends Application<MainConfiguration> {
         25, new ThreadFactoryBuilder().setNameFormat("Iterator-ArtifactCollection").build());
     final ScheduledThreadPoolExecutor eventDeliveryExecutor = new ScheduledThreadPoolExecutor(
         25, new ThreadFactoryBuilder().setNameFormat("Iterator-Event-Delivery").build());
-
-    injector.getInstance(AlertReconciliationHandler.class).registerIterators();
     injector.getInstance(ArtifactCollectionHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(ArtifactCleanupHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(EventDeliveryHandler.class).registerIterators(eventDeliveryExecutor);
     injector.getInstance(InstanceSyncHandler.class).registerIterators();
     injector.getInstance(LicenseCheckHandler.class).registerIterators();
     injector.getInstance(ApprovalPollingHandler.class).registerIterators();
-    injector.getInstance(GCPBillingHandler.class).registerIterators();
-    injector.getInstance(SegmentGroupEventJob.class).registerIterators();
-    injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
-    injector.getInstance(UsageMetricsHandler.class).registerIterators();
     injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators();
     injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators();
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
-    injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
-    injector.getInstance(LdapGroupSyncJobHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
+    injector.getInstance(DeletedEntityHandler.class).registerIterators();
+    injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
+    injector.getInstance(AccessRequestHandler.class).registerIterators();
+    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
+  }
+
+  public static void registerIteratorsDelegateService(Injector injector) {
+    // broadcasting task
+    injector.getInstance(AlertReconciliationHandler.class).registerIterators();
+    // perpetual task
+    injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
+    // delegate capability check
+    injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
+    injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
+  }
+
+  public static void registerIteratorsWings(Injector injector) {
+    injector.getInstance(GCPBillingHandler.class).registerIterators();
+    injector.getInstance(SegmentGroupEventJob.class).registerIterators();
+    injector.getInstance(LdapGroupSyncJobHandler.class).registerIterators();
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
@@ -1071,12 +1091,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(DeleteAccountHandler.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
-    injector.getInstance(DeletedEntityHandler.class).registerIterators();
-    injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
-    injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
-    injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
-    injector.getInstance(AccessRequestHandler.class).registerIterators();
-    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
+    injector.getInstance(UsageMetricsHandler.class).registerIterators();
+    injector.getInstance(BarrierServiceImpl.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {
