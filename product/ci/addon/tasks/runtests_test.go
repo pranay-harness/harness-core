@@ -264,6 +264,7 @@ instrPackages: p1, p2, p3`
 
 	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`
@@ -335,6 +336,7 @@ instrPackages: p1, p2, p3`
 
 	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`
@@ -401,6 +403,7 @@ instrPackages: p1, p2, p3`
 
 	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`
@@ -467,6 +470,7 @@ instrPackages: p1, p2, p3`
 
 	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`
