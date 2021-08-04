@@ -2,7 +2,6 @@ package io.harness.analyserservice;
 
 import static io.harness.AuthorizationServiceHeader.ANALYZER_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.mongo.tracing.TracerConstants.ANALYZER_CACHE_NAME;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.QueryAnalysisMessageListener;
@@ -10,15 +9,12 @@ import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
-import io.harness.eventsframework.impl.redis.DistributedCache;
-import io.harness.eventsframework.impl.redis.RedisCache;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
@@ -44,8 +40,5 @@ public class EventsFrameworkModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkConstants.QUERY_ANALYSIS_TOPIC))
         .to(QueryAnalysisMessageListener.class);
-    //    bind(DistributedCache.class)
-    //        .annotatedWith(Names.named(ANALYZER_CACHE_NAME))
-    //        .toInstance(RedisCache.of(redisConfig, 10, TimeUnit.HOURS));
   }
 }

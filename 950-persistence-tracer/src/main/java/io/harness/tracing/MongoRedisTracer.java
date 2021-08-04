@@ -7,7 +7,6 @@ import static io.harness.mongo.tracing.TracerConstants.SERVICE_ID;
 import static io.harness.version.VersionConstants.VERSION_KEY;
 
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.impl.redis.DistributedCache;
 import io.harness.eventsframework.producer.Message;
 import io.harness.mongo.tracing.Tracer;
 import io.harness.tracing.shapedetector.QueryShapeDetector;
@@ -17,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.concurrent.ExecutorService;
+import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -30,17 +30,17 @@ public class MongoRedisTracer implements Tracer {
   @Inject @Named(SERVICE_ID) private String serviceId;
   @Inject private VersionInfoManager versionInfoManager;
 
-  @Inject @Named(ANALYZER_CACHE_NAME) DistributedCache queryStatsCache;
+  @Inject @Named(ANALYZER_CACHE_NAME) Cache<String, Long> queryStatsCache;
 
   @Override
   public void trace(Document queryDoc, Document sortDoc, String collectionName, MongoTemplate mongoTemplate) {
     try {
       String qHash = QueryShapeDetector.getQueryHash(collectionName, queryDoc, sortDoc);
       String queryStatsCacheKey = String.format(ANALYZER_CACHE_KEY, serviceId);
-      if (queryStatsCache.presentInMap(queryStatsCacheKey, qHash)) {
-        Long count = queryStatsCache.getFromMap(queryStatsCacheKey, qHash);
+      if (queryStatsCache.containsKey(qHash)) {
+        Long count = queryStatsCache.get(qHash);
         count = count + 1;
-        queryStatsCache.putInsideMap(queryStatsCacheKey, qHash, count);
+        queryStatsCache.put(qHash, count);
         if (count % SAMPLE_SIZE != 0) {
           return;
         }
@@ -66,7 +66,7 @@ public class MongoRedisTracer implements Tracer {
                           .putMetadata(QUERY_HASH, qHash)
                           .setData(ByteString.copyFromUtf8(explainResult.toJson()))
                           .build());
-        queryStatsCache.putInsideMap(queryStatsCacheKey, qHash, 1L);
+        queryStatsCache.put(qHash, 1L);
       });
     } catch (Exception ex) {
       log.error("Unable to trace the query {}", queryDoc);

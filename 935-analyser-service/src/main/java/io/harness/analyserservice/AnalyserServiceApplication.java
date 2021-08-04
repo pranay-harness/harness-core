@@ -8,9 +8,6 @@ import io.harness.event.QueryAnalyserEventService;
 import io.harness.event.queryRecords.AnalyserSampleAggregatorService;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.service.QueryStatsService;
-import io.harness.springdata.HMongoTemplate;
-import io.harness.tracing.MongoRedisTracer;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 public class AnalyserServiceApplication extends Application<AnalyserServiceConfiguration> {
@@ -85,9 +81,7 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
 
     registerManagedBeans(environment, injector);
     registerScheduledJobs(injector, configuration);
-    registerObservers(injector);
     MaintenanceController.forceMaintenance(false);
-    populateCache(injector);
   }
 
   private void registerCorsFilter(AnalyserServiceConfiguration configuration, Environment environment) {
@@ -97,11 +91,6 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
         "X-Requested-With,Content-Type,Accept,Origin,Authorization,X-api-key", "allowedMethods",
         "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-  }
-
-  private void registerObservers(Injector injector) {
-    HMongoTemplate hMongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
-    hMongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
@@ -114,10 +103,6 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
             ScheduledExecutorService.class, Names.named(AnalyserServiceConstants.SAMPLE_AGGREGATOR_SCHEDULED_THREAD)))
         .scheduleWithFixedDelay(injector.getInstance(AnalyserSampleAggregatorService.class), 0L,
             configuration.getAggregateScheduleInterval(), TimeUnit.MINUTES);
-  }
-
-  private void populateCache(Injector injector) {
-    injector.getInstance(QueryStatsService.class).storeHashesInsideCache();
   }
 
   private void registerResources(Environment environment, Injector injector) {

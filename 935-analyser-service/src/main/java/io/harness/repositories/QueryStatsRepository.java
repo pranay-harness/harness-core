@@ -7,8 +7,7 @@ import java.util.List;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
-public interface QueryStatsRepository
-    extends PagingAndSortingRepository<QueryStats, String>, QueryStatsRepositoryCustom {
+public interface QueryStatsRepository extends PagingAndSortingRepository<QueryStats, String> {
   <S extends QueryStats> S save(S queryStats);
 
   List<QueryStats> findByServiceIdAndVersionAndExecutionTimeMillisGreaterThanOrderByExecutionTimeMillisDesc(

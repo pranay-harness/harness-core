@@ -1,7 +1,5 @@
 package io.harness.service;
 
-import static io.harness.mongo.tracing.TracerConstants.ANALYZER_CACHE_NAME;
-
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.analyserservice.AnalyserServiceConfiguration;
@@ -18,12 +16,10 @@ import io.harness.event.QueryPlanner.WinningPlan;
 import io.harness.event.QueryRecordEntity;
 import io.harness.event.QueryStats;
 import io.harness.event.QueryStats.QueryStatsKeys;
-import io.harness.eventsframework.impl.redis.DistributedCache;
 import io.harness.repositories.QueryStatsRepository;
 import io.harness.service.beans.QueryRecordKey;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,17 +31,9 @@ import org.springframework.data.mongodb.core.query.Query;
 public class QueryStatsServiceImpl implements QueryStatsService {
   private static final int size = 100;
 
-  @Inject @Named(ANALYZER_CACHE_NAME) DistributedCache queryRecordCache;
   @Inject QueryStatsRepository queryStatsRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject AnalyserServiceConfiguration analyserServiceConfiguration;
-
-  public void storeHashesInsideCache() {
-    int page = 1;
-    while (queryStatsRepository.findAllHashes(page, size, queryRecordCache)) {
-      page++;
-    }
-  }
 
   public void updateQueryStatsByAggregation(Map<QueryRecordKey, List<QueryRecordEntity>> queryRecordKeyListMap) {
     for (QueryRecordKey queryRecordKey : queryRecordKeyListMap.keySet()) {
