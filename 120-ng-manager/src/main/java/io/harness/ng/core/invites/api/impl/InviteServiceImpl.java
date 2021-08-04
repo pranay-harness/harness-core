@@ -121,7 +121,7 @@ public class InviteServiceImpl implements InviteService {
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
   private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
   private static final String NG_UI_PATH_PREFIX = "ng/";
-  private static final String ACCEPT_INVITE_PATH = "gateway/ng/api/invites/verify";
+  private static final String ACCEPT_INVITE_PATH = "ng/api/invites/verify";
   private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final NgUserService ngUserService;
@@ -339,8 +339,9 @@ public class InviteServiceImpl implements InviteService {
   private URI getUserInfoSubmitUrl(String email, String jwtToken, InviteAcceptResponse inviteAcceptResponse) {
     String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
     try {
-      String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s",
-          accountIdentifier, email, jwtToken, getResourceUrl(inviteAcceptResponse));
+      String accountCreationFragment =
+          String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s&generation=NG", accountIdentifier, email,
+              jwtToken, getResourceUrl(inviteAcceptResponse));
       String baseUrl = getBaseUrl(accountIdentifier);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
@@ -365,6 +366,10 @@ public class InviteServiceImpl implements InviteService {
 
   private String getBaseUrl(String accountIdentifier) {
     return RestClientUtils.getResponse(accountClient.getBaseUrl(accountIdentifier));
+  }
+
+  private String getGatewayBaseUrl(String accountIdentifier) {
+    return RestClientUtils.getResponse(accountClient.getGatewayBaseUrl(accountIdentifier));
   }
 
   private Invite resendInvite(Invite newInvite) {
@@ -585,19 +590,15 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private String getAcceptInviteUrl(Invite invite) throws URISyntaxException, UnsupportedEncodingException {
-    String baseUrl = getBaseUrl(invite.getAccountIdentifier());
+    String baseUrl = getGatewayBaseUrl(invite.getAccountIdentifier()) + ACCEPT_INVITE_PATH;
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
-    uriBuilder.setPath(ACCEPT_INVITE_PATH);
     uriBuilder.setParameters(getParameterList(invite));
     uriBuilder.setFragment(null);
     return uriBuilder.toString();
   }
 
   private List<NameValuePair> getParameterList(Invite invite) throws UnsupportedEncodingException {
-    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
     return Arrays.asList(new BasicNameValuePair("accountIdentifier", invite.getAccountIdentifier()),
-        new BasicNameValuePair("accountName", account.getName()),
-        new BasicNameValuePair("company", account.getCompanyName()),
         new BasicNameValuePair("email", URLEncoder.encode(invite.getEmail(), "UTF-8")),
         new BasicNameValuePair("token", invite.getInviteToken()));
   }

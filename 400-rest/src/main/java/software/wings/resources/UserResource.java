@@ -55,6 +55,7 @@ import software.wings.beans.LoginTypeRequest;
 import software.wings.beans.PublicUser;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.marketplace.MarketPlaceType;
@@ -87,6 +88,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -1155,9 +1157,65 @@ public class UserResource {
   @Path("invites/ngsignin")
   @Timed
   @ExceptionMetered
-  public RestResponse<User> completeInviteAndSignIn(
-      @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInviteDTO userInvite) {
-    return new RestResponse<>(userService.completeNGInviteAndSignIn(userInvite));
+  public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("generation") Generation gen, @NotNull UserInviteDTO userInviteDTO) {
+    if (gen != null && gen.equals(Generation.CG)) {
+      Account account = accountService.get(accountId);
+      String inviteId = userService.getInviteIdFromToken(userInviteDTO.getToken());
+      UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                  .withAccountId(accountId)
+                                  .withEmail(userInviteDTO.getEmail())
+                                  .withName(userInviteDTO.getName())
+                                  .withAccountName(account.getAccountName())
+                                  .withCompanyName(account.getCompanyName())
+                                  .withUuid(inviteId)
+                                  .build();
+      userInvite.setAccountId(accountId);
+      userInvite.setUuid(inviteId);
+      userInvite.setPassword(userInviteDTO.getPassword().toCharArray());
+      return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+    } else {
+      return new RestResponse<>(userService.completeNGInviteAndSignIn(userInviteDTO));
+    }
+  }
+
+  /**
+   * The backend URL for invite which will be added in
+   *
+   * @param accountId the account ID
+   * @param jwtToken JWT token corresponding to the invite
+   * @param email Email id for the user
+   * @return the rest response
+   */
+  @PublicApi
+  @GET
+  @Path("invites/verify")
+  @Timed
+  @ExceptionMetered
+  public Response acceptInviteAndRedirect(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("token") @NotNull String jwtToken, @QueryParam("email") @NotNull String email) {
+    UserInvite userInvite = new UserInvite();
+    String decodedEmail = email;
+    try {
+      decodedEmail = URLDecoder.decode(email, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      log.error("Unsupported encoding exception for " + accountId, e);
+      throw new InvalidRequestException("Malformed email received");
+    }
+
+    String inviteId = userService.getInviteIdFromToken(jwtToken);
+    userInvite.setAccountId(accountId);
+    userInvite.setEmail(decodedEmail);
+    userInvite.setUuid(inviteId);
+    InviteOperationResponse inviteResponse = userService.checkInviteStatus(userInvite, Generation.CG);
+    URI redirectURL = null;
+    try {
+      redirectURL = userService.getInviteAcceptRedirectURL(inviteResponse, userInvite, jwtToken);
+      return Response.seeOther(redirectURL).build();
+    } catch (URISyntaxException e) {
+      log.error("Unable to create redirect url for invite", e);
+      throw new InvalidRequestException("URI syntax error");
+    }
   }
 
   @PublicApi

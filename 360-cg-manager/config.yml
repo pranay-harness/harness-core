@@ -301,8 +301,11 @@ envPath: ""
 kubectlVersion: v1.13.2
 scmVersion: abf4ce53
 
+ngAuthUIEnabled: false
+
 portal:
   url: https://localhost:8000
+  gatewayPathPrefix: "gateway/"
   allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
   companyName: Harness Inc
   authTokenExpiryInMillis: 86400000
