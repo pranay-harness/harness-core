@@ -25,8 +25,8 @@ const (
 	defaultRunTestsRetries int32 = 1
 	mvnCmd                       = "mvn"
 	bazelCmd                     = "bazel"
-	outDir                       = "%s/ti/callgraph/"     // path passed as outDir in the config.ini file
-	cgDir                        = "%s/ti/callgraph/cg/"  // path where callgraph files will be generated
+	outDir                       = "%s/ti/callgraph/"    // path passed as outDir in the config.ini file
+	cgDir                        = "%s/ti/callgraph/cg/" // path where callgraph files will be generated
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
 	javaAgentArg = "-javaagent:/addon/bin/java-agent.jar=%s"
@@ -407,8 +407,11 @@ func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string
 		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
 
+	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
+	agentArg := fmt.Sprintf(javaAgentArg, iniFile)
+
 	// TMPDIR needs to be set for some build tools like bazel
-	command := fmt.Sprintf("set -xe\nexport TMPDIR=%s\n%s\n%s\n%s%s", r.tmpFilePath, r.preCommand, testCmd, r.postCommand, outputVarCmd)
+	command := fmt.Sprintf("set -xe\nexport TMPDIR=%s\nexport HARNESS_JAVA_AGENT=%s\n%s\n%s\n%s%s", r.tmpFilePath, agentArg, r.preCommand, testCmd, r.postCommand, outputVarCmd)
 	resolvedCmd, err := resolveExprInCmd(command)
 	if err != nil {
 		return "", err
