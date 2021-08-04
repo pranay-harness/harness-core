@@ -102,11 +102,9 @@ import io.harness.service.DeploymentEventListenerRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
-import io.harness.tracing.MongoRedisTracer;
 import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
@@ -165,7 +163,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PL)
 @Slf4j
@@ -303,18 +300,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJobs(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
-    registerObservers(injector);
     initializeMonitoring(appConfig, injector);
 
     registerManagedBeans(environment, injector);
 
     registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
-  }
-
-  private void registerObservers(Injector injector) {
-    HMongoTemplate hMongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
-    hMongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerQueueListeners(Injector injector) {

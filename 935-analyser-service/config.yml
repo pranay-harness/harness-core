@@ -44,7 +44,6 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: true
   aliasDBName: analyserserver
-  traceMode: ENABLED
 
 eventsFramework:
   redis:

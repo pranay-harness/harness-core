@@ -192,7 +192,6 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.token.TokenClientModule;
-import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
@@ -490,17 +489,6 @@ public class NextGenModule extends AbstractModule {
     });
     install(OrchestrationModule.getInstance(getOrchestrationConfig()));
     install(OrchestrationStepsModule.getInstance(null));
-    install(new AbstractPersistenceTracerModule() {
-      @Override
-      protected RedisConfig redisConfigProvider() {
-        return appConfig.getEventsFrameworkConfiguration().getRedisConfig();
-      }
-
-      @Override
-      protected String serviceIdProvider() {
-        return NG_MANAGER.getServiceId();
-      }
-    });
     install(EntitySetupUsageModule.getInstance());
     install(PersistentLockModule.getInstance());
     install(new TransactionOutboxModule(

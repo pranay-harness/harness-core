@@ -37,12 +37,10 @@ import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
-import io.harness.springdata.HMongoTemplate;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.TokenClientModule;
 import io.harness.token.remote.TokenClient;
-import io.harness.tracing.MongoRedisTracer;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,7 +75,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 @OwnedBy(PL)
@@ -149,7 +146,6 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     registerJerseyFeatures(environment);
     registerAuthFilters(appConfig, environment, godInjector);
     registerRequestContextFilter(environment);
-    registerObservers(godInjector.get(NOTIFICATION_SERVICE));
 
     new NotificationServiceSetup().setup(
         appConfig.getNotificationServiceConfig(), environment, godInjector.get(NOTIFICATION_SERVICE));
@@ -175,11 +171,6 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   private void blockingMigrations(Injector injector) {
     //    This is is temporary one time blocking migration
     injector.getInstance(PurgeDeletedResourceGroups.class).cleanUp();
-  }
-
-  private void registerObservers(Injector injector) {
-    HMongoTemplate hMongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
-    hMongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerCommonResources(

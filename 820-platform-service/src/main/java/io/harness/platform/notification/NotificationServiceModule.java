@@ -47,14 +47,12 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.platform.PlatformConfiguration;
 import io.harness.queue.QueueConsumer;
-import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NotificationRegistrars;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.token.TokenClientModule;
-import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionModule;
@@ -201,18 +199,6 @@ public class NotificationServiceModule extends AbstractModule {
     bindMessageConsumer();
     install(new TokenClientModule(this.appConfig.getRbacServiceConfig(),
         this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), NOTIFICATION_SERVICE.getServiceId()));
-
-    install(new AbstractPersistenceTracerModule() {
-      @Override
-      protected RedisConfig redisConfigProvider() {
-        return appConfig.getResoureGroupServiceConfig().getRedisConfig();
-      }
-
-      @Override
-      protected String serviceIdProvider() {
-        return NOTIFICATION_SERVICE.getServiceId();
-      }
-    });
   }
 
   @Provides
