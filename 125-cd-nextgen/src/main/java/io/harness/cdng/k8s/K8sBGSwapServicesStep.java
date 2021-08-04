@@ -89,7 +89,7 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8s
     K8sBlueGreenOutcome k8sBlueGreenOutcome = (K8sBlueGreenOutcome) optionalSweepingOutput.getOutput();
 
     InfrastructureOutcome infrastructure = k8sStepHelper.getInfrastructureOutcome(ambiance);
-
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     K8sSwapServiceSelectorsRequest swapServiceSelectorsRequest =
         K8sSwapServiceSelectorsRequest.builder()
             .service1(k8sBlueGreenOutcome.getPrimaryServiceName())
@@ -100,6 +100,7 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8s
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
             .build();
 
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
     return k8sStepHelper
         .queueK8sTask(stepElementParameters, swapServiceSelectorsRequest, ambiance,
             K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build())

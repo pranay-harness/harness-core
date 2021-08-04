@@ -10,7 +10,6 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.CDP)
-public class K8sRollingDetailsInfo implements StepDetailsInfo {
+public class K8sReleaseDetailsInfo implements StepDetailsInfo {
   String releaseName;
-  Integer releaseNumber;
 }

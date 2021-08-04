@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 
 @OwnedBy(CDP)
@@ -48,6 +49,10 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.isSkipSteadyStateCheck()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @Test

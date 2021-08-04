@@ -86,11 +86,13 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                                              .build();
   final StepElementParameters stepElementParameters =
       StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
+  private String releaseName = "test-release-name";
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
+    doReturn(releaseName).when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
   }
 
   private void setupPreConditions(Ambiance ambiance) {
@@ -135,6 +137,10 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
 
     // We need this null as K8sBGSwapServicesStep does not depend upon Manifests
     assertThat(request.getManifestDelegateConfig()).isNull();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @Test

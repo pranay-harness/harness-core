@@ -209,6 +209,10 @@ public class K8sScaleStepTest extends CategoryTest {
 
     // We need this null as K8sScaleStep does not depend upon Manifests
     assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo("test-scale-count-release");
   }
 
   @Test
@@ -264,6 +268,9 @@ public class K8sScaleStepTest extends CategoryTest {
 
     // We need this null as K8sScaleStep does not depend upon Manifests
     assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo("test-scale-percentage-release");
   }
 
   @SneakyThrows
