@@ -95,6 +95,9 @@ public class BuildEnvironmentUtils {
         envVarMap.put(DRONE_TAG, manualExecutionSource.getTag());
         envVarMap.put(DRONE_BUILD_EVENT, "tag");
       }
+      if (!isEmpty(manualExecutionSource.getCommitSha())) {
+        envVarMap.put(DRONE_COMMIT_SHA, manualExecutionSource.getCommitSha());
+      }
     } else if (ciExecutionArgs.getExecutionSource().getType() == Type.CUSTOM) {
       CustomExecutionSource customExecutionSource = (CustomExecutionSource) ciExecutionArgs.getExecutionSource();
       if (!isEmpty(customExecutionSource.getBranch())) {

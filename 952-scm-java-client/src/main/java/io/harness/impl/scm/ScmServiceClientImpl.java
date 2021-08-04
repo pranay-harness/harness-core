@@ -45,6 +45,8 @@ import io.harness.product.ci.scm.proto.FindFilesInCommitRequest;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInPRRequest;
 import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
+import io.harness.product.ci.scm.proto.FindPRRequest;
+import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetAuthenticatedUserRequest;
 import io.harness.product.ci.scm.proto.GetAuthenticatedUserResponse;
 import io.harness.product.ci.scm.proto.GetBatchFileRequest;
@@ -494,6 +496,17 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   @Override
+  public FindPRResponse findPR(ScmConnector scmConnector, long number, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    FindPRRequest findPRRequest =
+        FindPRRequest.newBuilder().setSlug(slug).setNumber(number).setProvider(gitProvider).build();
+    final FindPRResponse prResponse = scmBlockingStub.findPR(findPRRequest);
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(prResponse.getStatus(), prResponse.getError());
+    return prResponse;
+  }
+
+  @Override
   public CreateWebhookResponse createWebhook(
       ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     String slug = scmGitProviderHelper.getSlug(scmConnector);
@@ -634,7 +647,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                             .build());
   }
 
-  private String getLatestShaOfBranch(
+  public String getLatestShaOfBranch(
       String slug, Provider gitProvider, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     try {
       GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
