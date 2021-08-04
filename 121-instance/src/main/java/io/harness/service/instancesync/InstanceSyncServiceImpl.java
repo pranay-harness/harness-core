@@ -449,7 +449,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
             .instanceType(abstractInstanceSyncHandler.getInstanceType())
             .instanceKey(abstractInstanceSyncHandler.getInstanceKey(instanceInfoDTO))
             .primaryArtifact(deploymentSummaryDTO.getArtifactDetails())
-            .infraMappingType(infrastructureMappingDTO.getInfrastructureKind())
+            .infrastructureKind(infrastructureMappingDTO.getInfrastructureKind())
             .connectorRef(infrastructureMappingDTO.getConnectorRef())
             .lastPipelineExecutionName(deploymentSummaryDTO.getPipelineExecutionName())
             .lastDeployedByName(deploymentSummaryDTO.getDeployedByName())

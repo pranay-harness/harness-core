@@ -5,8 +5,13 @@ import static java.lang.System.currentTimeMillis;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
+import io.harness.entities.Instance;
+import io.harness.mappers.InstanceDetailsMapper;
+import io.harness.mappers.InstanceMapper;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
+import io.harness.models.InstanceDTOsByBuildId;
+import io.harness.models.InstanceDetailsByBuildId;
 import io.harness.models.InstancesByBuildId;
 import io.harness.models.constants.InstanceSyncConstants;
 import io.harness.models.dashboard.InstanceCountDetails;
@@ -30,6 +35,8 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   private InstanceService instanceService;
+  private InstanceDetailsMapper instanceDetailsMapper;
+
   /**
    * API to fetch active instance count overview for given account+org+project group by env type
    * @param accountIdentifier
@@ -126,18 +133,19 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
    * @return List of buildId and instances
    */
   @Override
-  public List<InstancesByBuildId> getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier,
+  public List<InstanceDetailsByBuildId> getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String serviceId, String envId, List<String> buildIds,
       long timestampInMs) {
     AggregationResults<InstancesByBuildId> buildIdAndInstancesAggregationResults =
         instanceService.getActiveInstancesByServiceIdEnvIdAndBuildIds(accountIdentifier, orgIdentifier,
             projectIdentifier, serviceId, envId, buildIds, timestampInMs, InstanceSyncConstants.INSTANCE_LIMIT);
-    List<InstancesByBuildId> buildIdAndInstancesList = new ArrayList<>();
+    List<InstanceDetailsByBuildId> buildIdAndInstancesList = new ArrayList<>();
 
     buildIdAndInstancesAggregationResults.getMappedResults().forEach(buildIdAndInstances -> {
       String buildId = buildIdAndInstances.getBuildId();
-      List<InstanceDTO> instances = buildIdAndInstances.getInstances();
-      buildIdAndInstancesList.add(new InstancesByBuildId(buildId, instances));
+      List<Instance> instances = buildIdAndInstances.getInstances();
+      buildIdAndInstancesList.add(new InstanceDetailsByBuildId(
+          buildId, instanceDetailsMapper.toInstanceDetailsDTOList(InstanceMapper.toDTO(instances))));
     });
 
     return buildIdAndInstancesList;
@@ -202,9 +210,9 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
       Map<String, Map<String, List<InstanceDTO>>> instanceGroupMap) {
     List<BuildsByEnvironment> buildsByEnvironment = new ArrayList<>();
     for (String envId : instanceGroupMap.keySet()) {
-      List<InstancesByBuildId> instancesByBuilds = new ArrayList<>();
+      List<InstanceDTOsByBuildId> instancesByBuilds = new ArrayList<>();
       for (String buildId : instanceGroupMap.get(envId).keySet()) {
-        instancesByBuilds.add(new InstancesByBuildId(buildId, instanceGroupMap.get(envId).get(buildId)));
+        instancesByBuilds.add(new InstanceDTOsByBuildId(buildId, instanceGroupMap.get(envId).get(buildId)));
       }
       buildsByEnvironment.add(new BuildsByEnvironment(envId, instancesByBuilds));
     }

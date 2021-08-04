@@ -8,6 +8,7 @@ import io.harness.dtos.InstanceDTO;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 import io.harness.dtos.instanceinfo.InstanceInfoDTO;
 import io.harness.entities.InstanceType;
+import io.harness.models.infrastructuredetails.InfrastructureDetails;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,9 @@ public abstract class AbstractInstanceSyncHandler implements IInstanceSyncHandle
    * Need to do similar mapping in NG
    */
   public abstract String getInfrastructureKind();
+
+  // Used for Dashboarding purposes
+  public abstract InfrastructureDetails getInfrastructureDetails(InstanceInfoDTO instanceInfoDTO);
 
   public abstract DeploymentInfoDTO getDeploymentInfo(
       InfrastructureOutcome infrastructureOutcome, List<ServerInstanceInfo> serverInstanceInfoList);
