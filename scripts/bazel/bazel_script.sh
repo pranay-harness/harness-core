@@ -117,6 +117,7 @@ BAZEL_MODULES="\
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //945-account-mgmt:module \
+  //945-license-usage-sdk:module \
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
   //947-access-control-core:module \
@@ -161,6 +162,7 @@ BAZEL_MODULES="\
   //960-expression-service:module \
   //960-ng-core-beans:module \
   //960-ng-license-beans:module \
+  //960-ng-license-usage-beans:module \
   //960-ng-signup-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \

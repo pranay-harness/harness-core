@@ -1,6 +1,6 @@
 package io.harness.licensing.services;
 
-import static io.harness.licensing.interfaces.ModuleLicenseInterfaceImpl.TRIAL_DURATION;
+import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
 
 import static java.lang.String.format;
 

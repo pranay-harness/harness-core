@@ -306,6 +306,8 @@ aeriform("//940-secret-manager-client:module")
 
 aeriform("//945-account-mgmt:module")
 
+aeriform("//945-license-usage-sdk:module")
+
 aeriform("//945-ng-audit-client:module")
 
 aeriform("//945-ng-audit-client:tests")
@@ -437,6 +439,8 @@ aeriform("//960-expression-service:tests")
 aeriform("//960-ng-core-beans:module")
 
 aeriform("//960-ng-license-beans:module")
+
+aeriform("//960-ng-license-usage-beans:module")
 
 aeriform("//960-ng-signup-beans:module")
 
