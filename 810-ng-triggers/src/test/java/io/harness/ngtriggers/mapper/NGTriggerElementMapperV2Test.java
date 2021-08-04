@@ -1,7 +1,10 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.SCHEDULED;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
+import static io.harness.ngtriggers.beans.source.artifact.BuildStoreType.HTTP;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.CONTAINS;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.ENDS_WITH;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.EQUALS;
@@ -19,20 +22,31 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.internal.configuration.GlobalConfiguration.validate;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.jackson.JsonNodeUtils;
 import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
+import io.harness.ngtriggers.beans.source.ManifestType;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
+import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
+import io.harness.ngtriggers.beans.source.artifact.BuildAware;
+import io.harness.ngtriggers.beans.source.artifact.BuildStoreType;
+import io.harness.ngtriggers.beans.source.artifact.HelmManifestSpec;
+import io.harness.ngtriggers.beans.source.artifact.ManifestTriggerConfig;
+import io.harness.ngtriggers.beans.source.artifact.ManifestTypeSpec;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerSpec;
@@ -51,12 +65,23 @@ import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubTriggerE
 import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.GitlabSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.action.GitlabPRAction;
 import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.event.GitlabTriggerEvent;
+import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.yaml.YamlUtils;
+import io.harness.polling.contracts.HttpHelmPayload;
+import io.harness.polling.contracts.PayloadType;
+import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.contracts.Qualifier;
+import io.harness.polling.contracts.Type;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.rule.Owner;
 import io.harness.webhook.WebhookConfigProvider;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.common.io.Resources;
@@ -65,8 +90,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -91,6 +119,7 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   private String ngTriggerYaml_cron;
   private String ngTriggerYaml_artifact;
   private String ngTriggerYaml_manifest;
+  private String pipeline;
 
   private List<TriggerEventDataCondition> payloadConditions;
   private List<TriggerEventDataCondition> headerConditions;
@@ -143,6 +172,8 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
 
     ngTriggerYaml_manifest = Resources.toString(
         Objects.requireNonNull(classLoader.getResource("ng-trigger-manifest.yaml")), StandardCharsets.UTF_8);
+    pipeline =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource("pipeline.yaml")), StandardCharsets.UTF_8);
 
     payloadConditions = asList(TriggerEventDataCondition.builder().key("k1").operator(EQUALS).value("v1").build(),
         TriggerEventDataCondition.builder().key("k2").operator(NOT_EQUALS).value("v2").build(),
@@ -600,27 +631,225 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void testManifestTriggerToResponseDTO() {
-    NGTriggerEntity ngTriggerEntity =
-        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_manifest).getNgTriggerEntity();
-    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
-    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
-    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
+  public void testManifestTriggerToResponseDTO() throws Exception {
+    TriggerDetails triggerDetails =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_manifest);
+
+    JsonNode jsonNode = YamlUtils.readTree(ngTriggerYaml_manifest).getNode().getCurrJsonNode();
+    Map<String, JsonNode> triggerSpecMap = JsonNodeUtils.getMap(jsonNode.get("trigger").get("source"), "spec");
+
+    Map<String, Object> pipelineBuildSpecMap = generateFinalMapWithBuildSpecFromPipeline(
+        pipeline, triggerSpecMap.get("stageIdentifier").asText(), triggerSpecMap.get("manifestRef").asText());
+
+    validateStageAndBuildRef(pipelineBuildSpecMap, triggerSpecMap);
+
+    Map<String, Object> triggerBuildSpecMap = new HashMap<>();
+    triggerSpecMap.entrySet().forEach(entry -> triggerBuildSpecMap.put(entry.getKey(), entry.getValue()));
+    PollingItem pollingItem = generatePollingItem(triggerDetails, pipelineBuildSpecMap, triggerBuildSpecMap);
+    int i = 0;
   }
 
-  private TriggerEventHistory generateEventHistoryWithTimestamp(SimpleDateFormat formatter6, String sDate1)
-      throws ParseException {
-    return TriggerEventHistory.builder().createdAt(formatter6.parse(sDate1).getTime()).build();
+  private void validateStageAndBuildRef(
+      Map<String, Object> pipelineBuildSpecMap, Map<String, JsonNode> triggerSpecMap) {
+    if (isEmpty(pipelineBuildSpecMap)) {
+      // manifest was not in pipeline
+      throw new InvalidRequestException("");
+    }
+
+    EngineExpressionEvaluator engineExpressionEvaluator = new EngineExpressionEvaluator(null);
+    Map<String, Object> exprMap = new HashMap<>();
+    triggerSpecMap.entrySet().stream().forEach(entry -> exprMap.put(entry.getKey(), entry.getValue()));
+
+    TextNode typeFromPipeline = (TextNode) pipelineBuildSpecMap.get("type");
+    String typeFromTrigger = ((TextNode) engineExpressionEvaluator.evaluateExpression("type", exprMap)).asText();
+    if (!typeFromPipeline.asText().equals(typeFromTrigger)) {
+      throw new InvalidRequestException("");
+    }
+
+    if (typeFromTrigger.equals(ManifestType.HELM_MANIFEST.getValue())) {
+      String storeTypeFromTrigger =
+          ((TextNode) engineExpressionEvaluator.evaluateExpression("spec.store.type", exprMap)).asText();
+      String storeTypeFromPipeline = ((TextNode) pipelineBuildSpecMap.get("spec.store.type")).asText();
+
+      if (!storeTypeFromPipeline.equals(storeTypeFromTrigger)) {
+        throw new InvalidRequestException("");
+      }
+
+      if (pipelineBuildSpecMap.containsKey("spec.chartVersion")) {
+        String chartVersion = ((TextNode) pipelineBuildSpecMap.get("spec.chartVersion")).asText();
+        if (!chartVersion.equals("<+input>")) {
+          // throw new InvalidRequestException("");
+        }
+      }
+    }
   }
 
-  private void assertRootLevelProperties(NGTriggerConfigV2 ngTriggerConfigV2) {
-    assertThat(ngTriggerConfigV2).isNotNull();
-    assertThat(ngTriggerConfigV2.getIdentifier()).isEqualTo("first_trigger");
-    assertThat(ngTriggerConfigV2.getEnabled()).isTrue();
-    assertThat(ngTriggerConfigV2.getInputYaml()).isEqualTo(inputYaml);
-    assertThat(ngTriggerConfigV2.getPipelineIdentifier()).isEqualTo("pipeline");
-    assertThat(ngTriggerConfigV2.getOrgIdentifier()).isEqualTo("org");
-    assertThat(ngTriggerConfigV2.getProjectIdentifier()).isEqualTo("proj");
-    assertThat(ngTriggerConfigV2.getName()).isEqualTo("first trigger");
+  private PollingItem generatePollingItem(
+      TriggerDetails details, Map<String, Object> pipelineMap, Map<String, Object> triggerDetails) {
+    int i = 0;
+
+    if (details.getNgTriggerEntity().getMetadata().getBuildMetadata() != null
+        && details.getNgTriggerEntity().getMetadata().getBuildMetadata().getType() == MANIFEST) {
+      EngineExpressionEvaluator engineExpressionEvaluator = new EngineExpressionEvaluator(null);
+      TextNode textNode = (TextNode) engineExpressionEvaluator.evaluateExpression("type", triggerDetails);
+      String type = textNode.asText();
+
+      if (ManifestType.HELM_MANIFEST.getValue().equals(type)) {
+        return generateHelmChartPollingItem(details, pipelineMap, triggerDetails);
+      }
+      return null;
+    }
+
+    return null;
   }
+
+  private PollingItem generateHelmChartPollingItem(
+      TriggerDetails details, Map<String, Object> pipelineMap, Map<String, Object> triggerDetails) {
+    EngineExpressionEvaluator engineExpressionEvaluator = new EngineExpressionEvaluator(null);
+    TextNode textNode =
+        (TextNode) engineExpressionEvaluator.evaluateExpression("spec.store.spec.connectorRef", pipelineMap);
+    String connectorRef = textNode.asText();
+    if ("<+input>".equals(connectorRef)) {
+      JsonNode jsonNode =
+          (JsonNode) engineExpressionEvaluator.evaluateExpression("spec.store.spec.connectorRef", triggerDetails);
+      connectorRef = jsonNode.asText();
+      if (isEmpty(connectorRef) || "<+input>".equals(connectorRef)) {
+        throw new InvalidRequestException("");
+      }
+    }
+
+    PollingItem.Builder builder =
+        PollingItem.newBuilder()
+            .setCategory(io.harness.polling.contracts.Category.MANIFEST)
+            .setQualifier(
+                Qualifier.newBuilder()
+                    .setSignature(details.getNgTriggerEntity().getMetadata().getBuildMetadata().getSignature())
+                    .setAccountId(details.getNgTriggerEntity().getAccountId())
+                    .setOrganizationId(details.getNgTriggerEntity().getOrgIdentifier())
+                    .setProjectId(details.getNgTriggerEntity().getProjectIdentifier())
+                    .build())
+            .setConnectorRef(connectorRef);
+    textNode = (TextNode) engineExpressionEvaluator.evaluateExpression("spec.store.type", triggerDetails);
+    String storeType = textNode.asText();
+
+    if (HTTP.getValue().equals(storeType)) {
+      return generateHttpHelmPollingItem(details, pipelineMap, triggerDetails, builder);
+    }
+    return null;
+  }
+
+  private PollingItem generateHttpHelmPollingItem(TriggerDetails details, Map<String, Object> pipelineMap,
+      Map<String, Object> triggerDetails, PollingItem.Builder builder) {
+    EngineExpressionEvaluator engineExpressionEvaluator = new EngineExpressionEvaluator(null);
+    TextNode textNode = (TextNode) engineExpressionEvaluator.evaluateExpression("spec.chartName", pipelineMap);
+    String chartName = textNode.asText();
+
+    if ("<+input>".equals(chartName)) {
+      JsonNode jsonNode = (JsonNode) engineExpressionEvaluator.evaluateExpression("spec.chartName", triggerDetails);
+      chartName = jsonNode.asText();
+      if (isEmpty(chartName) || "<+input>".equals(chartName)) {
+        throw new InvalidRequestException("");
+      }
+    }
+
+    builder.setPayloadType(PayloadType.newBuilder()
+                               .setType(Type.HTTP_HELM)
+                               .setHttpHelmPayload(HttpHelmPayload.newBuilder().setChartName(chartName).build())
+                               .build());
+
+    return builder.build();
+  }
+
+  private Map<String, Object> generateFinalMapWithBuildSpecFromPipeline(
+      String pipeline, String stageRef, String buildRef, List<String> fqnDisplayStrs) {
+    PipelineYamlConfig pipelineYamlConfig = new PipelineYamlConfig(pipeline);
+    String key =
+        "pipeline.stages.stage[identifier:STAGE_REF].spec.serviceConfig.serviceDefinition.spec.manifests.manifest[identifier:BUILD_REF]";
+    String key2 =
+        "pipeline.stages.parallel.stage[identifier:STAGE_REF].spec.serviceConfig.serviceDefinition.spec.manifests.manifest[identifier:BUILD_REF]";
+    key = key.replace("STAGE_REF", stageRef).replace("BUILD_REF", buildRef);
+
+    Map<String, Object> fqnToValueMap = new HashMap<>();
+    for (Map.Entry<FQN, Object> entry : pipelineYamlConfig.getFqnToValueMap().entrySet()) {
+      fqnDisplayStrs =
+          fqnDisplayStrs.stream().filter(str -> entry.getKey().display().startsWith(str)).collect(Collectors.toList());
+      if (isEmpty(fqnDisplayStrs)) {
+        continue;
+      }
+
+      FQN mapKey = entry.getKey();
+      String display = mapKey.display();
+      fqnToValueMap.put(display.substring(key.length() + 1, display.length() - 1), entry.getValue());
+      String fieldName = mapKey.getFieldName();
+      // String expressionFqn = mapKey.getExpressionFqn();
+      int i = 0;
+    }
+  }
+
+  return fqnToValueMap;
+}
+
+private PollingItem generatePollingItem(TriggerDetails triggerDetails, Map<String, Object> finalMap) {
+  NGTriggerSourceV2 ngTriggerSourceV2 = triggerDetails.getNgTriggerConfigV2().getSource();
+  NGTriggerSpecV2 spec = ngTriggerSourceV2.getSpec();
+
+  if (spec.getClass().isAssignableFrom(ManifestTriggerConfig.class)) {
+    ManifestTriggerConfig manifestTriggerConfig = (ManifestTriggerConfig) spec;
+    ManifestType manifestType = manifestTriggerConfig.getType();
+
+    if (!manifestType.name().equals(finalMap.get("type"))) {
+      throw new InvalidRequestException("");
+    }
+
+    if (manifestType == ManifestType.HELM_MANIFEST) {
+      return generateHelmChart(triggerDetails.getNgTriggerEntity(), manifestTriggerConfig, finalMap);
+    }
+  }
+  return null;
+}
+
+private PollingItem generateHelmChart(
+    NGTriggerEntity ngTriggerEntity, ManifestTriggerConfig manifestTriggerConfig, Map<String, Object> finalMap) {
+  PollingItem.Builder builder = PollingItem.newBuilder().setCategory(io.harness.polling.contracts.Category.MANIFEST);
+  builder.setQualifier(Qualifier.newBuilder()
+                           .setAccountId(ngTriggerEntity.getAccountId())
+                           .setOrganizationId(ngTriggerEntity.getOrgIdentifier())
+                           .setProjectId(ngTriggerEntity.getProjectIdentifier())
+                           .setSignature(ngTriggerEntity.getMetadata().getBuildMetadata().getSignature())
+                           .build());
+
+  HelmManifestSpec helmManifestSpec = (HelmManifestSpec) manifestTriggerConfig.getSpec();
+  if (!finalMap.get("spec.store.type").equals(helmManifestSpec.getType())) {
+    // type of manifest store does not match
+    throw new InvalidRequestException("");
+  }
+
+  if (finalMap.containsKey("spec.chartVersion") && !finalMap.get("spec.chartVersion").equals("<+input>")) {
+    // trigger does not make sense here
+    throw new InvalidRequestException("");
+  }
+
+  if (HTTP_HELM == helmManifestSpec.getType()) {
+    PayloadType.Builder payloadTypeBuilder = PayloadType.newBuilder().setType(Type.HTTP_HELM);
+    if (finalMap.containsKey("spec.chartName")) {
+    }
+  }
+  return null;
+}
+
+private TriggerEventHistory generateEventHistoryWithTimestamp(SimpleDateFormat formatter6, String sDate1)
+    throws ParseException {
+  return TriggerEventHistory.builder().createdAt(formatter6.parse(sDate1).getTime()).build();
+}
+
+private void assertRootLevelProperties(NGTriggerConfigV2 ngTriggerConfigV2) {
+  assertThat(ngTriggerConfigV2).isNotNull();
+  assertThat(ngTriggerConfigV2.getIdentifier()).isEqualTo("first_trigger");
+  assertThat(ngTriggerConfigV2.getEnabled()).isTrue();
+  assertThat(ngTriggerConfigV2.getInputYaml()).isEqualTo(inputYaml);
+  assertThat(ngTriggerConfigV2.getPipelineIdentifier()).isEqualTo("pipeline");
+  assertThat(ngTriggerConfigV2.getOrgIdentifier()).isEqualTo("org");
+  assertThat(ngTriggerConfigV2.getProjectIdentifier()).isEqualTo("proj");
+  assertThat(ngTriggerConfigV2.getName()).isEqualTo("first trigger");
+}
 }
