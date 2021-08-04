@@ -115,6 +115,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
     TaskChainResponse response =
         k8sStepHelper.queueK8sTask(stepElementParameters, k8sRollingDeployRequest, ambiance, executionPassThroughData);
     executionSweepingOutputService.consume(ambiance, K8sRollingReleaseOutput.OUTPUT_NAME,

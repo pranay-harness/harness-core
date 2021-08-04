@@ -124,6 +124,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
     return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, executionPassThroughData);
   }
 
