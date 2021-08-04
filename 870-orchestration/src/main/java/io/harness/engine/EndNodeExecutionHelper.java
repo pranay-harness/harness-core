@@ -8,7 +8,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
-import io.harness.engine.utils.TransactionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -29,13 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 public class EndNodeExecutionHelper {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private TransactionUtils transactionUtils;
   @Inject private OrchestrationEngine orchestrationEngine;
 
   public void endNodeExecutionWithNoAdvisers(
       @NonNull NodeExecution nodeExecution, @NonNull StepResponseProto stepResponse) {
-    NodeExecution updatedNodeExecution =
-        transactionUtils.performTransaction(() -> processStepResponseWithNoAdvisers(nodeExecution, stepResponse));
+    NodeExecution updatedNodeExecution = processStepResponseWithNoAdvisers(nodeExecution, stepResponse);
     if (updatedNodeExecution == null) {
       log.warn("Cannot process step response for nodeExecution {}", nodeExecution.getUuid());
       return;
@@ -80,7 +77,7 @@ public class EndNodeExecutionHelper {
 
   public NodeExecution handleStepResponsePreAdviser(NodeExecution nodeExecution, StepResponseProto stepResponse) {
     log.info("Handling Step response before calling advisers");
-    return transactionUtils.performTransaction(() -> processStepResponsePreAdvisers(nodeExecution, stepResponse));
+    return processStepResponsePreAdvisers(nodeExecution, stepResponse);
   }
 
   private NodeExecution processStepResponsePreAdvisers(NodeExecution nodeExecution, StepResponseProto stepResponse) {

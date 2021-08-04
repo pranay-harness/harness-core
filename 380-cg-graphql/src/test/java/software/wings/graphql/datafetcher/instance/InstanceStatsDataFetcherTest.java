@@ -16,7 +16,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
-import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -55,9 +54,9 @@ import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilt
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
 import software.wings.graphql.schema.type.aggregation.service.QLDeploymentType;
 import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
-import software.wings.graphql.schema.type.aggregation.service.QLWorkflowType;
-import software.wings.graphql.schema.type.aggregation.service.QLWorkflowTypeFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowType;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 import software.wings.security.UserThreadLocal;
 
 import com.google.inject.Inject;
@@ -1242,7 +1241,6 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
         Instance.builder().accountId(ACCOUNT1_ID).appId(APP2_ID_ACCOUNT1).lastWorkflowExecutionId("wid2").build());
     workflowService.createWorkflow(
         WorkflowBuilder.aWorkflow()
-            .workflowType(WorkflowType.ORCHESTRATION)
             .accountId(ACCOUNT1_ID)
             .appId(APP1_ID_ACCOUNT1)
             .name(APP1_ID_ACCOUNT1)
@@ -1252,7 +1250,6 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
             .build());
     workflowService.createWorkflow(
         WorkflowBuilder.aWorkflow()
-            .workflowType(WorkflowType.PIPELINE)
             .accountId(ACCOUNT1_ID)
             .appId(APP2_ID_ACCOUNT1)
             .name(APP2_ID_ACCOUNT1)
@@ -1261,14 +1258,16 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
             .uuid("wid2")
             .build());
 
-    QLInstanceFilter workflowTypeFilter = QLInstanceFilter.builder()
-                                              .workflowType(QLWorkflowTypeFilter.builder()
-                                                                .values(new QLWorkflowType[] {QLWorkflowType.PIPELINE})
-                                                                .operator(QLEnumOperator.IN)
-                                                                .build())
-                                              .build();
+    QLInstanceFilter workflowTypeFilter =
+        QLInstanceFilter.builder()
+            .orchestrationWorkflowType(
+                QLOrchestrationWorkflowTypeFilter.builder()
+                    .values(new QLOrchestrationWorkflowType[] {QLOrchestrationWorkflowType.BUILD})
+                    .operator(QLEnumOperator.IN)
+                    .build())
+            .build();
     QLData qlData = dataFetcher.fetch(ACCOUNT1_ID, null, newArrayList(workflowTypeFilter), null, null, null);
-    assertSinglePointData(qlData, 1L);
+    assertSinglePointData(qlData, 2L);
   }
 
   @Test
@@ -1288,12 +1287,14 @@ public class InstanceStatsDataFetcherTest extends AbstractDataFetcherTestBase {
                                 .operator(QLEnumOperator.IN)
                                 .build())
             .build();
-    QLInstanceFilter workflowTypeFilter = QLInstanceFilter.builder()
-                                              .workflowType(QLWorkflowTypeFilter.builder()
-                                                                .values(new QLWorkflowType[] {QLWorkflowType.PIPELINE})
-                                                                .operator(QLEnumOperator.IN)
-                                                                .build())
-                                              .build();
+    QLInstanceFilter workflowTypeFilter =
+        QLInstanceFilter.builder()
+            .orchestrationWorkflowType(
+                QLOrchestrationWorkflowTypeFilter.builder()
+                    .values(new QLOrchestrationWorkflowType[] {QLOrchestrationWorkflowType.BUILD})
+                    .operator(QLEnumOperator.IN)
+                    .build())
+            .build();
     QLData qlData = dataFetcher.fetch(
         ACCOUNT2_ID, null, newArrayList(envTypeFilter, deploymentTypeFilter, workflowTypeFilter), null, null, null);
     assertSinglePointData(qlData, 0L);

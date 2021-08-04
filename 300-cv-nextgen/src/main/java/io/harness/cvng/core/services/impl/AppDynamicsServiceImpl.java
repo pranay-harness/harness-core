@@ -97,7 +97,9 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
             .forEach(metricDefinition -> {
               TimeSeriesRecord timeSeriesRecord =
                   timeSeriesRecords.stream()
-                      .filter(record -> record.getMetricName().equals(metricDefinition.getName()))
+                      .filter(record
+                          -> record.getMetricName().equals(
+                              getMetricNameFromValidationPath(metricDefinition.getValidationPath())))
                       .findFirst()
                       .orElse(null);
 
@@ -127,6 +129,10 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     });
 
     return validationResponses;
+  }
+
+  private String getMetricNameFromValidationPath(String validationPath) {
+    return validationPath.substring(validationPath.lastIndexOf('|') + 1);
   }
 
   @Override

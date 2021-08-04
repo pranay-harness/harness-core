@@ -30,9 +30,10 @@ public class PmsEmailChannel extends PmsNotificationChannel {
     return EmailChannel.builder()
         .accountId(accountId)
         .recipients(recipients)
-        .userGroups(userGroups.stream()
-                        .map(e -> NotificationChannelUtils.getUserGroups(e, orgIdentifier, projectIdentifier))
-                        .collect(Collectors.toList()))
+        .userGroups(
+            userGroups.stream()
+                .map(e -> NotificationChannelUtils.getUserGroups(e, accountId, orgIdentifier, projectIdentifier))
+                .collect(Collectors.toList()))
         .team(Team.PIPELINE)
         .templateData(templateData)
         .templateId(templateId)

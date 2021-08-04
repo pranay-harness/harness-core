@@ -13,10 +13,10 @@ import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;

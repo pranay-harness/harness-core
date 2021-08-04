@@ -1,10 +1,8 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GTM_CCM_ENABLED;
 import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
-import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -51,7 +49,6 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -263,7 +260,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
-@TargetModule(_970_RBAC_CORE)
 public class UserServiceImpl implements UserService {
   static final String ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   static final String USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME = "password_changed";
@@ -2473,7 +2469,7 @@ public class UserServiceImpl implements UserService {
       if (isNotEmpty(user.getAccounts())) {
         for (Account account : user.getAccounts()) {
           if (account.getUuid().equals(accountId)) {
-            if (featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId)) {
+            if (accountService.isNextGenEnabled(accountId)) {
               Boolean isUserPartOfAccountInNG =
                   NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
               log.info(

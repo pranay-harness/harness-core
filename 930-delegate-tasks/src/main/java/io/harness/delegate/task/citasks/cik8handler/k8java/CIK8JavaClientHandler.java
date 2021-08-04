@@ -312,9 +312,6 @@ public class CIK8JavaClientHandler {
               .map(containerStatus -> containerStatus.getState().getWaiting().getMessage())
               .collect(Collectors.toList());
       errMsg = String.join(", ", containerErrs);
-    } else if (Duration.between(startTime, currTime).getSeconds() >= podMaxWaitUntilReadySecs) {
-      errMsg = format("Timeout exception: Pod containers failed to reach running state within %s seconds",
-          podMaxWaitUntilReadySecs);
     } else {
       List<String> podConditions = pod.getStatus()
                                        .getConditions()
@@ -323,6 +320,11 @@ public class CIK8JavaClientHandler {
                                        .map(V1PodCondition::getMessage)
                                        .collect(Collectors.toList());
       errMsg = String.join(", ", podConditions);
+    }
+
+    if (isEmpty(errMsg) && Duration.between(startTime, currTime).getSeconds() >= podMaxWaitUntilReadySecs) {
+      errMsg = format("Timeout exception: Pod containers failed to reach running state within %s seconds",
+          podMaxWaitUntilReadySecs);
     }
     return PodStatus.builder()
         .status(PodStatus.Status.ERROR)

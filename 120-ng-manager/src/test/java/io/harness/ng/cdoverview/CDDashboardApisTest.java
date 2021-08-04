@@ -10,13 +10,11 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.Deployment;
 import io.harness.ng.cdOverview.dto.DeploymentCount;
 import io.harness.ng.cdOverview.dto.DeploymentDateAndCount;
 import io.harness.ng.cdOverview.dto.DeploymentInfo;
-import io.harness.ng.cdOverview.dto.DeploymentStatusInfo;
 import io.harness.ng.cdOverview.dto.DeploymentStatusInfoList;
 import io.harness.ng.cdOverview.dto.ExecutionDeployment;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
@@ -24,7 +22,6 @@ import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
 import io.harness.ng.cdOverview.dto.HealthDeploymentInfo;
 import io.harness.ng.cdOverview.dto.LastWorkloadInfo;
 import io.harness.ng.cdOverview.dto.ServiceDeployment;
-import io.harness.ng.cdOverview.dto.ServiceDeploymentInfo;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.TimeAndStatusDeployment;
@@ -33,6 +30,11 @@ import io.harness.ng.cdOverview.dto.WorkloadCountInfo;
 import io.harness.ng.cdOverview.dto.WorkloadDateCountInfo;
 import io.harness.ng.cdOverview.dto.WorkloadDeploymentInfo;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl;
+import io.harness.ng.core.dashboard.AuthorInfo;
+import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
+import io.harness.ng.core.dashboard.ExecutionStatusInfo;
+import io.harness.ng.core.dashboard.GitInfo;
+import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
@@ -560,6 +562,18 @@ public class CDDashboardApisTest {
         failedStatusList.get(0), failedStatusList.get(1), failedStatusList.get(0), failedStatusList.get(2),
         failedStatusList.get(2), failedStatusList.get(0));
 
+    // CI
+    List<GitInfo> gitInfoList = Arrays.asList(GitInfo.builder().build(), GitInfo.builder().build(),
+        GitInfo.builder().build(), GitInfo.builder().build(), GitInfo.builder().build(), GitInfo.builder().build(),
+        GitInfo.builder().build(), GitInfo.builder().build());
+
+    List<String> triggerTypeList =
+        Arrays.asList("Manual", "Webhook", "Manual", "Webhook", "Manual", "Manual", "Webhook", "Manual");
+
+    List<AuthorInfo> authorInfoList = Arrays.asList(AuthorInfo.builder().build(), AuthorInfo.builder().build(),
+        AuthorInfo.builder().build(), AuthorInfo.builder().build(), AuthorInfo.builder().build(),
+        AuthorInfo.builder().build(), AuthorInfo.builder().build(), AuthorInfo.builder().build());
+
     DeploymentStatusInfoList deploymentStatusInfoListFailure = DeploymentStatusInfoList.builder()
                                                                    .objectIdList(objectIdListFailure)
                                                                    .startTs(startTsFailure)
@@ -568,6 +582,9 @@ public class CDDashboardApisTest {
                                                                    .pipelineIdentifierList(identifier)
                                                                    .planExecutionIdList(planExecutionList)
                                                                    .deploymentStatus(deploymentStatusFailure)
+                                                                   .gitInfoList(gitInfoList)
+                                                                   .author(authorInfoList)
+                                                                   .triggerType(triggerTypeList)
                                                                    .build();
 
     // active list
@@ -594,6 +611,9 @@ public class CDDashboardApisTest {
                                                                   .planExecutionIdList(planExecutionListActive)
                                                                   .pipelineIdentifierList(identifierActive)
                                                                   .deploymentStatus(deploymentStatusActive)
+                                                                  .gitInfoList(gitInfoList)
+                                                                  .author(authorInfoList)
+                                                                  .triggerType(triggerTypeList)
                                                                   .build();
 
     // pending list
@@ -619,6 +639,9 @@ public class CDDashboardApisTest {
                                                                    .pipelineIdentifierList(identifierPending)
                                                                    .planExecutionIdList(planExecutionListPending)
                                                                    .deploymentStatus(deploymentStatusPending)
+                                                                   .gitInfoList(gitInfoList)
+                                                                   .author(authorInfoList)
+                                                                   .triggerType(triggerTypeList)
                                                                    .build();
 
     String queryFailed = cdOverviewDashboardServiceImpl.queryBuilderStatus("acc", "orgId", "pro", 10, failedStatusList);
@@ -684,220 +707,292 @@ public class CDDashboardApisTest {
         .when(cdOverviewDashboardServiceImpl)
         .queryCalculatorServiceTagMag(serviveTagQueryPending);
 
-    DashboardDeploymentActiveFailedRunningInfo dashboardDeploymentActiveFailedRunningInfo =
+    DashboardExecutionStatusInfo dashboardExecutionStatusInfo =
         cdOverviewDashboardServiceImpl.getDeploymentActiveFailedRunningInfo("acc", "orgId", "pro", 10);
 
     // failure
 
-    List<DeploymentStatusInfo> failureStatusInfo = new ArrayList<>();
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name1")
+    List<ExecutionStatusInfo> failureStatusInfo = new ArrayList<>();
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name1")
                               .pipelineIdentifier("name1")
                               .planExecutionId("planId1")
                               .startTs(1619626802000L)
                               .endTs(1622218802000L)
                               .status(failedStatusList.get(0))
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(0))
+                              .author(authorInfoList.get(0))
                               .serviceInfoList(serviceTagMapFailure.get("11"))
                               .build());
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name2")
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name2")
                               .pipelineIdentifier("name2")
                               .planExecutionId("planId2")
                               .startTs(1619885951000L)
                               .endTs(1622564351000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(1))
+                              .author(authorInfoList.get(0))
                               .status(failedStatusList.get(1))
                               .build());
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name3")
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name3")
                               .pipelineIdentifier("name3")
                               .planExecutionId("planId3")
                               .startTs(1619885925000L)
                               .endTs(1622564325000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(2))
+                              .author(authorInfoList.get(0))
                               .status(failedStatusList.get(0))
                               .serviceInfoList(serviceTagMapFailure.get("13"))
                               .build());
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name4")
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name4")
                               .pipelineIdentifier("name4")
                               .planExecutionId("planId4")
                               .startTs(1619799469000l)
                               .endTs(1622391469000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(3))
+                              .author(authorInfoList.get(0))
                               .status(failedStatusList.get(1))
                               .build());
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name5")
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name5")
                               .pipelineIdentifier("name5")
                               .planExecutionId("planId5")
                               .startTs(1619885815000L)
                               .endTs(1622564215000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(4))
+                              .author(authorInfoList.get(0))
                               .status(failedStatusList.get(0))
                               .serviceInfoList(serviceTagMapFailure.get("15"))
                               .build());
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name1")
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name1")
                               .pipelineIdentifier("name1")
                               .planExecutionId("planId1")
                               .startTs(1619972127000L)
                               .endTs(1622650527000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(0))
+                              .author(authorInfoList.get(0))
                               .status(failedStatusList.get(2))
                               .build());
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name2")
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name2")
                               .pipelineIdentifier("name2")
                               .planExecutionId("planId2")
                               .startTs(1619799299000L)
                               .endTs(1622391299000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(1))
+                              .author(authorInfoList.get(0))
                               .status(failedStatusList.get(2))
                               .build());
-    failureStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name3")
+    failureStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name3")
                               .pipelineIdentifier("name3")
                               .planExecutionId("planId3")
                               .startTs(1619885632000L)
                               .endTs(1622564032000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(2))
+                              .author(authorInfoList.get(0))
                               .status(failedStatusList.get(0))
                               .build());
 
     // active
-    List<DeploymentStatusInfo> activeStatusInfo = new ArrayList<>();
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name1")
+    List<ExecutionStatusInfo> activeStatusInfo = new ArrayList<>();
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name1")
                              .pipelineIdentifier("name1")
                              .planExecutionId("planId1")
                              .startTs(1619626802000L)
                              .endTs(1622218802000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(0))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(0))
                              .build());
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name2")
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name2")
                              .pipelineIdentifier("name2")
                              .planExecutionId("planId2")
                              .startTs(1619885951000L)
                              .endTs(1622564351000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(1))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(1))
                              .build());
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name3")
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name3")
                              .pipelineIdentifier("name3")
                              .planExecutionId("planId3")
                              .startTs(1619885925000L)
                              .endTs(1622564325000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(2))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(0))
                              .build());
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name4")
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name4")
                              .pipelineIdentifier("name4")
                              .planExecutionId("planId4")
                              .startTs(1619799469000L)
                              .endTs(1622391469000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(3))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(1))
                              .build());
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name5")
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name5")
                              .pipelineIdentifier("name5")
                              .planExecutionId("planId5")
                              .startTs(1619885815000L)
                              .endTs(1622564215000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(4))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(0))
                              .build());
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name1")
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name1")
                              .pipelineIdentifier("name1")
                              .planExecutionId("planId1")
                              .startTs(1619972127000L)
                              .endTs(1622650527000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(0))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(0))
                              .build());
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name2")
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name2")
                              .pipelineIdentifier("name2")
                              .planExecutionId("planId2")
                              .startTs(1619799299000L)
                              .endTs(1622391299000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(1))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(1))
                              .build());
-    activeStatusInfo.add(DeploymentStatusInfo.builder()
-                             .name("name3")
+    activeStatusInfo.add(ExecutionStatusInfo.builder()
+                             .pipelineName("name3")
                              .pipelineIdentifier("name3")
                              .planExecutionId("planId3")
                              .startTs(1619885632000L)
                              .endTs(1622564032000L)
+                             .gitInfo(gitInfoList.get(0))
+                             .triggerType(triggerTypeList.get(2))
+                             .author(authorInfoList.get(0))
                              .status(activeStatusList.get(0))
                              .build());
 
     // pending
-    List<DeploymentStatusInfo> pendingStatusInfo = new ArrayList<>();
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name1")
+    List<ExecutionStatusInfo> pendingStatusInfo = new ArrayList<>();
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name1")
                               .pipelineIdentifier("name1")
                               .planExecutionId("planId1")
                               .startTs(1619626802000L)
                               .endTs(1622218802000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(0))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(0))
                               .build());
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name2")
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name2")
                               .pipelineIdentifier("name2")
                               .planExecutionId("planId2")
                               .startTs(1619885951000L)
                               .endTs(1622564351000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(1))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(1))
                               .build());
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name3")
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name3")
                               .pipelineIdentifier("name3")
                               .planExecutionId("planId3")
                               .startTs(1619885925000L)
                               .endTs(1622564325000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(2))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(0))
                               .build());
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name4")
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name4")
                               .pipelineIdentifier("name4")
                               .planExecutionId("planId4")
                               .startTs(1619799469000L)
                               .endTs(1622391469000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(3))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(1))
                               .build());
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name5")
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name5")
                               .pipelineIdentifier("name5")
                               .planExecutionId("planId5")
                               .startTs(1619885815000L)
                               .endTs(1622564215000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(4))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(0))
                               .build());
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name1")
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name1")
                               .pipelineIdentifier("name1")
                               .planExecutionId("planId1")
                               .startTs(1619972127000L)
                               .endTs(1622650527000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(0))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(0))
                               .build());
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name2")
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name2")
                               .pipelineIdentifier("name2")
                               .planExecutionId("planId2")
                               .startTs(1619799299000L)
                               .endTs(1622391299000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(1))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(1))
                               .build());
-    pendingStatusInfo.add(DeploymentStatusInfo.builder()
-                              .name("name3")
+    pendingStatusInfo.add(ExecutionStatusInfo.builder()
+                              .pipelineName("name3")
                               .pipelineIdentifier("name3")
                               .planExecutionId("planId3")
                               .startTs(1619885632000L)
                               .endTs(1622564032000L)
+                              .gitInfo(gitInfoList.get(0))
+                              .triggerType(triggerTypeList.get(2))
+                              .author(authorInfoList.get(0))
                               .status(pendingStatusList.get(0))
                               .build());
 
-    DashboardDeploymentActiveFailedRunningInfo expectedResult = DashboardDeploymentActiveFailedRunningInfo.builder()
-                                                                    .failure(failureStatusInfo)
-                                                                    .active(activeStatusInfo)
-                                                                    .pending(pendingStatusInfo)
-                                                                    .build();
+    DashboardExecutionStatusInfo expectedResult = DashboardExecutionStatusInfo.builder()
+                                                      .failure(failureStatusInfo)
+                                                      .active(activeStatusInfo)
+                                                      .pending(pendingStatusInfo)
+                                                      .build();
 
-    assertThat(expectedResult).isEqualTo(dashboardDeploymentActiveFailedRunningInfo);
+    assertThat(expectedResult).isEqualTo(dashboardExecutionStatusInfo);
   }
 }

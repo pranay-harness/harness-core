@@ -82,23 +82,25 @@ public class QueryBuilderTest {
     List<String> pendingStatusList =
         Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(), ExecutionStatus.APPROVALWAITING.name());
 
+    String columnsExecutionStatus = new CDOverviewDashboardServiceImpl().executionStatusCdTimeScaleColumns();
+
     // failedStatusList
-    String expectedQueryResult =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    String expectedQueryResult = "select " + columnsExecutionStatus
+        + " from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
     String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
         "accountId", "orgId", "projectId", 20, failedStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
     // activeStatusList
-    expectedQueryResult =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('RUNNING') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    expectedQueryResult = "select " + columnsExecutionStatus
+        + " from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('RUNNING') and startts is not null ORDER BY startts DESC LIMIT 20;";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
         "accountId", "orgId", "projectId", 20, activeStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
     // pending
-    expectedQueryResult =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTIONWAITING','APPROVALWAITING') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    expectedQueryResult = "select " + columnsExecutionStatus
+        + " from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTIONWAITING','APPROVALWAITING') and startts is not null ORDER BY startts DESC LIMIT 20;";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
         "accountId", "orgId", "projectId", 20, pendingStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);

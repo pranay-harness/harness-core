@@ -1,14 +1,13 @@
 package io.harness.rule;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.NOOP;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.concurrent.HTimeLimiter;
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.ff.FeatureFlagConfig;
@@ -36,7 +35,6 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -48,6 +46,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@OwnedBy(PL)
 @Slf4j
 public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -109,9 +108,6 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
-        bind(Producer.class)
-            .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-            .toInstance(NoOpProducer.of("dummy_topic_name"));
         bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
       }
     });

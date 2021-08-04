@@ -71,13 +71,3 @@ enum ServiceTagType {
   APPLICATION
   SERVICE
 }
-
-input WorkflowTypeFilter {
-  operator: EnumOperator
-  values: [WorkflowType]
-}
-
-enum WorkflowType {
-  PIPELINE
-  ORCHESTRATION
-}

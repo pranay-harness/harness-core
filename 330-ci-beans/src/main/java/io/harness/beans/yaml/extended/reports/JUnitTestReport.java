@@ -1,7 +1,7 @@
 package io.harness.beans.yaml.extended.reports;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.beans.common.SwaggerConstants.STRING_LIST_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;

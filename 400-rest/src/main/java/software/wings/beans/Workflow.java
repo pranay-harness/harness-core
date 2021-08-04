@@ -66,7 +66,11 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
                  .field(WorkflowKeys.accountId)
                  .descSortField(WorkflowKeys.createdAt)
                  .build())
-        .add(CompoundMongoIndex.builder().name("workflowTypeIndex").field(WorkflowKeys.workflowType).build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_orchestrationWorkflowTypeIndex")
+                 .field(WorkflowKeys.accountId)
+                 .field(WorkflowKeys.orchestrationWorkflowType)
+                 .build())
         .build();
   }
   public static final String NAME_KEY = "name";
@@ -592,6 +596,6 @@ public class Workflow extends Base implements KeywordsAware, NameAccess, TagAwar
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
     public static final String accountId = "accountId";
-    public static final String workflowType = "workflowType";
+    public static final String orchestrationWorkflowType = "orchestration.orchestrationWorkflowType";
   }
 }
