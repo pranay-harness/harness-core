@@ -58,6 +58,7 @@ import io.harness.ng.cdOverview.util.GrowthTrendEvaluator;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
+import io.harness.ng.core.dashboard.DeploymentsInfo;
 import io.harness.ng.core.dashboard.ExecutionStatusInfo;
 import io.harness.ng.core.dashboard.GitInfo;
 import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
@@ -1522,5 +1523,27 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return new TimeValuePairListDTO<>(timeValuePairList);
+  }
+
+  public DeploymentsInfo getDeploymentsByServiceId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    String query = queryBuilderDeployments(accountIdentifier, orgIdentifier, projectIdentifier, serviceId);
+    String queryServiceNameTagId = queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId);
+    List<ExecutionStatusInfo> deployments = getDeploymentStatusInfo(query, queryServiceNameTagId);
+    return DeploymentsInfo.builder().deployments(deployments).build();
+  }
+
+  private String queryBuilderDeployments(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    return "select " + executionStatusCdTimeScaleColumns() + " from " + tableNameCD + " where id in ( "
+        + queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId) + ") order by startts desc";
+  }
+
+  private String queryToGetId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    return "select distinct pipeline_execution_summary_cd_id from " + tableNameServiceAndInfra + " where "
+        + String.format("accountid='%s' and ", accountIdentifier)
+        + String.format("orgidentifier='%s' and ", orgIdentifier)
+        + String.format("projectidentifier='%s' and ", projectIdentifier) + String.format("service_id='%s'", serviceId);
   }
 }

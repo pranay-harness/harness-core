@@ -28,6 +28,7 @@ import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
+import io.harness.ng.core.dashboard.DeploymentsInfo;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -280,5 +281,17 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getInstanceCountHistory(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startInterval, endInterval));
+  }
+
+  @GET
+  @Path("/getDeploymentsByServiceId")
+  @ApiOperation(value = "Get deployments by serviceId", nickname = "getDeploymentsByServiceId")
+  public ResponseDTO<DeploymentsInfo> getDeploymentsByServiceId(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentsByServiceId(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId));
   }
 }
