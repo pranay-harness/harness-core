@@ -2,6 +2,8 @@ package io.harness.accesscontrol.acl.api;
 
 import static io.harness.accesscontrol.clients.AccessControlClientUtils.checkPreconditions;
 import static io.harness.accesscontrol.clients.AccessControlClientUtils.getAccessControlDTO;
+import static io.harness.accesscontrol.clients.AccessControlClientUtils.serviceContextAndNoPrincipalInBody;
+import static io.harness.accesscontrol.principals.PrincipalType.SERVICE;
 import static io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType;
 import static io.harness.exception.WingsException.USER;
 
@@ -88,6 +90,23 @@ public class ACLResource {
     Principal principalToCheckPermissionsFor = dto.getPrincipal();
 
     boolean preconditionsValid = checkPreconditions(contextPrincipal, principalToCheckPermissionsFor);
+
+    if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
+      return ResponseDTO.newResponse(
+          AccessCheckResponseDTO.builder()
+              .principal(Principal.of(SERVICE, contextPrincipal.getName()))
+              .accessControlList(permissionChecks.stream()
+                                     .map(permissionCheckDTO
+                                         -> AccessControlDTO.builder()
+                                                .permitted(true)
+                                                .permission(permissionCheckDTO.getPermission())
+                                                .resourceScope(permissionCheckDTO.getResourceScope())
+                                                .resourceIdentifier(permissionCheckDTO.getResourceIdentifier())
+                                                .resourceType(permissionCheckDTO.getResourceType())
+                                                .build())
+                                     .collect(Collectors.toList()))
+              .build());
+    }
 
     if (!preconditionsValid) {
       throw new InvalidRequestException(
