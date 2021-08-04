@@ -56,11 +56,7 @@ import io.harness.ng.cdOverview.dto.WorkloadDateCountInfo;
 import io.harness.ng.cdOverview.dto.WorkloadDeploymentInfo;
 import io.harness.ng.cdOverview.util.GrowthTrendEvaluator;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
-import io.harness.ng.core.dashboard.AuthorInfo;
-import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
-import io.harness.ng.core.dashboard.ExecutionStatusInfo;
-import io.harness.ng.core.dashboard.GitInfo;
-import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
+import io.harness.ng.core.dashboard.*;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
@@ -1522,5 +1518,44 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return new TimeValuePairListDTO<>(timeValuePairList);
+  }
+
+  public DashboardDeploymentsFilteredByServiceInfo getDeploymentsByServiceId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    String query = queryBuilderDeployments(accountIdentifier, orgIdentifier, projectIdentifier, serviceId);
+    String queryServiceNameTagId = queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId);
+    List<ExecutionStatusInfo> deployments = getDeploymentStatusInfo(query, queryServiceNameTagId);
+    return DashboardDeploymentsFilteredByServiceInfo.builder().deployments(deployments).build();
+  }
+
+  public String queryBuilderDeployments(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    String selectStatusQuery = "select " + executionStatusCdTimeScaleColumns() + " from " + tableNameCD
+        + " where id in ( " + queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId) + ")";
+    return selectStatusQuery;
+  }
+
+  public String queryToGetId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    String selectStatusQuery = "select pipeline_execution_summary_cd_id from " + tableNameServiceAndInfra + " where ";
+    StringBuilder totalBuildSqlBuilder = new StringBuilder();
+    totalBuildSqlBuilder.append(selectStatusQuery);
+
+    if (accountIdentifier != null) {
+      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountIdentifier));
+    }
+
+    if (orgIdentifier != null) {
+      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgIdentifier));
+    }
+
+    if (projectIdentifier != null) {
+      totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectIdentifier));
+    }
+    if (serviceId != null) {
+      totalBuildSqlBuilder.append(String.format("service_id='%s'", serviceId));
+    }
+
+    return totalBuildSqlBuilder.toString();
   }
 }

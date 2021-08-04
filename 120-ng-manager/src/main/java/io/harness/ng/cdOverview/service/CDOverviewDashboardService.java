@@ -15,7 +15,9 @@ import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
 import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
+import io.harness.ng.core.dashboard.DashboardDeploymentsFilteredByServiceInfo;
 import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
+import io.harness.ng.core.dashboard.ExecutionStatusInfo;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import java.util.List;
@@ -65,4 +67,7 @@ public interface CDOverviewDashboardService {
 
   TimeValuePairListDTO<EnvIdCountPair> getInstanceCountHistory(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs);
+
+  DashboardDeploymentsFilteredByServiceInfo getDeploymentsByServiceId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId);
 }
