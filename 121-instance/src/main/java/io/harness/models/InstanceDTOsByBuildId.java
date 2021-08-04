@@ -2,7 +2,7 @@ package io.harness.models;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.Instance;
+import io.harness.dtos.InstanceDTO;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,7 +11,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @OwnedBy(HarnessTeam.DX)
-public class InstancesByBuildId {
+public class InstanceDTOsByBuildId {
   private String buildId;
-  private List<Instance> instances;
+  private List<InstanceDTO> instances;
 }
