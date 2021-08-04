@@ -210,6 +210,25 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  public void testGetUuidToErrorResponseMap() {
+    String filename = "pipeline-extensive.yml";
+    String yaml = readFile(filename);
+
+    String runtimeInputWrongFile = "runtimeInputWrong1.yml";
+    String runtimeInputWrong = readFile(runtimeInputWrongFile);
+
+    Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap =
+        InputSetErrorsHelper.getUuidToErrorResponseMap(yaml, runtimeInputWrong);
+    assertThat(uuidToErrorResponseMap).isNotNull();
+    assertThat(uuidToErrorResponseMap.size()).isEqualTo(2);
+    assertThat(uuidToErrorResponseMap.containsKey("pipeline.stages.qaStage.spec.execution.steps.httpStep1.spec.method"))
+        .isTrue();
+    assertThat(uuidToErrorResponseMap.containsKey("pipeline.stages.qaStage.absolutelyWrongKey")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
   public void testMergeOnYamlWithFailureStrategies() {
     String fullYamlFile = "failure-strategy.yaml";
     String fullYaml = readFile(fullYamlFile);
