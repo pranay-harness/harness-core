@@ -90,11 +90,10 @@ public class NodeStartHelper {
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, ExecutionMode executionMode) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), calculateStatusFromMode(executionMode), ops -> {
-          if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
-            setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
-          }
-        }, EnumSet.noneOf(Status.class)));
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), calculateStatusFromMode(executionMode),
+        ops
+        -> setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution)),
+        EnumSet.noneOf(Status.class)));
   }
 
   private Status calculateStatusFromMode(ExecutionMode executionMode) {
@@ -116,6 +115,9 @@ public class NodeStartHelper {
     TimeoutCallback timeoutCallback =
         new NodeExecutionTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
     if (EmptyPredicate.isEmpty(timeoutObtainmentList)) {
+      if (ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
+        return timeoutInstanceIds;
+      }
       TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(AbsoluteTimeoutTrackerFactory.DIMENSION);
       TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
           AbsoluteTimeoutParameters.builder().timeoutMillis(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS).build());
