@@ -282,6 +282,12 @@ aeriform("//930-ng-license-manager:module")
 
 aeriform("//930-ng-license-manager:tests")
 
+aeriform("//935-analyser-service:module")
+
+aeriform("//937-persistence-tracer:module")
+
+aeriform("//937-persistence-tracer:tests")
+
 aeriform("//940-cg-audit-service:module")
 
 aeriform("//940-cg-audit-service:tests")

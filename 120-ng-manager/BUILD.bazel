@@ -28,7 +28,6 @@ shared_dependencies = [
     "//948-access-control-admin-client:module",
     "//950-telemetry:module",
     "//958-migration-sdk:module",
-    "//950-persistence-tracer:module",
     "//958-ng-file-service-sdk:module",
     "//965-api-key-filter:module",
     "//product/ci/scm/proto:ciscm_java_proto",

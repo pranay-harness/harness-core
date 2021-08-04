@@ -21,8 +21,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-@Slf4j
 @UtilityClass
+@Slf4j
 public class QueryShapeDetector {
   private static final Object DEFAULT_VALUE = 1;
   private static final Set<String> ARRAY_TRIM_OPERATORS = Sets.newHashSet("$eq", "$in", "$nin", "$all", "$mod");
@@ -100,6 +100,6 @@ public class QueryShapeDetector {
   }
 
   private boolean needToTrimList(String key) {
-    return !key.startsWith("$") || ARRAY_TRIM_OPERATORS.contains(key);
+    return !(key.charAt(0) == '$') || ARRAY_TRIM_OPERATORS.contains(key);
   }
 }
