@@ -431,8 +431,8 @@ func (tdb *TimeScaleDb) GetTestSuites(
 // WriteSelectedTests write selected test information corresponding to a PR to the database.
 // If an entry already exists, it adds the counts to the existing row.
 func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId, projectId, pipelineId,
-	buildId, stageId, stepId string, s types.SelectTestsResp, timeMs int, upsert bool) error {
-	entries := 12
+	buildId, stageId, stepId, repo, source, target string, s types.SelectTestsResp, timeMs int, upsert bool) error {
+	entries := 15
 	valueArgs := make([]interface{}, 0, entries)
 	var stmt string
 	if upsert == true {
@@ -493,10 +493,10 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 			`
 					INSERT INTO %s
 					(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id,
-					test_count, test_selected, source_code_test, new_test, updated_test)
+					test_count, test_selected, source_code_test, new_test, updated_test, repo, source_branch, target_branch)
 					VALUES %s`, tdb.SelectionTable, constructPsqlInsertStmt(1, entries))
 		valueArgs = append(valueArgs, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId,
-			s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests)
+			s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests, repo, source, target)
 	}
 
 	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
@@ -511,9 +511,10 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, orgId, projectId, pipelineId,
 	buildId, stepId, stageId string) (types.SelectionOverview, error) {
 	var ztotal, zsrc, znew, zupd, ztt, zts zero.Int
+	var repo, source, target zero.String
 	query := fmt.Sprintf(
 		`
-		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms
+		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms, repo, source_branch, target_branch
 		FROM %s
 		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, tdb.SelectionTable)
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
@@ -523,7 +524,7 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 	}
 	res := types.SelectionOverview{}
 	for rows.Next() {
-		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd, &ztt, &zts)
+		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd, &ztt, &zts, &repo, &source, &target)
 		if err != nil {
 			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
 			return types.SelectionOverview{}, err
@@ -531,6 +532,9 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 		res.Total = int(ztotal.ValueOrZero())
 		res.TimeSavedMs = int(zts.ValueOrZero())
 		res.TimeTakenMs = int(ztt.ValueOrZero())
+		res.Repo = repo.ValueOrZero()
+		res.SourceBranch = source.ValueOrZero()
+		res.TargetBranch = target.ValueOrZero()
 		res.Selected.New = int(znew.ValueOrZero())
 		res.Selected.Upd = int(zupd.ValueOrZero())
 		res.Selected.Src = int(zsrc.ValueOrZero())
