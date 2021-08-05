@@ -18,6 +18,7 @@ import software.wings.graphql.schema.mutation.event.input.QLDeleteEventsConfigIn
 import software.wings.graphql.schema.mutation.event.payload.QLDeleteEventsConfigPayload;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ public class DeleteEventsConfigDataFetcher
     extends BaseMutatorDataFetcher<QLDeleteEventsConfigInput, QLDeleteEventsConfigPayload> {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EventConfigService eventConfigService;
+  @Inject private AppService appService;
 
   public DeleteEventsConfigDataFetcher() {
     super(QLDeleteEventsConfigInput.class, QLDeleteEventsConfigPayload.class);
@@ -41,6 +43,9 @@ public class DeleteEventsConfigDataFetcher
     String accountId = mutationContext.getAccountId();
     if (!featureFlagService.isEnabled(APP_TELEMETRY, mutationContext.getAccountId())) {
       throw new InvalidRequestException("Please enable feature flag to configure events");
+    }
+    if (!appService.exist(parameter.getAppId())) {
+      throw new InvalidRequestException("Application does not exist");
     }
     eventConfigService.deleteEventsConfig(accountId, parameter.getAppId(), parameter.getEventsConfigId());
     return QLDeleteEventsConfigPayload.builder().clientMutationId(parameter.getClientMutationId()).build();

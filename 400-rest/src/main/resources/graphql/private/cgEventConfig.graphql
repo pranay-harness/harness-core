@@ -40,45 +40,55 @@ type WebhookHeader {
 }
 
 input EventRuleInput {
-  #Allowed values are ALL, PIPELINE, WORKFLOW
-  type: String!
+  #Allowed values are ALL, PIPELINE
+  type: RuleType!
   pipelineRule: PipelineRuleInput
   workflowRule: WorkflowRuleInput
 }
 
 type EventRule {
-  #Allowed values are ALL, PIPELINE, WORKFLOW
-  type: String!
+  #Allowed values are ALL, PIPELINE
+  type: RuleType!
   pipelineRule: PipelineRule
   workflowRule: WorkflowRule
+}
+
+enum RuleType {
+  ALL
+  PIPELINE
+}
+
+enum EventType {
+  pipeline_start
+  pipeline_end
 }
 
 type PipelineRule {
   allEvents: Boolean!
   allPipelines: Boolean!
   pipelineIds: [String]
-  events: [String]
+  events: [EventType]
 }
 
 type WorkflowRule {
   allEvents: Boolean!
   allWorkflows: Boolean!
   workflowIds: [String]
-  events: [String]
+  events: [EventType]
 }
 
 input PipelineRuleInput {
   allEvents: Boolean!
   allPipelines: Boolean!
   pipelineIds: [String]
-  events: [String]
+  events: [EventType]
 }
 
 input WorkflowRuleInput {
   allEvents: Boolean!
   allWorkflows: Boolean!
   workflowIds: [String]
-  events: [String]
+  events: [EventType]
 }
 
 extend type Mutation {
