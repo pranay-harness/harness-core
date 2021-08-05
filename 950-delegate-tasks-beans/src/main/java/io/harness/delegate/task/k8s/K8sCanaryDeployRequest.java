@@ -6,6 +6,7 @@ import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGInstanceUnitType;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.expression.Expression;
 
 import java.util.List;
@@ -31,4 +32,5 @@ public class K8sCanaryDeployRequest implements K8sDeployRequest {
   String accountId;
   boolean skipResourceVersioning;
   @Builder.Default boolean shouldOpenFetchFilesLogStream = true;
+  CommandUnitsProgress commandUnitsProgress;
 }

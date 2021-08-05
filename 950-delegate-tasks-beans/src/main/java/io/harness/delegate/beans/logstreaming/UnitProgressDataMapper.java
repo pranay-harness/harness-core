@@ -1,5 +1,10 @@
 package io.harness.delegate.beans.logstreaming;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 
 import java.util.ArrayList;
@@ -7,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDP)
 public class UnitProgressDataMapper {
   public static UnitProgressData toUnitProgressData(CommandUnitsProgress commandUnitsProgress) {
     if (commandUnitsProgress == null || commandUnitsProgress.getCommandUnitProgressMap() == null) {
@@ -31,5 +37,25 @@ public class UnitProgressDataMapper {
     }
 
     return UnitProgressData.builder().unitProgresses(unitProgressList).build();
+  }
+
+  public static CommandUnitsProgress toCommandUnitsProgress(UnitProgressData unitProgressData) {
+    if (unitProgressData == null || isEmpty(unitProgressData.getUnitProgresses())) {
+      return null;
+    }
+
+    List<UnitProgress> unitProgressList = unitProgressData.getUnitProgresses();
+    LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap = new LinkedHashMap<>(unitProgressList.size());
+    for (UnitProgress unitProgress : unitProgressList) {
+      CommandUnitProgress commandUnitProgress =
+          CommandUnitProgress.builder()
+              .status(CommandExecutionStatus.getCommandExecutionStatus(unitProgress.getStatus()))
+              .startTime(unitProgress.getStartTime())
+              .endTime(unitProgress.getEndTime())
+              .build();
+      commandUnitProgressMap.put(unitProgress.getUnitName(), commandUnitProgress);
+    }
+
+    return CommandUnitsProgress.builder().commandUnitProgressMap(commandUnitProgressMap).build();
   }
 }
