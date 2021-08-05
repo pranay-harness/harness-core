@@ -8,4 +8,6 @@ public interface DelegateAgentService {
   void stop();
 
   void freeze();
+
+  boolean areAllClientToolsInstalled();
 }

@@ -75,8 +75,8 @@ public interface DelegateAgentManagerClient {
 
   @KryoResponse
   @GET("agent/delegates/{delegateId}/tasks/{taskId}/fail")
-  Call<RestResponse> failIfAllDelegatesFailed(
-      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
+  Call<RestResponse> failIfAllDelegatesFailed(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
+      @Query("accountId") String accountId, @Query("areClientToolsInstalled") boolean areClientToolsInstalled);
 
   @GET("agent/delegateFiles/downloadConfig")
   Call<ResponseBody> downloadFile(@Query("fileId") String fileId, @Query("accountId") String accountId,

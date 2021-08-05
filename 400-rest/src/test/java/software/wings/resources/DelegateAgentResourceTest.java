@@ -528,10 +528,11 @@ public class DelegateAgentResourceTest {
   public void shouldFailIfAllDelegatesFailed() {
     String taskId = generateUuid();
     RESOURCES.client()
-        .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/fail?accountId=" + ACCOUNT_ID)
+        .target(String.format("/agent/delegates/%s/tasks/%s/fail?accountId=%s&areClientToolsInstalled=%s", DELEGATE_ID,
+            taskId, ACCOUNT_ID, true))
         .request()
         .get(new GenericType<RestResponse<String>>() {});
-    verify(delegateTaskServiceClassic, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId);
+    verify(delegateTaskServiceClassic, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId, true);
   }
 
   @Test
