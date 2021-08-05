@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.service.steps.ServiceStepOutcome;
@@ -14,7 +15,6 @@ import io.harness.dtos.DeploymentSummaryDTO;
 import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.entities.ArtifactDetails;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.models.DeploymentEvent;
@@ -52,19 +52,24 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
   private final InstanceSyncService instanceSyncService;
   private final InstanceInfoService instanceInfoService;
   private final DeploymentSummaryService deploymentSummaryService;
-  private final FeatureFlagService featureFlagService;
+  private final CDFeatureFlagHelper cdFeatureFlagHelper;
+
+  private static boolean isInstanceSyncEnabled;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.INSTANCE_SYNC_NG)) {
-      return;
-    }
-
     Ambiance ambiance = event.getAmbiance();
-    try (AutoLogContext ignore1 = new AccountLogContext(getAccountIdentifier(ambiance), OVERRIDE_ERROR);
+    String accountIdentifier = getAccountIdentifier(ambiance);
+    try (AutoLogContext ignore1 = new AccountLogContext(accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 = InstanceSyncLogContext.builder()
                                       .instanceSyncFlow(InstanceSyncFlow.NEW_DEPLOYMENT.name())
                                       .build(OVERRIDE_ERROR)) {
+      if (!isInstanceSyncEnabled && !cdFeatureFlagHelper.isEnabled(accountIdentifier, FeatureName.INSTANCE_SYNC_NG)) {
+        return;
+      } else {
+        isInstanceSyncEnabled = true;
+      }
+
       if (!StatusUtils.isFinalStatus(event.getStatus())) {
         return;
       }
@@ -135,6 +140,8 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
             .infrastructureMappingId(infrastructureMappingDTO.getId())
             .deploymentInfoDTO(
                 abstractInstanceSyncHandler.getDeploymentInfo(infrastructureOutcome, serverInstanceInfoList))
+            // TODO check if this is correct value for deployedAt
+            .deployedAt(System.currentTimeMillis())
             .build();
     setArtifactDetails(ambiance, deploymentSummaryDTO);
     deploymentSummaryDTO = deploymentSummaryService.save(deploymentSummaryDTO);

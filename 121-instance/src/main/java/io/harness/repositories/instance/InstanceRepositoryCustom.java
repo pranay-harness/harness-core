@@ -10,10 +10,13 @@ import io.harness.models.InstancesByBuildId;
 import java.util.List;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceRepositoryCustom {
   Instance findAndReplace(Criteria criteria, Instance instance);
+
+  Instance findAndModify(Criteria criteria, Update update);
 
   List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 

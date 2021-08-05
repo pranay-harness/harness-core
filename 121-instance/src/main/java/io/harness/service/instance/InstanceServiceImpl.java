@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @OwnedBy(HarnessTeam.DX)
@@ -69,6 +70,18 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public void deleteAll(List<InstanceDTO> instanceDTOList) {
     instanceDTOList.forEach(instanceDTO -> instanceRepository.deleteByInstanceKey(instanceDTO.getInstanceKey()));
+  }
+
+  @Override
+  public Optional<InstanceDTO> softDelete(String instanceKey) {
+    Criteria criteria = Criteria.where(InstanceKeys.instanceKey).is(instanceKey);
+    Update update =
+        new Update().set(InstanceKeys.isDeleted, true).set(InstanceKeys.deletedAt, System.currentTimeMillis());
+    Instance instance = instanceRepository.findAndModify(criteria, update);
+    if (instance == null) {
+      return Optional.empty();
+    }
+    return Optional.of(InstanceMapper.toDTO(instance));
   }
 
   /**
