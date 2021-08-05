@@ -110,7 +110,7 @@ input UpdateEventsConfigInput {
   rule: EventRuleInput!
   delegateSelectors: [String]
   enabled: Boolean!
-  id: String!
+  eventsConfigId: String!
 }
 
 input DeleteEventsConfigInput {

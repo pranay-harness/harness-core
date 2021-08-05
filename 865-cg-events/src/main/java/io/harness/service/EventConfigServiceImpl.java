@@ -79,6 +79,10 @@ public class EventConfigServiceImpl implements EventConfigService {
     if (eventConfig.getDelegateSelectors() == null) {
       eventConfig.setDelegateSelectors(Collections.emptyList());
     }
+    CgEventConfig prevConfigByName = getEventsConfigByName(accountId, appId, eventConfig.getName());
+    if (prevConfigByName != null && !(prevConfigByName.getUuid()).equals(eventConfig.getUuid())) {
+      throw new InvalidRequestException("Duplicate Name " + eventConfig.getName());
+    }
     UpdateOperations<CgEventConfig> updateOperations =
         hPersistence.createUpdateOperations(CgEventConfig.class)
             .set(CgEventConfigKeys.rule, eventConfig.getRule())
