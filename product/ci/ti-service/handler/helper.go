@@ -27,6 +27,8 @@ const (
 	repoParam         = "repo"
 	sourceBranchParam = "source"
 	targetBranchParam = "target"
+	classNameParam    = "class"
+	limitParam        = "limit"
 	shaParam          = "sha"
 )
 

@@ -61,13 +61,13 @@ func collectCg(ctx context.Context, stepID, cgDir string, timeMs int64, log *zap
 	}
 	defer client.CloseConn()
 	req := &pb.UploadCgRequest{
-		StepId: stepID,
-		Repo:   repo,
-		Sha:    sha,
-		Source: source,
-		Target: target,
-		DataDir:  cgDir,
-		TimeMs: timeMs,
+		StepId:  stepID,
+		Repo:    repo,
+		Sha:     sha,
+		Source:  source,
+		Target:  target,
+		DataDir: cgDir,
+		TimeMs:  timeMs,
 	}
 	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetDataDir()))
 	_, err = client.Client().UploadCg(ctx, req)

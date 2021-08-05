@@ -9,3 +9,6 @@ config:
     - "scripts/terraform/**/*"
     - "on-prem/**/*"
     - "dockerization/**/*"
+    - "scripts/jenkins/*"
+    - "product/**/*"
+    - "commons/**/*"
