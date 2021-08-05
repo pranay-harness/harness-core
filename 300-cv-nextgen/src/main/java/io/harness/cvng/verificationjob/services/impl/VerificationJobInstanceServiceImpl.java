@@ -186,7 +186,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   private void createAndQueueHealthVerification(VerificationJobInstance verificationJobInstance) {
     // We dont do any data collection for health verification. So just queue the analysis.
-    VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJobInstance.getResolvedJob());
     cvConfigs.forEach(cvConfig -> {
       String verificationTaskId = verificationTaskService.create(
@@ -237,11 +236,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Override
   public CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
-    if (verificationJobInstance.getCvConfigMap()
-        != null) { // TODO: this is just migration logic. Remove this check once VerificationJobInstances expires.
-      return verificationJobInstance.getCvConfigMap().get(cvConfigId);
-    }
-    return cvConfigService.get(cvConfigId);
+    return verificationJobInstance.getCvConfigMap().get(cvConfigId);
   }
 
   @Override
