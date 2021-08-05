@@ -313,14 +313,22 @@ public class LdapGroupSyncJob implements Job {
   @VisibleForTesting
   boolean validateUserGroupStates(Collection<UserGroup> userGroups) {
     for (UserGroup userGroup : userGroups) {
+      log.info("[LdapGroupSyncJob] Validating user group {} state before sync", userGroup.getName());
       UserGroup savedUserGroup = userGroupService.get(userGroup.getAccountId(), userGroup.getUuid(), false);
       if (!savedUserGroup.isSsoLinked()) {
+        log.info(
+            "[LdapGroupSyncJob] Validating UserGroup {} state before sync And Failed because group is not ssolinked",
+            userGroup.getName());
         return false;
       }
       if (!savedUserGroup.getSsoGroupId().equals(userGroup.getSsoGroupId())) {
+        log.info(
+            "[LdapGroupSyncJob] Validating user group {} state before sync And Failed because mismatch in SavedUserGroupId:{} and UserGroupId:{} and UserGroupName:{}",
+            savedUserGroup.getSsoGroupId(), userGroup.getSsoGroupId(), userGroup.getName());
         return false;
       }
     }
+    log.info("[LdapGroupSyncJob] All UserGroups are valid sync can proceed : UserGroups {}", userGroups);
     return true;
   }
 
@@ -404,7 +412,8 @@ public class LdapGroupSyncJob implements Job {
       List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountId, ssoId);
       syncUserGroups(accountId, ldapSettings, userGroupsToSync, ssoId);
 
-      log.info("Ldap group sync job done for ssoId {} accountId {}", ssoId, accountId);
+      log.info(
+          "Ldap group sync job done for ssoId {} accountId {} and usergroups {}", ssoId, accountId, userGroupsToSync);
     } catch (WingsException exception) {
       if (exception.getCode() == ErrorCode.USER_GROUP_SYNC_FAILURE) {
         ssoSettingService.raiseSyncFailureAlert(accountId, ssoId, exception.getMessage());
