@@ -67,6 +67,6 @@ public interface CDOverviewDashboardService {
   TimeValuePairListDTO<EnvIdCountPair> getInstanceCountHistory(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs);
 
-  DeploymentsInfo getDeploymentsByServiceId(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId);
+  DeploymentsInfo getDeploymentsByServiceId(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String serviceId, long startTimeInMs, long endTimeInMs);
 }
