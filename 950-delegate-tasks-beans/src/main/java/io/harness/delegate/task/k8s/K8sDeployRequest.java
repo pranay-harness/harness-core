@@ -17,6 +17,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
@@ -37,6 +38,7 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
   K8sInfraDelegateConfig getK8sInfraDelegateConfig();
   ManifestDelegateConfig getManifestDelegateConfig();
   Integer getTimeoutIntervalInMin();
+  CommandUnitsProgress getCommandUnitsProgress();
 
   @Override
   default List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

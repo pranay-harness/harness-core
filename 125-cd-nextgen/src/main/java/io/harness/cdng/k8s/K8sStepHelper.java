@@ -685,7 +685,7 @@ public class K8sStepHelper {
     }
 
     return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
-        K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build(), true);
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build(), true, null);
   }
 
   private TaskChainResponse prepareGitFetchValuesTaskChainResponse(StoreConfig storeConfig, Ambiance ambiance,
@@ -888,7 +888,7 @@ public class K8sStepHelper {
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(manifestsOutcome.values());
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
 
     if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
@@ -918,13 +918,13 @@ public class K8sStepHelper {
     List<OpenshiftParamManifestOutcome> openshiftParamManifests = getOpenshiftParamManifests(manifestOutcomes);
     if (isEmpty(openshiftParamManifests)) {
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
     if (!isAnyOcParamRemoteStore(openshiftParamManifests)) {
       List<String> openshiftParamContentsForLocalStore = emptyList();
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
           openshiftParamContentsForLocalStore,
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
 
     return prepareOpenshiftParamFetchTask(
@@ -940,7 +940,7 @@ public class K8sStepHelper {
       List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
           valuesFileContentsForLocalStore,
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
 
     return prepareValuesFetchTask(k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome,
@@ -1052,7 +1052,8 @@ public class K8sStepHelper {
     }
 
     return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, emptyList(),
-        K8sExecutionPassThroughData.builder().infrastructure(k8sStepPassThroughData.getInfrastructure()).build(), true);
+        K8sExecutionPassThroughData.builder().infrastructure(k8sStepPassThroughData.getInfrastructure()).build(), true,
+        unitProgressData);
   }
 
   private UnitProgressData completeUnitProgressData(
@@ -1109,7 +1110,7 @@ public class K8sStepHelper {
             .infrastructure(k8sStepPassThroughData.getInfrastructure())
             .lastActiveUnitProgressData(gitFetchResponse.getUnitProgressData())
             .build(),
-        false);
+        false, gitFetchResponse.getUnitProgressData());
   }
 
   private TaskChainResponse handleHelmValuesFetchResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
@@ -1138,7 +1139,7 @@ public class K8sStepHelper {
               .infrastructure(k8sStepPassThroughData.getInfrastructure())
               .lastActiveUnitProgressData(helmValuesFetchResponse.getUnitProgressData())
               .build(),
-          false);
+          false, helmValuesFetchResponse.getUnitProgressData());
     }
   }
 

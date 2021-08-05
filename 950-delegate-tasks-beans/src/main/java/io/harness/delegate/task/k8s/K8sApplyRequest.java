@@ -5,6 +5,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.expression.Expression;
 
 import java.util.List;
@@ -28,4 +29,5 @@ public class K8sApplyRequest implements K8sDeployRequest {
   boolean skipSteadyStateCheck;
   List<String> filePaths;
   @Builder.Default boolean shouldOpenFetchFilesLogStream = true;
+  CommandUnitsProgress commandUnitsProgress;
 }

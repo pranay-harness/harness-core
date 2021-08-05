@@ -159,7 +159,9 @@ import io.harness.delegate.beans.gitapi.GitApiTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiTaskResponse;
 import io.harness.delegate.beans.gitapi.GitRepoType;
 import io.harness.delegate.beans.instancesync.info.K8sServerInstanceInfo;
+import io.harness.delegate.beans.logstreaming.CommandUnitProgress;
 import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
@@ -873,5 +875,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmPathFilterEvaluationTaskResponse.class, 543424);
     kryo.register(DelegateTaskRank.class, 543425);
     kryo.register(K8sServerInstanceInfo.class, 543426);
+    kryo.register(CommandUnitsProgress.class, 543427);
+    kryo.register(CommandUnitProgress.class, 543428);
   }
 }
