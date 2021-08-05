@@ -297,7 +297,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       entityScopeInfoBuilder.setOrgId(StringValue.of(yamlGitConfigDTO.getOrganizationIdentifier()));
     }
     if (isNotEmpty(yamlGitConfigDTO.getProjectIdentifier())) {
-      entityScopeInfoBuilder.setOrgId(StringValue.of(yamlGitConfigDTO.getProjectIdentifier()));
+      entityScopeInfoBuilder.setProjectId(StringValue.of(yamlGitConfigDTO.getProjectIdentifier()));
     }
 
     try {
