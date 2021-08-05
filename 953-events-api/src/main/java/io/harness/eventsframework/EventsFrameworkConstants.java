@@ -110,4 +110,8 @@ public final class EventsFrameworkConstants {
   public static final int GIT_PUSH_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PR_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_BRANCH_HOOK_EVENT_STREAM_BATCH_SIZE = 50;
+
+  // Tracing Constants
+  public static final String QUERY_ANALYSIS_TOPIC = "query_analysis";
+  public static final int QUERY_ANALYSIS_TOPIC_SIZE = 100;
 }
