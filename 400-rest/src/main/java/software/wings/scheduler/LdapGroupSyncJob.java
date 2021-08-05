@@ -334,6 +334,7 @@ public class LdapGroupSyncJob implements Job {
     List<UserGroup> userGroupsFailedToSync = new ArrayList<>();
     for (UserGroup userGroup : userGroups) {
       try {
+        log.info("Ldap started syncing usergroup {}", userGroup.getName());
         LdapGroupResponse groupResponse = fetchGroupDetails(ldapSettings, encryptedDataDetail, userGroup);
 
         if (!groupResponse.isSelectable()) {
