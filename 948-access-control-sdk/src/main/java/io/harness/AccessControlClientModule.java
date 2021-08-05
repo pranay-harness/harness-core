@@ -10,6 +10,7 @@ import io.harness.accesscontrol.clients.AccessControlHttpClientFactory;
 import io.harness.accesscontrol.clients.NonPrivilegedAccessControlClientImpl;
 import io.harness.accesscontrol.clients.NonPrivilegedNoOpAccessControlClientImpl;
 import io.harness.accesscontrol.clients.PrivilegedAccessControlClientImpl;
+import io.harness.accesscontrol.clients.PrivilegedNoopAccessControlClientImpl;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ClientMode;
 import io.harness.security.ServiceTokenGenerator;
@@ -93,7 +94,7 @@ public class AccessControlClientModule extends AbstractModule {
           .in(Scopes.SINGLETON);
       bind(AccessControlClient.class)
           .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
-          .to(PrivilegedAccessControlClientImpl.class)
+          .to(PrivilegedNoopAccessControlClientImpl.class)
           .in(Scopes.SINGLETON);
     }
     NGAccessControlCheckHandler ngAccessControlCheckHandler = new NGAccessControlCheckHandler();
