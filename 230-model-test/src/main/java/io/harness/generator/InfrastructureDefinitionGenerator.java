@@ -1,6 +1,7 @@
 package io.harness.generator;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.SettingGenerator.Settings.AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
@@ -439,10 +440,11 @@ public class InfrastructureDefinitionGenerator {
 
     final SettingAttribute ecsCloudProvider =
         settingGenerator.ensurePredefined(seed, owners, AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER);
-    Service service = owners.obtainService();
-    if (service == null) {
-      service = serviceGenerator.ensurePredefined(seed, owners, Services.ECS_TEST);
+    List<String> serviceIds = owners.obtainAllServiceIds();
+    if (isEmpty(serviceIds)) {
+      Service service = serviceGenerator.ensurePredefined(seed, owners, Services.ECS_TEST);
       owners.add(service);
+      serviceIds = Collections.singletonList(service.getUuid());
     }
 
     InfrastructureDefinition infrastructureDefinition =
@@ -457,7 +459,7 @@ public class InfrastructureDefinitionGenerator {
                                 .build())
             .deploymentType(DeploymentType.ECS)
             .cloudProviderType(CloudProviderType.AWS)
-            .scopedToServices(Collections.singletonList(service.getUuid()))
+            .scopedToServices(serviceIds)
             .envId(environment.getUuid())
             .appId(owners.obtainApplication().getUuid())
             .build();
