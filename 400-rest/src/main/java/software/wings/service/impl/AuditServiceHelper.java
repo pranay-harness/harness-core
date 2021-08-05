@@ -1,5 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.manage.GlobalContextManager;
@@ -16,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(HarnessModule._940_CG_AUDIT_SERVICE)
 public class AuditServiceHelper {
   @Inject private AppService appService;
   @Getter private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();

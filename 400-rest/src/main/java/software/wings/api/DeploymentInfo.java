@@ -1,17 +1,16 @@
 package software.wings.api;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-/**
- * This is used as request for capturing deployment and instance information.
- * @author rktummala on 02/04/18
- *
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
+@OwnedBy(HarnessTeam.PL)
 public abstract class DeploymentInfo {}

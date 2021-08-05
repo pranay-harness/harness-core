@@ -10,6 +10,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
@@ -700,7 +701,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   public void shouldFailIfAllDelegatesFailed_all() {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
-    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
+    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     assertThat(persistence.createQuery(DelegateTask.class).get()).isNull();
   }
@@ -711,7 +712,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   public void shouldFailIfAllDelegatesFailed_sync() {
     DelegateTask delegateTask = saveDelegateTask(false, ImmutableSet.of(DELEGATE_ID), QUEUED);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
-    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
+    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     String expectedMessage =
         "No eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
@@ -725,11 +726,31 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void shouldFailIfAllDelegatesFailedNoClientTools_sync() {
+    DelegateTask delegateTask = saveDelegateTask(false, ImmutableSet.of(DELEGATE_ID), QUEUED);
+    when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(emptyList());
+    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), false);
+    verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
+    String expectedMessage =
+        "No eligible delegates could perform the required capabilities for this task: [ https://www.google.com ]\n"
+        + "  -  The capabilities were tested by the following delegates: [ DELEGATE_ID ]\n"
+        + "  -  Following delegates were validating but never returned: [  ]\n"
+        + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions."
+        + "  -  This could be due to some client tools still being installed on the delegates. If this is the reason please retry in a few minutes.";
+    RemoteMethodReturnValueData notifyResponse = (RemoteMethodReturnValueData) kryoSerializer.asInflatedObject(
+        persistence.createQuery(DelegateSyncTaskResponse.class).get().getResponseData());
+
+    assertThat(notifyResponse.getException().getMessage()).isEqualTo(expectedMessage);
+  }
+
+  @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldFailIfAllDelegatesFailed_notAll() {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID, "delegate2"), QUEUED);
-    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
+    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }
 
@@ -739,7 +760,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   public void shouldFailIfAllDelegatesFailed_whitelist() {
     DelegateTask delegateTask = saveDelegateTask(true, ImmutableSet.of(DELEGATE_ID), QUEUED);
     when(assignDelegateService.connectedWhitelistedDelegates(delegateTask)).thenReturn(singletonList("delegate2"));
-    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
+    delegateTaskServiceClassic.failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(), true);
     verify(assignDelegateService).connectedWhitelistedDelegates(delegateTask);
     assertThat(persistence.createQuery(DelegateTask.class).get()).isEqualTo(delegateTask);
   }

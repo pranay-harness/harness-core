@@ -328,12 +328,13 @@ public class DelegateAgentResource {
   @Path("{delegateId}/tasks/{taskId}/fail")
   @Timed
   @ExceptionMetered
-  public void failIfAllDelegatesFailed(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
-      @QueryParam("accountId") @NotEmpty String accountId) {
+  public void failIfAllDelegatesFailed(@PathParam("delegateId") final String delegateId,
+      @PathParam("taskId") final String taskId, @QueryParam("accountId") @NotEmpty final String accountId,
+      @QueryParam("areClientToolsInstalled") final boolean areClientToolsInstalled) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateTaskServiceClassic.failIfAllDelegatesFailed(accountId, delegateId, taskId);
+      delegateTaskServiceClassic.failIfAllDelegatesFailed(accountId, delegateId, taskId, areClientToolsInstalled);
     }
   }
 

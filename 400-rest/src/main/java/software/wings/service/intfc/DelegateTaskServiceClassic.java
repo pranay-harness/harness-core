@@ -45,7 +45,7 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
   DelegateTaskPackage reportConnectionResults(
       String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
 
-  void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId);
+  void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId, boolean areClientToolsInstalled);
 
   void publishTaskProgressResponse(
       String accountId, String driverId, String delegateTaskId, DelegateProgressData responseData);
