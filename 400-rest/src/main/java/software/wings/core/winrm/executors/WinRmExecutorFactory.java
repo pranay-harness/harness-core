@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class WinRmExecutorFactory {
   @Inject private DelegateLogService logService;
@@ -32,10 +32,9 @@ public class WinRmExecutorFactory {
         getExecutionLogCallback(config), delegateFileManager, shouldSaveExecutionLogs, config, disableCommandEncoding);
   }
 
-  public FileBasedWinRmExecutor getFiledBasedWinRmExecutor(
-      WinRmSessionConfig config, boolean disableCommandEncoding, boolean winrmCopyConfigOptimize) {
-    return new FileBasedWinRmExecutor(getExecutionLogCallback(config), delegateFileManager, true, config,
-        disableCommandEncoding, winrmCopyConfigOptimize);
+  public FileBasedWinRmExecutor getFiledBasedWinRmExecutor(WinRmSessionConfig config, boolean disableCommandEncoding) {
+    return new FileBasedWinRmExecutor(
+        getExecutionLogCallback(config), delegateFileManager, true, config, disableCommandEncoding);
   }
 
   ExecutionLogCallback getExecutionLogCallback(WinRmSessionConfig config) {
