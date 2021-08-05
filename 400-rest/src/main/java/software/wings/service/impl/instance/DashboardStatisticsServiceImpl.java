@@ -1270,7 +1270,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                         projection(
                             ServiceInfoSummaryKeys.lastWorkflowExecutionName, InstanceKeys.lastWorkflowExecutionName),
                         projection(ServiceInfoSummaryKeys.infraMappingId, "_id." + InstanceKeys.infraMappingId),
-                        projection(ServiceInfoSummaryKeys.infraMappingName, InstanceKeys.infraMappingName))));
+                        projection(ServiceInfoSummaryKeys.infraMappingName, InstanceKeys.infraMappingName))))
+            .sort(Sort.ascending(InstanceKeys.serviceName));
 
     aggregationPipeline.skip(offset);
     aggregationPipeline.limit(limit);
