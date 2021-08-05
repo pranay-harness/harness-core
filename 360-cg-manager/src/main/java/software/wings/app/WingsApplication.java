@@ -904,6 +904,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void scheduleJobsDelegateService(Injector injector, MainConfiguration configuration) {
     log.info("Initializing delegate service scheduled jobs ...");
+    // delegate task broadcasting schedule job
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
 
@@ -1055,22 +1056,19 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(ArtifactCleanupHandler.class).registerIterators(artifactCollectionExecutor);
     injector.getInstance(EventDeliveryHandler.class).registerIterators(eventDeliveryExecutor);
     injector.getInstance(InstanceSyncHandler.class).registerIterators();
-    injector.getInstance(LicenseCheckHandler.class).registerIterators();
     injector.getInstance(ApprovalPollingHandler.class).registerIterators();
-    injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
     injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators();
     injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators();
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
-    injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
+    //??RBAC for task executions
     injector.getInstance(AccessRequestHandler.class).registerIterators();
-    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
   }
 
   public static void registerIteratorsDelegateService(Injector injector) {
-    // broadcasting task
+    // delegate alert reconciliation
     injector.getInstance(AlertReconciliationHandler.class).registerIterators();
     // perpetual task
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
@@ -1093,6 +1091,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(UsageMetricsHandler.class).registerIterators();
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
+    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
+    injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
+    injector.getInstance(LicenseCheckHandler.class).registerIterators();
+    injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {
