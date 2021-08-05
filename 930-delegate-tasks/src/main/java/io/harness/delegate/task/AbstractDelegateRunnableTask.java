@@ -129,7 +129,6 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
                                   .build());
         taskResponse.responseCode(ResponseCode.FAILED);
       }
-      log.info("Completed executing task {}", taskId);
     } catch (DelegateRetryableException exception) {
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
@@ -147,9 +146,12 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
       GlobalContextManager.unset();
+      DelegateTaskResponse taskResponseFinal = taskResponse.build();
       if (consumer != null) {
-        consumer.accept(taskResponse.build());
+        consumer.accept(taskResponseFinal);
       }
+      log.info("Completed executing task {} with taskResponse {} and responseCode {}", taskId,
+          taskResponseFinal.getResponse(), taskResponseFinal.getResponseCode());
     }
   }
 

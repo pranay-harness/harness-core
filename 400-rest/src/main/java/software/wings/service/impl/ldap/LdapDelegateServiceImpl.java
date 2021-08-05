@@ -197,7 +197,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       // If there are no entries in the group.
       LdapEntry group = groups.getEntries().isEmpty() ? null : groups.getEntries().iterator().next();
       if (null == group) {
-        log.info("No entries found in group");
+        log.info("No entries found in group {}", dn);
         return null;
       }
 
@@ -220,7 +220,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
               .flatMap(Collection::stream)
               .collect(Collectors.toList());
 
-      log.info("LDAP : Users set in Group response {}", userResponses);
+      log.info("LDAP : Users set for groupDn {} in Group response {}", dn, userResponses);
       groupResponse.setUsers(userResponses);
       return groupResponse;
     } catch (LdapException e) {

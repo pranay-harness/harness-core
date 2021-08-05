@@ -151,7 +151,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
     if (delegateTask == null || response == null) {
       return;
     }
-
+    log.info("Handling driver response task with taskId {}", delegateTask.getUuid());
     try (DelegateDriverLogContext driverLogContext =
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
@@ -184,6 +184,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
   }
 
   private void handleInprocResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
+    log.info("Handling inproc task with taskId {}", delegateTask.getUuid());
     if (delegateTask.getData().isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
@@ -196,6 +197,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
                            .uuid(delegateTask.getUuid())
                            .responseData(kryoSerializer.asDeflatedBytes(response.getResponse()))
                            .build());
+      log.info("Saved inproc task with taskId {} with response {}", delegateTask.getUuid(), response.getResponse());
     }
   }
 
