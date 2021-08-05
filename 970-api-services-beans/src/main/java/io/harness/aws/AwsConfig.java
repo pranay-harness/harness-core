@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AwsConfig {
   boolean isEc2IamCredentials;
+  boolean isIRSA;
   CrossAccountAccess crossAccountAccess;
   AwsAccessKeyCredential awsAccessKeyCredential;
 }

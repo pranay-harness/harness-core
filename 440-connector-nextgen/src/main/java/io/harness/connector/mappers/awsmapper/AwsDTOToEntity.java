@@ -27,6 +27,10 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
       case MANUAL_CREDENTIALS:
         awsConfigBuilder = buildManualCredential(credential);
         break;
+      case IRSA:
+        //  TODO -- Verify
+        awsConfigBuilder = buildIRSA(credential);
+        break;
       default:
         throw new InvalidRequestException("Invalid Credential type.");
     }
@@ -47,5 +51,9 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
                                                      .secretKeyRef(secretKeyRef)
                                                      .build();
     return AwsConfig.builder().credentialType(AwsCredentialType.MANUAL_CREDENTIALS).credential(accessKeyCredential);
+  }
+
+  private AwsConfigBuilder buildIRSA(AwsCredentialDTO connector) {
+    return AwsConfig.builder().credentialType(AwsCredentialType.IRSA).credential(null);
   }
 }

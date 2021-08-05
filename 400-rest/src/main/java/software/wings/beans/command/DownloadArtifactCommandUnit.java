@@ -19,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
@@ -54,6 +55,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.mappers.artifact.NexusConfigToNexusRequestMapper;
 import software.wings.utils.RepositoryType;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -333,6 +336,13 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       awsAccessKey = credentials.getAccessKeyId();
       awsSecretKey = credentials.getSecretKey();
       awsToken = credentials.getToken();
+    } else if (awsConfig.isUseIRSA()) {
+      WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
+      providerBuilder.roleSessionName(awsConfig.getAccountId() + UUIDGenerator.generateUuid());
+
+      AWSCredentialsProvider credentialsProvider = providerBuilder.build();
+      awsAccessKey = credentialsProvider.getCredentials().getAWSAccessKeyId();
+      awsSecretKey = credentialsProvider.getCredentials().getAWSSecretKey();
     } else {
       awsAccessKey = String.valueOf(awsConfig.getAccessKey());
       awsSecretKey = String.valueOf(awsConfig.getSecretKey());

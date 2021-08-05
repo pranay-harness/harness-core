@@ -61,6 +61,13 @@ public class AwsNgConfigMapper {
                                                     .build())
                         .build();
         break;
+      case IRSA:
+        // TODO -- Verify:
+        awsConfig = AwsConfig.builder()
+                        .isIRSA(true)
+                        .crossAccountAccess(mapCrossAccountAccess(credential.getCrossAccountAccess()))
+                        .build();
+        break;
       default:
         Switch.unhandled(awsCredentialType);
     }
