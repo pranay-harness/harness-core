@@ -4,6 +4,7 @@ load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//874-orchestration-delay:module",
+    "//940-feature-flag:module",
     "//950-wait-engine:module",
     "//950-delegate-tasks-beans:module",
     "//950-common-entities:module",

@@ -2,7 +2,9 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.settings.SettingVariableTypes;
 
@@ -14,6 +16,7 @@ import java.util.Set;
  * The Enum ArtifactStreamType.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._959_CG_BEANS)
 public enum ArtifactStreamType {
   JENKINS,
   BAMBOO,

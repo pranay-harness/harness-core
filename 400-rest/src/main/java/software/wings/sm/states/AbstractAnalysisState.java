@@ -104,7 +104,7 @@ import org.slf4j.Logger;
  */
 @OwnedBy(CV)
 @FieldNameConstants(innerTypeName = "AbstractAnalysisStateKeys")
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class AbstractAnalysisState extends State {
   private static final SecureRandom random = new SecureRandom();

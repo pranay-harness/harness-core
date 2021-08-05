@@ -38,6 +38,7 @@ public class CgOrchestrationRegistrars {
           .addAll(OrchestrationDelayRegistrars.morphiaRegistrars)
           .add(CgOrchestrationMorphiaRegistrar.class)
           .add(CommonEntitiesMorphiaRegister.class)
+          .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

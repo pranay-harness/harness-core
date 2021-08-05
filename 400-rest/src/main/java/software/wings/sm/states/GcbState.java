@@ -19,7 +19,9 @@ import static software.wings.utils.GitUtilsManager.fetchCompleteGitRepoUrl;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -93,6 +95,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class GcbState extends State implements SweepingOutputStateMixin {
   public static final String GCB_LOGS = "GCB Output";
   public static final String BUILD_NO = "buildNo";

@@ -190,8 +190,6 @@ aeriform("//860-orchestration-visualization:module")
 
 aeriform("//860-orchestration-visualization:tests")
 
-aeriform("//861-cg-orchestration-states:module")
-
 aeriform("//865-cg-events:module")
 
 aeriform("//865-cg-events:tests")

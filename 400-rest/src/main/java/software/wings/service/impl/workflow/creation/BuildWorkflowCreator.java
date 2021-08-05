@@ -7,7 +7,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.serializer.MapperUtils;
 
 import software.wings.beans.BuildWorkflow;
@@ -21,6 +23,7 @@ import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import com.google.inject.Inject;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class BuildWorkflowCreator extends WorkflowCreator {
   @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
