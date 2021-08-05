@@ -6,7 +6,9 @@ import static io.harness.govern.Switch.unhandled;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.tasks.ResponseData;
@@ -61,6 +63,7 @@ import org.mongodb.morphia.annotations.Transient;
 */
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class BarrierState extends State {
   private static String errorMsg =
       "The barrier endures since some of the tasks failed before all instances were reached.";

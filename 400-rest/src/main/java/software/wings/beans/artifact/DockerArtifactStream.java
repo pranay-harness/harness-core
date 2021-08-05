@@ -6,7 +6,9 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ff.FeatureFlagService;
 
@@ -24,6 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by anubhaw on 1/5/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._959_CG_BEANS)
 @JsonTypeName("DOCKER")
 @Data
 @EqualsAndHashCode(callSuper = false)

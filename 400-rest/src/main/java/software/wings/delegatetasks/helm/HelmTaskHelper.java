@@ -9,13 +9,12 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.helm.HelmConstants.CHARTS_YAML_KEY;
-import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
-import static io.harness.helm.HelmConstants.REPO_NAME;
 import static io.harness.helm.HelmConstants.VALUES_YAML;
 import static io.harness.helm.HelmConstants.WORKING_DIR_BASE;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -29,11 +28,10 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmCliCommandType;
-import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.annotation.EncryptableSetting;
@@ -49,6 +47,7 @@ import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
@@ -64,8 +63,10 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -154,9 +155,11 @@ public class HelmTaskHelper {
     unzipManifestFiles(destDir, zipInputStream);
   }
 
-  public String getValuesYamlFromChart(HelmChartConfigParams helmChartConfigParams, long timeoutInMillis,
-      HelmCommandFlag helmCommandFlag) throws Exception {
+  public Map<String, List<String>> getValuesYamlFromChart(HelmChartConfigParams helmChartConfigParams,
+      long timeoutInMillis, HelmCommandFlag helmCommandFlag, Map<String, List<String>> mapK8sValuesLocationToFilePaths)
+      throws Exception {
     String workingDirectory = createNewDirectoryAtPath(Paths.get(WORKING_DIR_BASE).toString());
+    Map<String, List<String>> mapK8sValuesLocationToContents = new HashMap<>();
 
     try {
       fetchChartFiles(helmChartConfigParams, workingDirectory, timeoutInMillis, helmCommandFlag);
@@ -172,11 +175,46 @@ public class HelmTaskHelper {
         }
       }
 
-      return new String(Files.readAllBytes(Paths.get(
-                            getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), VALUES_YAML)),
-          StandardCharsets.UTF_8);
+      if (isEmpty(mapK8sValuesLocationToFilePaths)) {
+        String fileContent = new String(
+            Files.readAllBytes(
+                Paths.get(getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), VALUES_YAML)),
+            StandardCharsets.UTF_8);
+        mapK8sValuesLocationToContents.put(K8sValuesLocation.Service.name(), singletonList(fileContent));
+        return mapK8sValuesLocationToContents;
+      }
+
+      mapK8sValuesLocationToFilePaths.forEach((key, value) -> {
+        final List<String> valuesYamlContents = mapK8sValuesLocationToContents.containsKey(key)
+            ? mapK8sValuesLocationToContents.get(key)
+            : new ArrayList<>();
+
+        value.forEach(filePath -> {
+          try {
+            String fileContent = new String(
+                Files.readAllBytes(
+                    Paths.get(getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), filePath)),
+                StandardCharsets.UTF_8);
+            valuesYamlContents.add(fileContent);
+          } catch (Exception ex) {
+            String msg = format("Required values yaml file with path %s not found", filePath);
+            log.error(msg, ex);
+            throw new InvalidArgumentsException(msg, ex, USER);
+          }
+          mapK8sValuesLocationToContents.put(key, valuesYamlContents);
+        });
+      });
+
+      if (mapK8sValuesLocationToFilePaths.entrySet().stream().anyMatch(
+              entry -> mapK8sValuesLocationToContents.get(entry.getKey()).size() != entry.getValue().size())) {
+        throw new InvalidArgumentsException("Could not find all required values yaml files in helm repo");
+      }
+
+      return mapK8sValuesLocationToContents;
+    } catch (InvalidArgumentsException ex) {
+      throw ex;
     } catch (Exception ex) {
-      log.info("values.yaml file not found", ex);
+      log.info("values yaml file not found", ex);
       return null;
     } finally {
       cleanup(workingDirectory);
@@ -324,33 +362,12 @@ public class HelmTaskHelper {
     }
   }
 
-  private String getRepoUpdateCommand(String repoName, String workingDirectory, HelmVersion helmVersion) {
-    String repoUpdateCommand =
-        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_UPDATE, helmVersion)
-            .replace(HELM_PATH_PLACEHOLDER, helmTaskHelperBase.getHelmPath(helmVersion))
-            .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
-            .replace(REPO_NAME, repoName);
-
-    return helmTaskHelperBase.applyHelmHomePath(repoUpdateCommand, workingDirectory);
-  }
-
   public void removeRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     helmTaskHelperBase.removeRepo(repoName, workingDirectory, helmVersion, timeoutInMillis);
   }
 
   public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
-    try {
-      String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
-      ProcessResult processResult = helmTaskHelperBase.executeCommand(repoUpdateCommand, null,
-          format("update helm repo %s", repoName), timeoutInMillis, HelmCliCommandType.REPO_UPDATE);
-
-      log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
-      if (processResult.getExitValue() != 0) {
-        log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
-      }
-    } catch (Exception ex) {
-      log.warn(ExceptionUtils.getMessage(ex));
-    }
+    helmTaskHelperBase.updateRepo(repoName, workingDirectory, helmVersion, timeoutInMillis);
   }
 
   /*
@@ -510,17 +527,7 @@ public class HelmTaskHelper {
 
   private String fetchHelmChartVersionsCommand(
       HelmVersion helmVersion, String chartName, String repoName, String workingDirectory) {
-    String helmFetchCommand =
-        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.FETCH_ALL_VERSIONS, helmVersion)
-            .replace(HELM_PATH_PLACEHOLDER, helmTaskHelperBase.getHelmPath(helmVersion))
-            .replace("${CHART_NAME}", chartName);
-
-    if (isNotBlank(repoName)) {
-      helmFetchCommand = helmFetchCommand.replace(REPO_NAME, repoName);
-    } else {
-      helmFetchCommand = helmFetchCommand.replace(REPO_NAME + "/", "");
-    }
-    return helmTaskHelperBase.applyHelmHomePath(helmFetchCommand, workingDirectory);
+    return helmTaskHelperBase.fetchHelmChartVersionsCommand(helmVersion, chartName, repoName, workingDirectory);
   }
 
   String executeCommandWithLogOutput(

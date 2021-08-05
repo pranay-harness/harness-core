@@ -29,7 +29,7 @@ public class RetryInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
     Interrupt savedInterrupt = validateAndSave(interrupt);
-    return handleInterrupt(savedInterrupt);
+    return handleInterruptForNodeExecution(savedInterrupt, savedInterrupt.getNodeExecutionId());
   }
 
   private Interrupt validateAndSave(Interrupt interrupt) {
@@ -51,14 +51,14 @@ public class RetryInterruptHandler implements InterruptHandler {
 
   @Override
   public Interrupt handleInterrupt(Interrupt interrupt) {
-    retryHelper.retryNodeExecution(
-        interrupt.getNodeExecutionId(), interrupt.getParameters(), interrupt.getUuid(), interrupt.getInterruptConfig());
-    planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
-    return interruptService.markProcessed(interrupt.getUuid(), State.PROCESSED_SUCCESSFULLY);
+    throw new UnsupportedOperationException("Please use handleInterrupt for handling retries");
   }
 
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
-    throw new UnsupportedOperationException("Please use handleInterrupt for handling retries");
+    retryHelper.retryNodeExecution(
+        interrupt.getNodeExecutionId(), interrupt.getParameters(), interrupt.getUuid(), interrupt.getInterruptConfig());
+    planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);
+    return interruptService.markProcessed(interrupt.getUuid(), State.PROCESSED_SUCCESSFULLY);
   }
 }

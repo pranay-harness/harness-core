@@ -2,7 +2,6 @@ package software.wings.graphql.datafetcher.event;
 
 import static io.harness.beans.FeatureName.APP_TELEMETRY;
 
-import static software.wings.graphql.schema.type.event.QLEventRule.toEventRule;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -19,9 +18,9 @@ import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.event.input.QLUpdateEventsConfigInput;
 import software.wings.graphql.schema.mutation.event.payload.QLUpdateEventsConfigPayload;
 import software.wings.graphql.schema.type.event.QLEventsConfig;
-import software.wings.graphql.schema.type.event.QLWebhookEventConfig;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +32,7 @@ public class UpdateEventsConfigDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateEventsConfigInput, QLUpdateEventsConfigPayload> {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EventConfigService eventConfigService;
+  @Inject private AppService appService;
 
   public UpdateEventsConfigDataFetcher() {
     super(QLUpdateEventsConfigInput.class, QLUpdateEventsConfigPayload.class);
@@ -46,6 +46,9 @@ public class UpdateEventsConfigDataFetcher
     if (!featureFlagService.isEnabled(APP_TELEMETRY, mutationContext.getAccountId())) {
       throw new InvalidRequestException("Please enable feature flag to configure events");
     }
+    if (!appService.exist(parameter.getAppId())) {
+      throw new InvalidRequestException("Application does not exist");
+    }
     CgEventConfig eventConfig = CgEventConfig.builder()
                                     .appId(parameter.getAppId())
                                     .accountId(accountId)
@@ -55,20 +58,12 @@ public class UpdateEventsConfigDataFetcher
                                     .delegateSelectors(parameter.getDelegateSelectors())
                                     .enabled(parameter.isEnabled())
                                     .build();
-    eventConfig.setUuid(parameter.getId());
+    eventConfig.setUuid(parameter.getEventsConfigId());
     CgEventConfig updatedEventsConfig =
         eventConfigService.updateEventsConfig(accountId, parameter.getAppId(), eventConfig);
     return QLUpdateEventsConfigPayload.builder()
         .clientMutationId(parameter.getClientMutationId())
-        .eventsConfig(QLEventsConfig.builder()
-                          .appId(updatedEventsConfig.getAppId())
-                          .name(updatedEventsConfig.getName())
-                          .webhookConfig(QLWebhookEventConfig.toWebhookEventConfig(updatedEventsConfig.getConfig()))
-                          .rule(toEventRule(updatedEventsConfig.getRule()))
-                          .delegateSelectors(updatedEventsConfig.getDelegateSelectors())
-                          .enabled(updatedEventsConfig.isEnabled())
-                          .id(updatedEventsConfig.getUuid())
-                          .build())
+        .eventsConfig(QLEventsConfig.getQLEventsConfig(updatedEventsConfig))
         .build();
   }
 }

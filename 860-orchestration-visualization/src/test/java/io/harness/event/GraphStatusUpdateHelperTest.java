@@ -32,7 +32,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -204,7 +204,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
             .planExecutionId(planExecution.getUuid())
             .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
-            .outcomeValue(OrchestrationMap.parse(doc))
+            .outcomeValue(PmsOutcome.parse(doc))
             .build();
     mongoTemplate.insert(outcome);
 
@@ -221,7 +221,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomeDocuments().values())
-        .containsExactlyInAnyOrder(OrchestrationMap.parse(RecastOrchestrationUtils.toMap(dummyVisualizationOutcome)));
+        .containsExactlyInAnyOrder(PmsOutcome.parse(RecastOrchestrationUtils.toMap(dummyVisualizationOutcome)));
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
@@ -238,7 +238,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(SUCCEEDED)
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(OrchestrationMap.parse(nodeExecution.getResolvedStepParameters()))
+        .stepParameters(nodeExecution.getPmsStepParameters())
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())

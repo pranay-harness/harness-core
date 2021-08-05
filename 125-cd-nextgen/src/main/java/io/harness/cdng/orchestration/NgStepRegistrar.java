@@ -34,7 +34,7 @@ import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.registrars.OrchestrationStepsModuleSdkStepRegistrar;
-import io.harness.steps.common.script.ShellScriptStep;
+import io.harness.steps.shellscript.ShellScriptStep;
 
 import java.util.HashMap;
 import java.util.Map;

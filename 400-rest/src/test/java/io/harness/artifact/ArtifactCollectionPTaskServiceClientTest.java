@@ -8,6 +8,8 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -32,6 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactCollectionPTaskServiceClientTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String artifactStreamId = "ARTIFACT_STREAM_ID";

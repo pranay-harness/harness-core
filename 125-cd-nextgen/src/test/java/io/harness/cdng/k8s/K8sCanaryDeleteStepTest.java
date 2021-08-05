@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
@@ -64,12 +65,14 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
   private final StepInputPackage stepInputPackage = StepInputPackage.builder().build();
   private final String canaryStepFqn = "canaryStep";
   private final String canaryDeleteStepFqn = "canaryDeleteStep";
+  private String releaseName = "test-release-name";
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
 
     doReturn(infrastructureOutcome).when(k8sStepHelper).getInfrastructureOutcome(any(Ambiance.class));
+    doReturn(releaseName).when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
   }
 
   @Test
@@ -114,6 +117,10 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     assertThat(k8sDeleteRequest.getTaskType()).isEqualTo(K8sTaskType.DELETE);
     assertThat(k8sDeleteRequest.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(k8sDeleteRequest.isDeleteNamespacesForRelease()).isFalse();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @SneakyThrows

@@ -12,6 +12,8 @@ import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURA
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
+import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
+import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
@@ -143,6 +145,7 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pcf.CfDeploymentManager;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.poll.PollResourceClientModule;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
@@ -847,6 +850,15 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new EventsFrameworkModule(
         configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
     install(FeatureFlagModule.getInstance());
+    install(AccessControlAdminClientModule.getInstance(
+        AccessControlAdminClientConfiguration.builder()
+            .accessControlServiceConfig(
+                configuration.getAccessControlClientConfiguration().getAccessControlServiceConfig())
+            .accessControlServiceSecret(
+                configuration.getAccessControlClientConfiguration().getAccessControlServiceSecret())
+            .mockAccessControlService(false)
+            .build(),
+        MANAGER.getServiceId()));
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(PortalConfig.class).toInstance(configuration.getPortal());
@@ -1285,6 +1297,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
+
+    install(new PollResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     // ng-usermembership Dependencies
     install(new UserMembershipClientModule(configuration.getNgManagerServiceHttpClientConfig(),

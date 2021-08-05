@@ -244,7 +244,7 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HelmDeployStateTest extends CategoryTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
   private static final String HELM_RELEASE_NAME_PREFIX = "helm-release-name-prefix";
@@ -1011,10 +1011,13 @@ public class HelmDeployStateTest extends CategoryTest {
 
   private void testHandleAsyncResponseForHelmFetchTaskWithValuesInGit() {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Map<String, List<String>> mapK8sValuesLocationToContents = new HashMap<>();
+    mapK8sValuesLocationToContents.put(K8sValuesLocation.Service.name(), singletonList("fileContent"));
     HelmValuesFetchTaskResponse response = HelmValuesFetchTaskResponse.builder()
                                                .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                               .valuesFileContent("fileContent")
+                                               .mapK8sValuesLocationToContent(mapK8sValuesLocationToContents)
                                                .build();
+
     Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     doReturn(appManifestMap)
@@ -1350,6 +1353,9 @@ public class HelmDeployStateTest extends CategoryTest {
     helmOverrideManifestMap.put(
         K8sValuesLocation.EnvironmentGlobal, ApplicationManifest.builder().storeType(StoreType.Local).build());
 
+    Map<K8sValuesLocation, ApplicationManifest> mapK8sValuesLocationToApplicationManifest =
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+
     ApplicationManifest serviceHelmChartManifest =
         ApplicationManifest.builder()
             .storeType(HelmChartRepo)
@@ -1363,7 +1369,8 @@ public class HelmDeployStateTest extends CategoryTest {
                         .repoName("repoName")
                         .build());
 
-    helmDeployState.executeHelmValuesFetchTask(context, ACTIVITY_ID, helmOverrideManifestMap);
+    helmDeployState.executeHelmValuesFetchTask(
+        context, ACTIVITY_ID, helmOverrideManifestMap, mapK8sValuesLocationToApplicationManifest);
 
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(applicationManifestUtils, times(1))

@@ -64,7 +64,7 @@ public class GitSyncablePersistenceConfig extends AbstractMongoConfiguration {
   @Bean(name = "primary")
   @Primary
   public MongoTemplate mongoTemplate() throws Exception {
-    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter(), mongoConfig.getTraceMode());
   }
 
   @Bean

@@ -5,9 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.service.steps.ServiceStepOutcome;
 import io.harness.exception.UnexpectedException;
+import io.harness.steps.environment.EnvironmentOutcome;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

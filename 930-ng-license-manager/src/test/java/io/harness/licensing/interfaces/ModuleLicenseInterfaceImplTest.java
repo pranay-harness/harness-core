@@ -34,7 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class ModuleLicenseInterfaceImplTest extends CategoryTest {
-  @InjectMocks ModuleLicenseInterfaceImpl moduleLicenseInterface;
+  @InjectMocks ModuleLicenseImpl moduleLicenseInterface;
   @Mock Map<ModuleType, ModuleLicenseClient> clientMap;
 
   @Before
@@ -93,8 +93,6 @@ public class ModuleLicenseInterfaceImplTest extends CategoryTest {
   public void testStartTrialOnCE() {
     when(clientMap.get(ModuleType.CE)).thenReturn(new CELocalClient());
     ModuleLicenseDTO expectedDTO = CEModuleLicenseDTO.builder()
-                                       .numberOfCluster(UNLIMITED)
-                                       .dataRetentionInDays(1825)
                                        .spendLimit(Long.valueOf(UNLIMITED))
                                        .accountIdentifier(ACCOUNT_IDENTIFIER)
                                        .moduleType(ModuleType.CE)

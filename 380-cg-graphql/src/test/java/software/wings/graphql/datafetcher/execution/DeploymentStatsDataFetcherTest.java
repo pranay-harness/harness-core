@@ -69,9 +69,9 @@ import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLDeploymentType;
 import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
-import software.wings.graphql.schema.type.aggregation.service.QLWorkflowType;
-import software.wings.graphql.schema.type.aggregation.service.QLWorkflowTypeFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowType;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 
 import com.google.inject.Inject;
 import de.danielbechler.util.Collections;
@@ -1473,18 +1473,20 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
             .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
             .build();
 
-    QLWorkflowType[] qlWorkflowTypes = new QLWorkflowType[] {QLWorkflowType.ORCHESTRATION};
+    QLOrchestrationWorkflowType[] qlWorkflowTypes =
+        new QLOrchestrationWorkflowType[] {QLOrchestrationWorkflowType.CANARY};
 
     QLDeploymentFilter workflowTypesFilter =
         QLDeploymentFilter.builder()
-            .workflowType(QLWorkflowTypeFilter.builder().operator(QLEnumOperator.IN).values(qlWorkflowTypes).build())
+            .orchestrationWorkflowType(
+                QLOrchestrationWorkflowTypeFilter.builder().operator(QLEnumOperator.IN).values(qlWorkflowTypes).build())
             .build();
 
     DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
     doReturn(Arrays.asList(new String[] {"wid1", "wid2"}))
         .when(dataFetcherSpy)
         .getWorkflowIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
-            new ArrayList<>(Arrays.asList(QLWorkflowType.ORCHESTRATION.name())));
+            new ArrayList<>(Arrays.asList(QLOrchestrationWorkflowType.CANARY.name())));
 
     DeploymentStatsQueryMetaData queryMetaData =
         dataFetcherSpy.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
@@ -1528,17 +1530,20 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
         .getServiceIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
             new ArrayList<>(Arrays.asList(QLDeploymentType.KUBERNETES.name(), QLDeploymentType.SSH.name())));
 
-    QLWorkflowType[] qlWorkflowTypes = new QLWorkflowType[] {QLWorkflowType.ORCHESTRATION};
+    QLOrchestrationWorkflowType[] qlOrchestrationWorkflowTypes =
+        new QLOrchestrationWorkflowType[] {QLOrchestrationWorkflowType.CANARY};
 
-    QLDeploymentFilter workflowTypesFilter =
-        QLDeploymentFilter.builder()
-            .workflowType(QLWorkflowTypeFilter.builder().operator(QLEnumOperator.IN).values(qlWorkflowTypes).build())
-            .build();
+    QLDeploymentFilter workflowTypesFilter = QLDeploymentFilter.builder()
+                                                 .orchestrationWorkflowType(QLOrchestrationWorkflowTypeFilter.builder()
+                                                                                .operator(QLEnumOperator.IN)
+                                                                                .values(qlOrchestrationWorkflowTypes)
+                                                                                .build())
+                                                 .build();
 
     doReturn(Arrays.asList(new String[] {"wid1", "wid2"}))
         .when(dataFetcherSpy)
         .getWorkflowIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
-            new ArrayList<>(Arrays.asList(QLWorkflowType.ORCHESTRATION.name())));
+            new ArrayList<>(Arrays.asList(QLOrchestrationWorkflowType.CANARY.name())));
 
     DeploymentStatsQueryMetaData queryMetaData =
         dataFetcherSpy.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
@@ -1585,7 +1590,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   @Owner(developers = ALEXANDRU_CIOFU)
   @Category(UnitTests.class)
   public void testGetWorkflowIds() {
-    List<String> workflowTypes = Arrays.asList(new String[] {"ORCHESTRATION"});
+    List<String> workflowTypes = Arrays.asList(new String[] {"BUILD"});
 
     Query<Workflow> workflowQuery = mock(Query.class);
     doReturn(workflowQuery).when(wingsPersistence).createQuery(Workflow.class);
@@ -1593,7 +1598,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
     doReturn(workflowQuery).when(workflowQuery).filter(eq(WorkflowKeys.accountId), anyString());
 
     FieldEnd<Service> fieldEnd = mock(FieldEnd.class);
-    doReturn(fieldEnd).when(workflowQuery).field(WorkflowKeys.workflowType);
+    doReturn(fieldEnd).when(workflowQuery).field(WorkflowKeys.orchestrationWorkflowType);
 
     doReturn(workflowQuery).when(fieldEnd).in(workflowTypes);
 

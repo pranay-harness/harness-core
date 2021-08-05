@@ -7,9 +7,9 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.principals.users.HarnessUserService;
 import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams.HarnessScopeParamsBuilder;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
@@ -26,12 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class UserMembershipEventHandler implements EventHandler {
   private final HarnessUserService harnessUserService;
-  private final ScopeService scopeService;
 
   @Inject
-  public UserMembershipEventHandler(HarnessUserService harnessUserService, ScopeService scopeService) {
+  public UserMembershipEventHandler(HarnessUserService harnessUserService) {
     this.harnessUserService = harnessUserService;
-    this.scopeService = scopeService;
   }
 
   @Override
@@ -54,7 +52,7 @@ public class UserMembershipEventHandler implements EventHandler {
       builder.orgIdentifier(stripToNull(eventsScope.getOrgIdentifier()));
       builder.projectIdentifier(stripToNull(eventsScope.getProjectIdentifier()));
 
-      Scope scope = scopeService.buildScopeFromParams(builder.build());
+      Scope scope = ScopeMapper.fromParams(builder.build());
       if (isNotEmpty(userId)) {
         harnessUserService.sync(userId, scope);
       }

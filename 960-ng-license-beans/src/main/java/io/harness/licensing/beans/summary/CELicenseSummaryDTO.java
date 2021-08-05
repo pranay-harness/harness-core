@@ -22,4 +22,6 @@ import lombok.experimental.SuperBuilder;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
-public class CELicenseSummaryDTO extends LicensesWithSummaryDTO {}
+public class CELicenseSummaryDTO extends LicensesWithSummaryDTO {
+  private long totalSpendLimit;
+}

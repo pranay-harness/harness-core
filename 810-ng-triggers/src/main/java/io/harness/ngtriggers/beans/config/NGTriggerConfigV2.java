@@ -24,5 +24,4 @@ public class NGTriggerConfigV2 implements NGTriggerInterface {
   String inputYaml;
   NGTriggerSourceV2 source;
   @Builder.Default Boolean enabled = Boolean.TRUE;
-  @Builder.Default Boolean autoRegister = Boolean.TRUE;
 }

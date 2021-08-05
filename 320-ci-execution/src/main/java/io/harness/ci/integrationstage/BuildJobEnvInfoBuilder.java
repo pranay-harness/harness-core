@@ -61,7 +61,7 @@ import io.harness.stateutils.buildstate.PluginSettingUtils;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;

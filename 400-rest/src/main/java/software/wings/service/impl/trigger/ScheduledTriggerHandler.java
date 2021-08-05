@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ScheduledTriggerHandler implements Handler<Trigger> {
   private static final int POOL_SIZE = 8;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;

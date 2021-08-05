@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.SettingAttribute;
@@ -12,6 +14,7 @@ import java.util.List;
 import org.mongodb.morphia.query.Query;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
 public class SettingAttributeDao {
   @Inject private HPersistence persistence;
 

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.AUTO_ACCEPT_SAML_ACCOUNT_INVITES;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -9,6 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -116,6 +118,7 @@ import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
@@ -459,14 +462,14 @@ public class AccountServiceImpl implements AccountService {
     featureFlagService.enableAccount(FeatureName.HELM_CHART_NAME_SPLIT, account.getUuid());
 
     if (fromDataGen) {
-      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
+      updateNextGenEnabled(account.getUuid(), true);
       featureFlagService.enableAccount(FeatureName.CDNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CENG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
     } else if (account.isCreatedFromNG()) {
-      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
+      updateNextGenEnabled(account.getUuid(), true);
     }
   }
 
@@ -510,6 +513,21 @@ public class AccountServiceImpl implements AccountService {
     }
     LicenseUtils.decryptLicenseInfo(account, false);
     return account;
+  }
+
+  @Override
+  public boolean isNextGenEnabled(String accountId) {
+    Account account = getFromCacheWithFallback(accountId);
+    return account != null && account.isNextGenEnabled();
+  }
+
+  @Override
+  public Boolean updateNextGenEnabled(String accountId, boolean enabled) {
+    Account account = get(accountId);
+    account.setNextGenEnabled(enabled);
+    update(account);
+    publishAccountChangeEventViaEventFramework(accountId, UPDATE_ACTION);
+    return true;
   }
 
   @Override
@@ -837,6 +855,7 @@ public class AccountServiceImpl implements AccountService {
             .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
             .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
             .set(AccountKeys.cloudCostEnabled, account.isCloudCostEnabled())
+            .set(AccountKeys.nextGenEnabled, account.isNextGenEnabled())
             .set(AccountKeys.ceAutoCollectK8sEvents, account.isCeAutoCollectK8sEvents())
             .set("whitelistedDomains", account.getWhitelistedDomains());
 
@@ -1823,6 +1842,24 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public boolean isAutoInviteAcceptanceEnabled(String accountId) {
+    if (!featureFlagService.isEnabled(AUTO_ACCEPT_SAML_ACCOUNT_INVITES, accountId)) {
+      // This feature is restricted only to a certain accounts
+      return false;
+    }
+
+    Account account = get(accountId);
+
+    if (!AuthenticationMechanism.SAML.equals(account.getAuthenticationMechanism())) {
+      // Currently this provision is only for SAML authenticated accounts
+      return false;
+    }
+
+    List<SSOSettings> ssoSettings = ssoSettingService.getAllSsoSettings(accountId);
+    return ssoSettings.stream().anyMatch(settings -> settings.getType() == SSOType.SAML);
   }
 
   @Override

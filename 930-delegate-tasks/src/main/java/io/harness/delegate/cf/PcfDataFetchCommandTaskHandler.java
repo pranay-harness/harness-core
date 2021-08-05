@@ -7,9 +7,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -37,7 +35,6 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 @NoArgsConstructor
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
   /**

@@ -258,7 +258,7 @@ commons-codec:commons-codec:jar:1.10
 commons-collections:commons-collections:jar:3.2.2
 commons-dbcp:commons-dbcp:jar:1.4
 commons-digester:commons-digester:jar:2.1
-commons-io:commons-io:jar:2.7
+commons-io:commons-io:jar:2.6
 commons-lang:commons-lang:jar:2.3
 commons-logging:commons-logging:jar:1.1.1
 commons-net:commons-net:jar:3.6

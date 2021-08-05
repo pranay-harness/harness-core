@@ -26,9 +26,11 @@ public class StackdriverMetricHealthSourceSpecTransformer
                 .metricTags(metricInfo.getTags())
                 .dashboardName(cvConfig.getDashboardName())
                 .metricName(metricInfo.getMetricName())
+                .serviceInstanceField(metricInfo.getServiceInstanceField())
                 .jsonMetricDefinition(JsonUtils.asObject(metricInfo.getJsonMetricDefinition(), Object.class))
                 .isManualQuery(metricInfo.isManualQuery())
                 .dashboardPath(cvConfig.getDashboardPath())
+
                 .riskProfile(
                     RiskProfile.builder()
                         .category(cvConfig.getMetricPack().getCategory())

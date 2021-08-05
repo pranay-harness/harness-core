@@ -1,6 +1,6 @@
 package io.harness.licensing.interfaces.clients.local;
 
-import static io.harness.licensing.interfaces.ModuleLicenseInterfaceImpl.TRIAL_DURATION;
+import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
 
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;

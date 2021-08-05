@@ -1,8 +1,13 @@
 package io.harness.delegate.beans.connector.artifactoryconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+@OwnedBy(CDC)
 public enum ArtifactoryAuthType {
   @JsonProperty(ArtifactoryConstants.USERNAME_PASSWORD) USER_PASSWORD(ArtifactoryConstants.USERNAME_PASSWORD),
   @JsonProperty(ArtifactoryConstants.ANONYMOUS) ANONYMOUS(ArtifactoryConstants.ANONYMOUS);
@@ -16,6 +21,7 @@ public enum ArtifactoryAuthType {
   public String getDisplayName() {
     return displayName;
   }
+
   @Override
   public String toString() {
     return displayName;

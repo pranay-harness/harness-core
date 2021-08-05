@@ -397,7 +397,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -557,7 +557,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -615,7 +615,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -809,7 +809,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -1117,7 +1117,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -1195,7 +1195,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
         .team(Team.CV)
         .templateId("slack_vanilla")
         .templateData(Collections.emptyMap())
-        .userGroupIds(emptyList())
+        .userGroups(emptyList())
         .build();
   }
 

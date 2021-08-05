@@ -20,8 +20,8 @@ import io.harness.pms.preflight.PreFlightResolution;
 import io.harness.pms.preflight.PreFlightStatus;
 import io.harness.pms.preflight.PreflightCommonUtils;
 import io.harness.pms.preflight.connector.ConnectorCheckResponse.ConnectorCheckResponseBuilder;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.preflight.PreFlightCheckMetadata;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

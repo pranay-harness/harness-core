@@ -11,4 +11,7 @@ public abstract class InstanceInfoDTO {
   // Create combination of fields that can be used to identify corresponding deployment info details
   // The key should be same as instance handler key of the corresponding deployment info
   public abstract String prepareInstanceSyncHandlerKey();
+
+  // Get name of instance on the server as per the deployment type
+  public abstract String getPodName();
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.IGOR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -17,6 +18,9 @@ import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_LAB_EV
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -42,6 +46,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebhookEventUtilsTest extends WingsBaseTest {
   @Inject @InjectMocks private WebhookEventUtils webhookEventUtils;
   static final String GH_PUSH_REQ_FILE =

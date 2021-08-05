@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.atteo.evo.inflector.English.plural;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
@@ -139,9 +140,10 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(CDP)
 @Singleton
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 @ValidateOnExecution
 @Slf4j
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class InfrastructureProvisionerServiceImpl implements InfrastructureProvisionerService {
   @Inject private ManagerExpressionEvaluator evaluator;
 

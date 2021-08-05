@@ -3,7 +3,9 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 @FieldNameConstants(innerTypeName = "ApprovalResumeStateKeys")
 public class ApprovalResumeState extends State {

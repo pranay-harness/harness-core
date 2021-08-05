@@ -58,6 +58,19 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 		sr.Post("/select", HandleSelect(tidb, db, config, log))
 		sr.Get("/overview", HandleOverview(db, log))
 		sr.Post("/uploadcg", HandleUploadCg(tidb, db, log))
+		sr.Post("/uploadvis", HandleUploadVg(tidb, db, log))
+		return sr
+	}())
+
+	r.Mount("/vg", func() http.Handler {
+		sr := chi.NewRouter()
+		// Validate the accountId in URL with the token generated above and authorize the request
+		if !config.Secrets.DisableAuth {
+			sr.Use(AuthMiddleware(config))
+		}
+
+		sr.Get("/", HandleVgSearch(tidb, db, log))
+
 		return sr
 	}())
 

@@ -19,6 +19,13 @@ public class DeploymentSummaryServiceImpl implements DeploymentSummaryService {
   private DeploymentSummaryRepository deploymentSummaryRepository;
 
   @Override
+  public DeploymentSummaryDTO save(DeploymentSummaryDTO deploymentSummaryDTO) {
+    DeploymentSummary deploymentSummary =
+        deploymentSummaryRepository.save(DeploymentSummaryMapper.toEntity(deploymentSummaryDTO));
+    return DeploymentSummaryMapper.toDTO(deploymentSummary);
+  }
+
+  @Override
   public Optional<DeploymentSummaryDTO> getByDeploymentSummaryId(String deploymentSummaryId) {
     Optional<DeploymentSummary> deploymentSummaryOptional = deploymentSummaryRepository.findById(deploymentSummaryId);
     return deploymentSummaryOptional.map(DeploymentSummaryMapper::toDTO);

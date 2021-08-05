@@ -12,7 +12,6 @@ import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.filter.creation.FilterCreationResponse;
@@ -42,6 +41,8 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
   private String accountId;
   private String projectIdentifier;
   private String orgIdentifier;
+  private String serviceIdentifier;
+  private String envIdentifier;
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
@@ -49,6 +50,8 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
     accountId = builderFactory.getContext().getAccountId();
     projectIdentifier = builderFactory.getContext().getProjectIdentifier();
     orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
+    envIdentifier = builderFactory.getContext().getEnvIdentifier();
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
   }
 
@@ -59,6 +62,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
     assertThatThrownBy(
         ()
             -> cvngStepFilterJsonCreator.handleNode(FilterCreationContext.builder()
+                                                        .currentField(getYamlField())
                                                         .setupMetadata(SetupMetadata.newBuilder()
                                                                            .setAccountId(accountId)
                                                                            .setOrgId(orgIdentifier)
@@ -66,8 +70,8 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
                                                                            .build())
                                                         .build(),
                 StepElementConfig.builder().stepSpecType(builderFactory.cvngStepInfoBuilder().build()).build()))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining("Monitored Source Entity with identifier ");
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("MonitoredService does not exist for service %s and env %s", serviceIdentifier, envIdentifier);
   }
 
   @Test
@@ -84,7 +88,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
                                                                     .setOrgId(orgIdentifier)
                                                                     .setProjectId(projectIdentifier)
                                                                     .build())
-                                                 .currentField(new YamlField(getYamlNode()))
+                                                 .currentField(getYamlField())
                                                  .build(),
             StepElementConfig.builder().stepSpecType(builderFactory.cvngStepInfoBuilder().build()).build());
     assertThat(filterCreationResponse.getReferredEntities()).hasSize(1);
@@ -101,32 +105,27 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testHandleNode_whenMonitoredServiceRefIsRuntimeOrExpression() throws IOException {
+  public void testHandleNode_whenServiceOrEnvIsRuntimeOrExpression() throws IOException {
     MonitoredServiceDTO monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
     monitoredServiceService.create(accountId, monitoredServiceDTO);
+    YamlField yamlField = getYamlField("<+input>", "Prod");
     FilterCreationContextBuilder filterCreationContextBuilder =
         FilterCreationContext.builder().setupMetadata(SetupMetadata.newBuilder()
                                                           .setAccountId(accountId)
                                                           .setOrgId(orgIdentifier)
                                                           .setProjectId(projectIdentifier)
                                                           .build());
-    FilterCreationResponse filterCreationResponse = cvngStepFilterJsonCreator.handleNode(
-        filterCreationContextBuilder.currentField(new YamlField(getYamlNode())).build(),
-        StepElementConfig.builder()
-            .stepSpecType(builderFactory.cvngStepInfoBuilder()
-                              .monitoredServiceRef(ParameterField.createExpressionField(true, "<+input>", null, true))
-                              .build())
-            .build());
+    FilterCreationResponse filterCreationResponse =
+        cvngStepFilterJsonCreator.handleNode(filterCreationContextBuilder.currentField(yamlField).build(),
+            StepElementConfig.builder().stepSpecType(builderFactory.cvngStepInfoBuilder().build()).build());
 
     assertThat(filterCreationResponse.getReferredEntities()).isEmpty();
+
     filterCreationResponse = cvngStepFilterJsonCreator.handleNode(
-        filterCreationContextBuilder.currentField(new YamlField(getYamlNode())).build(),
-        StepElementConfig.builder()
-            .stepSpecType(builderFactory.cvngStepInfoBuilder()
-                              .monitoredServiceRef(ParameterField.createExpressionField(
-                                  true, "<+service.identifier>_<+env.identifier>", null, true))
-                              .build())
-            .build());
+        filterCreationContextBuilder
+            .currentField(getYamlField("verification", "<+serviceConfig.artifacts.primary.tag>"))
+            .build(),
+        StepElementConfig.builder().stepSpecType(builderFactory.cvngStepInfoBuilder().build()).build());
     assertThat(filterCreationResponse.getReferredEntities()).isEmpty();
   }
 
@@ -142,7 +141,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
                                                                            .setOrgId(orgIdentifier)
                                                                            .setProjectId(projectIdentifier)
                                                                            .build())
-                                                        .currentField(new YamlField(getYamlNode()))
+                                                        .currentField(getYamlField())
                                                         .build(),
                 StepElementConfig.builder()
                     .stepSpecType(builderFactory.cvngStepInfoBuilder()
@@ -170,7 +169,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
                                                                     .setOrgId(orgIdentifier)
                                                                     .setProjectId(projectIdentifier)
                                                                     .build())
-                                                 .currentField(new YamlField(getYamlNode()))
+                                                 .currentField(getYamlField())
                                                  .build(),
             StepElementConfig.builder()
                 .stepSpecType(
@@ -185,10 +184,16 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
     assertThat(filterCreationResponse.getReferredEntities()).hasSize(1);
   }
 
-  public YamlNode getYamlNode() throws IOException {
+  public YamlField getYamlField() throws IOException {
+    return getYamlField(serviceIdentifier, envIdentifier);
+  }
+
+  public YamlField getYamlField(String serviceRef, String envRef) throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline-test.yml");
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
+    yamlContent = yamlContent.replace("$serviceRef", serviceRef);
+    yamlContent = yamlContent.replace("$environmentRef", envRef);
     YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
     YamlField stagesNode = pipelineNode.getField("stages");
@@ -196,6 +201,6 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
     YamlNode stepsNode =
         stage1Node.getField("spec").getNode().getField("execution").getNode().getField("steps").getNode();
     YamlNode step1Node = stepsNode.asArray().get(0).getField("step").getNode();
-    return step1Node;
+    return new YamlField(step1Node);
   }
 }

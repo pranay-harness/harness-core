@@ -62,51 +62,22 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   @Inject private DelegateConnectionDao delegateConnectionDao;
 
   @Override
+  public long getDelegateGroupCount(final String accountId, final String orgId, final String projectId) {
+    return createDelegateGroupsQuery(accountId, orgId, projectId, false).count();
+  }
+
+  @Override
   public DelegateGroupListing listDelegateGroupDetails(String accountId, String orgId, String projectId) {
-    List<DelegateGroupDetails> delegateGroupDetails = getDelegateGroupDetails(accountId, orgId, projectId);
+    final List<DelegateGroupDetails> delegateGroupDetails = getDelegateGroupDetails(accountId, orgId, projectId, false);
 
     return DelegateGroupListing.builder().delegateGroupDetails(delegateGroupDetails).build();
   }
 
   @Override
   public DelegateGroupListing listDelegateGroupDetailsUpTheHierarchy(String accountId, String orgId, String projectId) {
-    List<DelegateGroupDetails> delegateGroupDetails =
-        getDelegateGroupDetailsUpTheHierarchy(accountId, orgId, projectId);
+    final List<DelegateGroupDetails> delegateGroupDetails = getDelegateGroupDetails(accountId, orgId, projectId, true);
 
     return DelegateGroupListing.builder().delegateGroupDetails(delegateGroupDetails).build();
-  }
-
-  private List<DelegateGroupDetails> getDelegateGroupDetailsUpTheHierarchy(
-      String accountId, String orgId, String projectId) {
-    Query<DelegateGroup> delegateGroupQuery = persistence.createQuery(DelegateGroup.class)
-                                                  .filter(DelegateGroupKeys.accountId, accountId)
-                                                  .filter(DelegateGroupKeys.ng, true);
-
-    String projectIdentifier = orgId == null || projectId == null ? null : orgId + "/" + projectId;
-    delegateGroupQuery.field(DelegateKeys.owner_identifier).in(Arrays.asList(null, orgId, projectIdentifier));
-
-    List<String> delegateGroupIds = delegateGroupQuery.field(DelegateGroupKeys.status)
-                                        .notEqual(DelegateGroupStatus.DELETED)
-                                        .asKeyList()
-                                        .stream()
-                                        .map(key -> (String) key.getId())
-                                        .collect(toList());
-
-    Map<String, List<Delegate>> delegatesByGroup = persistence.createQuery(Delegate.class)
-                                                       .filter(DelegateKeys.accountId, accountId)
-                                                       .field(DelegateKeys.delegateGroupId)
-                                                       .in(delegateGroupIds)
-                                                       .asList()
-                                                       .stream()
-                                                       .collect(groupingBy(Delegate::getDelegateGroupId));
-
-    return delegateGroupIds.stream()
-        .map(delegateGroupId -> {
-          DelegateGroup delegateGroup = delegateCache.getDelegateGroup(accountId, delegateGroupId);
-          return buildDelegateGroupDetails(
-              accountId, delegateGroup, delegatesByGroup.get(delegateGroupId), delegateGroupId);
-        })
-        .collect(toList());
   }
 
   @Override
@@ -139,90 +110,6 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
                                         .asList();
 
     return buildDelegateGroupDetails(accountId, delegateGroup, groupDelegates, delegateGroupId);
-  }
-
-  private List<DelegateGroupDetails> getDelegateGroupDetails(String accountId, String orgId, String projectId) {
-    Query<DelegateGroup> delegateGroupQuery = persistence.createQuery(DelegateGroup.class)
-                                                  .filter(DelegateGroupKeys.accountId, accountId)
-                                                  .filter(DelegateGroupKeys.ng, true);
-
-    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
-    if (owner != null) {
-      delegateGroupQuery.filter(DelegateGroupKeys.owner, owner);
-    } else {
-      // Account level delegates
-      delegateGroupQuery.field(DelegateGroupKeys.owner).doesNotExist();
-    }
-
-    List<String> delegateGroupIds = delegateGroupQuery.field(DelegateGroupKeys.status)
-                                        .notEqual(DelegateGroupStatus.DELETED)
-                                        .asKeyList()
-                                        .stream()
-                                        .map(key -> (String) key.getId())
-                                        .collect(toList());
-
-    Map<String, List<Delegate>> delegatesByGroup = persistence.createQuery(Delegate.class)
-                                                       .filter(DelegateKeys.accountId, accountId)
-                                                       .field(DelegateKeys.delegateGroupId)
-                                                       .in(delegateGroupIds)
-                                                       .asList()
-                                                       .stream()
-                                                       .collect(groupingBy(Delegate::getDelegateGroupId));
-
-    return delegateGroupIds.stream()
-        .map(delegateGroupId -> {
-          DelegateGroup delegateGroup = delegateCache.getDelegateGroup(accountId, delegateGroupId);
-          return buildDelegateGroupDetails(
-              accountId, delegateGroup, delegatesByGroup.get(delegateGroupId), delegateGroupId);
-        })
-        .collect(toList());
-  }
-
-  private DelegateGroupDetails buildDelegateGroupDetails(
-      String accountId, DelegateGroup delegateGroup, List<Delegate> groupDelegates, String delegateGroupId) {
-    if (groupDelegates == null) {
-      log.info("There are no delegates related to this delegate group.");
-      groupDelegates = emptyList();
-    }
-
-    Map<String, List<DelegateConnectionDetails>> activeDelegateConnections =
-        delegateConnectionDao.obtainActiveDelegateConnections(accountId);
-
-    String delegateType = delegateGroup != null ? delegateGroup.getDelegateType() : null;
-    String groupName = delegateGroup != null ? delegateGroup.getName() : null;
-    String delegateDescription = delegateGroup != null ? delegateGroup.getDescription() : null;
-    String delegateConfigurationId = delegateGroup != null ? delegateGroup.getDelegateConfigurationId() : null;
-    String delegateGroupIdentifier = delegateGroup != null ? delegateGroup.getIdentifier() : null;
-    DelegateSizeDetails sizeDetails = delegateGroup != null ? delegateGroup.getSizeDetails() : null;
-    Set<String> groupCustomSelectors = delegateGroup != null ? delegateGroup.getTags() : null;
-
-    String groupHostName = "";
-    if (KUBERNETES.equals(delegateType) && isNotEmpty(groupDelegates)) {
-      groupHostName = getHostNameForGroupedDelegate(groupDelegates.get(0).getHostName());
-    }
-
-    long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
-
-    List<DelegateGroupListing.DelegateInner> delegateInstanceDetails =
-        buildInnerDelegates(groupDelegates, activeDelegateConnections, true);
-
-    return DelegateGroupDetails.builder()
-        .groupId(delegateGroupId)
-        .delegateGroupIdentifier(delegateGroupIdentifier)
-        .delegateType(delegateType)
-        .groupName(groupName)
-        .groupHostName(groupHostName)
-        .delegateDescription(delegateDescription)
-        .delegateConfigurationId(delegateConfigurationId)
-        .sizeDetails(sizeDetails)
-        .groupImplicitSelectors(retrieveDelegateGroupImplicitSelectors(delegateGroup))
-        .groupCustomSelectors(groupCustomSelectors)
-        .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, delegateGroupId))
-        .lastHeartBeat(lastHeartBeat)
-        .activelyConnected(
-            delegateInstanceDetails.stream().anyMatch(delegateDetails -> isNotEmpty(delegateDetails.getConnections())))
-        .delegateInstanceDetails(delegateInstanceDetails)
-        .build();
   }
 
   @Override
@@ -432,5 +319,97 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
 
     String delegateGroupId = updatedDelegateGroup != null ? updatedDelegateGroup.getUuid() : null;
     return buildDelegateGroupDetails(accountId, updatedDelegateGroup, null, delegateGroupId);
+  }
+
+  private List<DelegateGroupDetails> getDelegateGroupDetails(
+      final String accountId, final String orgId, final String projectId, final boolean upTheHierarchy) {
+    final Query<DelegateGroup> query = createDelegateGroupsQuery(accountId, orgId, projectId, upTheHierarchy);
+
+    final List<String> delegateGroupIds = query.asKeyList().stream().map(key -> (String) key.getId()).collect(toList());
+
+    final Map<String, List<Delegate>> delegatesByGroup = persistence.createQuery(Delegate.class)
+                                                             .filter(DelegateKeys.accountId, accountId)
+                                                             .field(DelegateKeys.delegateGroupId)
+                                                             .in(delegateGroupIds)
+                                                             .asList()
+                                                             .stream()
+                                                             .collect(groupingBy(Delegate::getDelegateGroupId));
+
+    return delegateGroupIds.stream()
+        .map(delegateGroupId -> {
+          DelegateGroup delegateGroup = delegateCache.getDelegateGroup(accountId, delegateGroupId);
+          return buildDelegateGroupDetails(
+              accountId, delegateGroup, delegatesByGroup.get(delegateGroupId), delegateGroupId);
+        })
+        .collect(toList());
+  }
+
+  private Query<DelegateGroup> createDelegateGroupsQuery(
+      final String accountId, final String orgId, final String projectId, final boolean upTheHierarchy) {
+    final Query<DelegateGroup> delegateGroupQuery = persistence.createQuery(DelegateGroup.class)
+                                                        .filter(DelegateGroupKeys.accountId, accountId)
+                                                        .filter(DelegateGroupKeys.ng, true);
+
+    final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
+    if (owner != null) {
+      if (upTheHierarchy) {
+        final String projectIdentifier = projectId != null ? owner.getIdentifier() : null;
+        delegateGroupQuery.field(DelegateKeys.owner_identifier).in(Arrays.asList(null, orgId, projectIdentifier));
+      } else {
+        delegateGroupQuery.filter(DelegateGroupKeys.owner, owner);
+      }
+    } else {
+      // Account level delegates
+      delegateGroupQuery.field(DelegateGroupKeys.owner).doesNotExist();
+    }
+
+    return delegateGroupQuery.field(DelegateGroupKeys.status).notEqual(DelegateGroupStatus.DELETED);
+  }
+
+  private DelegateGroupDetails buildDelegateGroupDetails(
+      String accountId, DelegateGroup delegateGroup, List<Delegate> groupDelegates, String delegateGroupId) {
+    if (groupDelegates == null) {
+      log.info("There are no delegates related to this delegate group.");
+      groupDelegates = emptyList();
+    }
+
+    Map<String, List<DelegateConnectionDetails>> activeDelegateConnections =
+        delegateConnectionDao.obtainActiveDelegateConnections(accountId);
+
+    String delegateType = delegateGroup != null ? delegateGroup.getDelegateType() : null;
+    String groupName = delegateGroup != null ? delegateGroup.getName() : null;
+    String delegateDescription = delegateGroup != null ? delegateGroup.getDescription() : null;
+    String delegateConfigurationId = delegateGroup != null ? delegateGroup.getDelegateConfigurationId() : null;
+    String delegateGroupIdentifier = delegateGroup != null ? delegateGroup.getIdentifier() : null;
+    DelegateSizeDetails sizeDetails = delegateGroup != null ? delegateGroup.getSizeDetails() : null;
+    Set<String> groupCustomSelectors = delegateGroup != null ? delegateGroup.getTags() : null;
+
+    String groupHostName = "";
+    if (KUBERNETES.equals(delegateType) && isNotEmpty(groupDelegates)) {
+      groupHostName = getHostNameForGroupedDelegate(groupDelegates.get(0).getHostName());
+    }
+
+    long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
+
+    List<DelegateGroupListing.DelegateInner> delegateInstanceDetails =
+        buildInnerDelegates(groupDelegates, activeDelegateConnections, true);
+
+    return DelegateGroupDetails.builder()
+        .groupId(delegateGroupId)
+        .delegateGroupIdentifier(delegateGroupIdentifier)
+        .delegateType(delegateType)
+        .groupName(groupName)
+        .groupHostName(groupHostName)
+        .delegateDescription(delegateDescription)
+        .delegateConfigurationId(delegateConfigurationId)
+        .sizeDetails(sizeDetails)
+        .groupImplicitSelectors(retrieveDelegateGroupImplicitSelectors(delegateGroup))
+        .groupCustomSelectors(groupCustomSelectors)
+        .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, delegateGroupId))
+        .lastHeartBeat(lastHeartBeat)
+        .activelyConnected(
+            delegateInstanceDetails.stream().anyMatch(delegateDetails -> isNotEmpty(delegateDetails.getConnections())))
+        .delegateInstanceDetails(delegateInstanceDetails)
+        .build();
   }
 }

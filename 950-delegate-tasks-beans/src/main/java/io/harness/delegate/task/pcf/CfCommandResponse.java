@@ -2,9 +2,7 @@ package io.harness.delegate.task.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.pcf.response.CfDeployCommandResponse;
 import io.harness.delegate.task.pcf.response.CfInfraMappingDataResponse;
 import io.harness.delegate.task.pcf.response.CfInstanceSyncResponse;
@@ -21,7 +19,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({

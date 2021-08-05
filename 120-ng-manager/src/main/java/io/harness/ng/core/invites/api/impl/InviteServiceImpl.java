@@ -7,6 +7,8 @@ import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_
 import static io.harness.ng.core.invites.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_EXPIRED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.ACCEPTED_INVITE;
 
@@ -119,7 +121,7 @@ public class InviteServiceImpl implements InviteService {
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
   private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
   private static final String NG_UI_PATH_PREFIX = "ng/";
-  private static final String ACCEPT_INVITE_PATH = "gateway/ng/api/invites/verify";
+  private static final String ACCEPT_INVITE_PATH = "ng/api/invites/verify";
   private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final NgUserService ngUserService;
@@ -263,8 +265,9 @@ public class InviteServiceImpl implements InviteService {
   @Override
   public URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String email, String jwtToken) {
     String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
-    if (inviteAcceptResponse.getResponse().equals(FAIL)) {
-      return getLoginPageUrl(accountIdentifier);
+    if (inviteAcceptResponse.getResponse().equals(INVITE_EXPIRED)
+        || inviteAcceptResponse.getResponse().equals(INVITE_INVALID)) {
+      return getLoginPageUrl(accountIdentifier, inviteAcceptResponse.getResponse());
     }
 
     UserInfo userInfo = inviteAcceptResponse.getUserInfo();
@@ -280,13 +283,7 @@ public class InviteServiceImpl implements InviteService {
       if (isPasswordRequired) {
         return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
       } else {
-        UserInviteDTO userInviteDTO = UserInviteDTO.builder()
-                                          .accountId(accountIdentifier)
-                                          .email(email)
-                                          .name(email.trim())
-                                          .token(jwtToken)
-                                          .build();
-        RestClientUtils.getResponse(userClient.createUserAndCompleteNGInvite(userInviteDTO));
+        createAndInviteNonPasswordUser(accountIdentifier, jwtToken, email.trim());
         return getResourceUrl(inviteAcceptResponse);
       }
     } else {
@@ -294,10 +291,17 @@ public class InviteServiceImpl implements InviteService {
       if (isPasswordRequired && !isUserPasswordSet) {
         return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
       } else {
-        completeInvite(jwtToken);
+        Optional<Invite> inviteOpt = getInviteFromToken(jwtToken, false);
+        completeInvite(inviteOpt);
         return getResourceUrl(inviteAcceptResponse);
       }
     }
+  }
+
+  private void createAndInviteNonPasswordUser(String accountIdentifier, String jwtToken, String email) {
+    UserInviteDTO userInviteDTO =
+        UserInviteDTO.builder().accountId(accountIdentifier).email(email).name(email).token(jwtToken).build();
+    RestClientUtils.getResponse(userClient.createUserAndCompleteNGInvite(userInviteDTO));
   }
 
   private URI getResourceUrl(InviteAcceptResponse inviteAcceptResponse) {
@@ -336,8 +340,9 @@ public class InviteServiceImpl implements InviteService {
   private URI getUserInfoSubmitUrl(String email, String jwtToken, InviteAcceptResponse inviteAcceptResponse) {
     String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
     try {
-      String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s",
-          accountIdentifier, email, jwtToken, getResourceUrl(inviteAcceptResponse));
+      String accountCreationFragment =
+          String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s&generation=NG", accountIdentifier, email,
+              jwtToken, getResourceUrl(inviteAcceptResponse));
       String baseUrl = getBaseUrl(accountIdentifier);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
@@ -348,12 +353,12 @@ public class InviteServiceImpl implements InviteService {
     }
   }
 
-  private URI getLoginPageUrl(String accountIdentifier) {
+  private URI getLoginPageUrl(String accountIdentifier, InviteOperationResponse inviteOperationResponse) {
     try {
       String baseUrl = getBaseUrl(accountIdentifier);
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
-      uriBuilder.setFragment("/signin");
+      uriBuilder.setFragment("/signin?errorCode=" + inviteOperationResponse.getType());
       return uriBuilder.build();
     } catch (URISyntaxException e) {
       throw new WingsException(e);
@@ -362,6 +367,10 @@ public class InviteServiceImpl implements InviteService {
 
   private String getBaseUrl(String accountIdentifier) {
     return RestClientUtils.getResponse(accountClient.getBaseUrl(accountIdentifier));
+  }
+
+  private String getGatewayBaseUrl(String accountIdentifier) {
+    return RestClientUtils.getResponse(accountClient.getGatewayBaseUrl(accountIdentifier));
   }
 
   private Invite resendInvite(Invite newInvite) {
@@ -389,10 +398,16 @@ public class InviteServiceImpl implements InviteService {
     Optional<Invite> inviteOptional = getInviteFromToken(jwtToken, true);
     if (!inviteOptional.isPresent() || !inviteOptional.get().getInviteToken().equals(jwtToken)) {
       log.warn("Invite token {} is invalid", jwtToken);
-      return InviteAcceptResponse.builder().response(InviteOperationResponse.FAIL).build();
+      return InviteAcceptResponse.builder().response(INVITE_INVALID).build();
+    }
+    Invite invite = inviteOptional.get();
+    Date today = Date.from(OffsetDateTime.now().toInstant());
+    Date validUntil = invite.getValidUntil();
+    if (validUntil.compareTo(today) < 0) {
+      log.warn("Invite expired");
+      return InviteAcceptResponse.builder().response(INVITE_EXPIRED).build();
     }
 
-    Invite invite = inviteOptional.get();
     Optional<UserMetadataDTO> ngUserOpt = ngUserService.getUserByEmail(invite.getEmail(), true);
     UserInfo userInfo = ngUserOpt
                             .map(user
@@ -492,7 +507,13 @@ public class InviteServiceImpl implements InviteService {
     } catch (UnsupportedEncodingException e) {
       log.error("Invite Email sending failed due to encoding exception. InviteId: " + savedInvite.getId(), e);
     }
-
+    String accountId = invite.getAccountIdentifier();
+    boolean isAutoAcceptInviteEnabled =
+        RestClientUtils.getResponse(accountClient.checkAutoInviteAcceptanceEnabledForAccount(accountId));
+    if (isAutoAcceptInviteEnabled) {
+      String email = invite.getEmail().trim();
+      createAndInviteNonPasswordUser(accountId, invite.getInviteToken(), email);
+    }
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 
@@ -525,7 +546,7 @@ public class InviteServiceImpl implements InviteService {
                                                   .recipients(Collections.singletonList(invite.getEmail()))
                                                   .team(Team.PL)
                                                   .templateId("email_invite")
-                                                  .userGroupIds(Collections.emptyList());
+                                                  .userGroups(Collections.emptyList());
     Map<String, String> templateData = new HashMap<>();
     templateData.put("url", url);
     if (!isBlank(invite.getProjectIdentifier())) {
@@ -576,26 +597,21 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private String getAcceptInviteUrl(Invite invite) throws URISyntaxException, UnsupportedEncodingException {
-    String baseUrl = getBaseUrl(invite.getAccountIdentifier());
+    String baseUrl = getGatewayBaseUrl(invite.getAccountIdentifier()) + ACCEPT_INVITE_PATH;
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
-    uriBuilder.setPath(ACCEPT_INVITE_PATH);
     uriBuilder.setParameters(getParameterList(invite));
     uriBuilder.setFragment(null);
     return uriBuilder.toString();
   }
 
   private List<NameValuePair> getParameterList(Invite invite) throws UnsupportedEncodingException {
-    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
     return Arrays.asList(new BasicNameValuePair("accountIdentifier", invite.getAccountIdentifier()),
-        new BasicNameValuePair("accountName", account.getName()),
-        new BasicNameValuePair("company", account.getCompanyName()),
         new BasicNameValuePair("email", URLEncoder.encode(invite.getEmail(), "UTF-8")),
         new BasicNameValuePair("token", invite.getInviteToken()));
   }
 
   @Override
-  public boolean completeInvite(String token) {
-    Optional<Invite> inviteOpt = getInviteFromToken(token, false);
+  public boolean completeInvite(Optional<Invite> inviteOpt) {
     if (!inviteOpt.isPresent()) {
       return false;
     }

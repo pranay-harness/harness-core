@@ -11,7 +11,9 @@ import java.util.List;
 public interface EventConfigService {
   List<CgEventConfig> listAllEventsConfig(String accountId, String appId);
 
-  CgEventConfig getEventsConfig(String accountId, String appId, String eventConfig);
+  CgEventConfig getEventsConfig(String accountId, String appId, String eventConfigId);
+
+  CgEventConfig getEventsConfigByName(String accountId, String appId, String eventConfigName);
 
   CgEventConfig createEventsConfig(String accountId, String appId, CgEventConfig eventConfig);
 

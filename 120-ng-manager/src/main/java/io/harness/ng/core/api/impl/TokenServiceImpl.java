@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.core.account.ServiceAccountConfig.DEFAULT_TOKEN_LIMIT;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -9,11 +10,14 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.BCryptVersion.$2A;
 
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.AccountOrgProjectValidator;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.common.beans.ApiKeyType;
@@ -47,6 +51,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -63,6 +68,7 @@ public class TokenServiceImpl implements TokenService {
   @Inject private AccountOrgProjectValidator accountOrgProjectValidator;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
   @Inject private NgUserService ngUserService;
+  @Inject private AccountService accountService;
 
   private static final String deliminator = ".";
 
@@ -70,21 +76,28 @@ public class TokenServiceImpl implements TokenService {
   public String createToken(TokenDTO tokenDTO) {
     validateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
         tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
+    validateTokenLimit(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
+        tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder($2A, 10);
     String tokenString = passwordEncoder.encode(randomString);
     ApiKey apiKey = apiKeyService.getApiKey(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
         tokenDTO.getProjectIdentifier(), tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(),
         tokenDTO.getApiKeyIdentifier());
-    Token token = TokenDTOMapper.getTokenFromDTO(tokenDTO, apiKey.getDefaultTimeToExpireToken());
-    token.setEncodedPassword(tokenString);
-    validate(token);
-    Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-      Token savedToken = tokenRepository.save(token);
-      outboxService.save(new TokenCreateEvent(TokenDTOMapper.getDTOFromToken(savedToken)));
-      return savedToken;
-    }));
-    return token.getApiKeyType().getValue() + deliminator + newToken.getUuid() + deliminator + randomString;
+    try {
+      Token token = TokenDTOMapper.getTokenFromDTO(tokenDTO, apiKey.getDefaultTimeToExpireToken());
+      token.setEncodedPassword(tokenString);
+      validate(token);
+      Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+        Token savedToken = tokenRepository.save(token);
+        outboxService.save(new TokenCreateEvent(TokenDTOMapper.getDTOFromToken(savedToken)));
+        return savedToken;
+      }));
+      return token.getApiKeyType().getValue() + deliminator + newToken.getUuid() + deliminator + randomString;
+    } catch (DuplicateKeyException e) {
+      throw new DuplicateFieldException(
+          String.format("Try using different token name, [%s] already exists", tokenDTO.getIdentifier()));
+    }
   }
 
   private void validateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
@@ -96,6 +109,19 @@ public class TokenServiceImpl implements TokenService {
     }
     apiKeyService.getApiKey(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
+  }
+
+  private void validateTokenLimit(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier, String apiKeyIdentifier) {
+    ServiceAccountConfig serviceAccountConfig = accountService.getAccount(accountIdentifier).getServiceAccountConfig();
+    long tokenLimit = serviceAccountConfig != null ? serviceAccountConfig.getTokenLimit() : DEFAULT_TOKEN_LIMIT;
+    long existingTokenCount =
+        tokenRepository
+            .countByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifier(
+                accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
+    if (existingTokenCount >= tokenLimit) {
+      throw new InvalidRequestException(String.format("Maximum limit has reached"));
+    }
   }
 
   private void validateUpdateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,

@@ -1,10 +1,12 @@
 package io.harness.pms.expressions.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -36,6 +38,7 @@ import io.harness.ngpipeline.artifact.bean.EcrArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -49,6 +52,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class ImagePullSecretUtils {
   @Inject private EcrImagePullSecretHelper ecrImagePullSecretHelper;
   @Inject private ConnectorResourceClient connectorResourceClient;
@@ -167,7 +171,7 @@ public class ImagePullSecretUtils {
 
   private ConnectorInfoDTO getConnector(String connectorIdentifierRef, Ambiance ambiance) {
     try {
-      NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+      NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
       IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifierRef,
           ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
       Optional<ConnectorDTO> connectorDTO =

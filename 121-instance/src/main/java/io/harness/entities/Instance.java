@@ -59,7 +59,7 @@ public class Instance {
   private String serviceName;
 
   private String infrastructureMappingId;
-  private String infraMappingType;
+  private String infrastructureKind;
   private String connectorRef;
 
   private ArtifactDetails primaryArtifact;

@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.WebHookToken;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
@@ -22,6 +24,7 @@ import lombok.EqualsAndHashCode;
  */
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 @JsonTypeName("WEBHOOK")
 @Data
 @Builder

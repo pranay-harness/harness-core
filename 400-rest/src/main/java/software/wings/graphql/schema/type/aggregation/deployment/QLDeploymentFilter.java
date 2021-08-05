@@ -14,7 +14,7 @@ import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
-import software.wings.graphql.schema.type.aggregation.service.QLWorkflowTypeFilter;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -51,7 +51,7 @@ public class QLDeploymentFilter implements EntityFilter {
   private QLIdFilter environment;
   private QLEnvironmentTypeFilter environmentType;
   private QLDeploymentTypeFilter deploymentType;
-  private QLWorkflowTypeFilter workflowType;
+  private QLOrchestrationWorkflowTypeFilter orchestrationWorkflowType;
   private QLStringFilter status;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
@@ -75,8 +75,8 @@ public class QLDeploymentFilter implements EntityFilter {
     if (filter.getDeploymentType() != null) {
       filterTypes.add(QLDeploymentFilterType.DeploymentType);
     }
-    if (filter.getWorkflowType() != null) {
-      filterTypes.add(QLDeploymentFilterType.WorkflowType);
+    if (filter.getOrchestrationWorkflowType() != null) {
+      filterTypes.add(QLDeploymentFilterType.OrchestrationWorkflowType);
     }
     if (filter.getPipeline() != null) {
       filterTypes.add(QLDeploymentFilterType.Pipeline);
@@ -134,8 +134,8 @@ public class QLDeploymentFilter implements EntityFilter {
         return filter.getService();
       case DeploymentType:
         return filter.getDeploymentType();
-      case WorkflowType:
-        return filter.getWorkflowType();
+      case OrchestrationWorkflowType:
+        return filter.getOrchestrationWorkflowType();
       case Workflow:
         return filter.getWorkflow();
       case CloudProvider:

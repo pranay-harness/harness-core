@@ -210,11 +210,7 @@ public class MailServiceImpl implements ChannelService {
   private List<String> resolveRecipients(NotificationRequest notificationRequest) {
     NotificationRequest.Email emailDetails = notificationRequest.getEmail();
     List<String> recipients = new ArrayList<>(emailDetails.getEmailIdsList());
-    if (isNotEmpty(emailDetails.getUserGroupIdsList())) {
-      List<String> resolvedRecipients = notificationSettingsService.getNotificationSettingsForGroups(
-          emailDetails.getUserGroupIdsList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
-      recipients.addAll(resolvedRecipients);
-    } else {
+    if (isNotEmpty(emailDetails.getUserGroupList())) {
       List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
           emailDetails.getUserGroupList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);

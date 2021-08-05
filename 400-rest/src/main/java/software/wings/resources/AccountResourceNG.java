@@ -50,7 +50,7 @@ import retrofit2.http.Body;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public class AccountResourceNG {
   private final AccountService accountService;
   private SubdomainUrlHelper subdomainUrlHelper;
@@ -99,9 +99,21 @@ public class AccountResourceNG {
   }
 
   @GET
+  @Path("/{accountId}/nextgen-enabled")
+  public RestResponse<Boolean> isNextGenEnabled(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.isNextGenEnabled(accountId));
+  }
+
+  @GET
   @Path("/baseUrl")
   public RestResponse<String> getBaseUrl(@QueryParam("accountId") String accountId) {
     return new RestResponse<>(subdomainUrlHelper.getPortalBaseUrl(accountId));
+  }
+
+  @GET
+  @Path("/gatewayBaseUrl")
+  public RestResponse<String> getGatewayBaseUrl(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(subdomainUrlHelper.getGatewayBaseUrl(accountId));
   }
 
   @GET
@@ -128,6 +140,12 @@ public class AccountResourceNG {
   @Path("two-factor-enabled")
   public RestResponse<Boolean> getTwoFactorAuthAdminEnforceInfo(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse(twoFactorAuthenticationManager.getTwoFactorAuthAdminEnforceInfo(accountId));
+  }
+
+  @GET
+  @Path("isAutoInviteAcceptanceEnabled")
+  public RestResponse<Boolean> isAutoInviteAcceptanceEnabled(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse(accountService.isAutoInviteAcceptanceEnabled(accountId));
   }
 
   @Path("/exists/{accountName}")

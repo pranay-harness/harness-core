@@ -5,6 +5,7 @@ import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.cdng.k8s.K8sStepHelper.K8S_SUPPORTED_MANIFEST_TYPES;
 import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
+import static io.harness.cdng.k8s.K8sStepHelper.RELEASE_NAME;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
@@ -35,7 +36,6 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
@@ -123,6 +123,7 @@ import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataService;
 import io.harness.pms.sdk.core.execution.invokers.StrategyHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -132,6 +133,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.EntityReferenceExtractorUtils;
+import io.harness.steps.StepHelper;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
@@ -169,6 +171,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private StepHelper stepHelper;
   @Mock private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Mock private PipelineRbacHelper pipelineRbacHelper;
+  @Mock private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
   @Mock private LogCallback mockLogCallback;
@@ -542,7 +545,7 @@ public class K8sStepHelperTest extends CategoryTest {
         GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
     GitStoreDelegateConfig gitStoreDelegateConfig =
         k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
-            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+            sshKeySpecDTO, gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
     GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
@@ -566,7 +569,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
     GitStoreDelegateConfig gitStoreDelegateConfig =
         k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
-            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+            sshKeySpecDTO, gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
     assertThat(gitStoreDelegateConfig).isNotNull();
     assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
     GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
@@ -587,7 +590,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
     try {
       k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO,
-          gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+          gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
     } catch (Exception thrown) {
       assertThat(thrown).isNotNull();
       assertThat(thrown).isInstanceOf(InvalidRequestException.class);
@@ -612,7 +615,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
     GitStoreDelegateConfig gitStoreDelegateConfig =
         k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(),
-            sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name(), paths);
+            sshKeySpecDTO, gitConfigDTO, K8sManifestOutcome.builder().build(), paths);
 
     assertThat(gitStoreDelegateConfig.getBranch()).isEqualTo("branch");
     assertThat(gitStoreDelegateConfig.getCommitId()).isEqualTo("commitId");
@@ -1536,6 +1539,21 @@ public class K8sStepHelperTest extends CategoryTest {
     K8sStepPassThroughData stepPassThroughData = (K8sStepPassThroughData) taskChainResponse.getPassThroughData();
     assertThat(stepPassThroughData.getValuesManifestOutcomes().stream().map(ManifestOutcome::getIdentifier))
         .containsExactly("k8s", "values1", "values2", "values3", "values4");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldPublishReleaseNameStepDetails() {
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, "test-release-name");
+
+    ArgumentCaptor<K8sReleaseDetailsInfo> releaseDetailsCaptor = ArgumentCaptor.forClass(K8sReleaseDetailsInfo.class);
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(sdkGraphVisualizationDataService, times(1))
+        .publishStepDetailInformation(eq(ambiance), releaseDetailsCaptor.capture(), releaseNameCaptor.capture());
+
+    assertThat(releaseDetailsCaptor.getValue().getReleaseName()).isEqualTo("test-release-name");
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(RELEASE_NAME);
   }
 
   private GitStore sampleGitStore(String identifier) {

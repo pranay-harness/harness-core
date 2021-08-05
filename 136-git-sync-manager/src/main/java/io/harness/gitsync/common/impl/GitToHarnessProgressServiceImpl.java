@@ -173,4 +173,11 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
     }
     return null;
   }
+
+  @Override
+  public GitToHarnessProgressDTO updateProcessingCommitId(String uuid, String processingCommitId) {
+    Update update = new Update();
+    update.set(GitToHarnessProgressKeys.processingCommitId, processingCommitId);
+    return update(uuid, update);
+  }
 }

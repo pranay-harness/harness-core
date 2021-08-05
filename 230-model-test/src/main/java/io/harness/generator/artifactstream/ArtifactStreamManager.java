@@ -1,5 +1,8 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
@@ -15,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
 
+@OwnedBy(CDP)
 @Singleton
 public class ArtifactStreamManager {
   @Inject ArtifactStreamService artifactStreamService;
@@ -52,6 +56,11 @@ public class ArtifactStreamManager {
 
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined) {
     return ensurePredefined(seed, owners, predefined, false);
+  }
+
+  public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined, String serviceName) {
+    ArtifactStreamsGenerator streamsGenerator = streamGeneratorFactory.getArtifactStreamGenerator(predefined);
+    return streamsGenerator.ensureArtifactStream(seed, owners, serviceName, false);
   }
 
   public ArtifactStream ensurePredefined(Seed seed, Owners owners, ArtifactStreams predefined, boolean atConnector) {

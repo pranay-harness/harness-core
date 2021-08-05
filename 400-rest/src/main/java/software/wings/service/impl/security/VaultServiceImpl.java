@@ -113,6 +113,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     savedVaultConfig.setTemplatizedFields(vaultConfig.getTemplatizedFields());
     savedVaultConfig.setUsageRestrictions(vaultConfig.getUsageRestrictions());
     savedVaultConfig.setScopedToAccount(vaultConfig.isScopedToAccount());
+    savedVaultConfig.setDelegateSelectors(vaultConfig.getDelegateSelectors());
     // Handle vault Agent Properties
     updateVaultAgentConfiguration(vaultConfig, savedVaultConfig);
     updateNameSpace(accountId, vaultConfig, savedVaultConfig);
@@ -137,11 +138,9 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
       savedVaultConfig.setSecretId(null);
       savedVaultConfig.setSinkPath(vaultConfig.getSinkPath());
       savedVaultConfig.setUseVaultAgent(vaultConfig.isUseVaultAgent());
-      savedVaultConfig.setDelegateSelectors(vaultConfig.getDelegateSelectors());
     } else {
       savedVaultConfig.setUseVaultAgent(false);
       savedVaultConfig.setSinkPath(null);
-      savedVaultConfig.setDelegateSelectors(null);
     }
   }
 

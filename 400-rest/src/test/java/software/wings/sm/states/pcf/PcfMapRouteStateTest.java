@@ -142,7 +142,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfMapRouteStateTest extends WingsBaseTest {
   public static final String PCF_OLD_APP_NAME = "pcfOldAppName";
   private static final String BASE_URL = "https://env.harness.io/";

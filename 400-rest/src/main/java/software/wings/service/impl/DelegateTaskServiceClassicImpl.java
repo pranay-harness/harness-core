@@ -206,6 +206,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
+@BreakDependencyOn("software.wings.app.MainConfiguration")
+@BreakDependencyOn("software.wings.app.PortalConfig")
+@BreakDependencyOn("software.wings.beans.Application")
 @OwnedBy(DEL)
 public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassic {
   private static final String ASYNC = "async";
@@ -1154,7 +1157,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   }
 
   @Override
-  public void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId) {
+  public void failIfAllDelegatesFailed(
+      final String accountId, final String delegateId, final String taskId, final boolean areClientToolsInstalled) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
       log.info("Task not found or was already assigned");
@@ -1180,7 +1184,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       }
 
       log.info("No connected whitelisted delegates found for task");
-      String errorMessage = generateValidationError(delegateTask);
+      String errorMessage = generateValidationError(delegateTask, areClientToolsInstalled);
       log.info(errorMessage);
       DelegateResponseData response;
       if (delegateTask.getData().isAsync()) {
@@ -1197,37 +1201,60 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     }
   }
 
-  private String generateValidationError(DelegateTask delegateTask) {
-    String capabilities = "";
-    List<ExecutionCapability> executionCapabilities = delegateTask.getExecutionCapabilities();
+  private String generateValidationError(final DelegateTask delegateTask, final boolean areClientToolsInstalled) {
+    final String capabilities = generateCapabilitiesMessage(delegateTask);
+    final String delegates = generateValidatedDelegatesMessage(delegateTask);
+    final String timedoutDelegates = generateTimedoutDelegatesMessage(delegateTask);
+
+    final String clientToolsWarning = !areClientToolsInstalled
+        ? "  -  This could be due to some client tools still being installed on the delegates. If this is the reason please retry in a few minutes."
+        : "";
+
+    return format("No eligible delegates could perform the required capabilities for this task: [ %s ]%n"
+                   + "  -  The capabilities were tested by the following delegates: [ %s ]%n"
+                   + "  -  Following delegates were validating but never returned: [ %s ]%n"
+                   + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.",
+               capabilities, delegates, timedoutDelegates)
+        + clientToolsWarning;
+  }
+
+  private String generateCapabilitiesMessage(final DelegateTask delegateTask) {
+    final List<ExecutionCapability> executionCapabilities = delegateTask.getExecutionCapabilities();
+    final StringBuilder stringBuilder = new StringBuilder("");
+
     if (isNotEmpty(executionCapabilities)) {
-      capabilities = (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
-                         .stream()
-                         .map(ExecutionCapability::fetchCapabilityBasis)
-                         .collect(joining(", "));
+      stringBuilder.append(
+          (executionCapabilities.size() > 4 ? executionCapabilities.subList(0, 4) : executionCapabilities)
+              .stream()
+              .map(ExecutionCapability::fetchCapabilityBasis)
+              .collect(joining(", ")));
       if (executionCapabilities.size() > 4) {
-        capabilities += ", and " + (executionCapabilities.size() - 4) + " more...";
+        stringBuilder.append(", and ").append(executionCapabilities.size() - 4).append(" more...");
       }
     }
+    return stringBuilder.toString();
+  }
 
-    String delegates = null, timedoutDelegates = null;
-    Set<String> validationCompleteDelegateIds = delegateTask.getValidationCompleteDelegateIds();
-    Set<String> validatingDelegateIds = delegateTask.getValidatingDelegateIds();
+  private String generateValidatedDelegatesMessage(final DelegateTask delegateTask) {
+    final Set<String> validationCompleteDelegateIds = delegateTask.getValidationCompleteDelegateIds();
 
     if (isNotEmpty(validationCompleteDelegateIds)) {
-      delegates = join(", ",
-          validationCompleteDelegateIds.stream()
-              .map(delegateId -> {
-                Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
-                return delegate == null ? delegateId : delegate.getHostName();
-              })
-              .collect(toList()));
-    } else {
-      delegates = "no delegates";
+      return validationCompleteDelegateIds.stream()
+          .map(delegateId -> {
+            Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
+            return delegate == null ? delegateId : delegate.getHostName();
+          })
+          .collect(joining(", "));
     }
+    return "no delegates";
+  }
+
+  private String generateTimedoutDelegatesMessage(final DelegateTask delegateTask) {
+    final Set<String> validationCompleteDelegateIds = delegateTask.getValidationCompleteDelegateIds();
+    final Set<String> validatingDelegateIds = delegateTask.getValidatingDelegateIds();
 
     if (isNotEmpty(validatingDelegateIds)) {
-      timedoutDelegates = join(", ",
+      return join(", ",
           validatingDelegateIds.stream()
               .filter(p -> !validationCompleteDelegateIds.contains(p))
               .map(delegateId -> {
@@ -1235,15 +1262,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                 return delegate == null ? delegateId : delegate.getHostName();
               })
               .collect(joining()));
-    } else {
-      timedoutDelegates = "no delegates timedout";
     }
-
-    return format("No eligible delegates could perform the required capabilities for this task: [ %s ]%n"
-            + "  -  The capabilities were tested by the following delegates: [ %s ]%n"
-            + "  -  Following delegates were validating but never returned: [ %s ]%n"
-            + "  -  Other delegates (if any) may have been offline or were not eligible due to tag or scope restrictions.",
-        capabilities, delegates, timedoutDelegates);
+    return "no delegates timedout";
   }
 
   @VisibleForTesting

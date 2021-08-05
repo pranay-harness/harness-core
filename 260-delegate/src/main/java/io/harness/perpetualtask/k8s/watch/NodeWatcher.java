@@ -153,6 +153,9 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
               .putAllAllocatableResource(K8sResourceUtils.getResourceMap(node.getStatus().getAllocatable()))
               .build();
       eventPublisher.publishMessage(nodeInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+
+      log.info("Published Node Uid: {}, Name:{}", nodeInfo.getNodeUid(), nodeInfo.getNodeName());
+
       publishedNodes.add(node.getMetadata().getUid());
     } else {
       log.debug("NodeInfo for uid:{} already published", node.getMetadata().getUid());

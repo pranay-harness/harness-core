@@ -1,12 +1,10 @@
 package software.wings.service.intfc;
 
-import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.security.PermissionAttribute.PermissionType;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
@@ -40,6 +38,7 @@ import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,7 +57,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
  * Created by anubhaw on 3/28/16.
  */
 @OwnedBy(PL)
-@TargetModule(_970_RBAC_CORE)
 public interface UserService extends OwnedByAccount {
   /**
    * Consider the following characters in email as illegal and prohibit trial signup with the following characters
@@ -446,6 +444,12 @@ public interface UserService extends OwnedByAccount {
   boolean deleteInvites(@NotBlank String accountId, @NotBlank String email);
 
   /**
+   * Given a JWT encoded token from the invite email, get the mongo id corresponding to it
+   * @param jwtToken  the JWT token encoded in email
+   * @return the String
+   */
+  String getInviteIdFromToken(String jwtToken);
+  /**
    * Gets user account role.
    *
    * @param userId    the user id
@@ -618,4 +622,7 @@ public interface UserService extends OwnedByAccount {
   void setUserEmailVerified(String userId);
 
   boolean isUserPasswordPresent(String accountId, String emailId);
+
+  URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken)
+      throws URISyntaxException;
 }

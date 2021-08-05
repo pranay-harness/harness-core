@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.MILAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
 import io.harness.data.structure.EmptyPredicate;
@@ -32,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class OnCustomWebhookTriggerFunctionalTest extends AbstractFunctionalTest {
   private final Randomizer.Seed seed = new Randomizer.Seed(0);
   private OwnerManager.Owners owners;

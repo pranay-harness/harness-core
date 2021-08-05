@@ -1,20 +1,28 @@
 package io.harness.plancreator.pipeline;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
+import io.harness.pms.timeout.SdkTimeoutObtainment;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.common.pipeline.PipelineSetupStepParameters;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
+import io.harness.utils.TimeoutUtils;
 
 import com.google.common.base.Preconditions;
 import java.util.Collections;
@@ -24,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfig> {
   @Override
   public String getStartingNodeId(PipelineInfoConfig field) {
@@ -55,20 +64,32 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
     StepParameters stepParameters =
         PipelineSetupStepParameters.getStepParameters(ctx, config, stagesYamlNode.getUuid());
 
-    return PlanNode.builder()
-        .uuid(config.getUuid())
-        .identifier(YAMLFieldNameConstants.PIPELINE)
-        .stepType(PipelineSetupStep.STEP_TYPE)
-        .group(StepOutcomeGroup.PIPELINE.name())
-        .name(name)
-        .skipUnresolvedExpressionsCheck(true)
-        .stepParameters(stepParameters)
-        .facilitatorObtainment(
-            FacilitatorObtainment.newBuilder()
-                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
-                .build())
-        .skipExpressionChain(false)
-        .build();
+    PlanNodeBuilder planNodeBuilder =
+        PlanNode.builder()
+            .uuid(config.getUuid())
+            .identifier(YAMLFieldNameConstants.PIPELINE)
+            .stepType(PipelineSetupStep.STEP_TYPE)
+            .group(StepOutcomeGroup.PIPELINE.name())
+            .name(name)
+            .skipUnresolvedExpressionsCheck(true)
+            .stepParameters(stepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    .build())
+            .skipExpressionChain(false);
+
+    if (!ParameterField.isNull(config.getTimeout())) {
+      planNodeBuilder.timeoutObtainment(
+          SdkTimeoutObtainment.builder()
+              .dimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+              .parameters(AbsoluteSdkTimeoutTrackerParameters.builder()
+                              .timeout(TimeoutUtils.getTimeoutParameterFieldString(config.getTimeout()))
+                              .build())
+              .build());
+    }
+
+    return planNodeBuilder.build();
   }
 
   @Override

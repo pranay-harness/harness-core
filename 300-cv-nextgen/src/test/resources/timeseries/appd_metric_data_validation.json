@@ -15,6 +15,11 @@
 	"metricName" : "Average Response Time (ms)",
 	"metricValue" : 46.0,
 	"timestamp" : 1616754300000
+  },{
+	  "txnName" : "Overall Application Performance",
+	  "metricName" : "Exceptions per Minute",
+	  "metricValue" : 233.0,
+	  "timestamp" : 1616754300000
   } ],
   "projectIdentifier" : "raghu_p",
   "orgIdentifier" : "harness_test",

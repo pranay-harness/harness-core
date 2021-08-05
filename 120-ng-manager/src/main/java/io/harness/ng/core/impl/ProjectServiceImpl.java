@@ -51,6 +51,7 @@ import io.harness.ng.core.events.ProjectDeleteEvent;
 import io.harness.ng.core.events.ProjectRestoreEvent;
 import io.harness.ng.core.events.ProjectUpdateEvent;
 import io.harness.ng.core.remote.ProjectMapper;
+import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.entities.UserMembership;
@@ -76,6 +77,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -110,12 +112,13 @@ public class ProjectServiceImpl implements ProjectService {
   private final NgUserService ngUserService;
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlClient accessControlClient;
+  private final ScopeAccessHelper scopeAccessHelper;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
       NgUserService ngUserService, @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient,
-      AccessControlClient accessControlClient) {
+      AccessControlClient accessControlClient, ScopeAccessHelper scopeAccessHelper) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.transactionTemplate = transactionTemplate;
@@ -123,6 +126,7 @@ public class ProjectServiceImpl implements ProjectService {
     this.ngUserService = ngUserService;
     this.resourceGroupClient = resourceGroupClient;
     this.accessControlClient = accessControlClient;
+    this.scopeAccessHelper = scopeAccessHelper;
   }
 
   @Override
@@ -264,7 +268,9 @@ public class ProjectServiceImpl implements ProjectService {
                             .exists(true);
     Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
     List<UserMembership> userMembershipList = userMembershipPage.getContent();
-
+    if (userMembershipList.isEmpty()) {
+      return getNGPageResponse(Page.empty(), Collections.emptyList());
+    }
     Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
     List<Criteria> criteriaList = new ArrayList<>();
     for (UserMembership userMembership : userMembershipList) {
@@ -326,10 +332,27 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public Page<Project> list(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO) {
+  public Page<Project> listPermittedProjects(
+      String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO) {
     Criteria criteria = createProjectFilterCriteria(
-        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).ne(Boolean.TRUE),
+        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).is(FALSE),
         projectFilterDTO);
+    List<Scope> projects = projectRepository.findAllProjects(criteria);
+    List<Scope> permittedProjects = scopeAccessHelper.getPermittedScopes(projects);
+
+    if (permittedProjects.isEmpty()) {
+      return Page.empty();
+    }
+
+    criteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier);
+    Criteria[] subCriteria = permittedProjects.stream()
+                                 .map(project
+                                     -> Criteria.where(ProjectKeys.orgIdentifier)
+                                            .is(project.getOrgIdentifier())
+                                            .and(ProjectKeys.identifier)
+                                            .is(project.getProjectIdentifier()))
+                                 .toArray(Criteria[] ::new);
+    criteria.orOperator(subCriteria);
     return projectRepository.findAll(criteria, pageable);
   }
 
@@ -347,7 +370,11 @@ public class ProjectServiceImpl implements ProjectService {
     if (projectFilterDTO == null) {
       return criteria;
     }
-    criteria.and(ProjectKeys.orgIdentifier).in(projectFilterDTO.getOrgIdentifiers());
+
+    if (projectFilterDTO.getOrgIdentifiers() != null) {
+      criteria.and(ProjectKeys.orgIdentifier).in(projectFilterDTO.getOrgIdentifiers());
+    }
+
     if (projectFilterDTO.getModuleType() != null) {
       if (Boolean.TRUE.equals(projectFilterDTO.getHasModule())) {
         criteria.and(ProjectKeys.modules).in(projectFilterDTO.getModuleType());

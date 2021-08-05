@@ -4,6 +4,9 @@ import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -13,6 +16,7 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -20,7 +24,10 @@ import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.timeout.SdkTimeoutTrackerParameters;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
 import io.harness.timeout.TimeoutCallback;
@@ -37,11 +44,12 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class NodeStartHelper {
   @Inject private PmsEventSender eventSender;
@@ -50,6 +58,7 @@ public class NodeStartHelper {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private TimeoutRegistry timeoutRegistry;
+  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
@@ -81,11 +90,10 @@ public class NodeStartHelper {
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, ExecutionMode executionMode) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), calculateStatusFromMode(executionMode), ops -> {
-          if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
-            setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
-          }
-        }, EnumSet.noneOf(Status.class)));
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), calculateStatusFromMode(executionMode),
+        ops
+        -> setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution)),
+        EnumSet.noneOf(Status.class)));
   }
 
   private Status calculateStatusFromMode(ExecutionMode executionMode) {
@@ -102,31 +110,48 @@ public class NodeStartHelper {
   }
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {
-    List<TimeoutObtainment> timeoutObtainmentList;
-    if (nodeExecution.getNode().getTimeoutObtainmentsList().isEmpty()) {
-      timeoutObtainmentList = Collections.singletonList(
-          TimeoutObtainment.newBuilder()
-              .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-              .setParameters(ByteString.copyFrom(
-                  kryoSerializer.asBytes(AbsoluteTimeoutParameters.builder()
-                                             .timeoutMillis(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS)
-                                             .build())))
-              .build());
-    } else {
-      timeoutObtainmentList = nodeExecution.getNode().getTimeoutObtainmentsList();
-    }
-
+    List<TimeoutObtainment> timeoutObtainmentList = nodeExecution.getNode().getTimeoutObtainmentsList();
     List<String> timeoutInstanceIds = new ArrayList<>();
     TimeoutCallback timeoutCallback =
         new NodeExecutionTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
-    for (TimeoutObtainment timeoutObtainment : timeoutObtainmentList) {
-      TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(timeoutObtainment.getDimension());
+    if (EmptyPredicate.isEmpty(timeoutObtainmentList)) {
+      if (ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
+        return timeoutInstanceIds;
+      }
+      TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(AbsoluteTimeoutTrackerFactory.DIMENSION);
       TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
-          (TimeoutParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray()));
+          AbsoluteTimeoutParameters.builder().timeoutMillis(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS).build());
       TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
       timeoutInstanceIds.add(instance.getUuid());
+    } else {
+      EngineExpressionEvaluator evaluator =
+          pmsEngineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance());
+      for (TimeoutObtainment timeoutObtainment : timeoutObtainmentList) {
+        TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(timeoutObtainment.getDimension());
+
+        // Evaluate timeout expressions and convert sdk timeout parameters to timeout engine specific parameters.
+        SdkTimeoutTrackerParameters sdkTimeoutTrackerParameters =
+            (SdkTimeoutTrackerParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray());
+        sdkTimeoutTrackerParameters = resolve(evaluator, sdkTimeoutTrackerParameters);
+        TimeoutParameters timeoutParameters = sdkTimeoutTrackerParameters.prepareTimeoutParameters();
+
+        TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(timeoutParameters);
+        TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
+        timeoutInstanceIds.add(instance.getUuid());
+      }
     }
     log.info(format("Registered node execution timeouts: %s", timeoutInstanceIds.toString()));
     return timeoutInstanceIds;
+  }
+
+  private <T> T resolve(EngineExpressionEvaluator evaluator, T o) {
+    if (o == null) {
+      return null;
+    }
+
+    Class<?> cls = o.getClass();
+    Map<String, Object> m = NodeExecutionUtils.extractObject(RecastOrchestrationUtils.toJson(o));
+    String json = RecastOrchestrationUtils.toJson(evaluator.resolve(m, false));
+    return (T) RecastOrchestrationUtils.fromJson(json, cls);
   }
 }

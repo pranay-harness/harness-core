@@ -30,4 +30,7 @@ public interface NGTriggerRepository
 
   Optional<List<NGTriggerEntity>> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndTargetIdentifierAndDeletedNot(
       String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier, boolean notDeleted);
+
+  Optional<List<NGTriggerEntity>> findByAccountIdAndSignatureAndEnabledAndDeletedNot(
+      String accountId, String signature, boolean enabled, boolean notDeleted);
 }

@@ -2,7 +2,7 @@ package io.harness.cdng.service.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromStageVisitorHelper;
 import io.harness.pms.yaml.ParameterField;

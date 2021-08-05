@@ -131,15 +131,15 @@ public class InstanceQueryHelper {
         }
       }
 
-      if (filter.getWorkflowType() != null) {
-        List<String> workflowTypes = Arrays.stream(filter.getWorkflowType().getValues())
-                                         .map(d -> d.name())
-                                         .distinct()
-                                         .collect(Collectors.toList());
+      if (filter.getOrchestrationWorkflowType() != null) {
+        List<String> orchestrationWorkflowTypes = Arrays.stream(filter.getOrchestrationWorkflowType().getValues())
+                                                      .map(d -> d.name())
+                                                      .distinct()
+                                                      .collect(Collectors.toList());
         List<String> workflowIds = wingsPersistence.createQuery(Workflow.class)
                                        .filter(WorkflowKeys.accountId, accountId)
-                                       .field(WorkflowKeys.workflowType)
-                                       .in(workflowTypes)
+                                       .field(WorkflowKeys.orchestrationWorkflowType)
+                                       .in(orchestrationWorkflowTypes)
                                        .asList()
                                        .stream()
                                        .map(w -> w.getUuid())

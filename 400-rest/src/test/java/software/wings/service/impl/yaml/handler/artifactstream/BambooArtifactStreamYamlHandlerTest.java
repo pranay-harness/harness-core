@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
@@ -17,6 +18,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -40,6 +42,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class BambooArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private BambooArtifactStreamYamlHandler yamlHandler;
   @Mock AppService appService;

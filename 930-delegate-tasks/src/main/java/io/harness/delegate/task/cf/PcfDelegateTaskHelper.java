@@ -1,9 +1,7 @@
 package io.harness.delegate.task.cf;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.cf.PcfCommandTaskHandler;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -20,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public class PcfDelegateTaskHelper {
   @Inject private Map<String, PcfCommandTaskHandler> commandTaskTypeToTaskHandlerMap;

@@ -78,6 +78,11 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
                 .name("accId_sourcerepo_index")
                 .field(NGTriggerEntityKeys.accountId)
                 .field("metadata.webhook.type")
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("accId_signature_index")
+                .field(NGTriggerEntityKeys.accountId)
+                .field("metadata.buildMetadata.signature")
                 .build())
         .build();
   }
@@ -94,6 +99,7 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   @NotEmpty String projectIdentifier;
   @NotEmpty String targetIdentifier;
   @NotEmpty TargetType targetType;
+  String signature;
 
   @NotEmpty NGTriggerMetadata metadata;
 
@@ -105,7 +111,6 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   @Builder.Default Boolean enabled = Boolean.TRUE;
   @FdIndex private List<Long> nextIterations; // List of activation times for cron triggers
   @Builder.Default Long ymlVersion = Long.valueOf(2);
-  @Builder.Default Boolean autoRegister = Boolean.TRUE;
 
   @Override
   public List<Long> recalculateNextIterations(String fieldName, boolean skipMissed, long throttled) {

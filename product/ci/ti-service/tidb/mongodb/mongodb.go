@@ -1,14 +1,16 @@
 package mongodb
 
 import (
+	"container/list"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/kamva/mgm/v3"
 	"github.com/mattn/go-zglob"
 	"github.com/pkg/errors"
-	"github.com/wings-software/portal/product/ci/addon/ti"
+	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -55,8 +57,9 @@ type Node struct {
 	Method          string    `json:"method" bson:"method"`
 	Id              int       `json:"id" bson:"id"`
 	Params          string    `json:"params" bson:"params"`
+	File            string    `json:"file" bson:"file"` // Only populated if the type is resource
 	Class           string    `json:"class" bson:"class"`
-	Type            string    `json:"type" bson:"type"`
+	Type            string    `json:"type" bson:"type"` // Can be test | source | resource
 	CallsReflection bool      `json:"callsReflection" bson:"callsReflection"`
 	Acct            string    `json:"account" bson:"account"`
 	Proj            string    `json:"project" bson:"project"`
@@ -65,9 +68,21 @@ type Node struct {
 	VCSInfo         VCSInfo   `json:"vcs_info" bson:"vcs_info"`
 }
 
+type VisEdge struct {
+	mgm.DefaultModel `bson:",inline"`
+
+	Caller  int     `json:"caller" bson:"caller"`
+	Callee  []int   `json:"callee" bson:"callee"`
+	Acct    string  `json:"account" bson:"account"`
+	Proj    string  `json:"project" bson:"project"`
+	Org     string  `json:"organization" bson:"organization"`
+	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+}
+
 const (
 	nodeColl  = "nodes"
 	relnsColl = "relations"
+	visColl   = "vis_edges"
 )
 
 var expireQuery = bson.M{"$set": bson.M{"expireAt": time.Now()}}
@@ -80,7 +95,7 @@ type VCSInfo struct {
 }
 
 // NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
+func NewNode(id int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
 		Id:              id,
 		Package:         pkg,
@@ -88,6 +103,7 @@ func NewNode(id int, pkg, method, params, class, typ string, callsReflection boo
 		Params:          params,
 		Class:           class,
 		Type:            typ,
+		File:            file,
 		CallsReflection: callsReflection,
 		Acct:            acc,
 		Org:             org,
@@ -104,6 +120,17 @@ func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *R
 		Acct:    acc,
 		Org:     org,
 		Proj:    proj,
+		VCSInfo: vcs,
+	}
+}
+
+func NewVisEdge(caller int, callee []int, account, org, project string, vcs VCSInfo) *VisEdge {
+	return &VisEdge{
+		Caller:  caller,
+		Callee:  callee,
+		Acct:    account,
+		Org:     org,
+		Proj:    project,
 		VCSInfo: vcs,
 	}
 }
@@ -144,41 +171,63 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 	return &MongoDb{Client: client, Database: client.Database(dbName), Log: log}, nil
 }
 
-// queryHelper gets the tests that need to be run corresponding to the packages and classes
-func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []string, account string) ([]types.RunnableTest, error) {
-	if len(pkgs) != len(classes) {
-		return nil, fmt.Errorf("Length of pkgs: %d and length of classes: %d don't match", len(pkgs), len(classes))
-	}
-	if len(pkgs) == 0 {
-		mdb.Log.Warnw("did not receive any pkg/classes to query DB")
-		return []types.RunnableTest{}, nil
-	}
+// queryHelper gets the tests that need to be run corresponding to the parsed file nodes
+// We return true if all the tests need to be selected
+func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, account string) ([]types.RunnableTest, bool, error) {
 	result := []types.RunnableTest{}
 	// Query 1
-	// Get nodes corresponding to the packages and classes
+	// Get node IDs corresponding to the packages, classes and resources by iterating over the parsed file nodes
 	nodes := []Node{}
+	mResources := make(map[string]struct{})
 	allowedPairs := []interface{}{}
-	for idx, pkg := range pkgs {
-		cls := classes[idx]
-		allowedPairs = append(allowedPairs,
-			bson.M{"package": pkg, "class": cls,
-				"vcs_info.repo":   repo,
-				"vcs_info.branch": targetBranch,
-				"account":         account})
+	for _, n := range fn {
+		if n.Type == utils.NodeType_SOURCE {
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "source", "package": n.Pkg, "class": n.Class,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": targetBranch,
+					"account":         account})
+		} else if n.Type == utils.NodeType_RESOURCE {
+			// There can be multiple resource files with the same name
+			if _, ok := mResources[n.File]; ok {
+				continue
+			}
+			mResources[n.File] = struct{}{}
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "resource", "file": n.File,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": targetBranch,
+					"account":         account})
+		}
+	}
+	if len(allowedPairs) == 0 {
+		// Nothing to query in DB
+		return result, false, nil
 	}
 	err := mgm.Coll(&Node{}).SimpleFind(&nodes, bson.M{"$or": allowedPairs})
 	if err != nil {
-		return nil, err
-	}
-	if len(nodes) == 0 {
-		// Log error message for debugging if no nodes are found
-		mdb.Log.Errorw("could not find any nodes corresponding to the pkgs and classes",
-			"pkgs", pkgs, "classes", classes, "repo", repo, "branch", targetBranch)
+		return nil, false, err
 	}
 
 	nids := []int{}
+	nMap := make(map[int]struct{})
+	rCount := 0
+	// Get unique node IDs corresponding to the conditions.
+	// If the number of resources from the query is less than the number of resources changed,
+	// some of the resources have not been mapped.
 	for _, n := range nodes {
+		if _, ok := nMap[n.Id]; ok {
+			continue
+		}
+		nMap[n.Id] = struct{}{}
 		nids = append(nids, n.Id)
+		// Check whether all the resource nodes are present in the mapping or not.
+		if n.Type == "resource" {
+			rCount++
+		}
+	}
+	if rCount < len(mResources) { // Run all the tests
+		return result, true, nil
 	}
 
 	// Query 2
@@ -190,7 +239,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 			"vcs_info.repo":   repo,
 			"account":         account})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	mtids := make(map[int]struct{})
 	tids := []int{}
@@ -213,7 +262,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 			"vcs_info.repo":   repo,
 			"account":         account})
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if len(tnodes) != len(tids) {
 		// Log error message for debugging if we don't find a test ID in the node list
@@ -224,12 +273,183 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 		result = append(result, types.RunnableTest{Pkg: t.Package, Class: t.Class})
 	}
 
-	return result, nil
+	return result, false, nil
 }
 
 // isValid checks whether the test is valid or not
 func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
+}
+
+/*
+	Callgraph:
+		1 -> 2, 3, 6, 8
+		2 -> 4, 7
+		3 -> 2, 8
+
+	BFS(1) with a limit x and source as 1 should return BFS with root node as 1 and maximum of x nodes.
+
+*/
+func (mdb *MongoDb) GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgResp, error) {
+	ret := types.GetVgResp{}
+	var pkg, cls string
+	var branch string
+
+	branch = req.SourceBranch // Try to search for the visualisation data in the source branch
+
+	if req.Class != "" {
+		// This will be of the form <pkg.class>. Parse out the package and class names from it.
+		idx := strings.LastIndex(req.Class, ".")
+		if idx == -1 {
+			return ret, fmt.Errorf("incorrectly formatted class name: %s", req.Class)
+		}
+		pkg = req.Class[:idx]
+		cls = req.Class[idx+1:]
+
+		// Try to see if we have any information present in the source branch
+		fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "package": pkg, "class": cls}
+		err := mdb.Database.Collection(nodeColl).FindOne(ctx, fi, &options.FindOneOptions{}).Decode(&bson.M{})
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				// If nothing is present in the source branch, we try to get information from the target branch
+				mdb.Log.Infow("could not find a source branch visualization mapping. Defaulting to target branch",
+					"source_branch", req.SourceBranch, "target_branch", req.TargetBranch, "account", req.AccountId, "repo",
+					req.Repo, "package", pkg, "class", cls)
+				branch = req.TargetBranch
+			} else {
+				return ret, err
+			}
+		}
+
+		return mdb.bfsWithSource(ctx, branch, pkg, cls, req)
+	} else {
+		// Get a partial BFS corresponding to any random nodes
+		branch = req.TargetBranch
+		return mdb.bfsRandom(ctx, branch, req)
+	}
+}
+
+// Perform a BFS starting for given branch and repo with the source nodes as <pkg, class>
+func (mdb *MongoDb) bfsWithSource(ctx context.Context, branch, pkg, cls string, req types.GetVgReq) (types.GetVgResp, error) {
+	// Try to query the package and class in the target branch
+	ret := types.GetVgResp{}
+	all := []Node{}
+	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "package": pkg, "class": cls}
+	err := mgm.Coll(&Node{}).SimpleFind(&all, fi)
+	if err != nil {
+		return ret, err
+	}
+	// The node was not found in the branch
+	if len(all) == 0 {
+		return ret, fmt.Errorf("could not find an entry corresponding to: %s.%s", pkg, cls)
+	}
+
+	imp := make(map[int]bool) // List of 'important' nodes which can be shown by UI
+
+	// Perform the BFS
+	src := []int{}
+	// Initialize the starting nodes
+	for _, s := range all {
+		src = append(src, s.Id)
+		imp[s.Id] = true
+	}
+
+	return mdb.bfsHelper(ctx, src, []int{}, branch, imp, req)
+
+}
+
+// Perform a random BFS over the search space to return a partial graph
+func (mdb *MongoDb) bfsRandom(ctx context.Context, branch string, req types.GetVgReq) (types.GetVgResp, error) {
+	all := []Node{}
+	ret := types.GetVgResp{}
+	opt := options.FindOptions{Limit: &req.Limit}
+	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId}
+	err := mgm.Coll(&Node{}).SimpleFind(&all, fi, &opt)
+	if err != nil {
+		return ret, err
+	}
+	if len(all) == 0 {
+		return ret, errors.New("no data present in visualisation callgraph")
+	}
+	src := []int{}
+	add := []int{}
+	for idx, s := range all {
+		if idx == 0 {
+			src = append(src, s.Id)
+		} else {
+			add = append(add, s.Id)
+		}
+	}
+
+	return mdb.bfsHelper(ctx, src, add, branch, make(map[int]bool), req)
+}
+
+// bfsHelper takes in a list of source nodes to start the BFS from and a list of additional nodes which can be used to
+// add in more nodes to the BFS if required. It returns all the nodes and edges for this graph.
+func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branch string, imp map[int]bool, req types.GetVgReq) (types.GetVgResp, error) {
+	Q := list.New()
+	vis := make(map[int]struct{})
+	ret := types.GetVgResp{}
+	idx := 0
+
+	// Add all source nodes to the queue
+	for _, n := range srcList {
+		Q.PushBack(n)
+	}
+
+	nIds := []int{}
+	for len(nIds) < int(req.Limit) && Q.Len() > 0 {
+		id := Q.Front()
+		val := id.Value.(int)
+		Q.Remove(id)
+
+		if _, ok := vis[val]; !ok {
+			nIds = append(nIds, val) // Add to node IDs if not added before
+			m := types.VisMapping{}
+			m.From = val
+			vis[val] = struct{}{} // Mark the node as visited
+			// Go through edges of id and add the nodes to the queue
+			edge := VisEdge{}
+			fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "caller": val}
+			err := mdb.Database.Collection(visColl).FindOne(ctx, fi, &options.FindOneOptions{}).Decode(&edge)
+			if err != nil {
+				if err != mongo.ErrNoDocuments {
+					// Node has no edges
+					return ret, err
+				}
+			} else {
+				// Construct the response.
+				for _, k := range edge.Callee {
+					Q.PushBack(k)
+					m.To = append(m.To, k)
+				}
+				ret.Edges = append(ret.Edges, m)
+			}
+		}
+
+		// Start a BFS from a different random node
+		if Q.Len() == 0 && idx <= len(addList)-1 {
+			Q.PushBack(addList[idx])
+			idx++
+		}
+	}
+
+	// Get detailed node information
+	all := []Node{}
+	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "id": bson.M{"$in": nIds}}
+	err := mgm.Coll(&Node{}).SimpleFind(&all, f)
+	if err != nil {
+		return ret, err
+	}
+	for _, n := range all {
+		v := types.VisNode{Id: n.Id, Class: n.Class, Package: n.Package, Method: n.Method, Params: n.Params, Type: n.Type, File: n.File}
+		if _, ok := imp[n.Id]; ok {
+			v.Important = true
+		}
+		ret.Nodes = append(ret.Nodes, v)
+	}
+
+	return ret, nil
 }
 
 func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string, enableReflection bool) (types.SelectTestsResp, error) {
@@ -242,7 +462,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 		for _, ignore := range req.TiConfig.Config.Ignore {
 			matched, _ := zglob.Match(ignore, f.Name)
 			if matched == true {
-				// TODO: (Vistaar) Remove this warning message in prod since it has no context
 				remove = true
 				break
 			}
@@ -266,7 +485,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 	res := types.SelectTestsResp{}
 	totalTests := 0
-	nodes, err := utils.ParseFileNames(fileNames)
+	fnodes, err := utils.ParseFileNames(fileNames)
 	if err != nil {
 		return res, err
 	}
@@ -305,12 +524,10 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 
 	m := make(map[types.RunnableTest]struct{}) // Get unique tests to run
 	l := []types.RunnableTest{}
-	var pkgs []string
-	var cls []string
 	var selectAll bool
 	updated := 0
 	new := 0 // Keep track of new files. Don't count them in the current total. The count will get updated using partial CG
-	for _, node := range nodes {
+	for _, node := range fnodes {
 		// A file which is not recognized. Need to add logic for handling these type of files
 		if !utils.IsSupported(node) {
 			// A list with a single empty element indicates that all tests need to be run
@@ -345,10 +562,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 					m[t] = struct{}{}
 				}
 			}
-		} else {
-			// Source file
-			pkgs = append(pkgs, node.Pkg)
-			cls = append(cls, node.Class)
 		}
 	}
 	if selectAll == true {
@@ -361,9 +574,19 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 		}, nil
 	}
 
-	tests, err := mdb.queryHelper(req.TargetBranch, req.Repo, pkgs, cls, account)
+	// Get tests corresponding to parsed source and resource file nodes
+	tests, runAll, err := mdb.queryHelper(req.TargetBranch, req.Repo, fnodes, account)
 	if err != nil {
 		return res, err
+	}
+	if runAll {
+		return types.SelectTestsResp{
+			SelectAll:     true,
+			TotalTests:    totalTests,
+			SelectedTests: totalTests,
+			UpdatedTests:  updated,
+			SrcCodeTests:  totalTests - updated,
+		}, nil
 	}
 	for _, t := range tests {
 		if !isValid(t) {
@@ -408,7 +631,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 }
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
-func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
 	resp := types.SelectTestsResp{}
 	if len(cg.Nodes) == 0 && len(cg.Relations) == 0 {
 		// Don't delete the existing callgraph, this might happen in case of some issues with the setup
@@ -430,7 +653,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.CallsReflection, info, account, org, proj)
+		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}

@@ -14,9 +14,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGServiceConstants;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeAndServiceId;
 import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
-import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
+import io.harness.ng.cdOverview.dto.EnvIdCountPair;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
 import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
 import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
@@ -27,6 +27,8 @@ import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
+import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
+import io.harness.ng.core.dashboard.DeploymentsInfo;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -141,7 +143,7 @@ public class CDDashboardOverviewResource {
   @Path("/getDeployments")
   @ApiOperation(value = "Get deployments", nickname = "getDeployments")
   @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
-  public ResponseDTO<DashboardDeploymentActiveFailedRunningInfo> getDeployments(
+  public ResponseDTO<DashboardExecutionStatusInfo> getDeployments(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
@@ -264,6 +266,34 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getInstanceGrowthTrend(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startInterval, endInterval));
+  }
+
+  @GET
+  @Path("/getInstanceCountHistory")
+  @ApiOperation(value = "Get instance count history", nickname = "getInstanceCountHistory")
+  public ResponseDTO<TimeValuePairListDTO<EnvIdCountPair>> getInstanceCountHistory(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getInstanceCountHistory(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startInterval, endInterval));
+  }
+
+  @GET
+  @Path("/getDeploymentsByServiceId")
+  @ApiOperation(value = "Get deployments by serviceId", nickname = "getDeploymentsByServiceId")
+  public ResponseDTO<DeploymentsInfo> getDeploymentsByServiceId(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentsByServiceId(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startInterval, endInterval));
   }
 }

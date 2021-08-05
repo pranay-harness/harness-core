@@ -31,6 +31,7 @@ import io.harness.perpetualtask.k8s.metrics.client.K8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.client.model.node.NodeMetrics;
 import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetrics;
 import io.harness.perpetualtask.k8s.metrics.recommender.ContainerState;
+import io.harness.perpetualtask.k8s.utils.ApiExceptionLogger;
 import io.harness.perpetualtask.k8s.watch.K8sResourceStandardizer;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -122,7 +123,7 @@ public class K8sMetricCollector {
         }
         isNodeProcessed.put(nodeName, Boolean.TRUE);
       } catch (Exception ex) {
-        log.warn("Failed to collect pvMetrics for node:{}", nodeName, ex);
+        ApiExceptionLogger.logWarnIfNotSeenRecently(ex, "Failed to collect pvMetrics for node:" + nodeName);
       }
     });
   }

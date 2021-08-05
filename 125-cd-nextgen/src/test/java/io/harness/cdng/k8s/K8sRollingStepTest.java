@@ -18,6 +18,8 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.instance.info.InstanceInfoService;
+import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.K8sRollingReleaseOutput;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -39,6 +41,8 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -50,6 +54,7 @@ import org.mockito.Mock;
 @OwnedBy(HarnessTeam.CDP)
 public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
   @Mock ExecutionSweepingOutputService executionSweepingOutputService;
+  @Mock private InstanceInfoService instanceInfoService;
   @InjectMocks private K8sRollingStep k8sRollingStep;
   final String canaryStepFqn = "canaryStep";
 
@@ -84,6 +89,10 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
         .consume(eq(ambiance), eq(K8sRollingReleaseOutput.OUTPUT_NAME), releaseOutputCaptor.capture(),
             eq(StepOutcomeGroup.STEP.name()));
     assertThat(releaseOutputCaptor.getValue().getName()).isEqualTo(releaseName);
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @Test
@@ -150,21 +159,31 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sDeployResponse k8sDeployResponse =
         K8sDeployResponse.builder()
-            .k8sNGTaskResponse(K8sRollingDeployResponse.builder().releaseNumber(1).build())
+            .k8sNGTaskResponse(
+                K8sRollingDeployResponse.builder().k8sPodList(Collections.emptyList()).releaseNumber(1).build())
             .commandUnitsProgress(UnitProgressData.builder().build())
             .commandExecutionStatus(SUCCESS)
             .build();
     when(k8sStepHelper.getReleaseName(any(), any())).thenReturn("releaseName");
+    StepResponse.StepOutcome stepOutcome = StepResponse.StepOutcome.builder()
+                                               .name(OutcomeExpressionConstants.DEPLOYMENT_INFO_OUTCOME)
+                                               .outcome(DeploymentInfoOutcome.builder().build())
+                                               .build();
+    doReturn(stepOutcome).when(instanceInfoService).saveServerInstancesIntoSweepingOutput(any(), any());
 
     StepResponse response = k8sRollingStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
-    assertThat(response.getStepOutcomes()).hasSize(1);
+    assertThat(response.getStepOutcomes()).hasSize(2);
 
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sRollingOutcome.class);
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.OUTPUT);
     assertThat(outcome.getGroup()).isNull();
+
+    StepOutcome deploymentInfoOutcome = new ArrayList<>(response.getStepOutcomes()).get(1);
+    assertThat(deploymentInfoOutcome.getOutcome()).isInstanceOf(DeploymentInfoOutcome.class);
+    assertThat(deploymentInfoOutcome.getName()).isEqualTo(OutcomeExpressionConstants.DEPLOYMENT_INFO_OUTCOME);
 
     ArgumentCaptor<K8sRollingOutcome> argumentCaptor = ArgumentCaptor.forClass(K8sRollingOutcome.class);
     verify(executionSweepingOutputService, times(1))

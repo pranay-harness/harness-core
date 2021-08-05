@@ -19,6 +19,7 @@ import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
+import static software.wings.beans.appmanifest.StoreType.VALUES_YAML_FROM_HELM_REPO;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
@@ -118,6 +119,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.tools.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -899,11 +901,24 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         validateStoreTypeForHelmChartOverride(appManifest.getStoreType(), getAppManifestType(appManifest));
       } else {
         if (StoreType.Local != appManifest.getStoreType() && Remote != appManifest.getStoreType()
-            && CUSTOM != appManifest.getStoreType()) {
+            && CUSTOM != appManifest.getStoreType() && VALUES_YAML_FROM_HELM_REPO != appManifest.getStoreType()) {
           throw new InvalidRequestException(
-              "Only local, remote and custom store types are allowed for values.yaml in environment");
+              "Only local, remote, values yaml from helm repo and custom store types are allowed for values.yaml in environment");
         }
       }
+    }
+  }
+
+  @VisibleForTesting
+  void validateAppManifestForValuesInHelmRepo(ApplicationManifest appManifest) {
+    if (!appManifest.getKind().equals(VALUES)) {
+      throw new InvalidRequestException("Only ApplicationManifest Kind VALUES is supported", USER);
+    }
+    if (appManifest.getKind().equals(VALUES) && appManifest.getStoreType().equals(VALUES_YAML_FROM_HELM_REPO)
+        && StringUtils.isEmpty(appManifest.getHelmValuesYamlFilePaths())) {
+      throw new InvalidRequestException(
+          "If ApplicationManifest with Kind VALUES and storetype ValuesYamlFromHelmRepo is given HelmValuesYamlFilePaths can not be null or empty",
+          USER);
     }
   }
 
@@ -1042,17 +1057,28 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
     if (applicationManifest.getHelmChartConfig() != null) {
       throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
     if (applicationManifest.getCustomSourceConfig() != null) {
       throw new InvalidRequestException(
-          "customSourcceConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
+          "customSourceConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
     gitFileConfigHelperService.validate(applicationManifest.getGitFileConfig());
+
+    if (isNotEmpty(applicationManifest.getAppId()) && isNotEmpty(applicationManifest.getServiceId())) {
+      Service service =
+          serviceResourceService.getWithDetails(applicationManifest.getAppId(), applicationManifest.getServiceId());
+
+      if (service != null && service.getDeploymentType() == DeploymentType.ECS
+          && applicationManifest.getStoreType() == Remote) {
+        gitFileConfigHelperService.validateEcsGitfileConfig(applicationManifest.getGitFileConfig());
+      }
+    }
   }
 
   private void validateKustomizeAppManifest(ApplicationManifest applicationManifest) {
@@ -1094,6 +1120,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
       case Local:
         validateLocalAppManifest(applicationManifest);
+        break;
+
+      case VALUES_YAML_FROM_HELM_REPO:
+        validateAppManifestForValuesInHelmRepo(applicationManifest);
         break;
 
       case HelmChartRepo:
@@ -1164,6 +1194,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       case KustomizeSourceRepo:
         applicationManifest.getKustomizeConfig().setKustomizeDirPath(
             defaultString(applicationManifest.getKustomizeConfig().getKustomizeDirPath()));
+        break;
+
+      case VALUES_YAML_FROM_HELM_REPO:
+        applicationManifest.setHelmValuesYamlFilePaths(applicationManifest.getHelmValuesYamlFilePaths().trim());
         break;
 
       case HelmChartRepo:

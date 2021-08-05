@@ -1,6 +1,9 @@
 package software.wings.delegatetasks.buildsource;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -15,6 +18,7 @@ import lombok.NoArgsConstructor;
 /**
  * Created by anubhaw on 7/20/18.
  */
+@OwnedBy(CDC)
 @Data
 @Builder
 @NoArgsConstructor

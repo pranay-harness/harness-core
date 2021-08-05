@@ -135,7 +135,9 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
               == null
           || ((BasicDBObject) iteratorObject.getValue())
                   .get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.startTs)
-              == null) {
+              == null
+          || ((BasicDBObject) iteratorObject.getValue()).get("nodeType") == null
+          || !((BasicDBObject) iteratorObject.getValue()).get("nodeType").equals("Deployment")) {
         continue;
       }
       if (columnValueMapping.containsKey("pipeline_execution_summary_cd_id")) {

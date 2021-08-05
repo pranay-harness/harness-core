@@ -38,6 +38,8 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanEx
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.Principal;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.ProtoUtils;
 import io.harness.service.GraphGenerationService;
@@ -235,10 +237,14 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public InterruptDTO registerInterrupt(
       PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId) {
+    final Principal principal = SecurityContextBuilder.getPrincipal();
     InterruptConfig interruptConfig =
         InterruptConfig.newBuilder()
             .setIssuedBy(IssuedBy.newBuilder()
-                             .setManualIssuer(ManualIssuer.newBuilder().build())
+                             .setManualIssuer(ManualIssuer.newBuilder()
+                                                  .setType(principal.getType().toString())
+                                                  .setIdentifier(principal.getName())
+                                                  .build())
                              .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                              .build())
             .build();

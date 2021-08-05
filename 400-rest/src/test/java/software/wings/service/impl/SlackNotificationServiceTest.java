@@ -11,6 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
@@ -36,6 +38,7 @@ import org.mockito.Mock;
  * Created by anubhaw on 12/16/16.
  */
 
+@OwnedBy(HarnessTeam.CDC)
 public class SlackNotificationServiceTest extends WingsBaseTest {
   @Inject private NotificationSetupService notificationSetupService;
 

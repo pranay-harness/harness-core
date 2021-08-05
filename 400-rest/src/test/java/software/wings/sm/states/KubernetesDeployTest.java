@@ -143,7 +143,7 @@ import org.mongodb.morphia.Key;
  * Created by brett on 3/10/17
  */
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class KubernetesDeployTest extends WingsBaseTest {
   private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String PHASE_NAME = "phaseName";

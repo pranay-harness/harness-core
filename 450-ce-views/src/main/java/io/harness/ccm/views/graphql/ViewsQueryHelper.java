@@ -5,7 +5,8 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 
-import com.hazelcast.util.Preconditions;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,7 +31,9 @@ public class ViewsQueryHelper {
   private static final int IDLE_COST_BASELINE = 30;
   private static final int UNALLOCATED_COST_BASELINE = 5;
   private static final int DEFAULT_EFFICIENCY_SCORE = -1;
+  private static final double DEFAULT_DOUBLE_VALUE = 0;
   private static final String EFFICIENCY_SCORE_LABEL = "Efficiency Score";
+  private static final long OBSERVATION_PERIOD = 29 * ONE_DAY_MILLIS;
 
   public boolean isYearRequired(Instant startInstant, Instant endInstant) {
     LocalDate endDate = LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC).toLocalDate();
@@ -64,22 +67,30 @@ public class ViewsQueryHelper {
     return Math.round(value * 10000D) / 100D;
   }
 
-  public double getForecastCost(ViewCostData billingAmountData, Instant endInstant) {
-    Preconditions.checkNotNull(billingAmountData);
+  public double getForecastCost(ViewCostData costData, Instant endInstant) {
+    if (costData == null) {
+      return DEFAULT_DOUBLE_VALUE;
+    }
     Instant currentTime = Instant.now();
     if (currentTime.isAfter(endInstant)) {
-      return Double.valueOf(0);
+      return DEFAULT_DOUBLE_VALUE;
     }
 
-    long maxStartTime = getModifiedMaxStartTime(billingAmountData.getMaxStartTime());
+    double totalCost = costData.getCost();
+    long actualTimeDiffMillis =
+        (endInstant.plus(1, ChronoUnit.SECONDS).toEpochMilli()) - (costData.getMaxStartTime() / 1000);
+
     long billingTimeDiffMillis = ONE_DAY_MILLIS;
-    if (maxStartTime != billingAmountData.getMinStartTime()) {
-      billingTimeDiffMillis = maxStartTime - billingAmountData.getMinStartTime();
+    if (costData.getMaxStartTime() != costData.getMinStartTime()) {
+      billingTimeDiffMillis = ((costData.getMaxStartTime() - costData.getMinStartTime()) / 1000) + ONE_DAY_MILLIS;
+    }
+    if (billingTimeDiffMillis < OBSERVATION_PERIOD) {
+      return DEFAULT_DOUBLE_VALUE;
     }
 
-    double totalBillingAmount = billingAmountData.getCost();
-    long actualTimeDiffMillis = endInstant.toEpochMilli() - billingAmountData.getMinStartTime();
-    return getRoundedDoubleValue(totalBillingAmount * ((double) actualTimeDiffMillis / billingTimeDiffMillis));
+    return totalCost
+        * (new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP))
+              .doubleValue();
   }
 
   private Long getModifiedMaxStartTime(long maxStartTime) {
@@ -134,7 +145,6 @@ public class ViewsQueryHelper {
     long currentDay = getStartOfCurrentDay();
     long days = 0;
     if (endTimeFilter != null && startTimeFilter != null) {
-      log.info("End time from filters heer: {} {}", endTimeFilter, currentDay - 1000);
       long endTimeFromFilters = endTimeFilter.getValue().longValue();
       long startTimeFromFilters = startTimeFilter.getValue().longValue();
       if (endTimeFromFilters == currentDay - 1000) {

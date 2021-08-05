@@ -52,7 +52,6 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.plancreator.pipeline.PipelineConfig;
@@ -115,6 +114,7 @@ import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.impl.GraphGenerationServiceImpl;
+import io.harness.springdata.HMongoTemplate;
 import io.harness.steps.barriers.BarrierInitializer;
 import io.harness.steps.barriers.event.BarrierDropper;
 import io.harness.steps.barriers.event.BarrierPositionHelperEventHandler;
@@ -125,6 +125,8 @@ import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.token.remote.TokenClient;
+import io.harness.tracing.MongoRedisTracer;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -223,7 +225,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    NGObjectMapperHelper.configureNGObjectMapper(mapper);
     mapper.registerModule(new PmsBeansJacksonModule());
     mapper.registerModule(new PipelineServiceJacksonModule());
   }
@@ -405,6 +407,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
     graphGenerationService.getGraphNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
+
+    HMongoTemplate mongoTemplate = (HMongoTemplate) injector.getInstance(MongoTemplate.class);
+    mongoTemplate.getTracerSubject().register(injector.getInstance(MongoRedisTracer.class));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {

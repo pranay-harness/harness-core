@@ -818,8 +818,9 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
              accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
     DeploymentActivityDTO deploymentActivityDTO = getDeploymentActivity(verificationJob);
-    String verificationJobInstanceId = realVerificationJobInstanceService.create(createVerificationJobInstance());
-    CVConfig cvConfig = createCVConfig();
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    String verificationJobInstanceId = realVerificationJobInstanceService.create(verificationJobInstance);
     String verificationTaskId =
         verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
 

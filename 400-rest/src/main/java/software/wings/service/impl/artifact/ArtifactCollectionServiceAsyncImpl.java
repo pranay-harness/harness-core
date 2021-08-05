@@ -43,7 +43,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.CustomArtifactStream;
-import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -80,7 +79,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private PermitService permitService;
   @Inject private AlertService alertService;
   @Inject private FeatureFlagService featureFlagService;

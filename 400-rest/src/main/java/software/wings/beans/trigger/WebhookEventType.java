@@ -2,6 +2,10 @@ package software.wings.beans.trigger;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
 
@@ -9,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public enum WebhookEventType {
   PULL_REQUEST("On Pull Request", "pull_request"),
   PUSH("On Push", "push"),

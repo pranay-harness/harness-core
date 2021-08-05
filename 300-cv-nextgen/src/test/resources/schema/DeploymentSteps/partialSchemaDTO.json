@@ -22,7 +22,7 @@
       },
       "timeout" : {
         "type" : "string",
-        "pattern" : "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
+        "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
       },
       "type" : {
         "type" : "string"
@@ -283,7 +283,9 @@
                   "type" : "string"
                 }
               }, {
-                "type" : "string"
+                "type" : "string",
+                "pattern" : "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                "minLength" : 1
               } ]
             }
           },
@@ -327,18 +329,8 @@
             "$ref" : "#/definitions/cvng/StepSpecType"
           }, {
             "type" : "object",
-            "required" : [ "healthSources", "monitoredServiceRef", "type" ],
+            "required" : [ "type" ],
             "properties" : {
-              "healthSources" : {
-                "type" : "array",
-                "items" : {
-                  "$ref" : "#/definitions/cvng/HealthSource"
-                }
-              },
-              "monitoredServiceRef" : {
-                "type" : "string",
-                "description" : "It supports runtime input and expression"
-              },
               "type" : {
                 "type" : "string"
               }
@@ -574,17 +566,6 @@
           } ],
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
-        "HealthSource" : {
-          "type" : "object",
-          "required" : [ "identifier" ],
-          "properties" : {
-            "identifier" : {
-              "type" : "string",
-              "description" : "Health Source identifier"
-            }
-          },
-          "$schema" : "http://json-schema.org/draft-07/schema#"
-        },
         "HoldingScope" : {
           "type" : "object",
           "required" : [ "nodeSetupId", "scope" ],
@@ -621,10 +602,16 @@
                 "type" : "string"
               },
               "delegateSelectors" : {
-                "type" : "array",
-                "items" : {
-                  "type" : "string"
-                }
+                "oneOf" : [ {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }, {
+                  "type" : "string",
+                  "pattern" : "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength" : 1
+                } ]
               },
               "headers" : {
                 "type" : "array",
@@ -1244,7 +1231,7 @@
             },
             "timeout" : {
               "type" : "string",
-              "pattern" : "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
+              "pattern" : "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
             },
             "type" : {
               "type" : "string",

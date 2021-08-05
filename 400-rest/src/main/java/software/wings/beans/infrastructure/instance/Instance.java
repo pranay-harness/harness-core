@@ -214,5 +214,12 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
     public static final String instanceInfoPodName = "instanceInfo.podName";
     public static final String instanceInfoNamespace = "instanceInfo.namespace";
     public static final String deploymentType = "deploymentType";
+    public static final String serviceId = "serviceId";
+    public static final String envId = "envId";
+    public static final String lastArtifactBuildNum = "lastArtifactBuildNum";
+    public static final String lastWorkflowExecutionId = "lastWorkflowExecutionId";
+    public static final String lastWorkflowExecutionName = "lastWorkflowExecutionName";
+    public static final String infraMappingId = "infraMappingId";
+    public static final String infraMappingName = "infraMappingName";
   }
 }

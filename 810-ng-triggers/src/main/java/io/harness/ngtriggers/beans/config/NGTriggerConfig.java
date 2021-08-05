@@ -22,5 +22,4 @@ public class NGTriggerConfig implements NGTriggerInterface {
   NGTriggerSource source;
   Map<String, String> tags;
   @Builder.Default Boolean enabled = Boolean.TRUE;
-  @Builder.Default Boolean autoRegister = Boolean.TRUE;
 }

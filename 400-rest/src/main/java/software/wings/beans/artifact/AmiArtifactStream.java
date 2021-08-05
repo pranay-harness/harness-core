@@ -10,7 +10,9 @@ import static java.lang.String.format;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ff.FeatureFlagService;
 
@@ -30,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._959_CG_BEANS)
 @JsonTypeName("AMI")
 @Data
 @EqualsAndHashCode(callSuper = true)

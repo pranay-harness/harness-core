@@ -60,6 +60,7 @@ import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
+import io.harness.poll.PollResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -132,6 +133,7 @@ public class DelegateAgentResourceTest {
   private static final ConnectorHearbeatPublisher connectorHearbeatPublisher = mock(ConnectorHearbeatPublisher.class);
   private static final KryoSerializer kryoSerializer = mock(KryoSerializer.class);
   private static final FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+  private static final PollResourceClient pollResourceClient = mock(PollResourceClient.class);
 
   @Parameter public String apiUrl;
 
@@ -143,10 +145,11 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
-              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
-              instanceSyncResponseHandler, manifestCollectionResponseHandler, connectorHearbeatPublisher,
-              kryoSerializer, configurationController, featureFlagService, delegateTaskServiceClassic))
+          .instance(
+              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
+                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler,
+                  manifestCollectionResponseHandler, connectorHearbeatPublisher, kryoSerializer,
+                  configurationController, featureFlagService, delegateTaskServiceClassic, pollResourceClient))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -528,10 +531,11 @@ public class DelegateAgentResourceTest {
   public void shouldFailIfAllDelegatesFailed() {
     String taskId = generateUuid();
     RESOURCES.client()
-        .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "/fail?accountId=" + ACCOUNT_ID)
+        .target(String.format("/agent/delegates/%s/tasks/%s/fail?accountId=%s&areClientToolsInstalled=%s", DELEGATE_ID,
+            taskId, ACCOUNT_ID, true))
         .request()
         .get(new GenericType<RestResponse<String>>() {});
-    verify(delegateTaskServiceClassic, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId);
+    verify(delegateTaskServiceClassic, atLeastOnce()).failIfAllDelegatesFailed(ACCOUNT_ID, DELEGATE_ID, taskId, true);
   }
 
   @Test

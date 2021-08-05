@@ -70,15 +70,16 @@ import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -93,16 +94,20 @@ import io.harness.redis.RedisConfig;
 import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
+import io.harness.runnable.InstanceAccountInfoRunnable;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
+import io.harness.service.DeploymentEventListenerRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -200,7 +205,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    NGObjectMapperHelper.configureNGObjectMapper(mapper);
     mapper.registerModule(new PmsBeansJacksonModule());
   }
 
@@ -383,6 +388,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void registerIterators(Injector injector) {
     injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+    injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -440,6 +446,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
       remote = true;
     }
+
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .moduleType(ModuleType.CD)
@@ -451,8 +458,34 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
-        .engineEventHandlersMap(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .engineEventHandlersMap(getOrchestrationEventHandlers())
         .build();
+  }
+
+  private Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getOrchestrationEventHandlers() {
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> orchestrationEventTypeSetHashMap =
+        new HashMap<>();
+    List<Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>>> orchestrationEventHandlersList =
+        new ArrayList<>(Arrays.asList(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(),
+            DeploymentEventListenerRegistrar.getEngineEventHandlers()));
+    orchestrationEventHandlersList.forEach(
+        orchestrationEventHandlers -> mergeEventHandlers(orchestrationEventTypeSetHashMap, orchestrationEventHandlers));
+    return orchestrationEventTypeSetHashMap;
+  }
+
+  private void mergeEventHandlers(
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> finalHandlers,
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> handlers) {
+    for (Map.Entry<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> entry :
+        handlers.entrySet()) {
+      if (finalHandlers.containsKey(entry.getKey())) {
+        Set<Class<? extends OrchestrationEventHandler>> existing = finalHandlers.get(entry.getKey());
+        existing.addAll(entry.getValue());
+        finalHandlers.put(entry.getKey(), existing);
+      } else {
+        finalHandlers.put(entry.getKey(), entry.getValue());
+      }
+    }
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
@@ -532,6 +565,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(InstanceAccountInfoRunnable.class), 0, 6, TimeUnit.HOURS);
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
