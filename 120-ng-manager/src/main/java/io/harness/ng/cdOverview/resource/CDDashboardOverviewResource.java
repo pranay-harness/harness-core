@@ -290,8 +290,10 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId) {
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId,
+      @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentsByServiceId(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceId));
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startInterval, endInterval));
   }
 }
