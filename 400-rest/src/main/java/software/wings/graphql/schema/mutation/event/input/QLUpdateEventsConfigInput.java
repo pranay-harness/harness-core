@@ -27,5 +27,5 @@ public class QLUpdateEventsConfigInput implements QLMutationInput {
   CgEventRule rule;
   List<String> delegateSelectors;
   boolean enabled;
-  String id;
+  String eventsConfigId;
 }
