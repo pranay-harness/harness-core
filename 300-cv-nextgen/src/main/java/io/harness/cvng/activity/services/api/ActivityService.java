@@ -9,6 +9,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -63,6 +64,6 @@ public interface ActivityService {
   List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
       String accountId, String activityId, String hostName);
 
-  PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(
-      String accountId, String activityId, Integer label, int pageNumber, int pageSize, String hostName);
+  PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
+      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType);
 }

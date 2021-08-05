@@ -26,6 +26,7 @@ import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -636,15 +637,15 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(
-      String accountId, String activityId, Integer label, int pageNumber, int pageSize, String hostName) {
+  public PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
+      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
     return deploymentLogAnalysisService.getLogAnalysisResult(
-        accountId, verificationJobInstanceIds.get(0), label, pageNumber, pageSize, hostName);
+        accountId, verificationJobInstanceIds.get(0), label, pageNumber, pageSize, hostName, clusterType);
   }
 
   private List<String> getVerificationJobInstanceId(String activityId) {
