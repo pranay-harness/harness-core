@@ -52,6 +52,8 @@ public class DelegateTaskResource {
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       try {
+        log.info("Processing delegate response for accountId {} and taskId {} and response {}", accountId, taskId,
+            delegateTaskResponse);
         delegateTaskService.processDelegateResponse(accountId, delegateId, taskId, delegateTaskResponse);
       } catch (Exception exception) {
         log.error("Error during update task response. delegateId: {}, taskId: {}, delegateTaskResponse: {}.",

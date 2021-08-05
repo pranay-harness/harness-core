@@ -61,7 +61,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
   @Override
   public LdapTestResponse validateLdapUserSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    log.info("Initiating validateLdapUserSettings with ldap settings : {}", settings);
+    log.info("LDAP :  Initiating validateLdapUserSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateUserConfig(settings.getUserSettingsList());
@@ -73,7 +73,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
   @Override
   public LdapTestResponse validateLdapGroupSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    log.info("Initiating validateLdapGroupSettings with ldap settings : {}", settings);
+    log.info("LDAP : Initiating validateLdapGroupSettings with ldap settings : {}", settings);
     settings.decryptFields(encryptedDataDetail, encryptionService);
     LdapHelper helper = new LdapHelper(settings.getConnectionSettings());
     LdapResponse response = helper.validateGroupConfig(settings.getGroupSettingsList().get(0));
@@ -186,11 +186,11 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
       if (listGroupsResponse == null || listGroupsResponse.getLdapResponse() == null
           || LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
-        log.error("LDAP : The call to fetch the group failed for ldapSettingsId {} and accountId {}",
+        log.error("LDAP : The call to fetch the group failed for groupDn {} ldapSettingsId {} and accountId {}", dn,
             settings.getUuid(), settings.getAccountId());
         return null;
       }
-
+      log.info("LDAP : listGroupsResponse for groupDn {} is {}", dn, listGroupsResponse);
       SearchResult groups = listGroupsResponse.getSearchResult();
       helper.populateGroupSize(groups, settings.getUserSettingsList());
 

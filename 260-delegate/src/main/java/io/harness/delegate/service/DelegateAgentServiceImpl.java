@@ -2213,7 +2213,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           // Closes the log stream for the task
           logStreamingTaskClient.closeStream(null);
         } catch (Exception ex) {
-          log.error("Unexpected error occurred while closing the log stream.");
+          log.error("Unexpected error occurred while closing the log stream for task {}", taskId, ex);
         }
       }
 
@@ -2225,7 +2225,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           while (retries-- > 0) {
             resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
-              log.info("Task {} response sent to manager", taskId);
+              log.info("TaskId {} response {} sent to manager", taskId, resp);
               return resp;
             } else {
               log.warn("Response received for sent task {}: {}. {}", taskId, resp == null ? "null" : resp.code(),
@@ -2236,21 +2236,23 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           return resp;
         });
       } catch (UncheckedTimeoutException ex) {
-        log.warn("Timed out sending response to manager", ex);
+        log.warn("Timed out sending response to manager for task {}", taskId, ex);
       } catch (Exception e) {
-        log.error("Unable to send response to manager", e);
+        log.error("Unable to send response to manager for task {}", taskId, e);
       } finally {
         if (sanitizer != null) {
           delegateLogService.unregisterLogSanitizer(sanitizer);
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
-          log.info("Removed from executing futures on post execution");
+          log.info("Removed from executing futures on post execution for task {}", taskId);
         }
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
+          log.info("Response error body {} for task {}", response.errorBody(), taskId);
           response.errorBody().close();
         }
         if (response != null && response.body() != null && response.isSuccessful()) {
+          log.info("Response body {} for task {}", response.body(), taskId);
           response.body().close();
         }
       }
