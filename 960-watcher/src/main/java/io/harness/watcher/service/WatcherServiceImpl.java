@@ -475,7 +475,6 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
     try {
-      log.info("WATCHER_VERSION has version {}", getVersion());
       Map<String, Object> heartbeatData = new HashMap<>();
       heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
       heartbeatData.put(WATCHER_PROCESS, getProcessId());
