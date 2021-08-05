@@ -5,7 +5,7 @@ import static io.harness.network.SafeHttpCall.executeWithExceptions;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.polling.ManifestPollingResponse;
+import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.grpc.utils.AnyUtils;
@@ -142,10 +142,10 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
             .accountId(taskParams.getAccountId())
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .pollingDocId(taskParams.getPollingDocId())
-            .pollingResponse(ManifestPollingResponse.builder()
-                                 .unpublishedVersions(unpublishedKeys)
-                                 .allVersions(new ArrayList<>(manifestsCollectionCache.getAllManifestKeys()))
-                                 .build())
+            .pollingResponseInfc(ManifestPollingResponseInfc.builder()
+                                     .unpublishedVersions(unpublishedKeys)
+                                     .allVersions(new ArrayList<>(manifestsCollectionCache.getAllManifestKeys()))
+                                     .build())
             .build();
 
     if (publishToManger(taskId, response)) {
