@@ -585,6 +585,23 @@ public class UserResource {
         authenticationManager.switchAccount(authenticationManager.extractToken(authorization, "Bearer"), accountId));
   }
 
+  @Data
+  public static class SwitchAccountRequest {
+    @NotBlank private String accountId;
+  }
+
+  @POST
+  @Path("switch-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> newSwitchAccount(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
+      @Valid @NotNull SwitchAccountRequest switchAccountRequest) {
+    return new RestResponse<>(
+        authenticationManager.switchAccount(
+            authenticationManager.extractToken(authorization, "Bearer"), switchAccountRequest.getAccountId())
+        != null);
+  }
+
   /**
    * Explicitly set default account for a logged in user. This means the user will be landed in the default account
    * after logged in next time.
