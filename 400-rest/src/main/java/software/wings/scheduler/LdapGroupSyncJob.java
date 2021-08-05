@@ -282,7 +282,8 @@ public class LdapGroupSyncJob implements Job {
     long userProvidedTimeout = ldapSettings.getConnectionSettings().getResponseTimeout();
     // if user specified time
     long ldapSyncTimeout = getLdapSyncTimeout(userProvidedTimeout);
-    log.info("Fetching LDAP group details for {} with timeout {}", ldapSettings.getAccountId(), ldapSyncTimeout);
+    log.info("Fetching LDAP group details for group {} and accountId {} with timeout {}", userGroup.getName(),
+        ldapSettings.getAccountId(), ldapSyncTimeout);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(ldapSettings.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -292,10 +293,10 @@ public class LdapGroupSyncJob implements Job {
                                           .fetchGroupByDn(ldapSettings, encryptedDataDetail, userGroup.getSsoGroupId());
     if (null == groupResponse) {
       String message = String.format(LdapConstants.USER_GROUP_SYNC_INVALID_REMOTE_GROUP, userGroup.getName());
-      log.info("LDAP : Group Response from delegate is null");
+      log.info("LDAP : Group Response for group {} from delegate is null", userGroup.getName());
       throw new WingsException(ErrorCode.USER_GROUP_SYNC_FAILURE, message);
     }
-    log.info("LDAP : Group Response from delegate {}", groupResponse);
+    log.info("LDAP : Group Response for group {} from delegate {}", userGroup.getName(), groupResponse);
     return groupResponse;
   }
 

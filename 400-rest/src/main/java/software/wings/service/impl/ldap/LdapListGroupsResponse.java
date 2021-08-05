@@ -9,11 +9,13 @@ import software.wings.helpers.ext.ldap.LdapResponse;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.experimental.FieldDefaults;
 import org.ldaptive.SearchResult;
 
 @OwnedBy(PL)
 @Getter
+@ToString
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapListGroupsResponse {
   SearchResult searchResult;

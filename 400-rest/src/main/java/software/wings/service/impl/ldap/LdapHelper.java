@@ -274,7 +274,7 @@ public class LdapHelper {
     List<LdapGetUsersResponse> ldapGetUsersResponses = listGroupUsers(configs, groupDnList);
 
     groups.getEntries().forEach(ldapEntry -> {
-      log.info("Ldap Entry = [{}]", ldapEntry.toString());
+      log.info("LDAP : Ldap Entry = [{}]", ldapEntry.toString());
       int groupSize =
           ldapGetUsersResponses.stream()
               .filter(ldapGetUsersResponse -> ldapEntry.getDn().equals(ldapGetUsersResponse.getGroupBaseDn()))
@@ -285,7 +285,7 @@ public class LdapHelper {
       ldapEntry.addAttribute(groupSizeAttr);
     });
     long elapsedTime = System.currentTimeMillis() - startTime;
-    log.info("elapsedTime : {}", elapsedTime);
+    log.info("LDAP : elapsedTime {}", elapsedTime);
   }
 
   List<LdapListGroupsResponse> searchGroupsByName(List<LdapGroupSettings> groupConfig, String name)
