@@ -10,7 +10,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(HarnessTeam.CDC)
-public class ManifestPollingResponse implements PollingResponse {
+public class ManifestPollingResponseInfc implements PollingResponseInfc {
   private List<String> unpublishedVersions;
   private List<String> allVersions;
 }

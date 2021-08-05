@@ -13,7 +13,7 @@ import lombok.Data;
 public class PollingDelegateResponse {
   private String accountId;
   private String pollingDocId;
-  private PollingResponse pollingResponse;
+  private PollingResponseInfc pollingResponseInfc;
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
 }
