@@ -106,6 +106,7 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.token.TokenClientModule;
+import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionInfoManager;
@@ -168,6 +169,17 @@ public class PipelineServiceModule extends AbstractModule {
       @Override
       public UserProvider userProvider() {
         return new NoopUserProvider();
+      }
+    });
+    install(new AbstractPersistenceTracerModule() {
+      @Override
+      protected RedisConfig redisConfigProvider() {
+        return configuration.getEventsFrameworkConfiguration().getRedisConfig();
+      }
+
+      @Override
+      protected String serviceIdProvider() {
+        return PIPELINE_SERVICE.getServiceId();
       }
     });
     install(PipelineServiceGrpcModule.getInstance());
