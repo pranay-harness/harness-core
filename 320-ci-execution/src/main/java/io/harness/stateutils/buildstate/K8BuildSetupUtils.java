@@ -780,7 +780,7 @@ public class K8BuildSetupUtils {
   private String getGitURL(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
     String gitUrl = retrieveGenericGitConnectorURL(ciCodebase, connectionType, url);
 
-    if (!url.endsWith(GIT_URL_SUFFIX)) {
+    if (!url.endsWith(GIT_URL_SUFFIX) && !url.contains("dev.azure.com")) {
       gitUrl += GIT_URL_SUFFIX;
     }
     return gitUrl;
