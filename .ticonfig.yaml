@@ -5,4 +5,7 @@ config:
     - "**/*.go"
     - "**/Dockerfile*"
     - "**/README.md"
-    - "scripts/jenkins/*"
+    - "scripts/jenkins/**/*"
+    - "scripts/terraform/**/*"
+    - "on-prem/**/*"
+    - "dockerization/**/*"
