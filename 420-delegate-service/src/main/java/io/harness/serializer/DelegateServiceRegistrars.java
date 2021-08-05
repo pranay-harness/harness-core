@@ -5,7 +5,10 @@ import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateServiceKryoRegister;
+import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
+import io.harness.serializer.kryo.SMCoreKryoRegistrar;
+import io.harness.serializer.kryo.SecretManagerClientKryoRegistrar;
 import io.harness.serializer.kryo.WatcherBeansKryoRegister;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
@@ -26,6 +29,9 @@ public class DelegateServiceRegistrars {
           .add(WatcherBeansKryoRegister.class)
           .add(DelegateServiceKryoRegister.class)
           .add(RbacCoreKryoRegistrar.class)
+          .add(SMCoreKryoRegistrar.class)
+          .add(SecretManagerClientKryoRegistrar.class)
+          .add(ProjectAndOrgKryoRegistrar.class)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .build();
@@ -40,5 +46,8 @@ public class DelegateServiceRegistrars {
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(SMCoreRegistrars.morphiaRegistrars)
+          .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
+          .addAll(ProjectAndOrgRegistrars.morphiaRegistrars)
           .build();
 }
