@@ -26,6 +26,7 @@ public final class EventsFrameworkConstants {
   public static final String ORCHESTRATION_LOG = "orchestration_log";
   public static final String NG_ACCOUNT_SETUP = "ng_account_setup";
   public static final String INSTANCE_SYNC_PERPETUAL_TASK_RESPONSE_STREAM = "instance_sync_perpetual_task_stream";
+  public static final String INSTANCE_STATS = "instance_stats";
 
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";

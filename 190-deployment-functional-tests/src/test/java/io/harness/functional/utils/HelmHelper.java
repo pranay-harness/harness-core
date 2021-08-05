@@ -9,6 +9,8 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -41,6 +43,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDP)
 @Singleton
 public class HelmHelper {
   private static final int RELEASE_NAME_LENGTH_WITHOUT_SHORT_ID = 46;
