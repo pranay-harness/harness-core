@@ -1,10 +1,14 @@
 package io.harness.grpc;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import static io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
+import io.harness.delegatesetup.DelegateSetupServiceGrpc;
+import io.harness.delegatesetup.DelegateSetupServiceGrpc.DelegateSetupServiceBlockingStub;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.security.ServiceTokenGenerator;
@@ -26,6 +30,7 @@ import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DEL)
 public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   private final String serviceSecret;
   private final String target;
@@ -45,6 +50,7 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).in(Singleton.class);
     bind(DelegateProfileServiceGrpcClient.class).in(Singleton.class);
+    bind(DelegateSetupServiceGrpcClient.class).in(Singleton.class);
   }
 
   @Named("delegate-service-channel")
@@ -108,6 +114,13 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
     return DelegateProfileServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
   }
 
+  @Provides
+  @Singleton
+  DelegateSetupServiceBlockingStub delegateSetupServiceBlockingStub(@Named("delegate-service-channel") Channel channel,
+      @Named("dss-call-credentials") CallCredentials callCredentials) {
+    return DelegateSetupServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  }
+
   @Named("ds-call-credentials")
   @Provides
   @Singleton
@@ -120,6 +133,13 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   @Singleton
   CallCredentials dpsCallCredentials() {
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-profile-service");
+  }
+
+  @Named("dss-call-credentials")
+  @Provides
+  @Singleton
+  CallCredentials dssCallCredentials() {
+    return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-setup-service");
   }
 
   @Named("driver-installed-in-ng-service")
