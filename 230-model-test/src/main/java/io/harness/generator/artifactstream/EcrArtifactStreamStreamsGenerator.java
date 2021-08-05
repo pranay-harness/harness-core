@@ -1,7 +1,10 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
@@ -16,6 +19,7 @@ import software.wings.beans.artifact.EcrArtifactStream;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+@OwnedBy(CDP)
 @Singleton
 public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerator {
   @Inject private SettingGenerator settingGenerator;
@@ -24,6 +28,11 @@ public class EcrArtifactStreamStreamsGenerator implements ArtifactStreamsGenerat
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, String serviceName, boolean atConnector) {
+    return null;
   }
 
   @Override
