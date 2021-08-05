@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @OwnedBy(HarnessTeam.DX)
@@ -38,6 +39,11 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   public Instance findAndReplace(Criteria criteria, Instance instance) {
     Query query = new Query(criteria);
     return mongoTemplate.findAndReplace(query, instance, FindAndReplaceOptions.options().returnNew());
+  }
+
+  public Instance findAndModify(Criteria criteria, Update update) {
+    Query query = new Query(criteria);
+    return mongoTemplate.findAndModify(query, update, Instance.class);
   }
 
   @Override

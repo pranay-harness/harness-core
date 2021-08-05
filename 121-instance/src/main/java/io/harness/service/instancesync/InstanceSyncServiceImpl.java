@@ -430,7 +430,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   }
 
   private void deleteInstances(List<InstanceDTO> instancesToBeDeleted) {
-    instanceService.deleteAll(instancesToBeDeleted);
+    instancesToBeDeleted.forEach(instanceDTO -> instanceService.softDelete(instanceDTO.getInstanceKey()));
   }
 
   private void saveInstances(List<InstanceDTO> instancesToBeSaved) {
