@@ -24,6 +24,7 @@ enum Type {
 
 message HttpHelmPayload {
   string chartName = 1;
+  string helmVersion = 2;
 }
 
 message DockerEcrPayload {
@@ -33,10 +34,12 @@ message DockerEcrPayload {
 message GcsHelmPayload {
   string chartName = 1;
   string bucketName = 2;
+  string helmVersion = 3;
 }
 
 message S3HelmPayload {
   string chartName = 1;
   string bucketName = 2;
   string region = 3;
+  string helmVersion = 4;
 }

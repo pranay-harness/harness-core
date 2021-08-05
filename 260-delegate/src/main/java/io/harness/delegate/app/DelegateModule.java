@@ -231,6 +231,8 @@ import io.harness.pcf.cfsdk.CfSdkClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
+import io.harness.perpetualtask.polling.manifest.HelmChartCollectionService;
+import io.harness.perpetualtask.polling.manifest.ManifestCollectionService;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
 import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
@@ -1026,6 +1028,7 @@ public class DelegateModule extends AbstractModule {
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
     bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
     bind(ScmServiceClient.class).to(ScmServiceClientImpl.class);
+    bind(ManifestCollectionService.class).to(HelmChartCollectionService.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =

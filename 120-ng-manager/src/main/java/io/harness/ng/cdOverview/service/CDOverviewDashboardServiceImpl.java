@@ -58,6 +58,7 @@ import io.harness.ng.cdOverview.util.GrowthTrendEvaluator;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
+import io.harness.ng.core.dashboard.DeploymentsInfo;
 import io.harness.ng.core.dashboard.ExecutionStatusInfo;
 import io.harness.ng.core.dashboard.GitInfo;
 import io.harness.ng.core.dashboard.ServiceDeploymentInfo;
@@ -1441,7 +1442,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
     List<TimeValuePair<Integer>> timeValuePairList = new ArrayList<>();
 
-    final long tunedStartTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(startTimeInMs);
+    final long tunedStartTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
     final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
 
     final String query =
@@ -1465,7 +1466,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           final long timestamp =
               resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
           final int count = Integer.parseInt(resultSet.getString("count"));
-          timeValuePairList.add(new TimeValuePair<>(timestamp, count));
+          timeValuePairList.add(new TimeValuePair<>(getStartTimeOfTheDayAsEpoch(timestamp), count));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -1484,8 +1485,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public TimeValuePairListDTO<EnvIdCountPair> getInstanceCountHistory(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
     List<TimeValuePair<EnvIdCountPair>> timeValuePairList = new ArrayList<>();
+    Map<String, Map<Long, Integer>> envIdToTimestampAndCountMap = new HashMap<>();
 
-    final long tunedStartTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(startTimeInMs);
+    final long tunedStartTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
     final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
 
     final String query =
@@ -1511,8 +1513,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           final String envId = resultSet.getString(TimescaleConstants.ENV_ID.getKey());
           final int count = Integer.parseInt(resultSet.getString("count"));
 
-          EnvIdCountPair envIdCountPair = EnvIdCountPair.builder().envId(envId).count(count).build();
-          timeValuePairList.add(new TimeValuePair<>(timestamp, envIdCountPair));
+          envIdToTimestampAndCountMap.putIfAbsent(envId, new HashMap<>());
+          envIdToTimestampAndCountMap.get(envId).put(getStartTimeOfTheDayAsEpoch(timestamp), count);
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -1521,6 +1523,41 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
+
+    envIdToTimestampAndCountMap.forEach((envId, timeStampAndCountMap) -> {
+      long currTime = tunedStartTimeInMs;
+      while (currTime <= tunedEndTimeInMs) {
+        int count = timeStampAndCountMap.getOrDefault(currTime, 0);
+        EnvIdCountPair envIdCountPair = EnvIdCountPair.builder().envId(envId).count(count).build();
+        timeValuePairList.add(new TimeValuePair<>(currTime, envIdCountPair));
+        currTime += DAY.getDurationInMs();
+      }
+    });
+
     return new TimeValuePairListDTO<>(timeValuePairList);
+  }
+
+  public DeploymentsInfo getDeploymentsByServiceId(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
+    String query = queryBuilderDeployments(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startTimeInMs, endTimeInMs);
+    String queryServiceNameTagId = queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId);
+    List<ExecutionStatusInfo> deployments = getDeploymentStatusInfo(query, queryServiceNameTagId);
+    return DeploymentsInfo.builder().deployments(deployments).build();
+  }
+
+  private String queryBuilderDeployments(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String serviceId, long startTimeInMs, long endTimeInMs) {
+    return "select " + executionStatusCdTimeScaleColumns() + " from " + tableNameCD + " where id in ( "
+        + queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId) + ") and "
+        + String.format("startts>='%s' and startts<='%s' ", startTimeInMs, endTimeInMs) + "order by startts desc";
+  }
+
+  private String queryToGetId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    return "select distinct pipeline_execution_summary_cd_id from " + tableNameServiceAndInfra + " where "
+        + String.format("accountid='%s' and ", accountIdentifier)
+        + String.format("orgidentifier='%s' and ", orgIdentifier)
+        + String.format("projectidentifier='%s' and ", projectIdentifier) + String.format("service_id='%s'", serviceId);
   }
 }

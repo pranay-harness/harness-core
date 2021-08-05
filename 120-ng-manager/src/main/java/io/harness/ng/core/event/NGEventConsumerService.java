@@ -6,6 +6,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVIT
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
+import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS;
 import static io.harness.eventsframework.EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE_MAX_PROCESSING_TIME;
@@ -33,11 +34,14 @@ public class NGEventConsumerService implements Managed {
   @Inject private EntityActivityStreamConsumer entityActivityStreamConsumer;
   @Inject private SamlAuthorizationStreamConsumer samlAuthorizationStreamConsumer;
   private ExecutorService ngAccountSetupConsumerService;
+
+  @Inject private InstanceStatsStreamConsumer instanceStatsStreamConsumer;
   private ExecutorService entityCRUDConsumerService;
   private ExecutorService setupUsageConsumerService;
   private ExecutorService entityActivityConsumerService;
   private ExecutorService userMembershipConsumerService;
   private ExecutorService samlAuthorizationConsumerService;
+  private ExecutorService instanceStatsConsumerService;
 
   @Override
   public void start() {
@@ -53,6 +57,8 @@ public class NGEventConsumerService implements Managed {
         Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(USERMEMBERSHIP).build());
     samlAuthorizationConsumerService = Executors.newSingleThreadExecutor(
         new ThreadFactoryBuilder().setNameFormat(SAML_AUTHORIZATION_ASSERTION).build());
+    instanceStatsConsumerService =
+        Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(INSTANCE_STATS).build());
 
     entityCRUDConsumerService.execute(entityCRUDStreamConsumer);
     ngAccountSetupConsumerService.execute(ngAccountSetupConsumer);
@@ -60,6 +66,7 @@ public class NGEventConsumerService implements Managed {
     entityActivityConsumerService.execute(entityActivityStreamConsumer);
     userMembershipConsumerService.execute(userMembershipStreamConsumer);
     samlAuthorizationConsumerService.execute(samlAuthorizationStreamConsumer);
+    instanceStatsConsumerService.execute(instanceStatsStreamConsumer);
   }
 
   @Override
@@ -71,10 +78,12 @@ public class NGEventConsumerService implements Managed {
     userMembershipConsumerService.shutdown();
     samlAuthorizationConsumerService.shutdown();
     ngAccountSetupConsumerService.awaitTermination(ENTITY_CRUD_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+    instanceStatsConsumerService.shutdown();
     entityCRUDConsumerService.awaitTermination(ENTITY_CRUD_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     setupUsageConsumerService.awaitTermination(SETUP_USAGE_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     entityActivityConsumerService.awaitTermination(ENTITY_ACTIVITY_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     userMembershipConsumerService.awaitTermination(USERMEMBERSHIP_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
     samlAuthorizationConsumerService.awaitTermination(DEFAULT_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+    instanceStatsConsumerService.awaitTermination(DEFAULT_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }
 }

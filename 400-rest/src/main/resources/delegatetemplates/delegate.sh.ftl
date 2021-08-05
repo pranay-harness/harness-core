@@ -204,6 +204,10 @@ if ! `grep clientToolsDownloadDisabled config-delegate.yml > /dev/null`; then
   echo "clientToolsDownloadDisabled: $CLIENT_TOOLS_DOWNLOAD_DISABLED" >> config-delegate.yml
 fi
 
+if ! `grep installClientToolsInBackground config-delegate.yml > /dev/null`; then
+  echo "installClientToolsInBackground: $INSTALL_CLIENT_TOOLS_IN_BACKGROUND" >> config-delegate.yml
+fi
+
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
   echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
 fi

@@ -322,6 +322,9 @@ func Test_WriteSelectedTests(t *testing.T) {
 	build := "build"
 	stage := "stage"
 	step := "step"
+	repo := "repo"
+	source := "source"
+	target := "target"
 
 	total := 20
 	selected := 10
@@ -344,19 +347,19 @@ func Test_WriteSelectedTests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	valueStrings := constructPsqlInsertStmt(1, 12)
+	valueStrings := constructPsqlInsertStmt(1, 15)
 	stmt := fmt.Sprintf(
 		`
 				INSERT INTO %s
 				(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id,
-				test_count, test_selected, source_code_test, new_test, updated_test)
+				test_count, test_selected, source_code_test, new_test, updated_test, repo, source_branch, target_branch)
 				VALUES %s`, table, valueStrings)
 	stmt = regexp.QuoteMeta(stmt)
 	mock.ExpectExec(stmt).
 		WithArgs(account, org, project, pipeline, build, stage, step,
-			total, selected, src, new, updated).WillReturnResult(sqlmock.NewResult(0, 1))
+			total, selected, src, new, updated, repo, source, target).WillReturnResult(sqlmock.NewResult(0, 1))
 	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
-	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, 0, false)
+	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, repo, source, target, arg, 0, false)
 	assert.Nil(t, err, nil)
 }
 
@@ -372,6 +375,9 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 	build := "build"
 	stage := "stage"
 	step := "step"
+	repo := "repo"
+	source := "source"
+	target := "target"
 
 	total := 20
 	selected := 10
@@ -397,13 +403,13 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 
 	overviewQuery := fmt.Sprintf(
 		`
-		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms
+		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms, repo, source_branch, target_branch
 		FROM %s
 		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, table)
 	overviewQuery = regexp.QuoteMeta(overviewQuery)
-	col := []string{"test_count", "source_code_test", "new_test", "updated_test", "time_taken_ms", "time_saved_ms"}
+	col := []string{"test_count", "source_code_test", "new_test", "updated_test", "time_taken_ms", "time_saved_ms", "repo", "source_branch", "target_branch"}
 	rows := sqlmock.NewRows(col).
-		AddRow(300, 10, 5, 5, 40, 0)
+		AddRow(300, 10, 5, 5, 40, 0, "repo", "source", "target")
 	mock.ExpectQuery(overviewQuery).WithArgs(account, org, project, pipeline, build, step, stage).WillReturnRows(rows)
 
 	avgQuery := fmt.Sprintf(
@@ -432,6 +438,6 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 		WithArgs(total, selected, src, new, updated, 30, 120,
 			account, org, project, pipeline, build, step, stage).WillReturnResult(sqlmock.NewResult(0, 1))
 	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
-	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, 30, true)
+	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, repo, source, target, arg, 30, true)
 	assert.Nil(t, err, nil)
 }

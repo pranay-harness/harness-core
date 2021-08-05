@@ -648,10 +648,10 @@ public class ServiceGenerator {
 
   public Service ensureEcsTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
-    owners.add(ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build()));
+    Service service = ensureService(seed, owners, builder().name(name).artifactType(ArtifactType.DOCKER).build());
+    owners.add(service);
     ArtifactStream artifactStream =
-        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
-    Service service = owners.obtainService();
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER, name);
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
     return service;
   }

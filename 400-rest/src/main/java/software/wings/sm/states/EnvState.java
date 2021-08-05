@@ -103,7 +103,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Attributes(title = "Env")
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvStateKeys")
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EnvState extends State implements WorkflowState {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 

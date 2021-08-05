@@ -1,6 +1,7 @@
 package io.harness.cvng.verificationjob.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
@@ -50,8 +51,9 @@ public class DeploymentLogAnalysisResource {
   public RestResponse<PageResponse<LogAnalysisClusterDTO>> getLogAnalysisResult(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("label") Integer label,
-      @QueryParam("pageNumber") int pageNumber, @QueryParam("hostName") String hostName) {
+      @QueryParam("pageNumber") int pageNumber, @QueryParam("hostName") String hostName,
+      @QueryParam("clusterType") ClusterType clusterType) {
     return new RestResponse(deploymentLogAnalysisService.getLogAnalysisResult(
-        accountId, verificationJobInstanceId, label, pageNumber, DEFAULT_PAGE_SIZE, hostName));
+        accountId, verificationJobInstanceId, label, pageNumber, DEFAULT_PAGE_SIZE, hostName, clusterType));
   }
 }

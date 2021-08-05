@@ -145,6 +145,7 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pcf.CfDeploymentManager;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.poll.PollResourceClientModule;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
@@ -1296,6 +1297,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
+
+    install(new PollResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     // ng-usermembership Dependencies
     install(new UserMembershipClientModule(configuration.getNgManagerServiceHttpClientConfig(),

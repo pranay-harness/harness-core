@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
@@ -48,7 +48,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDP)
 public class K8sTrafficSplitState extends AbstractK8sState {
   @Inject private ActivityService activityService;

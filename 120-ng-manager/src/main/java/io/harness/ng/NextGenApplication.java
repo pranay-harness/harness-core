@@ -94,6 +94,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
+import io.harness.runnable.InstanceAccountInfoRunnable;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
@@ -102,6 +103,7 @@ import io.harness.service.DeploymentEventListenerRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
@@ -386,6 +388,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void registerIterators(Injector injector) {
     injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
+    injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -562,6 +565,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(InstanceAccountInfoRunnable.class), 0, 6, TimeUnit.HOURS);
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {

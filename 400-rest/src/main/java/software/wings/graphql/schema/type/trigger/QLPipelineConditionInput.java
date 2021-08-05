@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.type.trigger;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.PermissionAttribute;
@@ -15,6 +17,7 @@ import lombok.Value;
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.CDC)
 public class QLPipelineConditionInput {
   private String pipelineId;
 }

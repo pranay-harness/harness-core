@@ -66,6 +66,10 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
     assertThat(request.isSkipResourceVersioning()).isTrue();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @Test

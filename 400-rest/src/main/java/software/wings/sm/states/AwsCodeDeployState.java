@@ -15,7 +15,9 @@ import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aSt
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -91,6 +93,7 @@ import org.mongodb.morphia.Key;
  */
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsCodeDeployState extends State {
   public static final String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
   public static final String ARTIFACT_S3_KEY_EXPRESSION = "${artifact.key}";

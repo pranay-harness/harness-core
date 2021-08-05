@@ -8,7 +8,9 @@ import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.Build;
@@ -43,11 +45,13 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
     if (ciCodeBase != null) {
       parameterFieldBuild = ciCodeBase.getBuild();
     }
+    ExecutionTriggerInfo triggerInfo = executionMetadata.getTriggerInfo();
+    TriggerPayload triggerPayload = planCreationContextValue.getTriggerPayload();
 
     CIExecutionArgs ciExecutionArgs =
         CIExecutionArgs.builder()
             .executionSource(IntegrationStageUtils.buildExecutionSource(
-                planCreationContextValue, stageElementConfig.getIdentifier(), parameterFieldBuild))
+                triggerInfo, triggerPayload, stageElementConfig.getIdentifier(), parameterFieldBuild))
             .buildNumberDetails(
                 BuildNumberDetails.builder().buildNumber((long) executionMetadata.getRunSequence()).build())
             .build();

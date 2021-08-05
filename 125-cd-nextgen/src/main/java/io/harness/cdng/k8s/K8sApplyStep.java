@@ -121,6 +121,9 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
             .skipSteadyStateCheck(skipSteadyStateCheck)
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
+
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
+
     return k8sStepHelper.queueK8sTask(stepElementParameters, k8sApplyRequest, ambiance, executionPassThroughData);
   }
 

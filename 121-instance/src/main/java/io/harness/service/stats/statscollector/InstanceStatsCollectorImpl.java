@@ -76,7 +76,7 @@ public class InstanceStatsCollectorImpl implements StatsCollector {
       usageMetricsEventPublisher.publishInstanceStatsTimeSeries(accountId, instant.toEpochMilli(), instances);
       return true;
     } catch (Exception e) {
-      // TODO handle exception gracefully
+      log.error("Unable to publish instance stats for Account [{}] with exception {}", accountId, e);
       return false;
     }
   }

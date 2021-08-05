@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.LogsAnalysisSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
@@ -26,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Sort;
@@ -85,15 +87,15 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
 
   @Override
   public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(String accountId, String verificationJobInstanceId,
-      Integer label, int pageNumber, int pageSize, String hostName) {
+      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType) {
     List<LogAnalysisClusterDTO> logAnalysisClusters =
-        getLogAnalysisResult(accountId, verificationJobInstanceId, label, hostName);
+        getLogAnalysisResult(accountId, verificationJobInstanceId, label, hostName, clusterType);
 
     return formPageResponse(logAnalysisClusters, pageNumber, pageSize);
   }
 
   private List<LogAnalysisClusterDTO> getLogAnalysisResult(
-      String accountId, String verificationJobInstanceId, Integer label, String hostName) {
+      String accountId, String verificationJobInstanceId, Integer label, String hostName, ClusterType clusterType) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
         getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
     if (isEmpty(latestDeploymentLogAnalysis)) {
@@ -110,7 +112,11 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         logAnalysisClusters.addAll(getOverallLogAnalysisClusters(deploymentLogAnalysis, label));
       }
     }
-
+    if (clusterType != null) {
+      logAnalysisClusters = logAnalysisClusters.stream()
+                                .filter(logAnalysis -> logAnalysis.getClusterType().equals(clusterType))
+                                .collect(Collectors.toList());
+    }
     logAnalysisClusters.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
     return logAnalysisClusters;
   }
@@ -124,7 +130,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         verificationJobInstanceIds, "Missing verificationJobInstanceIds when looking for summary");
     verificationJobInstanceIds.forEach(verificationJobInstanceId -> {
       List<LogAnalysisClusterDTO> logAnalysisClusters =
-          getLogAnalysisResult(accountId, verificationJobInstanceId, null, "");
+          getLogAnalysisResult(accountId, verificationJobInstanceId, null, "", null);
       int anomClusters = 0, totalClusters = 0;
       for (LogAnalysisClusterDTO logAnalysisClusterDTO : logAnalysisClusters) {
         if (logAnalysisClusterDTO.getRisk().isGreaterThan(Risk.LOW)) {

@@ -10,6 +10,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -185,8 +186,9 @@ public class ActivityResource {
   public RestResponse<PageResponse<LogAnalysisClusterDTO>> getDeploymentLogAnalysisResult(
       @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("label") Integer label, @NotNull @QueryParam("pageNumber") int pageNumber,
-      @NotNull @QueryParam("pageSize") int pageSize, @QueryParam("hostName") String hostName) {
+      @NotNull @QueryParam("pageSize") int pageSize, @QueryParam("hostName") String hostName,
+      @QueryParam("clusterType") DeploymentLogAnalysisDTO.ClusterType clusterType) {
     return new RestResponse(activityService.getDeploymentActivityLogAnalysisResult(
-        accountId, activityId, label, pageNumber, pageSize, hostName));
+        accountId, activityId, label, pageNumber, pageSize, hostName, clusterType));
   }
 }

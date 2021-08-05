@@ -167,8 +167,7 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   public String getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch) {
     final ScmConnector decryptedConnector =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
-    final GetLatestCommitResponse latestCommit =
-        scmClient.getLatestCommit(decryptedConnector, yamlGitConfigDTO.getBranch());
+    final GetLatestCommitResponse latestCommit = scmClient.getLatestCommit(decryptedConnector, branch);
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
     return latestCommit.getCommitId();
   }

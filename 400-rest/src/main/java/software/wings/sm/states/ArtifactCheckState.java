@@ -10,7 +10,9 @@ import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delay.DelayEventHelper;
@@ -35,6 +37,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 public class ArtifactCheckState extends State {
   @Inject private transient ArtifactService artifactService;

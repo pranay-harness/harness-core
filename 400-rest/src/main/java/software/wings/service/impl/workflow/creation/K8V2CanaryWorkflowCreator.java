@@ -9,7 +9,9 @@ import static software.wings.common.WorkflowConstants.K8S_PRIMARY_PHASE_NAME;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.MapperUtils;
 
@@ -27,6 +29,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
   private static final String PHASE_NAME = "CANARY";

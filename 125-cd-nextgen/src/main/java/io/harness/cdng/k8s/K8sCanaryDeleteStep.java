@@ -96,6 +96,7 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
     }
 
     InfrastructureOutcome infrastructure = k8sStepHelper.getInfrastructureOutcome(ambiance);
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
 
     K8sDeleteRequest request =
         K8sDeleteRequest.builder()
@@ -109,6 +110,7 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
                 NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
             .build();
 
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
     return k8sStepHelper
         .queueK8sTask(stepElementParameters, request, ambiance,
             K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build())

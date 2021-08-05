@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.clients;
 
-import static io.harness.accesscontrol.clients.AccessControlClientUtils.checkPreconditions;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.accesscontrol.Principal;
@@ -8,9 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.security.SecurityContextBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,13 +29,6 @@ public abstract class AbstractAccessControlClient implements AccessControlClient
   public AccessCheckResponseDTO checkForAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList) {
     AccessCheckRequestDTO accessCheckRequestDTO =
         AccessCheckRequestDTO.builder().principal(principal).permissions(permissionCheckDTOList).build();
-    boolean preconditionsValid =
-        checkPreconditions(SecurityContextBuilder.getPrincipal(), accessCheckRequestDTO.getPrincipal());
-    if (!preconditionsValid) {
-      throw new InvalidRequestException(
-          "Missing principal in context or User doesn't have permission to check access for a different principal",
-          USER);
-    }
     return checkForAccess(accessCheckRequestDTO);
   }
 

@@ -83,6 +83,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.RepairActionCode;
 import io.harness.beans.WorkflowType;
 
@@ -129,6 +131,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDC)
 public class WorkflowServiceTestHelper {
   public static Workflow constructCustomWorkflow() {
     Graph graph = aGraph()

@@ -1,11 +1,14 @@
 package io.harness.service.stats.usagemetrics.eventpublisher;
 
+import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS;
+
 import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dtos.InstanceDTO;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.instancestatstimeseriesevent.DataPoint;
@@ -14,18 +17,22 @@ import io.harness.models.constants.TimescaleConstants;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
 public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublisher {
-  private Producer eventProducer;
+  private final Producer eventProducer;
+
+  @Inject
+  public UsageMetricsEventPublisherImpl(@Named(INSTANCE_STATS) Producer eventProducer) {
+    this.eventProducer = eventProducer;
+  }
 
   public void publishInstanceStatsTimeSeries(String accountId, long timestamp, List<InstanceDTO> instances) {
     if (EmptyPredicate.isEmpty(instances)) {
@@ -53,7 +60,6 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       data.put(TimescaleConstants.INFRAMAPPING_ID.getKey(), instance.getInfrastructureMappingId());
       data.put(TimescaleConstants.CLOUDPROVIDER_ID.getKey(), instance.getConnectorRef());
       data.put(TimescaleConstants.INSTANCE_TYPE.getKey(), instance.getInstanceType().name());
-      data.put(TimescaleConstants.ARTIFACT_ID.getKey(), instance.getPrimaryArtifact().getArtifactId());
       data.put(TimescaleConstants.INSTANCECOUNT.getKey(), String.valueOf(size));
 
       dataPointList.add(DataPoint.newBuilder().putAllData(data).build());
@@ -66,13 +72,14 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
                                              .build();
 
     try {
-      // TODO check if more metadata needed to be added
       eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", accountId))
+                             .putAllMetadata(ImmutableMap.of(
+                                 "accountId", accountId, EventsFrameworkMetadataConstants.ENTITY_TYPE, INSTANCE_STATS))
                              .setData(eventInfo.toByteString())
                              .build());
     } catch (Exception ex) {
-      // TODO handle exception gracefully
+      log.error(
+          String.format("Failed to publish instance stats event for Account %s via event framework.", accountId), ex);
     }
   }
 }

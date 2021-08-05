@@ -19,6 +19,7 @@ import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
+import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetAuthenticatedUserResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.GetUserReposResponse;
@@ -108,4 +109,6 @@ public interface ScmServiceClient {
   GetAuthenticatedUserResponse getAuthenticatedUser(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   GetUserReposResponse getUserRepos(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub);
+
+  FindPRResponse findPR(ScmConnector scmConnector, long number, SCMGrpc.SCMBlockingStub scmBlockingStub);
 }

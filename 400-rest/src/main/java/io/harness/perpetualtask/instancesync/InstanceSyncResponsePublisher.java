@@ -1,7 +1,9 @@
 package io.harness.perpetualtask.instancesync;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.instancesync.InstanceSyncResourceClient;
 import io.harness.utils.RestCallToNGManagerClientUtils;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
 @Singleton
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class InstanceSyncResponsePublisher {
   @Inject private InstanceSyncResourceClient instanceSyncResourceClient;
 

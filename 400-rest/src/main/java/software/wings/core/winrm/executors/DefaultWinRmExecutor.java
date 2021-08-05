@@ -1,5 +1,6 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -16,6 +17,9 @@ import static software.wings.sm.StateExecutionData.SECRET_MASK;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -42,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class DefaultWinRmExecutor implements WinRmExecutor {
   public static final String HARNESS_FILENAME_PREFIX = "\\harness-";
   public static final String WINDOWS_TEMPFILE_LOCATION = "%TEMP%";

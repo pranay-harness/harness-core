@@ -1,5 +1,7 @@
 package io.harness.governance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.BaseYaml;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,6 +21,7 @@ import lombok.NoArgsConstructor;
   @JsonSubTypes.Type(value = AllAppFilter.Yaml.class, name = "ALL")
   , @JsonSubTypes.Type(value = CustomAppFilter.Yaml.class, name = "CUSTOM")
 })
+@OwnedBy(HarnessTeam.CDC)
 public abstract class ApplicationFilterYaml extends BaseYaml {
   private List<EnvironmentFilterYaml> envSelection;
   private BlackoutWindowFilterType filterType;

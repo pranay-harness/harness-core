@@ -1,8 +1,10 @@
 package io.harness.persistence;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.mongo.CollectionLogContext;
 import io.harness.mongo.ProcessTimeLogContext;
@@ -13,6 +15,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.mongodb.morphia.query.MorphiaIterator;
 
 // This is a simple wrapper around MorphiaIterator to provide AutoCloseable implementation
+@OwnedBy(PL)
 @Slf4j
 public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
   private static final long SLOW_PROCESSING = 1000;
@@ -44,10 +47,10 @@ public class HIterator<T> implements AutoCloseable, Iterable<T>, Iterator<T> {
       try (CollectionLogContext ignore1 = new CollectionLogContext(iterator.getCollection(), OVERRIDE_NESTS);
            ProcessTimeLogContext ignore2 = new ProcessTimeLogContext(watch.getTime(), OVERRIDE_NESTS)) {
         if (watch.getTime() > dangerouslySlowProcessing) {
-          log.error("HIterator is dangerously slow processing the data for query: {}",
-              iterator.getCursor().getQuery().toString());
+          log.error("HIterator is dangerously slow processing the data for query: {} time: {}",
+              iterator.getCursor().getQuery().toString(), watch.getTime());
         } else {
-          log.info("Time consuming HIterator processing");
+          log.info("Time consuming HIterator processing. time: {}", watch.getTime());
         }
       }
     }

@@ -2,6 +2,10 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -14,6 +18,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 @Singleton
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class DelegateTaskFactory {
   @Inject Map<TaskType, Class<? extends DelegateRunnableTask>> classMap;
 

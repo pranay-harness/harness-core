@@ -1,7 +1,9 @@
 package software.wings.graphql.schema.type.event;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CgEventRule;
 
 import software.wings.graphql.schema.type.QLObject;
@@ -13,6 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 @Data
 @Builder
 @NoArgsConstructor

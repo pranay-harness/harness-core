@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
@@ -211,7 +211,7 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDP)
 public class AbstractK8SStateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;

@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AsyncSdkProgressCallback implements ProgressCallback {
   @Inject ExecutableProcessorFactory executableProcessorFactory;
-  @Inject SdkNodeExecutionService sdkNodeExecutionService;
 
   byte[] ambianceBytes;
   byte[] stepParameters;

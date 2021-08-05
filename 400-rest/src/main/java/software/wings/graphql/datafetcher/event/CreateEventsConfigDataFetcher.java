@@ -20,6 +20,7 @@ import software.wings.graphql.schema.mutation.event.payload.QLCreateEventsConfig
 import software.wings.graphql.schema.type.event.QLEventsConfig;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class CreateEventsConfigDataFetcher
     extends BaseMutatorDataFetcher<QLCreateEventsConfigInput, QLCreateEventsConfigPayload> {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EventConfigService eventConfigService;
+  @Inject private AppService appService;
 
   public CreateEventsConfigDataFetcher() {
     super(QLCreateEventsConfigInput.class, QLCreateEventsConfigPayload.class);
@@ -43,6 +45,9 @@ public class CreateEventsConfigDataFetcher
     String accountId = mutationContext.getAccountId();
     if (!featureFlagService.isEnabled(APP_TELEMETRY, mutationContext.getAccountId())) {
       throw new InvalidRequestException("Please enable feature flag to configure events");
+    }
+    if (!appService.exist(parameter.getAppId())) {
+      throw new InvalidRequestException("Application does not exist");
     }
     CgEventConfig eventConfig = eventConfigService.createEventsConfig(accountId, parameter.getAppId(),
         CgEventConfig.builder()

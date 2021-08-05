@@ -10,7 +10,9 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -35,6 +37,7 @@ import lombok.NoArgsConstructor;
  * Created by srinivas on 3/31/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._959_CG_BEANS)
 @JsonTypeName("NEXUS")
 @Data
 @EqualsAndHashCode(callSuper = true)

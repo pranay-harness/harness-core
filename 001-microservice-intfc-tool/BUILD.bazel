@@ -52,7 +52,6 @@ java_binary(
         "//840-template-service:module",
         "//860-orchestration-steps:module",
         "//860-orchestration-visualization:module",
-        "//861-cg-orchestration-states:module",
         "//865-cg-events:module",
         "//870-cg-orchestration:module",
         "//870-orchestration:module",

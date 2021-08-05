@@ -16,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -54,6 +56,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.CDC)
 public class AzureArtifactsServiceTest extends WingsBaseTest {
   private static final String DEFAULT_AZURE_ARTIFACTS_URL_WITHOUT_SLASH = "http://localhost:9891/azureartifacts";
   private static final String DEFAULT_AZURE_ARTIFACTS_URL = DEFAULT_AZURE_ARTIFACTS_URL_WITHOUT_SLASH + "/";

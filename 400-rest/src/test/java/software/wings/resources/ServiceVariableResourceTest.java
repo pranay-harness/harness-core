@@ -23,6 +23,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -55,6 +57,7 @@ import org.mockito.AdditionalAnswers;
  * Created by peeyushaggarwal on 9/27/16.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceVariableResourceTest extends CategoryTest {
   private static final String ACCOUNT_ID = UUID.randomUUID().toString();
   private static final ServiceVariableService VARIABLE_SERVICE = mock(ServiceVariableService.class);

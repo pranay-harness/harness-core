@@ -135,6 +135,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataService;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -186,6 +187,7 @@ public class K8sStepHelper {
   private static final Set<String> VALUES_YAML_SUPPORTED_MANIFEST_TYPES =
       ImmutableSet.of(ManifestType.K8Manifest, ManifestType.HelmChart);
 
+  public static final String RELEASE_NAME = "Release Name";
   public static final String MISSING_INFRASTRUCTURE_ERROR = "Infrastructure section is missing or is not configured";
   public static final String RELEASE_NAME_VALIDATION_REGEX =
       "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
@@ -201,6 +203,7 @@ public class K8sStepHelper {
   @Inject private StepHelper stepHelper;
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
+  @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -1354,6 +1357,13 @@ public class K8sStepHelper {
     } catch (Exception e) {
       String message = String.format("%s for field %s in %s", e.getMessage(), fieldName, description);
       throw new InvalidArgumentsException(message);
+    }
+  }
+
+  public void publishReleaseNameStepDetails(Ambiance ambiance, String releaseName) {
+    if (isNotEmpty(releaseName)) {
+      sdkGraphVisualizationDataService.publishStepDetailInformation(
+          ambiance, K8sReleaseDetailsInfo.builder().releaseName(releaseName).build(), RELEASE_NAME);
     }
   }
 }

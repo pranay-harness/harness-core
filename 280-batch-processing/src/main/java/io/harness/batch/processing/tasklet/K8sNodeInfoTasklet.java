@@ -107,6 +107,8 @@ public class K8sNodeInfoTasklet implements Tasklet {
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
     String cloudProviderInstanceId = getCloudProviderInstanceId(nodeInfo.getProviderId(), k8SCloudProvider);
     if (CloudProvider.UNKNOWN == k8SCloudProvider) {
+      log.warn("Node cloud provide is  not  present for nodeName {} and clusterId {}", nodeInfo.getNodeName(),
+          nodeInfo.getClusterId());
       return InstanceInfo.builder().metaData(metaData).build();
     }
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, k8SCloudProvider.name());

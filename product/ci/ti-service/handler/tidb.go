@@ -72,7 +72,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		}
 
 		// Classify and write the test selection stats to timescaleDB
-		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, 0, false)
+		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, repo, source, target, selected, 0, false)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write selected tests", "account_id", accountId,
@@ -85,6 +85,87 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		log.Infow("completed test selection", "account_id", accountId,
 			"repo", repo, "source", source, "target", target, "sha", sha, "tests",
 			selected.Tests, "num_tests", len(selected.Tests), "time_taken", time.Since(st))
+
+	}
+}
+
+// HandleVgSearch returns a http.HandlerFunc that returns back the visualization callgraph
+// corresponding to a fully qualified class name.
+// If a source branch is provided, we first try to retrieve the visualization call graph only from
+// the source branch. Otherwise, if the source call graph does not exist, we use the target branch call graph.
+// If a class name is not specified, this will provide a partial visualization graph containing at max limit
+// number of nodes.
+func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		st := time.Now()
+		ctx := r.Context()
+
+		// Info needed:
+		// i) account ID, ... buildID
+		// ii) fully-qualified class name (optional) (if not specified, we will return a random part of the callgraph)
+		// iii) limit (max number of nodes to return in the output) (optional)
+		// We use the mapping of <account, org, project, pipeline, build, step, stage> -> <repo, source, target> to
+		// get the repo, source and target branch to render visualization data from.
+		// If class name is specified, we return the callgraph corresponding starting with that class as a root node.
+		// This is done by doing a BFS from that point.
+
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam)
+		if err != nil {
+			WriteInternalError(w, err)
+			return
+		}
+
+		accountId := r.FormValue(accountIDParam)
+		orgId := r.FormValue(orgIdParam)
+		projectId := r.FormValue(projectIdParam)
+		pipelineId := r.FormValue(pipelineIdParam)
+		buildId := r.FormValue(buildIdParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
+		limitStr := r.FormValue(limitParam)
+		class := r.FormValue(classNameParam)
+		limit, err := strconv.ParseInt(limitStr, 10, 64)
+		if err != nil {
+			log.Errorw("could not parse limit", zap.Error(err))
+			limit = 200 // return back upto 200 nodes if we can't parse the limit
+		}
+
+		overview, err := db.GetSelectionOverview(ctx, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId)
+
+		if err != nil {
+			WriteInternalError(w, err)
+			log.Errorw("api: could not get selection overview for VG search", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId, zap.Error(err))
+			return
+		}
+
+		req := types.GetVgReq{
+			AccountId:    accountId,
+			Repo:         overview.Repo,
+			SourceBranch: overview.SourceBranch,
+			TargetBranch: overview.TargetBranch,
+			Class:        class,
+			Limit:        limit,
+		}
+
+		// Make call to Mongo DB to get the visualization call graph of
+		graph, err := tidb.GetVg(ctx, req)
+		if err != nil {
+			WriteInternalError(w, err)
+			// TODO: (Vistaar) Find a better way to add all the params to all the different types of logs.
+			log.Errorw("api: could not get visualization graph", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId,
+				repoParam, overview.Repo, sourceBranchParam, overview.SourceBranch, targetBranchParam, overview.TargetBranch,
+				classNameParam, class, zap.Error(err))
+			return
+		}
+
+		// Write the selected tests back
+		WriteJSON(w, graph, 200)
+		log.Infow("retrieved visualization callgraph", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+			pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId,
+			repoParam, overview.Repo, sourceBranchParam, overview.SourceBranch, targetBranchParam, overview.TargetBranch,
+			classNameParam, class, "len(edges)", len(graph.Edges), "len(nodes)", len(graph.Nodes), "time_taken", time.Since(st))
 
 	}
 }
@@ -194,7 +275,6 @@ func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		// Write the selected tests back
 		WriteJSON(w, overview, 200)
 		log.Infow("retrieved test overview", "account_id", accountId, "time_taken", time.Since(st))
-
 	}
 }
 
@@ -260,7 +340,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
 		log.Infow("completed partial CG upload to mongo", "account", acc, "org", org, "project", proj, "build", buildId, "stage", stageId, "step", stepId, "time_taken", time.Since(st).String())
 		// Try to update counts even if uploading partial CG failed
-		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, int(timeMs), true)
+		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, "", "", "", resp, int(timeMs), true)
 		if err != nil {
 			log.Errorw("failed to write partial cg to mongo", accountIDParam, acc, orgIdParam, org, projectIdParam, proj, buildIdParam, buildId, repoParam, info.Repo,
 				sourceBranchParam, info.Branch, stepIdParam, stepId, stageIdParam, stageId, zap.Error(err))
@@ -275,7 +355,6 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
-
 
 func HandleUploadVg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

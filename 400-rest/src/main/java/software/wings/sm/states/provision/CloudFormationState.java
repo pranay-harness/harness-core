@@ -91,7 +91,7 @@ import org.mongodb.morphia.query.Query;
 @FieldNameConstants(innerTypeName = "CloudFormationStateKeys")
 @OwnedBy(CDP)
 @Slf4j
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class CloudFormationState extends State {
   @Inject protected transient ActivityService activityService;

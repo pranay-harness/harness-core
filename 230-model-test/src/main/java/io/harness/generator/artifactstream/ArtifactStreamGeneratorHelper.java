@@ -1,7 +1,10 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.GeneratorUtils;
 import io.harness.generator.OwnerManager.Owners;
 
@@ -15,6 +18,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+@OwnedBy(CDP)
 @Singleton
 public class ArtifactStreamGeneratorHelper {
   @Inject WingsPersistence wingsPersistence;
@@ -39,7 +43,7 @@ public class ArtifactStreamGeneratorHelper {
   private ArtifactStream createArtifactStream(ArtifactStream artifactStream, Owners owners) {
     ArtifactStream savedArtifactStream = artifactStreamService.create(artifactStream, false);
     if (!savedArtifactStream.getAppId().equals(GLOBAL_APP_ID)) {
-      Service service = owners.obtainService();
+      Service service = owners.obtainServiceByServiceId(artifactStream.getServiceId());
       if (service == null) {
         return savedArtifactStream;
       }
@@ -47,7 +51,8 @@ public class ArtifactStreamGeneratorHelper {
       // TODO: ASR: update this method after refactor
 
       Service updatedService = serviceResourceService.addArtifactStreamId(service, savedArtifactStream.getUuid());
-      owners.obtainService().setArtifactStreamIds(updatedService.getArtifactStreamIds());
+      owners.obtainServiceByServiceId(artifactStream.getServiceId())
+          .setArtifactStreamIds(updatedService.getArtifactStreamIds());
     }
     return savedArtifactStream;
   }

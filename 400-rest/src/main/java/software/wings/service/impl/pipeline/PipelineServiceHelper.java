@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineServiceHelper {
   private PipelineServiceHelper() {}
 

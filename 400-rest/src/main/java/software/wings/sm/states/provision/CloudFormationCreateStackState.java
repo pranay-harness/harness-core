@@ -97,7 +97,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String CREATE_STACK_COMMAND_UNIT = "Create Stack";

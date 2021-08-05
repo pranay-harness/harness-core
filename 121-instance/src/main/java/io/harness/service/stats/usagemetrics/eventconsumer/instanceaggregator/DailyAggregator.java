@@ -17,16 +17,16 @@ import java.util.Map;
 public class DailyAggregator extends InstanceAggregator {
   private static final String FETCH_CHILD_DATA_POINTS_SQL =
       "SELECT PERCENTILE_DISC(0.50) WITHIN GROUP (ORDER BY INSTANCECOUNT) AS INSTANCECOUNT, BOOL_AND(SANITYSTATUS) AS SANITYSTATUS, COUNT(*) AS NUM_OF_RECORDS "
-      + "FROM INSTANCE_STATS_HOUR "
+      + "FROM NG_INSTANCE_STATS_HOUR "
       + "WHERE REPORTEDAT >= ? AND REPORTEDAT < ? "
       + "AND ACCOUNTID=? AND ORGID=? AND PROJECTID=? AND SERVICEID=? AND ENVID=? AND CLOUDPROVIDERID=? AND INSTANCETYPE=?";
 
   private static final String UPSERT_PARENT_TABLE_SQL =
-      "INSERT INTO INSTANCE_STATS_DAY (REPORTEDAT,ACCOUNTID,ORGID,PROJECTID,SERVICEID,ENVID,CLOUDPROVIDERID,INSTANCETYPE,INSTANCECOUNT,ARTIFACTID,WEEKTIMESTAMP,MONTHTIMESTAMP,SANITYSTATUS) "
-      + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) "
+      "INSERT INTO NG_INSTANCE_STATS_DAY (REPORTEDAT,ACCOUNTID,ORGID,PROJECTID,SERVICEID,ENVID,CLOUDPROVIDERID,INSTANCETYPE,INSTANCECOUNT,WEEKTIMESTAMP,MONTHTIMESTAMP,SANITYSTATUS) "
+      + "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) "
       + "ON CONFLICT(ACCOUNTID,ORGID,PROJECTID,SERVICEID,ENVID,CLOUDPROVIDERID,INSTANCETYPE,REPORTEDAT) "
       + "DO UPDATE SET INSTANCECOUNT=EXCLUDED.INSTANCECOUNT, SANITYSTATUS=EXCLUDED.SANITYSTATUS "
-      + "WHERE INSTANCE_STATS_DAY.SANITYSTATUS=FALSE";
+      + "WHERE NG_INSTANCE_STATS_DAY.SANITYSTATUS=FALSE";
 
   public DailyAggregator(TimeseriesBatchEventInfo eventInfo) {
     super(eventInfo, FETCH_CHILD_DATA_POINTS_SQL, UPSERT_PARENT_TABLE_SQL, 24, "DAILY AGGREGATOR");
@@ -63,11 +63,10 @@ public class DailyAggregator extends InstanceAggregator {
     statement.setString(7, dataMap.get(TimescaleConstants.CLOUDPROVIDER_ID.getKey()));
     statement.setString(8, dataMap.get(TimescaleConstants.INSTANCE_TYPE.getKey()));
     statement.setInt(9, (Integer) params.get(TimescaleConstants.INSTANCECOUNT.getKey()));
-    statement.setString(10, dataMap.get(TimescaleConstants.ARTIFACT_ID.getKey()));
     statement.setTimestamp(
-        11, new Timestamp(this.getWeeklyWindowTimestamp().getTime()), DateUtils.getDefaultCalendar());
+        10, new Timestamp(this.getWeeklyWindowTimestamp().getTime()), DateUtils.getDefaultCalendar());
     statement.setTimestamp(
-        12, new Timestamp(this.getMonthlyWindowTimestamp().getTime()), DateUtils.getDefaultCalendar());
+        11, new Timestamp(this.getMonthlyWindowTimestamp().getTime()), DateUtils.getDefaultCalendar());
     statement.setBoolean(12, (Boolean) params.get(TimescaleConstants.SANITYSTATUS.getKey()));
   }
 

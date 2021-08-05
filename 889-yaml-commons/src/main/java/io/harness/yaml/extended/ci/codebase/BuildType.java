@@ -1,7 +1,8 @@
 package io.harness.yaml.extended.ci.codebase;
 
-import static io.harness.yaml.extended.ci.codebase.BuildTypeConstants.BRANCH_TYPE;
-import static io.harness.yaml.extended.ci.codebase.BuildTypeConstants.TAG_TYPE;
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,9 +10,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import org.springframework.data.annotation.TypeAlias;
 
 @TypeAlias("io.harness.yaml.extended.ci.BuildType")
+@OwnedBy(CI)
 public enum BuildType {
-  @JsonProperty(BRANCH_TYPE) BRANCH(BRANCH_TYPE),
-  @JsonProperty(TAG_TYPE) TAG(TAG_TYPE);
+  @JsonProperty(BuildTypeConstants.BRANCH) BRANCH(BuildTypeConstants.BRANCH),
+  @JsonProperty(BuildTypeConstants.TAG) TAG(BuildTypeConstants.TAG),
+  @JsonProperty(BuildTypeConstants.PR) PR(BuildTypeConstants.PR),
+  @JsonProperty(BuildTypeConstants.COMMIT_SHA) COMMIT_SHA(BuildTypeConstants.COMMIT_SHA);
 
   private final String yamlProperty;
 

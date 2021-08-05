@@ -97,7 +97,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
   private boolean
       disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
-  private boolean winrmCopyConfigOptimize;
   private List<String> delegateSelectors;
 
   // new fields for multi artifact
@@ -174,11 +173,10 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       ContainerResizeParams containerResizeParams, Map<String, String> metadata,
       CommandExecutionData commandExecutionData, Integer timeout, String deploymentType,
       List<EncryptedDataDetail> artifactServerEncryptedDataDetails, boolean inlineSshCommand, boolean executeOnDelegate,
-      boolean disableWinRMCommandEncodingFFSet, boolean disableWinRMEnvVariables, boolean winrmCopyConfigOptimize,
-      List<String> delegateSelectors, Map<String, Artifact> multiArtifactMap,
-      Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap, boolean multiArtifact,
-      Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap, String artifactFileName,
-      SSHVaultConfig sshVaultConfig) {
+      boolean disableWinRMCommandEncodingFFSet, boolean disableWinRMEnvVariables, List<String> delegateSelectors,
+      Map<String, Artifact> multiArtifactMap, Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap,
+      boolean multiArtifact, Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap,
+      String artifactFileName, SSHVaultConfig sshVaultConfig) {
     this.accountId = accountId;
     this.envId = envId;
     this.host = host;
@@ -218,7 +216,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     this.executeOnDelegate = executeOnDelegate;
     this.disableWinRMCommandEncodingFFSet = disableWinRMCommandEncodingFFSet;
     this.disableWinRMEnvVariables = disableWinRMEnvVariables;
-    this.winrmCopyConfigOptimize = winrmCopyConfigOptimize;
     this.delegateSelectors = delegateSelectors;
     this.multiArtifactMap = multiArtifactMap;
     this.artifactStreamAttributesMap = artifactStreamAttributesMap;
@@ -396,7 +393,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private boolean disableWinRMCommandEncodingFFSet; // DISABLE_WINRM_COMMAND_ENCODING
     private boolean
         disableWinRMEnvVariables; //  DISABLE_WINRM_ENV_VARIABLES stop passing service variables as env variables
-    private boolean winrmCopyConfigOptimize;
     private List<String> delegateSelectors;
 
     // new fields for multi artifact
@@ -598,11 +594,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
-    public Builder winrmCopyConfigOptimize(boolean winrmCopyConfigOptimize) {
-      this.winrmCopyConfigOptimize = winrmCopyConfigOptimize;
-      return this;
-    }
-
     public Builder disableWinRMEnvVariables(boolean disableWinRMEnvVariables) {
       this.disableWinRMEnvVariables = disableWinRMEnvVariables;
       return this;
@@ -738,7 +729,6 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setArtifactFileName(artifactFileName);
       commandExecutionContext.setDisableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet);
       commandExecutionContext.setDisableWinRMEnvVariables(disableWinRMEnvVariables);
-      commandExecutionContext.setWinrmCopyConfigOptimize(winrmCopyConfigOptimize);
       commandExecutionContext.setDelegateSelectors(delegateSelectors);
       commandExecutionContext.setSshVaultConfig(sshVaultConfig);
       return commandExecutionContext;
