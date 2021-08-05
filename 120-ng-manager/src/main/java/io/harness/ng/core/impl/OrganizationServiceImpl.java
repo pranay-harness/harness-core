@@ -271,10 +271,11 @@ public class OrganizationServiceImpl implements OrganizationService {
     List<Scope> orgs = organizationRepository.findAllOrgs(criteria);
     List<String> permittedOrgsIds =
         scopeAccessHelper.getPermittedScopes(orgs).stream().map(Scope::getOrgIdentifier).collect(Collectors.toList());
+    criteria.and(OrganizationKeys.identifier).in(permittedOrgsIds);
+
     if (permittedOrgsIds.isEmpty()) {
       return Page.empty();
     }
-    criteria.and(OrganizationKeys.identifier).in(permittedOrgsIds);
 
     return organizationRepository.findAll(
         criteria, pageable, organizationFilterDTO != null && organizationFilterDTO.isIgnoreCase());
