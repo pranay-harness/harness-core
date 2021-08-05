@@ -9,6 +9,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -29,13 +30,16 @@ public class PollingEventStreamConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
+  private final QueueController queueController;
 
   @Inject
   public PollingEventStreamConsumer(@Named(EventsFrameworkConstants.POLLING_EVENTS_STREAM) Consumer redisConsumer,
-      @Named(EventsFrameworkConstants.POLLING_EVENTS_STREAM) MessageListener pollingEventListener) {
+      @Named(EventsFrameworkConstants.POLLING_EVENTS_STREAM) MessageListener pollingEventListener,
+      QueueController queueController) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(pollingEventListener);
+    this.queueController = queueController;
   }
 
   @Override
@@ -44,6 +48,12 @@ public class PollingEventStreamConsumer implements Runnable {
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info(this.getClass().getSimpleName()
+              + " is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (InterruptedException ex) {

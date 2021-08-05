@@ -17,6 +17,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.network.SafeHttpCall;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails;
 import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails.WebhookEventProcessingDetailsBuilder;
@@ -32,9 +33,13 @@ import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
+import io.harness.polling.client.PollingResourceClient;
+import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.contracts.service.PollingDocument;
 import io.harness.repositories.spring.NGTriggerRepository;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.repositories.spring.TriggerWebhookEventRepository;
+import io.harness.serializer.KryoSerializer;
 
 import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
@@ -44,6 +49,7 @@ import com.cronutils.parser.CronParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -69,6 +75,8 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   private final ConnectorResourceClient connectorResourceClient;
   private final NGTriggerWebhookRegistrationService ngTriggerWebhookRegistrationService;
   private final ExecutorService executorService;
+  private final KryoSerializer kryoSerializer;
+  private final PollingResourceClient pollingResourceClient;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -81,6 +89,33 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
           String.format(DUP_KEY_EXP_FORMAT_STRING, ngTriggerEntity.getIdentifier()), USER_SRE, e);
+    }
+  }
+
+  private void registerPollingAsync(NGTriggerEntity ngTriggerEntity) {
+    executorService.submit(() -> {
+      // ToDo: Generate PollingItem from ngTriggerEntity after @Adwait's code is merged
+      PollingItem pollingItem = PollingItem.newBuilder().build();
+      byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
+      ResponseDTO<byte[]> responseDTO;
+      try {
+        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(pollingItemBytes));
+      } catch (IOException exception) {
+        throw new InvalidRequestException(exception.getMessage());
+      }
+      byte[] pollingDocumentBytes = responseDTO.getData();
+      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asInflatedObject(pollingDocumentBytes);
+      updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
+    });
+  }
+
+  private void updatePollingRegistrationStatus(NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument) {
+    Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
+    ngTriggerEntity.getMetadata().getBuildMetadata().setPollingDocId(pollingDocument.getPollingDocId());
+    NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+    if (updatedEntity == null) {
+      throw new InvalidRequestException(
+          String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
     }
   }
 
