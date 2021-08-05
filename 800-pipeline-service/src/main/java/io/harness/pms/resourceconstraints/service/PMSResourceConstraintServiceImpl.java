@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
+import io.harness.pms.resourceconstraints.response.ResourceConstraintDetailDTO;
 import io.harness.pms.resourceconstraints.response.ResourceConstraintExecutionInfoDTO;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
@@ -35,8 +36,7 @@ public class PMSResourceConstraintServiceImpl implements PMSResourceConstraintSe
   private final ResourceRestraintInstanceService resourceRestraintInstanceService;
   private final PlanExecutionService planExecutionService;
 
-  public List<ResourceConstraintExecutionInfoDTO> getResourceConstraintExecutionInfoList(
-      String accountId, String resourceUnit) {
+  public ResourceConstraintExecutionInfoDTO getResourceConstraintExecutionInfo(String accountId, String resourceUnit) {
     ResourceRestraint resourceConstraint =
         resourceRestraintService.getByNameAndAccountId(PmsConstants.QUEUING_RC_NAME, accountId);
     if (resourceConstraint == null) {
@@ -55,14 +55,19 @@ public class PMSResourceConstraintServiceImpl implements PMSResourceConstraintSe
             .stream()
             .collect(Collectors.toMap(PlanExecution::getUuid, Function.identity()));
 
-    return instances.stream()
-        .map(instance
-            -> ResourceConstraintExecutionInfoDTO.builder()
-                   .pipelineIdentifier(
-                       planExecutionMap.get(instance.getReleaseEntityId()).getMetadata().getPipelineIdentifier())
-                   .planExecutionId(instance.getReleaseEntityId())
-                   .state(instance.getState())
-                   .build())
-        .collect(Collectors.toList());
+    return ResourceConstraintExecutionInfoDTO.builder()
+        .name(resourceConstraint.getName())
+        .capacity(resourceConstraint.getCapacity())
+        .resourceConstraints(instances.stream()
+                                 .map(instance
+                                     -> ResourceConstraintDetailDTO.builder()
+                                            .pipelineIdentifier(planExecutionMap.get(instance.getReleaseEntityId())
+                                                                    .getMetadata()
+                                                                    .getPipelineIdentifier())
+                                            .planExecutionId(instance.getReleaseEntityId())
+                                            .state(instance.getState())
+                                            .build())
+                                 .collect(Collectors.toList()))
+        .build();
   }
 }
