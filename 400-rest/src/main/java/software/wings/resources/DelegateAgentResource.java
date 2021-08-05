@@ -52,7 +52,7 @@ import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.perpetualtask.instancesync.InstanceSyncResponsePublisher;
 import io.harness.persistence.HPersistence;
-import io.harness.poll.PollResourceClient;
+import io.harness.polling.client.PollingResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
@@ -117,7 +117,7 @@ public class DelegateAgentResource {
   private FeatureFlagService featureFlagService;
   private DelegateTaskServiceClassic delegateTaskServiceClassic;
   private InstanceSyncResponsePublisher instanceSyncResponsePublisher;
-  private PollResourceClient pollResourceClient;
+  private PollingResourceClient pollingResourceClient;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService, HPersistence persistence,
@@ -126,7 +126,7 @@ public class DelegateAgentResource {
       ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
       ConfigurationController configurationController, FeatureFlagService featureFlagService,
-      DelegateTaskServiceClassic delegateTaskServiceClassic, PollResourceClient pollResourceClient) {
+      DelegateTaskServiceClassic delegateTaskServiceClassic, PollingResourceClient pollingResourceClient) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -140,7 +140,7 @@ public class DelegateAgentResource {
     this.configurationController = configurationController;
     this.featureFlagService = featureFlagService;
     this.delegateTaskServiceClassic = delegateTaskServiceClassic;
-    this.pollResourceClient = pollResourceClient;
+    this.pollingResourceClient = pollingResourceClient;
   }
 
   @DelegateAuth
@@ -551,7 +551,7 @@ public class DelegateAgentResource {
       @QueryParam("accountId") @NotEmpty String accountId, byte[] serializedExecutionResponse) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
-      pollResourceClient.processPolledResult(perpetualTaskId, accountId, serializedExecutionResponse);
+      pollingResourceClient.processPolledResult(perpetualTaskId, accountId, serializedExecutionResponse);
     }
     return new RestResponse<>(Boolean.TRUE);
   }

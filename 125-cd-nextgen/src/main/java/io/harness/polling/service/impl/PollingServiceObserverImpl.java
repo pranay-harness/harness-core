@@ -6,9 +6,16 @@ import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingServiceObserver;
 
+import com.google.inject.Inject;
+
 @OwnedBy(HarnessTeam.CDC)
 public class PollingServiceObserverImpl implements PollingServiceObserver {
   private PollingPerpetualTaskService pollingPerpetualTaskService;
+
+  @Inject
+  public PollingServiceObserverImpl(PollingPerpetualTaskService pollingPerpetualTaskService) {
+    this.pollingPerpetualTaskService = pollingPerpetualTaskService;
+  }
 
   @Override
   public void onSaved(PollingDocument pollingDocument) {

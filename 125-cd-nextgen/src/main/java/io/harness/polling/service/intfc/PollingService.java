@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.polling.bean.PolledResponse;
 import io.harness.polling.bean.PollingDocument;
+import io.harness.polling.contracts.PollingItem;
 
 import javax.validation.Valid;
 
@@ -22,4 +23,8 @@ public interface PollingService {
   void updateFailedAttempts(String accountId, String pollingDocId, int failedAttempts);
 
   void updatePolledResponse(String accountId, String pollingDocId, PolledResponse polledResponse);
+
+  String subscribe(PollingItem pollingItem);
+
+  boolean unsubscribe(PollingItem pollingItem);
 }

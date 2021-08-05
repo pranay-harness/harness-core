@@ -19,6 +19,7 @@ shared_dependencies = [
     "//820-platform-service:module",
     "//835-notification-senders:module",
     "//865-cg-events:module",
+    "//867-polling-contracts:module",
     "//870-cg-orchestration:module",
     "//874-orchestration-delay:module",
     "//890-sm-core:module",
