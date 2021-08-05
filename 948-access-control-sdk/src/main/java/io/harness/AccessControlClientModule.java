@@ -7,8 +7,8 @@ import io.harness.accesscontrol.NGAccessControlCheckHandler;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlHttpClient;
 import io.harness.accesscontrol.clients.AccessControlHttpClientFactory;
-import io.harness.accesscontrol.clients.NoOpAccessControlClientImpl;
 import io.harness.accesscontrol.clients.NonPrivilegedAccessControlClientImpl;
+import io.harness.accesscontrol.clients.NonPrivilegedNoOpAccessControlClientImpl;
 import io.harness.accesscontrol.clients.PrivilegedAccessControlClientImpl;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ClientMode;
@@ -86,14 +86,14 @@ public class AccessControlClientModule extends AbstractModule {
           .in(Scopes.SINGLETON);
       bind(AccessControlClient.class).to(NonPrivilegedAccessControlClientImpl.class).in(Scopes.SINGLETON);
     } else {
-      bind(AccessControlClient.class).to(NoOpAccessControlClientImpl.class).in(Scopes.SINGLETON);
+      bind(AccessControlClient.class).to(NonPrivilegedNoOpAccessControlClientImpl.class).in(Scopes.SINGLETON);
       bind(AccessControlClient.class)
           .annotatedWith(Names.named(ClientMode.NON_PRIVILEGED.name()))
-          .to(NoOpAccessControlClientImpl.class)
+          .to(NonPrivilegedNoOpAccessControlClientImpl.class)
           .in(Scopes.SINGLETON);
       bind(AccessControlClient.class)
           .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
-          .to(NoOpAccessControlClientImpl.class)
+          .to(PrivilegedAccessControlClientImpl.class)
           .in(Scopes.SINGLETON);
     }
     NGAccessControlCheckHandler ngAccessControlCheckHandler = new NGAccessControlCheckHandler();
