@@ -1,4 +1,4 @@
-package io.harness.poll;
+package io.harness.polling.client;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -16,7 +16,8 @@ import lombok.experimental.FieldDefaults;
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.CDC)
-public class PollResourceHttpClientFactory extends AbstractHttpClientFactory implements Provider<PollResourceClient> {
+public class PollResourceHttpClientFactory
+    extends AbstractHttpClientFactory implements Provider<PollingResourceClient> {
   public PollResourceHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
     super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
@@ -29,7 +30,7 @@ public class PollResourceHttpClientFactory extends AbstractHttpClientFactory imp
   }
 
   @Override
-  public PollResourceClient get() {
-    return getRetrofit().create(PollResourceClient.class);
+  public PollingResourceClient get() {
+    return getRetrofit().create(PollingResourceClient.class);
   }
 }

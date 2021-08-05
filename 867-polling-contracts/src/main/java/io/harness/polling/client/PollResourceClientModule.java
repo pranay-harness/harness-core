@@ -1,4 +1,4 @@
-package io.harness.poll;
+package io.harness.polling.client;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -29,11 +29,11 @@ public class PollResourceClientModule extends AbstractModule {
   @Provides
   private PollResourceHttpClientFactory providesHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new PollResourceHttpClientFactory(this.ngManagerClientConfig, this.serviceSecret,
-        new ServiceTokenGenerator(), kryoConverterFactory, clientId, ClientMode.NON_PRIVILEGED);
+        new ServiceTokenGenerator(), kryoConverterFactory, clientId, ClientMode.PRIVILEGED);
   }
 
   @Override
   protected void configure() {
-    this.bind(PollResourceClient.class).toProvider(PollResourceHttpClientFactory.class).in(Scopes.SINGLETON);
+    this.bind(PollingResourceClient.class).toProvider(PollResourceHttpClientFactory.class).in(Scopes.SINGLETON);
   }
 }

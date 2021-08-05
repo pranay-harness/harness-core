@@ -88,6 +88,7 @@ import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImplV2;
+import io.harness.polling.client.PollResourceClientModule;
 import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
@@ -216,6 +217,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(YamlSdkModule.getInstance());
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), PIPELINE_SERVICE.getServiceId()));
+    install(new PollResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
 
     install(new OrganizationClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));

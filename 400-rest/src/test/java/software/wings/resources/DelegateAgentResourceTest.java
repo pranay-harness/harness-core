@@ -32,8 +32,10 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.category.element.UnitTests;
@@ -60,7 +62,7 @@ import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
-import io.harness.poll.PollResourceClient;
+import io.harness.polling.client.PollingResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -109,6 +111,7 @@ import org.mockito.ArgumentCaptor;
 @RunWith(Parameterized.class)
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateAgentResourceTest {
   private static final DelegateService delegateService = mock(DelegateService.class);
   private static final software.wings.service.intfc.DelegateTaskServiceClassic delegateTaskServiceClassic =
@@ -133,7 +136,7 @@ public class DelegateAgentResourceTest {
   private static final ConnectorHearbeatPublisher connectorHearbeatPublisher = mock(ConnectorHearbeatPublisher.class);
   private static final KryoSerializer kryoSerializer = mock(KryoSerializer.class);
   private static final FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
-  private static final PollResourceClient pollResourceClient = mock(PollResourceClient.class);
+  private static final PollingResourceClient pollResourceClient = mock(PollingResourceClient.class);
 
   @Parameter public String apiUrl;
 

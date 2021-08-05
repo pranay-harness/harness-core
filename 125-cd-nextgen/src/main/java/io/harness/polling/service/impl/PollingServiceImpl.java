@@ -8,6 +8,8 @@ import io.harness.observer.Subject;
 import io.harness.polling.bean.PolledResponse;
 import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.bean.PollingDocument.PollingDocumentKeys;
+import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.mapper.PollingRequestToPollingDocumentMapper;
 import io.harness.polling.service.intfc.PollingService;
 import io.harness.polling.service.intfc.PollingServiceObserver;
 import io.harness.repositories.polling.PollingRepository;
@@ -21,11 +23,14 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CDC)
 public class PollingServiceImpl implements PollingService {
   private PollingRepository pollingRepository;
+  private PollingRequestToPollingDocumentMapper pollingDocumentMapper;
   private Subject<PollingServiceObserver> subject = new Subject<>();
 
   @Inject
-  public PollingServiceImpl(PollingRepository pollingRepository) {
+  public PollingServiceImpl(
+      PollingRepository pollingRepository, PollingRequestToPollingDocumentMapper pollingDocumentMapper) {
     this.pollingRepository = pollingRepository;
+    this.pollingDocumentMapper = pollingDocumentMapper;
   }
 
   @Override
@@ -95,6 +100,19 @@ public class PollingServiceImpl implements PollingService {
   public void updatePolledResponse(String accountId, String pollingDocId, PolledResponse polledResponse) {
     pollingRepository.updateSelectiveEntity(
         accountId, pollingDocId, PollingDocumentKeys.polledResponse, polledResponse);
+  }
+
+  @Override
+  public String subscribe(PollingItem pollingItem) {
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
+    return save(pollingDocument);
+  }
+
+  @Override
+  public boolean unsubscribe(PollingItem pollingItem) {
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
+    delete(pollingDocument);
+    return true;
   }
 
   private void createPerpetualTask(@NotNull PollingDocument pollingDocument) {

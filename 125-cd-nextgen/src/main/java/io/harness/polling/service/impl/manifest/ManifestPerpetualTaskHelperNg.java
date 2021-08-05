@@ -19,6 +19,7 @@ import io.harness.polling.bean.PollingDocument;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Singleton
 @OwnedBy(HarnessTeam.CDC)
 public class ManifestPerpetualTaskHelperNg {
   K8sStepHelper k8sStepHelper;
