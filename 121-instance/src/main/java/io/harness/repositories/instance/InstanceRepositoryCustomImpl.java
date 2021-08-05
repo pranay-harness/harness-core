@@ -44,12 +44,10 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   public List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp) {
     Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier).is(accountIdentifier);
     if (timestamp > 0) {
-      criteria = criteria.andOperator(
-          Criteria.where(InstanceKeys.createdAt)
-              .lte(timestamp)
-              .andOperator(Criteria.where(InstanceKeys.isDeleted)
-                               .is(false)
-                               .orOperator(Criteria.where(InstanceKeys.deletedAt).gte(timestamp))));
+      Criteria filterCreatedAt = Criteria.where(InstanceKeys.createdAt).lte(timestamp);
+      Criteria filterDeletedAt = Criteria.where(InstanceKeys.deletedAt).gte(timestamp);
+      Criteria filterNotDeleted = Criteria.where(InstanceKeys.isDeleted).is(false);
+      criteria.andOperator(filterCreatedAt.orOperator(filterNotDeleted, filterDeletedAt));
     } else {
       criteria = criteria.andOperator(Criteria.where(InstanceKeys.isDeleted).is(false));
     }

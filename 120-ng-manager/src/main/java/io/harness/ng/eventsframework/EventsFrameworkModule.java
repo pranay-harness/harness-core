@@ -9,6 +9,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_S
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE;
 
@@ -94,6 +95,13 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(GIT_CONFIG_STREAM))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.INSTANCE_STATS))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(INSTANCE_STATS))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -176,6 +184,14 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(GIT_CONFIG_STREAM, NG_MANAGER.getServiceId(), redisConfig,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE));
+      bind(Producer.class)
+          .annotatedWith(Names.named(INSTANCE_STATS))
+          .toInstance(RedisProducer.of(
+              INSTANCE_STATS, redisConfig, EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(INSTANCE_STATS))
+          .toInstance(RedisConsumer.of(INSTANCE_STATS, NG_MANAGER.getServiceId(), redisConfig,
+              EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME, EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE));
     }
   }
 }
