@@ -52,6 +52,7 @@ import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.perpetualtask.instancesync.InstanceSyncResponsePublisher;
 import io.harness.persistence.HPersistence;
+import io.harness.poll.PollResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
@@ -116,6 +117,7 @@ public class DelegateAgentResource {
   private FeatureFlagService featureFlagService;
   private DelegateTaskServiceClassic delegateTaskServiceClassic;
   private InstanceSyncResponsePublisher instanceSyncResponsePublisher;
+  private PollResourceClient pollResourceClient;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService, HPersistence persistence,
@@ -124,7 +126,7 @@ public class DelegateAgentResource {
       ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
       ConfigurationController configurationController, FeatureFlagService featureFlagService,
-      DelegateTaskServiceClassic delegateTaskServiceClassic) {
+      DelegateTaskServiceClassic delegateTaskServiceClassic, PollResourceClient pollResourceClient) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -138,6 +140,7 @@ public class DelegateAgentResource {
     this.configurationController = configurationController;
     this.featureFlagService = featureFlagService;
     this.delegateTaskServiceClassic = delegateTaskServiceClassic;
+    this.pollResourceClient = pollResourceClient;
   }
 
   @DelegateAuth
@@ -539,6 +542,18 @@ public class DelegateAgentResource {
       connectorHearbeatPublisher.pushConnectivityCheckActivity(accountId, validationResult);
     }
     return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("polling/{perpetualTaskId}")
+  public RestResponse<Boolean> processPollingResultNg(@PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, byte[] serializedExecutionResponse) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      pollResourceClient.processPolledResult(perpetualTaskId, accountId, serializedExecutionResponse);
+    }
+    return new RestResponse<>(Boolean.TRUE);
   }
 
   private DelegateHeartbeatResponse buildDelegateHBResponse(Delegate delegate) {

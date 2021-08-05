@@ -9,8 +9,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.helm.HelmConstants.CHARTS_YAML_KEY;
-import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
-import static io.harness.helm.HelmConstants.REPO_NAME;
 import static io.harness.helm.HelmConstants.VALUES_YAML;
 import static io.harness.helm.HelmConstants.WORKING_DIR_BASE;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -30,12 +28,10 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmCliCommandType;
-import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.annotation.EncryptableSetting;
@@ -366,33 +362,12 @@ public class HelmTaskHelper {
     }
   }
 
-  private String getRepoUpdateCommand(String repoName, String workingDirectory, HelmVersion helmVersion) {
-    String repoUpdateCommand =
-        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_UPDATE, helmVersion)
-            .replace(HELM_PATH_PLACEHOLDER, helmTaskHelperBase.getHelmPath(helmVersion))
-            .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
-            .replace(REPO_NAME, repoName);
-
-    return helmTaskHelperBase.applyHelmHomePath(repoUpdateCommand, workingDirectory);
-  }
-
   public void removeRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     helmTaskHelperBase.removeRepo(repoName, workingDirectory, helmVersion, timeoutInMillis);
   }
 
   public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
-    try {
-      String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
-      ProcessResult processResult = helmTaskHelperBase.executeCommand(repoUpdateCommand, null,
-          format("update helm repo %s", repoName), timeoutInMillis, HelmCliCommandType.REPO_UPDATE);
-
-      log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
-      if (processResult.getExitValue() != 0) {
-        log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
-      }
-    } catch (Exception ex) {
-      log.warn(ExceptionUtils.getMessage(ex));
-    }
+    helmTaskHelperBase.updateRepo(repoName, workingDirectory, helmVersion, timeoutInMillis);
   }
 
   /*
@@ -552,17 +527,7 @@ public class HelmTaskHelper {
 
   private String fetchHelmChartVersionsCommand(
       HelmVersion helmVersion, String chartName, String repoName, String workingDirectory) {
-    String helmFetchCommand =
-        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.FETCH_ALL_VERSIONS, helmVersion)
-            .replace(HELM_PATH_PLACEHOLDER, helmTaskHelperBase.getHelmPath(helmVersion))
-            .replace("${CHART_NAME}", chartName);
-
-    if (isNotBlank(repoName)) {
-      helmFetchCommand = helmFetchCommand.replace(REPO_NAME, repoName);
-    } else {
-      helmFetchCommand = helmFetchCommand.replace(REPO_NAME + "/", "");
-    }
-    return helmTaskHelperBase.applyHelmHomePath(helmFetchCommand, workingDirectory);
+    return helmTaskHelperBase.fetchHelmChartVersionsCommand(helmVersion, chartName, repoName, workingDirectory);
   }
 
   String executeCommandWithLogOutput(

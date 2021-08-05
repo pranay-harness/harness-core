@@ -1,4 +1,4 @@
-package io.harness.cdng.polling;
+package io.harness.polling.service;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

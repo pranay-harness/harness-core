@@ -12,11 +12,13 @@ import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.k8s.model.HelmVersion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,20 +35,25 @@ public class HelmValuesFetchRequest implements TaskParameters, ExecutionCapabili
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    List<ExecutionCapability> capabilities = new ArrayList<>();
+    HelmVersion helmVersion = helmChartManifestDelegateConfig.getHelmVersion();
+    StoreDelegateConfig storeDelegateConfig = helmChartManifestDelegateConfig.getStoreDelegateConfig();
 
-    if (helmChartManifestDelegateConfig.getHelmVersion() != null) {
-      capabilities.add(
-          HelmInstallationCapability.builder()
-              .version(helmChartManifestDelegateConfig.getHelmVersion())
-              .criteria(String.format("Helm %s Installed", helmChartManifestDelegateConfig.getHelmVersion()))
-              .build());
+    return getHelmExecutionCapabilities(helmVersion, storeDelegateConfig, maskingEvaluator);
+  }
+
+  public static List<ExecutionCapability> getHelmExecutionCapabilities(
+      HelmVersion helmVersion, StoreDelegateConfig storeDelegateConfig, ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilities = new ArrayList<>();
+    if (helmVersion != null) {
+      capabilities.add(HelmInstallationCapability.builder()
+                           .version(helmVersion)
+                           .criteria(String.format("Helm %s Installed", helmVersion))
+                           .build());
     }
 
-    switch (helmChartManifestDelegateConfig.getStoreDelegateConfig().getType()) {
+    switch (storeDelegateConfig.getType()) {
       case HTTP_HELM:
-        HttpHelmStoreDelegateConfig httpHelmStoreConfig =
-            (HttpHelmStoreDelegateConfig) helmChartManifestDelegateConfig.getStoreDelegateConfig();
+        HttpHelmStoreDelegateConfig httpHelmStoreConfig = (HttpHelmStoreDelegateConfig) storeDelegateConfig;
         if (httpHelmStoreConfig.getHttpHelmConnector().getHelmRepoUrl() != null) {
           capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
               httpHelmStoreConfig.getHttpHelmConnector().getHelmRepoUrl(), maskingEvaluator));
@@ -58,8 +65,7 @@ public class HelmValuesFetchRequest implements TaskParameters, ExecutionCapabili
         break;
 
       case S3_HELM:
-        S3HelmStoreDelegateConfig s3HelmStoreConfig =
-            (S3HelmStoreDelegateConfig) helmChartManifestDelegateConfig.getStoreDelegateConfig();
+        S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
         capabilities.addAll(AwsCapabilityHelper.fetchRequiredExecutionCapabilities(
             s3HelmStoreConfig.getAwsConnector(), maskingEvaluator));
         capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
@@ -67,8 +73,7 @@ public class HelmValuesFetchRequest implements TaskParameters, ExecutionCapabili
         break;
 
       case GCS_HELM:
-        GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig =
-            (GcsHelmStoreDelegateConfig) helmChartManifestDelegateConfig.getStoreDelegateConfig();
+        GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
         capabilities.addAll(GcpCapabilityHelper.fetchRequiredExecutionCapabilities(
             gcsHelmStoreDelegateConfig.getGcpConnector(), maskingEvaluator));
         capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
@@ -78,7 +83,6 @@ public class HelmValuesFetchRequest implements TaskParameters, ExecutionCapabili
       default:
         // No capabilities to add
     }
-
     return capabilities;
   }
 }

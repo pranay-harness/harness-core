@@ -7,6 +7,7 @@ import io.harness.beans.WithIdentifier;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.polling.bean.PollingInfo;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -21,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
       @JsonSubTypes.Type(value = OpenshiftManifestOutcome.class, name = ManifestType.OpenshiftTemplate),
       @JsonSubTypes.Type(value = OpenshiftParamManifestOutcome.class, name = ManifestType.OpenshiftParam)
 })
-public interface ManifestOutcome extends Outcome, WithIdentifier {
+public interface ManifestOutcome extends Outcome, WithIdentifier, PollingInfo {
   String getIdentifier();
   String getType();
   StoreConfig getStore();

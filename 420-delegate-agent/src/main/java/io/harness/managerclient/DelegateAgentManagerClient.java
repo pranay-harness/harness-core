@@ -1,5 +1,7 @@
 package io.harness.managerclient;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
@@ -35,6 +37,7 @@ import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+@OwnedBy(HarnessTeam.DEL)
 public interface DelegateAgentManagerClient {
   @POST("agent/delegates/register")
   Call<RestResponse<DelegateRegisterResponse>> registerDelegate(
@@ -129,6 +132,10 @@ public interface DelegateAgentManagerClient {
 
   @POST("agent/delegates/artifact-collection/{perpetualTaskId}")
   Call<RestResponse<Boolean>> publishArtifactCollectionResult(@Path("perpetualTaskId") String perpetualTaskId,
+      @Query("accountId") String accountId, @Body RequestBody buildSourceExecutionResponse);
+
+  @POST("agent/delegates/polling/{perpetualTaskId}")
+  Call<RestResponse<Boolean>> publishPollingResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body RequestBody buildSourceExecutionResponse);
 
   @KryoResponse
