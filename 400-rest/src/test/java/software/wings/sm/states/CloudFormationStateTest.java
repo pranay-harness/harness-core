@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -148,7 +148,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class CloudFormationStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String ENV_ID_CF = "abcdefgh";

@@ -7,7 +7,9 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.exception.InvalidRequestException;
@@ -45,6 +47,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._959_CG_BEANS)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "artifactStreamType")
 
 // TODO: ASR: add compound index with setting_id + name

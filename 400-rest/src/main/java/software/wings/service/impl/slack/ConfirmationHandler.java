@@ -7,7 +7,9 @@ import static software.wings.service.impl.slack.SlackApprovalUtils.createMessage
 import static software.wings.service.impl.slack.SlackApprovalUtils.slackPostRequest;
 import static software.wings.sm.states.ApprovalState.JSON;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
 
@@ -26,6 +28,7 @@ import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONObject;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ConfirmationHandler implements SlackActionHandler {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SlackApprovalUtils slackApprovalUtils;

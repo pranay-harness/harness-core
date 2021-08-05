@@ -73,7 +73,7 @@ import org.slf4j.Logger;
 @Slf4j
 @FieldNameConstants(innerTypeName = "APMVerificationStateKeys")
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class APMVerificationState extends AbstractMetricAnalysisState {
   public APMVerificationState(String name) {

@@ -1,6 +1,6 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.k8s.K8sTaskType.DELETE;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -78,7 +78,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDP)
 public class K8sDeleteTest extends CategoryTest {
   private static final String RELEASE_NAME = "releaseName";

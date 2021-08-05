@@ -84,7 +84,7 @@ import org.apache.commons.io.FilenameUtils;
 @Slf4j
 @FieldNameConstants(innerTypeName = "ARMProvisionStateKeys")
 @OwnedBy(HarnessTeam.CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ARMProvisionState extends State {
   private static final String TEMPLATE_KEY = "TEMPLATE";
   private static final String VARIABLES_KEY = "VARIABLES";

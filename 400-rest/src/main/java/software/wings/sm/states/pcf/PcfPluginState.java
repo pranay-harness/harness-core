@@ -111,7 +111,7 @@ import org.apache.commons.collections4.MapUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class PcfPluginState extends State {
   @Inject private transient DelegateService delegateService;

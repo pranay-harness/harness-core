@@ -104,7 +104,6 @@ modules = [
     "//835-notification-senders",
     "//860-orchestration-steps",
     "//860-orchestration-visualization",
-    "//861-cg-orchestration-states",
     "//865-cg-events",
     "//870-cg-orchestration",
     #"//870-cg-yaml",

@@ -7,7 +7,9 @@ import static software.wings.service.impl.slack.SlackApprovalUtils.createBody;
 import static software.wings.service.impl.slack.SlackApprovalUtils.createMessageFromTemplate;
 import static software.wings.service.impl.slack.SlackApprovalUtils.slackPostRequest;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.rest.RestResponse;
@@ -27,6 +29,7 @@ import java.util.Map;
 import okhttp3.RequestBody;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ProceedResponseHandler implements SlackActionHandler {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SlackApprovalUtils slackApprovalUtils;

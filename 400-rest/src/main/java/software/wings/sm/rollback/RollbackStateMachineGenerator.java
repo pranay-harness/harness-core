@@ -11,7 +11,9 @@ import static software.wings.sm.StateType.STAGING_ORIGINAL_EXECUTION;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 
@@ -37,6 +39,7 @@ import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class RollbackStateMachineGenerator {
   public static final String STAGING_PHASE_NAME = "Staging Execution";
   private static final String STAGING_PHASE_STEP_NAME = "Stage Rollback";

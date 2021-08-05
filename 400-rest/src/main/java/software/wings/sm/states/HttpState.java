@@ -106,7 +106,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "HttpStateKeys")
 @Attributes
 @Slf4j
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HttpState extends State implements SweepingOutputStateMixin {
   private static final String ASSERTION_ERROR_MSG =

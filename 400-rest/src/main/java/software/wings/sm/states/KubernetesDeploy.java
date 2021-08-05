@@ -26,7 +26,7 @@ import org.apache.commons.lang3.StringUtils;
  * Created by brett on 3/1/17
  */
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class KubernetesDeploy extends ContainerServiceDeploy {
   public static final String INSTANCE_UNIT_TYPE_KEY = "instanceUnitType";
   public static final String INSTANCE_COUNT_KEY = "instanceCount";
