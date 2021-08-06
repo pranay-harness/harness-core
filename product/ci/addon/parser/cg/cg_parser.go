@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
@@ -16,7 +18,7 @@ import (
 // nodes and relations
 type Parser interface {
 	// Parse and read the file from
-	Parse(file []string) (*Callgraph, error)
+	Parse(cgFile, visFile []string) (*Callgraph, error)
 }
 
 // CallGraphParser struct definition
@@ -33,27 +35,124 @@ func NewCallGraphParser(log *zap.SugaredLogger, fs filesystem.FileSystem) *CallG
 	}
 }
 
-// iterate through all the cg files in the directory, parse each of them and return Callgraph object
-func (cg *CallGraphParser) Parse(files []string) (*Callgraph, error) {
-	var finalCg []string
+// Iterate through all the cg files in the directory, parse each of them and return Callgraph object
+func (cg *CallGraphParser) Parse(cgFiles, visFiles []string) (*Callgraph, error) {
+	cg.log.Infof("parsing files := cg - [%s], vis - [%s]", cgFiles, visFiles)
+	cgraph, err := cg.parseCg(cgFiles)
+	if err != nil {
+		return nil, err
+	}
+	visRelation, err := cg.parseVis(visFiles)
+	if err != nil {
+		return nil, err
+	}
+	return &Callgraph{
+		Nodes:         cgraph.Nodes,
+		TestRelations: cgraph.TestRelations,
+		VisRelations:  *visRelation,
+	}, nil
+}
+
+// parseCg parses callgraph data from list of strings
+func (cg *CallGraphParser) parseCg(files []string) (*Callgraph, error) {
+	cgList, err := cg.readFiles(files)
+	if err != nil {
+		return nil, err
+	}
+	cgraph, err := parseCg(cgList)
+	if err != nil {
+		return nil, err
+	}
+	return cgraph, nil
+}
+
+// read list of files, merge all of them and returns array of strings where each string is one line of file
+func (cg *CallGraphParser) readFiles(files []string) ([]string, error) {
+	var finalData []string
 	for _, file := range files {
 		f, err := cg.fs.Open(file)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))
+			return []string{}, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))
 		}
 		r := bufio.NewReader(f)
 		cgStr, err := rFile(r)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse file %s", file))
+			return []string{}, errors.Wrap(err, fmt.Sprintf("failed to parse file %s", file))
 		}
-		cg.log.Infow(fmt.Sprintf("successfully parsed cg file %s", file))
-		finalCg = append(finalCg, cgStr...)
+		cg.log.Infow(fmt.Sprintf("successfully parsed file %s", file))
+		finalData = append(finalData, cgStr...)
 	}
-	return parseInt(finalCg)
+	return finalData, nil
 }
 
-// parseInt reads the input callgraph file and converts it into callgraph object
-func parseInt(cgStr []string) (*Callgraph, error) {
+// reads visualization callgraph files and converts it into relation object
+func (cg *CallGraphParser) parseVis(visFiles []string) (*[]Relation, error) {
+	vgList, err := cg.readFiles(visFiles)
+	if err != nil {
+		return nil, err
+	}
+	return formatVG(vgList)
+}
+
+// convert line of visgrph file to relation object
+// dedupe data - string format - `{1, 2}`
+func formatVG(vg []string) (*[]Relation, error) {
+	var keys, values []int
+	var relnList []Relation
+	for _, row := range vg {
+		s := strings.Split(row, ",")
+		key, value, err := getNodes(s)
+		if err != nil {
+			return nil, err
+		}
+		keys = append(keys, key)
+		values = append(values, value)
+	}
+
+	// deduping records
+	m := make(map[int][]int)
+	for i, key := range keys {
+		m[key] = append(m[key], values[i])
+	}
+
+	for k, v := range m {
+		relnList = append(relnList, Relation{
+			Source: k,
+			Tests:  removeDup(v),
+		})
+	}
+	return &relnList, nil
+}
+
+// removed duplicate elements from slice
+func removeDup(s []int) []int {
+	tmp := make(map[int]bool)
+	var c []int
+	for i := range s {
+		tmp[s[i]] = true
+	}
+	for k, _ := range tmp {
+		c = append(c, k)
+	}
+	return c
+}
+
+// parses one line of visGraph file
+// format - [-841968839,1459543895]
+func getNodes(s []string) (int, int, error) {
+	if len(s) != 2 {
+		return 0, 0, fmt.Errorf("parsing failed: string format is not correct %v", s)
+	}
+	key, err1 := strconv.Atoi(s[0])
+	val, err2 := strconv.Atoi(s[1])
+	if err1 != nil || err2 != nil {
+		return 0, 0, fmt.Errorf("parsing failed: Id format is not correct %s %s", s[0], s[1])
+	}
+	return key, val, nil
+}
+
+// parseCg reads the input callgraph file and converts it into callgraph object
+func parseCg(cgStr []string) (*Callgraph, error) {
 	var (
 		err error
 		inp []Input
@@ -88,8 +187,8 @@ func process(inps []Input) *Callgraph {
 		nodes = append(nodes, v)
 	}
 	return &Callgraph{
-		Nodes:     nodes,
-		Relations: relns,
+		Nodes:         nodes,
+		TestRelations: relns,
 	}
 }
 

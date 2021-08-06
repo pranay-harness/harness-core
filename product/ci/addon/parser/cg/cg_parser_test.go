@@ -14,7 +14,7 @@ func TestCallGraphParser_Parse(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewOSFileSystem(log.Sugar())
 	cgph := NewCallGraphParser(log.Sugar(), fs)
-	dto, _ := cgph.Parse([]string{"testdata/cg.json"})
+	dto, _ := cgph.Parse([]string{"testdata/cg.json"}, []string{})
 
 	// Assert relations is as expected
 	exp := map[int][]int{
@@ -27,7 +27,7 @@ func TestCallGraphParser_Parse(t *testing.T) {
 		2139952358:  {-1648419296},
 		330989721:   {-1648419296},
 	}
-	for _, v := range dto.Relations {
+	for _, v := range dto.TestRelations {
 		assert.Equal(t, v.Tests, exp[v.Source])
 	}
 
@@ -73,7 +73,7 @@ func TestCallGraphParser_ParseShouldFail(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewOSFileSystem(log.Sugar())
 	cgph := NewCallGraphParser(log.Sugar(), fs)
-	_, err := cgph.Parse([]string{"testdata/cg_invalid.json"})
+	_, err := cgph.Parse([]string{"testdata/cg_invalid.json"}, []string{})
 
 	assert.NotEqual(t, nil, err)
 	assert.True(t, strings.Contains(err.Error(), "data unmarshalling to json failed for line"))
@@ -83,7 +83,7 @@ func TestCallGraphParser_ParseShouldFailNoFile(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewOSFileSystem(log.Sugar())
 	cgph := NewCallGraphParser(log.Sugar(), fs)
-	_, err := cgph.Parse([]string{"testdata/cg_random.json"})
+	_, err := cgph.Parse([]string{"testdata/cg_random.json"}, []string{})
 
 	assert.NotEqual(t, nil, err)
 	strings.Contains(err.Error(), "failed to open file")

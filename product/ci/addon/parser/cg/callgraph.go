@@ -20,13 +20,14 @@ import (
 
 // Callgraph object is used for data transfer b/w ti service and lite-engine
 type Callgraph struct {
-	Nodes     []Node
-	Relations []Relation
+	Nodes         []Node
+	TestRelations []Relation
+	VisRelations  []Relation
 }
 
 //ToStringMap converts Callgraph to map[string]interface{} for encoding
 func (cg *Callgraph) ToStringMap() map[string]interface{} {
-	var nodes, relations []interface{}
+	var nodes, tRelations, vRelations []interface{}
 	for _, v := range (*cg).Nodes {
 		data := map[string]interface{}{
 			"package":         v.Package,
@@ -40,16 +41,24 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 		}
 		nodes = append(nodes, data)
 	}
-	for _, v := range (*cg).Relations {
+	for _, v := range (*cg).TestRelations {
 		data := map[string]interface{}{
 			"source": v.Source,
 			"tests":  v.Tests,
 		}
-		relations = append(relations, data)
+		tRelations = append(tRelations, data)
+	}
+	for _, v := range (*cg).VisRelations {
+		data := map[string]interface{}{
+			"source":       v.Source,
+			"destinations": v.Tests,
+		}
+		vRelations = append(vRelations, data)
 	}
 	data := map[string]interface{}{
-		"nodes":     nodes,
-		"relations": relations,
+		"nodes":             nodes,
+		"testRelations":     tRelations,
+		"visgraphRelations": vRelations,
 	}
 	return data
 }
@@ -57,7 +66,7 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 //FromStringMap creates Callgraph object from map[string]interface{}
 func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 	var fNodes []Node
-	var fRel []Relation
+	var fRel, vRel []Relation
 	for k, v := range data {
 		switch k {
 		case "nodes":
@@ -92,36 +101,59 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 			} else {
 				return nil, errors.New("failed to parse nodes in callgraph")
 			}
-		case "relations":
+		case "testRelations":
 			if relns, ok := v.([]interface{}); ok {
-				for _, reln := range relns {
-					var relation Relation
-					fields := reln.(map[string]interface{})
-					for k, v := range fields {
-						switch k {
-						case "source":
-							relation.Source = int(v.(int32))
-						case "tests":
-							var testsN []int
-							for _, v := range v.([]interface{}) {
-								testsN = append(testsN, int(v.(int32)))
-							}
-							relation.Tests = testsN
-						default:
-							return nil, errors.New(fmt.Sprintf("unknown field received: %s", k))
-						}
-					}
-					fRel = append(fRel, relation)
+				rel, err := convertStringMap("source", "tests", relns)
+				if err != nil {
+					return nil, err
+				} else {
+					fRel = *rel
 				}
 			} else {
-				return nil, errors.New("failed to parse relns in callgraph")
+				return nil, errors.New("failed to parse test relns in callgraph")
+			}
+		case "visgraphRelations":
+			if relns, ok := v.([]interface{}); ok {
+				rel, err := convertStringMap("source", "destinations", relns)
+				if err != nil {
+					return nil, err
+				} else {
+					vRel = *rel
+				}
+			} else {
+				return nil, errors.New("failed to parse vis relns in callgraph")
 			}
 		}
 	}
 	return &Callgraph{
-		Relations: fRel,
-		Nodes:     fNodes,
+		TestRelations: fRel,
+		Nodes:         fNodes,
+		VisRelations:  vRel,
 	}, nil
+}
+
+func convertStringMap(key, val string, relns []interface{}) (*[]Relation, error) {
+	var vRel []Relation
+	for _, reln := range relns {
+		var relation Relation
+		fields := reln.(map[string]interface{})
+		for k, v := range fields {
+			switch k {
+			case key:
+				relation.Source = int(v.(int32))
+			case val:
+				var testsN []int
+				for _, v := range v.([]interface{}) {
+					testsN = append(testsN, int(v.(int32)))
+				}
+				relation.Tests = testsN
+			default:
+				return nil, errors.New(fmt.Sprintf("unknown field received: %s", k))
+			}
+		}
+		vRel = append(vRel, relation)
+	}
+	return &vRel, nil
 }
 
 //Node type represents detail of node in callgraph

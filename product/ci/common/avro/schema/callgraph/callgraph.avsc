@@ -24,7 +24,7 @@
             }
         },
         {
-            "name":"relations",
+            "name":"testRelations",
             "type":{
                 "type": "array",  
                 "items":{
@@ -36,6 +36,20 @@
                     ]
                 }
             }
-        }        
+        },
+        {
+            "name":"visgraphRelations",
+            "type":{
+                "type": "array",
+                "items":{
+                    "name":"Child",
+                    "type":"record",
+                    "fields":[
+                        {"name" : "source", "type" : "int"},
+                        {"name" : "destinations", "type" : {"type":"array", "items":"int"}}
+                    ]
+                }
+            }
+        }
     ] 
 }

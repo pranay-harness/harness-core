@@ -28,7 +28,7 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 				CallsReflection: true,
 			},
 		},
-		Relations: []Relation{
+		TestRelations: []Relation{
 			{
 				Source: 0,
 				Tests:  []int{1, 2, 3, 4, 5},
@@ -38,20 +38,31 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 				Tests:  []int{11, 12, 13, 14, 15},
 			},
 		},
+		VisRelations: []Relation{
+			{
+				Source: 2,
+				Tests:  []int{2, 9, 13, 14, 15},
+			},
+			{
+				Source: 3,
+				Tests:  []int{12, 112, 113, 114, 115},
+			},
+		},
 	}
 	mp := cg.ToStringMap()
 
-	fNodes, fRelations := getCgObject(mp)
+	fNodes, fRelations, vRelations := getCgObject(mp)
 	finalCg := Callgraph{
-		Nodes:     fNodes,
-		Relations: fRelations,
+		Nodes:         fNodes,
+		TestRelations: fRelations,
+		VisRelations:  vRelations,
 	}
 	assert.Equal(t, reflect.DeepEqual(finalCg, cg), true)
 }
 
-func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
+func getCgObject(mp map[string]interface{}) ([]Node, []Relation, []Relation) {
 	var fNodes []Node
-	var fRelations []Relation
+	var fRelations, vRelations []Relation
 	for k, v := range mp {
 		switch k {
 		case "nodes":
@@ -80,7 +91,7 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 					fNodes = append(fNodes, node)
 				}
 			}
-		case "relations":
+		case "testRelations":
 			if relations, ok := v.([]interface{}); ok {
 				for _, reln := range relations {
 					var relation Relation
@@ -100,7 +111,27 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 					fRelations = append(fRelations, relation)
 				}
 			}
+		case "visgraphRelations":
+			if relations, ok := v.([]interface{}); ok {
+				for _, reln := range relations {
+					var relation Relation
+					fields := reln.(map[string]interface{})
+					for k, v := range fields {
+						switch k {
+						case "source":
+							relation.Source = v.(int)
+						case "destinations":
+							var testsN []int
+							for _, v := range v.([]int) {
+								testsN = append(testsN, v)
+							}
+							relation.Tests = testsN
+						}
+					}
+					vRelations = append(vRelations, relation)
+				}
+			}
 		}
 	}
-	return fNodes, fRelations
+	return fNodes, fRelations, vRelations
 }
