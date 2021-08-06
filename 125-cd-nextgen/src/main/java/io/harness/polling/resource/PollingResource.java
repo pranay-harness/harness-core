@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.polling.PollingResponseHandler;
 import io.harness.polling.contracts.Category;
@@ -35,7 +36,6 @@ import retrofit2.http.Body;
 @Api("polling")
 @Path("polling")
 @Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @InternalApi
 @ApiOperation(hidden = true, value = "Communication APIs for polling framework.")
 @OwnedBy(HarnessTeam.CDC)
@@ -66,8 +66,8 @@ public class PollingResource {
 
   @POST
   @Path("subscribe")
-  public byte[] subscribe(@Body byte[] pollingItem) {
-    PollingItem pollingItem1 = (PollingItem) kryoSerializer.asInflatedObject(pollingItem);
+  public ResponseDTO<byte[]> subscribe(byte[] pollingItem) {
+    PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
     // PollingItem pollingItem1 =
     // PollingItem.newBuilder().setConnectorRef("helm_connector").setCategory(Category.MANIFEST)
     //            .setQualifier(Qualifier.newBuilder()
@@ -80,7 +80,7 @@ public class PollingResource {
     //                            .setChartName("todolist-primary-artifact").build()).build()).build();
     String pollingDocId = pollingService.subscribe(pollingItem1);
     PollingDocument pd = PollingDocument.newBuilder().setPollingDocId(pollingDocId).build();
-    return kryoSerializer.asDeflatedBytes(pd);
+    return ResponseDTO.newResponse(kryoSerializer.asBytes(pd));
   }
 
   @POST

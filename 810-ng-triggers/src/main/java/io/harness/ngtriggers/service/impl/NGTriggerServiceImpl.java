@@ -66,6 +66,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -121,8 +123,14 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
       ResponseDTO<byte[]> responseDTO;
       try {
-        byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
-        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(pollingItemBytes));
+        byte[] pollingItemBytes = kryoSerializer.asBytes(pollingItem);
+
+        //      executeWithExceptions(delegateAgentManagerClient.publishArtifactCollectionResult(taskId.getId(),
+        //      accountId,
+        //          RequestBody.create(MediaType.parse("application/octet-stream"), responseSerialized)));
+
+        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
+            RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
       } catch (Exception exception) {
         log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
                       TriggerHelper.getTriggerRef(ngTriggerEntity)),
@@ -130,7 +138,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
         throw new InvalidRequestException(exception.getMessage());
       }
       byte[] pollingDocumentBytes = responseDTO.getData();
-      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asInflatedObject(pollingDocumentBytes);
+      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asObject(pollingDocumentBytes);
       updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
     });
   }
