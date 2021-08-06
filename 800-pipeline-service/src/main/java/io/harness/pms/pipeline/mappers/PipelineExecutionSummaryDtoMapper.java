@@ -20,14 +20,7 @@ import lombok.experimental.UtilityClass;
 public class PipelineExecutionSummaryDtoMapper {
   public PipelineExecutionSummaryDTO toDto(
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity, EntityGitDetails entityGitDetails) {
-    if (entityGitDetails.getRootFolder().equals(GitSyncConstants.DEFAULT)
-        || entityGitDetails.getFilePath().equals(GitSyncConstants.DEFAULT)) {
-      entityGitDetails = EntityGitDetails.builder()
-                             .branch(entityGitDetails.getBranch())
-                             .repoIdentifier(entityGitDetails.getRepoIdentifier())
-                             .objectId(entityGitDetails.getObjectId())
-                             .build();
-    }
+    entityGitDetails = updateEntityGitDetails(entityGitDetails);
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = pipelineExecutionSummaryEntity.getLayoutNodeMap();
     String startingNodeId = pipelineExecutionSummaryEntity.getStartingNodeId();
     return PipelineExecutionSummaryDTO.builder()
@@ -92,5 +85,24 @@ public class PipelineExecutionSummaryDtoMapper {
       return count;
     }
     return count + getStagesCount(layoutNodeDTOMap, nodeDTO.getEdgeLayoutList().getNextIds().get(0));
+  }
+
+  private EntityGitDetails updateEntityGitDetails(EntityGitDetails entityGitDetails) {
+    if (entityGitDetails == null) {
+      return null;
+    }
+    String rootFolder = entityGitDetails.getRootFolder();
+    String filePath = entityGitDetails.getFilePath();
+    if (rootFolder == null && filePath == null) {
+      return entityGitDetails;
+    } else if (rootFolder == null || filePath == null || rootFolder.equals(GitSyncConstants.DEFAULT)
+        || filePath.equals(GitSyncConstants.DEFAULT)) {
+      return EntityGitDetails.builder()
+          .branch(entityGitDetails.getBranch())
+          .repoIdentifier(entityGitDetails.getRepoIdentifier())
+          .objectId(entityGitDetails.getObjectId())
+          .build();
+    }
+    return entityGitDetails;
   }
 }
