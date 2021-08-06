@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -70,6 +71,7 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @TargetModule(HarnessModule._959_CG_BEANS)
 @OwnedBy(CDC)
+@BreakDependencyOn("WorkflowExecutionServiceHelper")
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
