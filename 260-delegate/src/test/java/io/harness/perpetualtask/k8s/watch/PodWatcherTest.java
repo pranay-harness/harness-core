@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.health.HealthStatusService.UID;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_SCHEDULED;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.rule.OwnerRule.AVMOHAN;
@@ -192,6 +193,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(captor.getAllValues()).hasSize(1);
     assertThat(captor.getAllValues().get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
   }
 
   @Test
@@ -204,6 +206,7 @@ public class PodWatcherTest extends CategoryTest {
         .publishMessage(captor.capture(), any(Timestamp.class), mapArgumentCaptor.capture());
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(PodEvent.class, this::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
   }
 
   @Test
@@ -251,6 +254,7 @@ public class PodWatcherTest extends CategoryTest {
     assertThat(publishedMessages.get(0)).isInstanceOfSatisfying(PodInfo.class, this::infoMessageAssertions);
     assertThat(publishedMessages.get(1)).isInstanceOfSatisfying(PodEvent.class, this::deletedMessageAssertions);
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+    assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
   }
 
   private static V1Pod scheduledPod() {
