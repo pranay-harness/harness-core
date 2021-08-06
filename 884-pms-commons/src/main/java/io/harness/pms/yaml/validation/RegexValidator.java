@@ -31,7 +31,9 @@ public class RegexValidator implements RuntimeValidator {
     String regex = engineExpressionEvaluator.renderExpression(parameters, skipUnresolvedExpressionsCheck);
     if (currentValue instanceof String) {
       if (!ExpressionUtils.matchesPattern(Pattern.compile(regex), (String) currentValue)) {
-        return RuntimeValidatorResponse.builder().errorMessage("Current value does not match with given regex").build();
+        return RuntimeValidatorResponse.builder()
+            .errorMessage("Current value " + currentValue + " does not match with given regex")
+            .build();
       }
       return RuntimeValidatorResponse.builder().isValid(true).build();
     } else {

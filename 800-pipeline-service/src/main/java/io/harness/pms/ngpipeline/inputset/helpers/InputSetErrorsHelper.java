@@ -24,7 +24,9 @@ import io.harness.pms.yaml.YamlUtils;
 import io.harness.pms.yaml.validation.InputSetValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -33,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(PIPELINE)
@@ -148,6 +151,27 @@ public class InputSetErrorsHelper {
   }
 
   private String validateStaticValues(Object templateObject, Object inputSetObject) {
+    /*
+      This if block is to validate static values inside an array of primitive values.
+      For example, the pipeline can have something like `a: <+input>.regex(a.*a)`, and the input set provides
+      the following value `a: [austria, australia, india]`. This block checks each element in the list against the
+      regex provided in the pipeline yaml.
+     */
+    if (inputSetObject instanceof ArrayNode) {
+      ArrayNode inputSetValueArray = (ArrayNode) inputSetObject;
+      List<JsonNode> invalidJsonNodes = new ArrayList<>();
+      for (JsonNode element : inputSetValueArray) {
+        String error = validateStaticValues(templateObject, element);
+        if (EmptyPredicate.isNotEmpty(error)) {
+          invalidJsonNodes.add(element);
+        }
+      }
+      if (invalidJsonNodes.isEmpty()) {
+        return "";
+      }
+      List<String> invalidValues = invalidJsonNodes.stream().map(JsonNode::textValue).collect(Collectors.toList());
+      return "Following values don't match the provided input set validator: " + invalidValues;
+    }
     String error = "";
     String templateValue = ((JsonNode) templateObject).asText();
     String inputSetValue = ((JsonNode) inputSetObject).asText();
