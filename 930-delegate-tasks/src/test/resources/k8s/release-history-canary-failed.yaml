@@ -1,0 +1,48 @@
+releases:
+  - customWorkloads: []
+    managedWorkload:
+    managedWorkloadRevision:
+    managedWorkloads: []
+    number: 46
+    resources:
+      - name: test-value-46
+        kind: Secret
+        namespace: default
+        versioned: true
+      - name: test-value-46
+        kind: ConfigMap
+        namespace: default
+        versioned: true
+      - name: test-value-deployment-canary
+        kind: Deployment
+        namespace: default
+        versioned: false
+    resourcesWithSpec: []
+    status: Failed
+  - customWorkloads: []
+    managedWorkload:
+    managedWorkloadRevision:
+    managedWorkloads:
+      - revision: '13'
+        workload:
+          name: test-value-deployment
+          kind: Deployment
+          namespace: default
+          versioned: false
+    number: 45
+    resources:
+      - name: test-value-45
+        kind: Secret
+        namespace: default
+        versioned: true
+      - name: test-value-45
+        kind: ConfigMap
+        namespace: default
+        versioned: true
+      - name: test-value-deployment
+        kind: Deployment
+        namespace: default
+        versioned: false
+    resourcesWithSpec: []
+    status: Succeeded
+version: v1

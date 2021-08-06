@@ -42,7 +42,7 @@ public class K8sDeleteBaseHandler {
       case ReleaseName:
         return getReleaseNameResourceIdsToDelete(k8sDeleteRequest, kubernetesConfig, executionLogCallback);
       case ResourceName:
-        return getResourceNameResourceIdsToDelete(k8sDeleteRequest);
+        return getResourceNameResourceIdsToDelete(k8sDeleteRequest.getResources());
       default:
         throw new UnsupportedOperationException(
             String.format("Delete resource type: [%s]", deleteResourcesType.name()));
@@ -60,16 +60,16 @@ public class K8sDeleteBaseHandler {
     return getResourceIdsForDeletion(k8sDeleteRequest, kubernetesConfig, executionLogCallback);
   }
 
-  private List<KubernetesResourceId> getResourceNameResourceIdsToDelete(K8sDeleteRequest k8sDeleteRequest) {
-    if ("*".equals(k8sDeleteRequest.getResources().trim())) {
-      throw new InvalidArgumentsException("Invalid resource name. Use release name instead.");
-    }
-
-    if (StringUtils.isEmpty(k8sDeleteRequest.getResources())) {
+  public List<KubernetesResourceId> getResourceNameResourceIdsToDelete(String resources) {
+    if (StringUtils.isEmpty(resources)) {
       return Collections.emptyList();
     }
 
-    return createKubernetesResourceIdsFromKindName(k8sDeleteRequest.getResources());
+    if ("*".equals(resources.trim())) {
+      throw new InvalidArgumentsException("Invalid resource name. Use release name instead.");
+    }
+
+    return createKubernetesResourceIdsFromKindName(resources);
   }
 
   private List<KubernetesResourceId> getResourceIdsForDeletion(K8sDeleteRequest k8sDeleteRequest,

@@ -294,6 +294,7 @@ import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
+import io.harness.delegate.task.k8s.K8sCanaryDeleteRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -877,5 +878,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sServerInstanceInfo.class, 543426);
     kryo.register(CommandUnitsProgress.class, 543427);
     kryo.register(CommandUnitProgress.class, 543428);
+    kryo.register(K8sCanaryDeleteRequest.class, 543429);
   }
 }

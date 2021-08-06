@@ -7,6 +7,7 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sCanaryBaseStepInfo.K8sCanaryBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sCanaryExecutionOutput;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestType;
@@ -111,8 +112,13 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
             .build();
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
-    return k8sStepHelper.queueK8sTask(
-        stepElementParameters, k8sCanaryDeployRequest, ambiance, executionPassThroughData);
+    TaskChainResponse response =
+        k8sStepHelper.queueK8sTask(stepElementParameters, k8sCanaryDeployRequest, ambiance, executionPassThroughData);
+
+    executionSweepingOutputService.consume(ambiance, K8sCanaryExecutionOutput.OUTPUT_NAME,
+        K8sCanaryExecutionOutput.builder().build(), StepOutcomeGroup.STEP.name());
+
+    return response;
   }
 
   @Override
