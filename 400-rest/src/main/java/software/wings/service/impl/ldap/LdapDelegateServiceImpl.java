@@ -186,10 +186,11 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
 
       if (listGroupsResponse == null || listGroupsResponse.getLdapResponse() == null
           || LdapResponse.Status.SUCCESS != listGroupsResponse.getLdapResponse().getStatus()) {
-        log.error("LDAP : The call to fetch the group failed for ldapSettingsId {} and accountId {}",
+        log.error("LDAP : The call to fetch the group failed for groupDn {} ldapSettingsId {} and accountId {}", dn,
             settings.getUuid(), settings.getAccountId());
         return null;
       }
+      log.info("LDAP : listGroupsResponse for groupDn {} is {}", dn, listGroupsResponse);
 
       SearchResult groups = listGroupsResponse.getSearchResult();
       helper.populateGroupSize(groups, settings.getUserSettingsList());
@@ -197,7 +198,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       // If there are no entries in the group.
       LdapEntry group = groups.getEntries().isEmpty() ? null : groups.getEntries().iterator().next();
       if (null == group) {
-        log.info("No entries found in group");
+        log.info("No entries found in group {}", dn);
         return null;
       }
 
@@ -220,7 +221,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
               .flatMap(Collection::stream)
               .collect(Collectors.toList());
 
-      log.info("LDAP : Users set in Group response {}", userResponses);
+      log.info("LDAP : Users set for groupDn {} in Group response {}", dn, userResponses);
       groupResponse.setUsers(userResponses);
       return groupResponse;
     } catch (LdapException e) {

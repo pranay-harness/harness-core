@@ -90,7 +90,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
     }
 
-    log.info("Response received for task with responseCode [{}]", response.getResponseCode());
+    log.info("Response received for task {} with response [{}]", taskId, response.getResponse());
 
     Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
                                         .filter(DelegateTaskKeys.accountId, response.getAccountId())
@@ -102,11 +102,13 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
         if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-          log.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
+          log.warn("Version mismatch for task {} [managerVersion {}, taskVersion {}]", taskId, getVersion(),
               delegateTask.getVersion());
         }
 
         if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
+          log.info("Retrying for another delegate for taskId {}", taskId);
+
           RetryDelegate retryDelegate =
               RetryDelegate.builder().delegateId(delegateId).delegateTask(delegateTask).taskQuery(taskQuery).build();
 
@@ -124,7 +126,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
         retryObserverSubject.fireInform(DelegateTaskRetryObxxxxxxxx:onTaskResponseProcessed, delegateTask, delegateId);
       }
     } else {
-      log.warn("No delegate task found");
+      log.warn("No delegate for taskId {} found", taskId);
     }
   }
 
@@ -150,11 +152,12 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
     if (delegateTask == null || response == null) {
       return;
     }
+    log.info("Handling driver response task with taskId {}", delegateTask.getUuid());
 
     try (DelegateDriverLogContext driverLogContext =
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
-      log.info("Processing task response...");
+      log.info("Processing task {} response...", delegateTask.getUuid());
 
       DelegateCallbackService delegateCallbackService =
           delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
@@ -165,24 +168,24 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       }
 
       if (delegateTask.getData().isAsync()) {
-        log.info("Publishing async task response...");
+        log.info("Publishing async task {} response...", delegateTask.getUuid());
         delegateCallbackService.publishAsyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
-        log.info("Published async task response.");
+        log.info("Published async task {} response.", delegateTask.getUuid());
       } else {
-        log.info("Publishing sync task response...");
+        log.info("Publishing sync task {} response...", delegateTask.getUuid());
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
-        log.info("Published sync task response.");
+        log.info("Published sync task {} response.", delegateTask.getUuid());
       }
     } catch (Exception ex) {
-      log.error("Failed publishing task response", ex);
+      log.error("Failed publishing taskId {} response", delegateTask.getUuid(), ex);
     }
-
-    log.info("Finished processing task response.");
+    log.info("Finished processing task {} response.", delegateTask.getUuid());
   }
 
   private void handleInprocResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
+    log.info("Handling inproc task with taskId {}", delegateTask.getUuid());
     if (delegateTask.getData().isAsync()) {
       String waitId = delegateTask.getWaitId();
       if (waitId != null) {
@@ -195,6 +198,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
                            .uuid(delegateTask.getUuid())
                            .responseData(kryoSerializer.asDeflatedBytes(response.getResponse()))
                            .build());
+      log.info("Saved inproc task with taskId {} with response {}", delegateTask.getUuid(), response.getResponse());
     }
   }
 

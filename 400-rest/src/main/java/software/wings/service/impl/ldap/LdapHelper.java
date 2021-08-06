@@ -298,6 +298,7 @@ public class LdapHelper {
     for (LdapGroupSettings groupConfig : groupConfigs) {
       String oldBaseDn = groupConfig.getBaseDN();
       groupConfig.setBaseDN(dn);
+      log.info("LDAP : groupConfig while fetching group for dn {} is {}", dn, groupConfig);
       List<LdapListGroupsResponse> ldapListGroupsResponses =
           listGroups(Arrays.asList(groupConfig), null, 1, groupConfig.getReturnAttrs());
 
@@ -309,9 +310,11 @@ public class LdapHelper {
         if (Status.SUCCESS == currentLdapListGroupsResponse.getLdapResponse().getStatus()) {
           listGroupsResponse = currentLdapListGroupsResponse;
           groupConfig.setBaseDN(oldBaseDn);
+          log.info("LDAP : status success for dn {} and oldBaseDn is {}", dn, oldBaseDn);
           break;
         }
       }
+      log.info("LDAP : status size not 1 for dn {} and oldBaseDn is {}", dn, oldBaseDn);
       groupConfig.setBaseDN(oldBaseDn);
     }
     return listGroupsResponse;
