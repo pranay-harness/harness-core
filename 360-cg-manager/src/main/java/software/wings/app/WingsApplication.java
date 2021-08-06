@@ -528,8 +528,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public boolean isDelegateServiceApp() {
-    return startupMode.equals(StartupMode.DELEGATE_SERVICE)
-        || featureFlagService.isGlobalEnabled(FeatureName.USE_DELEGATE_SERVICE_APP);
+    return startupMode.equals(StartupMode.DELEGATE_SERVICE);
   }
 
   public void addModules(final MainConfiguration configuration, List<Module> modules) {
