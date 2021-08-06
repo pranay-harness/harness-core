@@ -86,11 +86,6 @@ fi
 BASE_SHA=`git merge-base origin/${ghprbTargetBranch} HEAD`
 
 FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@BreakDependencyOn\|@TargetModule' | wc -l)
-if [ $FIXES -gt 9 ]
-then
-  echo "$FIXES is enough for one PR"
-  exit 0
-fi
 
 git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > raw_list.txt
 TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < raw_list.txt | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
@@ -101,6 +96,12 @@ scripts/bazel/aeriform.sh analyze \
   --kind-filter Critical \
   --top-blockers=25 \
   --exit-code
+
+if [ $FIXES -gt 9 ]
+then
+  echo "$FIXES is enough for one PR"
+  exit 0
+fi
 
 if [ ! -z "$TRACK_FILES" ]
 then
