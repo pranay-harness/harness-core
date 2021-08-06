@@ -1,5 +1,10 @@
 package io.harness.datahandler.services;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
@@ -13,6 +18,8 @@ import software.wings.beans.LicenseUpdateInfo;
 
 import java.util.List;
 
+@OwnedBy(PL)
+@TargetModule(_955_ACCOUNT_MGMT)
 public interface AdminAccountService {
   LicenseInfo updateLicense(String accountId, LicenseUpdateInfo licenseUpdateInfo);
 
@@ -51,4 +58,6 @@ public interface AdminAccountService {
   boolean updateAccountName(String accountId, String accountName);
 
   boolean updateCompanyName(String accountId, String companyName);
+
+  boolean enableOrDisableNextGen(String accountId, boolean enabled);
 }

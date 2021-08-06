@@ -19,7 +19,7 @@ then
      ;;
      "CCE") export HARNESS_TEAM="CE"
      ;;
-     "PIP") export HARNESS_TEAM="PIPELINE"
+     "PIE") export HARNESS_TEAM="PIPELINE"
      ;;
      "CCM") export HARNESS_TEAM="CE"
      ;;
@@ -90,6 +90,7 @@ scripts/bazel/prepare_aeriform.sh
 
 scripts/bazel/aeriform.sh analyze \
   --kind-filter Critical \
+  --top-blockers=25 \
   --exit-code
 
 if [ ! -z "$TRACK_FILES" ]

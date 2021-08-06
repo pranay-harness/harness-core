@@ -106,12 +106,12 @@ ciExecutionServiceConfig:
   defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
-  addonImage: harness/ci-addon:release-27
-  liteEngineImage: harness/ci-lite-engine:release-8
+  addonImage: harness/ci-addon:release-47
+  liteEngineImage: harness/ci-lite-engine:release-17
   isLocal: false
   stepConfig:
     gitCloneConfig:
-      image: harness/drone-git:v1.0.3
+      image: harness/drone-git:v1.0.4
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:

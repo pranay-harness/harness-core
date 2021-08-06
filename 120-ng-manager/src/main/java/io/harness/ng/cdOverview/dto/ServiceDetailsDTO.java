@@ -2,6 +2,7 @@ package io.harness.ng.cdOverview.dto;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 
 import java.util.Set;
 import lombok.AccessLevel;
@@ -25,5 +26,6 @@ public class ServiceDetailsDTO {
   double failureRateChangeRate;
   double frequency;
   double frequencyChangeRate;
+  InstanceCountDetailsByEnvTypeBase instanceCountDetails;
   ServicePipelineInfo lastPipelineExecuted;
 }

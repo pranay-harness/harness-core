@@ -32,6 +32,7 @@ shared_dependencies = [
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
     "//948-access-control-sdk:module",
+    "//948-access-control-admin-client:module",
     "//950-command-library-common:module",
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",

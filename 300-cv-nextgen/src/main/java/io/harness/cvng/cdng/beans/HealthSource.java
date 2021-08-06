@@ -1,6 +1,6 @@
 package io.harness.cvng.cdng.beans;
 
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;

@@ -3,10 +3,10 @@ package io.harness.signup.notification;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import io.harness.Team;
-import io.harness.cloud.google.DownloadResult;
-import io.harness.cloud.google.GoogleCloudFileService;
 import io.harness.notification.remote.NotificationHTTPClient;
 import io.harness.signup.SignupNotificationConfiguration;
+import io.harness.templates.google.DownloadResult;
+import io.harness.templates.google.GoogleCloudFileService;
 
 import com.google.common.cache.CacheLoader;
 import com.google.inject.Inject;
@@ -30,7 +30,7 @@ public class SignupNotificationTemplateLoader extends CacheLoader<EmailType, Boo
     try {
       googleCloudFileService.initialize(notificationConfiguration.getProjectId());
     } catch (IllegalArgumentException e) {
-      log.error("Failed to initialize GCS for signup notification template", e);
+      log.warn("Failed to initialize GCS for signup notification template", e);
     }
   }
 

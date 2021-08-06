@@ -1,8 +1,13 @@
 package io.harness.delegate.beans.connector.nexusconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+@OwnedBy(CDC)
 public enum NexusAuthType {
   @JsonProperty(NexusConstants.USERNAME_PASSWORD) USER_PASSWORD(NexusConstants.USERNAME_PASSWORD),
   @JsonProperty(NexusConstants.ANONYMOUS) ANONYMOUS(NexusConstants.ANONYMOUS);

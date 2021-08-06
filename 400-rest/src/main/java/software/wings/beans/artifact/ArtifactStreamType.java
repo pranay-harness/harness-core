@@ -1,5 +1,9 @@
 package software.wings.beans.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.collect.ImmutableMap;
@@ -9,6 +13,7 @@ import java.util.Set;
 /**
  * The Enum ArtifactStreamType.
  */
+@OwnedBy(CDC)
 public enum ArtifactStreamType {
   JENKINS,
   BAMBOO,

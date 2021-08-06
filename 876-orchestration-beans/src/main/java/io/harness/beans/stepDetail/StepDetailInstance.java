@@ -8,7 +8,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.stepdetails.PmsStepDetails;
 
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
@@ -37,7 +37,7 @@ public class StepDetailInstance {
   String name;
   String planExecutionId;
   String nodeExecutionId;
-  OrchestrationMap stepDetails;
+  PmsStepDetails stepDetails;
 
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 

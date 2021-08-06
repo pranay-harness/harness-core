@@ -2,7 +2,7 @@ package io.harness.plancreator.pipeline;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.notification.bean.NotificationRules;
@@ -10,6 +10,7 @@ import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.timeout.Timeout;
 import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.yaml.core.properties.NGProperties;
 import io.harness.yaml.core.variables.NGVariable;
@@ -62,4 +63,8 @@ public class PipelineInfoConfig {
 
   String orgIdentifier;
   String projectIdentifier;
+
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Pattern(regexp = NGRegexValidatorConstants.TIMEOUT_PATTERN)
+  ParameterField<Timeout> timeout;
 }

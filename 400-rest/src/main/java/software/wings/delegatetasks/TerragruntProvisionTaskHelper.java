@@ -41,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.PushbackInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -201,7 +202,14 @@ public class TerragruntProvisionTaskHelper {
     if (parameters.getCurrentStateFileId() != null) {
       try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
                TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
-        FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
+        PushbackInputStream pushbackInputStream = new PushbackInputStream(stateRemoteInputStream);
+        int firstByte = pushbackInputStream.read();
+        if (firstByte == -1) {
+          FileUtils.deleteQuietly(tfStateFile);
+        } else {
+          pushbackInputStream.unread(firstByte);
+          FileUtils.copyInputStreamToFile(pushbackInputStream, tfStateFile);
+        }
       }
     } else {
       FileUtils.deleteQuietly(tfStateFile);

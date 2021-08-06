@@ -1,8 +1,8 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
-import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 

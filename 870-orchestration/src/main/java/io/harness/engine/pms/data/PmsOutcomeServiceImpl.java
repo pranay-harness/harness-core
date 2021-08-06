@@ -7,17 +7,20 @@ import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.outcomes.OutcomeException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -35,10 +38,12 @@ import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
+import org.apache.commons.jexl3.JexlException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
@@ -76,7 +81,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
-                                   .outcomeValue(OrchestrationMap.parse(value))
+                                   .outcomeValue(PmsOutcome.parse(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
@@ -188,7 +193,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
           .found(true)
           .outcome(value == null ? null : RecastOrchestrationUtils.toJson(value))
           .build();
-    } catch (OutcomeException ignore) {
+    } catch (UnresolvedExpressionsException | JexlException ignore) {
       return OptionalOutcome.builder().found(false).build();
     }
   }

@@ -154,7 +154,7 @@ public class LogClusterServiceImplTest extends CvNextGenTestBase {
     List<LearningEngineTask> tasks = hPersistence.createQuery(LearningEngineTask.class, excludeAuthority)
                                          .filter(LearningEngineTaskKeys.verificationTaskId, verificationTaskId)
                                          .asList();
-    assertThat(tasks.size()).isEqualTo(0);
+    assertThat(tasks.size()).isEqualTo(1);
   }
 
   @Test

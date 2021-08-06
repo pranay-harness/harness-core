@@ -14,7 +14,6 @@ import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
-import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
@@ -148,7 +147,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestConfig.class, 8104);
     kryo.register(K8sDirectInfrastructureOutcome.class, 8105);
     kryo.register(PrimaryArtifact.class, 8106);
-    kryo.register(EnvironmentOutcome.class, 8107);
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
     kryo.register(RollbackNode.class, 8109);
 

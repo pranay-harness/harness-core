@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -73,6 +74,8 @@ public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @NotNull private String companyName;
+
+  @Getter(value = AccessLevel.PRIVATE) @Setter private Boolean nextGenEnabled = Boolean.FALSE;
 
   @FdUniqueIndex @NotNull private String accountName;
 
@@ -199,6 +202,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
   public void setLocalEncryptionEnabled(boolean localEncryptionEnabled) {
     this.localEncryptionEnabled = localEncryptionEnabled;
+  }
+
+  public boolean isNextGenEnabled() {
+    return Boolean.TRUE.equals(nextGenEnabled);
   }
 
   /**
@@ -519,6 +526,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private long lastLicenseExpiryReminderSentAt;
     private List<Long> licenseExpiryRemindersSentAt;
     private boolean oauthEnabled;
+    private Boolean nextGenEnabled;
     private boolean cloudCostEnabled;
     private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
@@ -537,6 +545,11 @@ public class Account extends Base implements PersistentRegularIterable {
 
     public Builder withCompanyName(String companyName) {
       this.companyName = companyName;
+      return this;
+    }
+
+    public Builder withNextGenEnabled(boolean enabled) {
+      this.nextGenEnabled = enabled;
       return this;
     }
 
@@ -740,6 +753,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setDefaultExperience(defaultExperience);
       account.setCreatedFromNG(createdFromNG);
       account.setAccountPreferences(accountPreferences);
+      account.setNextGenEnabled(nextGenEnabled);
       account.setServiceAccountConfig(serviceAccountConfig);
       return account;
     }

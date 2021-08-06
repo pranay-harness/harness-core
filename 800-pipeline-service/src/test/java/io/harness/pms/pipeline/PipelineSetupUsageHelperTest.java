@@ -40,7 +40,7 @@ import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.rule.Owner;
 

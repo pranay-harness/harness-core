@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.atteo.evo.inflector.English.plural;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
@@ -142,6 +143,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @TargetModule(_861_CG_ORCHESTRATION_STATES)
 @ValidateOnExecution
 @Slf4j
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class InfrastructureProvisionerServiceImpl implements InfrastructureProvisionerService {
   @Inject private ManagerExpressionEvaluator evaluator;
 

@@ -17,5 +17,4 @@ public class DelegateTaskBroadcast {
   private boolean async;
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates;
-  private boolean ng;
 }

@@ -8,5 +8,7 @@ import java.util.Optional;
 
 @OwnedBy(HarnessTeam.DX)
 public interface DeploymentSummaryService {
+  DeploymentSummaryDTO save(DeploymentSummaryDTO deploymentSummaryDTO);
+
   Optional<DeploymentSummaryDTO> getByDeploymentSummaryId(String deploymentSummaryId);
 }

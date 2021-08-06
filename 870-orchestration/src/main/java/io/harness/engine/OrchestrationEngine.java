@@ -331,7 +331,7 @@ public class OrchestrationEngine {
 
   public void handleAdvise(String nodeExecutionId, AdviserResponse adviserResponse) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(
-        nodeExecutionService.get(nodeExecutionId), "NodeExecution not foung for id: " + nodeExecutionId);
+        nodeExecutionService.get(nodeExecutionId), "NodeExecution not found for id: " + nodeExecutionId);
     try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
       if (adviserResponse.getType() == AdviseType.UNKNOWN) {
         log.warn("Got null advise for node execution with id {}", nodeExecutionId);

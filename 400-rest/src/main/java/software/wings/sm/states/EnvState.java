@@ -66,7 +66,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
@@ -163,13 +162,6 @@ public class EnvState extends State implements WorkflowState {
           .errorMessage("Workflow does not exist")
           .stateExecutionData(envStateExecutionData)
           .build();
-    }
-
-    if (isNotEmpty(disableAssertion) && !featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)) {
-      ExecutionResponse response = checkDisableAssertion((ExecutionContextImpl) context, workflowService, log);
-      if (response != null) {
-        return response;
-      }
     }
 
     DeploymentExecutionContext deploymentExecutionContext = (DeploymentExecutionContext) context;

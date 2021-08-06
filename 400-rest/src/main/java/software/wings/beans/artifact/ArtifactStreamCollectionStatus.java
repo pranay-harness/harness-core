@@ -1,3 +1,7 @@
 package software.wings.beans.artifact;
 
-public enum ArtifactStreamCollectionStatus { UNSTABLE, STABLE }
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC) public enum ArtifactStreamCollectionStatus { UNSTABLE, STABLE }

@@ -9,9 +9,9 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.protobuf.ByteString;
 import java.util.Set;

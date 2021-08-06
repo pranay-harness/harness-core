@@ -200,8 +200,13 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
   public PageResponse<ServiceAccountAggregateDTO> listAggregateServiceAccounts(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, List<String> identifiers, Pageable pageable,
       ServiceAccountFilterDTO filterDTO) {
-    Criteria criteria = createServiceAccountFilterCriteria(
-        Criteria.where(ServiceAccountKeys.accountIdentifier).is(accountIdentifier), filterDTO);
+    Criteria criteria = createServiceAccountFilterCriteria(Criteria.where(ServiceAccountKeys.accountIdentifier)
+                                                               .is(accountIdentifier)
+                                                               .and(ServiceAccountKeys.projectIdentifier)
+                                                               .is(null)
+                                                               .and(ServiceAccountKeys.orgIdentifier)
+                                                               .is(null),
+        filterDTO);
     Page<ServiceAccount> serviceAccounts = serviceAccountRepository.findAll(criteria, pageable);
     List<String> saIdentifiers =
         serviceAccounts.stream().map(ServiceAccount::getIdentifier).distinct().collect(Collectors.toList());

@@ -774,10 +774,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
               if (stateExecutionData instanceof EnvStateExecutionData) {
                 EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-                if (featureFlagService.isEnabled(
-                        FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
-                  setWaitingForInputFlag(stateExecutionInstance, stageExecution);
-                }
+                setWaitingForInputFlag(stateExecutionInstance, stageExecution);
                 if (envStateExecutionData.getWorkflowExecutionId() != null) {
                   WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
                       workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
@@ -791,9 +788,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               stageExecutionDataList.add(stageExecution);
             } else if (ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
                 || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
-              if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
-                setWaitingForInputFlag(stateExecutionInstance, stageExecution);
-              }
+              setWaitingForInputFlag(stateExecutionInstance, stageExecution);
               if (stateExecutionData instanceof ForkStateExecutionData) {
                 handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
                     stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement,
@@ -1463,12 +1458,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams, Trigger trigger,
       Pipeline pipeline, Workflow workflow, ContextElement... contextElements) {
-    if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId())) {
-      return triggerExecution(workflowExecution, stateMachine, new PipelineStageExecutionAdvisor(),
-          workflowExecutionUpdate, stdParams, trigger, pipeline, workflow, contextElements);
-    }
-    return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, trigger,
-        pipeline, workflow, contextElements);
+    return triggerExecution(workflowExecution, stateMachine, new PipelineStageExecutionAdvisor(),
+        workflowExecutionUpdate, stdParams, trigger, pipeline, workflow, contextElements);
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,

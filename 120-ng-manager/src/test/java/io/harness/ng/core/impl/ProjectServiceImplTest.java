@@ -15,6 +15,7 @@ import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -42,6 +43,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.remote.ProjectMapper;
+import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
@@ -93,13 +95,15 @@ public class ProjectServiceImplTest extends CategoryTest {
   @Mock private ResourceGroupClient resourceGroupClient;
   @Mock private NgUserService ngUserService;
   @Mock private AccessControlClient accessControlClient;
+  @Mock private ScopeAccessHelper scopeAccessHelper;
   private ProjectServiceImpl projectService;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, transactionTemplate,
-        outboxService, ngUserService, resourceGroupClient, accessControlClient));
+        outboxService, ngUserService, resourceGroupClient, accessControlClient, scopeAccessHelper));
+    when(scopeAccessHelper.getPermittedScopes(any())).then(returnsFirstArg());
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -233,18 +237,18 @@ public class ProjectServiceImplTest extends CategoryTest {
     String orgIdentifier = randomAlphabetic(10);
     String searchTerm = randomAlphabetic(5);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
-
+    when(projectRepository.findAllProjects(any(Criteria.class))).thenReturn(Collections.emptyList());
     when(projectRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
 
     Set<String> orgIdentifiers = Collections.singleton(orgIdentifier);
-    Page<Project> projectPage = projectService.list(accountIdentifier, unpaged(),
+    Page<Project> projectPage = projectService.listPermittedProjects(accountIdentifier, unpaged(),
         ProjectFilterDTO.builder().orgIdentifiers(orgIdentifiers).searchTerm(searchTerm).moduleType(CD).build());
 
-    verify(projectRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
+    verify(projectRepository, times(1)).findAllProjects(criteriaArgumentCaptor.capture());
 
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();
-
+    System.out.println(criteriaObject);
     assertEquals(5, criteriaObject.size());
     assertEquals(accountIdentifier, criteriaObject.get(ProjectKeys.accountIdentifier));
     assertTrue(criteriaObject.containsKey(ProjectKeys.orgIdentifier));

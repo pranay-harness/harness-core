@@ -14,7 +14,6 @@ import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
 import io.harness.ng.core.ProjectScope;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pms.events.PipelineCreateEvent;
@@ -24,6 +23,7 @@ import io.harness.pms.events.PipelineUpdateEvent;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
+import io.harness.utils.NGObjectMapperHelper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
@@ -38,7 +38,7 @@ public class PipelineOutboxEventHandler implements OutboxEventHandler {
   private final InputSetEventHandler inputSetEventHandler;
   @Inject
   PipelineOutboxEventHandler(AuditClientService auditClientService, InputSetEventHandler inputSetEventHandler) {
-    this.objectMapper = NGPipelineObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
+    this.objectMapper = NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER;
     this.auditClientService = auditClientService;
     this.inputSetEventHandler = inputSetEventHandler;
   }

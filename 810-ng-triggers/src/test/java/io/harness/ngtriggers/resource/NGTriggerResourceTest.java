@@ -32,7 +32,7 @@ import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.rule.Owner;
-import io.harness.yaml.utils.YamlPipelineUtils;
+import io.harness.utils.YamlPipelineUtils;
 
 import com.google.common.io.Resources;
 import java.io.IOException;

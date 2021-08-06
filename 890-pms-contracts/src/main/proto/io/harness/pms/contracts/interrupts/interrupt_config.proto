@@ -31,8 +31,11 @@ message IssuedBy {
 
 message ManualIssuer {
   // TODO(archit): Add user details
-  string email_id = 1;
-  string user_id = 2;
+  string email_id = 1 [deprecated = true];
+  string user_id = 2 [deprecated = true];
+
+  string type = 3;
+  string identifier = 4;
 }
 message AdviserIssuer {
   io.harness.pms.contracts.advisers.AdviseType adviserType = 1;

@@ -1,0 +1,35 @@
+trigger:
+  name: manifest trigger
+  identifier: manifest_trigger
+  enabled: true
+  orgIdentifier: org
+  projectIdentifier: proj
+  pipelineIdentifier: pipeline
+  source:
+    type: Manifest
+    spec:
+      stageIdentifier: dev
+      manifestRef: manifestref
+      type: HelmChart
+      spec:
+        chartVersion: "1.1"
+        chartName: "todolist"
+        store:
+          type: Http
+          spec:
+            connectorRef: "httphelmconnector"
+        eventConditions:
+          - key: HelmVersion
+            operator: Equals
+            value: v2
+  inputYaml: |
+    pipeline:
+      identifier: secrethttp1
+      stages:
+        - stage:
+            identifier: qaStage
+            spec:
+              infrastructure:
+                infrastructureDefinition:
+                  spec:
+                    releaseName: releaseName1

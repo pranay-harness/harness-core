@@ -4472,7 +4472,7 @@ plain_artifacts = [
     "commons-collections:commons-collections:3.2.2",
     "commons-dbcp:commons-dbcp:1.4",
     "commons-digester:commons-digester:2.1",
-    "commons-io:commons-io:2.7",
+    "commons-io:commons-io:2.6",
     "commons-lang:commons-lang:2.3",
     "commons-logging:commons-logging:1.1.1",
     "commons-net:commons-net:3.6",

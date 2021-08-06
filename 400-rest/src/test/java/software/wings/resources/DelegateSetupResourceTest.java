@@ -508,11 +508,10 @@ public class DelegateSetupResourceTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldDelete() {
-    Response restResponse = RESOURCES.client()
-                                .target("/setup/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID + "&forceDelete=true")
-                                .request()
-                                .delete();
-    verify(delegateService, atLeastOnce()).delete(ACCOUNT_ID, ID_KEY, true);
+    Response restResponse =
+        RESOURCES.client().target("/setup/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID).request().delete();
+
+    verify(delegateService, atLeastOnce()).delete(ACCOUNT_ID, ID_KEY);
   }
 
   @Test

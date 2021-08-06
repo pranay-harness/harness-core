@@ -756,7 +756,11 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
 
-    valuesFetchTaskResponse.setValuesFileContent("VALUES_FILE_CONTENT");
+    when(applicationManifestUtils.getMapK8sValuesLocationToNonEmptyContents(anyMap())).thenCallRealMethod();
+    Map<String, List<String>> mapK8sValuesLocationToFileContents = new HashMap<>();
+    mapK8sValuesLocationToFileContents.put(K8sValuesLocation.Service.name(), singletonList("VALUES_FILE_CONTENT"));
+    valuesFetchTaskResponse.setMapK8sValuesLocationToContent(mapK8sValuesLocationToFileContents);
+
     valuesFetchTaskResponse.setCommandExecutionStatus(SUCCESS);
     abstractK8SState.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
     k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
@@ -768,8 +772,9 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.Service))
         .containsExactly("VALUES_FILE_CONTENT");
 
+    mapK8sValuesLocationToFileContents.put(K8sValuesLocation.Service.name(), singletonList(""));
     k8sStateExecutionData.setValuesFiles(new HashMap<>());
-    valuesFetchTaskResponse.setValuesFileContent("");
+    valuesFetchTaskResponse.setMapK8sValuesLocationToContent(mapK8sValuesLocationToFileContents);
     valuesFetchTaskResponse.setCommandExecutionStatus(SUCCESS);
     abstractK8SState.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
     k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
@@ -1033,8 +1038,11 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest))
         .thenReturn(helmChartConfigParams);
 
-    ExecutionResponse executionResponse =
-        abstractK8SState.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
+    Map<K8sValuesLocation, ApplicationManifest> mapK8sValuesLocationToApplicationManifest =
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+
+    ExecutionResponse executionResponse = abstractK8SState.executeHelmValuesFetchTask(
+        context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L, mapK8sValuesLocationToApplicationManifest);
     assertThat(executionResponse.isAsync()).isTrue();
     K8sStateExecutionData responseStateExecutionData =
         (K8sStateExecutionData) executionResponse.getStateExecutionData();
@@ -1057,7 +1065,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(10));
 
     when(infrastructureMappingService.get(APP_ID, null)).thenReturn(null);
-    abstractK8SState.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
+    abstractK8SState.executeHelmValuesFetchTask(
+        context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L, mapK8sValuesLocationToApplicationManifest);
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     assertThat(captor.getValue().getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
@@ -1066,7 +1075,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
 
     when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(null);
     try {
-      abstractK8SState.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
+      abstractK8SState.executeHelmValuesFetchTask(
+          context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L, mapK8sValuesLocationToApplicationManifest);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(ex.getMessage())
@@ -1076,7 +1086,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     appManifest.setStoreType(HelmSourceRepo);
     when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(appManifest);
     try {
-      abstractK8SState.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
+      abstractK8SState.executeHelmValuesFetchTask(
+          context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L, mapK8sValuesLocationToApplicationManifest);
       fail("Should not reach here");
     } catch (Exception ex) {
       assertThat(ex.getMessage())
@@ -1096,6 +1107,9 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         DirectKubernetesInfrastructureMapping.builder().build();
     infrastructureMapping.setUuid(INFRA_MAPPING_ID);
 
+    Map<K8sValuesLocation, ApplicationManifest> mapK8sValuesLocationToApplicationManifest =
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+
     when(infrastructureMappingService.get(APP_ID, null)).thenReturn(infrastructureMapping);
     when(applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context)).thenReturn(appManifest);
     when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest))
@@ -1104,7 +1118,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         .thenReturn(ContainerServiceParams.builder().clusterName("us-east-1").build());
     when(featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, ACCOUNT_ID)).thenReturn(true);
 
-    abstractK8SState.executeHelmValuesFetchTask(context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L);
+    abstractK8SState.executeHelmValuesFetchTask(
+        context, ACTIVITY_ID, "commandName", 10 * 60 * 1000L, mapK8sValuesLocationToApplicationManifest);
 
     verify(applicationManifestUtils, times(1)).getAppManifestByApplyingHelmChartOverride(context);
     verify(helmChartConfigHelperService, times(1)).getHelmChartConfigTaskParams(context, appManifest);

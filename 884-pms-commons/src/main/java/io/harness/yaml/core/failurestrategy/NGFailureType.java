@@ -10,10 +10,8 @@ import static io.harness.pms.contracts.execution.failure.FailureType.TIMEOUT_FAI
 import static io.harness.pms.contracts.execution.failure.FailureType.UNKNOWN_FAILURE;
 import static io.harness.pms.contracts.execution.failure.FailureType.VERIFICATION_FAILURE;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.contracts.execution.failure.FailureType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -23,8 +21,6 @@ import java.util.Arrays;
 import java.util.EnumSet;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-// TODO this should go to yaml commons
-@TargetModule(HarnessModule._884_PMS_COMMONS)
 public enum NGFailureType {
   @JsonProperty(NGFailureTypeConstants.UNKNOWN)
   UNKNOWN(NGFailureTypeConstants.UNKNOWN, EnumSet.of(APPLICATION_FAILURE, SKIPPING_FAILURE, UNKNOWN_FAILURE)),

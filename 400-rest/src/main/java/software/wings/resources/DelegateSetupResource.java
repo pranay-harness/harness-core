@@ -511,11 +511,11 @@ public class DelegateSetupResource {
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  public RestResponse<Void> delete(@PathParam("delegateId") @NotEmpty String delegateId,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("forceDelete") boolean forceDelete) {
+  public RestResponse<Void> delete(
+      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.delete(accountId, delegateId, forceDelete);
+      delegateService.delete(accountId, delegateId);
       return new RestResponse<>();
     }
   }
@@ -542,12 +542,12 @@ public class DelegateSetupResource {
   // enabled.
   public RestResponse<Void> deleteDelegateGroup(@PathParam("delegateGroupId") @NotEmpty String delegateGroupId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("orgId") String orgId,
-      @QueryParam("projectId") String projectId, @QueryParam("forceDelete") boolean forceDelete) {
+      @QueryParam("projectId") String projectId) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, delegateGroupId), DELEGATE_DELETE_PERMISSION);
 
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      delegateService.deleteDelegateGroup(accountId, delegateGroupId, forceDelete);
+      delegateService.deleteDelegateGroup(accountId, delegateGroupId);
       return new RestResponse<>();
     }
   }
