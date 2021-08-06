@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.EQUALS;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.IN;

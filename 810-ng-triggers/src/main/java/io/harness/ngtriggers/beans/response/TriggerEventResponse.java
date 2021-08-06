@@ -3,6 +3,7 @@ package io.harness.ngtriggers.beans.response;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ngtriggers.beans.source.NGTriggerType;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(PIPELINE)
-public class WebhookEventResponse {
+public class TriggerEventResponse {
   public enum FinalStatus {
     SCM_SERVICE_CONNECTION_FAILED,
     INVALID_PAYLOAD,
@@ -32,7 +33,12 @@ public class WebhookEventResponse {
     FAILED_TO_FETCH_PR_DETAILS,
     EXCEPTION_WHILE_PROCESSING,
     TRIGGER_CONFIRMATION_SUCCESSFUL,
-    TRIGGER_CONFIRMATION_FAILED
+    TRIGGER_CONFIRMATION_FAILED,
+
+    VALIDATION_FAILED_FOR_TRIGGER,
+    // Build Trigger events
+    NEW_ARTIFACT_EVENT_PROCESSED,
+    NEW_MANIFEST_EVENT_PROCESSED,
   }
 
   private String accountId;
@@ -49,4 +55,5 @@ public class WebhookEventResponse {
   private String triggerIdentifier;
   private TargetExecutionSummary targetExecutionSummary;
   private boolean enabled;
+  NGTriggerType ngTriggerType;
 }

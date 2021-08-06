@@ -88,7 +88,7 @@ public class PollingResponseHandler {
         if (isNotEmpty(newVersions)) {
           PolledResponseResult polledResponseResult =
               getPolledResponseResultForManifest((ManifestOutcome) pollingDocument.getPollingInfo());
-          publishPolledItemToQueue(pollingDocument, newVersions, polledResponseResult);
+          publishPolledItemToTopic(pollingDocument, newVersions, polledResponseResult);
         }
         break;
       case ARTIFACT:
@@ -96,7 +96,7 @@ public class PollingResponseHandler {
         if (isNotEmpty(newVersions)) {
           PolledResponseResult polledResponseResult =
               getPolledResponseResultForArtifact((ArtifactConfig) pollingDocument.getPollingInfo());
-          publishPolledItemToQueue(pollingDocument, newVersions, polledResponseResult);
+          publishPolledItemToTopic(pollingDocument, newVersions, polledResponseResult);
         }
         break;
       default:
@@ -105,7 +105,7 @@ public class PollingResponseHandler {
     }
   }
 
-  private void publishPolledItemToQueue(
+  private void publishPolledItemToTopic(
       PollingDocument pollingDocument, List<String> newVersions, PolledResponseResult polledResponseResult) {
     polledItemPublisher.publishPolledItems(
         PollingResponse.newBuilder()

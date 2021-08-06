@@ -164,6 +164,11 @@ public class BuildTriggerHelper {
       if (isNotBlank(error)) {
         throw new InvalidRequestException(error);
       }
+
+      error = checkFiledValueError("helmVersion", pollingItem.getPayloadType().getHttpHelmPayload().getHelmVersion());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
     } else {
       throw new InvalidRequestException("Store Type is not supported for HelmChart Trigger");
     }
