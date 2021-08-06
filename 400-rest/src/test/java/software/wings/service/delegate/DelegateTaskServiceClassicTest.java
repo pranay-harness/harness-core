@@ -7,6 +7,7 @@ import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
@@ -16,6 +17,7 @@ import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.service.impl.DelegateServiceImpl.TASK_CATEGORY_MAP;
 import static software.wings.service.impl.DelegateServiceImpl.TASK_SELECTORS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -117,6 +119,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -129,6 +132,7 @@ import software.wings.service.impl.DelegateTaskServiceClassicImpl;
 import software.wings.service.impl.DelegateTaskStatusObserver;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.sm.ExecutionStatusData;
@@ -184,6 +188,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
   @Mock private CapabilityService capabilityService;
   @Mock private DelegateSyncService delegateSyncService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock private AlertService alertService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private KryoSerializer kryoSerializer;
@@ -559,6 +564,26 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid()))
         .isNull();
+  }
+
+  @Cache
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldNotAcquireTaskWhenNoEligibleDelegates_cannotAssign() {
+    when(assignDelegateService.canAssign(
+             any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
+        .thenReturn(false);
+    when(assignDelegateService.retrieveActiveDelegates(eq(ACCOUNT_ID), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(singletonList(DELEGATE_ID));
+    Delegate delegate = createDelegateBuilder().build();
+    delegate.setUuid(DELEGATE_ID);
+    persistence.save(delegate);
+    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
+    assertThat(delegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid()))
+        .isNull();
+    verify(alertService, times(0))
+        .openAlert(eq(ACCOUNT_ID), anyString(), eq(NoEligibleDelegates), any(NoEligibleDelegatesAlert.class));
   }
 
   @Cache

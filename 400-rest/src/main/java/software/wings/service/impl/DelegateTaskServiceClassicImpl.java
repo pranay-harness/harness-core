@@ -28,7 +28,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -138,7 +137,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.common.AuditHelper;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -1017,47 +1015,21 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
     if (activeDelegates.isEmpty()) {
       if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-        log.info("No installed delegates found for the account");
+        log.info("No installed delegates found for the account. Task id: {}", task.getUuid());
         alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoInstalledDelegates,
             NoInstalledDelegatesAlert.builder().accountId(task.getAccountId()).build());
       } else {
-        log.info("No delegates are active for the account");
+        log.info("No delegates are active for the account. Task id: {}", task.getUuid());
         alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
             NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
       }
     } else if (eligibleDelegates.isEmpty()) {
-      log.warn("{} delegates active but no delegates are eligible to execute task", activeDelegates.size());
-
-      List<ExecutionCapability> selectorCapabilities = null;
-
-      if (task.getExecutionCapabilities() != null) {
-        selectorCapabilities =
-            task.getExecutionCapabilities().stream().filter(c -> c instanceof SelectorCapability).collect(toList());
-      } else {
-        selectorCapabilities = emptyList();
-      }
-
-      String appId =
-          task.getSetupAbstractions() == null ? null : task.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD);
-      String envId =
-          task.getSetupAbstractions() == null ? null : task.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD);
-      String infrastructureMappingId = task.getSetupAbstractions() == null
-          ? null
-          : task.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD);
-
-      alertService.openAlert(task.getAccountId(), appId, NoEligibleDelegates,
-          NoEligibleDelegatesAlert.builder()
-              .accountId(task.getAccountId())
-              .appId(appId)
-              .envId(envId)
-              .infraMappingId(infrastructureMappingId)
-              .taskGroup(TaskType.valueOf(task.getData().getTaskType()).getTaskGroup())
-              .taskType(TaskType.valueOf(task.getData().getTaskType()))
-              .executionCapabilities(selectorCapabilities)
-              .build());
+      log.warn("{} delegates active but no delegates are eligible to execute task with id: {}", activeDelegates.size(),
+          task.getUuid());
     }
 
-    log.info("{} delegates {} eligible to execute task", eligibleDelegates.size(), eligibleDelegates);
+    log.info("{} delegates {} eligible to execute task with id: {}", eligibleDelegates.size(), eligibleDelegates,
+        task.getUuid());
     return eligibleDelegates;
   }
 

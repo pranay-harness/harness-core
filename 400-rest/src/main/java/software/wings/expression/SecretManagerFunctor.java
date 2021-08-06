@@ -43,7 +43,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._940_SECRET_MANAGER_CLIENT)
 public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
   private SecretManagerMode mode;
   private FeatureFlagService featureFlagService;

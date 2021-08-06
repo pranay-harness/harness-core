@@ -26,7 +26,7 @@ import lombok.Value;
 
 @OwnedBy(CDC)
 @Value
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator {
   private final ExpressionFunctor secretManagerFunctor;
   private final ExpressionFunctor ngSecretManagerFunctor;

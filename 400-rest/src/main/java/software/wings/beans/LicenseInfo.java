@@ -1,5 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.Serializable;
 import lombok.AllArgsConstructor;
@@ -18,6 +24,8 @@ import lombok.experimental.FieldNameConstants;
 @AllArgsConstructor
 @ToString
 @FieldNameConstants(innerTypeName = "LicenseInfoKeys")
+@TargetModule(HarnessModule._959_CG_BEANS)
+@OwnedBy(PL)
 public class LicenseInfo implements Serializable {
   private static final long serialVersionUID = 2006711824734916828L;
 
