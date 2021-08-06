@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ngtriggers.beans.entity.ValidationStatus.Status.INVALID_TRIGGER_YAML;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -124,7 +125,12 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
       ResponseDTO<byte[]> responseDTO;
       try {
-        byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
+        byte[] pollingItemBytes = kryoSerializer.asBytes(pollingItem);
+
+        //      executeWithExceptions(delegateAgentManagerClient.publishArtifactCollectionResult(taskId.getId(),
+        //      accountId,
+        //          RequestBody.create(MediaType.parse("application/octet-stream"), responseSerialized)));
+
         responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
             RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
       } catch (Exception exception) {
@@ -150,11 +156,13 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   private void registerWebhookAsync(NGTriggerEntity ngTriggerEntity) {
-    executorService.submit(() -> {
-      WebhookRegistrationStatus registrationStatus =
-          ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);
-      updateWebhookRegistrationStatus(ngTriggerEntity, registrationStatus);
-    });
+    if (ngTriggerEntity.getType() == WEBHOOK && ngTriggerEntity.getMetadata().getWebhook().getGit() != null) {
+      executorService.submit(() -> {
+        WebhookRegistrationStatus registrationStatus =
+            ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);
+        updateWebhookRegistrationStatus(ngTriggerEntity, registrationStatus);
+      });
+    }
   }
 
   @Override

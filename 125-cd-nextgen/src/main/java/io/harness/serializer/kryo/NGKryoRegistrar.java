@@ -210,7 +210,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(DeploymentInfoOutcome.class, 12547);
 
     // kryo.register(PollingDocument.class, 12548);
-    kryo.register(PollingItem.class, PollingItemKryoSerializer.getInstance(), 12549);
-    kryo.register(PollingDocument.class, PollingDocumentKryoSerializer.getInstance(), 12550);
+    // kryo.register(PollingItem.class, PollingItemKryoSerializer.getInstance(), 12549);
+    // kryo.register(PollingDocument.class, PollingDocumentKryoSerializer.getInstance(), 12550);
   }
 }
