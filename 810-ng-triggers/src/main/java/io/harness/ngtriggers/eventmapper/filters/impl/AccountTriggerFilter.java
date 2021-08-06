@@ -2,7 +2,7 @@ package io.harness.ngtriggers.eventmapper.filters.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_ACCOUNT_SOURCE_REPO;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_ACCOUNT_SOURCE_REPO;
 
 import static java.util.stream.Collectors.toList;
 
@@ -14,7 +14,7 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 
 import com.google.inject.Inject;
@@ -45,7 +45,7 @@ public class AccountTriggerFilter implements TriggerFilter {
                             .append(triggerWebhookEvent.getSourceRepoType())
                             .toString();
       log.info(errorMsg);
-      builder.failedToFindTrigger(true).webhookEventResponse(WebhookEventResponseHelper.toResponse(
+      builder.failedToFindTrigger(true).webhookEventResponse(TriggerEventResponseHelper.toResponse(
           NO_ENABLED_TRIGGER_FOR_ACCOUNT_SOURCE_REPO, triggerWebhookEvent, null, null, errorMsg, null));
     } else {
       addDetails(builder, filterRequestData,

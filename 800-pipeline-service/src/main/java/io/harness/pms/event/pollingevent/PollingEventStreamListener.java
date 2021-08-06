@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.ngtriggers.buildtriggers.eventmapper.BuildTriggerEventMapper;
+import io.harness.pms.triggers.build.eventmapper.BuildTriggerEventMapper;
 import io.harness.polling.contracts.PollingResponse;
 
 import com.google.inject.Inject;

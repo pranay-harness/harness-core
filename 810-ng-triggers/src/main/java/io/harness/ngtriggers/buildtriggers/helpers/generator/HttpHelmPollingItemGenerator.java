@@ -46,11 +46,21 @@ public class HttpHelmPollingItemGenerator implements PollingItemGenerator {
       chartName = buildTriggerHelper.fetchValueFromJsonNode("spec.chartName", buildTriggerOpsData.getTriggerSpecMap());
     }
 
+    String helmVersion = buildTriggerOpsData.getPipelineBuildSpecMap().containsKey("spec.helmVersion")
+        ? ((JsonNode) buildTriggerOpsData.getPipelineBuildSpecMap().get("spec.helmVersion")).asText()
+        : EMPTY;
+    if (isBlank(helmVersion) || "<+input>".equals(helmVersion)) {
+      helmVersion =
+          buildTriggerHelper.fetchValueFromJsonNode("spec.helmVersion", buildTriggerOpsData.getTriggerSpecMap());
+    }
+
     return builder.setConnectorRef(connectorRef)
-        .setPayloadType(PayloadType.newBuilder()
-                            .setType(Type.HTTP_HELM)
-                            .setHttpHelmPayload(HttpHelmPayload.newBuilder().setChartName(chartName).build())
-                            .build())
+        .setPayloadType(
+            PayloadType.newBuilder()
+                .setType(Type.HTTP_HELM)
+                .setHttpHelmPayload(
+                    HttpHelmPayload.newBuilder().setChartName(chartName).setHelmVersion(helmVersion).build())
+                .build())
         .build();
   }
 }

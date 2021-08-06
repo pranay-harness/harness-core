@@ -3,7 +3,7 @@ package io.harness.ngtriggers.eventmapper.filters.impl;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.Constants.DOT_GIT;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.utils.IdentifierRefHelper.getFullyQualifiedIdentifierRefString;
 
@@ -33,7 +33,7 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.TriggerGitConnectorWrapper;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.GitProviderDataObtainmentManager;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -93,7 +93,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
       log.info(msg);
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(
-              WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, originalEvent, null, null, msg, null))
+              TriggerEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, originalEvent, null, null, msg, null))
           .build();
     } else {
       // fetches additional information

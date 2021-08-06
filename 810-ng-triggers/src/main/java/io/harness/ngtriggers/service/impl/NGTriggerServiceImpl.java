@@ -119,9 +119,9 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
     executorService.submit(() -> {
       PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
-      byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
       ResponseDTO<byte[]> responseDTO;
       try {
+        byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
         responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(pollingItemBytes));
       } catch (Exception exception) {
         log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
@@ -341,6 +341,14 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public List<NGTriggerEntity> findBuildTriggersByAccountIdAndSignature(String accountId, List<String> signatures) {
+    Page<NGTriggerEntity> triggersPage =
+        list(TriggerFilterHelper.createCriteriaFormBuildTriggerUsingAccIdAndSignature(accountId, signatures),
+            Pageable.unpaged());
+    return triggersPage.get().collect(Collectors.toList());
+  }
+
+  @Override
   public List<NGTriggerEntity> listEnabledTriggersForCurrentProject(
       String accountId, String orgIdentifier, String projectIdentifier) {
     Optional<List<NGTriggerEntity>> enabledTriggerForProject;
@@ -481,13 +489,13 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     return pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
   }
 
-  private void updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult) {
+  public void updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
 
     if (validationResult.isSuccess() && ngTriggerEntity.getValidationStatus() != null
         && ngTriggerEntity.getValidationStatus().isValidationFailure()) {
       ngTriggerEntity.setValidationStatus(ValidationStatus.builder().validationFailure(false).build());
-    } else {
+    } else if (!validationResult.isSuccess()) {
       ngTriggerEntity.setValidationStatus(ValidationStatus.builder()
                                               .status(INVALID_TRIGGER_YAML)
                                               .validationFailure(true)
