@@ -136,7 +136,6 @@ BAZEL_MODULES="\
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-telemetry:module \
-  //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
   //952-scm-java-client:module \
@@ -156,6 +155,7 @@ BAZEL_MODULES="\
   //959-cg-beans:module \
   //959-file-service-commons:module \
   //959-psql-database-models:module \
+  //959-timeout-engine:module \
   //960-api-services:module \
   //960-continuous-features:module \
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
@@ -394,7 +394,6 @@ build_bazel_module 950-events-framework
 build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
-build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
 build_bazel_module 951-ng-audit-commons
@@ -412,6 +411,7 @@ build_bazel_module 958-migration-sdk
 build_bazel_module 959-cg-beans
 build_bazel_module 959-file-service-commons
 build_bazel_module 959-psql-database-models
+build_bazel_module 959-timeout-engine
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features
 build_bazel_module 960-expression-service

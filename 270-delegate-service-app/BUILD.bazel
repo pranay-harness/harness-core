@@ -37,7 +37,7 @@ shared_dependencies = [
     "//950-events-framework:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",
-    "//950-timeout-engine:module",
+    "//959-timeout-engine:module",
     "//950-wait-engine:module",
     "//950-walktree-visitor:module",
     "//960-api-services:module",
