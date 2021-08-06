@@ -435,7 +435,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       scheduleJobsManager(injector, configuration);
     }
 
-    if (isDelegateServiceApp()) {
+    if (isDelegateServiceApp(injector)) {
       scheduleJobsDelegateService(injector, configuration);
     }
 
@@ -466,7 +466,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (isManager()) {
         registerIteratorsManager(injector);
       }
-      if (isDelegateServiceApp()) {
+      if (isDelegateServiceApp(injector)) {
         registerIteratorsDelegateService(injector);
       }
     }
