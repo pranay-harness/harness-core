@@ -6,6 +6,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.APP;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
@@ -164,6 +165,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = WORKFLOW, action = Action.READ)
   @AuthRule(permissionType = WORKFLOW, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = WORKFLOW, action = Action.READ)
   public RestResponse<YamlPayload> getWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
     return yamlResourceService.getWorkflow(appId, workflowId);
@@ -180,6 +182,7 @@ public class YamlResource {
   @Path("/templates/{templateId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = TEMPLATE_MANAGEMENT, action = Action.READ)
   public RestResponse<YamlPayload> getTemplateLibrary(@QueryParam("accountId") String accountId,
       @PathParam("templateId") String templateId, @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId) {
     return yamlResourceService.getTemplateLibrary(accountId, appId, templateId);
@@ -210,6 +213,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = PROVISIONER, action = Action.READ)
   @AuthRule(permissionType = PROVISIONER, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = PROVISIONER, action = Action.READ)
   public RestResponse<YamlPayload> getProvisioner(
       @QueryParam("appId") String appId, @PathParam("infraProvisionerId") String provisionerId) {
     return yamlResourceService.getProvisioner(appId, provisionerId);
@@ -240,6 +244,7 @@ public class YamlResource {
   @Path("/artifactTriggers/{artifactStreamId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT, action = Action.READ)
   public RestResponse<YamlPayload> getArtifactTrigger(
       @QueryParam("appId") String appId, @PathParam("artifactStreamId") String artifactStreamId) {
     return yamlResourceService.getArtifactTrigger(appId, artifactStreamId);
@@ -275,6 +280,7 @@ public class YamlResource {
   @Path("/triggers/{triggerId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT, action = Action.READ)
   public RestResponse<YamlPayload> getTrigger(
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
     return yamlResourceService.getTrigger(appId, triggerId);
@@ -312,6 +318,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = PIPELINE, action = Action.READ)
   @AuthRule(permissionType = PIPELINE, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = PIPELINE, action = Action.READ)
   public RestResponse<YamlPayload> getPipeline(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
     return yamlResourceService.getPipeline(appId, pipelineId);
@@ -323,6 +330,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getApplicationManifestId(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("applicationManifestId") String applicationManifestId) {
     return yamlResourceService.getApplicationManifest(appId, applicationManifestId);
@@ -345,6 +353,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getApplicationManifestFile(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("manifestFileId") String manifestFileId) {
     return yamlResourceService.getManifestFile(appId, manifestFileId);
@@ -417,6 +426,7 @@ public class YamlResource {
   @Path("/service-commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getServiceCommand(
       @QueryParam("appId") String appId, @PathParam("serviceCommandId") String serviceCommandId) {
     return yamlResourceService.getServiceCommand(appId, serviceCommandId);
@@ -483,6 +493,7 @@ public class YamlResource {
   @Path("/defaults/{uuid}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT, action = Action.READ)
   public RestResponse<YamlPayload> getDefaults(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
     return yamlResourceService.getDefaultVariables(accountId, uuid);
@@ -542,6 +553,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = ENV, action = Action.READ)
   @AuthRule(permissionType = ENV, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = ENV, action = Action.READ)
   public RestResponse<YamlPayload> getEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return yamlResourceService.getEnvironment(appId, envId);
   }
@@ -587,6 +599,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getService(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return yamlResourceService.getService(appId, serviceId);
@@ -641,6 +654,7 @@ public class YamlResource {
   @Path("/applications/{appId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = APP, action = Action.READ)
   public RestResponse<YamlPayload> getApp(@PathParam("appId") String appId) {
     return appYamlResourceService.getApp(appId);
   }
@@ -686,6 +700,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<DirectoryNode> getApplicationManifestForService(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(yamlDirectoryService.getApplicationManifestYamlFolderNode(accountId, appId, serviceId));
@@ -701,6 +716,7 @@ public class YamlResource {
   @Path("/application")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = APP, action = Action.READ)
   public RestResponse<DirectoryNode> getApplication(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
     return new RestResponse<>(yamlDirectoryService.getApplicationYamlFolderNode(accountId, appId));
@@ -735,6 +751,7 @@ public class YamlResource {
   @Path("/artifact-streams/{artifactStreamId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getArtifactStream(
       @QueryParam("appId") String appId, @PathParam("artifactStreamId") String artifactStreamId) {
     return yamlArtifactStreamService.getArtifactStreamYaml(appId, artifactStreamId);
@@ -764,6 +781,7 @@ public class YamlResource {
   @Path("/infrastructuremappings/{infraMappingId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ENV, action = Action.READ)
   public RestResponse<YamlPayload> getInfraMapping(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("infraMappingId") String infraMappingId) {
     return yamlResourceService.getInfraMapping(accountId, appId, infraMappingId);
@@ -786,6 +804,7 @@ public class YamlResource {
   @Path("infrastructuredefinitions/{infraDefinitionId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(action = Action.READ)
   public RestResponse<YamlPayload> getInfraDefintion(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("infraDefinitionId") String infraDefinitionId) {
     return yamlResourceService.getInfraDefinition(appId, infraDefinitionId);
@@ -807,6 +826,7 @@ public class YamlResource {
   @Path("/container-tasks/{containerTaskId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(action = Action.READ)
   public RestResponse<YamlPayload> getContainerTask(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("containerTaskId") String containerTaskId) {
     return yamlResourceService.getContainerTask(accountId, appId, containerTaskId);
@@ -816,6 +836,7 @@ public class YamlResource {
   @Path("/ecs-service-spec/{ecsServiceSpecificationId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getEcsSErviceSpecification(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId,
       @PathParam("ecsServiceSpecificationId") String ecsServiceSpecificationId) {
@@ -850,6 +871,7 @@ public class YamlResource {
   @Path("/pcfservicespecifications/{pcfservicespecificationId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getPcfservicespecificationId(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId,
       @PathParam("pcfservicespecificationId") String pcfservicespecificationId) {
@@ -872,6 +894,7 @@ public class YamlResource {
   @Path("/helm-charts/{helmChartSpecificationId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getHelmChartSpecification(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId,
       @PathParam("helmChartSpecificationId") String helmChartSpecificationId) {
@@ -894,6 +917,7 @@ public class YamlResource {
   @Path("/lambda-specs/{lambdaSpecId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getLamdbaSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("lambdaSpecId") String lambdaSpecId) {
     return yamlResourceService.getLambdaSpec(accountId, appId, lambdaSpecId);
@@ -905,6 +929,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = SERVICE, action = Action.UPDATE)
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE)
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<Base> updateUserDataSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
@@ -916,6 +941,7 @@ public class YamlResource {
   @Path("/user-data-specs/{userDataSpecId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getUserDataSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("userDataSpecId") String userDataSpecId) {
     return yamlResourceService.getUserDataSpec(accountId, appId, userDataSpecId);
@@ -926,6 +952,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   public RestResponse<Base> updateLambdaSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
@@ -977,6 +1004,7 @@ public class YamlResource {
   @Path("git-config/{entityId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE, action = Action.READ)
   public RestResponse<YamlGitConfig> get(@PathParam("entityId") String entityId,
       @QueryParam("accountId") String accountId, @QueryParam("entityType") EntityType entityType) {
     return new RestResponse<>(yamlGitService.get(accountId, entityId, entityType));
@@ -1162,6 +1190,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = LOGGED_IN)
   @AuthRule(permissionType = LOGGED_IN)
+  @ApiKeyAuthorized(permissionType = LOGGED_IN, action = Action.READ)
   public RestResponse<YamlPayload> getCVConfiguration(
       @QueryParam("appId") String appId, @PathParam("cvConfigId") String cvConfigId) {
     return yamlResourceService.getCVConfiguration(appId, cvConfigId);
@@ -1195,6 +1224,7 @@ public class YamlResource {
   @ExceptionMetered
   @ApiKeyAuthorized(permissionType = MANAGE_TAGS)
   @AuthRule(permissionType = MANAGE_TAGS)
+  @ApiKeyAuthorized(permissionType = MANAGE_TAGS, action = Action.READ)
   public RestResponse<YamlPayload> getTags(@QueryParam("accountId") String accountId) {
     return yamlResourceService.getHarnessTags(accountId);
   }
@@ -1239,7 +1269,6 @@ public class YamlResource {
   @Path("/yaml-content")
   @Timed
   @ExceptionMetered
-  @ApiKeyAuthorized(permissionType = LOGGED_IN)
   public RestResponse<YamlPayload> getYamlForFilePath(@QueryParam("accountId") String accountId,
       @QueryParam("yamlFilePath") String yamlFilePath, @QueryParam("yamlSubType") String yamlSubType,
       @QueryParam("applicationId") String applicationId) {
