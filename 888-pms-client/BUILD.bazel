@@ -8,6 +8,7 @@ java_library(
     exports = [
         "//:lombok",
         "//890-pms-contracts:module",
+        "//900-git-sync-sdk:module",
         "//970-ng-commons:module",
         "@maven//:ch_qos_logback_logback_access",
         "@maven//:ch_qos_logback_logback_classic",
