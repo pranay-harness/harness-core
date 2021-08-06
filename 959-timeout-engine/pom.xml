@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>950-timeout-engine</artifactId>
+    <artifactId>959-timeout-engine</artifactId>
     <dependencies>
         <dependency>
             <groupId>de.bwaldvogel</groupId>

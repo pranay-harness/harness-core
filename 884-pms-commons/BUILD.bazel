@@ -8,7 +8,7 @@ shared_deps = [
     "//890-pms-contracts:module",
     "//900-git-sync-sdk:module",
     "//920-delegate-service-beans:module",
-    "//950-timeout-engine:module",
+    "//959-timeout-engine:module",
     "//950-walktree-visitor:module",
     "//953-events-api:module",
     "//955-delegate-beans:module",

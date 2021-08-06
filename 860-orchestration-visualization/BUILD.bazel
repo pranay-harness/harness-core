@@ -31,8 +31,8 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
-        "//950-timeout-engine:module",
         "//950-wait-engine:module",
+        "//959-timeout-engine:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",

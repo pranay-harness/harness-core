@@ -364,10 +364,6 @@ aeriform("//950-telemetry:module")
 
 aeriform("//950-telemetry:tests")
 
-aeriform("//950-timeout-engine:module")
-
-aeriform("//950-timeout-engine:tests")
-
 aeriform("//950-wait-engine:module")
 
 aeriform("//950-wait-engine:supporter-test")
@@ -429,6 +425,10 @@ aeriform("//959-file-service-commons:module")
 aeriform("//959-psql-database-models:module")
 
 aeriform("//959-psql-database-models:tests")
+
+aeriform("//959-timeout-engine:module")
+
+aeriform("//959-timeout-engine:tests")
 
 aeriform("//960-api-services:module")
 

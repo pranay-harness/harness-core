@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-timeout-engine</artifactId>
+            <artifactId>959-timeout-engine</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
