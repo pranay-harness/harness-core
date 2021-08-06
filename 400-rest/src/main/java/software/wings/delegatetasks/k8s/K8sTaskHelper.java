@@ -3,6 +3,8 @@ package software.wings.delegatetasks.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.scm.GitConnectionType.REPO;
+import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.TOKEN;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
@@ -11,6 +13,8 @@ import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
+import static software.wings.beans.GitConfig.ProviderType.GITHUB;
+import static software.wings.beans.GitConfig.ProviderType.GITLAB;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
@@ -22,12 +26,24 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.FileData;
+import io.harness.connector.helper.GitApiAccessDecryptionHelper;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
+import io.harness.delegate.task.git.GitFetchFilesTaskHelper;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.scm.ScmDelegateClient;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -40,12 +56,18 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestService;
+import io.harness.product.ci.scm.proto.FileContent;
+import io.harness.product.ci.scm.proto.SCMGrpc;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.service.ScmServiceClient;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
@@ -67,8 +89,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -88,6 +114,9 @@ public class K8sTaskHelper {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private HelmHelper helmHelper;
   @Inject private CustomManifestService customManifestService;
+  @Inject private ScmDelegateClient scmDelegateClient;
+  @Inject private ScmServiceClient scmServiceClient;
+  @Inject private SecretDecryptionService secretDecryptionService;
 
   public boolean doStatusCheckAllResourcesForHelm(Kubectl client, List<KubernetesResourceId> resourceIds, String ocPath,
       String workingDir, String namespace, String kubeconfigPath, ExecutionLogCallback executionLogCallback)
@@ -111,15 +140,7 @@ public class K8sTaskHelper {
         if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
           continue;
         }
-
-        Path filePath = Paths.get(directoryPath, manifestFile.getFileName());
-        Path parent = filePath.getParent();
-        if (parent == null) {
-          throw new WingsException("Failed to create file at path " + filePath.toString());
-        }
-
-        createDirectoryIfDoesNotExist(parent.toString());
-        FileIo.writeUtf8StringToFile(filePath.toString(), manifestFile.getFileContent());
+        writeManifestFile(directoryPath, manifestFile.getFileName(), manifestFile.getFileContent());
       }
 
       return true;
@@ -127,6 +148,17 @@ public class K8sTaskHelper {
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
+  }
+
+  private void writeManifestFile(String directoryPath, String fileName, String fileContent) throws IOException {
+    Path filePath = Paths.get(directoryPath, fileName);
+    Path parent = filePath.getParent();
+    if (parent == null) {
+      throw new WingsException("Failed to create file at path " + filePath.toString());
+    }
+
+    createDirectoryIfDoesNotExist(parent.toString());
+    FileIo.writeUtf8StringToFile(filePath.toString(), fileContent);
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -281,10 +313,14 @@ public class K8sTaskHelper {
       GitConfig gitConfig = delegateManifestConfig.getGitConfig();
       printGitConfigInExecutionLogs(gitConfig, gitFileConfig, executionLogCallback);
 
-      encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails(), false);
-
-      gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
-
+      if (gitConfig.getSshSettingAttribute() == null
+          && Arrays.asList(GITHUB, GITLAB).contains(gitConfig.getProviderType())) {
+        downloadFilesUsingScm(manifestFilesDirectory, gitFileConfig, gitConfig,
+            delegateManifestConfig.getEncryptedDataDetails(), executionLogCallback);
+      } else {
+        encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails(), false);
+        gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
+      }
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(k8sTaskHelperBase.getManifestFileNamesInLogFormat(manifestFilesDirectory));
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
@@ -296,6 +332,29 @@ public class K8sTaskHelper {
           "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
           CommandExecutionStatus.FAILURE);
       return false;
+    }
+  }
+  private void downloadFilesUsingScm(String manifestFilesDirectory, GitFileConfig gitFileConfig, GitConfig gitConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+    encryptedDataDetails.get(0).setFieldName("tokenRef");
+    String directoryPath = Paths.get(manifestFilesDirectory).toString();
+
+    ScmConnector scmConnector = getScmConnector(gitConfig);
+
+    secretDecryptionService.decrypt(
+        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector), encryptedDataDetails);
+
+    Set<String> folders = new HashSet<>();
+    folders.add(gitFileConfig.getFilePath());
+
+    FileContentBatchResponse fileBatchContentResponse = scmDelegateClient.processScmRequest(
+        c -> scmServiceClient.listFiles(scmConnector, folders, gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
+    try {
+      for (FileContent fileContent : fileBatchContentResponse.getFileBatchContentResponse().getFileContentsList()) {
+        writeManifestFile(directoryPath, fileContent.getPath(), fileContent.getContent());
+      }
+    } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR, CommandExecutionStatus.FAILURE);
     }
   }
 
@@ -449,5 +508,40 @@ public class K8sTaskHelper {
     }
 
     return k8sTaskHelperBase.arrangeResourceIdsInDeletionOrder(kubernetesResourceIds);
+  }
+  public ScmConnector getScmConnector(GitConfig gitConfig) {
+    switch (gitConfig.getProviderType()) {
+      case GITHUB:
+        return getGitHubConnector(gitConfig);
+      case GITLAB:
+        return getGitLabConnector(gitConfig);
+      default:
+        return null;
+    }
+  }
+
+  private GithubConnectorDTO getGitHubConnector(GitConfig gitConfig) {
+    return GithubConnectorDTO.builder()
+        .url(gitConfig.getRepoUrl())
+        .connectionType(REPO)
+        .apiAccess(GithubApiAccessDTO.builder()
+                       .type(TOKEN)
+                       .spec(GithubTokenSpecDTO.builder()
+                                 .tokenRef(SecretRefData.builder().identifier(gitConfig.getEncryptedPassword()).build())
+                                 .build())
+                       .build())
+        .build();
+  }
+
+  private GitlabConnectorDTO getGitLabConnector(GitConfig gitConfig) {
+    return GitlabConnectorDTO.builder()
+        .url(gitConfig.getRepoUrl())
+        .connectionType(REPO)
+        .apiAccess(GitlabApiAccessDTO.builder()
+                       .spec(GitlabTokenSpecDTO.builder()
+                                 .tokenRef(SecretRefData.builder().identifier(gitConfig.getEncryptedPassword()).build())
+                                 .build())
+                       .build())
+        .build();
   }
 }
