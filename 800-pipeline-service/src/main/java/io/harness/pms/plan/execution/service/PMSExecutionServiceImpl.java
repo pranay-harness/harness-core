@@ -79,7 +79,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
       String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
-      ByteString gitEntityBasicInfo) {
+      ByteString gitSyncBranchContext) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -139,8 +139,19 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
 
     Criteria gitCriteria = new Criteria();
-    if (gitEntityBasicInfo != null) {
-      gitCriteria.orOperator(where(PlanExecutionSummaryKeys.gitSyncBranchContext).is(gitEntityBasicInfo));
+    if (gitSyncBranchContext != null) {
+      Criteria gitCriteriaDeprecated =
+          Criteria.where(PlanExecutionSummaryKeys.gitSyncBranchContext).is(gitSyncBranchContext);
+
+      EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(gitSyncBranchContext);
+      Criteria gitCriteriaNew = Criteria
+                                    .where(PlanExecutionSummaryKeys.entityGitDetails + "."
+                                        + "branch")
+                                    .is(entityGitDetails.getBranch())
+                                    .and(PlanExecutionSummaryKeys.entityGitDetails + "."
+                                        + "repoIdentifier")
+                                    .is(entityGitDetails.getRepoIdentifier());
+      gitCriteria.orOperator(gitCriteriaDeprecated, gitCriteriaNew);
     }
 
     criteria.andOperator(filterCriteria, moduleCriteria, searchCriteria, gitCriteria);

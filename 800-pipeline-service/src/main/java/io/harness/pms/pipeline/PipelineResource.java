@@ -321,8 +321,10 @@ public class PipelineResource implements YamlSchemaResource {
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
         pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
             .map(e
-                -> PipelineExecutionSummaryDtoMapper.toDto(
-                    e, pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
+                -> PipelineExecutionSummaryDtoMapper.toDto(e,
+                    e.getEntityGitDetails() != null
+                        ? e.getEntityGitDetails()
+                        : pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
 
     return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
