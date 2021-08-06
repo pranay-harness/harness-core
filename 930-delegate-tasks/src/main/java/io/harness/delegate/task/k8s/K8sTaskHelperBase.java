@@ -755,7 +755,8 @@ public class K8sTaskHelperBase {
     ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, applyCommand);
     if (result.getExitValue() != 0) {
       log.error(format("\nFailed. Process terminated with exit value: [%s] and output: [%s]", result.getExitValue(),
-          result.getOutput()));
+          result.outputUTF8()));
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
 
