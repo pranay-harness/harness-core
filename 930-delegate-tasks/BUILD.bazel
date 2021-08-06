@@ -68,6 +68,7 @@ java_library(
         "module",
         "//:lombok",
         "//950-delegate-tasks-beans:module",
+        "//955-delegate-beans:module",
         "//959-cg-beans:module",
         "//960-api-services:module",
         "//970-api-services-beans:module",
