@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.buildtriggers.helpers.BuildTriggerHelper;
 import io.harness.ngtriggers.buildtriggers.helpers.dtos.BuildTriggerOpsData;
+import io.harness.polling.contracts.HelmVersion;
 import io.harness.polling.contracts.HttpHelmPayload;
 import io.harness.polling.contracts.PayloadType;
 import io.harness.polling.contracts.PollingItem;
@@ -46,10 +47,21 @@ public class HttpHelmPollingItemGenerator implements PollingItemGenerator {
       chartName = buildTriggerHelper.fetchValueFromJsonNode("spec.chartName", buildTriggerOpsData.getTriggerSpecMap());
     }
 
+    String helmVersion = buildTriggerOpsData.getPipelineBuildSpecMap().containsKey("spec.helmVersion")
+        ? ((JsonNode) buildTriggerOpsData.getPipelineBuildSpecMap().get("spec.helmVersion")).asText()
+        : EMPTY;
+    if (isBlank(helmVersion) || "<+input>".equals(helmVersion)) {
+      helmVersion =
+          buildTriggerHelper.fetchValueFromJsonNode("spec.helmVersion", buildTriggerOpsData.getTriggerSpecMap());
+    }
+
     return builder.setConnectorRef(connectorRef)
         .setPayloadType(PayloadType.newBuilder()
                             .setType(Type.HTTP_HELM)
-                            .setHttpHelmPayload(HttpHelmPayload.newBuilder().setChartName(chartName).build())
+                            .setHttpHelmPayload(HttpHelmPayload.newBuilder()
+                                                    .setChartName(chartName)
+                                                    .setHelmVersion(HelmVersion.valueOf(helmVersion))
+                                                    .build())
                             .build())
         .build();
   }

@@ -31,8 +31,7 @@ public class TriggerValidationHandler {
   private final ManifestTriggerValidator manifestTriggerValidator;
   private final ArtifactTriggerValidator artifactTriggerValidator;
 
-  public ValidationResult applyValidations(NGTriggerEntity ngTriggerEntity) {
-    TriggerDetails triggerDetails = prepareTriggerDetails(ngTriggerEntity);
+  public ValidationResult applyValidations(TriggerDetails triggerDetails) {
     List<TriggerValidator> applicableValidators = getApplicableValidators(triggerDetails);
 
     // Remove it later, as this should not happen

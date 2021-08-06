@@ -7,11 +7,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.polling.PollingResponseHandler;
+import io.harness.polling.contracts.Category;
+import io.harness.polling.contracts.HttpHelmPayload;
+import io.harness.polling.contracts.PayloadType;
 import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.contracts.Qualifier;
+import io.harness.polling.contracts.Type;
 import io.harness.polling.contracts.service.PollingDocument;
 import io.harness.polling.service.intfc.PollingService;
 import io.harness.security.annotations.InternalApi;
@@ -20,6 +26,7 @@ import io.harness.serializer.KryoSerializer;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import javax.ws.rs.Consumes;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.POST;
@@ -28,6 +35,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
 @Api("polling")
 @Path("polling")
@@ -67,16 +75,16 @@ public class PollingResource {
 
   @POST
   @Path("subscribe")
-  public byte[] subscribe(byte[] pollingItem) {
+  public ResponseDTO<byte[]> subscribe(byte[] pollingItem) {
     PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
     String pollingDocId = pollingService.subscribe(pollingItem1);
     PollingDocument pd = PollingDocument.newBuilder().setPollingDocId(pollingDocId).build();
-    return kryoSerializer.asBytes(pd);
+    return ResponseDTO.newResponse(kryoSerializer.asBytes(pd));
   }
 
   @POST
   @Path("unsubscribe")
-  public Boolean unsubscribe(byte[] pollingItem) {
+  public Boolean unsubscribe(@Body byte[] pollingItem) {
     PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
     return pollingService.unsubscribe(pollingItem1);
   }

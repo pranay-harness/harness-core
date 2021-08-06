@@ -170,6 +170,28 @@ public class NGTriggerElementMapper {
     return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(ngTriggerEntity).build();
   }
 
+  public TriggerDetails toTriggerDetails(NGTriggerEntity ngTriggerEntity) {
+    NGTriggerConfigV2 config = toTriggerConfigV2(ngTriggerEntity.getYaml());
+    NGTriggerEntity entity = toTriggerEntity(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
+        ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getIdentifier(), ngTriggerEntity.getYaml());
+
+    copyEntityFieldsOutsideOfYml(ngTriggerEntity, entity);
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
+  }
+
+  private void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
+    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
+      if (isNotEmpty(existingEntity.getMetadata().getBuildMetadata().getSignature())) {
+        newEntity.getMetadata().getBuildMetadata().setSignature(
+            existingEntity.getMetadata().getBuildMetadata().getSignature());
+      }
+      if (isNotEmpty(existingEntity.getMetadata().getBuildMetadata().getPollingDocId())) {
+        newEntity.getMetadata().getBuildMetadata().setPollingDocId(
+            existingEntity.getMetadata().getBuildMetadata().getPollingDocId());
+      }
+    }
+  }
+
   public NGTriggerEntity toTriggerEntity(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String yaml) {
     NGTriggerConfigV2 config = toTriggerConfigV2(yaml);

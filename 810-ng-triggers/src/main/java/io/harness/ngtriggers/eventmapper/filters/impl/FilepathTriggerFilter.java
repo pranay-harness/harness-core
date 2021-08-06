@@ -12,7 +12,7 @@ import static io.harness.ngtriggers.Constants.COMMIT_FILE_REMOVED;
 import static io.harness.ngtriggers.Constants.GITHUB_LOWER_CASE;
 import static io.harness.ngtriggers.Constants.GITLAB_LOWER_CASE;
 import static io.harness.ngtriggers.Constants.TRIGGER_PAYLOAD_COMMITS;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_FILEPATH_CONDITIONS;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_FILEPATH_CONDITIONS;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
@@ -42,7 +42,7 @@ import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.utils.TaskExecutionUtils;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
@@ -108,7 +108,7 @@ public class FilepathTriggerFilter implements TriggerFilter {
     if (isEmpty(matchedTriggers)) {
       log.info("No trigger matched Path condition after filter evaluation:");
       mappingResponseBuilder.failedToFindTrigger(true)
-          .webhookEventResponse(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_FILEPATH_CONDITIONS,
+          .webhookEventResponse(TriggerEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_FILEPATH_CONDITIONS,
               filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
               "No trigger matched Path condition after filter evaluation for Account: "
                   + filterRequestData.getAccountId(),

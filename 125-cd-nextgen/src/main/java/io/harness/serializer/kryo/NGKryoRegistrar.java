@@ -100,6 +100,8 @@ import io.harness.polling.contracts.service.PollingDocument;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
+import io.serializer.kryo.PollingDocumentKryoSerializer;
+import io.serializer.kryo.PollingItemKryoSerializer;
 
 @OwnedBy(CDC)
 public class NGKryoRegistrar implements KryoRegistrar {
@@ -207,7 +209,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sExecutionPassThroughData.class, 12546);
     kryo.register(DeploymentInfoOutcome.class, 12547);
 
-    kryo.register(PollingDocument.class, 12548);
-    kryo.register(PollingItem.class, 12549);
+    // kryo.register(PollingDocument.class, 12548);
+    // kryo.register(PollingItem.class, PollingItemKryoSerializer.getInstance(), 12549);
+    // kryo.register(PollingDocument.class, PollingDocumentKryoSerializer.getInstance(), 12550);
   }
 }
