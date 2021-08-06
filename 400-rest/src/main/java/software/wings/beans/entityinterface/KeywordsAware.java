@@ -1,5 +1,9 @@
 package software.wings.beans.entityinterface;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedByAccess;
 import io.harness.persistence.UpdatedByAccess;
@@ -7,8 +11,11 @@ import io.harness.persistence.UpdatedByAccess;
 import java.util.HashSet;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._959_CG_BEANS)
 public interface KeywordsAware {
   Set<String> getKeywords();
+
   void setKeywords(Set<String> keywords);
 
   default Set<String> generateKeywords() {
