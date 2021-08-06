@@ -9,4 +9,5 @@ import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
-public interface DeploymentSummaryRepository extends CrudRepository<DeploymentSummary, String> {}
+public interface DeploymentSummaryRepository
+    extends CrudRepository<DeploymentSummary, String>, DeploymentSummaryCustom {}

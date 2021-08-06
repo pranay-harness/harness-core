@@ -30,4 +30,16 @@ public class DeploymentSummaryServiceImpl implements DeploymentSummaryService {
     Optional<DeploymentSummary> deploymentSummaryOptional = deploymentSummaryRepository.findById(deploymentSummaryId);
     return deploymentSummaryOptional.map(DeploymentSummaryMapper::toDTO);
   }
+
+  @Override
+  public Optional<DeploymentSummaryDTO> getNthDeploymentSummaryFromNow(int N, String instanceSyncKey) {
+    Optional<DeploymentSummary> deploymentSummaryOptional =
+        deploymentSummaryRepository.fetchNthRecordFromNow(N, instanceSyncKey);
+    return deploymentSummaryOptional.map(DeploymentSummaryMapper::toDTO);
+  }
+
+  @Override
+  public Optional<DeploymentSummaryDTO> getLatestByInstanceKey(String instanceSyncKey) {
+    return getNthDeploymentSummaryFromNow(1, instanceSyncKey);
+  }
 }
