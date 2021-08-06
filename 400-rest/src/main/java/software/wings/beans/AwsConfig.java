@@ -2,7 +2,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -44,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._959_CG_BEANS)
 public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") @Encrypted(fieldName = "access_key", isReference = true) private char[] accessKey;

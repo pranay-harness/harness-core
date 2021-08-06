@@ -255,7 +255,7 @@ public class AwsApiHelperService {
       throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonCloudFormationException) {
       if (amazonServiceException.getMessage().contains("No updates are to be performed")) {
-        log.info("Nothing to update on stack" + amazonServiceException.getMessage());
+        log.error("Nothing to update on stack" + amazonServiceException.getMessage());
       } else {
         throw new InvalidRequestException(amazonServiceException.getMessage(), amazonServiceException);
       }

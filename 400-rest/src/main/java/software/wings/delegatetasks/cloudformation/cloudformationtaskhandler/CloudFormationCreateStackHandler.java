@@ -48,6 +48,7 @@ import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.cloudformation.model.Tag;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import com.amazonaws.services.cloudformation.model.UpdateStackResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -178,7 +179,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       String responseStackStatus =
           ((CloudFormationCreateStackResponse) cloudFormationCommandExecutionResponse.getCommandResponse())
               .getStackStatus();
-      if (responseStackStatus != null) {
+      if (responseStackStatus != null && isNotEmpty(updateRequest.getStackStatusesToMarkAsSuccess())) {
         boolean hasMatchingStatusToBeTreatedAsSuccess =
             updateRequest.getStackStatusesToMarkAsSuccess().stream().anyMatch(
                 status -> status.name().equals(responseStackStatus));
@@ -301,6 +302,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           executionLogCallback.saveExecutionLog("# Stack creation Successful");
           populateInfraMappingPropertiesFromStack(builder, stack,
               ExistingStackInfo.builder().stackExisted(false).build(), executionLogCallback, createRequest);
+          sleep(ofSeconds(30));
           executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
           printStackResources(createRequest, stack, executionLogCallback);
           return;
@@ -378,9 +380,20 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     executionLogCallback.saveExecutionLog(
         format("# Calling Aws API to Update stack: %s", originalStack.getStackName()));
     long stackEventsTs = System.currentTimeMillis();
-    awsHelperService.updateStack(request.getRegion(), updateStackRequest, request.getAwsConfig());
+
+    UpdateStackResult updateStackResult =
+        awsHelperService.updateStack(request.getRegion(), updateStackRequest, request.getAwsConfig());
     executionLogCallback.saveExecutionLog(
         format("# Update Stack Request submitted for stack: %s. Now polling for status", originalStack.getStackName()));
+
+    boolean noStackUpdated = false;
+    if (updateStackResult == null || updateStackResult.getStackId() == null) {
+      noStackUpdated = true;
+      executionLogCallback.saveExecutionLog(
+          format("# Update Stack Request Failed. There is nothing to be updated in the stack with name: %s",
+              originalStack.getStackName()));
+    }
+
     int timeOutMs = remainingTimeoutMs;
     long endTime = System.currentTimeMillis() + timeOutMs;
     Stack stack = null;
@@ -396,6 +409,43 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         return;
       }
       stack = stacks.get(0);
+
+      if (noStackUpdated) {
+        switch (stack.getStackStatus()) {
+          case "CREATE_COMPLETE":
+          case "UPDATE_COMPLETE": {
+            executionLogCallback.saveExecutionLog(format("# Stack is already in %s state.", stack.getStackStatus()));
+            populateInfraMappingPropertiesFromStack(builder, stack, existingStackInfo, executionLogCallback, request);
+            CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+                getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+            builder.commandResponse(cloudFormationCreateStackResponse);
+            printStackResources(request, stack, executionLogCallback);
+            return;
+          }
+          case "UPDATE_ROLLBACK_COMPLETE": {
+            executionLogCallback.saveExecutionLog(format("# Stack is already in %s state.", stack.getStackStatus()));
+            CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+                getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+            builder.commandResponse(cloudFormationCreateStackResponse);
+            builder.commandExecutionStatus(SUCCESS);
+            printStackResources(request, stack, executionLogCallback);
+            return;
+          }
+          default: {
+            String errorMessage =
+                format("# Existing stack with name %s is already in status: %s, therefore exiting with failure",
+                    stack.getStackName(), stack.getStackStatus());
+            executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+            builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+            CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+                getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+            builder.commandResponse(cloudFormationCreateStackResponse);
+            printStackResources(request, stack, executionLogCallback);
+            return;
+          }
+        }
+      }
+
       stackEventsTs = printStackEvents(request, stackEventsTs, stack, executionLogCallback);
 
       switch (stack.getStackStatus()) {
@@ -403,6 +453,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         case "UPDATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Update Successful for stack");
           populateInfraMappingPropertiesFromStack(builder, stack, existingStackInfo, executionLogCallback, request);
+          sleep(ofSeconds(30));
           executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
           CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
               getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
@@ -477,7 +528,6 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
         createCloudFormationCreateStackResponse(stack, existingStackInfo, cloudFormationCreateStackRequest);
     builder.commandExecutionStatus(SUCCESS).commandResponse(cloudFormationCreateStackResponse);
-    sleep(ofSeconds(30));
   }
 
   private CloudFormationCreateStackResponse getCloudFormationCreateStackResponse(
