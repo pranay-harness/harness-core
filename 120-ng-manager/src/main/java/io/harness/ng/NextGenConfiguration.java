@@ -109,6 +109,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("signupNotificationConfiguration")
   private SignupNotificationConfiguration signupNotificationConfiguration;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty(value = "scopeAccessCheckEnabled", defaultValue = "false") private boolean isScopeAccessCheckEnabled;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
