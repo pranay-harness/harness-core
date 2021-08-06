@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 7
+version: 8
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -96,6 +96,7 @@ roles:
         - core_organization_view
         - core_organization_edit
         - core_organization_delete
+        - core_project_view
         - core_project_create
         - core_secret_view
         - core_secret_edit
@@ -142,6 +143,7 @@ roles:
       description: View an organization
       permissions:
         - core_organization_view
+        - core_project_view
         - core_secret_view
         - core_connector_view
         - core_delegate_view
@@ -161,6 +163,7 @@ roles:
       description: Administer an account
       permissions:
         - core_user_invite
+        - core_organization_view
         - core_organization_create
         - core_secret_view
         - core_secret_edit
@@ -214,6 +217,7 @@ roles:
       name: Account Viewer
       description: View an account
       permissions:
+        - core_organization_view
         - core_secret_view
         - core_connector_view
         - core_delegate_view
