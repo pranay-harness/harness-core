@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 
 	cg "github.com/wings-software/portal/product/ci/common/avro/schema/callgraph"
-	vg "github.com/wings-software/portal/product/ci/common/avro/schema/visgraph"
 )
 
 //Serialzer is the interface for encoding and decoding structs
@@ -37,8 +36,6 @@ func NewCgphSerialzer(typ string) (*CgphSerialzer, error) {
 	switch typ {
 	case cgType:
 		schema, err = cg.Asset(cgSrcFile)
-	case vgType:
-		schema, err = vg.Asset(vgSrcFile)
 	default:
 		return nil, fmt.Errorf("type %s is not supported", typ)
 	}

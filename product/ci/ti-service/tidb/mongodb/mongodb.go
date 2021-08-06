@@ -633,12 +633,13 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
 func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
 	resp := types.SelectTestsResp{}
-	if len(cg.Nodes) == 0 && len(cg.Relations) == 0 {
+	if len(cg.Nodes) == 0 && len(cg.TestRelations) == 0 {
 		// Don't delete the existing callgraph, this might happen in case of some issues with the setup
 		return resp, nil
 	}
 	nodes := make([]Node, len(cg.Nodes))
-	rels := make([]Relation, len(cg.Relations))
+	rels := make([]Relation, len(cg.TestRelations))
+	visEdges := make([]VisEdge, len(cg.VisRelations))
 
 	// Create method map to calculate how many tests have been added
 	all := []Node{}
@@ -663,8 +664,11 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 			resp.TotalTests += 1
 		}
 	}
-	for i, rel := range cg.Relations {
+	for i, rel := range cg.TestRelations {
 		rels[i] = *NewRelation(rel.Source, rel.Tests, info, account, org, proj)
+	}
+	for i, vis := range cg.VisRelations {
+		visEdges[i] = *NewVisEdge(vis.Source, vis.Tests, account, org, proj, info)
 	}
 	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
@@ -685,17 +689,30 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 			fmt.Sprintf("failed to make records from relations collection expired while uploading partial callgraph "+
 				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
 	}
+	// this will delete all the vis_relations created by older commits for current pull request
+	f = bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
+	r3, err := mdb.Database.Collection(visColl).UpdateMany(ctx, f, expireQuery)
+	if err != nil {
+		return resp, errors.Wrap(
+			err,
+			fmt.Sprintf("failed to expire records from vis_edges collection "+
+				"repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
+	}
 	mdb.Log.Infow(
-		fmt.Sprintf("marked %d records expired  from nodes and %d records from relns collection",
-			r1.ModifiedCount, r2.ModifiedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
+		fmt.Sprintf("expired records in nodes: %d, relations:  %d, vis_edges: %d collection",
+			r1.ModifiedCount, r2.ModifiedCount, r3.ModifiedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
 
 	err = mdb.upsertNodes(ctx, nodes, info, account)
 	if err != nil {
 		return resp, err
 	}
-	err = mdb.upsertRelations(ctx, rels, info, account)
+	err = mdb.upsertTestRelations(ctx, rels, info, account)
 	if err != nil {
-		return resp, err
+		return resp, errors.Wrap(err, fmt.Sprintf("failed to write in %s", relnsColl))
+	}
+	err = mdb.upsertVisRelations(ctx, visEdges, info, account)
+	if err != nil {
+		return resp, errors.Wrap(err, fmt.Sprintf("failed to write in %s", visColl))
 	}
 	return resp, nil
 }
@@ -733,13 +750,13 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	// merge relations
 	// get all the nids which are from the dest branch
 	f = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo, "account": req.AccountId}
-	dRelIDs, err := mdb.getRelIds(ctx, commit, branch, repo, f)
+	dRelIDs, err := mdb.getTestRelIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
 	// get all the nids from the source branch which need to be merged
 	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": req.AccountId}
-	sRelIDs, err := mdb.getRelIds(ctx, commit, branch, repo, f)
+	sRelIDs, err := mdb.getTestRelIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
@@ -861,9 +878,9 @@ func (mdb *MongoDb) getNodeIds(ctx context.Context, commit, branch, repo string,
 }
 
 // getRelIds queries mongo and returns list of relation ID's for the given filter
-func (mdb *MongoDb) getRelIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
-	var relations []Relation
+func (mdb *MongoDb) getTestRelIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
 	var relIDS []int
+	var relations []Relation
 	cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
 	if err != nil {
 		return []int{}, formatError(err, "failed in find query in rel collection", repo, branch, commit)
@@ -873,6 +890,23 @@ func (mdb *MongoDb) getRelIds(ctx context.Context, commit, branch, repo string, 
 	}
 	for _, v := range relations {
 		relIDS = append(relIDS, v.Source)
+	}
+	return relIDS, nil
+}
+
+// getRelIds queries mongo and returns list of vis_relation ID's for the given filter
+func (mdb *MongoDb) getVgRelIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
+	var relIDS []int
+	var visRelns []VisEdge
+	cur, err := mdb.Database.Collection(visColl).Find(ctx, f)
+	if err != nil {
+		return []int{}, formatError(err, "failed in find query in visEdge collection", repo, branch, commit)
+	}
+	if err = cur.All(ctx, &visRelns); err != nil {
+		return []int{}, formatError(err, "failed to iterate on records using cursor in visEdge collection", repo, branch, commit)
+	}
+	for _, v := range visRelns {
+		relIDS = append(relIDS, v.Caller)
 	}
 	return relIDS, nil
 }
@@ -1044,17 +1078,17 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo,
 	return nil
 }
 
-// upsertRelations is used to upload partial callagraph to db. If there is already a cg present with
+// upsertTestRelations is used to upload partial callagraph to db. If there is already a cg present with
 // the same commit, it udpdates that callgraph otherwise creates a new entry The algo for that is:
 // 1. get all the existing relations for `repo` + `branch` + `commit_id`.
 // 2. Relations received in cg which are new will be inserted in relations collection.
 // relations which are already present in the db needs to be merged.
-func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info VCSInfo, account string) error {
+func (mdb *MongoDb) upsertTestRelations(ctx context.Context, relns []Relation, info VCSInfo, account string) error {
 	mdb.Log.Infow("uploading partialcg in relations collection",
 		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
 	// fetch existing records for branch
 	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
-	Ids, err := mdb.getRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
+	Ids, err := mdb.getTestRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
 	if err != nil {
 		return err
 	}
@@ -1087,13 +1121,13 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 		for _, rel := range relToUpdate {
 			idToUpdate = append(idToUpdate, rel.Source)
 		}
-		f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "account": account, "source": bson.M{"$in": idToUpdate}}
+		f = bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "account": account, "source": bson.M{"$in": idToUpdate}}
 		cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
 		if err != nil {
 			return formatError(err, "failed in find query in rel collection", info.Repo, info.Repo, info.CommitId)
 		}
 		if err = cur.All(ctx, &existingRelns); err != nil {
-			return formatError(err, "failed to iterate on records using cursor in existing relations collection", info.Repo, info.Branch, info.CommitId)
+			return formatError(err, "failed to iterate on records using cursor", info.Repo, info.Branch, info.CommitId)
 		}
 		finalRelations := getRelMap(relToUpdate, existingRelns)
 		var operations []mongo.WriteModel
@@ -1104,6 +1138,80 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 			operations = append(operations, operation)
 		}
 		res, err := mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+		if err != nil {
+			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
+		}
+		mdb.Log.Infow(
+			fmt.Sprintf("relations updated: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
+			"repo", info.Repo,
+			"branch", info.Branch,
+			"commit", info.CommitId,
+		)
+	}
+	return nil
+}
+
+// upsertVisRelations is used to upload partial visgraph to db. If there is already a cg present with
+// the same commit, it updates that visgraph otherwise creates a new entry The algo for that is:
+// 1. get all the existing relations for `repo` + `branch` + `commit_id`.
+// 2. Relations received in vg which are new will be inserted in relations collection.
+// relations which are already present in the db needs to be merged.
+func (mdb *MongoDb) upsertVisRelations(ctx context.Context, relns []VisEdge, info VCSInfo, account string) error {
+	mdb.Log.Infow("uploading partialcg in vis_edge collection",
+		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
+	// fetch existing records for branch
+	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
+	Ids, err := mdb.getVgRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
+	if err != nil {
+		return err
+	}
+	existingRel := getMap(Ids)
+	relToAdd := make([]interface{}, 0)
+	relToUpdate := make([]VisEdge, 0)
+	for _, rel := range relns {
+		if existingRel[rel.Caller] {
+			relToUpdate = append(relToUpdate, rel)
+		} else {
+			relToAdd = append(relToAdd, rel)
+		}
+	}
+	if len(relToAdd) > 0 {
+		res, err := mdb.Database.Collection(visColl).InsertMany(ctx, relToAdd)
+		if err != nil {
+			return errors.Wrap(
+				err,
+				fmt.Sprintf("failed to add relns while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
+		}
+		mdb.Log.Infow(fmt.Sprintf("inserted %d records in vis_edge collection", len(res.InsertedIDs)),
+			"account", account,
+			"repo", info.Repo,
+			"branch", info.Branch,
+		)
+	}
+	if len(relToUpdate) > 0 {
+		var idToUpdate []int
+		var existingRelns []VisEdge
+		for _, rel := range relToUpdate {
+			idToUpdate = append(idToUpdate, rel.Caller)
+		}
+		f = bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "account": account, "caller": bson.M{"$in": idToUpdate}}
+		cur, err := mdb.Database.Collection(visColl).Find(ctx, f)
+		if err != nil {
+			return formatError(err, "failed in find query in rel collection", info.Repo, info.Repo, info.CommitId)
+		}
+		if err = cur.All(ctx, &existingRelns); err != nil {
+			return formatError(err, "failed to iterate on records using cursor", info.Repo, info.Branch, info.CommitId)
+		}
+		finalRelations := getVisMap(relToUpdate, existingRelns)
+		var operations []mongo.WriteModel
+		for src, tests := range finalRelations {
+			operation := mongo.NewUpdateOneModel()
+			operation.SetFilter(bson.M{"caller": src, "vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch})
+			operation.SetUpdate(bson.M{"$set": bson.M{"callee": tests}})
+			operations = append(operations, operation)
+		}
+		res, err := mdb.Database.Collection(visColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
 		if err != nil {
 			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
 		}
@@ -1137,6 +1245,23 @@ func getRelMap(src []Relation, dest []Relation) map[int][]int {
 	}
 	for _, v := range dest {
 		destMap[v.Source] = v.Tests
+	}
+	for k, v := range destMap {
+		destMap[k] = merge(v, srcMap[k])
+	}
+	return destMap
+}
+
+// getRelMap takes two VisEdge records A and B and returns a map[source]dest object
+// where dest is the union of tests of A and B for each entry of A
+func getVisMap(src []VisEdge, dest []VisEdge) map[int][]int {
+	srcMap := make(map[int][]int)
+	destMap := make(map[int][]int)
+	for _, relation := range src {
+		srcMap[relation.Caller] = relation.Callee
+	}
+	for _, v := range dest {
+		destMap[v.Caller] = v.Callee
 	}
 	for k, v := range destMap {
 		destMap[k] = merge(v, srcMap[k])

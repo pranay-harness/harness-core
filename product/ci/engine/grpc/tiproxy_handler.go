@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	fs "github.com/wings-software/portal/commons/go/lib/filesystem"
-	visp "github.com/wings-software/portal/product/ci/addon/parser/visualization"
+	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"io"
 	"path/filepath"
@@ -28,8 +28,7 @@ var (
 )
 
 const (
-	cgSchemaType       = "callgraph"
-	visGraphSchematype = "visgraph"
+	cgSchemaType = "callgraph"
 )
 
 // handler is used to implement EngineServer
@@ -218,7 +217,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	}
 
 	//Upload callgraph to TI server
-	encCg, err := h.getEncodedData("json", cgSchemaType, req)
+	encCg, err := h.getEncodedData(req)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to get avro encoded callgraph")
 	}
@@ -226,56 +225,51 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if err != nil {
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}
-
-	// Upload visGraph to ti server
-	encVg, err := h.getEncodedData("csv", visGraphSchematype, req)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to get avro encoded visGraph")
-	}
-	// Upload callgraph to TI server
-	err = client.UploadVisgraph(org, project, pipeline, build, stage, step, repo, sha, source, target, encVg)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to upload visgraph to ti server")
-	}
 	return res, nil
 }
 
 // getCgFiles return list of cg files in given directory
-func (h *tiProxyHandler) getCgFiles(dir, ext string) ([]string, error) {
+func (h *tiProxyHandler) getCgFiles(dir, ext1, ext2 string) ([]string, []string, error) {
 	if !strings.HasSuffix(dir, "/") {
 		dir = dir + "/"
 	}
-	return filepath.Glob(dir + "*." + ext)
+	cgFiles, err1 := filepath.Glob(dir + "*." + ext1)
+	visFiles, err2 := filepath.Glob(dir + "*." + ext2)
+
+	if err1 != nil || err2 != nil {
+		h.log.Errorw(fmt.Sprintf("error in getting files list in dir %s", dir), zap.Error(err1), zap.Error(err2))
+	}
+	return cgFiles, visFiles, nil
 }
 
 // getEncodedData reads all files of specified format from datadir folder and returns byte array of avro encoded format
-func (h *tiProxyHandler) getEncodedData(fExtension, schemaType string, req *pb.UploadCgRequest) ([]byte, error) {
-	var parser visp.Parser
+func (h *tiProxyHandler) getEncodedData(req *pb.UploadCgRequest) ([]byte, error) {
+	var parser cgp.Parser
 
 	visDir := req.GetDataDir()
 	if visDir == "" {
 		return nil, fmt.Errorf("dataDir not present in request")
 	}
-	files, err := h.getCgFiles(visDir, fExtension)
+	cgFiles, visFiles, err := h.getCgFiles(visDir, "json", "csv")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch files inside the directory")
 	}
 	fs := fs.NewOSFileSystem(h.log)
-	parser = visp.NewVisGraphParser(h.log, fs)
-	visGraph, err := parser.Parse(files)
+	parser = cgp.NewCallGraphParser(h.log, fs)
+	cg, err := parser.Parse(cgFiles, visFiles)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse visgraph")
 	}
-	h.log.Infow(fmt.Sprintf("size of nodes: %d", len(visGraph.Keys)))
+	h.log.Infow(fmt.Sprintf("size of nodes: %d, testReln: %d, visReln %d", len(cg.Nodes), len(cg.TestRelations), len(cg.VisRelations)))
 
-	cgMap := visGraph.ToStringMap()
-	cgSer, err := avro.NewCgphSerialzer(schemaType)
+	cgMap := cg.ToStringMap()
+	cgSer, err := avro.NewCgphSerialzer(cgSchemaType)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create serializer")
 	}
 	encCg, err := cgSer.Serialize(cgMap)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to encode visgraph")
+		return nil, errors.Wrap(err, "failed to encode callgraph")
 	}
 	return encCg, nil
 }

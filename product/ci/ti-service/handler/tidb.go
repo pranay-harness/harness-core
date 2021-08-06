@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -333,8 +332,9 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteBadRequest(w, err)
 			return
 		}
-		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)),
-			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
+		log.Infow("received callgraph", "len(nodes)", len(cg.Nodes), "len(relations)", len(cg.TestRelations),
+			"len(vis_relations)", len(cg.VisRelations), accountIDParam, acc, repoParam,
+			info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
 
 		st := time.Now()
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
