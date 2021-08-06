@@ -3,6 +3,7 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.serializer.GitSyncSdkRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.PmsCommonsKryoRegistrar;
 import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
@@ -48,6 +49,7 @@ public class PmsCommonsModuleRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .add(PmsCommonsMorphiaRegistrar.class)
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
+          .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
           .build();
 
   public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

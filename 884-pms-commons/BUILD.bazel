@@ -6,6 +6,7 @@ shared_deps = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//890-pms-contracts:module",
+    "//900-git-sync-sdk:module",
     "//920-delegate-service-beans:module",
     "//950-timeout-engine:module",
     "//950-walktree-visitor:module",

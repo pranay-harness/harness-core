@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -19,6 +20,14 @@ import lombok.experimental.UtilityClass;
 public class PipelineExecutionSummaryDtoMapper {
   public PipelineExecutionSummaryDTO toDto(
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity, EntityGitDetails entityGitDetails) {
+    if (entityGitDetails.getRootFolder().equals(GitSyncConstants.DEFAULT)
+        || entityGitDetails.getFilePath().equals(GitSyncConstants.DEFAULT)) {
+      entityGitDetails = EntityGitDetails.builder()
+                             .branch(entityGitDetails.getBranch())
+                             .repoIdentifier(entityGitDetails.getRepoIdentifier())
+                             .objectId(entityGitDetails.getObjectId())
+                             .build();
+    }
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = pipelineExecutionSummaryEntity.getLayoutNodeMap();
     String startingNodeId = pipelineExecutionSummaryEntity.getStartingNodeId();
     return PipelineExecutionSummaryDTO.builder()
