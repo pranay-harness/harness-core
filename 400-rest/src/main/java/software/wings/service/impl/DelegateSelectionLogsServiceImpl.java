@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
+import static io.harness.beans.FeatureName.ENABLE_DELEGATE_SELECTION_LOG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.NgSetupFields.NG;
 
@@ -68,6 +68,7 @@ import org.jetbrains.annotations.NotNull;
 @BreakDependencyOn("software.wings.beans.Application")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.Service")
+@BreakDependencyOn("io.harness.beans.FeatureName")
 @OwnedBy(DEL)
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
   @Inject private HPersistence persistence;
@@ -131,13 +132,13 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
 
     try {
-      if (featureFlagService.isNotEnabled(
-              DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
+      if (featureFlagService.isEnabled(
+              ENABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
         persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
         persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
         log.info("Batch saved successfully");
       } else {
-        batch.getDelegateSelectionLogs().stream().map(this::constructSelectionLogString).distinct().forEach(log::info);
+        batch.getDelegateSelectionLogs().stream().map(this::constructSelectionLogString).distinct().forEach(log::debug);
       }
     } catch (Exception exception) {
       log.error("Error while saving into Database ", exception);
@@ -146,7 +147,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public BatchDelegateSelectionLog createBatch(DelegateTask task) {
-    if (task == null || task.getUuid() == null || !task.isSelectionLogsTrackingEnabled()) {
+    if (task == null || task.getUuid() == null
+        || featureFlagService.isNotEnabled(ENABLE_DELEGATE_SELECTION_LOG, task.getAccountId())) {
       return null;
     }
 
@@ -361,7 +363,9 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       final Set<String> delegateIds, final Map<String, DelegateSelectionLogMetadata> metadata, final String message,
       final String conclusion, final String groupId) {
     if (batch == null) {
-      log.info("SelectionLog (no taskId): {}, Conclusion {}, groupId {}", message, conclusion, groupId);
+      if (log.isDebugEnabled()) {
+        log.debug("SelectionLog (no taskId): {}, Conclusion {}, groupId {}", message, conclusion, groupId);
+      }
       return;
     }
 
