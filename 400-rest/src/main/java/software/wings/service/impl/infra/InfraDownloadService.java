@@ -9,8 +9,8 @@ import io.harness.logging.AccessTokenBean;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(PL)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface InfraDownloadService {
   String getDownloadUrlForDelegate(@NotEmpty String version, String env, String accountId);
 

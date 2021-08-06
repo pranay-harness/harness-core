@@ -30,7 +30,9 @@ import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_U
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
@@ -102,6 +104,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._950_EVENTS_FRAMEWORK)
 public class EventPublishHelper {
   @Inject private EventPublisher eventPublisher;
   @Inject private ExecutorService executorService;

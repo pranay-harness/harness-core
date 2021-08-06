@@ -45,7 +45,7 @@ import lombok.Value;
 @OwnedBy(CDP)
 @Value
 @Builder
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._950_NG_CORE)
 public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManagerFunctorInterface {
   private int expressionFunctorToken;
   private final String accountId;
