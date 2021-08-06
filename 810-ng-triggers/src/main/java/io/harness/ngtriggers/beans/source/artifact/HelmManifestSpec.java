@@ -6,6 +6,9 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ngtriggers.beans.source.artifact.BuildStoreType;
+import io.harness.ngtriggers.beans.source.artifact.BuildStoreTypeSpec;
+import io.harness.ngtriggers.beans.source.artifact.ManifestTypeSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
