@@ -46,6 +46,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -62,7 +63,8 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   @Inject private DelegateConnectionDao delegateConnectionDao;
 
   @Override
-  public long getDelegateGroupCount(final String accountId, final String orgId, final String projectId) {
+  public long getDelegateGroupCount(
+      final String accountId, @Nullable final String orgId, @Nullable final String projectId) {
     return createDelegateGroupsQuery(accountId, orgId, projectId, false).count();
   }
 
@@ -344,8 +346,8 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
         .collect(toList());
   }
 
-  private Query<DelegateGroup> createDelegateGroupsQuery(
-      final String accountId, final String orgId, final String projectId, final boolean upTheHierarchy) {
+  private Query<DelegateGroup> createDelegateGroupsQuery(final String accountId, @Nullable final String orgId,
+      @Nullable final String projectId, final boolean upTheHierarchy) {
     final Query<DelegateGroup> delegateGroupQuery = persistence.createQuery(DelegateGroup.class)
                                                         .filter(DelegateGroupKeys.accountId, accountId)
                                                         .filter(DelegateGroupKeys.ng, true);
