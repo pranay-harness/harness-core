@@ -1,5 +1,7 @@
 package io.harness.grpc;
 
+import static com.google.common.base.Strings.emptyToNull;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegatesetup.DelegateGroupsCountResponse;
@@ -26,8 +28,8 @@ public class DelegateSetupServiceGrpcImpl extends DelegateSetupServiceImplBase {
       final DelegateGroupsRequest request, final StreamObserver<DelegateGroupsCountResponse> responseObserver) {
     try {
       final String accountId = request.getAccountId().getId();
-      final String orgId = request.getOrgId().getId();
-      final String projectId = request.getProjectId().getId();
+      final String orgId = emptyToNull(request.getOrgId().getId());
+      final String projectId = emptyToNull(request.getProjectId().getId());
       final long delegateGroupCount = delegateSetupService.getDelegateGroupCount(accountId, orgId, projectId);
 
       responseObserver.onNext(
