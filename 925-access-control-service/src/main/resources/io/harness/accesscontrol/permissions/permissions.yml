@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: permissionsConfiguration
-version: 6
+version: 7
 permissions:
   - identifier: core_project_delete
     name: Delete Project
@@ -13,6 +13,7 @@ permissions:
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
+      - organization
       - project
   - identifier: core_project_edit
     name: Edit a Project
@@ -37,6 +38,7 @@ permissions:
     status: ACTIVE
     includeInAllRoles: true
     allowedScopeLevels:
+      - account
       - organization
   - identifier: core_organization_edit
     name: Edit an Organization
