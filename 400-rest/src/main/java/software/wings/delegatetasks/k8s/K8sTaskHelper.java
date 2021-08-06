@@ -312,7 +312,7 @@ public class K8sTaskHelper {
       GitFileConfig gitFileConfig = delegateManifestConfig.getGitFileConfig();
       GitConfig gitConfig = delegateManifestConfig.getGitConfig();
       printGitConfigInExecutionLogs(gitConfig, gitFileConfig, executionLogCallback);
-
+      // To do  add feature flag check
       if (gitConfig.getSshSettingAttribute() == null
           && Arrays.asList(GITHUB, GITLAB).contains(gitConfig.getProviderType())) {
         downloadFilesUsingScm(manifestFilesDirectory, gitFileConfig, gitConfig,
@@ -336,6 +336,7 @@ public class K8sTaskHelper {
   }
   private void downloadFilesUsingScm(String manifestFilesDirectory, GitFileConfig gitFileConfig, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+    // To do decrypt old way an copy decrypted value
     encryptedDataDetails.get(0).setFieldName("tokenRef");
     String directoryPath = Paths.get(manifestFilesDirectory).toString();
 

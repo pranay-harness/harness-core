@@ -119,8 +119,9 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
       GitFetchFilesResult gitFetchFilesResult;
 
       try {
-        gitFetchFilesResult = fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(),
-            gitFetchFileConfig.getGitConfig(), gitFetchFileConfig.getEncryptedDataDetails(), executionLogCallback);
+        gitFetchFilesResult =
+            fetchFilesFromRepo(gitFetchFileConfig.getGitFileConfig(), gitFetchFileConfig.getGitConfig(),
+                gitFetchFileConfig.getEncryptedDataDetails(), executionLogCallback, taskParams.isOptimizedFilesFetch());
       } catch (Exception ex) {
         String exceptionMsg = ex.getMessage();
 
@@ -156,7 +157,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   }
 
   private GitFetchFilesResult fetchFilesFromRepo(GitFileConfig gitFileConfig, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean optimizedFilesFetch) {
     executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfig.getRepoUrl());
     if (gitFileConfig.isUseBranch()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitFileConfig.getBranch());
@@ -183,8 +185,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
       filePathsToFetch = Collections.singletonList(filePath);
     }
 
-    GitFetchFilesResult gitFetchFilesResult = null;
-    if (gitConfig.getSshSettingAttribute() == null
+    GitFetchFilesResult gitFetchFilesResult;
+    if (optimizedFilesFetch && gitConfig.getSshSettingAttribute() == null
         && Arrays.asList(GITHUB, GITLAB).contains(gitConfig.getProviderType())) {
       gitFetchFilesResult = fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, encryptedDataDetails, filePathsToFetch);
     } else {
@@ -202,7 +204,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   private GitFetchFilesResult fetchFilesFromRepoWithScm(GitFileConfig gitFileConfig, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, List<String> filePathList) {
     encryptedDataDetails.get(0).setFieldName("tokenRef");
-
+   // TO Do decrypt gitconfig anf copy decrypted value
     ScmConnector scmConnector = getScmConnector(gitConfig);
 
     secretDecryptionService.decrypt(
