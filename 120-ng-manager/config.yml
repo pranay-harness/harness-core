@@ -329,3 +329,5 @@ cacheConfig:
   cacheBackend: REDIS
   cacheNamespace: ""
   disabledCaches: [ ]
+
+scopeAccessCheckEnabled: true

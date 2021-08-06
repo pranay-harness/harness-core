@@ -4,6 +4,10 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassInterMsvcRequests;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassInternalApi;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPaths;
+import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPublicApi;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
@@ -16,6 +20,8 @@ import io.harness.Microservice;
 import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.filter.NGScopeAccessCheckFilter;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
@@ -294,6 +300,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
     registerAuthFilters(appConfig, environment, injector);
+    registerScopeAccessCheckFilter(appConfig, environment, injector);
     registerRequestContextFilter(environment);
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
@@ -574,6 +581,17 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       registerNextGenAuthFilter(
           configuration, environment, injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))));
       registerInternalApiAuthFilter(configuration, environment);
+    }
+  }
+
+  private void registerScopeAccessCheckFilter(
+      NextGenConfiguration configuration, Environment environment, Injector injector) {
+    if (configuration.isScopeAccessCheckEnabled()) {
+      AccessControlClient accessControlClient = injector.getInstance(AccessControlClient.class);
+      environment.jersey().register(
+          new NGScopeAccessCheckFilter(Arrays.asList(bypassInterMsvcRequests(), bypassPublicApi(), bypassInternalApi(),
+                                           bypassPaths(Arrays.asList("/version", "/swagger", "/swagger.json"))),
+              accessControlClient));
     }
   }
 
