@@ -17,7 +17,8 @@ public enum ModuleType {
 
   // Internal
   @JsonProperty("CORE") CORE("Core", true),
-  @JsonProperty("PMS") PMS("Pipelines", true);
+  @JsonProperty("PMS") PMS("Pipelines", true),
+  @JsonProperty("TEMPLATESERVICE") TEMPLATE_SERVICE("TemplateService", true);
 
   String displayName;
   boolean internal;

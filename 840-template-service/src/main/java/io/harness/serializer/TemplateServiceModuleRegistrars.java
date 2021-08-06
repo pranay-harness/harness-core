@@ -7,6 +7,7 @@ import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
@@ -15,10 +16,18 @@ import org.springframework.core.convert.converter.Converter;
 @OwnedBy(CDC)
 public class TemplateServiceModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(NGCommonsRegistrars.kryoRegistrars)
+          .addAll(NGCoreBeansRegistrars.kryoRegistrars)
+          .addAll(PrimaryVersionManagerRegistrars.kryoRegistrars)
+          .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
+      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+          .addAll(NGCommonsRegistrars.morphiaRegistrars)
+          .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
+          .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder().build();
