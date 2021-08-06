@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
+import static io.harness.beans.FeatureName.USE_DELEGATE_SERVICE_APP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -527,8 +528,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     return startupMode.equals(StartupMode.MANAGER);
   }
 
-  public boolean isDelegateServiceApp() {
-    return startupMode.equals(StartupMode.DELEGATE_SERVICE);
+  public boolean isDelegateServiceApp(Injector injector) {
+    return startupMode.equals(StartupMode.DELEGATE_SERVICE)
+        || !injector.getInstance(FeatureFlagService.class).isGlobalEnabled(USE_DELEGATE_SERVICE_APP);
   }
 
   public void addModules(final MainConfiguration configuration, List<Module> modules) {
