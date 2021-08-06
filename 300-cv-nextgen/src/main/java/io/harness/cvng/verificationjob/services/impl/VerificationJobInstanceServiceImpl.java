@@ -289,6 +289,22 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       updateStatusIfDone(verificationJobInstanceId);
     }
   }
+
+  @Override
+  public void abort(List<String> verficationJobInstanceIds) {
+    UpdateOperations<VerificationJobInstance> abortUpdateOperation =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class)
+            .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.ABORTED);
+    Query<VerificationJobInstance> query = hPersistence.createQuery(VerificationJobInstance.class)
+                                               .field(VerificationJobInstanceKeys.uuid)
+                                               .in(verficationJobInstanceIds)
+                                               .field(VerificationJobInstanceKeys.executionStatus)
+                                               .in(ExecutionStatus.nonFinalStatuses());
+    hPersistence.update(query, abortUpdateOperation);
+    List<String> verificationTaskIds = verificationTaskService.maybeGetVerificationTaskIds(verficationJobInstanceIds);
+    dataCollectionTaskService.abortDeploymentDataCollectionTasks(verificationTaskIds);
+  }
+
   private void updateStatusIfDone(String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
     if (verificationJobInstance.getExecutionStatus() != ExecutionStatus.RUNNING) {
@@ -540,6 +556,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     int failed = 0;
     int notStarted = 0;
     int errors = 0;
+    int aborted = 0;
     List<Risk> latestRiskScores = new ArrayList<>();
     for (int i = 0; i < verificationJobInstances.size(); i++) {
       VerificationJobInstance verificationJobInstance = verificationJobInstances.get(i);
@@ -570,6 +587,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           }
           progress++;
           break;
+        case ABORTED:
+          aborted++;
+          break;
         default:
           throw new IllegalStateException(verificationJobInstance.getExecutionStatus() + " not supported");
       }
@@ -583,6 +603,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .total(total)
         .failed(failed)
         .errors(errors)
+        .aborted(aborted)
         .passed(passed)
         .progress(progress)
         .notStarted(notStarted)

@@ -213,4 +213,15 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
         .map(verificationTask -> verificationTask.getVerificationJobInstanceId())
         .collect(Collectors.toList());
   }
+
+  @Override
+  public List<String> maybeGetVerificationTaskIds(List<String> verificationJobInstanceIds) {
+    return hPersistence.createQuery(VerificationTask.class)
+        .field(VerificationTaskKeys.verificationJobInstanceId)
+        .in(verificationJobInstanceIds)
+        .asList()
+        .stream()
+        .map(VerificationTask::getUuid)
+        .collect(Collectors.toList());
+  }
 }

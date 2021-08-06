@@ -245,7 +245,8 @@ public final class VerificationJobInstance
     RUNNING,
     FAILED,
     SUCCESS,
-    TIMEOUT;
+    TIMEOUT,
+    ABORTED;
     public static List<ExecutionStatus> nonFinalStatuses() {
       return Lists.newArrayList(QUEUED, RUNNING);
     }
