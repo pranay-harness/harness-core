@@ -147,9 +147,12 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
       GlobalContextManager.unset();
+      DelegateTaskResponse taskResponseFinal = taskResponse.build();
       if (consumer != null) {
-        consumer.accept(taskResponse.build());
+        consumer.accept(taskResponseFinal);
       }
+      log.info("Completed executing task {} with taskResponse {} and responseCode {}", taskId,
+          taskResponseFinal.getResponse(), taskResponseFinal.getResponseCode());
     }
   }
 

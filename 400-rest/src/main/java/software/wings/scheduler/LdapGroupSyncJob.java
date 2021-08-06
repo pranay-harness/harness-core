@@ -218,6 +218,7 @@ public class LdapGroupSyncJob implements Job {
   UserGroup syncUserGroupMetadata(UserGroup userGroup, LdapGroupResponse groupResponse) {
     UpdateOperations<UserGroup> updateOperations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(updateOperations, UserGroupKeys.ssoGroupName, groupResponse.getName());
+    log.info("LDAP: sync setting ssGroupName to {}", groupResponse.getName());
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
                                  .filter("_id", userGroup.getUuid())
                                  .field(UserGroupKeys.accountId)
@@ -282,7 +283,9 @@ public class LdapGroupSyncJob implements Job {
     long userProvidedTimeout = ldapSettings.getConnectionSettings().getResponseTimeout();
     // if user specified time
     long ldapSyncTimeout = getLdapSyncTimeout(userProvidedTimeout);
-    log.info("Fetching LDAP group details for {} with timeout {}", ldapSettings.getAccountId(), ldapSyncTimeout);
+    log.info("Fetching LDAP user group {} group details for {} with timeout {}", userGroup.getName(),
+        ldapSettings.getAccountId(), ldapSyncTimeout);
+
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(ldapSettings.getAccountId())
                                           .appId(GLOBAL_APP_ID)
@@ -292,10 +295,10 @@ public class LdapGroupSyncJob implements Job {
                                           .fetchGroupByDn(ldapSettings, encryptedDataDetail, userGroup.getSsoGroupId());
     if (null == groupResponse) {
       String message = String.format(LdapConstants.USER_GROUP_SYNC_INVALID_REMOTE_GROUP, userGroup.getName());
-      log.info("LDAP : Group Response from delegate is null");
+      log.info("LDAP : Group Response for group {} from delegate is null", userGroup.getName());
       throw new WingsException(ErrorCode.USER_GROUP_SYNC_FAILURE, message);
     }
-    log.info("LDAP : Group Response from delegate {}", groupResponse);
+    log.info("LDAP : Group Response for group {} from delegate {}", userGroup.getName(), groupResponse);
     return groupResponse;
   }
 
@@ -313,12 +316,18 @@ public class LdapGroupSyncJob implements Job {
     for (UserGroup userGroup : userGroups) {
       UserGroup savedUserGroup = userGroupService.get(userGroup.getAccountId(), userGroup.getUuid(), false);
       if (!savedUserGroup.isSsoLinked()) {
+        log.info("[LdapGroupSyncJob] Validating user group {} state before sync", userGroup.getName());
         return false;
       }
       if (!savedUserGroup.getSsoGroupId().equals(userGroup.getSsoGroupId())) {
+        log.info(
+            "[LdapGroupSyncJob] Validating user group state before sync And Failed because mismatch in SavedUserGroupId:{} and UserGroupId:{} and UserGroupName:{}",
+            savedUserGroup.getSsoGroupId(), userGroup.getSsoGroupId(), userGroup.getName());
+
         return false;
       }
     }
+    log.info("[LdapGroupSyncJob] All UserGroups are valid sync can proceed : UserGroups {}", userGroups);
     return true;
   }
 
@@ -332,6 +341,7 @@ public class LdapGroupSyncJob implements Job {
     List<UserGroup> userGroupsFailedToSync = new ArrayList<>();
     for (UserGroup userGroup : userGroups) {
       try {
+        log.info("Ldap started syncing usergroup {}", userGroup.getName());
         LdapGroupResponse groupResponse = fetchGroupDetails(ldapSettings, encryptedDataDetail, userGroup);
 
         if (!groupResponse.isSelectable()) {
@@ -360,6 +370,9 @@ public class LdapGroupSyncJob implements Job {
     // Sync the groups only if the state is still the same as we started. Else any change in the groups would have
     // already triggered another cron job and it will handle it.
     if (validateUserGroupStates(userGroups)) {
+      log.info("LDAP: removedGroupMembers for ssoId {} is {}", ssoId, removedGroupMembers);
+      log.info("LDAP: addedGroupMembers for ssoId {} is {}", ssoId, addedGroupMembers);
+
       syncUserGroupMembers(accountId, removedGroupMembers, addedGroupMembers);
     }
   }
@@ -399,7 +412,8 @@ public class LdapGroupSyncJob implements Job {
       List<UserGroup> userGroupsToSync = userGroupService.getUserGroupsBySsoId(accountId, ssoId);
       syncUserGroups(accountId, ldapSettings, userGroupsToSync, ssoId);
 
-      log.info("Ldap group sync job done for ssoId {} accountId {}", ssoId, accountId);
+      log.info(
+          "Ldap group sync job done for ssoId {} accountId {} and usergroups {}", ssoId, accountId, userGroupsToSync);
     } catch (WingsException exception) {
       if (exception.getCode() == ErrorCode.USER_GROUP_SYNC_FAILURE) {
         ssoSettingService.raiseSyncFailureAlert(accountId, ssoId, exception.getMessage());
