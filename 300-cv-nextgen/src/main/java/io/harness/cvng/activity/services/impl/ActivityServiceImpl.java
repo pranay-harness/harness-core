@@ -648,6 +648,18 @@ public class ActivityServiceImpl implements ActivityService {
         accountId, verificationJobInstanceIds.get(0), label, pageNumber, pageSize, hostName, clusterType);
   }
 
+  @Override
+  public void abort(String activityId) {
+    Activity activity = hPersistence.createQuery(Activity.class)
+                            .filter(ActivityKeys.uuid, activityId)
+                            .field(ActivityKeys.analysisStatus)
+                            .notIn(ActivityVerificationStatus.getFinalStates())
+                            .get();
+    if (activity != null) {
+      verificationJobInstanceService.abort(activity.getVerificationJobInstanceIds());
+    }
+  }
+
   private List<String> getVerificationJobInstanceId(String activityId) {
     Preconditions.checkNotNull(activityId);
     Activity activity = get(activityId);

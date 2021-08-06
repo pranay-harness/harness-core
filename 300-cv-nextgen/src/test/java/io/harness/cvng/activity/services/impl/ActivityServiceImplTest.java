@@ -5,6 +5,7 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.JOB_IDE
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -1050,6 +1051,49 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     assertThat(activities.get(0).getAnalysisStatus().name())
         .isEqualTo(ActivityVerificationStatus.VERIFICATION_PASSED.name());
     assertThat(activities.get(0).getVerificationSummary()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testAbort_inNotStarted() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    instant = Instant.now();
+    String activityId = activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    Activity activity = activityService.get(activityId);
+    List<String> verificationJobs = Lists.newArrayList("JOB_INSTANCE_ID");
+    activity.setVerificationJobInstanceIds(verificationJobs);
+    hPersistence.save(activity);
+
+    activityService.abort(activityId);
+
+    Activity updatedActivity = activityService.get(activityId);
+    verify(verificationJobInstanceService).abort(Lists.newArrayList(updatedActivity.getVerificationJobInstanceIds()));
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testAbort_inError() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(
+             accountId, orgIdentifier, projectIdentifier, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    instant = Instant.now();
+    String activityId = activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    Activity activity = activityService.get(activityId);
+    activity.setAnalysisStatus(ActivityVerificationStatus.ERROR);
+    hPersistence.save(activity);
+
+    activityService.abort(activityId);
+
+    Activity updatedActivity = activityService.get(activityId);
+    // assert that errored activity is not aborted
+    assertThat(updatedActivity.getAnalysisStatus()).isEqualTo(ActivityVerificationStatus.ERROR);
+    verify(verificationJobInstanceService, never()).abort(any());
   }
 
   @Test

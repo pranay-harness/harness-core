@@ -66,4 +66,6 @@ public interface ActivityService {
 
   PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
       Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType);
+
+  void abort(String activityId);
 }

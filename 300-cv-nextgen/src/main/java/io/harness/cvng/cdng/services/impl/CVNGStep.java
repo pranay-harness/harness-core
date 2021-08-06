@@ -248,5 +248,8 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, CVNGStepParameter stepParameters, AsyncExecutableResponse executableResponse) {}
+      Ambiance ambiance, CVNGStepParameter stepParameters, AsyncExecutableResponse executableResponse) {
+    CVNGStepTask cvngStepTask = cvngStepTaskService.getByCallBackId(executableResponse.getCallbackIds(0));
+    activityService.abort(cvngStepTask.getActivityId());
+  }
 }

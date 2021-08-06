@@ -48,4 +48,5 @@ public interface VerificationJobInstanceService {
   void markTimedOutIfNoProgress(VerificationJobInstance verificationJobInstance);
   CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId);
   Set<DatasourceTypeDTO> getDataSourcetypes(List<String> verificationJobInstanceIds);
+  void abort(List<String> verficationJobInstanceIds);
 }
