@@ -5,14 +5,13 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sCanaryExecutionOutput;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.task.k8s.DeleteResourcesType;
-import io.harness.delegate.task.k8s.K8sDeleteRequest;
+import io.harness.delegate.task.k8s.K8sCanaryDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
-import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
@@ -63,25 +62,68 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
     K8sCanaryDeleteStepParameters k8sCanaryDeleteStepParameters =
         (K8sCanaryDeleteStepParameters) stepElementParameters.getSpec();
     String canaryStepFqn = k8sCanaryDeleteStepParameters.getCanaryStepFqn();
+    InfrastructureOutcome infrastructure = k8sStepHelper.getInfrastructureOutcome(ambiance);
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     if (EmptyPredicate.isEmpty(canaryStepFqn)) {
       throw new InvalidRequestException(K8S_CANARY_STEP_MISSING, USER);
     }
 
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(ambiance,
         RefObjectUtils.getSweepingOutputRefObject(canaryStepFqn + "." + OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+    if (optionalSweepingOutput.isFound()) {
+      K8sCanaryOutcome k8sCanaryOutcome = (K8sCanaryOutcome) optionalSweepingOutput.getOutput();
+      return obtainTaskBasedOnCanaryOutcome(
+          stepElementParameters, ambiance, infrastructure, k8sCanaryOutcome, releaseName);
+    }
 
+    optionalSweepingOutput = executionSweepingOutputService.resolveOptional(ambiance,
+        RefObjectUtils.getSweepingOutputRefObject(canaryStepFqn + "." + K8sCanaryExecutionOutput.OUTPUT_NAME));
     if (!optionalSweepingOutput.isFound()) {
       return skipTaskRequestOrThrowException(ambiance);
     }
 
-    K8sCanaryOutcome canaryOutcome = (K8sCanaryOutcome) optionalSweepingOutput.getOutput();
-    if (StepUtils.isStepInRollbackSection(ambiance)) {
-      if (!canaryOutcome.isCanaryWorkloadDeployed()) {
-        return TaskRequest.newBuilder()
-            .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_K8S_CANARY_DELETE_STEP_EXECUTION).build())
-            .build();
-      }
+    return obtainTaskBasedOnReleaseName(stepElementParameters, ambiance, infrastructure, releaseName);
+  }
 
+  private TaskRequest obtainTaskBasedOnCanaryOutcome(StepElementParameters stepElementParameters, Ambiance ambiance,
+      InfrastructureOutcome infrastructure, K8sCanaryOutcome canaryOutcome, String releaseName) {
+    if (StepUtils.isStepInRollbackSection(ambiance) && !canaryOutcome.isCanaryWorkloadDeployed()) {
+      return TaskRequest.newBuilder()
+          .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_K8S_CANARY_DELETE_STEP_EXECUTION).build())
+          .build();
+    }
+
+    K8sCanaryDeleteRequest request =
+        K8sCanaryDeleteRequest.builder()
+            .canaryWorkloads(canaryOutcome.getCanaryWorkload())
+            .commandName(K8S_CANARY_DELETE_COMMAND_NAME)
+            .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
+            .timeoutIntervalInMin(
+                NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
+            .build();
+
+    return queueCanaryDeleteRequest(stepElementParameters, request, ambiance, infrastructure, releaseName);
+  }
+
+  private TaskRequest obtainTaskBasedOnReleaseName(StepElementParameters stepElementParameters, Ambiance ambiance,
+      InfrastructureOutcome infrastructure, String releaseName) {
+    K8sCanaryDeleteRequest request =
+        K8sCanaryDeleteRequest.builder()
+            .releaseName(releaseName)
+            .commandName(K8S_CANARY_DELETE_COMMAND_NAME)
+            .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
+            .timeoutIntervalInMin(
+                NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
+            .build();
+
+    return queueCanaryDeleteRequest(stepElementParameters, request, ambiance, infrastructure, releaseName);
+  }
+
+  private TaskRequest queueCanaryDeleteRequest(StepElementParameters stepElementParameters,
+      K8sCanaryDeleteRequest request, Ambiance ambiance, InfrastructureOutcome infrastructure, String releaseName) {
+    K8sCanaryDeleteStepParameters k8sCanaryDeleteStepParameters =
+        (K8sCanaryDeleteStepParameters) stepElementParameters.getSpec();
+    if (StepUtils.isStepInRollbackSection(ambiance)) {
       String canaryDeleteStepFqn = k8sCanaryDeleteStepParameters.getCanaryDeleteStepFqn();
       if (EmptyPredicate.isNotEmpty(canaryDeleteStepFqn)) {
         OptionalSweepingOutput existingCanaryDeleteOutput = executionSweepingOutputService.resolveOptional(ambiance,
@@ -94,21 +136,6 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
         }
       }
     }
-
-    InfrastructureOutcome infrastructure = k8sStepHelper.getInfrastructureOutcome(ambiance);
-    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
-
-    K8sDeleteRequest request =
-        K8sDeleteRequest.builder()
-            .resources(canaryOutcome.getCanaryWorkload())
-            .deleteResourcesType(DeleteResourcesType.ResourceName)
-            .commandName(K8S_CANARY_DELETE_COMMAND_NAME)
-            .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .deleteNamespacesForRelease(false)
-            .taskType(K8sTaskType.DELETE)
-            .timeoutIntervalInMin(
-                NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
-            .build();
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
     return k8sStepHelper
