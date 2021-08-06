@@ -1,5 +1,10 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public enum K8sTaskType {
   DEPLOYMENT_ROLLING,
   DEPLOYMENT_ROLLING_ROLLBACK,
@@ -11,5 +16,6 @@ public enum K8sTaskType {
   TRAFFIC_SPLIT,
   APPLY,
   VERSION,
-  SWAP_SERVICE_SELECTORS
+  SWAP_SERVICE_SELECTORS,
+  CANARY_DELETE,
 }

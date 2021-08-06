@@ -93,7 +93,7 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   @Size(max = 1024) String description;
   @NotEmpty String yaml;
   @NotEmpty NGTriggerType type;
-
+  String status;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
   @NotEmpty String projectIdentifier;
@@ -102,7 +102,7 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   String signature;
 
   @NotEmpty NGTriggerMetadata metadata;
-
+  ValidationStatus validationStatus;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;

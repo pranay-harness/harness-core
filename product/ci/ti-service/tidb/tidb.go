@@ -18,4 +18,7 @@ type TiDB interface {
 	// MergePartialCg merges a partial cg corresponding to a list of commits and a repo to the
 	// master call graph.
 	MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error
+
+	// GetVg returns the visualization callgraph corresponding to a target branch and an (optional) class name.
+	GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgResp, error)
 }

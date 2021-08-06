@@ -1,6 +1,7 @@
 package io.harness.cvng.cdng.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,12 +10,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.beans.CVNGStepParameter;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
+import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.cdng.services.impl.CVNGStep.VerifyStepOutcome;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -42,9 +45,11 @@ import com.google.inject.Injector;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 public class CVNGStepTest extends CvNextGenTestBase {
   private CVNGStep cvngStep;
@@ -52,6 +57,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject private MetricPackService metricPackService;
+  @Inject private CVNGStepTaskService cvngStepTaskService;
   private BuilderFactory builderFactory;
   private String accountId;
   private String projectIdentifier;
@@ -317,6 +323,22 @@ public class CVNGStepTest extends CvNextGenTestBase {
                                      .activityId(activityId)
                                      .build();
     assertThat(verifyStepOutcome).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testHandleAbort() throws IllegalAccessException {
+    Ambiance ambiance = getAmbiance();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    CVNGStepTask cvngStepTask = builderFactory.cvngStepTaskBuilder().build();
+    hPersistence.save(cvngStepTask);
+    ActivityService activityService = Mockito.mock(ActivityService.class);
+    FieldUtils.writeField(cvngStep, "activityService", activityService, true);
+
+    cvngStep.handleAbort(ambiance, cvngStepParameter,
+        AsyncExecutableResponse.newBuilder().addCallbackIds(cvngStepTask.getCallbackId()).build());
+    Mockito.verify(activityService).abort(cvngStepTask.getActivityId());
   }
 
   private CVNGStepParameter getCvngStepParameter() {

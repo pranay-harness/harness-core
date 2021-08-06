@@ -16,6 +16,7 @@ import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.k8s.K8sConstants;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
@@ -118,7 +119,7 @@ public class K8sCanaryBaseHandler {
       K8sCanaryHandlerConfig canaryHandlerConfig, Integer targetInstances, LogCallback logCallback) {
     canaryHandlerConfig.setTargetInstances(targetInstances);
     KubernetesResource canaryWorkload = canaryHandlerConfig.getCanaryWorkload();
-    canaryWorkload.appendSuffixInName("-canary");
+    canaryWorkload.appendSuffixInName(K8sConstants.CANARY_WORKLOAD_SUFFIX_NAME);
     canaryWorkload.addLabelsInPodSpec(ImmutableMap.of(HarnessLabels.releaseName, canaryHandlerConfig.getReleaseName(),
         HarnessLabels.track, HarnessLabelValues.trackCanary));
     canaryWorkload.addLabelsInDeploymentSelector(ImmutableMap.of(HarnessLabels.track, HarnessLabelValues.trackCanary));

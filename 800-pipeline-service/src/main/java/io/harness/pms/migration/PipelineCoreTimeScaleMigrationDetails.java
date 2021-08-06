@@ -29,6 +29,7 @@ public class PipelineCoreTimeScaleMigrationDetails implements MigrationDetails {
         .add(Pair.of(2, UpdateTimescaleCIPipelineExecutionSummary.class))
         .add(Pair.of(3, UpdateTimescaleTablePipelineExecutionSummaryCd.class))
         .add(Pair.of(4, UpdateTimescaleTableCIWithTriggerInfo.class))
+        .add(Pair.of(5, CreateTimescaleCDCTablesWhereNotExist.class))
         .build();
   }
 }

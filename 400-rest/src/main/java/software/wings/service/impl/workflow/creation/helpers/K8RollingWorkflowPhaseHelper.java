@@ -8,7 +8,9 @@ import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 
 import software.wings.beans.GraphNode;
@@ -21,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   // Get all Rolling Steps
   @Override

@@ -85,7 +85,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(onlyExplicitlyIncluded = true, innerTypeName = "ShellScriptProvisionStateKeys")
 @OwnedBy(CDP)
 @Slf4j
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
   private static final int TIMEOUT_IN_MINUTES = 20;

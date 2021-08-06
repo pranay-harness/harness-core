@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @OwnedBy(HarnessTeam.DX)
@@ -40,16 +41,19 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
     return mongoTemplate.findAndReplace(query, instance, FindAndReplaceOptions.options().returnNew());
   }
 
+  public Instance findAndModify(Criteria criteria, Update update) {
+    Query query = new Query(criteria);
+    return mongoTemplate.findAndModify(query, update, Instance.class);
+  }
+
   @Override
   public List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp) {
     Criteria criteria = Criteria.where(InstanceKeys.accountIdentifier).is(accountIdentifier);
     if (timestamp > 0) {
-      criteria = criteria.andOperator(
-          Criteria.where(InstanceKeys.createdAt)
-              .lte(timestamp)
-              .andOperator(Criteria.where(InstanceKeys.isDeleted)
-                               .is(false)
-                               .orOperator(Criteria.where(InstanceKeys.deletedAt).gte(timestamp))));
+      Criteria filterCreatedAt = Criteria.where(InstanceKeys.createdAt).lte(timestamp);
+      Criteria filterDeletedAt = Criteria.where(InstanceKeys.deletedAt).gte(timestamp);
+      Criteria filterNotDeleted = Criteria.where(InstanceKeys.isDeleted).is(false);
+      criteria.andOperator(filterCreatedAt.orOperator(filterNotDeleted, filterDeletedAt));
     } else {
       criteria = criteria.andOperator(Criteria.where(InstanceKeys.isDeleted).is(false));
     }

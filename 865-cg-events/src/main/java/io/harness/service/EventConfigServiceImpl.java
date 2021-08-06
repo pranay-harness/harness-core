@@ -79,6 +79,10 @@ public class EventConfigServiceImpl implements EventConfigService {
     if (eventConfig.getDelegateSelectors() == null) {
       eventConfig.setDelegateSelectors(Collections.emptyList());
     }
+    CgEventConfig prevConfigByName = getEventsConfigByName(accountId, appId, eventConfig.getName());
+    if (prevConfigByName != null && !(prevConfigByName.getUuid()).equals(eventConfig.getUuid())) {
+      throw new InvalidRequestException("Duplicate Name " + eventConfig.getName());
+    }
     UpdateOperations<CgEventConfig> updateOperations =
         hPersistence.createUpdateOperations(CgEventConfig.class)
             .set(CgEventConfigKeys.rule, eventConfig.getRule())
@@ -107,6 +111,9 @@ public class EventConfigServiceImpl implements EventConfigService {
 
   @Override
   public void deleteEventsConfig(String accountId, String appId, String eventConfigId) {
+    if (getEventsConfig(accountId, appId, eventConfigId) == null) {
+      throw new InvalidRequestException("Event Config does not exist");
+    }
     hPersistence.delete(CgEventConfig.class, eventConfigId);
   }
 

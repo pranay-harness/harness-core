@@ -30,7 +30,7 @@ public interface InviteService {
 
   Optional<Invite> updateInvite(Invite invite);
 
-  boolean completeInvite(String token);
+  boolean completeInvite(Optional<Invite> inviteOpt);
 
   Optional<Invite> deleteInvite(String inviteId);
 

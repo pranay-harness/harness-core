@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -ex
 
 local_repo=${HOME}/.m2/repository
@@ -118,6 +117,7 @@ BAZEL_MODULES="\
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //945-account-mgmt:module \
+  //945-license-usage-sdk:module \
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
   //947-access-control-core:module \
@@ -136,7 +136,6 @@ BAZEL_MODULES="\
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-telemetry:module \
-  //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
   //952-scm-java-client:module \
@@ -156,12 +155,14 @@ BAZEL_MODULES="\
   //959-cg-beans:module \
   //959-file-service-commons:module \
   //959-psql-database-models:module \
+  //959-timeout-engine:module \
   //960-api-services:module \
   //960-continuous-features:module \
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
   //960-expression-service:module \
   //960-ng-core-beans:module \
   //960-ng-license-beans:module \
+  //960-ng-license-usage-beans:module \
   //960-ng-signup-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
@@ -393,7 +394,6 @@ build_bazel_module 950-events-framework
 build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
-build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
 build_bazel_module 951-ng-audit-commons
@@ -411,6 +411,7 @@ build_bazel_module 958-migration-sdk
 build_bazel_module 959-cg-beans
 build_bazel_module 959-file-service-commons
 build_bazel_module 959-psql-database-models
+build_bazel_module 959-timeout-engine
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features
 build_bazel_module 960-expression-service

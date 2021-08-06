@@ -25,6 +25,10 @@ public class K8sTestHelper {
   public static final String SERVICE = "service.yaml";
   public static final String CRD_OLD = "crd-old.yaml";
   public static final String CRD_NEW = "crd-new.yaml";
+  public static final String EMPTY_RELEASE_HISTORY = "empty-release-history.yaml";
+  public static final String RELEASE_HISTORY = "release-history.yaml";
+  public static final String RELEASE_HISTORY_CANARY = "release-history-canary.yaml";
+  public static final String RELEASE_HISTORY_FAILED_CANARY = "release-history-canary-failed.yaml";
 
   public static KubernetesResource configMap() throws IOException {
     String yamlFileContent = readResourceFileContent(CONFIG_MAP);

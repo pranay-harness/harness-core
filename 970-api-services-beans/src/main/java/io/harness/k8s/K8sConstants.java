@@ -1,5 +1,10 @@
 package io.harness.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public interface K8sConstants {
   String OIDC_CLIENT_ID = "${CLIENT_ID_DATA}";
   String OIDC_CLIENT_SECRET = "${CLIENT_SECRET_DATA}";
@@ -92,4 +97,6 @@ public interface K8sConstants {
    * The cloudwatch metric url.
    */
   String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
+
+  String CANARY_WORKLOAD_SUFFIX_NAME = "-canary";
 }

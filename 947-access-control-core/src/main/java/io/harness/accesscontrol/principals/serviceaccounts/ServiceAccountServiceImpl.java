@@ -8,7 +8,6 @@ import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAc
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.UnexpectedException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.RetryUtils;
@@ -66,19 +65,16 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
   public Optional<ServiceAccount> deleteIfPresent(String identifier, String scopeIdentifier) {
     Optional<ServiceAccount> optionalServiceAccount = get(identifier, scopeIdentifier);
     if (optionalServiceAccount.isPresent()) {
-      return Optional.of(deleteInternal(identifier, scopeIdentifier));
+      deleteInternal(identifier, scopeIdentifier);
+      return optionalServiceAccount;
     }
     return Optional.empty();
   }
 
-  private ServiceAccount deleteInternal(String identifier, String scopeIdentifier) {
+  private long deleteInternal(String identifier, String scopeIdentifier) {
     return Failsafe.with(deleteServiceAccountTransactionPolicy).get(() -> transactionTemplate.execute(status -> {
       deleteServiceAccountRoleAssignments(identifier, scopeIdentifier);
-      return serviceAccountDao.delete(identifier, scopeIdentifier)
-          .orElseThrow(
-              ()
-                  -> new UnexpectedException(String.format(
-                      "Failed to delete the service account %s in the scope %s", identifier, scopeIdentifier)));
+      return serviceAccountDao.deleteInScopesAndChildScopes(identifier, scopeIdentifier);
     }));
   }
 
@@ -86,6 +82,7 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
     return roleAssignmentService.deleteMulti(
         RoleAssignmentFilter.builder()
             .scopeFilter(scopeIdentifier)
+            .includeChildScopes(true)
             .principalFilter(Sets.newHashSet(Principal.builder()
                                                  .principalType(PrincipalType.SERVICE_ACCOUNT)
                                                  .principalIdentifier(identifier)

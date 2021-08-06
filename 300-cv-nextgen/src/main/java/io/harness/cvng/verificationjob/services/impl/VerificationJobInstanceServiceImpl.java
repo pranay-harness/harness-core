@@ -186,7 +186,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   private void createAndQueueHealthVerification(VerificationJobInstance verificationJobInstance) {
     // We dont do any data collection for health verification. So just queue the analysis.
-    VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJobInstance.getResolvedJob());
     cvConfigs.forEach(cvConfig -> {
       String verificationTaskId = verificationTaskService.create(
@@ -237,11 +236,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Override
   public CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
-    if (verificationJobInstance.getCvConfigMap()
-        != null) { // TODO: this is just migration logic. Remove this check once VerificationJobInstances expires.
-      return verificationJobInstance.getCvConfigMap().get(cvConfigId);
-    }
-    return cvConfigService.get(cvConfigId);
+    return verificationJobInstance.getCvConfigMap().get(cvConfigId);
   }
 
   @Override
@@ -294,6 +289,22 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       updateStatusIfDone(verificationJobInstanceId);
     }
   }
+
+  @Override
+  public void abort(List<String> verficationJobInstanceIds) {
+    UpdateOperations<VerificationJobInstance> abortUpdateOperation =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class)
+            .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.ABORTED);
+    Query<VerificationJobInstance> query = hPersistence.createQuery(VerificationJobInstance.class)
+                                               .field(VerificationJobInstanceKeys.uuid)
+                                               .in(verficationJobInstanceIds)
+                                               .field(VerificationJobInstanceKeys.executionStatus)
+                                               .in(ExecutionStatus.nonFinalStatuses());
+    hPersistence.update(query, abortUpdateOperation);
+    List<String> verificationTaskIds = verificationTaskService.maybeGetVerificationTaskIds(verficationJobInstanceIds);
+    dataCollectionTaskService.abortDeploymentDataCollectionTasks(verificationTaskIds);
+  }
+
   private void updateStatusIfDone(String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
     if (verificationJobInstance.getExecutionStatus() != ExecutionStatus.RUNNING) {
@@ -545,6 +556,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     int failed = 0;
     int notStarted = 0;
     int errors = 0;
+    int aborted = 0;
     List<Risk> latestRiskScores = new ArrayList<>();
     for (int i = 0; i < verificationJobInstances.size(); i++) {
       VerificationJobInstance verificationJobInstance = verificationJobInstances.get(i);
@@ -575,6 +587,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           }
           progress++;
           break;
+        case ABORTED:
+          aborted++;
+          break;
         default:
           throw new IllegalStateException(verificationJobInstance.getExecutionStatus() + " not supported");
       }
@@ -588,6 +603,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .total(total)
         .failed(failed)
         .errors(errors)
+        .aborted(aborted)
         .passed(passed)
         .progress(progress)
         .notStarted(notStarted)

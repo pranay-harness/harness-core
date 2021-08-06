@@ -111,6 +111,12 @@ public class AccountResourceNG {
   }
 
   @GET
+  @Path("/gatewayBaseUrl")
+  public RestResponse<String> getGatewayBaseUrl(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(subdomainUrlHelper.getGatewayBaseUrl(accountId));
+  }
+
+  @GET
   @Path("/account-admins")
   public RestResponse<List<String>> getAccountAdmins(@QueryParam("accountId") String accountId) {
     UserGroup userGroup = userGroupService.getAdminUserGroup(accountId);
@@ -134,6 +140,12 @@ public class AccountResourceNG {
   @Path("two-factor-enabled")
   public RestResponse<Boolean> getTwoFactorAuthAdminEnforceInfo(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse(twoFactorAuthenticationManager.getTwoFactorAuthAdminEnforceInfo(accountId));
+  }
+
+  @GET
+  @Path("isAutoInviteAcceptanceEnabled")
+  public RestResponse<Boolean> isAutoInviteAcceptanceEnabled(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse(accountService.isAutoInviteAcceptanceEnabled(accountId));
   }
 
   @Path("/exists/{accountName}")

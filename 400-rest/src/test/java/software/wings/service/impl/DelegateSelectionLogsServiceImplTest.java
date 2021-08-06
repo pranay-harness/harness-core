@@ -15,6 +15,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -61,6 +62,13 @@ import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@BreakDependencyOn("io.harness.beans.Cd1SetupFields")
+@BreakDependencyOn("io.harness.beans.FeatureName")
+@BreakDependencyOn("software.wings.WingsBaseTest")
+@BreakDependencyOn("software.wings.beans.Application")
+@BreakDependencyOn("software.wings.beans.Environment")
+@BreakDependencyOn("software.wings.beans.Service")
+@BreakDependencyOn("software.wings.dl.WingsPersistence")
 public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -120,7 +128,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     delegateSelectionLogsService.save(null);
     delegateSelectionLogsService.save(BatchDelegateSelectionLog.builder().build());
 
-    verify(featureFlagService, never()).isNotEnabled(eq(FeatureName.DISABLE_DELEGATE_SELECTION_LOG), anyString());
+    verify(featureFlagService, never()).isEnabled(eq(FeatureName.ENABLE_DELEGATE_SELECTION_LOG), anyString());
   }
 
   @Test
@@ -134,7 +142,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+    when(featureFlagService.isNotEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
@@ -160,7 +168,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+    when(featureFlagService.isEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
@@ -191,7 +199,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+    when(featureFlagService.isNotEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
@@ -208,7 +216,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLog.class);
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLogTaskMetadata.class);
-    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
+    when(featureFlagService.isEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
 
     DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
                                                         .taskId(taskId)
@@ -245,10 +253,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(result).isNull();
 
     result = delegateSelectionLogsService.createBatch(DelegateTask.builder().build());
-    assertThat(result).isNull();
-
-    result = delegateSelectionLogsService.createBatch(
-        DelegateTask.builder().uuid(generateUuid()).selectionLogsTrackingEnabled(false).build());
     assertThat(result).isNull();
   }
 

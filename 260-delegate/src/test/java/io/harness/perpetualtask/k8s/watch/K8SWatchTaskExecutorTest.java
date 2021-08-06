@@ -46,6 +46,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
@@ -268,10 +269,11 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
                       .setClusterName(CLUSTER_NAME)
                       .setCloudProviderId(CLOUD_PROVIDER_ID)
                       .setKubeSystemUid(KUBE_SYSTEM_ID)
-                      .addAllActivePodUids(ImmutableList.of(POD_ONE_UID, POD_TWO_UID))
-                      .addAllActiveNodeUids(ImmutableList.of(NODE_ONE_UID, NODE_TWO_UID))
-                      .addAllActivePvUids(ImmutableList.of(PV_ONE_UID, PV_TWO_UID))
+                      .putAllActivePodUidsMap(ImmutableMap.of(POD_ONE_UID, POD_ONE_UID, POD_TWO_UID, POD_TWO_UID))
+                      .putAllActiveNodeUidsMap(ImmutableMap.of(NODE_ONE_UID, NODE_ONE_UID, NODE_TWO_UID, NODE_TWO_UID))
+                      .putAllActivePvUidsMap(ImmutableMap.of(PV_ONE_UID, PV_ONE_UID, PV_TWO_UID, PV_TWO_UID))
                       .setLastProcessedTimestamp(HTimestamps.fromInstant(pollTime))
+                      .setVersion(2)
                       .build());
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
@@ -299,7 +301,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   }
 
   private V1ObjectMeta getObjectMeta(String uid) {
-    return new V1ObjectMetaBuilder().withUid(uid).build();
+    return new V1ObjectMetaBuilder().withUid(uid).withName(uid).build();
   }
 
   private V1Pod getPod(String podUid) {

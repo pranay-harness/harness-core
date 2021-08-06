@@ -1,5 +1,8 @@
 package io.harness.artifact;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.experimental.UtilityClass;
 
 /*
@@ -32,6 +35,7 @@ import lombok.experimental.UtilityClass;
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 @UtilityClass
+@OwnedBy(HarnessTeam.CDC)
 public class ComparatorUtils {
   public boolean isDigit(char ch) {
     return (ch >= 48) && (ch <= 57);

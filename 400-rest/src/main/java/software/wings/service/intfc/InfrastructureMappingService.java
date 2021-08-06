@@ -1,5 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
@@ -37,6 +42,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by anubhaw on 1/10/17.
  */
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface InfrastructureMappingService
     extends OwnedByEnvironment, OwnedByInfrastructureProvisioner, OwnedByInfrastructureDefinition {
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest);

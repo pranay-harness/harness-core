@@ -10,8 +10,8 @@ java_library(
     deps = [
         "//:lombok",
         "//890-pms-contracts:module",
-        "//950-timeout-engine:module",
         "//950-walktree-visitor:module",
+        "//959-timeout-engine:module",
         "//960-yaml-sdk:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

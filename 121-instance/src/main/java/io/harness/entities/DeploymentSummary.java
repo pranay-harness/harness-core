@@ -50,8 +50,10 @@ public class DeploymentSummary implements PersistentEntity {
   private String deployedById;
   private String deployedByName;
   private String infrastructureMappingId;
+  private String instanceSyncKey;
   private long deployedAt;
   private DeploymentInfo deploymentInfo;
+  boolean isRollbackDeployment;
   @CreatedDate long createdAt;
   @LastModifiedDate long lastModifiedAt;
 }

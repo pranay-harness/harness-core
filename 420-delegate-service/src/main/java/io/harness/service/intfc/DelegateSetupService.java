@@ -14,6 +14,8 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.DEL)
 public interface DelegateSetupService {
+  long getDelegateGroupCount(String accountId, String orgId, String projectId);
+
   DelegateGroupListing listDelegateGroupDetails(String accountId, String orgId, String projectId);
 
   DelegateGroupListing listDelegateGroupDetailsUpTheHierarchy(String accountId, String orgId, String projectId);

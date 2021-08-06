@@ -1,5 +1,8 @@
 package software.wings.service.intfc.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 
 import software.wings.beans.infrastructure.instance.Instance;
@@ -8,6 +11,7 @@ import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
 import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
+import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo;
 
 import java.util.List;
 import java.util.Set;
@@ -18,6 +22,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Serves all the service and infrastructure dashboard related statistics
  * @author rktummala on 08/13/17
  */
+@OwnedBy(DX)
 public interface DashboardStatisticsService {
   /**
    * Gets the total instance summary stats for the given apps.
@@ -89,4 +94,7 @@ public interface DashboardStatisticsService {
   Set<String> getDeletedAppIds(String accountId, long timestamp);
 
   Set<String> getDeletedAppIds(String accountId, long fromTimestamp, long toTimestamp);
+
+  PageResponse<CompareEnvironmentAggregationInfo> getCompareServicesByEnvironment(
+      String accountId, String appId, String envId1, String envId2, int offset, int limit);
 }

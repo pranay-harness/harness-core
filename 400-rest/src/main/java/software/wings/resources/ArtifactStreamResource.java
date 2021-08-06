@@ -5,6 +5,8 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -48,6 +50,7 @@ import javax.ws.rs.QueryParam;
 @Consumes("application/json")
 @Scope(APPLICATION)
 @AuthRule(permissionType = SERVICE, skipAuth = true)
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
   private AppService appService;

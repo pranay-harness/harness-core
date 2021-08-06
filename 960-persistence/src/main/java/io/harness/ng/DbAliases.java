@@ -12,6 +12,7 @@ public class DbAliases {
   public static final String AUDITS = "ng-audits";
   public static final String RESOURCEGROUP = "resourcegroup";
   public static final String PMS = "pms-harness";
+  public static final String TEMPLATE = "template-harness";
   public static final String CIMANAGER = "ci-manager";
   public static final String ALL = "all";
   public static final String CVNG = "cvng";

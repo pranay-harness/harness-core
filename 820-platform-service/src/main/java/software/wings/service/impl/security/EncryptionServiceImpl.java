@@ -13,7 +13,9 @@ import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.CustomEncryptor;
@@ -53,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EncryptionServiceImpl implements EncryptionService {
   private final ExecutorService threadPoolExecutor;
   private final VaultEncryptorsRegistry vaultEncryptorsRegistry;

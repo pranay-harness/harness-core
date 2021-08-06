@@ -1,5 +1,10 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.Variable;
@@ -15,6 +20,8 @@ import java.util.Set;
  * Created by peeyushaggarwal on 11/14/16.
  */
 @JsonTypeInfo(use = Id.NAME, property = "commandUnitType", include = As.EXISTING_PROPERTY)
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public interface CommandUnit {
   /**
    * Execute execution result.

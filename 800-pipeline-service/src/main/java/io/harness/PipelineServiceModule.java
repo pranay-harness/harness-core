@@ -88,6 +88,7 @@ import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImplV2;
+import io.harness.polling.client.PollResourceClientModule;
 import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
@@ -106,6 +107,7 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.token.TokenClientModule;
+import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionInfoManager;
@@ -170,6 +172,17 @@ public class PipelineServiceModule extends AbstractModule {
         return new NoopUserProvider();
       }
     });
+    install(new AbstractPersistenceTracerModule() {
+      @Override
+      protected RedisConfig redisConfigProvider() {
+        return configuration.getEventsFrameworkConfiguration().getRedisConfig();
+      }
+
+      @Override
+      protected String serviceIdProvider() {
+        return PIPELINE_SERVICE.getServiceId();
+      }
+    });
     install(PipelineServiceGrpcModule.getInstance());
     install(new PipelinePersistenceModule());
     install(DelegateServiceDriverModule.getInstance(true));
@@ -197,13 +210,16 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(NGTriggersModule.getInstance(configuration.getPmsApiBaseUrl()));
+    install(NGTriggersModule.getInstance(configuration.getPmsApiBaseUrl(),
+        configuration.getPipelineServiceClientConfig(), configuration.getPipelineServiceSecret()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
     install(YamlSdkModule.getInstance());
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), PIPELINE_SERVICE.getServiceId()));
+    install(new PollResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
 
     install(new OrganizationClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));

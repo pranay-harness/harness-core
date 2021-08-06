@@ -23,6 +23,7 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHe
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
@@ -55,8 +56,10 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -109,10 +112,13 @@ public class BuilderFactory {
   }
 
   public VerificationJobInstanceBuilder verificationJobInstanceBuilder() {
+    CVConfig cvConfig = appDynamicsCVConfigBuilder().uuid(generateUuid()).build();
+    Map<String, CVConfig> cvConfigMap = Collections.singletonMap(cvConfig.getUuid(), cvConfig);
     return VerificationJobInstance.builder()
         .accountId(context.getAccountId())
         .deploymentStartTime(clock.instant().minus(Duration.ofMinutes(2)))
         .startTime(clock.instant())
+        .cvConfigMap(cvConfigMap)
         .dataCollectionDelay(Duration.ofMinutes(2))
         .resolvedJob(getVerificationJob());
   }

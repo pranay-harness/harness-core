@@ -26,6 +26,7 @@ public final class EventsFrameworkConstants {
   public static final String ORCHESTRATION_LOG = "orchestration_log";
   public static final String NG_ACCOUNT_SETUP = "ng_account_setup";
   public static final String INSTANCE_SYNC_PERPETUAL_TASK_RESPONSE_STREAM = "instance_sync_perpetual_task_stream";
+  public static final String INSTANCE_STATS = "instance_stats";
 
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";
@@ -110,4 +111,8 @@ public final class EventsFrameworkConstants {
   public static final int GIT_PUSH_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PR_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_BRANCH_HOOK_EVENT_STREAM_BATCH_SIZE = 50;
+
+  // Tracing Constants
+  public static final String QUERY_ANALYSIS_TOPIC = "query_analysis";
+  public static final int QUERY_ANALYSIS_TOPIC_SIZE = 100;
 }

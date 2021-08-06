@@ -1,5 +1,8 @@
 package io.harness.governance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -11,6 +14,7 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("CUSTOM")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(HarnessTeam.CDC)
 public class CustomAppFilter extends ApplicationFilter {
   private List<String> apps;
 

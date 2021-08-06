@@ -7,11 +7,14 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sCanaryBaseStepInfo.K8sCanaryBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sCanaryExecutionOutput;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -77,7 +80,8 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
-      K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
+      K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream,
+      UnitProgressData unitProgressData) {
     final InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     final String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepElementParameters.getSpec();
@@ -104,10 +108,17 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
             .accountId(accountId)
             .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
+            .commandUnitsProgress(UnitProgressDataMapper.toCommandUnitsProgress(unitProgressData))
             .build();
 
-    return k8sStepHelper.queueK8sTask(
-        stepElementParameters, k8sCanaryDeployRequest, ambiance, executionPassThroughData);
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
+    TaskChainResponse response =
+        k8sStepHelper.queueK8sTask(stepElementParameters, k8sCanaryDeployRequest, ambiance, executionPassThroughData);
+
+    executionSweepingOutputService.consume(ambiance, K8sCanaryExecutionOutput.OUTPUT_NAME,
+        K8sCanaryExecutionOutput.builder().build(), StepOutcomeGroup.STEP.name());
+
+    return response;
   }
 
   @Override

@@ -8,7 +8,9 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.serializer.MapperUtils;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -23,6 +25,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 public class SinglePhaseWorkflowCreator extends WorkflowCreator {
   @Inject private WorkflowServiceHelper workflowServiceHelper;

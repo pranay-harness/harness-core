@@ -13,7 +13,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.delay.DelayEventHelper;
@@ -54,6 +56,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ArtifactCollectionState extends State {
   @Attributes(title = "Entity Type") @Getter @Setter private EntityType entityType;
   @Attributes(title = "Entity") @Getter @Setter private String entityId;

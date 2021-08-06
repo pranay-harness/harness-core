@@ -6,6 +6,7 @@ import static io.harness.cvng.beans.job.VerificationJobType.TEST;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.NEMANJA;
@@ -93,6 +94,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
@@ -461,6 +463,34 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
                        .durationMs(Duration.ofMinutes(15).toMillis())
                        .remainingTimeMs(1200000)
                        .build());
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testAbort() throws IllegalAccessException {
+    DataCollectionTaskService dataCollectionTaskService = Mockito.mock(DataCollectionTaskService.class);
+    FieldUtils.writeField(verificationJobInstanceService, "dataCollectionTaskService", dataCollectionTaskService, true);
+
+    VerificationJobInstance runningVerificationJobInstance =
+        createVerificationJobInstance(verificationJobIdentifier, "prod", ExecutionStatus.RUNNING, CANARY);
+    VerificationJobInstance failedVerificationJobInstance =
+        createVerificationJobInstance(verificationJobIdentifier, "prod", ExecutionStatus.FAILED, CANARY);
+    hPersistence.save(Lists.newArrayList(runningVerificationJobInstance, failedVerificationJobInstance));
+    List<String> verificationTaskIds = verificationTaskService.maybeGetVerificationTaskIds(
+        Lists.newArrayList(runningVerificationJobInstance.getUuid(), failedVerificationJobInstance.getUuid()));
+
+    verificationJobInstanceService.abort(
+        Lists.newArrayList(runningVerificationJobInstance.getUuid(), failedVerificationJobInstance.getUuid()));
+
+    VerificationJobInstance abortedRunningVJI =
+        hPersistence.get(VerificationJobInstance.class, runningVerificationJobInstance.getUuid());
+    assertThat(abortedRunningVJI.getExecutionStatus()).isEqualTo(ExecutionStatus.ABORTED);
+    // Failed JobInstance will remain in failed status
+    VerificationJobInstance abortedFailedVJI =
+        hPersistence.get(VerificationJobInstance.class, failedVerificationJobInstance.getUuid());
+    assertThat(abortedFailedVJI.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    Mockito.verify(dataCollectionTaskService).abortDeploymentDataCollectionTasks(verificationTaskIds);
   }
 
   @Test

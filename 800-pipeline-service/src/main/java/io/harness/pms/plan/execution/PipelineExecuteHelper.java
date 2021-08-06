@@ -233,7 +233,7 @@ public class PipelineExecuteHelper {
             .setRunSequence(pipelineEntity.getRunSequence())
             .setPipelineIdentifier(pipelineIdentifier)
             .setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
-    ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal(pipelineEntity);
     if (gitSyncBranchContext != null) {
       builder.setGitSyncBranchContext(gitSyncBranchContext);
     }

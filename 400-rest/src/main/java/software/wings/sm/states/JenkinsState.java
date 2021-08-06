@@ -16,7 +16,9 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -86,6 +88,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class JenkinsState extends State implements SweepingOutputStateMixin {
   public static final String COMMAND_UNIT_NAME = "Console Output";
   public static final String JENKINS_CONFIG_ID_KEY = "jenkinsConfigId";

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
+import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.manage.GlobalContextManager;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -25,6 +26,15 @@ public class PmsGitSyncHelper {
       return null;
     }
     return gitSyncBranchContext.toEntityGitDetails();
+  }
+
+  public ByteString getGitSyncBranchContextBytesThreadLocal(GitSyncableEntity gitSyncableEntity) {
+    GitSyncBranchContext gitSyncBranchContext = GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+    if (gitSyncBranchContext != null && gitSyncBranchContext.getGitBranchInfo() != null) {
+      gitSyncBranchContext.getGitBranchInfo().setFilePath(gitSyncableEntity.getFilePath());
+      gitSyncBranchContext.getGitBranchInfo().setFolderPath(gitSyncableEntity.getRootFolder());
+    }
+    return serializeGitSyncBranchContext(gitSyncBranchContext);
   }
 
   public ByteString getGitSyncBranchContextBytesThreadLocal() {

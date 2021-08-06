@@ -24,6 +24,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidCredentialsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -234,6 +235,10 @@ public class AuthenticationManager {
   public User switchAccount(String bearerToken, String accountId) {
     AuthToken authToken = authService.validateToken(bearerToken);
     User user = authToken.getUser();
+    if (user.getAccounts() == null
+        || user.getAccounts().stream().noneMatch(account -> account.getUuid().equals(accountId))) {
+      throw new AccessDeniedException("User not authorized", USER);
+    }
     user.setLastAccountId(accountId);
     return authService.generateBearerTokenForUser(user);
   }

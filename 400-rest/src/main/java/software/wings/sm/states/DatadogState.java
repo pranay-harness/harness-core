@@ -81,7 +81,7 @@ import org.slf4j.Logger;
 @Slf4j
 @FieldNameConstants(innerTypeName = "DatadogStateKeys")
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class DatadogState extends AbstractMetricAnalysisState {
   @Inject @SchemaIgnore private transient DatadogService datadogService;

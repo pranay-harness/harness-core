@@ -34,7 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class ModuleLicenseInterfaceImplTest extends CategoryTest {
-  @InjectMocks ModuleLicenseInterfaceImpl moduleLicenseInterface;
+  @InjectMocks ModuleLicenseImpl moduleLicenseInterface;
   @Mock Map<ModuleType, ModuleLicenseClient> clientMap;
 
   @Before

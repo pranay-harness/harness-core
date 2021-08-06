@@ -234,6 +234,9 @@ import org.mockito.Mock;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("software.wings.WingsBaseTest")
 @BreakDependencyOn("software.wings.app.MainConfiguration")
+@BreakDependencyOn("software.wings.licensing.LicenseService")
+@BreakDependencyOn("software.wings.beans.LicenseInfo")
+@BreakDependencyOn("software.wings.cdn.CdnConfig")
 public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
   private static final String DELEGATE_NAME = "harness-delegate";
@@ -1840,23 +1843,22 @@ public class DelegateServiceTest extends WingsBaseTest {
 
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .as(expectedStartFilepath)
-          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath)))
-                         .replaceAll("8888", "" + port));
-
+      String expected =
+          CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath)))
+              .replaceAll("8888", "" + port);
+      String actual = new String(buffer);
+      assertThat(actual.equals(expected));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
       assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .as(expectedDelegateFilepath)
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath)))
-                  .replaceAll("8888", "" + port));
-
+      String expectedD =
+          CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath)))
+              .replaceAll("8888", "" + port);
+      String actualD = new String(buffer);
+      assertThat(actualD.equals(expectedD));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
       assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
@@ -1865,19 +1867,18 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
 
       String expectedFile = "/expectedStopOpenJdk.sh";
-      assertThat(new String(buffer))
-          .as(expectedFile)
-          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
-                         .replaceAll("8888", "" + port));
-
+      String expectedS = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
+                             .replaceAll("8888", "" + port);
+      String actualS = new String(buffer);
+      assertThat(actualS.equals(expectedS));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedSetupProxy.sh"))));
-
+      String expectedP = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
+                             .replaceAll("8888", "" + port);
+      String actualP = new String(buffer);
+      assertThat(actualP.equals(expectedP));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
     }

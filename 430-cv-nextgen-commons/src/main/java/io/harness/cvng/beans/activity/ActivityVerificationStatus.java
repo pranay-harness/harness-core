@@ -9,9 +9,10 @@ public enum ActivityVerificationStatus {
   VERIFICATION_PASSED,
   VERIFICATION_FAILED,
   ERROR,
+  ABORTED,
   IN_PROGRESS;
 
   public static List<ActivityVerificationStatus> getFinalStates() {
-    return Arrays.asList(ERROR, VERIFICATION_PASSED, VERIFICATION_FAILED);
+    return Arrays.asList(ERROR, VERIFICATION_PASSED, VERIFICATION_FAILED, ABORTED);
   }
 }

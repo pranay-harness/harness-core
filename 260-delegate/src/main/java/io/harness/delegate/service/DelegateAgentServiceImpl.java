@@ -259,6 +259,17 @@ import retrofit2.Response;
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
 @BreakDependencyOn("io.harness.delegate.beans.Delegate")
+@BreakDependencyOn("io.harness.delegate.beans.DelegateScripts")
+@BreakDependencyOn("io.harness.delegate.beans.FileBucket")
+@BreakDependencyOn("io.harness.delegate.message.Message")
+@BreakDependencyOn("io.harness.delegate.message.MessageConstants")
+@BreakDependencyOn("io.harness.delegate.message.MessageService")
+@BreakDependencyOn("io.harness.delegate.message.MessengerType")
+@BreakDependencyOn("software.wings.beans.DelegateTaskFactory")
+@BreakDependencyOn("software.wings.beans.command.Command")
+@BreakDependencyOn("software.wings.delegatetasks.validation.DelegateValidateTask")
+@BreakDependencyOn("software.wings.delegatetasks.LogSanitizer")
+@BreakDependencyOn("software.wings.service.intfc.security.EncryptionService")
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
@@ -436,26 +447,28 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
       }
 
-      if (delegateConfiguration.isClientToolsDownloadDisabled()) {
-        kubectlInstalled = true;
-        goTemplateInstalled = true;
-        harnessPywinrmInstalled = true;
-        helmInstalled = true;
-        chartMuseumInstalled = true;
-        tfConfigInspectInstalled = true;
-        ocInstalled = true;
-        kustomizeInstalled = true;
-        scmInstalled = true;
-      } else {
-        kubectlInstalled = installKubectl(delegateConfiguration);
-        goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
-        harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
-        helmInstalled = installHelm(delegateConfiguration);
-        chartMuseumInstalled = installChartMuseum(delegateConfiguration);
-        tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
-        ocInstalled = installOc(delegateConfiguration);
-        kustomizeInstalled = installKustomize(delegateConfiguration);
-        scmInstalled = installScm(delegateConfiguration);
+      if (!delegateConfiguration.isInstallClientToolsInBackground()) {
+        if (delegateConfiguration.isClientToolsDownloadDisabled()) {
+          kubectlInstalled = true;
+          goTemplateInstalled = true;
+          harnessPywinrmInstalled = true;
+          helmInstalled = true;
+          chartMuseumInstalled = true;
+          tfConfigInspectInstalled = true;
+          ocInstalled = true;
+          kustomizeInstalled = true;
+          scmInstalled = true;
+        } else {
+          kubectlInstalled = installKubectl(delegateConfiguration);
+          goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
+          harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
+          helmInstalled = installHelm(delegateConfiguration);
+          chartMuseumInstalled = installChartMuseum(delegateConfiguration);
+          tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
+          ocInstalled = installOc(delegateConfiguration);
+          kustomizeInstalled = installKustomize(delegateConfiguration);
+          scmInstalled = installScm(delegateConfiguration);
+        }
       }
 
       logCfCliConfiguration();
@@ -574,81 +587,66 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       startProfileCheck();
 
-      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
-          || !tfConfigInspectInstalled || !harnessPywinrmInstalled || !scmInstalled) {
+      if (!areAllClientToolsInstalled()) {
         systemExecutor.submit(() -> {
-          boolean kubectl = kubectlInstalled;
-          boolean goTemplate = goTemplateInstalled;
-          boolean helm = helmInstalled;
-          boolean chartMuseum = chartMuseumInstalled;
-          boolean tfConfigInspect = tfConfigInspectInstalled;
-          boolean oc = ocInstalled;
-          boolean kustomize = kustomizeInstalled;
-          boolean harnessPywinrm = harnessPywinrmInstalled;
-          boolean scm = scmInstalled;
-
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect || !harnessPywinrm || !scm)
-              && retries > 0) {
+          while (!areAllClientToolsInstalled() && retries > 0) {
             sleep(ofSeconds(15L));
-            if (!kubectl) {
-              kubectl = installKubectl(delegateConfiguration);
+            if (!kubectlInstalled) {
+              kubectlInstalled = installKubectl(delegateConfiguration);
             }
-            if (!goTemplate) {
-              goTemplate = installGoTemplateTool(delegateConfiguration);
+            if (!goTemplateInstalled) {
+              goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
             }
-            if (!harnessPywinrm) {
-              harnessPywinrm = installHarnessPywinrm(delegateConfiguration);
+            if (!harnessPywinrmInstalled) {
+              harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
             }
-            if (!helm) {
-              helm = installHelm(delegateConfiguration);
+            if (!helmInstalled) {
+              helmInstalled = installHelm(delegateConfiguration);
             }
-            if (!chartMuseum) {
-              chartMuseum = installChartMuseum(delegateConfiguration);
+            if (!chartMuseumInstalled) {
+              chartMuseumInstalled = installChartMuseum(delegateConfiguration);
             }
-            if (!tfConfigInspect) {
-              tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+            if (!tfConfigInspectInstalled) {
+              tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
             }
-            if (!tfConfigInspect) {
-              tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+            if (!ocInstalled) {
+              ocInstalled = installOc(delegateConfiguration);
             }
-            if (!oc) {
-              oc = installOc(delegateConfiguration);
+            if (!kustomizeInstalled) {
+              kustomizeInstalled = installKustomize(delegateConfiguration);
             }
-            if (!kustomize) {
-              kustomize = installKustomize(delegateConfiguration);
+            if (!scmInstalled) {
+              scmInstalled = installScm(delegateConfiguration);
             }
-            if (!scm) {
-              scm = installScm(delegateConfiguration);
-            }
-
             retries--;
           }
 
-          if (!kubectl) {
+          if (!kubectlInstalled) {
             log.error("Failed to install kubectl after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!goTemplate) {
+          if (!goTemplateInstalled) {
             log.error("Failed to install go-template after {} retries", CLIENT_TOOL_RETRIES);
           }
-
-          if (!harnessPywinrm) {
+          if (!harnessPywinrmInstalled) {
             log.error("Failed to install harness-pywinrm after {} retries", CLIENT_TOOL_RETRIES);
           }
-
-          if (!helm) {
+          if (!helmInstalled) {
             log.error("Failed to install helm after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!chartMuseum) {
+          if (!chartMuseumInstalled) {
             log.error("Failed to install chartMuseum after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!tfConfigInspect) {
+          if (!tfConfigInspectInstalled) {
             log.error("Failed to install tf-config-inspect after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!kustomize) {
+          if (!ocInstalled) {
+            log.error("Failed to install oc after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!kustomizeInstalled) {
             log.error("Failed to install kustomize after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!scm) {
+          if (!scmInstalled) {
             log.error("Failed to install scm after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
@@ -681,6 +679,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } catch (RuntimeException | IOException e) {
       log.error("Exception while starting/running delegate", e);
     }
+  }
+
+  public boolean areAllClientToolsInstalled() {
+    return kubectlInstalled && goTemplateInstalled && helmInstalled && chartMuseumInstalled && tfConfigInspectInstalled
+        && ocInstalled && kustomizeInstalled && harnessPywinrmInstalled && scmInstalled;
   }
 
   private RequestBuilder prepareRequestBuilder() {
@@ -886,7 +889,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.warn("Delegate used revoked token. It will be frozen and drained.");
       freeze();
     } else if (!StringUtils.equals(message, "X")) {
-      log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+      if (log.isDebugEnabled()) {
+        log.debug("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+      }
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
         try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
@@ -1835,12 +1840,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       // Delay response if already working on many tasks
       sleep(ofMillis(100 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 10)));
 
-      log.info("Try to acquire DelegateTask - accountId: {}", accountId);
+      if (log.isDebugEnabled()) {
+        log.debug("Try to acquire DelegateTask - accountId: {}", accountId);
+      }
 
       DelegateTaskPackage delegateTaskPackage =
           delegateExecute(delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
-        log.info("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
+        if (log.isDebugEnabled()) {
+          log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
+        }
         return;
       }
 
@@ -1919,7 +1928,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
       DelegateTaskEvent delegateTaskEvent, String taskId) {
     return delegateConnectionResults -> {
-      try (AutoLogContext logContext = new TaskLogContext(taskId, OVERRIDE_ERROR)) {
+      try (AutoLogContext ignored = new TaskLogContext(taskId, OVERRIDE_ERROR)) {
+        // Tools might be installed asynchronously, so get the flag early on
+        final boolean areAllClientToolsInstalled = areAllClientToolsInstalled();
         currentlyValidatingTasks.remove(taskId);
         currentlyValidatingFutures.remove(taskId);
         log.info("Removed from validating futures on post validation");
@@ -1946,7 +1957,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               try {
                 log.info("Manager check whether to fail task");
                 execute(delegateAgentManagerClient.failIfAllDelegatesFailed(
-                    delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+                    delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, areAllClientToolsInstalled));
               } catch (IOException e) {
                 log.error("Unable to tell manager to check whether to fail for task", e);
               }
@@ -1985,7 +1996,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return;
     }
 
-    log.info("DelegateTask acquired - accountId: {}, taskType: {}", accountId, taskData.getTaskType());
+    if (log.isDebugEnabled()) {
+      log.debug("DelegateTask acquired - accountId: {}, taskType: {}", accountId, taskData.getTaskType());
+    }
     Pair<String, Set<String>> activitySecrets = obtainActivitySecrets(delegateTaskPackage);
     Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
@@ -2001,7 +2014,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = selectExecutorService(taskData);
     Future taskFuture = executorService.submit(delegateRunnableTask);
-    log.info("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
+    if (taskFuture.isCancelled()) {
+      log.warn("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
+    }
     currentlyExecutingFutures.put(delegateTaskPackage.getDelegateTaskId(), taskFuture);
     updateCounterIfLessThanCurrent(maxExecutingFuturesCount, currentlyExecutingFutures.size());
 
@@ -2188,7 +2203,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       if (!currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
-        log.info("Adding task to executing tasks");
+        log.debug("Adding task to executing tasks");
         currentlyExecutingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxExecutingTasksCount, currentlyExecutingTasks.size());
         if (sanitizer != null) {
@@ -2246,7 +2261,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
-          log.info("Removed from executing futures on post execution");
+          log.debug("Removed from executing futures on post execution");
         }
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();

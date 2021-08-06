@@ -23,8 +23,8 @@ type CgphSerialzer struct {
 }
 
 const (
-	cgType = "callgraph"
-	vgType = "visgraph"
+	cgType    = "callgraph"
+	vgType    = "visgraph"
 	cgSrcFile = "callgraph.avsc"
 	vgSrcFile = "visgraph.avsc"
 )

@@ -121,6 +121,11 @@ public class ParameterField<T> {
     if (actualField == null) {
       return true;
     }
+
+    if (ofNull().equals(actualField)) {
+      return true;
+    }
+
     if (actualField.getExpressionValue() != null || actualField.getInputSetValidator() != null
         || actualField.getResponseField() != null || actualField.getValue() != null) {
       return false;

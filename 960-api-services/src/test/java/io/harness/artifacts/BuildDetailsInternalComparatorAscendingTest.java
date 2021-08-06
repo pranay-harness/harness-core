@@ -6,6 +6,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalBuilder;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class BuildDetailsInternalComparatorAscendingTest extends CategoryTest {
   private BuildDetailsInternalBuilder buildDetailsInternalBuilder =
       BuildDetailsInternal.builder().buildUrl("URL").uiDisplayName("DISPLAY_NAME");

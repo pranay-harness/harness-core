@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +14,8 @@ import io.harness.ngtriggers.service.impl.NGTriggerYamlSchemaServiceImpl;
 import io.harness.ngtriggers.utils.AwsCodeCommitDataObtainer;
 import io.harness.ngtriggers.utils.GitProviderBaseDataObtainer;
 import io.harness.ngtriggers.utils.SCMDataObtainer;
+import io.harness.pipeline.PipelineRemoteClientModule;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.webhook.WebhookConfigProvider;
 
 import com.google.inject.AbstractModule;
@@ -23,16 +26,22 @@ import java.util.concurrent.atomic.AtomicReference;
 public class NGTriggersModule extends AbstractModule {
   private static final AtomicReference<NGTriggersModule> instanceRef = new AtomicReference<>();
   private String pmsApiBaseUrl;
+  private ServiceHttpClientConfig pmsHttpClientConfig;
+  private String pipelineServiceSecret;
 
-  public static NGTriggersModule getInstance(String pmsApiBaseUrl) {
+  public static NGTriggersModule getInstance(
+      String pmsApiBaseUrl, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
     if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new NGTriggersModule(pmsApiBaseUrl));
+      instanceRef.compareAndSet(null, new NGTriggersModule(pmsApiBaseUrl, pmsHttpClientConfig, pipelineServiceSecret));
     }
     return instanceRef.get();
   }
 
-  private NGTriggersModule(String pmsApiBaseUrl) {
+  private NGTriggersModule(
+      String pmsApiBaseUrl, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
     this.pmsApiBaseUrl = pmsApiBaseUrl;
+    this.pmsHttpClientConfig = pmsHttpClientConfig;
+    this.pipelineServiceSecret = pipelineServiceSecret;
   }
 
   @Override
@@ -47,6 +56,9 @@ public class NGTriggersModule extends AbstractModule {
         return pmsApiBaseUrl;
       }
     });
+    install(new PipelineRemoteClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(pmsHttpClientConfig.getBaseUrl()).build(), pipelineServiceSecret,
+        PIPELINE_SERVICE.toString()));
     MapBinder<String, GitProviderBaseDataObtainer> gitProviderBaseDataObtainerMap =
         MapBinder.newMapBinder(binder(), String.class, GitProviderBaseDataObtainer.class);
     gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.AWS_CODECOMMIT.name())

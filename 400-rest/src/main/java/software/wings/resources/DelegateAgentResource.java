@@ -52,6 +52,7 @@ import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.perpetualtask.instancesync.InstanceSyncResponsePublisher;
 import io.harness.persistence.HPersistence;
+import io.harness.polling.client.PollingResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
@@ -116,6 +117,7 @@ public class DelegateAgentResource {
   private FeatureFlagService featureFlagService;
   private DelegateTaskServiceClassic delegateTaskServiceClassic;
   private InstanceSyncResponsePublisher instanceSyncResponsePublisher;
+  private PollingResourceClient pollingResourceClient;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService, HPersistence persistence,
@@ -124,7 +126,7 @@ public class DelegateAgentResource {
       ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
       ConfigurationController configurationController, FeatureFlagService featureFlagService,
-      DelegateTaskServiceClassic delegateTaskServiceClassic) {
+      DelegateTaskServiceClassic delegateTaskServiceClassic, PollingResourceClient pollingResourceClient) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -138,6 +140,7 @@ public class DelegateAgentResource {
     this.configurationController = configurationController;
     this.featureFlagService = featureFlagService;
     this.delegateTaskServiceClassic = delegateTaskServiceClassic;
+    this.pollingResourceClient = pollingResourceClient;
   }
 
   @DelegateAuth
@@ -328,12 +331,13 @@ public class DelegateAgentResource {
   @Path("{delegateId}/tasks/{taskId}/fail")
   @Timed
   @ExceptionMetered
-  public void failIfAllDelegatesFailed(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
-      @QueryParam("accountId") @NotEmpty String accountId) {
+  public void failIfAllDelegatesFailed(@PathParam("delegateId") final String delegateId,
+      @PathParam("taskId") final String taskId, @QueryParam("accountId") @NotEmpty final String accountId,
+      @QueryParam("areClientToolsInstalled") final boolean areClientToolsInstalled) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateTaskServiceClassic.failIfAllDelegatesFailed(accountId, delegateId, taskId);
+      delegateTaskServiceClassic.failIfAllDelegatesFailed(accountId, delegateId, taskId, areClientToolsInstalled);
     }
   }
 
@@ -541,6 +545,18 @@ public class DelegateAgentResource {
       connectorHearbeatPublisher.pushConnectivityCheckActivity(accountId, validationResult);
     }
     return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("polling/{perpetualTaskId}")
+  public RestResponse<Boolean> processPollingResultNg(@PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, byte[] serializedExecutionResponse) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      pollingResourceClient.processPolledResult(perpetualTaskId, accountId, serializedExecutionResponse);
+    }
+    return new RestResponse<>(Boolean.TRUE);
   }
 
   private DelegateHeartbeatResponse buildDelegateHBResponse(Delegate delegate) {

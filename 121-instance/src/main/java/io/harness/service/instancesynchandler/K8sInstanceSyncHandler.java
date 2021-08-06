@@ -15,6 +15,8 @@ import io.harness.dtos.instanceinfo.InstanceInfoDTO;
 import io.harness.dtos.instanceinfo.K8sInstanceInfoDTO;
 import io.harness.entities.InstanceType;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.models.infrastructuredetails.InfrastructureDetails;
+import io.harness.models.infrastructuredetails.K8sInfrastructureDetails;
 import io.harness.perpetualtask.PerpetualTaskType;
 
 import com.google.inject.Singleton;
@@ -40,6 +42,18 @@ public class K8sInstanceSyncHandler extends AbstractInstanceSyncHandler {
   @Override
   public String getInfrastructureKind() {
     return InfrastructureKind.KUBERNETES_DIRECT;
+  }
+
+  @Override
+  public InfrastructureDetails getInfrastructureDetails(InstanceInfoDTO instanceInfoDTO) {
+    if (!(instanceInfoDTO instanceof K8sInstanceInfoDTO)) {
+      throw new InvalidArgumentsException(Pair.of("instanceInfoDTO", "Must be instance of K8sInstanceInfoDTO"));
+    }
+    K8sInstanceInfoDTO k8sInstanceInfoDTO = (K8sInstanceInfoDTO) instanceInfoDTO;
+    return K8sInfrastructureDetails.builder()
+        .namespace(k8sInstanceInfoDTO.getNamespace())
+        .releaseName(k8sInstanceInfoDTO.getReleaseName())
+        .build();
   }
 
   @Override

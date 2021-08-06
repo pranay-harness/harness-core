@@ -271,7 +271,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public enum StepType {
   // Important: Do not change the order of StepTypes in the enum.
   // The order of StepTypes dictates the order in which Step Types are shown under each Category.

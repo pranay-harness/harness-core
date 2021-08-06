@@ -6,7 +6,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class ManifestCollectionResponseHandler {
   private static final int MAX_MANIFEST_COLLECTION_FOR_WARN = 100;
   private static final int MAX_LOGS = 100;

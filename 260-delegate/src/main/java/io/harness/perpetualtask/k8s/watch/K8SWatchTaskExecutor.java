@@ -46,9 +46,8 @@ import io.kubernetes.client.openapi.models.V1PersistentVolume;
 import io.kubernetes.client.openapi.models.V1Pod;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -153,29 +152,28 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   @VisibleForTesting
   static void publishClusterSyncEvent(DefaultK8sMetricsClient client, EventPublisher eventPublisher,
       K8sWatchTaskParams watchTaskParams, Instant pollTime) throws ApiException {
-    List<String> nodeUidList = client.listNode(null, null, null, null, null, null, null, null, null)
-                                   .getItems()
-                                   .stream()
-                                   .map(V1Node::getMetadata)
-                                   .map(V1ObjectMeta::getUid)
-                                   .collect(Collectors.toList());
-    List<String> podUidList = client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null)
-                                  .getItems()
-                                  .stream()
-                                  .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
-                                  .map(V1Pod::getMetadata)
-                                  .map(V1ObjectMeta::getUid)
-                                  .collect(Collectors.toList());
-    List<String> pvUidList = new ArrayList<>();
+    Map<String, String> nodeUidNameMap = client.listNode(null, null, null, null, null, null, null, null, null)
+                                             .getItems()
+                                             .stream()
+                                             .map(V1Node::getMetadata)
+                                             .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName));
 
+    Map<String, String> podUidNameMap =
+        client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null)
+            .getItems()
+            .stream()
+            .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
+            .map(V1Pod::getMetadata)
+            .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName));
+
+    Map<String, String> pvUidNameMap = new HashMap<>();
     // optional as of now, will remove when the permission is mandatory.
     try {
-      pvUidList.addAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null)
-                           .getItems()
-                           .stream()
-                           .map(V1PersistentVolume::getMetadata)
-                           .map(V1ObjectMeta::getUid)
-                           .collect(Collectors.toList()));
+      pvUidNameMap.putAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null)
+                              .getItems()
+                              .stream()
+                              .map(V1PersistentVolume::getMetadata)
+                              .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName)));
     } catch (ApiException ex) {
       log.warn("ListPersistentVolume failed: code=[{}], headers=[{}]", ex.getCode(), ex.getResponseHeaders(), ex);
     }
@@ -186,10 +184,11 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .setCloudProviderId(watchTaskParams.getCloudProviderId())
                                                   .setClusterName(watchTaskParams.getClusterName())
                                                   .setKubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(client))
-                                                  .addAllActiveNodeUids(nodeUidList)
-                                                  .addAllActivePodUids(podUidList)
-                                                  .addAllActivePvUids(pvUidList)
+                                                  .putAllActiveNodeUidsMap(nodeUidNameMap)
+                                                  .putAllActivePodUidsMap(podUidNameMap)
+                                                  .putAllActivePvUidsMap(pvUidNameMap)
                                                   .setLastProcessedTimestamp(timestamp)
+                                                  .setVersion(2)
                                                   .build();
     eventPublisher.publishMessage(
         k8SClusterSyncEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId()));

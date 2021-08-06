@@ -57,7 +57,7 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
-        "//950-timeout-engine:module",
+        "//959-timeout-engine:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",

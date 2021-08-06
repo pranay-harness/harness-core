@@ -1,8 +1,10 @@
 package mongodb
 
 import (
+	"container/list"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/kamva/mgm/v3"
@@ -66,9 +68,21 @@ type Node struct {
 	VCSInfo         VCSInfo   `json:"vcs_info" bson:"vcs_info"`
 }
 
+type VisEdge struct {
+	mgm.DefaultModel `bson:",inline"`
+
+	Caller  int     `json:"caller" bson:"caller"`
+	Callee  []int   `json:"callee" bson:"callee"`
+	Acct    string  `json:"account" bson:"account"`
+	Proj    string  `json:"project" bson:"project"`
+	Org     string  `json:"organization" bson:"organization"`
+	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+}
+
 const (
 	nodeColl  = "nodes"
 	relnsColl = "relations"
+	visColl   = "vis_edges"
 )
 
 var expireQuery = bson.M{"$set": bson.M{"expireAt": time.Now()}}
@@ -106,6 +120,17 @@ func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *R
 		Acct:    acc,
 		Org:     org,
 		Proj:    proj,
+		VCSInfo: vcs,
+	}
+}
+
+func NewVisEdge(caller int, callee []int, account, org, project string, vcs VCSInfo) *VisEdge {
+	return &VisEdge{
+		Caller:  caller,
+		Callee:  callee,
+		Acct:    account,
+		Org:     org,
+		Proj:    project,
 		VCSInfo: vcs,
 	}
 }
@@ -256,6 +281,177 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
+/*
+	Callgraph:
+		1 -> 2, 3, 6, 8
+		2 -> 4, 7
+		3 -> 2, 8
+
+	BFS(1) with a limit x and source as 1 should return BFS with root node as 1 and maximum of x nodes.
+
+*/
+func (mdb *MongoDb) GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgResp, error) {
+	ret := types.GetVgResp{}
+	var pkg, cls string
+	var branch string
+
+	branch = req.SourceBranch // Try to search for the visualisation data in the source branch
+
+	if req.Class != "" {
+		// This will be of the form <pkg.class>. Parse out the package and class names from it.
+		idx := strings.LastIndex(req.Class, ".")
+		if idx == -1 {
+			return ret, fmt.Errorf("incorrectly formatted class name: %s", req.Class)
+		}
+		pkg = req.Class[:idx]
+		cls = req.Class[idx+1:]
+
+		// Try to see if we have any information present in the source branch
+		fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "package": pkg, "class": cls}
+		err := mdb.Database.Collection(nodeColl).FindOne(ctx, fi, &options.FindOneOptions{}).Decode(&bson.M{})
+		if err != nil {
+			if err == mongo.ErrNoDocuments {
+				// If nothing is present in the source branch, we try to get information from the target branch
+				mdb.Log.Infow("could not find a source branch visualization mapping. Defaulting to target branch",
+					"source_branch", req.SourceBranch, "target_branch", req.TargetBranch, "account", req.AccountId, "repo",
+					req.Repo, "package", pkg, "class", cls)
+				branch = req.TargetBranch
+			} else {
+				return ret, err
+			}
+		}
+
+		return mdb.bfsWithSource(ctx, branch, pkg, cls, req)
+	} else {
+		// Get a partial BFS corresponding to any random nodes
+		branch = req.TargetBranch
+		return mdb.bfsRandom(ctx, branch, req)
+	}
+}
+
+// Perform a BFS starting for given branch and repo with the source nodes as <pkg, class>
+func (mdb *MongoDb) bfsWithSource(ctx context.Context, branch, pkg, cls string, req types.GetVgReq) (types.GetVgResp, error) {
+	// Try to query the package and class in the target branch
+	ret := types.GetVgResp{}
+	all := []Node{}
+	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "package": pkg, "class": cls}
+	err := mgm.Coll(&Node{}).SimpleFind(&all, fi)
+	if err != nil {
+		return ret, err
+	}
+	// The node was not found in the branch
+	if len(all) == 0 {
+		return ret, fmt.Errorf("could not find an entry corresponding to: %s.%s", pkg, cls)
+	}
+
+	imp := make(map[int]bool) // List of 'important' nodes which can be shown by UI
+
+	// Perform the BFS
+	src := []int{}
+	// Initialize the starting nodes
+	for _, s := range all {
+		src = append(src, s.Id)
+		imp[s.Id] = true
+	}
+
+	return mdb.bfsHelper(ctx, src, []int{}, branch, imp, req)
+
+}
+
+// Perform a random BFS over the search space to return a partial graph
+func (mdb *MongoDb) bfsRandom(ctx context.Context, branch string, req types.GetVgReq) (types.GetVgResp, error) {
+	all := []Node{}
+	ret := types.GetVgResp{}
+	opt := options.FindOptions{Limit: &req.Limit}
+	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId}
+	err := mgm.Coll(&Node{}).SimpleFind(&all, fi, &opt)
+	if err != nil {
+		return ret, err
+	}
+	if len(all) == 0 {
+		return ret, errors.New("no data present in visualisation callgraph")
+	}
+	src := []int{}
+	add := []int{}
+	for idx, s := range all {
+		if idx == 0 {
+			src = append(src, s.Id)
+		} else {
+			add = append(add, s.Id)
+		}
+	}
+
+	return mdb.bfsHelper(ctx, src, add, branch, make(map[int]bool), req)
+}
+
+// bfsHelper takes in a list of source nodes to start the BFS from and a list of additional nodes which can be used to
+// add in more nodes to the BFS if required. It returns all the nodes and edges for this graph.
+func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branch string, imp map[int]bool, req types.GetVgReq) (types.GetVgResp, error) {
+	Q := list.New()
+	vis := make(map[int]struct{})
+	ret := types.GetVgResp{}
+	idx := 0
+
+	// Add all source nodes to the queue
+	for _, n := range srcList {
+		Q.PushBack(n)
+	}
+
+	nIds := []int{}
+	for len(nIds) < int(req.Limit) && Q.Len() > 0 {
+		id := Q.Front()
+		val := id.Value.(int)
+		Q.Remove(id)
+
+		if _, ok := vis[val]; !ok {
+			nIds = append(nIds, val) // Add to node IDs if not added before
+			m := types.VisMapping{}
+			m.From = val
+			vis[val] = struct{}{} // Mark the node as visited
+			// Go through edges of id and add the nodes to the queue
+			edge := VisEdge{}
+			fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "caller": val}
+			err := mdb.Database.Collection(visColl).FindOne(ctx, fi, &options.FindOneOptions{}).Decode(&edge)
+			if err != nil {
+				if err != mongo.ErrNoDocuments {
+					// Node has no edges
+					return ret, err
+				}
+			} else {
+				// Construct the response.
+				for _, k := range edge.Callee {
+					Q.PushBack(k)
+					m.To = append(m.To, k)
+				}
+				ret.Edges = append(ret.Edges, m)
+			}
+		}
+
+		// Start a BFS from a different random node
+		if Q.Len() == 0 && idx <= len(addList)-1 {
+			Q.PushBack(addList[idx])
+			idx++
+		}
+	}
+
+	// Get detailed node information
+	all := []Node{}
+	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "id": bson.M{"$in": nIds}}
+	err := mgm.Coll(&Node{}).SimpleFind(&all, f)
+	if err != nil {
+		return ret, err
+	}
+	for _, n := range all {
+		v := types.VisNode{Id: n.Id, Class: n.Class, Package: n.Package, Method: n.Method, Params: n.Params, Type: n.Type, File: n.File}
+		if _, ok := imp[n.Id]; ok {
+			v.Important = true
+		}
+		ret.Nodes = append(ret.Nodes, v)
+	}
+
+	return ret, nil
+}
+
 func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string, enableReflection bool) (types.SelectTestsResp, error) {
 	// parse package and class names from the files
 	fileNames := []string{}
@@ -266,7 +462,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 		for _, ignore := range req.TiConfig.Config.Ignore {
 			matched, _ := zglob.Match(ignore, f.Name)
 			if matched == true {
-				// TODO: (Vistaar) Remove this warning message in prod since it has no context
 				remove = true
 				break
 			}

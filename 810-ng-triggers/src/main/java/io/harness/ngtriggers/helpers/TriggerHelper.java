@@ -35,6 +35,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
@@ -121,5 +122,19 @@ public class TriggerHelper {
     if (isNotBlank(sourceTypeVal)) {
       jsonObject.put(SOURCE_TYPE, sourceTypeVal);
     }
+  }
+
+  public String getTriggerRef(NGTriggerEntity ngTriggerEntity) {
+    return new StringBuilder(128)
+        .append(ngTriggerEntity.getAccountId())
+        .append(':')
+        .append(ngTriggerEntity.getOrgIdentifier())
+        .append(':')
+        .append(ngTriggerEntity.getProjectIdentifier())
+        .append(':')
+        .append(ngTriggerEntity.getTargetIdentifier())
+        .append(':')
+        .append(ngTriggerEntity.getIdentifier())
+        .toString();
   }
 }

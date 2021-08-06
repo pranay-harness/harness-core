@@ -13,6 +13,7 @@ import static io.harness.audit.ResourceTypeConstants.SERVICE_ACCOUNT;
 import static io.harness.audit.ResourceTypeConstants.TOKEN;
 import static io.harness.audit.ResourceTypeConstants.USER;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
@@ -92,17 +93,16 @@ import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
+import io.harness.ng.core.DelegateServiceModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
 import io.harness.ng.core.api.ApiKeyService;
-import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.api.impl.ApiKeyServiceImpl;
-import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.TokenServiceImpl;
@@ -170,6 +170,12 @@ import io.harness.packages.HarnessPackages;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
+import io.harness.polling.service.impl.PollingPerpetualTaskServiceImpl;
+import io.harness.polling.service.impl.PollingServiceImpl;
+import io.harness.polling.service.impl.PollingServiceObserverImpl;
+import io.harness.polling.service.intfc.PollingPerpetualTaskService;
+import io.harness.polling.service.intfc.PollingService;
+import io.harness.polling.service.intfc.PollingServiceObserver;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
@@ -184,6 +190,7 @@ import io.harness.serializer.NextGenRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.service.InstanceModule;
+import io.harness.service.stats.usagemetrics.eventconsumer.InstanceStatsEventListener;
 import io.harness.signup.SignupModule;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
@@ -417,6 +424,7 @@ public class NextGenModule extends AbstractModule {
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
+    install(new DelegateServiceModule());
     install(NGModule.getInstance());
     install(ExceptionModule.getInstance());
     install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
@@ -540,7 +548,6 @@ public class NextGenModule extends AbstractModule {
     bind(NgUserService.class).to(NgUserServiceImpl.class);
     bind(UserGroupService.class).to(UserGroupServiceImpl.class);
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
-    bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
     bind(UserInfoService.class).to(UserInfoServiceImpl.class);
     bind(WebhookService.class).to(WebhookServiceImpl.class);
     bind(WebhookEventProcessingService.class).to(WebhookEventProcessingServiceImpl.class);
@@ -557,6 +564,10 @@ public class NextGenModule extends AbstractModule {
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(TokenService.class).to(TokenServiceImpl.class);
     bind(FeedbackService.class).to(FeedbackServiceImpl.class);
+
+    bind(PollingService.class).to(PollingServiceImpl.class);
+    bind(PollingServiceObserver.class).to(PollingServiceObserverImpl.class);
+    bind(PollingPerpetualTaskService.class).to(PollingPerpetualTaskServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
@@ -635,6 +646,7 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(SECRET_ENTITY + ENTITY_CRUD))
         .to(SecretEntityCRUDStreamListener.class);
+    bind(MessageListener.class).annotatedWith(Names.named(INSTANCE_STATS)).to(InstanceStatsEventListener.class);
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.USER_GROUP + ENTITY_CRUD))
         .to(UserGroupEntityCRUDStreamListener.class);

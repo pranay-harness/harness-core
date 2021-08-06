@@ -4,6 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ngtriggers.beans.entity.ValidationStatus.Status.INVALID_TRIGGER_YAML;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -17,6 +21,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.network.SafeHttpCall;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails;
 import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails.WebhookEventProcessingDetailsBuilder;
@@ -25,16 +30,25 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
+import io.harness.ngtriggers.beans.entity.ValidationStatus;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookRegistrationStatus;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
+import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
+import io.harness.ngtriggers.utils.PollingSubscriptionHelper;
+import io.harness.ngtriggers.validations.TriggerValidationHandler;
+import io.harness.ngtriggers.validations.ValidationResult;
+import io.harness.polling.client.PollingResourceClient;
+import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.contracts.service.PollingDocument;
 import io.harness.repositories.spring.NGTriggerRepository;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.repositories.spring.TriggerWebhookEventRepository;
+import io.harness.serializer.KryoSerializer;
 
 import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
@@ -68,7 +82,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   private final TriggerEventHistoryRepository triggerEventHistoryRepository;
   private final ConnectorResourceClient connectorResourceClient;
   private final NGTriggerWebhookRegistrationService ngTriggerWebhookRegistrationService;
+  private final TriggerValidationHandler triggerValidationHandler;
+  private final PollingSubscriptionHelper pollingSubscriptionHelper;
   private final ExecutorService executorService;
+  private final KryoSerializer kryoSerializer;
+  private final PollingResourceClient pollingResourceClient;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -76,7 +94,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   public NGTriggerEntity create(NGTriggerEntity ngTriggerEntity) {
     try {
       NGTriggerEntity savedNgTriggerEntity = ngTriggerRepository.save(ngTriggerEntity);
-      registerWebhookAsync(ngTriggerEntity);
+      performPostUpsertFlow(savedNgTriggerEntity);
       return savedNgTriggerEntity;
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
@@ -84,12 +102,57 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
   }
 
-  private void registerWebhookAsync(NGTriggerEntity ngTriggerEntity) {
+  private void performPostUpsertFlow(NGTriggerEntity ngTriggerEntity) {
+    registerWebhookAsync(ngTriggerEntity);
+    registerPollingAsync(ngTriggerEntity, validateTrigger(ngTriggerEntity));
+  }
+
+  private void registerPollingAsync(NGTriggerEntity ngTriggerEntity, boolean validationResult) {
+    if (!validationResult) {
+      log.warn(
+          String.format("Trigger Validation Failed for Trigger: %s, Skipping Polling Framework subscription request",
+              TriggerHelper.getTriggerRef(ngTriggerEntity)));
+    }
+    if (ngTriggerEntity.getType() != ARTIFACT && ngTriggerEntity.getType() != MANIFEST) {
+      return;
+    }
+
     executorService.submit(() -> {
-      WebhookRegistrationStatus registrationStatus =
-          ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);
-      updateWebhookRegistrationStatus(ngTriggerEntity, registrationStatus);
+      PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
+      byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
+      ResponseDTO<byte[]> responseDTO;
+      try {
+        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(pollingItemBytes));
+      } catch (Exception exception) {
+        log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
+                      TriggerHelper.getTriggerRef(ngTriggerEntity)),
+            exception);
+        throw new InvalidRequestException(exception.getMessage());
+      }
+      byte[] pollingDocumentBytes = responseDTO.getData();
+      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asInflatedObject(pollingDocumentBytes);
+      updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
     });
+  }
+
+  private void updatePollingRegistrationStatus(NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument) {
+    Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
+    ngTriggerEntity.getMetadata().getBuildMetadata().setPollingDocId(pollingDocument.getPollingDocId());
+    NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+    if (updatedEntity == null) {
+      throw new InvalidRequestException(
+          String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
+    }
+  }
+
+  private void registerWebhookAsync(NGTriggerEntity ngTriggerEntity) {
+    if (ngTriggerEntity.getType() == WEBHOOK && ngTriggerEntity.getMetadata().getWebhook().getGit() != null) {
+      executorService.submit(() -> {
+        WebhookRegistrationStatus registrationStatus =
+            ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);
+        updateWebhookRegistrationStatus(ngTriggerEntity, registrationStatus);
+      });
+    }
   }
 
   @Override
@@ -109,7 +172,8 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       throw new InvalidRequestException(
           String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
     }
-    registerWebhookAsync(updatedEntity);
+
+    performPostUpsertFlow(updatedEntity);
     return updatedEntity;
   }
 
@@ -395,5 +459,47 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       criteria.and(NGTriggerEntityKeys.version).is(version);
     }
     return criteria;
+  }
+
+  public boolean validateTrigger(NGTriggerEntity ngTriggerEntity) {
+    // Not adding it for webhook and cron for now as still in testing
+    if (ngTriggerEntity.getType() != MANIFEST && ngTriggerEntity.getType() != ARTIFACT) {
+      return true;
+    }
+
+    try {
+      ValidationResult validationResult = triggerValidationHandler.applyValidations(ngTriggerEntity);
+      updateTriggerWithValidationStatus(ngTriggerEntity, validationResult);
+      return validationResult.isSuccess();
+    } catch (Exception e) {
+      log.error("Failed in trigger validation ", e);
+      return false;
+    }
+  }
+
+  public PollingItem generatePollingItem(NGTriggerEntity ngTriggerEntity) {
+    return pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
+  }
+
+  private void updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult) {
+    Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
+
+    if (validationResult.isSuccess() && ngTriggerEntity.getValidationStatus() != null
+        && ngTriggerEntity.getValidationStatus().isValidationFailure()) {
+      ngTriggerEntity.setValidationStatus(ValidationStatus.builder().validationFailure(false).build());
+    } else {
+      ngTriggerEntity.setValidationStatus(ValidationStatus.builder()
+                                              .status(INVALID_TRIGGER_YAML)
+                                              .validationFailure(true)
+                                              .detailMessage(validationResult.getMessage())
+                                              .build());
+      ngTriggerEntity.setEnabled(false);
+    }
+
+    NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+    if (updatedEntity == null) {
+      throw new InvalidRequestException(
+          String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
+    }
   }
 }

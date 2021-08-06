@@ -12,5 +12,5 @@ import lombok.Getter;
 @OwnedBy(HarnessTeam.DX)
 public class BuildsByEnvironment {
   private String envId;
-  private List<InstancesByBuildId> builds;
+  private List<InstanceDTOsByBuildId> builds;
 }

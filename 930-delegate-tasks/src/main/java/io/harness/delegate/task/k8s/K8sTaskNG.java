@@ -67,7 +67,9 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public K8sDeployResponse run(TaskParameters parameters) {
     K8sDeployRequest k8sDeployRequest = (K8sDeployRequest) parameters;
-    CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
+    CommandUnitsProgress commandUnitsProgress = k8sDeployRequest.getCommandUnitsProgress() != null
+        ? k8sDeployRequest.getCommandUnitsProgress()
+        : CommandUnitsProgress.builder().build();
 
     log.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
     decryptRequestDTOs(k8sDeployRequest);

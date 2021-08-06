@@ -110,7 +110,7 @@ import org.mockito.Mock;
  * The Class HttpStateTest.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HttpStateTest extends WingsBaseTest {
   private static final HttpState.Builder httpStateBuilder =

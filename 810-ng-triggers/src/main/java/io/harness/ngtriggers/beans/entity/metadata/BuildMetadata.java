@@ -14,4 +14,5 @@ import lombok.Data;
 public class BuildMetadata {
   NGTriggerType type;
   String signature;
+  String pollingDocId;
 }

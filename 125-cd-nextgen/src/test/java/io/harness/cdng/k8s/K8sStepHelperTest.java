@@ -5,6 +5,7 @@ import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.cdng.k8s.K8sStepHelper.K8S_SUPPORTED_MANIFEST_TYPES;
 import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
+import static io.harness.cdng.k8s.K8sStepHelper.RELEASE_NAME;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
@@ -122,6 +123,7 @@ import io.harness.pms.data.OrchestrationRefType;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataService;
 import io.harness.pms.sdk.core.execution.invokers.StrategyHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -169,6 +171,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private StepHelper stepHelper;
   @Mock private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Mock private PipelineRbacHelper pipelineRbacHelper;
+  @Mock private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
   @Mock private LogCallback mockLogCallback;
@@ -1223,9 +1226,11 @@ public class K8sStepHelperTest extends CategoryTest {
                                                  .infrastructure(K8sDirectInfrastructureOutcome.builder().build())
                                                  .build();
 
+    UnitProgressData unitProgressData = UnitProgressData.builder().build();
     HelmValuesFetchResponse helmValuesFetchResponse = HelmValuesFetchResponse.builder()
                                                           .valuesFileContent("values yaml payload")
                                                           .commandExecutionStatus(SUCCESS)
+                                                          .unitProgressData(unitProgressData)
                                                           .build();
     Map<String, ResponseData> responseDataMap = ImmutableMap.of("helm-value-fetch-response", helmValuesFetchResponse);
     ThrowingSupplier responseDataSuplier = StrategyHelper.buildResponseDataSupplier(responseDataMap);
@@ -1237,8 +1242,11 @@ public class K8sStepHelperTest extends CategoryTest {
     verify(k8sStepExecutor, times(1))
         .executeK8sTask(eq(passThroughData.getK8sManifestOutcome()), eq(ambiance), eq(rollingStepElementParams),
             valuesFilesContentCaptor.capture(),
-            eq(K8sExecutionPassThroughData.builder().infrastructure(passThroughData.getInfrastructure()).build()),
-            eq(false));
+            eq(K8sExecutionPassThroughData.builder()
+                    .infrastructure(passThroughData.getInfrastructure())
+                    .lastActiveUnitProgressData(unitProgressData)
+                    .build()),
+            eq(false), eq(unitProgressData));
 
     List<String> valuesFilesContent = valuesFilesContentCaptor.getValue();
     assertThat(valuesFilesContent).isNotEmpty();
@@ -1308,7 +1316,7 @@ public class K8sStepHelperTest extends CategoryTest {
                 .infrastructure(passThroughData.getInfrastructure())
                 .lastActiveUnitProgressData(unitProgressData)
                 .build(),
-            false);
+            false, unitProgressData);
 
     TaskChainResponse response = k8sStepHelper.executeNextLink(
         k8sStepExecutor, ambiance, rollingStepElementParams, passThroughData, responseDataSuplier);
@@ -1536,6 +1544,21 @@ public class K8sStepHelperTest extends CategoryTest {
     K8sStepPassThroughData stepPassThroughData = (K8sStepPassThroughData) taskChainResponse.getPassThroughData();
     assertThat(stepPassThroughData.getValuesManifestOutcomes().stream().map(ManifestOutcome::getIdentifier))
         .containsExactly("k8s", "values1", "values2", "values3", "values4");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldPublishReleaseNameStepDetails() {
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, "test-release-name");
+
+    ArgumentCaptor<K8sReleaseDetailsInfo> releaseDetailsCaptor = ArgumentCaptor.forClass(K8sReleaseDetailsInfo.class);
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(sdkGraphVisualizationDataService, times(1))
+        .publishStepDetailInformation(eq(ambiance), releaseDetailsCaptor.capture(), releaseNameCaptor.capture());
+
+    assertThat(releaseDetailsCaptor.getValue().getReleaseName()).isEqualTo("test-release-name");
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(RELEASE_NAME);
   }
 
   private GitStore sampleGitStore(String identifier) {

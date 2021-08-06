@@ -112,7 +112,9 @@ public class AllowedValuesValidator implements RuntimeValidator {
 
   private <T> RuntimeValidatorResponse isAllowedValuesFromSet(T currentValue, Set<T> allowedValues) {
     if (!allowedValues.contains(currentValue)) {
-      return RuntimeValidatorResponse.builder().errorMessage("Current value is not in allowed values list").build();
+      return RuntimeValidatorResponse.builder()
+          .errorMessage("Current value " + currentValue + " is not in allowed values list")
+          .build();
     }
     return RuntimeValidatorResponse.builder().isValid(true).build();
   }
