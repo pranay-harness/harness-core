@@ -11,8 +11,10 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +89,19 @@ public class MergeHelper {
       ParameterField<?> parameterField = YamlUtils.read(pipelineValText, ParameterField.class);
       if (parameterField.getInputSetValidator() == null) {
         return inputSetValue;
+      }
+      /*
+      this if block appends the input set validator on every element of a list of primitive types
+       */
+      if (inputSetValue instanceof ArrayNode) {
+        ArrayNode inputSetArray = (ArrayNode) inputSetValue;
+        List<ParameterField<?>> appendedValidator = new ArrayList<>();
+        for (JsonNode element : inputSetArray) {
+          String elementText = element.asText();
+          appendedValidator.add(ParameterField.createExpressionField(
+              true, elementText, parameterField.getInputSetValidator(), element.getNodeType() != JsonNodeType.STRING));
+        }
+        return appendedValidator;
       }
       return ParameterField.createExpressionField(true, ((JsonNode) inputSetValue).asText(),
           parameterField.getInputSetValidator(), ((JsonNode) inputSetValue).getNodeType() != JsonNodeType.STRING);

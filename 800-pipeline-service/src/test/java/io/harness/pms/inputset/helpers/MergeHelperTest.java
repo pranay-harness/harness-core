@@ -310,6 +310,39 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  public void testInputSetValidatorsOnListOfStrings() {
+    String yamlFile = "paths-with-validators-pipeline.yaml";
+    String yaml = readFile(yamlFile);
+    String template = createTemplateFromPipeline(yaml);
+    assertThat(template).isNotNull();
+
+    String runtimeInputFile = "paths-with-validators-runtime-input.yaml";
+    String runtimeInput = readFile(runtimeInputFile);
+    String mergedYaml = mergeInputSetIntoPipeline(yaml, runtimeInput, true);
+    String fullYamlFile = "paths-with-validators-merged.yaml";
+    String fullYaml = readFile(fullYamlFile);
+    assertThat(mergedYaml).isEqualTo(fullYaml);
+
+    Map<FQN, String> noInvalidFQNsInInputSet = getInvalidFQNsInInputSet(template, runtimeInput);
+    assertThat(noInvalidFQNsInInputSet).isEmpty();
+
+    String runtimeInputFileWrong = "paths-with-validators-runtime-input-wrong.yaml";
+    String runtimeInputWrong = readFile(runtimeInputFileWrong);
+    Map<FQN, String> invalidFQNsInInputSet = getInvalidFQNsInInputSet(template, runtimeInputWrong);
+    assertThat(invalidFQNsInInputSet.size()).isEqualTo(2);
+    List<String> invalidFQNStrings =
+        invalidFQNsInInputSet.keySet().stream().map(FQN::display).collect(Collectors.toList());
+    String invalidFQN1 =
+        "pipeline.stages.stage[identifier:d1].spec.serviceConfig.serviceDefinition.spec.manifests.manifest[identifier:m1].spec.store.spec.paths.";
+    String invalidFQN2 =
+        "pipeline.stages.stage[identifier:d1].spec.serviceConfig.serviceDefinition.spec.manifests.manifest[identifier:m2].spec.store.spec.paths.";
+    assertThat(invalidFQNStrings.contains(invalidFQN1)).isTrue();
+    assertThat(invalidFQNStrings.contains(invalidFQN2)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
   public void testGetErrorMapForInputSetValidators() {
     String yamlFile = "pipeline-with-input-set-validators.yaml";
     String pipelineYaml = readFile(yamlFile);
