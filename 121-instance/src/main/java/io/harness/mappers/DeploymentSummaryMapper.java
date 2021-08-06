@@ -29,6 +29,8 @@ public class DeploymentSummaryMapper {
         .lastModifiedAt(deploymentSummary.getLastModifiedAt())
         .id(deploymentSummary.getId())
         .serverInstanceInfoList(new ArrayList<>())
+        .isRollbackDeployment(deploymentSummary.isRollbackDeployment())
+        .instanceSyncKey(deploymentSummary.getInstanceSyncKey())
         .build();
   }
 
@@ -45,6 +47,8 @@ public class DeploymentSummaryMapper {
         .pipelineExecutionId(deploymentSummaryDTO.getPipelineExecutionId())
         .pipelineExecutionName(deploymentSummaryDTO.getPipelineExecutionName())
         .artifactDetails(deploymentSummaryDTO.getArtifactDetails())
+        .isRollbackDeployment(deploymentSummaryDTO.isRollbackDeployment())
+        .instanceSyncKey(deploymentSummaryDTO.getInstanceSyncKey())
         .build();
   }
 }

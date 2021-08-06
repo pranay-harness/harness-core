@@ -11,4 +11,8 @@ public interface DeploymentSummaryService {
   DeploymentSummaryDTO save(DeploymentSummaryDTO deploymentSummaryDTO);
 
   Optional<DeploymentSummaryDTO> getByDeploymentSummaryId(String deploymentSummaryId);
+
+  Optional<DeploymentSummaryDTO> getNthDeploymentSummaryFromNow(int N, String instanceSyncKey);
+
+  Optional<DeploymentSummaryDTO> getLatestByInstanceKey(String instanceSyncKey);
 }

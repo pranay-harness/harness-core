@@ -27,11 +27,13 @@ public class DeploymentSummaryDTO {
   String deployedById;
   String deployedByName;
   String infrastructureMappingId;
+  String instanceSyncKey;
   @Setter @Nullable InfrastructureMappingDTO infrastructureMapping;
   // status of server instances when deployment happened
   // only used during new deployment instance sync flow
   @Setter List<ServerInstanceInfo> serverInstanceInfoList;
   DeploymentInfoDTO deploymentInfoDTO;
+  @Setter boolean isRollbackDeployment;
   long deployedAt;
   long createdAt;
   long lastModifiedAt;
