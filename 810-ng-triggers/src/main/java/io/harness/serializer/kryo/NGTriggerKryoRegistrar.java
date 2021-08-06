@@ -20,7 +20,7 @@ public class NGTriggerKryoRegistrar implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(NGTriggerConfig.class, 400001);
     kryo.register(NGTriggerConfigV2.class, 400002);
-    kryo.register(PollingItem.class, PollingItemKryoSerializer.getInstance(), 400003);
-    kryo.register(PollingDocument.class, PollingDocumentKryoSerializer.getInstance(), 400004);
+    //    kryo.register(PollingItem.class, PollingItemKryoSerializer.getInstance(), 400003);
+    //    kryo.register(PollingDocument.class, PollingDocumentKryoSerializer.getInstance(), 400004);
   }
 }

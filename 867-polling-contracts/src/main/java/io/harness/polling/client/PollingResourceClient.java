@@ -3,6 +3,7 @@ package io.harness.polling.client;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.polling.contracts.PollingItem;
 
 import okhttp3.RequestBody;
 import retrofit2.Call;
