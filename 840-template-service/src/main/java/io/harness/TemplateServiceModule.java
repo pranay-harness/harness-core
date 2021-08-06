@@ -1,8 +1,12 @@
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -10,8 +14,10 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
+import io.harness.time.TimeModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -32,8 +38,17 @@ import org.springframework.core.convert.converter.Converter;
 public class TemplateServiceModule extends AbstractModule {
   private final TemplateServiceConfiguration templateServiceConfiguration;
 
+  private static TemplateServiceModule instance;
+
   public TemplateServiceModule(TemplateServiceConfiguration templateServiceConfiguration) {
     this.templateServiceConfiguration = templateServiceConfiguration;
+  }
+
+  public static TemplateServiceModule getInstance(TemplateServiceConfiguration appConfig) {
+    if (instance == null) {
+      instance = new TemplateServiceModule(appConfig);
+    }
+    return instance;
   }
 
   @Override
@@ -45,6 +60,10 @@ public class TemplateServiceModule extends AbstractModule {
       }
     });
     install(new TemplateServicePersistenceModule());
+    install(PersistentLockModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
+    install(TimeModule.getInstance());
+
     bind(HPersistence.class).to(MongoPersistence.class);
   }
 
@@ -84,6 +103,19 @@ public class TemplateServiceModule extends AbstractModule {
   @Singleton
   public MongoConfig mongoConfig() {
     return templateServiceConfiguration.getMongoConfig();
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return MONGO;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  RedisConfig redisConfig() {
+    return RedisConfig.builder().build();
   }
 
   @Provides

@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -13,6 +14,7 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -38,6 +40,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @OwnedBy(CDC)
@@ -81,6 +85,12 @@ public class TemplateServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
       @Provides
       @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+
+      @Provides
+      @Singleton
       List<Class<? extends Converter<?, ?>>> springConverters() {
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(TemplateServiceModuleRegistrars.springConverters)
@@ -101,6 +111,7 @@ public class TemplateServiceTestRule implements InjectorRuleMixin, MethodRule, M
         bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
+    modules.add(PrimaryVersionManagerModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(mongoTypeModule(annotations));
