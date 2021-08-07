@@ -510,6 +510,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
       if (deploymentSummaryDTO == null) {
         log.warn("Couldn't find deployment summary in local cache for new deployment / rollback case");
         return getDeploymentSummaryFromDB(instanceSyncKey);
+      } else {
+        return deploymentSummaryDTO;
       }
     }
     if (!instancesInDB.isEmpty()) {
