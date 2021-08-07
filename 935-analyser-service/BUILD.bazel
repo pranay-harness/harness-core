@@ -28,3 +28,8 @@ java_binary(
     ],
     deps = shared_deps,
 )
+
+run_analysis(
+    run_checkstyle = False,
+    run_pmd = False,
+)
