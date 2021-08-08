@@ -303,6 +303,7 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
+import io.harness.delegate.task.k8s.K8sRollingDeployRollbackResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
@@ -879,5 +880,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CommandUnitsProgress.class, 543427);
     kryo.register(CommandUnitProgress.class, 543428);
     kryo.register(K8sCanaryDeleteRequest.class, 543429);
+    kryo.register(K8sRollingDeployRollbackResponse.class, 543430);
   }
 }
