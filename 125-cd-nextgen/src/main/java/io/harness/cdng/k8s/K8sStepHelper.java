@@ -242,6 +242,10 @@ public class K8sStepHelper {
 
   public ConnectorInfoDTO getConnector(String connectorId, Ambiance ambiance) {
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+    return getConnectorInfoDTO(connectorId, ngAccess);
+  }
+
+  private ConnectorInfoDTO getConnectorInfoDTO(String connectorId, NGAccess ngAccess) {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         connectorId, ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
@@ -550,29 +554,33 @@ public class K8sStepHelper {
   }
 
   public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+    return getK8sInfraDelegateConfig(infrastructure, ngAccess);
+  }
+
+  public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, NGAccess ngAccess) {
+    ConnectorInfoDTO connectorDTO = getConnectorInfoDTO(infrastructure.getConnectorRef(), ngAccess);
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
         K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
-        ConnectorInfoDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorRef(), ambiance);
         KubernetesHelperService.validateNamespace(k8SDirectInfrastructure.getNamespace());
 
         return DirectK8sInfraDelegateConfig.builder()
             .namespace(k8SDirectInfrastructure.getNamespace())
             .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, ngAccess))
             .build();
 
       case KUBERNETES_GCP:
         K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
-        ConnectorInfoDTO gcpConnectorDTO = getConnector(k8sGcpInfrastructure.getConnectorRef(), ambiance);
         KubernetesHelperService.validateNamespace(k8sGcpInfrastructure.getNamespace());
         KubernetesHelperService.validateCluster(k8sGcpInfrastructure.getCluster());
 
         return GcpK8sInfraDelegateConfig.builder()
             .namespace(k8sGcpInfrastructure.getNamespace())
             .cluster(k8sGcpInfrastructure.getCluster())
-            .gcpConnectorDTO((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+            .gcpConnectorDTO((GcpConnectorDTO) connectorDTO.getConnectorConfig())
+            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, ngAccess))
             .build();
 
       default:

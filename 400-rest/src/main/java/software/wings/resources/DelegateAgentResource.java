@@ -31,7 +31,6 @@ import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
-import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
@@ -126,7 +125,8 @@ public class DelegateAgentResource {
       ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
       ConfigurationController configurationController, FeatureFlagService featureFlagService,
-      DelegateTaskServiceClassic delegateTaskServiceClassic, PollingResourceClient pollingResourceClient) {
+      DelegateTaskServiceClassic delegateTaskServiceClassic, PollingResourceClient pollingResourceClient,
+      InstanceSyncResponsePublisher instanceSyncResponsePublisher) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -141,6 +141,7 @@ public class DelegateAgentResource {
     this.featureFlagService = featureFlagService;
     this.delegateTaskServiceClassic = delegateTaskServiceClassic;
     this.pollingResourceClient = pollingResourceClient;
+    this.instanceSyncResponsePublisher = instanceSyncResponsePublisher;
   }
 
   @DelegateAuth
@@ -501,7 +502,7 @@ public class DelegateAgentResource {
   @Path("instance-sync-ng/{perpetualTaskId}")
   public RestResponse<Boolean> processInstanceSyncNGResult(
       @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
-      @QueryParam("accountId") @NotEmpty String accountId, InstanceSyncPerpetualTaskResponse response) {
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateResponseData response) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
       instanceSyncResponsePublisher.publishInstanceSyncResponseToNG(

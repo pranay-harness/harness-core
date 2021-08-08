@@ -3,6 +3,7 @@ package io.harness.ng.instancesync;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -47,7 +48,9 @@ public class InstanceSyncResource {
   public ResponseDTO<Boolean> processInstanceSyncPerpetualTaskResponse(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PERPETUAL_TASK_ID) String perpetualTaskId,
-      @Body InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse) {
+      @Body DelegateResponseData delegateResponseData) {
+    InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse =
+        (InstanceSyncPerpetualTaskResponse) delegateResponseData;
     instanceSyncService.processInstanceSyncByPerpetualTask(
         accountIdentifier, perpetualTaskId, instanceSyncPerpetualTaskResponse);
     return ResponseDTO.newResponse(true);
