@@ -3,6 +3,8 @@ package io.harness.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.repositories.instancestats.InstanceStatsRepository;
 import io.harness.repositories.instancestats.InstanceStatsRepositoryImpl;
@@ -31,6 +33,8 @@ import io.harness.service.stats.usagemetrics.eventpublisher.UsageMetricsEventPub
 
 import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.cpr.DefaultBroadcasterFactory;
 
 @OwnedBy(DX)
 public class InstanceModule extends AbstractModule {
@@ -51,6 +55,7 @@ public class InstanceModule extends AbstractModule {
     bind(InstanceSyncPerpetualTaskInfoService.class).to(InstanceSyncPerpetualTaskInfoServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
     bind(InstanceSyncHandlerFactoryService.class).to(InstanceSyncHandlerFactoryServiceImpl.class);
+    bind(PerpetualTaskService.class).to(PerpetualTaskServiceImpl.class);
     bind(InstanceSyncService.class).to(InstanceSyncServiceImpl.class);
     bind(DeploymentSummaryService.class).to(DeploymentSummaryServiceImpl.class);
     bind(InstanceSyncPerpetualTaskService.class).to(InstanceSyncPerpetualTaskServiceImpl.class);
@@ -58,6 +63,7 @@ public class InstanceModule extends AbstractModule {
     bind(InstanceStatsService.class).to(InstanceStatsServiceImpl.class);
     bind(UsageMetricsEventPublisher.class).to(UsageMetricsEventPublisherImpl.class);
     bind(InstanceStatsRepository.class).to(InstanceStatsRepositoryImpl.class);
+    bind(BroadcasterFactory.class).to(DefaultBroadcasterFactory.class);
   }
 
   private void registerRequiredBindings() {
