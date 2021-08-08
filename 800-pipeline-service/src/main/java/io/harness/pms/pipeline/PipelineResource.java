@@ -22,6 +22,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
@@ -198,7 +199,7 @@ public class PipelineResource implements YamlSchemaResource {
     // validate unique fqn in yaml
     pmsYamlSchemaService.validateUniqueFqn(yaml);
 
-    PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion);
+    PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion, ChangeType.MODIFY);
 
     return ResponseDTO.newResponse(updatedEntity.getVersion().toString(), updatedEntity.getIdentifier());
   }

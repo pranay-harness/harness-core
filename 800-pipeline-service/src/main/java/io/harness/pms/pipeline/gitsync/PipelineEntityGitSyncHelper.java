@@ -9,6 +9,7 @@ import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
@@ -75,9 +76,9 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   }
 
   @Override
-  public PipelineConfig update(String accountIdentifier, String yaml) {
-    PipelineEntity pipelineEntity =
-        pmsPipelineService.updatePipelineYaml(PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml));
+  public PipelineConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
+    PipelineEntity pipelineEntity = pmsPipelineService.updatePipelineYaml(
+        PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml), changeType);
     return PipelineYamlDtoMapper.toDto(pipelineEntity);
   }
 

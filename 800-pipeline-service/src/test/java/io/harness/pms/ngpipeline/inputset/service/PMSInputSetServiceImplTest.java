@@ -14,6 +14,7 @@ import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
@@ -179,7 +180,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                                                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                                 .inputSetReferences(entity.getInputSetReferences())
                                                 .build();
-      InputSetEntity updatedInputSet = pmsInputSetService.update(updateInputSetEntity);
+      InputSetEntity updatedInputSet = pmsInputSetService.update(updateInputSetEntity, ChangeType.MODIFY);
       assertThat(updatedInputSet.getAccountId()).isEqualTo(updateInputSetEntity.getAccountId());
       assertThat(updatedInputSet.getOrgIdentifier()).isEqualTo(updateInputSetEntity.getOrgIdentifier());
       assertThat(updatedInputSet.getProjectIdentifier()).isEqualTo(updateInputSetEntity.getProjectIdentifier());
@@ -201,7 +202,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                                                    .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                                    .inputSetReferences(entity.getInputSetReferences())
                                                    .build();
-      assertThatThrownBy(() -> pmsInputSetService.update(incorrectInputSetEntity))
+      assertThatThrownBy(() -> pmsInputSetService.update(incorrectInputSetEntity, ChangeType.MODIFY))
           .isInstanceOf(InvalidRequestException.class);
 
       boolean delete = pmsInputSetService.delete(

@@ -18,6 +18,7 @@ import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
@@ -236,7 +237,7 @@ public class InputSetResourcePMS {
     InputSetEntity entity = PMSInputSetElementMapper.toInputSetEntity(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
     InputSetEntity entityWithVersion = entity.withVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
-    InputSetEntity updatedEntity = pmsInputSetService.update(entityWithVersion);
+    InputSetEntity updatedEntity = pmsInputSetService.update(entityWithVersion, ChangeType.MODIFY);
     return ResponseDTO.newResponse(
         updatedEntity.getVersion().toString(), PMSInputSetElementMapper.toInputSetResponseDTOPMS(updatedEntity));
   }
@@ -266,7 +267,7 @@ public class InputSetResourcePMS {
           PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(entityWithVersion, true, invalidReferences));
     }
 
-    InputSetEntity updatedEntity = pmsInputSetService.update(entityWithVersion);
+    InputSetEntity updatedEntity = pmsInputSetService.update(entityWithVersion, ChangeType.MODIFY);
     return ResponseDTO.newResponse(
         updatedEntity.getVersion().toString(), PMSInputSetElementMapper.toOverlayInputSetResponseDTOPMS(updatedEntity));
   }

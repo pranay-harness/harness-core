@@ -2,6 +2,7 @@ package io.harness.gitsync.entityInfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
@@ -23,7 +24,7 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
       }
       log.info("Object Id differs for database object: [{}] and git object: [{}] hence updating.", lastObjectId,
           objectIdOfNewYaml);
-      return update(accountIdentifier, yaml);
+      return update(accountIdentifier, yaml, ChangeType.MODIFY);
     } else {
       log.info("Object not found for yaml hence creating in database");
       return save(accountIdentifier, yaml);
@@ -33,4 +34,9 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
   public abstract String getLastObjectIdIfExists(String accountIdentifier, String yaml);
 
   public abstract Y getYamlDTO(String yaml);
+
+  @Override
+  public Y fullSyncEntity(String accountIdentifier, String yaml) {
+    return update(accountIdentifier, yaml, ChangeType.ADD);
+  }
 }

@@ -18,6 +18,7 @@ import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.exception.ScmException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.observer.Subject;
@@ -110,12 +111,12 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity) {
+  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity, ChangeType changeType) {
     PMSPipelineServiceHelper.validatePresenceOfRequiredFields(pipelineEntity.getAccountId(),
         pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
     if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
-      return makePipelineUpdateCall(pipelineEntity);
+      return makePipelineUpdateCall(pipelineEntity, changeType);
     }
     Optional<PipelineEntity> optionalOriginalEntity =
         pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
@@ -131,14 +132,14 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags());
 
-    return makePipelineUpdateCall(tempEntity);
+    return makePipelineUpdateCall(tempEntity, changeType);
   }
 
-  private PipelineEntity makePipelineUpdateCall(PipelineEntity pipelineEntity) {
+  private PipelineEntity makePipelineUpdateCall(PipelineEntity pipelineEntity, ChangeType changeType) {
     try {
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
       PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
-          entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
+          entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo), changeType);
 
       if (updatedResult == null) {
         throw new InvalidRequestException(format(
