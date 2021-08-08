@@ -21,6 +21,7 @@ import io.harness.delegate.k8s.beans.K8sRollingRollbackHandlerConfig;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sRollingDeployRollbackResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
@@ -84,8 +85,19 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
       rollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams,
           k8sRollingRollbackDeployRequest.getTimeoutIntervalInMin(), waitForSteadyStateLogCallback);
       rollbackBaseHandler.postProcess(rollbackHandlerConfig, k8sRollingRollbackDeployRequest.getReleaseName());
+      K8sRollingDeployRollbackResponse response =
+          K8sRollingDeployRollbackResponse.builder()
+              .k8sPodList(rollbackBaseHandler.getPods(k8sRollingRollbackDeployRequest.getTimeoutIntervalInMin(),
+                  rollbackHandlerConfig.getPreviousManagedWorkloads(),
+                  rollbackHandlerConfig.getPreviousCustomManagedWorkloads(),
+                  rollbackHandlerConfig.getKubernetesConfig(), k8sRollingRollbackDeployRequest.getReleaseName()))
+              .build();
+
       waitForSteadyStateLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-      return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+      return K8sDeployResponse.builder()
+          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .k8sNGTaskResponse(response)
+          .build();
     } catch (Exception e) {
       waitForSteadyStateLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
       throw e;
