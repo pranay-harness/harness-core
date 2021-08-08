@@ -89,4 +89,9 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   public SampleBean1 upsert(String accountIdentifier, String yaml) {
     return null;
   }
+
+  @Override
+  public SampleBean1 fullSyncEntity(String accountIdentifier, String yaml) {
+    return null;
+  }
 }
