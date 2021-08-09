@@ -1,6 +1,8 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
-import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.*;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.INHERIT_FROM_DELEGATE;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.IRSA;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
