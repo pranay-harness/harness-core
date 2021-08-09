@@ -40,7 +40,8 @@ public class AwsConnectorDTO extends ConnectorConfigDTO implements DelegateSelec
 
   @Override
   public void validate() {
-    if (AwsCredentialType.INHERIT_FROM_DELEGATE.equals(credential.getAwsCredentialType())
+    if ((AwsCredentialType.INHERIT_FROM_DELEGATE.equals(credential.getAwsCredentialType())
+            || AwsCredentialType.IRSA.equals(credential.getAwsCredentialType()))
         && isEmpty(delegateSelectors)) {
       throw new InvalidRequestException(INHERIT_FROM_DELEGATE_TYPE_ERROR_MSG);
     }
