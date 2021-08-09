@@ -12,5 +12,3 @@ ARG PLATFORM=jenkins
 ARG STEP=dockerization
 
 ARG STEP=RUN
-
-ENTRYPOINT ["jenkins-slave"]
