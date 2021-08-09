@@ -7,7 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.k8s.K8sStepHelper;
 import io.harness.cdng.manifest.ManifestType;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.delegate.Capability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
@@ -16,6 +16,7 @@ import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.polling.bean.PollingDocument;
+import io.harness.polling.bean.manifest.ManifestInfo;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
@@ -36,7 +37,7 @@ public class ManifestPerpetualTaskHelperNg {
   public PerpetualTaskExecutionBundle createPerpetualTaskExecutionBundle(PollingDocument pollingDocument) {
     Any perpetualTaskParams;
     List<ExecutionCapability> executionCapabilities;
-    ManifestOutcome manifestOutcome = (ManifestOutcome) pollingDocument.getPollingInfo();
+    ManifestInfo manifestInfo = (ManifestInfo) pollingDocument.getPollingInfo();
     String accountId = pollingDocument.getAccountId();
     Ambiance ambiance = Ambiance.newBuilder()
                             .putSetupAbstractions("accountId", pollingDocument.getAccountId())
@@ -47,9 +48,10 @@ public class ManifestPerpetualTaskHelperNg {
     final Map<String, String> ngTaskSetupAbstractionsWithOwner = getNGTaskSetupAbstractionsWithOwner(
         accountId, pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier());
 
-    if (ManifestType.HelmChart.equals(manifestOutcome.getType())) {
+    if (ManifestType.HelmChart.equals(manifestInfo.getType())) {
+      HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestInfo.toManifestOutcome();
       HelmChartManifestDelegateConfig helmManifest =
-          (HelmChartManifestDelegateConfig) k8sStepHelper.getManifestDelegateConfig(manifestOutcome, ambiance);
+          (HelmChartManifestDelegateConfig) k8sStepHelper.getManifestDelegateConfig(helmChartManifestOutcome, ambiance);
       executionCapabilities =
           getHelmExecutionCapabilities(helmManifest.getHelmVersion(), helmManifest.getStoreDelegateConfig(), null);
       ManifestCollectionTaskParamsNg manifestCollectionTaskParamsNg =
@@ -60,7 +62,7 @@ public class ManifestPerpetualTaskHelperNg {
               .build();
       perpetualTaskParams = Any.pack(manifestCollectionTaskParamsNg);
     } else {
-      throw new InvalidRequestException(String.format("Invalid type %s for polling", manifestOutcome.getType()));
+      throw new InvalidRequestException(String.format("Invalid type %s for polling", manifestInfo.getType()));
     }
 
     PerpetualTaskExecutionBundle.Builder builder = PerpetualTaskExecutionBundle.newBuilder();

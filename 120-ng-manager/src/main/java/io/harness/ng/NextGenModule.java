@@ -172,10 +172,8 @@ import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.polling.service.impl.PollingPerpetualTaskServiceImpl;
 import io.harness.polling.service.impl.PollingServiceImpl;
-import io.harness.polling.service.impl.PollingServiceObserverImpl;
 import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingService;
-import io.harness.polling.service.intfc.PollingServiceObserver;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
@@ -566,7 +564,6 @@ public class NextGenModule extends AbstractModule {
     bind(FeedbackService.class).to(FeedbackServiceImpl.class);
 
     bind(PollingService.class).to(PollingServiceImpl.class);
-    bind(PollingServiceObserver.class).to(PollingServiceObserverImpl.class);
     bind(PollingPerpetualTaskService.class).to(PollingPerpetualTaskServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =

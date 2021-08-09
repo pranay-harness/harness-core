@@ -35,6 +35,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
@@ -57,6 +58,7 @@ import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -95,6 +97,7 @@ public class HelmTaskHelperBase {
 
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject private NGChartMuseumService ngChartMuseumService;
+  @Inject private SecretDecryptionService decryptionService;
 
   public void initHelm(String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) throws IOException {
     String helmHomePath = getHelmHomePath(workingDirectory);
@@ -787,5 +790,32 @@ public class HelmTaskHelperBase {
     }
     removeRepo(repoName, workingDirectory, config.getHelmVersion(), timeoutInMillis);
     cleanup(workingDirectory);
+  }
+
+  public void decryptEncryptedDetails(HelmChartManifestDelegateConfig helmChartManifestDelegateConfig) {
+    StoreDelegateConfig helmStoreDelegateConfig = helmChartManifestDelegateConfig.getStoreDelegateConfig();
+    switch (helmStoreDelegateConfig.getType()) {
+      case S3_HELM:
+        S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) helmStoreDelegateConfig;
+        for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+        }
+        break;
+      case GCS_HELM:
+        GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) helmStoreDelegateConfig;
+        for (DecryptableEntity entity : gcsHelmStoreDelegateConfig.getGcpConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(entity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
+        }
+        break;
+      case HTTP_HELM:
+        HttpHelmStoreDelegateConfig httpHelmStoreConfig = (HttpHelmStoreDelegateConfig) helmStoreDelegateConfig;
+        for (DecryptableEntity entity : httpHelmStoreConfig.getHttpHelmConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(entity, httpHelmStoreConfig.getEncryptedDataDetails());
+        }
+        break;
+      default:
+        throw new InvalidRequestException(
+            format("Store type: %s not supported for helm values fetch task NG", helmStoreDelegateConfig.getType()));
+    }
   }
 }

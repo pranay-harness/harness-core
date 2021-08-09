@@ -94,6 +94,9 @@ import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsume
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.polling.service.impl.PollingServiceImpl;
+import io.harness.polling.service.impl.PollingServiceObserverImpl;
+import io.harness.polling.service.intfc.PollingService;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
@@ -310,6 +313,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
     initializeMonitoring(appConfig, injector);
+    registerObservers(injector);
 
     registerManagedBeans(environment, injector);
 
@@ -321,6 +325,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
+  }
+
+  private static void registerObservers(Injector injector) {
+    // register Polling Framework Observer
+    PollingServiceImpl pollingService = (PollingServiceImpl) injector.getInstance(Key.get(PollingService.class));
+    pollingService.getSubject().register(injector.getInstance(Key.get(PollingServiceObserverImpl.class)));
   }
 
   private void registerMigrations(Injector injector) {
