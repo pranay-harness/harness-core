@@ -9,12 +9,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.polling.PollingResponseHandler;
-import io.harness.polling.contracts.Category;
-import io.harness.polling.contracts.HttpHelmPayload;
-import io.harness.polling.contracts.PayloadType;
 import io.harness.polling.contracts.PollingItem;
-import io.harness.polling.contracts.Qualifier;
-import io.harness.polling.contracts.Type;
 import io.harness.polling.contracts.service.PollingDocument;
 import io.harness.polling.service.intfc.PollingService;
 import io.harness.security.annotations.InternalApi;
@@ -29,7 +24,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
-import retrofit2.http.Body;
 
 @Api("polling")
 @Path("polling")
@@ -64,26 +58,16 @@ public class PollingResource {
 
   @POST
   @Path("subscribe")
-  public byte[] subscribe(@Body byte[] pollingItem) {
-    PollingItem pollingItem1 = (PollingItem) kryoSerializer.asInflatedObject(pollingItem);
-    // PollingItem pollingItem1 =
-    // PollingItem.newBuilder().setConnectorRef("helm_connector").setCategory(Category.MANIFEST)
-    //            .setQualifier(Qualifier.newBuilder()
-    //                    .setAccountId("kmpySmUISimoRrJL6NL73w")
-    //                    .setSignature("re8skD1iRn2FHcR1CGViuA").build())
-    //            .setPayloadType(PayloadType.newBuilder()
-    //                    .setType(Type.HTTP_HELM)
-    //                    .setHttpHelmPayload(HttpHelmPayload.newBuilder()
-    //                            .setHelmVersion("V2")
-    //                            .setChartName("todolist-primary-artifact").build()).build()).build();
+  public byte[] subscribe(byte[] pollingItem) {
+    PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
     String pollingDocId = pollingService.subscribe(pollingItem1);
     PollingDocument pd = PollingDocument.newBuilder().setPollingDocId(pollingDocId).build();
-    return kryoSerializer.asDeflatedBytes(pd);
+    return kryoSerializer.asBytes(pd);
   }
 
   @POST
   @Path("unsubscribe")
-  public Boolean unsubscribe(@Body byte[] pollingItem) {
+  public Boolean unsubscribe(byte[] pollingItem) {
     PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
     return pollingService.unsubscribe(pollingItem1);
   }

@@ -2,6 +2,8 @@ package io.harness.pms.triggers.webhook.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ngtriggers.Constants.ARTIFACT_VERSION;
+import static io.harness.ngtriggers.Constants.MANIFEST_VERSION;
 import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.AWS_CODECOMMIT;
@@ -32,6 +34,7 @@ import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload.Builder;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.triggers.TriggerExecutionHelper;
+import io.harness.polling.contracts.PollingResponse;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -132,6 +135,26 @@ public class TriggerEventExecutionHelper {
         (PlanExecution) null, triggerDetails, runtimeInputYaml);
     return TriggerEventResponseHelper.toResponse(
         INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null, ngTriggerEntity, e.getMessage(), targetExecutionSummary);
+  }
+
+  public List<TriggerEventResponse> processTriggersForActivation(
+      List<TriggerDetails> mappedTriggers, PollingResponse pollingResponse) {
+    List<TriggerEventResponse> responses = new ArrayList<>();
+    for (TriggerDetails triggerDetails : mappedTriggers) {
+      try {
+        replaceBuildFromEvent(triggerDetails.getNgTriggerEntity(), pollingResponse.getBuildInfo().getVersions(0));
+        responses.add(triggerEventPipelineExecution(triggerDetails));
+      } catch (Exception e) {
+        log.error("Error while requesting pipeline execution for Build Trigger: "
+            + TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()));
+      }
+    }
+
+    return responses;
+  }
+
+  private void replaceBuildFromEvent(NGTriggerEntity trigger, String version) {
+    trigger.setYaml(trigger.getYaml().replaceAll(MANIFEST_VERSION, version).replaceAll(ARTIFACT_VERSION, version));
   }
 
   public TriggerEventResponse triggerEventPipelineExecution(TriggerDetails triggerDetails) {

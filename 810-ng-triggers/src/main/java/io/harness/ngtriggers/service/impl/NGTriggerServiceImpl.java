@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ngtriggers.beans.entity.ValidationStatus.Status.INVALID_TRIGGER_YAML;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
-import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -36,6 +35,7 @@ import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.helpers.TriggerHelper;
+import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
@@ -66,6 +66,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -87,6 +89,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   private final ExecutorService executorService;
   private final KryoSerializer kryoSerializer;
   private final PollingResourceClient pollingResourceClient;
+  private final NGTriggerElementMapper ngTriggerElementMapper;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -122,7 +125,8 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       ResponseDTO<byte[]> responseDTO;
       try {
         byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
-        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(pollingItemBytes));
+        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
+            RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
       } catch (Exception exception) {
         log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
                       TriggerHelper.getTriggerRef(ngTriggerEntity)),
@@ -130,7 +134,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
         throw new InvalidRequestException(exception.getMessage());
       }
       byte[] pollingDocumentBytes = responseDTO.getData();
-      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asInflatedObject(pollingDocumentBytes);
+      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asObject(pollingDocumentBytes);
       updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
     });
   }
@@ -146,13 +150,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   private void registerWebhookAsync(NGTriggerEntity ngTriggerEntity) {
-    if (ngTriggerEntity.getType() == WEBHOOK && ngTriggerEntity.getMetadata().getWebhook().getGit() != null) {
-      executorService.submit(() -> {
-        WebhookRegistrationStatus registrationStatus =
-            ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);
-        updateWebhookRegistrationStatus(ngTriggerEntity, registrationStatus);
-      });
-    }
+    executorService.submit(() -> {
+      WebhookRegistrationStatus registrationStatus =
+          ngTriggerWebhookRegistrationService.registerWebhook(ngTriggerEntity);
+      updateWebhookRegistrationStatus(ngTriggerEntity, registrationStatus);
+    });
   }
 
   @Override
@@ -476,17 +478,15 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
 
     try {
-      ValidationResult validationResult = triggerValidationHandler.applyValidations(ngTriggerEntity);
+      ValidationResult validationResult = triggerValidationHandler.applyValidations(
+          ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
+              ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getYaml()));
       updateTriggerWithValidationStatus(ngTriggerEntity, validationResult);
       return validationResult.isSuccess();
     } catch (Exception e) {
       log.error("Failed in trigger validation ", e);
       return false;
     }
-  }
-
-  public PollingItem generatePollingItem(NGTriggerEntity ngTriggerEntity) {
-    return pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
   }
 
   public void updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult) {
