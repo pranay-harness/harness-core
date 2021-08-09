@@ -129,6 +129,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.DelegateTokenGlobalContextData;
+import io.harness.grpc.DelegateServiceClassicGrpcClient;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -369,6 +370,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
   @Inject private OutboxService outboxService;
+  @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -3586,6 +3588,9 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueTask(DelegateTask task) {
+    if (featureFlagService.isEnabled(FeatureName.USE_DELEGATE_SERVICE_APP, task.getAccountId())) {
+      return delegateServiceClassicGrpcClient.queueTask(task);
+    }
     return delegateTaskServiceClassic.queueTask(task);
   }
 
@@ -3596,6 +3601,9 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+    if (featureFlagService.isEnabled(FeatureName.USE_DELEGATE_SERVICE_APP, task.getAccountId())) {
+      return delegateServiceClassicGrpcClient.executeTask(task);
+    }
     return delegateTaskServiceClassic.executeTask(task);
   }
 }

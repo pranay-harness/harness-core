@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.AbstractModule;
+import io.harness.grpc.DelegateServiceClassicGrpcClientModule;
 
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceModule extends AbstractModule {
@@ -19,5 +20,8 @@ public class DelegateServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(new DelegateServiceClassicGrpcServerModule(config));
+    install(new DelegateServiceClassicGrpcClientModule(config.getDelegateServiceSecret(),
+            config.getGrpcClientClassicConfig().getTarget(), config.getGrpcClientClassicConfig().getAuthority()));
+
   }
 }
