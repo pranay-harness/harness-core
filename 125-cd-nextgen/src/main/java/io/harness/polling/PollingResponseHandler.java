@@ -13,6 +13,7 @@ import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingResponseInfc;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -28,8 +29,6 @@ import io.harness.polling.contracts.PollingResponse;
 import io.harness.polling.service.PolledItemPublisher;
 import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingService;
-
-import software.wings.service.impl.PollingDelegateResponse;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
