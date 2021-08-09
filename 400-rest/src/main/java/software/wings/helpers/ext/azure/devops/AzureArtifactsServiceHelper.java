@@ -8,7 +8,10 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.network.Http;
 
@@ -30,6 +33,10 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
+@BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
+@BreakDependencyOn("software.wings.beans.settings.azureartifacts.AzureArtifactsConfig")
+@BreakDependencyOn("software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig")
 @UtilityClass
 public class AzureArtifactsServiceHelper {
   private static final int CONNECT_TIMEOUT = 5;
