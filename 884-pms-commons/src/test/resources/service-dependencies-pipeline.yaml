@@ -1,0 +1,41 @@
+pipeline:
+  name: Test 2
+  identifier: Test_2
+  projectIdentifier: Max_Test
+  orgIdentifier: Default
+  tags: {}
+  stages:
+  - stage:
+      name: Test
+      identifier: Test
+      type: CI
+      spec:
+        cloneCodebase: false
+        execution:
+          steps:
+          - step:
+              type: Run
+              name: asdas
+              identifier: asdas
+              spec:
+                connectorRef: Test_4_new
+                image: asdas
+                command: dasdasd
+                privileged: false
+              description: dasdasda
+        serviceDependencies:
+        - identifier: Service_Dependency
+          name: Service Dependency
+          type: Service
+          description: <+input>
+          spec:
+            connectorRef: <+input>
+            image: <+input>
+            privileged: <+input>
+            envVariables: <+input>
+            entrypoint: <+input>
+            args: <+input>
+            resources:
+              limits:
+                memory: <+input>
+                cpu: <+input>

@@ -1,0 +1,64 @@
+package io.harness.pms.events.base;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.api.AbstractConsumer;
+import io.harness.eventsframework.consumer.Message;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.interrupts.InterruptEvent;
+import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.events.PmsEventFrameworkConstants;
+
+import com.google.common.collect.ImmutableMap;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+@OwnedBy(HarnessTeam.PIPELINE)
+public class NoopRedisConsumer extends AbstractConsumer {
+  public NoopRedisConsumer(String topicName, String groupName) {
+    super(topicName, groupName);
+  }
+
+  @Override
+  public List<Message> read(Duration maxWaitTime) {
+    return Collections.singletonList(
+        Message.newBuilder()
+            .setMessage(io.harness.eventsframework.producer.Message.newBuilder()
+                            .putMetadata(PmsEventFrameworkConstants.SERVICE_NAME, "RANDOM_SERVICE")
+                            .setData(InterruptEvent.newBuilder()
+                                         .setAmbiance(buildAmbiance())
+                                         .setType(InterruptType.ABORT)
+                                         .build()
+                                         .toByteString())
+                            .build())
+            .build());
+  }
+
+  @Override
+  public void acknowledge(String messageId) {}
+
+  @Override
+  public void shutdown() {}
+
+  public static Ambiance buildAmbiance() {
+    Level level = Level.newBuilder()
+                      .setRuntimeId("rid")
+                      .setSetupId("sid")
+                      .setStepType(StepType.newBuilder().setType("RANDOM").setStepCategory(StepCategory.STEP).build())
+                      .setGroup("g")
+                      .build();
+    List<Level> levels = new ArrayList<>();
+    levels.add(level);
+    return Ambiance.newBuilder()
+        .setPlanExecutionId("peid")
+        .putAllSetupAbstractions(ImmutableMap.of("accountId", "aid", "orgId", "oid", "projectId", "pid"))
+        .addAllLevels(levels)
+        .setExpressionFunctorToken(1234)
+        .build();
+  }
+}
