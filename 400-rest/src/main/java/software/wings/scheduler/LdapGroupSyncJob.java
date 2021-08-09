@@ -340,6 +340,7 @@ public class LdapGroupSyncJob implements Job {
           throw new UnsupportedOperationException(message);
         }
         syncUserGroupMetadata(userGroup, groupResponse);
+        userGroup.setSsoGroupName(groupResponse.getName());
 
         updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);
         updateAddedGroupMembers(userGroup, groupResponse.getUsers(), addedGroupMembers);
