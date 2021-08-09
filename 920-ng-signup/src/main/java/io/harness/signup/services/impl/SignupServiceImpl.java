@@ -37,6 +37,7 @@ import io.harness.signup.entities.SignupVerificationToken;
 import io.harness.signup.notification.EmailType;
 import io.harness.signup.notification.SignupNotificationHelper;
 import io.harness.signup.services.SignupService;
+import io.harness.signup.services.SignupType;
 import io.harness.signup.validator.SignupValidator;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
@@ -124,7 +125,8 @@ public class SignupServiceImpl implements SignupService {
 
     AccountDTO account = createAccount(dto);
     UserInfo user = createUser(dto, account);
-    sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user);
+    sendSucceedTelemetryEvent(
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW);
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(user.getEmail());
       try {
@@ -212,7 +214,8 @@ public class SignupServiceImpl implements SignupService {
       }
       verificationTokenRepository.delete(verificationToken);
 
-      sendSucceedTelemetryEvent(userInfo.getEmail(), null, userInfo.getDefaultAccountId(), userInfo);
+      sendSucceedTelemetryEvent(
+          userInfo.getEmail(), null, userInfo.getDefaultAccountId(), userInfo, SignupType.SIGNUP_FORM_FLOW);
       executorService.submit(() -> {
         try {
           String url = generateLoginUrl(userInfo.getDefaultAccountId());
@@ -325,7 +328,8 @@ public class SignupServiceImpl implements SignupService {
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
     AccountDTO account = createAccount(signupDTO);
     UserInfo oAuthUser = createOAuthUser(dto, account);
-    sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser);
+    sendSucceedTelemetryEvent(
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser, SignupType.OAUTH_FLOW);
 
     executorService.submit(() -> {
       try {
@@ -446,13 +450,15 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
-  private void sendSucceedTelemetryEvent(String email, UtmInfo utmInfo, String accountId, UserInfo userInfo) {
+  private void sendSucceedTelemetryEvent(
+      String email, UtmInfo utmInfo, String accountId, UserInfo userInfo, String source) {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", userInfo.getEmail());
     properties.put("name", userInfo.getName());
     properties.put("id", userInfo.getUuid());
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     properties.put("accountId", accountId);
+    properties.put("source", source);
 
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(userInfo.getEmail(), properties,
