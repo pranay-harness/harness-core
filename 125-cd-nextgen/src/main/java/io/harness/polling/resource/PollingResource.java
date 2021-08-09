@@ -4,7 +4,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
@@ -15,10 +14,11 @@ import io.harness.polling.service.intfc.PollingService;
 import io.harness.security.annotations.InternalApi;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.service.impl.PollingDelegateResponse;
+
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -29,7 +29,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Api("polling")
 @Path("polling")
 @Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @InternalApi
 @ApiOperation(hidden = true, value = "Communication APIs for polling framework.")
 @OwnedBy(HarnessTeam.CDC)

@@ -9,6 +9,7 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -34,7 +35,7 @@ public class PollingDocument implements PersistentEntity, AccountAccess, UuidAwa
   private String projectIdentifier;
   @NotNull private List<String> signature;
 
-  private PollingType pollingType;
+  @JsonProperty("type") private PollingType pollingType;
 
   private PollingInfo pollingInfo;
 

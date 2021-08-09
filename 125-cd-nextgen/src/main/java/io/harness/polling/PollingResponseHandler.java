@@ -1,37 +1,35 @@
 package io.harness.polling;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.polling.contracts.Type.DOCKER_ECR;
 import static io.harness.polling.contracts.Type.GCS_HELM;
 import static io.harness.polling.contracts.Type.HTTP_HELM;
 import static io.harness.polling.contracts.Type.S3_HELM;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
-import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
-import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingResponseInfc;
-import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.polling.bean.ManifestPolledResponse;
 import io.harness.polling.bean.PolledResponse;
 import io.harness.polling.bean.PolledResponseResult;
 import io.harness.polling.bean.PollingDocument;
+import io.harness.polling.bean.artifact.ArtifactInfo;
+import io.harness.polling.bean.manifest.HelmChartManifestInfo;
+import io.harness.polling.bean.manifest.ManifestInfo;
+import io.harness.polling.bean.manifest.ManifestPolledResponse;
 import io.harness.polling.contracts.BuildInfo;
 import io.harness.polling.contracts.PollingResponse;
 import io.harness.polling.service.PolledItemPublisher;
 import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingService;
+
+import software.wings.service.impl.PollingDelegateResponse;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -70,7 +68,7 @@ public class PollingResponseHandler {
     if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       handleSuccessResponse(pollingDocument, executionResponse.getPollingResponseInfc());
     } else {
-      handleFailureResponse(pollingDocument, executionResponse.getPollingResponseInfc());
+      handleFailureResponse(pollingDocument);
     }
   }
 
@@ -87,7 +85,7 @@ public class PollingResponseHandler {
         newVersions = handleManifestResponse(accountId, pollDocId, polledResponse, pollingResponseInfc);
         if (isNotEmpty(newVersions)) {
           PolledResponseResult polledResponseResult =
-              getPolledResponseResultForManifest((ManifestOutcome) pollingDocument.getPollingInfo());
+              getPolledResponseResultForManifest((ManifestInfo) pollingDocument.getPollingInfo());
           publishPolledItemToQueue(pollingDocument, newVersions, polledResponseResult);
         }
         break;
@@ -95,7 +93,7 @@ public class PollingResponseHandler {
         // TODO: Handle ArtifactReseponse
         if (isNotEmpty(newVersions)) {
           PolledResponseResult polledResponseResult =
-              getPolledResponseResultForArtifact((ArtifactConfig) pollingDocument.getPollingInfo());
+              getPolledResponseResultForArtifact((ArtifactInfo) pollingDocument.getPollingInfo());
           publishPolledItemToQueue(pollingDocument, newVersions, polledResponseResult);
         }
         break;
@@ -117,7 +115,7 @@ public class PollingResponseHandler {
             .build());
   }
 
-  private void handleFailureResponse(PollingDocument pollingDocument, PollingResponseInfc pollingResponseInfc) {
+  private void handleFailureResponse(PollingDocument pollingDocument) {
     int failedCount = pollingDocument.getFailedAttempts() + 1;
 
     if (failedCount % 25 == 0) {
@@ -158,33 +156,33 @@ public class PollingResponseHandler {
     return newVersions;
   }
 
-  private PolledResponseResult getPolledResponseResultForManifest(ManifestOutcome manifestOutcome) {
-    PolledResponseResult polledResponseResult = null;
-    if (manifestOutcome.getType() == ManifestType.HelmChart) {
-      polledResponseResult.setName(((HelmChartManifestOutcome) manifestOutcome).getChartName().getValue());
-      if (manifestOutcome.getStore() instanceof HttpStoreConfig) {
+  private PolledResponseResult getPolledResponseResultForManifest(ManifestInfo manifestInfo) {
+    PolledResponseResult polledResponseResult = PolledResponseResult.builder().build();
+    if (manifestInfo.getType().equals(ManifestType.HelmChart)) {
+      polledResponseResult.setName(((HelmChartManifestInfo) manifestInfo).getChartName());
+      if (manifestInfo.getStore() instanceof HttpStoreConfig) {
         polledResponseResult.setType(HTTP_HELM);
-      } else if (manifestOutcome.getStore() instanceof S3StoreConfig) {
+      } else if (manifestInfo.getStore() instanceof S3StoreConfig) {
         polledResponseResult.setType(S3_HELM);
-      } else if (manifestOutcome.getStore() instanceof GcsStoreConfig) {
+      } else if (manifestInfo.getStore() instanceof GcsStoreConfig) {
         polledResponseResult.setType(GCS_HELM);
       } else {
-        throw new InvalidRequestException(String.format("Unsupported Manifest Type {} or manifest store {} for {}",
-            manifestOutcome.getType(), manifestOutcome.getStore().toString(), manifestOutcome.getIdentifier()));
+        throw new InvalidRequestException(String.format("Unsupported Manifest Type {} or manifest store {}",
+            manifestInfo.getType(), manifestInfo.getStore().toString()));
       }
     }
     return polledResponseResult;
   }
 
-  private PolledResponseResult getPolledResponseResultForArtifact(ArtifactConfig artifactConfig) {
-    PolledResponseResult polledResponseResult = null;
-    if (artifactConfig.getSourceType() == ArtifactSourceType.ECR) {
-      polledResponseResult.setName(((EcrArtifactConfig) artifactConfig).getImagePath().getValue());
-      polledResponseResult.setType(DOCKER_ECR);
-    } else {
-      throw new InvalidRequestException(String.format("Unsupported Artifact Type {}", artifactConfig.getSourceType()));
-    }
+  private PolledResponseResult getPolledResponseResultForArtifact(ArtifactInfo artifactInfo) {
+    //    if (artifactConfig.getSourceType() == ArtifactSourceType.ECR) {
+    //      polledResponseResult.setName(((EcrArtifactConfig) artifactConfig).getImagePath().getValue());
+    //      polledResponseResult.setType(DOCKER_ECR);
+    //    } else {
+    //      throw new InvalidRequestException(String.format("Unsupported Artifact Type {}",
+    //      artifactConfig.getSourceType()));
+    //    }
 
-    return polledResponseResult;
+    return null;
   }
 }

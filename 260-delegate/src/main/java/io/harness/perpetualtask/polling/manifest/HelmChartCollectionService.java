@@ -30,6 +30,7 @@ public class HelmChartCollectionService implements ManifestCollectionService {
       try {
         HelmChartManifestDelegateConfig helmConfig = (HelmChartManifestDelegateConfig) params;
         String workingDirectory = getWorkingDirectory(helmConfig.getStoreDelegateConfig());
+        helmTaskHelperBase.decryptEncryptedDetails(helmConfig);
         return helmTaskHelperBase.fetchChartVersions(helmConfig, TIMEOUT_IN_MILLIS, workingDirectory);
       } catch (Exception e) {
         throw new ManifestCollectionException("Exception while collecting manifests from repo: " + e.getMessage(), e);

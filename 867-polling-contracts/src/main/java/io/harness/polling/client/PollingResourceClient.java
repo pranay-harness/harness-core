@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ResponseDTO;
 
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
@@ -16,7 +17,7 @@ public interface PollingResourceClient {
 
   @POST(POLLING_API + "/delegate-response/{perpetualTaskId}")
   Call<ResponseDTO> processPolledResult(@Path("perpetualTaskId") String perpetualTaskId,
-      @Query("accountId") String accountId, @Body byte[] buildSourceExecutionResponse);
+      @Query("accountId") String accountId, @Body RequestBody buildSourceExecutionResponse);
 
   @POST(POLLING_API + "/subscribe") Call<ResponseDTO<byte[]>> subscribe(@Body byte[] pollingItem);
 
