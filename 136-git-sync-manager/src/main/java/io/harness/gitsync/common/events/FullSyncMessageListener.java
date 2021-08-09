@@ -8,7 +8,7 @@ import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
-import io.harness.gitsync.core.fullsync.FullSyncTriggerService;
+import io.harness.gitsync.core.fullsync.FullSyncAccumulatorService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.event.MessageListener;
 
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class FullSyncMessageListener implements MessageListener {
-  private final FullSyncTriggerService fullSyncTriggerService;
+  private final FullSyncAccumulatorService fullSyncTriggerService;
 
   @Override
   public boolean handleMessage(Message message) {
@@ -40,7 +40,7 @@ public class FullSyncMessageListener implements MessageListener {
       final String configSwitchType = metadataMap.get(GitSyncConfigChangeEventConstants.CONFIG_SWITCH_TYPE);
       if (GitSyncConfigSwitchType.ENABLED.name().equals(configSwitchType)) {
         final EntityScopeInfo entityScopeInfo = getEntityScopeInfo(message);
-        fullSyncTriggerService.triggerFullSync(entityScopeInfo);
+        fullSyncTriggerService.triggerFullSync(entityScopeInfo, messageId);
       }
       return true;
     }
