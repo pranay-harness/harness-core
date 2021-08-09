@@ -193,11 +193,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       metricService.incCounter(CVNGMetricsUtils.getDataCollectionTaskStatusMetricName(dataCollectionTask.getStatus()));
       metricService.recordDuration(
           CVNGMetricsUtils.DATA_COLLECTION_TASK_TOTAL_TIME, dataCollectionTask.totalTime(clock.instant()));
-      if (dataCollectionTask.getLastPickedAt() != null) { // Remove this in the future after lastPickedAt is populated.
-        metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
-        metricService.recordDuration(
-            CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
-      }
+      metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
+      metricService.recordDuration(
+          CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
     }
   }
 
