@@ -71,6 +71,7 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @TargetModule(HarnessModule._959_CG_BEANS)
 @OwnedBy(CDC)
+@BreakDependencyOn("software.wings.service.impl.WorkflowExecutionServiceHelper")
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")

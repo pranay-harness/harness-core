@@ -1,8 +1,10 @@
 package software.wings.helpers.ext.azure.devops;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -11,6 +13,7 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 @OwnedBy(CDC)
+@TargetModule(_960_API_SERVICES)
 public interface AzureArtifactsRestClient {
   @GET("_apis/packaging/feeds?api-version=5.1-preview.1")
   Call<AzureArtifactsFeeds> listFeeds(@Header("Authorization") String authHeader);
