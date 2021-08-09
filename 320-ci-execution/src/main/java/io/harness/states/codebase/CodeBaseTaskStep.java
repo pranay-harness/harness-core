@@ -111,7 +111,6 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       log.info("Successfully retrieved codebase info from returned delegate response");
     } catch (Exception ex) {
       log.info("Failed to retrieve codebase info from returned delegate response");
-      return StepResponse.builder().status(Status.FAILED).build();
     }
 
     CodebaseSweepingOutput codebaseSweepingOutput = null;
