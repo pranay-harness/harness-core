@@ -178,7 +178,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
 
   private NGMigrationConfiguration getMigrationSdkConfiguration() {
     return NGMigrationConfiguration.builder()
-        .microservice(Microservice.TEMPLATE_SERVICE)
+        .microservice(Microservice.TEMPLATESERVICE)
         .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
           { add(TemplateMigrationProvider.class); } // Add all migration provider classes here
         })
