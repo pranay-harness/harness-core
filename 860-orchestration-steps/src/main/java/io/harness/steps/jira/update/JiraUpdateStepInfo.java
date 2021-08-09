@@ -1,6 +1,7 @@
 package io.harness.steps.jira.update;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
@@ -15,6 +16,7 @@ import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.jira.JiraStepUtils;
 import io.harness.steps.jira.beans.JiraField;
 import io.harness.steps.jira.update.beans.TransitionTo;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -41,6 +43,10 @@ public class JiraUpdateStepInfo implements PMSStepInfo, WithConnectorRef {
   TransitionTo transitionTo;
   List<JiraField> fields;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @YamlSchemaTypes(value = {runtime})
+  ParameterField<List<String>> delegateSelectors;
+
   @Override
   public StepType getStepType() {
     return JiraUpdateStep.STEP_TYPE;
@@ -58,6 +64,7 @@ public class JiraUpdateStepInfo implements PMSStepInfo, WithConnectorRef {
         .issueKey(issueKey)
         .transitionTo(transitionTo)
         .fields(JiraStepUtils.processJiraFieldsList(fields))
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 

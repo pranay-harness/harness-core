@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
 
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -25,4 +26,5 @@ public class JiraCreateSpecParameters implements SpecParameters {
   @NotEmpty ParameterField<String> issueType;
 
   Map<String, ParameterField<String>> fields;
+  ParameterField<List<String>> delegateSelectors;
 }
