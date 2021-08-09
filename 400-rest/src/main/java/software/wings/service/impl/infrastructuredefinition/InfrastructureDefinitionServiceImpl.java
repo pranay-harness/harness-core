@@ -54,6 +54,10 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.ExecutionStatus;
@@ -239,6 +243,8 @@ import org.mongodb.morphia.query.Query;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class InfrastructureDefinitionServiceImpl implements InfrastructureDefinitionService {
   public static final String NULL = "null";
   public static final String DEFAULT = "default";
