@@ -234,7 +234,7 @@ public class ConnectorServiceImpl implements ConnectorService {
       }
 
       ConnectorResponseDTO connectorResponse =
-          getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
+          getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier, gitChangeType);
       if (isDefaultBranchConnector) {
         ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
         createConnectorUpdateActivity(accountIdentifier, savedConnector);

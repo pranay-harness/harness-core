@@ -6,6 +6,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.InputSetReference;
 import io.harness.common.EntityReference;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
@@ -68,9 +69,9 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
   }
 
   @Override
-  public InputSetYamlDTO update(String accountIdentifier, String yaml) {
+  public InputSetYamlDTO update(String accountIdentifier, String yaml, ChangeType changeType) {
     InputSetEntity inputSetEntity = PMSInputSetElementMapper.toInputSetEntity(accountIdentifier, yaml);
-    return InputSetYamlDTOMapper.toDTO(pmsInputSetService.update(inputSetEntity));
+    return InputSetYamlDTOMapper.toDTO(pmsInputSetService.update(inputSetEntity, changeType));
   }
 
   @Override

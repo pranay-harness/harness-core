@@ -92,7 +92,8 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
-  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
+  public PipelineEntity updatePipelineYaml(
+      PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO, ChangeType changeType) {
     Supplier<OutboxEvent> supplier = null;
     if (!gitSyncSdkService.isGitSyncEnabled(pipelineToUpdate.getAccountId(), pipelineToUpdate.getOrgIdentifier(),
             pipelineToUpdate.getProjectIdentifier())) {
@@ -111,7 +112,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
       }
     }
     return gitAwarePersistence.save(
-        pipelineToUpdate, pipelineToUpdate.getYaml(), ChangeType.MODIFY, PipelineEntity.class, supplier);
+        pipelineToUpdate, pipelineToUpdate.getYaml(), changeType, PipelineEntity.class, supplier);
   }
 
   @Override
