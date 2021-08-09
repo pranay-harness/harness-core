@@ -2,8 +2,8 @@ package software.wings.graphql.datafetcher.artifact;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 
 import software.wings.beans.User;
@@ -16,7 +16,6 @@ import software.wings.graphql.schema.mutation.artifact.ArtifactCleanupInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.impl.artifact.ArtifactCleanupServiceSyncImpl;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuthService;
 
@@ -24,20 +23,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CDC)
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ArtifactCleanupDataFetcher extends BaseMutatorDataFetcher<ArtifactCleanupInput, ArtifactCleanUpPayload> {
-  private ArtifactCleanupServiceSyncImpl artifactCleanupService;
   private ArtifactCleanupHandler artifactCleanupHandler;
   private AuthService authService;
   private ArtifactStreamService artifactStreamService;
 
   @Inject
-  public ArtifactCleanupDataFetcher(ArtifactCleanupServiceSyncImpl artifactCleanupService,
-      ArtifactStreamService artifactStreamService, ArtifactCleanupHandler artifactCleanupHandler,
-      AuthService authService) {
+  public ArtifactCleanupDataFetcher(ArtifactStreamService artifactStreamService,
+      ArtifactCleanupHandler artifactCleanupHandler, AuthService authService) {
     super(ArtifactCleanupInput.class, ArtifactCleanUpPayload.class);
-    this.artifactCleanupService = artifactCleanupService;
     this.artifactCleanupHandler = artifactCleanupHandler;
     this.authService = authService;
     this.artifactStreamService = artifactStreamService;
