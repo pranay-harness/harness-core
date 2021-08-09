@@ -19,6 +19,10 @@ import software.wings.graphql.schema.type.aggregation.QLSinglePointData;
 import software.wings.graphql.schema.type.aggregation.QLStackedData;
 import software.wings.graphql.schema.type.aggregation.QLStackedTimeSeriesData;
 import software.wings.graphql.schema.type.aggregation.QLTimeSeriesData;
+import software.wings.graphql.schema.type.approval.QLJIRAApprovalDetails;
+import software.wings.graphql.schema.type.approval.QLSNOWApprovalDetails;
+import software.wings.graphql.schema.type.approval.QLShellScriptDetails;
+import software.wings.graphql.schema.type.approval.QLUGApprovalDetails;
 import software.wings.graphql.schema.type.artifactSource.QLACRArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLAMIArtifactSource;
 import software.wings.graphql.schema.type.artifactSource.QLAmazonS3ArtifactSource;
@@ -154,6 +158,7 @@ public class TypeResolverManager {
     public static final String ARTIFACT_SELECTION = "ArtifactSelection";
     public static final String PipelineStageExecution = "PipelineStageExecution";
     public static final String MANIFEST_SELECTION = "ManifestSelection";
+    public static final String APPROVAL_DETAILS = "ApprovalDetails";
   }
 
   @UtilityClass
@@ -277,6 +282,11 @@ public class TypeResolverManager {
     public static final String LAST_DEPLOYED_MANIFEST_FROM_PIPELINE = "LastDeployedManifestFromPipeline";
     public static final String MANIFEST_FROM_TRIGGERING_PIPELINE = "ManifestFromTriggeringPipeline";
     public static final String MANIFEST_FROM_WEBHOOK_PAYLOAD = "ManifestFromWebhookPayload";
+
+    public static final String UG_APPROVAL_DETAILS = "UserGroupApprovalDetails";
+    public static final String JIRA_APPROVAL_DETAILS = "JiraApprovalDetails";
+    public static final String SNOW_APPROVAL_DETAILS = "SNOWApprovalDetails";
+    public static final String SHELL_SCRIPT_DETAILS = "ShellScriptDetails";
   }
 
   /**
@@ -481,6 +491,13 @@ public class TypeResolverManager {
                         TypeResolverManagerTypes.MANIFEST_FROM_TRIGGERING_PIPELINE)
                     .put(QLManifestFromWebhookPayload.class, TypeResolverManagerTypes.MANIFEST_FROM_WEBHOOK_PAYLOAD)
                     .build()))
+        .put(TypeResolverManagerUnifaces.APPROVAL_DETAILS,
+            getResultTypeResolver(ImmutableMap.<Class, String>builder()
+                                      .put(QLUGApprovalDetails.class, TypeResolverManagerTypes.UG_APPROVAL_DETAILS)
+                                      .put(QLJIRAApprovalDetails.class, TypeResolverManagerTypes.JIRA_APPROVAL_DETAILS)
+                                      .put(QLSNOWApprovalDetails.class, TypeResolverManagerTypes.SNOW_APPROVAL_DETAILS)
+                                      .put(QLShellScriptDetails.class, TypeResolverManagerTypes.SHELL_SCRIPT_DETAILS)
+                                      .build()))
         .build();
   }
 

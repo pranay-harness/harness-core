@@ -1,10 +1,12 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -21,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDC)
 public class ApprovalStateExecutionDataTest extends WingsBaseTest {
   private ApprovalStateExecutionData approvalStateExecutionData;
 
@@ -55,7 +58,7 @@ public class ApprovalStateExecutionDataTest extends WingsBaseTest {
     List<String> keys = executionSummary.keySet().stream().collect(Collectors.toList());
     assertThat(keys).isNotNull().containsExactlyInAnyOrder("total", "breakdown", "approvalId", "status",
         "timeoutMillis", "approvalCriteria", "currentStatus", "rejectionCriteria", "approvedBy", "variables",
-        "comments");
+        "comments", "approvalViaApiKey");
   }
 
   @Test
@@ -66,6 +69,6 @@ public class ApprovalStateExecutionDataTest extends WingsBaseTest {
     List<String> keys = executionDetails.keySet().stream().collect(Collectors.toList());
     assertThat(keys).isNotNull().containsExactlyInAnyOrder("startTs", "endTs", "authorizationStatus",
         "isUserAuthorized", "approvalId", "status", "timeoutMillis", "approvalCriteria", "currentStatus",
-        "rejectionCriteria", "approvedBy", "variables", "comments", "duration");
+        "rejectionCriteria", "approvedBy", "variables", "comments", "duration", "approvalViaApiKey");
   }
 }

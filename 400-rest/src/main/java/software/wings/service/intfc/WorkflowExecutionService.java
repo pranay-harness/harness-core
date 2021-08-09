@@ -13,6 +13,7 @@ import io.harness.persistence.HIterator;
 
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ArtifactVariable;
@@ -181,8 +182,14 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails);
 
+  boolean approveOrRejectExecution(
+      String appId, List<String> userGroupIds, ApprovalDetails approvalDetails, ApiKeyEntry apiEntryKey);
+
   ApprovalStateExecutionData fetchApprovalStateExecutionDataFromWorkflowExecution(
       String appId, String workflowExecutionId, String stateExecutionId, ApprovalDetails approvalDetails);
+
+  List<ApprovalStateExecutionData> fetchApprovalStateExecutionsDataFromWorkflowExecution(
+      String appId, String workflowExecutionId);
 
   List<Artifact> getArtifactsCollected(String appId, String executionUuid);
 
@@ -215,6 +222,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       String appId, List<String> serviceIds, List<String> envIds, String workflowId);
 
   boolean verifyAuthorizedToAcceptOrReject(List<String> userGroupIds, String appId, String workflowId);
+
+  boolean verifyAuthorizedToAcceptOrReject(
+      List<String> userGroupIds, List<String> apiKeysUserGroupIds, String appId, String workflowId);
 
   List<WorkflowExecution> listWaitingOnDeployments(String appId, String workflowExecutionId);
 
