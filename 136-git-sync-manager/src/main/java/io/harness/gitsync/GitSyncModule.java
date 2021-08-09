@@ -1,6 +1,7 @@
 package io.harness.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
 
 import io.harness.EntityType;
 import io.harness.Microservice;
@@ -8,6 +9,7 @@ import io.harness.SCMJavaClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
+import io.harness.gitsync.common.events.FullSyncMessageListener;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchSyncServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
@@ -46,12 +48,14 @@ import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.impl.GitSyncErrorServiceImpl;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
@@ -113,6 +117,14 @@ public class GitSyncModule extends AbstractModule {
     bind(GitToHarnessProgressService.class).to(GitToHarnessProgressServiceImpl.class);
     bind(YamlChangeSetLifeCycleManagerService.class).to(YamlChangeSetLifeCycleManagerServiceImpl.class);
     registerRequiredBindings();
+
+    bindGitSyncConfigMessageListeners();
+  }
+
+  private void bindGitSyncConfigMessageListeners() {
+    Multibinder<MessageListener> gitSyncConfigStreamMessageListeners =
+        Multibinder.newSetBinder(binder(), MessageListener.class, Names.named(GIT_CONFIG_STREAM));
+    gitSyncConfigStreamMessageListeners.addBinding().to(FullSyncMessageListener.class);
   }
 
   private void registerRequiredBindings() {
