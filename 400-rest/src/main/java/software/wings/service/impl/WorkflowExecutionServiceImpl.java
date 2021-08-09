@@ -559,13 +559,31 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public boolean approveOrRejectExecution(
+      String appId, List<String> userGroupIds, ApprovalDetails approvalDetails, ApiKeyEntry apiEntryKey) {
+    if (apiEntryKey == null) {
+      return approveOrRejectExecution(appId, userGroupIds, approvalDetails);
+    }
+    if (apiEntryKey != null && isNotEmpty(userGroupIds)
+        && !verifyAuthorizedToAcceptOrReject(userGroupIds, apiEntryKey.getUserGroupIds(), appId, null)) {
+      throw new InvalidRequestException("User not authorized to accept or reject the approval");
+    }
+
+    return approveOrRejectExecution(appId, approvalDetails);
+  }
+
+  @Override
   public boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails) {
     if (isNotEmpty(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
       throw new InvalidRequestException("User not authorized to accept or reject the approval");
     }
 
+    return approveOrRejectExecution(appId, approvalDetails);
+  }
+
+  private boolean approveOrRejectExecution(String appId, ApprovalDetails approvalDetails) {
     User user = UserThreadLocal.get();
-    if (user != null) {
+    if (user != null && approvalDetails.getApprovedBy() == null) {
       approvalDetails.setApprovedBy(
           EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
     }
@@ -579,11 +597,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                    .approvedBy(approvalDetails.getApprovedBy())
                                                    .comments(approvalDetails.getComments())
                                                    .approvalFromSlack(approvalDetails.isApprovalFromSlack())
+                                                   .approvalFromGraphQL(approvalDetails.isApprovalFromGraphQL())
+                                                   .approvalViaApiKey(approvalDetails.isApprovalViaApiKey())
                                                    .variables(approvalDetails.getVariables())
                                                    .build();
 
     if (approvalDetails.getAction() == APPROVE) {
-      executionData.setStatus(ExecutionStatus.SUCCESS);
+      executionData.setStatus(SUCCESS);
     } else if (approvalDetails.getAction() == REJECT) {
       executionData.setStatus(ExecutionStatus.REJECTED);
     }
@@ -604,6 +624,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     notNullCheck("workflowExecutionId", workflowExecutionId, USER);
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new InvalidRequestException(
+          "No Execution found for given appId [" + appId + "] and executionId [" + workflowExecutionId + "]", USER);
+    }
     if (workflowExecution.getWorkflowType() == PIPELINE) {
       refreshPipelineExecution(workflowExecution);
     }
@@ -634,6 +658,46 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return approvalStateExecutionData;
+  }
+
+  @Override
+  public List<ApprovalStateExecutionData> fetchApprovalStateExecutionsDataFromWorkflowExecution(
+      String appId, String workflowExecutionId) {
+    notNullCheck("appId", appId, USER);
+
+    notNullCheck("workflowExecutionId", workflowExecutionId, USER);
+
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new InvalidRequestException(
+          "No Execution found for given appId [" + appId + "] and executionId [" + workflowExecutionId + "]", USER);
+    }
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+    }
+
+    notNullCheck("workflowExecution", workflowExecution, USER);
+
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+    String workflowType = "";
+
+    // Pipeline approval
+    if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+      workflowType = "Pipeline";
+      approvalStateExecutionsData = fetchPipelineWaitingApprovalStateExecutionsData(workflowExecution);
+    }
+
+    // Workflow approval
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+      workflowType = "Workflow";
+      approvalStateExecutionsData = fetchWorkflowWaitingApprovalStateExecutionsData(workflowExecution);
+    }
+
+    if (isEmpty(approvalStateExecutionsData)) {
+      throw new InvalidRequestException("No Approval found for execution [" + workflowExecutionId + "]", USER);
+    }
+
+    return approvalStateExecutionsData;
   }
 
   private ApprovalStateExecutionData fetchPipelineWaitingApprovalStateExecutionData(
@@ -685,6 +749,82 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return null;
+  }
+
+  private List<ApprovalStateExecutionData> fetchPipelineWaitingApprovalStateExecutionsData(
+      WorkflowExecution pipelineWorkflowExecution) {
+    PipelineExecution pipelineExecution = pipelineWorkflowExecution.getPipelineExecution();
+    if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null) {
+      return null;
+    }
+
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+
+    for (PipelineStageExecution pe : pipelineExecution.getPipelineStageExecutions()) {
+      if (pe.getStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) pe.getStateExecutionData();
+
+        if (pe.getStatus() == ExecutionStatus.PAUSED
+            && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED) {
+          approvalStateExecutionData.setStageName(
+              getStageNameForApprovalStateExecutionData(pipelineExecution, pe.getPipelineStageElementId()));
+          approvalStateExecutionData.setExecutionUuid(pipelineWorkflowExecution.getUuid());
+          approvalStateExecutionsData.add(approvalStateExecutionData);
+        }
+      } else {
+        List<WorkflowExecution> workflowExecutions = pe.getWorkflowExecutions();
+        for (WorkflowExecution workflowExecution : workflowExecutions) {
+          if (RUNNING.equals(workflowExecution.getStatus()) || PAUSED.equals(workflowExecution.getStatus())) {
+            List<ApprovalStateExecutionData> approvalStateExecutionDataList =
+                fetchWorkflowWaitingApprovalStateExecutionsData(workflowExecution);
+            approvalStateExecutionDataList.forEach(approvalStateExecutionData
+                -> approvalStateExecutionData.setStageName(workflowExecution.getStageName()));
+            approvalStateExecutionsData.addAll(approvalStateExecutionDataList);
+          }
+        }
+      }
+    }
+
+    return approvalStateExecutionsData;
+  }
+
+  public String getStageNameForApprovalStateExecutionData(
+      PipelineExecution pipelineExecution, String pipelineStageElementId) {
+    List<PipelineStage> pipelineStages = pipelineExecution.getPipeline().getPipelineStages();
+    if (pipelineStages == null) {
+      return null;
+    }
+
+    for (PipelineStage pipelineStage : pipelineStages) {
+      String stageName = pipelineStage.getName();
+      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        if (pipelineStageElement != null && pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
+          return stageName;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private List<ApprovalStateExecutionData> fetchWorkflowWaitingApprovalStateExecutionsData(
+      WorkflowExecution workflowExecution) {
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+
+    List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
+    for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+      if (stateExecutionInstance.fetchStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData =
+            (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
+        // Check for Approval Id in PAUSED status
+        if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED) {
+          approvalStateExecutionData.setExecutionUuid(workflowExecution.getUuid());
+          approvalStateExecutionsData.add(approvalStateExecutionData);
+        }
+      }
+    }
+
+    return approvalStateExecutionsData;
   }
 
   @VisibleForTesting
@@ -4845,6 +4985,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     } else {
       return userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, userGroupIds);
+    }
+  }
+
+  @Override
+  public boolean verifyAuthorizedToAcceptOrReject(
+      List<String> userGroupIds, List<String> apiKeysUserGroupIds, String appId, String workflowId) {
+    if (isEmpty(apiKeysUserGroupIds)) {
+      return true;
+    }
+
+    if (isEmpty(userGroupIds)) {
+      try {
+        if (isBlank(appId) || isBlank(workflowId)) {
+          return true;
+        }
+        deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, workflowId);
+        return true;
+      } catch (WingsException e) {
+        return false;
+      }
+    } else {
+      return userGroupService.verifyApiKeyAuthorizedToAcceptOrRejectApproval(apiKeysUserGroupIds, userGroupIds);
     }
   }
 

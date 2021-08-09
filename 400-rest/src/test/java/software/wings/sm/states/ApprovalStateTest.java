@@ -1887,7 +1887,7 @@ public class ApprovalStateTest extends WingsBaseTest {
         ApprovalStateExecutionDataKeys.variables, ApprovalStateExecutionDataKeys.comments, "test",
         ApprovalStateExecutionDataKeys.approvedOn, ApprovalStateExecutionDataKeys.approvalFromSlack,
         ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType,
-        ApprovalStateExecutionDataKeys.approvedBy);
+        ApprovalStateExecutionDataKeys.approvedBy, ApprovalStateExecutionDataKeys.approvalFromGraphQL);
   }
 
   private void assertJiraKeysInSweepingOutput(List<String> keys) {
