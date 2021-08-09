@@ -10,6 +10,11 @@ import io.harness.app.datafetcher.delegate.DelegateListDataFetcher;
 import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
 
 import software.wings.app.WingsGraphQLModule;
+import software.wings.graphql.datafetcher.event.CreateEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.event.DeleteEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.event.EventsConfigConnectionDataFetcher;
+import software.wings.graphql.datafetcher.event.EventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.event.UpdateEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
 
 import com.google.common.collect.Sets;
@@ -78,6 +83,11 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(DelegateListDataFetcher.class);
     bindDataFetcherWithAnnotation(AddDelegateScopeDataFetcher.class);
     bindDataFetcherWithAnnotation(AttachScopeToDelegateDataFetcher.class);
+    bindDataFetcherWithAnnotation(CreateEventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteEventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(EventsConfigConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(EventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateEventsConfigDataFetcher.class);
   }
 
   @NotNull
