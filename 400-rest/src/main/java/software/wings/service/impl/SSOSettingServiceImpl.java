@@ -9,6 +9,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
@@ -70,6 +71,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 
 @ValidateOnExecution
+@BreakDependencyOn("software.wings.scheduler.LdapGroupSyncJob")
 @Singleton
 @Slf4j
 public class SSOSettingServiceImpl implements SSOSettingService {
