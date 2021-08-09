@@ -5,11 +5,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
 import io.harness.k8s.model.K8sContainer;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@JsonTypeName("K8sServerInstanceInfo")
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)

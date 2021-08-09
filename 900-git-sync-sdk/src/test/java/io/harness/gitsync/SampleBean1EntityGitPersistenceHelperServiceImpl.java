@@ -51,7 +51,7 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public SampleBean1 update(String accountIdentifier, String yaml) {
+  public SampleBean1 update(String accountIdentifier, String yaml, io.harness.git.model.ChangeType changeType) {
     return null;
   }
 
@@ -87,6 +87,11 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
 
   @Override
   public SampleBean1 upsert(String accountIdentifier, String yaml) {
+    return null;
+  }
+
+  @Override
+  public SampleBean1 fullSyncEntity(String accountIdentifier, String yaml) {
     return null;
   }
 }

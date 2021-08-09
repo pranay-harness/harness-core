@@ -22,6 +22,7 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.JsonSchemaValidationException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -208,7 +209,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testUpdatePipeline() throws IOException {
-    doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity);
+    doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity, ChangeType.MODIFY);
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData()).isEqualTo(PIPELINE_IDENTIFIER);

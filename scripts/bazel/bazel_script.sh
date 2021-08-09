@@ -68,6 +68,7 @@ BAZEL_MODULES="\
   //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
+  //441-cg-instance-sync:module \
   //445-cg-connectors:module \
   //450-ce-views:module \
   //460-capability:module \

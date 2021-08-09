@@ -7,6 +7,7 @@ import io.harness.waiter.ProgressUpdate;
 import io.harness.waiter.WaitEngineEntity;
 import io.harness.waiter.WaitInstance;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 
@@ -31,4 +32,6 @@ public interface PersistenceWrapper {
   List<String> fetchNotifyResponseKeys(long limit);
 
   void deleteNotifyResponses(List<String> responseIds);
+
+  String saveWithTimeout(WaitInstance build, Duration timeout);
 }

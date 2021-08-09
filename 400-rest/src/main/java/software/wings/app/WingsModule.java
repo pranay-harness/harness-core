@@ -113,6 +113,7 @@ import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
+import io.harness.instancesync.InstanceSyncResourceClientModule;
 import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
@@ -1307,6 +1308,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    install(new InstanceSyncResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     // ng-secret dependencies

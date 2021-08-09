@@ -43,7 +43,7 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
-import groovy.lang.Singleton;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

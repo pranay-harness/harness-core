@@ -12,6 +12,7 @@ import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.morphia.MorphiaRegistrar;
@@ -24,6 +25,7 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.WaitEngineRegistrars;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -41,6 +43,7 @@ import io.harness.waiter.TestNotifyEventListener;
 import io.harness.waiter.WaiterConfiguration;
 import io.harness.waiter.WaiterRuleMixin;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -65,9 +68,11 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
-@OwnedBy(HarnessTeam.PIPELINE)
+@OwnedBy(HarnessTeam.DEL)
 public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, WaiterRuleMixin {
   ClosingFactory closingFactory;
 
@@ -161,8 +166,14 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
         return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
             asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(TEST_PUBLISHER)), config);
       }
-    });
 
+      @Provides
+      @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+    });
+    modules.add(new MetricRegistryModule(new MetricRegistry()));
     return modules;
   }
 

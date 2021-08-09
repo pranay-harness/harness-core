@@ -344,16 +344,17 @@ public class StepUtils {
   }
 
   public static List<TaskSelector> getTaskSelectors(ParameterField<List<String>> delegateSelectors) {
-    List<TaskSelector> taskSelectors = new ArrayList<>();
-    if (!ParameterField.isNull(delegateSelectors)) {
-      List<String> delegateSelectorsList = delegateSelectors.getValue();
-      if (delegateSelectorsList != null) {
-        taskSelectors = delegateSelectorsList.stream()
-                            .map(delegateSelector -> TaskSelector.newBuilder().setSelector(delegateSelector).build())
-                            .collect(toList());
-      }
+    return getDelegateSelectorList(delegateSelectors)
+        .stream()
+        .map(delegateSelector -> TaskSelector.newBuilder().setSelector(delegateSelector).build())
+        .collect(toList());
+  }
+
+  public static List<String> getDelegateSelectorList(ParameterField<List<String>> delegateSelectors) {
+    if (ParameterField.isNull(delegateSelectors) || delegateSelectors.getValue() == null) {
+      return new ArrayList<>();
     }
-    return taskSelectors;
+    return delegateSelectors.getValue();
   }
 
   public static Status getStepStatus(CommandExecutionStatus commandExecutionStatus) {

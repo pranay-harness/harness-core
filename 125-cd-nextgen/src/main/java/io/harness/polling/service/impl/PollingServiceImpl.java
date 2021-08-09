@@ -15,23 +15,19 @@ import io.harness.polling.service.intfc.PollingServiceObserver;
 import io.harness.repositories.polling.PollingRepository;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
+@Singleton
 public class PollingServiceImpl implements PollingService {
-  private PollingRepository pollingRepository;
-  private PollingRequestToPollingDocumentMapper pollingDocumentMapper;
-  private Subject<PollingServiceObserver> subject = new Subject<>();
-
-  @Inject
-  public PollingServiceImpl(
-      PollingRepository pollingRepository, PollingRequestToPollingDocumentMapper pollingDocumentMapper) {
-    this.pollingRepository = pollingRepository;
-    this.pollingDocumentMapper = pollingDocumentMapper;
-  }
+  @Inject private PollingRepository pollingRepository;
+  @Inject private PollingRequestToPollingDocumentMapper pollingDocumentMapper;
+  @Inject @Getter private final Subject<PollingServiceObserver> subject = new Subject<>();
 
   @Override
   public String save(PollingDocument pollingDocument) {

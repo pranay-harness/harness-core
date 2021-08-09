@@ -877,6 +877,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
           .endTime(fakeNow.minus(Duration.ofMinutes(2)))
           .status(executionStatus)
           .dataCollectionInfo(createDataCollectionInfo())
+          .lastPickedAt(executionStatus == RUNNING ? fakeNow.minus(Duration.ofMinutes(5)) : null)
           .build();
     } else {
       return DeploymentDataCollectionTask.builder()
@@ -888,6 +889,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
           .endTime(fakeNow.minus(Duration.ofMinutes(2)))
           .status(executionStatus)
           .dataCollectionInfo(createDataCollectionInfo())
+          .lastPickedAt(executionStatus == RUNNING ? fakeNow.minus(Duration.ofMinutes(5)) : null)
           .build();
     }
   }

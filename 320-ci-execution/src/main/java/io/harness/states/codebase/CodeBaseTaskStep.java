@@ -41,8 +41,8 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.FindPRResponse;
-import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
+import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -97,20 +97,34 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
                                   .parameters(new Object[] {scmGitRefTaskParams})
                                   .build();
 
+    log.info("Created delegate task to fetch codebase info");
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
   @Override
   public StepResponse handleTaskResult(Ambiance ambiance, CodeBaseTaskStepParameters stepParameters,
       ThrowingSupplier<ScmGitRefTaskResponseData> responseDataSupplier) throws Exception {
-    ScmGitRefTaskResponseData scmGitRefTaskResponseData = responseDataSupplier.get();
+    ScmGitRefTaskResponseData scmGitRefTaskResponseData = null;
+    try {
+      log.info("Retrieving codebase info from returned delegate response");
+      scmGitRefTaskResponseData = responseDataSupplier.get();
+      log.info("Successfully retrieved codebase info from returned delegate response");
+    } catch (Exception ex) {
+      log.info("Failed to retrieve codebase info from returned delegate response");
+      return StepResponse.builder().status(Status.FAILED).build();
+    }
+
     CodebaseSweepingOutput codebaseSweepingOutput = null;
-    if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.PULL_REQUEST_WITH_COMMITS) {
+    if (scmGitRefTaskResponseData != null
+        && scmGitRefTaskResponseData.getGitRefType() == GitRefType.PULL_REQUEST_WITH_COMMITS) {
       codebaseSweepingOutput = buildPRCodebaseSweepingOutput(scmGitRefTaskResponseData);
-    } else if (scmGitRefTaskResponseData.getGitRefType() == GitRefType.LATEST_COMMIT_ID) {
+    } else if (scmGitRefTaskResponseData != null && scmGitRefTaskResponseData.getGitRefType() == GitRefType.COMMIT) {
       codebaseSweepingOutput = buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData);
     }
-    saveCodebaseSweepingOutput(ambiance, codebaseSweepingOutput);
+    if (codebaseSweepingOutput != null) {
+      saveCodebaseSweepingOutput(ambiance, codebaseSweepingOutput);
+    }
+
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 
@@ -145,7 +159,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     if (isNotEmpty(branch)) {
       return ScmGitRefTaskParams.builder()
           .branch(branch)
-          .gitRefType(GitRefType.LATEST_COMMIT_ID)
+          .gitRefType(GitRefType.COMMIT)
           .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
           .scmConnector(scmConnector)
           .build();
@@ -165,16 +179,18 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
   CodebaseSweepingOutput buildCommitShaCodebaseSweepingOutput(ScmGitRefTaskResponseData scmGitRefTaskResponseData)
       throws InvalidProtocolBufferException {
     CodebaseSweepingOutput codebaseSweepingOutput;
-    final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getGetLatestCommitResponse();
+    final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getListCommitsResponse();
     if (isEmpty(getLatestCommitResponseByteArray)) {
-      throw new CIStageExecutionException("Codebase git information can't be obtained");
+      throw new CIStageExecutionException("Codebase git commit information can't be obtained");
     }
-    GetLatestCommitResponse getLatestCommitResponse =
-        GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
+    ListCommitsResponse listCommitsResponse = ListCommitsResponse.parseFrom(getLatestCommitResponseByteArray);
 
+    if (isEmpty(listCommitsResponse.getCommitIdsList())) {
+      throw new CIStageExecutionException("Codebase git commit information can't be obtained");
+    }
     codebaseSweepingOutput = CodebaseSweepingOutput.builder()
                                  .branch(scmGitRefTaskResponseData.getBranch())
-                                 .commitSha(getLatestCommitResponse.getCommitId())
+                                 .commitSha(listCommitsResponse.getCommitIds(0))
                                  .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
                                  .build();
     return codebaseSweepingOutput;

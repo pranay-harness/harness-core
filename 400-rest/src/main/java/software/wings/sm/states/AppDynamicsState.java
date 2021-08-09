@@ -12,6 +12,9 @@ import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
@@ -73,6 +76,8 @@ import org.slf4j.Logger;
  */
 @Slf4j
 @FieldNameConstants(innerTypeName = "AppDynamicsStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Transient @Inject protected AppdynamicsService appdynamicsService;
 

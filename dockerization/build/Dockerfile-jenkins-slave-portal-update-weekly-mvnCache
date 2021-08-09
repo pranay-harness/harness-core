@@ -30,5 +30,3 @@ RUN cd /root \
     && rm -rf /root/.m2/repository/software/wings
 
 ARG STEP=RUN
-
-ENTRYPOINT ["jenkins-slave"]

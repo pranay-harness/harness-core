@@ -92,8 +92,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         if (!instanceSyncPerpetualTaskInfoDTOOptional.isPresent()) {
           // no existing perpetual task info record found for given infrastructure mapping id
           // so create a new perpetual task and instance sync perpetual task info record
-          String perpetualTaskId = instanceSyncPerpetualTaskService.createPerpetualTask(
-              infrastructureMappingDTO, abstractInstanceSyncHandler);
+          String perpetualTaskId = instanceSyncPerpetualTaskService.createPerpetualTask(infrastructureMappingDTO,
+              abstractInstanceSyncHandler, Collections.singletonList(deploymentSummaryDTO.getDeploymentInfoDTO()));
           instanceSyncPerpetualTaskInfoDTO = instanceSyncPerpetualTaskInfoService.save(
               prepareInstanceSyncPerpetualTaskInfoDTO(deploymentSummaryDTO, perpetualTaskId));
         } else {
@@ -105,6 +105,11 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
             addNewDeploymentInfoToInstanceSyncPerpetualTaskInfoRecord(
                 instanceSyncPerpetualTaskInfoDTO, deploymentSummaryDTO);
             instanceSyncPerpetualTaskInfoService.updateDeploymentInfoDetailsList(instanceSyncPerpetualTaskInfoDTO);
+            // Reset perpetual task to update the execution bundle with latest information
+            instanceSyncPerpetualTaskService.resetPerpetualTask(infrastructureMappingDTO.getAccountIdentifier(),
+                instanceSyncPerpetualTaskInfoDTO.getPerpetualTaskId(), infrastructureMappingDTO,
+                abstractInstanceSyncHandler,
+                getDeploymentInfoDTOListFromInstanceSyncPerpetualTaskInfo(instanceSyncPerpetualTaskInfoDTO));
           }
         }
 
@@ -535,5 +540,13 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   private Sets.SetView<String> getSyncKeysNotFromServerInstances(
       Set<String> syncKeysfromDBInstances, Set<String> syncKeysFromServerInstances) {
     return Sets.difference(syncKeysfromDBInstances, syncKeysFromServerInstances);
+  }
+
+  private List<DeploymentInfoDTO> getDeploymentInfoDTOListFromInstanceSyncPerpetualTaskInfo(
+      InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO) {
+    List<DeploymentInfoDTO> deploymentInfoDTOList = new ArrayList<>();
+    instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList().forEach(
+        deploymentInfoDetailsDTO -> deploymentInfoDTOList.add(deploymentInfoDetailsDTO.getDeploymentInfoDTO()));
+    return deploymentInfoDTOList;
   }
 }

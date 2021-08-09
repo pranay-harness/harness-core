@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
@@ -56,6 +59,8 @@ import org.slf4j.Logger;
  */
 @Slf4j
 @FieldNameConstants(innerTypeName = "NewRelicStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class NewRelicState extends AbstractMetricAnalysisState {
   private String analysisServerConfigId;
   private String applicationId;

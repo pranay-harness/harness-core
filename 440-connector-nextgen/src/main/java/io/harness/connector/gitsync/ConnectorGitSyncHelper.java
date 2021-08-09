@@ -15,6 +15,7 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.encryption.ScopeHelper;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.exceptions.NGYamlParsingException;
@@ -87,9 +88,9 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   }
 
   @Override
-  public ConnectorDTO update(String accountIdentifier, String yaml) {
+  public ConnectorDTO update(String accountIdentifier, String yaml, ChangeType changeType) {
     ConnectorDTO connectorDTO = getYamlDTO(yaml);
-    ConnectorResponseDTO connectorResponseDTO = connectorService.update(connectorDTO, accountIdentifier);
+    ConnectorResponseDTO connectorResponseDTO = connectorService.update(connectorDTO, accountIdentifier, changeType);
     ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }

@@ -15,8 +15,11 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceRequiredProvider;
+import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.timeout.TimeoutInstance.TimeoutInstanceKeys;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -37,6 +40,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private Injector injector;
+  @Inject private TimeoutRegistry timeoutRegistry;
 
   private PersistenceIterator<TimeoutInstance> iterator;
 
@@ -53,6 +57,13 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
       iterator.wakeup();
     }
     return savedTimeoutInstance;
+  }
+
+  public TimeoutInstance registerAbsoluteTimeout(Duration timeoutDuration, TimeoutCallback timeoutCallback) {
+    TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(AbsoluteTimeoutTrackerFactory.DIMENSION);
+    TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
+        AbsoluteTimeoutParameters.builder().timeoutMillis(timeoutDuration.toMillis()).build());
+    return registerTimeout(timeoutTracker, timeoutCallback);
   }
 
   public void deleteTimeouts(List<String> timeoutInstanceIds) {

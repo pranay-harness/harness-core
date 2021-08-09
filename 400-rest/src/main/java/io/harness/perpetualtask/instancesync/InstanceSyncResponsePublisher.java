@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.instancesync.InstanceSyncResourceClient;
 import io.harness.utils.RestCallToNGManagerClientUtils;
 
@@ -19,8 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 public class InstanceSyncResponsePublisher {
   @Inject private InstanceSyncResourceClient instanceSyncResourceClient;
 
-  public void publishInstanceSyncResponseToNG(String accountIdentifier, String perpetualTaskId,
-      InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse) {
+  public void publishInstanceSyncResponseToNG(
+      String accountIdentifier, String perpetualTaskId, DelegateResponseData instanceSyncPerpetualTaskResponse) {
     if (instanceSyncPerpetualTaskResponse == null) {
       log.error("Instance sync perpetual task response is null for accountIdentifier : {} and perpetualTaskId : {}",
           accountIdentifier, perpetualTaskId);
