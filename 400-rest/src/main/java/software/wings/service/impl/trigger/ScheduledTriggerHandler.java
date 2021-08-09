@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,7 +70,11 @@ public class ScheduledTriggerHandler implements Handler<Trigger> {
                 -> query.field(TriggerKeys.triggerConditionType)
                        .equal(TriggerConditionType.SCHEDULED)
                        .field(TriggerKeys.nextIterations)
-                       .exists())
+                       .exists()
+                       .field(TriggerKeys.nextIterations)
+                       .notEqual(null)
+                       .field(TriggerKeys.nextIterations)
+                       .notEqual(Collections.emptyList()))
             .throttleInterval(ofSeconds(45)));
 
     executor.submit(() -> iterator.process());
