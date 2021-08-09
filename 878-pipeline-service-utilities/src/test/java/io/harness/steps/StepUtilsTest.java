@@ -1,6 +1,7 @@
 package io.harness.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SAMARTH;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
@@ -143,5 +144,15 @@ public class StepUtilsTest extends CategoryTest {
     assertThat(taskSelectors).hasSize(2);
     assertThat(taskSelectors.get(0).getSelector()).isEqualTo("s1");
     assertThat(taskSelectors.get(1).getSelector()).isEqualTo("s2");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void getDelegateSelectorSetTest() {
+    assertThat(StepUtils.getDelegateSelectorList(null)).isEmpty();
+    ParameterField<List<String>> delegateSelectors =
+        ParameterField.<List<String>>builder().value(Arrays.asList("primary", "secondary")).build();
+    assertThat(StepUtils.getDelegateSelectorList(delegateSelectors)).containsExactlyInAnyOrder("primary", "secondary");
   }
 }

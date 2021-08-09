@@ -7,6 +7,7 @@ import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,4 +25,5 @@ public class JiraApprovalSpecParameters implements SpecParameters {
   @NotNull ParameterField<String> issueKey;
   @NotNull CriteriaSpecWrapper approvalCriteria;
   CriteriaSpecWrapper rejectionCriteria;
+  ParameterField<List<String>> delegateSelectors;
 }

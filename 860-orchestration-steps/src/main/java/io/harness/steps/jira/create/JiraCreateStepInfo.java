@@ -1,6 +1,7 @@
 package io.harness.steps.jira.create;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
@@ -14,6 +15,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.jira.JiraStepUtils;
 import io.harness.steps.jira.beans.JiraField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -40,6 +42,10 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
 
   List<JiraField> fields;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @YamlSchemaTypes(value = {runtime})
+  ParameterField<List<String>> delegateSelectors;
+
   @Override
   public StepType getStepType() {
     return JiraCreateStep.STEP_TYPE;
@@ -57,6 +63,7 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
         .projectKey(projectKey)
         .issueType(issueType)
         .fields(JiraStepUtils.processJiraFieldsList(fields))
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 

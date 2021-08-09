@@ -1,6 +1,7 @@
 package io.harness.steps.approval.step.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
@@ -13,10 +14,12 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.ApprovalFacilitator;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -37,6 +40,10 @@ public class JiraApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
   @NotNull CriteriaSpecWrapper approvalCriteria;
   CriteriaSpecWrapper rejectionCriteria;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @YamlSchemaTypes(value = {runtime})
+  ParameterField<List<String>> delegateSelectors;
+
   @Override
   public StepType getStepType() {
     return JiraApprovalStep.STEP_TYPE;
@@ -54,6 +61,7 @@ public class JiraApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
         .issueKey(issueKey)
         .approvalCriteria(approvalCriteria)
         .rejectionCriteria(rejectionCriteria)
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 

@@ -8,11 +8,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
 import io.harness.steps.approval.step.jira.JiraApprovalSpecParameters;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapperDTO;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -36,6 +38,7 @@ public class JiraApprovalInstance extends ApprovalInstance {
   @NotEmpty String issueKey;
   @NotNull CriteriaSpecWrapperDTO approvalCriteria;
   CriteriaSpecWrapperDTO rejectionCriteria;
+  ParameterField<List<String>> delegateSelectors;
 
   public static JiraApprovalInstance fromStepParameters(Ambiance ambiance, StepElementParameters stepParameters) {
     if (stepParameters == null) {
@@ -61,6 +64,7 @@ public class JiraApprovalInstance extends ApprovalInstance {
                 CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getApprovalCriteria(), false))
             .rejectionCriteria(
                 CriteriaSpecWrapperDTO.fromCriteriaSpecWrapper(specParameters.getRejectionCriteria(), true))
+            .delegateSelectors(specParameters.getDelegateSelectors())
             .build();
     instance.updateFromStepParameters(ambiance, stepParameters);
     return instance;

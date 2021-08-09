@@ -7,6 +7,7 @@ import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.jira.update.beans.TransitionTo;
 
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -26,4 +27,5 @@ public class JiraUpdateSpecParameters implements SpecParameters {
 
   TransitionTo transitionTo;
   Map<String, ParameterField<String>> fields;
+  ParameterField<List<String>> delegateSelectors;
 }
