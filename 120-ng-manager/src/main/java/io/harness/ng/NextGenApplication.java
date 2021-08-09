@@ -43,6 +43,7 @@ import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
+import io.harness.gitsync.core.fullsync.GitFullSyncEntityIterator;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.gitsync.core.webhook.GitSyncEventConsumerService;
 import io.harness.gitsync.server.GitSyncGrpcModule;
@@ -406,6 +407,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
     injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
+    injector.getInstance(GitFullSyncEntityIterator.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
