@@ -21,8 +21,10 @@ public class GcpCloudCostDTOToEntity
   public GcpCloudCostConfig toConnectorEntity(GcpCloudCostConnectorDTO connectorDTO) {
     final List<CEFeatures> featuresEnabled = connectorDTO.getFeaturesEnabled();
 
-    final GcpCloudCostConfigBuilder configBuilder =
-        GcpCloudCostConfig.builder().featuresEnabled(featuresEnabled).projectId(connectorDTO.getProjectId());
+    final GcpCloudCostConfigBuilder configBuilder = GcpCloudCostConfig.builder()
+                                                        .featuresEnabled(featuresEnabled)
+                                                        .serviceAccountEmail(connectorDTO.getServiceAccountEmail())
+                                                        .projectId(connectorDTO.getProjectId());
 
     if (featuresEnabled.contains(CEFeatures.BILLING)) {
       populateBillingAttributes(configBuilder, connectorDTO.getBillingExportSpec());

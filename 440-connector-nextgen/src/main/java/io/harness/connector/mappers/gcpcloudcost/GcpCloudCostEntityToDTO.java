@@ -21,7 +21,10 @@ public class GcpCloudCostEntityToDTO
     final List<CEFeatures> featuresEnabled = connector.getFeaturesEnabled();
 
     final GcpCloudCostConnectorDTOBuilder connectorDTOBuilder =
-        GcpCloudCostConnectorDTO.builder().featuresEnabled(featuresEnabled).projectId(connector.getProjectId());
+        GcpCloudCostConnectorDTO.builder()
+            .featuresEnabled(featuresEnabled)
+            .serviceAccountEmail(connector.getServiceAccountEmail())
+            .projectId(connector.getProjectId());
 
     if (featuresEnabled.contains(CEFeatures.BILLING)) {
       // in DTOtoEntity we are making sure that if BILLING is enabled then the billingExportSpec shouldn't be null
