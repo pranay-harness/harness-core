@@ -74,6 +74,12 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
   /** Slack approval */
   private boolean approvalFromSlack;
 
+  /** GraphQL approval supported only for User group Approval */
+  private boolean approvalFromGraphQL;
+
+  /** Approved via API Key */
+  private boolean approvalViaApiKey;
+
   /** Shell Script approval */
   private Integer retryInterval;
 
@@ -83,6 +89,10 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
   // Setting these variables for pipeline executions with only approval state
   @Transient private transient List<UserGroup> userGroupList;
   @Transient private transient boolean isAuthorized;
+
+  // Used to return information in graphQL Apis for approval Data
+  @Transient private transient String stageName;
+  @Transient private transient String executionUuid;
 
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Transient @Inject private transient UserGroupService userGroupService;
@@ -143,50 +153,49 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
 
     if (isNotEmpty(approvalField) && isNotEmpty(approvalValue)) {
       putNotNull(executionDetails, "approvalCriteria",
-          ExecutionDataValue.builder()
-              .displayName("Approval Criteria")
-              .value(
-                  StringUtils.capitalize(approvalField) + " should be '" + StringUtils.capitalize(approvalValue) + "'")
-              .build());
+          ExecutionDataValue.builder().displayName("Approval Criteria").value(getJiraApprovalCriteria()).build());
     }
 
     if (snowApproval != null) {
       putNotNull(executionDetails, "approvalCriteria",
-          ExecutionDataValue.builder().displayName("Approval Criteria").value(snowApproval.conditionsString()).build());
+          ExecutionDataValue.builder()
+              .displayName("Approval Criteria")
+              .value(snowApproval.conditionsString("\n"))
+              .build());
     }
 
     if (isNotEmpty(currentStatus)) {
-      String statusString = approvalStateType == ApprovalStateType.SERVICENOW
-          ? currentStatus
-          : StringUtils.capitalize(approvalField) + " is equal to '" + StringUtils.capitalize(currentStatus) + "'";
+      String statusString = getApprovalCurrentStatus();
       putNotNull(executionDetails, "currentStatus",
           ExecutionDataValue.builder().displayName("Current value").value(statusString).build());
     }
 
     if (isNotEmpty(rejectionField) && isNotEmpty(rejectionValue)) {
       putNotNull(executionDetails, "rejectionCriteria",
-          ExecutionDataValue.builder()
-              .displayName("Rejection Criteria")
-              .value(StringUtils.capitalize(rejectionField) + " should be '" + StringUtils.capitalize(rejectionValue)
-                  + "'")
-              .build());
+          ExecutionDataValue.builder().displayName("Rejection Criteria").value(getJiraRejectionCriteria()).build());
     }
 
     if (snowRejection != null) {
-      String rejectionMessage = snowRejection.conditionsString();
+      String rejectionMessage = snowRejection.conditionsString("\n");
       if (isNotEmpty(rejectionMessage)) {
         executionDetails.put("rejectionCriteria",
             ExecutionDataValue.builder().displayName("Rejection Criteria").value(rejectionMessage).build());
       }
     }
 
+    putNotNull(executionDetails, "approvalViaApiKey", ExecutionDataValue.builder().value(approvalViaApiKey).build());
+
     if (approvedBy != null) {
+      String approvalDisplayName =
+          approvalFromGraphQL ? approvalViaApiKey ? "Approved via API using" : "Approved via API By" : "Approved By";
+      String rejectedDisplayName =
+          approvalFromGraphQL ? approvalViaApiKey ? "Rejected via API using" : "Rejected via API By" : "Rejected By";
       if (getStatus() == ExecutionStatus.SUCCESS) {
         putNotNull(executionDetails, "approvedBy",
-            ExecutionDataValue.builder().displayName("Approved By").value(approvedBy).build());
+            ExecutionDataValue.builder().displayName(approvalDisplayName).value(approvedBy).build());
       } else if (getStatus() == ExecutionStatus.REJECTED) {
         putNotNull(executionDetails, "approvedBy",
-            ExecutionDataValue.builder().displayName("Rejected By").value(approvedBy).build());
+            ExecutionDataValue.builder().displayName(rejectedDisplayName).value(approvedBy).build());
       }
     }
 
@@ -227,5 +236,19 @@ public class ApprovalStateExecutionData extends StateExecutionData implements De
       putNotNull(executionDetails, IS_USER_AUTHORIZED,
           ExecutionDataValue.builder().displayName(AUTHORIZED_DISPLAY_NAME).value(false).build());
     }
+  }
+
+  public String getApprovalCurrentStatus() {
+    return approvalStateType == ApprovalStateType.SERVICENOW
+        ? currentStatus
+        : StringUtils.capitalize(approvalField) + " is equal to '" + StringUtils.capitalize(currentStatus) + "'";
+  }
+
+  public String getJiraApprovalCriteria() {
+    return StringUtils.capitalize(approvalField) + " should be '" + StringUtils.capitalize(approvalValue) + "'";
+  }
+
+  public String getJiraRejectionCriteria() {
+    return StringUtils.capitalize(rejectionField) + " should be '" + StringUtils.capitalize(rejectionValue) + "'";
   }
 }

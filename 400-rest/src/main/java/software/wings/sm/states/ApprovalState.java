@@ -997,6 +997,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
         (ApprovalStateExecutionData) response.values().iterator().next();
 
     boolean isApprovalFromSlack = approvalNotifyResponse.isApprovalFromSlack();
+    boolean isApprovalFromGraphQL = approvalNotifyResponse.isApprovalFromGraphQL();
+
     if (isNotEmpty(approvalNotifyResponse.getVariables())) {
       setVariables(approvalNotifyResponse.getVariables());
     }
@@ -1015,6 +1017,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     executionData.setComments(approvalNotifyResponse.getComments());
     executionData.setApprovedOn(System.currentTimeMillis());
     executionData.setCurrentStatus(approvalNotifyResponse.getCurrentStatus());
+    executionData.setApprovalFromGraphQL(isApprovalFromGraphQL);
+    executionData.setApprovalViaApiKey(approvalNotifyResponse.isApprovalViaApiKey());
 
     Map<String, String> placeholderValues;
     if (approvalNotifyResponse.getApprovedBy() != null) {
@@ -1079,6 +1083,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           output.put(ApprovalStateExecutionDataKeys.userGroups,
               userGroupService.fetchUserGroupNamesFromIds(executionData.getUserGroups()));
         }
+        // Via GraphQL Approval
+        output.put(ApprovalStateExecutionDataKeys.approvalFromGraphQL, executionData.isApprovalFromGraphQL());
         break;
       case JIRA:
         output.put(ApprovalStateExecutionDataKeys.issueUrl, executionData.getIssueUrl());
