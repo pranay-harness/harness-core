@@ -32,7 +32,7 @@ public class Criteria {
     return this.conditions;
   }
 
-  public String conditionsString() {
+  public String conditionsString(String delimeter) {
     if (isEmpty(conditions)) {
       return "";
     }
@@ -44,7 +44,7 @@ public class Criteria {
             -> StringUtils.capitalize(condition.getKey()) + " should be "
                 + (condition.getValue().size() > 1 ? "any of " + String.join("/", condition.getValue())
                                                    : condition.getValue().get(0)))
-        .collect(Collectors.joining(" " + operator.name().toLowerCase() + "\n"));
+        .collect(Collectors.joining(" " + operator.name().toLowerCase() + delimeter));
   }
 
   public boolean satisfied(Map<String, String> currentStatus) {

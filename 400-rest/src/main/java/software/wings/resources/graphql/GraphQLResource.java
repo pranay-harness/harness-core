@@ -236,9 +236,9 @@ public class GraphQLResource {
           UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
           UserRestrictionInfo apiKeyRestrictions =
               apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
-          final Builder contextBuilder =
-              populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions, apiKeyRestrictions, accountId,
-                  apiKeyEntry.getUuid(), TriggeredByType.API_KEY, httpServletRequest, query, uploadedInputStream);
+          final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions,
+              apiKeyRestrictions, accountId, apiKeyEntry.getUuid(), TriggeredByType.API_KEY, httpServletRequest, query,
+              uploadedInputStream, apiKeyEntry);
           executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
@@ -322,5 +322,15 @@ public class GraphQLResource {
       }
     }
     return inputBytes;
+  }
+
+  private GraphQLContext.Builder populateContextBuilder(GraphQLContext.Builder builder,
+      UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo, String accountId, String triggeredById,
+      TriggeredByType triggeredByType, HttpServletRequest httpServletRequest, String graphqlQueryString,
+      InputStream uploadedInputStream, ApiKeyEntry apiKeyEntry) {
+    populateContextBuilder(builder, permissionInfo, restrictionInfo, accountId, triggeredById, triggeredByType,
+        httpServletRequest, graphqlQueryString, uploadedInputStream);
+    builder.of("apiKeyEntry", apiKeyEntry);
+    return builder;
   }
 }

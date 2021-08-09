@@ -744,6 +744,20 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public boolean verifyApiKeyAuthorizedToAcceptOrRejectApproval(
+      List<String> apiKeysUserGroupIds, List<String> userGroupIds) {
+    if (isEmpty(userGroupIds)) {
+      return false;
+    }
+
+    if (CollectionUtils.containsAny(apiKeysUserGroupIds, userGroupIds)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  @Override
   public UserGroup linkToSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, @NotNull SSOType ssoType,
       @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName) {
     UserGroup group = get(accountId, userGroupId, false);

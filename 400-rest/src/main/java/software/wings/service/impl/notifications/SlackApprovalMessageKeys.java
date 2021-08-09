@@ -26,6 +26,8 @@ public class SlackApprovalMessageKeys {
   public static final String SLACK_ACTION_MESSAGE_TEMPLATE = "/slack/slack-action-message.txt";
   public static final String APPROVAL_STATE_CHANGED_MESSAGE =
       "The Approval state can no longer be *Approved/Rejected*\nThe state has been *modified* through *Harness UI*.";
+  public static final String APPROVAL_STATE_CHANGED_MESSAGE_VIA_API =
+      "The Approval state can no longer be *Approved/Rejected*\nThe state has been *modified* through *Harness API*.";
 
   // Slack Message template keys
   // Note: Update these keys if any changes to slack message templates is made
