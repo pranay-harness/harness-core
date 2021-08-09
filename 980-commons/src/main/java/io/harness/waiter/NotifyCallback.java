@@ -1,3 +1,9 @@
 package io.harness.waiter;
 
-public interface NotifyCallback {}
+import io.harness.tasks.ResponseData;
+
+import java.util.Map;
+
+public interface NotifyCallback {
+  default void notifyTimeout(Map<String, ResponseData> responseMap) {}
+}
