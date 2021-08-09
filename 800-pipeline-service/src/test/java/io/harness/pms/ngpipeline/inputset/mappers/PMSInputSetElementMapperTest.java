@@ -1,13 +1,16 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
+import static io.harness.rule.OwnerRule.BRIJESH;
 import static io.harness.rule.OwnerRule.NAMAN;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTOPMS;
@@ -170,5 +173,32 @@ public class PMSInputSetElementMapperTest extends CategoryTest {
     assertThat(inputSetResponseDTOPMS1.getName()).isEqualTo("thisName");
     assertThat(inputSetResponseDTOPMS1.getDescription()).isEqualTo("this is an overlay input set");
     assertThat(inputSetResponseDTOPMS1.getTags()).isEqualTo(tags);
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testToInputSetEntityByYaml() {
+    InputSetEntity inputSetEntity = PMSInputSetElementMapper.toInputSetEntity("accountId", inputSetYaml);
+    assertEquals(inputSetEntity.getAccountId(), "accountId");
+    assertEquals(inputSetEntity.getPipelineIdentifier(), "Test_Pipline11");
+    assertEquals(inputSetEntity.getIdentifier(), "input1");
+    inputSetEntity = PMSInputSetElementMapper.toInputSetEntity("accountId", overlayInputSetYaml);
+    assertEquals(inputSetEntity.getAccountId(), "accountId");
+    assertEquals(inputSetEntity.getIdentifier(), "overlay1");
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testToInputSetResponseDTOPMSByDetails() {
+    InputSetResponseDTOPMS inputSetResponseDTOPMS =
+        PMSInputSetElementMapper.toInputSetResponseDTOPMS(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
+            PIPELINE_IDENTIFIER, inputSetYaml, InputSetErrorWrapperDTOPMS.builder().build());
+    assertEquals(inputSetResponseDTOPMS.getAccountId(), ACCOUNT_ID);
+    assertEquals(inputSetResponseDTOPMS.getOrgIdentifier(), ORG_IDENTIFIER);
+    assertEquals(inputSetResponseDTOPMS.getProjectIdentifier(), PROJ_IDENTIFIER);
+    assertEquals(inputSetResponseDTOPMS.getPipelineIdentifier(), PIPELINE_IDENTIFIER);
+    assertEquals(inputSetResponseDTOPMS.getInputSetYaml(), inputSetYaml);
   }
 }
