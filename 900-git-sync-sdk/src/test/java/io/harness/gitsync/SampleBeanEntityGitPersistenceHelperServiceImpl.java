@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SampleBean;
 import io.harness.common.EntityReference;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 
@@ -52,7 +53,7 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public SampleBean update(String accountIdentifier, String yaml) {
+  public SampleBean update(String accountIdentifier, String yaml, ChangeType changeType) {
     return null;
   }
 
@@ -88,6 +89,11 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
 
   @Override
   public SampleBean upsert(String accountIdentifier, String yaml) {
+    return null;
+  }
+
+  @Override
+  public SampleBean fullSyncEntity(String accountIdentifier, String yaml) {
     return null;
   }
 }
