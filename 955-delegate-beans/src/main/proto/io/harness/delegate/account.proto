@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package io.harness.delegate;
+
+option java_multiple_files = true;
+option go_package = "955_delegate_beans";
+
+message AccountId {
+  string id = 1;
+}

@@ -1,0 +1,32 @@
+{
+  "dataSets": [
+    {
+      "timeSeriesFilter": {
+        "filter": "metric.type=\"kubernetes.io/container/memory/used_bytes\" resource.type=\"k8s_container\"",
+        "minAlignmentPeriod": "60s",
+        "unitOverride": "By",
+        "aggregations": [
+          {
+            "perSeriesAligner": "ALIGN_MEAN",
+            "crossSeriesReducer": "REDUCE_MEAN",
+            "groupByFields": []
+          },
+          {
+            "crossSeriesReducer": "REDUCE_NONE"
+          }
+        ]
+      },
+      "targetAxis": "Y1",
+      "plotType": "LINE"
+    }
+  ],
+  "options": {
+    "mode": "COLOR"
+  },
+  "constantLines": [],
+  "timeshiftDuration": "0s",
+  "y1Axis": {
+    "label": "y1Axis",
+    "scale": "LINEAR"
+  }
+}

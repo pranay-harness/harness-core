@@ -1,0 +1,50 @@
+{
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "deploymentFreeze": true,
+  "timeRangeBasedFreezeConfigs": [
+    {
+      "uuid": "FREEZE_ID",
+      "freezeForAllApps": false,
+      "name": "freezer",
+      "description": "Holiday production freeze",
+      "applicable": true,
+      "userGroups": [
+        "aaOLwzRsTMOoSlDrjstIHQ",
+        "BH5_gD_VRDaWcSCsnZKSug"
+      ],
+      "appIds": [
+        "aaOLwzRsTMOoSlDrjstIHQ",
+        "BH5_gD_VRDaWcSCsnZKSug"
+      ],
+      "environmentTypes": [
+        "PROD"
+      ],
+      "appSelections": [
+        {
+          "filterType": "CUSTOM",
+          "apps": [
+            "aaOLwzRsTMOoSlDrjstIHQ"
+          ],
+          "envSelection": {
+            "filterType": "CUSTOM",
+            "environments": ["env1", "env2"]
+          }
+        },
+        {
+          "filterType": "ALL",
+          "envSelection": {
+            "filterType": "ALL_NON_PROD"
+          }
+        }
+      ],
+      "timeRange": {
+        "durationBased": false,
+        "from": 1609372800000,
+        "to": 1609459200000,
+        "timeZone": "Africa/Addis_Ababa"
+      }
+    }
+  ],
+  "uuid": "GOVERNANCE_CONFIG_ID",
+  "weeklyFreezeConfigs": []
+}

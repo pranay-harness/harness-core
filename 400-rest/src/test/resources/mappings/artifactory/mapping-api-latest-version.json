@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/artifactory/api/search/latestVersion",
+    "queryParameters": {
+      "a": {
+        "contains": "todolist"
+      }
+    }
+    },
+
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-latest-version-api.json",
+    "headers": {
+      "Content-Type": "text/plain"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+- name: nginx
+  image: nginx:1.15.4
+  ports:
+  - containerPort: 80
+  - containerPort: 8080
+- name: debian
+  image: debian:1.4
+  ports:
+  - containerPort: 80
+  - containerPort: 8080
+  restartPolicy: never

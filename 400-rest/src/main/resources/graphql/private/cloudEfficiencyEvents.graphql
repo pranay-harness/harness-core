@@ -1,0 +1,65 @@
+extend type Query {
+  ceEventStats(limit: Int, offset: Int, filters: [EventsFilter], sortCriteria: [EventsSortCriteria]): EventsData
+    @dataFetcher(name: eventsStats)
+  k8sEventYamlDiff(oldYamlRef: String!, newYamlRef: String!): K8sEventYamlDiff @dataFetcher(name: k8sEventYamlDiff)
+}
+
+type EventsData {
+  data: [EventsDataPoint]
+  chartData: [ChartDataPoint]
+}
+
+type K8sEventYamlDiff {
+  data: K8sEventYamls
+}
+
+type K8sEventYamls {
+  oldYaml: String
+  newYaml: String
+}
+
+type ChartDataPoint {
+  time: Number
+  eventsCount: Number
+  notableEventsCount: Number
+}
+
+type EventsDataPoint {
+  clusterId: String
+  clusterName: String
+  namespace: String
+  workloadName: String
+  time: Number
+  source: String
+  type: String
+  eventPriorityType: String
+  details: String
+  oldYamlRef: String
+  newYamlRef: String
+  costChangePercentage: Number
+}
+
+input EventsFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  cluster: IdFilter
+  cloudServiceName: IdFilter
+  billingAmount: IdFilter
+  taskId: IdFilter
+  namespace: IdFilter
+  workloadName: IdFilter
+  workloadType: IdFilter
+  startTime: TimeFilter
+  endTime: TimeFilter
+}
+
+input EventsSortCriteria {
+  sortType: EventsSortType
+  sortOrder: SortOrder
+}
+
+enum EventsSortType {
+  Time
+  Cost
+}

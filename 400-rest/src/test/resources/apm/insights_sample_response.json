@@ -1,0 +1,304 @@
+{
+  "facets": [
+    {
+      "name": [
+        "WebTransaction/Servlet/Register",
+        "testapplication-praveen-testservice-aws-testgcp.3-65d486d9nclpj"
+      ],
+      "total": {
+        "results": [
+          {
+            "count": 1
+          }
+        ],
+        "beginTimeSeconds": 0,
+        "endTimeSeconds": 0,
+        "inspectedCount": 1
+      },
+      "timeSeries": [
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869110,
+          "endTimeSeconds": 1531869170,
+          "inspectedCount": 0
+        },
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869170,
+          "endTimeSeconds": 1531869230,
+          "inspectedCount": 0
+        },
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869230,
+          "endTimeSeconds": 1531869290,
+          "inspectedCount": 0
+        },
+        {
+          "results": [
+            {
+              "count": 1
+            }
+          ],
+          "beginTimeSeconds": 1531869290,
+          "endTimeSeconds": 1531869350,
+          "inspectedCount": 1
+        },
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869350,
+          "endTimeSeconds": 1531869410,
+          "inspectedCount": 0
+        }
+      ]
+    },
+    {
+      "name": [
+        "WebTransaction/Servlet/Register",
+        "testapplication-praveen.testservice-aws.testgcp.36-548c6d6w5jnn"
+      ],
+      "total": {
+        "results": [
+          {
+            "count": 1
+          }
+        ],
+        "beginTimeSeconds": 0,
+        "endTimeSeconds": 0,
+        "inspectedCount": 1
+      },
+      "timeSeries": [
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869110,
+          "endTimeSeconds": 1531869170,
+          "inspectedCount": 0
+        },
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869170,
+          "endTimeSeconds": 1531869230,
+          "inspectedCount": 0
+        },
+        {
+          "results": [
+            {
+              "count": 1
+            }
+          ],
+          "beginTimeSeconds": 1531869230,
+          "endTimeSeconds": 1531869290,
+          "inspectedCount": 1
+        },
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869290,
+          "endTimeSeconds": 1531869350,
+          "inspectedCount": 0
+        },
+        {
+          "results": [
+            {
+              "count": 0
+            }
+          ],
+          "beginTimeSeconds": 1531869350,
+          "endTimeSeconds": 1531869410,
+          "inspectedCount": 0
+        }
+      ]
+    }
+  ],
+  "totalResult": {
+    "total": {
+      "results": [
+        {
+          "count": 2
+        }
+      ],
+      "beginTimeSeconds": 0,
+      "endTimeSeconds": 0,
+      "inspectedCount": 2
+    },
+    "timeSeries": [
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869110,
+        "endTimeSeconds": 1531869170,
+        "inspectedCount": 0
+      },
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869170,
+        "endTimeSeconds": 1531869230,
+        "inspectedCount": 0
+      },
+      {
+        "results": [
+          {
+            "count": 1
+          }
+        ],
+        "beginTimeSeconds": 1531869230,
+        "endTimeSeconds": 1531869290,
+        "inspectedCount": 1
+      },
+      {
+        "results": [
+          {
+            "count": 1
+          }
+        ],
+        "beginTimeSeconds": 1531869290,
+        "endTimeSeconds": 1531869350,
+        "inspectedCount": 1
+      },
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869350,
+        "endTimeSeconds": 1531869410,
+        "inspectedCount": 0
+      }
+    ]
+  },
+  "unknownGroup": {
+    "total": {
+      "results": [
+        {
+          "count": 0
+        }
+      ],
+      "beginTimeSeconds": 0,
+      "endTimeSeconds": 0,
+      "inspectedCount": 0
+    },
+    "timeSeries": [
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869110,
+        "endTimeSeconds": 1531869170,
+        "inspectedCount": 0
+      },
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869170,
+        "endTimeSeconds": 1531869230,
+        "inspectedCount": 0
+      },
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869230,
+        "endTimeSeconds": 1531869290,
+        "inspectedCount": 0
+      },
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869290,
+        "endTimeSeconds": 1531869350,
+        "inspectedCount": 0
+      },
+      {
+        "results": [
+          {
+            "count": 0
+          }
+        ],
+        "beginTimeSeconds": 1531869350,
+        "endTimeSeconds": 1531869410,
+        "inspectedCount": 0
+      }
+    ]
+  },
+  "metadata": {
+    "eventTypes": [
+      "TransactionError"
+    ],
+    "eventType": "TransactionError",
+    "openEnded": true,
+    "beginTime": "2018-07-17T23:11:50Z",
+    "endTime": "2018-07-17T23:16:50Z",
+    "beginTimeMillis": 1531869110703,
+    "endTimeMillis": 1531869410703,
+    "rawSince": "5 MINUTES AGO",
+    "rawUntil": "NOW",
+    "rawCompareWith": "",
+    "guid": "138b76e3-5c44-d54a-5646-44242d5149d8",
+    "routerGuid": "d80ef33e-5d63-a679-ab43-0796152238a9",
+    "messages": [],
+    "facet": [
+      "transactionName",
+      "host"
+    ],
+    "offset": 0,
+    "limit": 10,
+    "contents": {
+      "messages": [],
+      "timeSeries": {
+        "messages": [],
+        "contents": [
+          {
+            "function": "count",
+            "simple": true
+          }
+        ]
+      },
+      "bucketSizeMillis": 60000
+    }
+  }
+}

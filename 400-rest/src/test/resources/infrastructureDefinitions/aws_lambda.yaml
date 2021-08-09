@@ -1,0 +1,14 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: AWS_LAMBDA
+infrastructure:
+- type: AWS_AWS_LAMBDA
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  iamRole: arn:aws:iam::448640225317:role/Okta_AWSPlay_Admin
+  region: us-west-1
+  securityGroupIds:
+  - sg-0525e488ec823e23c
+  subnetIds:
+  - subnet-4b21b72c
+  vpcId: vpc-2e38c849

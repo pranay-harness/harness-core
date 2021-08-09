@@ -1,0 +1,30 @@
+harnessApiVersion: '1.0'
+type: OTHER
+commandUnitType: COMMAND
+commandUnits:
+- command: |-
+    mkdir -p ${WINGS_BACKUP_PATH}
+    mkdir -p ${WINGS_RUNTIME_PATH}
+    mkdir -p ${WINGS_STAGING_PATH}
+  commandUnitType: EXEC
+  deploymentType: SSH
+  name: Setup
+  scriptType: BASH
+- command: |
+    sudo docker pull harness/proxy:${serviceVariable.docker_image_tag}
+
+    sudo docker run -d --name harness-proxy --rm -p 7143:7143 -it -e MANAGER1=${serviceVariable.MANAGER1} -e UI1=${serviceVariable.UI1} -v  ${serviceVariable.WWW_DIR_LOCATION}:/www  harness/proxy:${serviceVariable.docker_image_tag}
+  commandUnitType: EXEC
+  deploymentType: SSH
+  name: Start Proxy
+  scriptType: BASH
+  workingDirectory: ${WINGS_RUNTIME_PATH}
+- command: |-
+    sleep 10
+
+    sudo docker inspect -f {{.State.Running}} harness-proxy
+  commandUnitType: PROCESS_CHECK_RUNNING
+  deploymentType: SSH
+  name: Verify process is running
+  scriptType: BASH
+targetToAllEnv: true

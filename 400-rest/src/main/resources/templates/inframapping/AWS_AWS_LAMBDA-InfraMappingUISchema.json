@@ -1,0 +1,8 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
+  "role": {"ui:help": "IAM role that Lambda assumes when it executes your function to access any other Amazon Web Services (AWS) resources"},
+  "ui:order": [  "name", "autoPopulate","serviceId","deploymentType","computeProviderSettingId","region", "role", "infraMappingType","computeProviderType", "vpcId", "subnetIds", "securityGroupIds"]
+
+}

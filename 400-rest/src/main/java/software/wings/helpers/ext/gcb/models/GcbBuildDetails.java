@@ -1,0 +1,57 @@
+package software.wings.helpers.ext.gcb.models;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.QUEUED;
+import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.WORKING;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
+import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+
+@OwnedBy(CDC)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(NON_NULL)
+@Data
+@Builder
+public class GcbBuildDetails {
+  private String id;
+  private String projectId;
+  private GcbBuildStatus status;
+  private String statusDetail;
+  private GcbBuildSource source;
+  private List<BuildStep> steps;
+  private GcbResult results;
+  private String createTime;
+  private String startTime;
+  private String finishTime;
+  private String timeout;
+  private List<String> images;
+  private String queueTtl;
+  private GcbArtifacts artifacts;
+  private String logsBucket;
+  private SourceProvenance sourceProvenance;
+  private String buildTriggerId;
+  private BuildOptions options;
+  private String logUrl;
+  private Map<String, String> substitutions;
+  private List<String> tags;
+  private List<String> secrets;
+  private Map<String, TimeSpan> timing;
+
+  /**
+   * @return boolean
+   */
+  @JsonIgnore
+  public boolean isWorking() {
+    return status == WORKING || status == QUEUED;
+  }
+}

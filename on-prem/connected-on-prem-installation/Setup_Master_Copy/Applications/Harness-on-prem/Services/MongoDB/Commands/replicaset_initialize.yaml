@@ -1,0 +1,18 @@
+harnessApiVersion: '1.0'
+type: OTHER
+commandUnitType: COMMAND
+commandUnits:
+  - command: |
+        # initialzie replica sets
+
+        sudo docker exec mongoContainer bash -c "mongo --port ${serviceVariable.MONGODB_PORT} < /scripts/initialize_replica_set.js"
+
+        sudo docker exec mongoContainer mongo --port ${serviceVariable.MONGODB_PORT} --eval "rs.status()"
+
+        echo "Sleeping for 10 s"
+        sleep 10
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Initialize replicaset
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+targetToAllEnv: true

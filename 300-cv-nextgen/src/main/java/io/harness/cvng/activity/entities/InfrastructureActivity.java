@@ -1,0 +1,37 @@
+package io.harness.cvng.activity.entities;
+
+import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@JsonTypeName("INFRASTRUCTURE")
+public class InfrastructureActivity extends Activity {
+  @Override
+  public ActivityType getType() {
+    return ActivityType.INFRASTRUCTURE;
+  }
+
+  @Override
+  public void fromDTO(ActivityDTO activityDTO) {
+    addCommonFields(activityDTO);
+  }
+
+  @Override
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstanceBuilder verificationJobInstance) {
+    verificationJobInstance.startTime(getActivityStartTime());
+  }
+
+  @Override
+  public void validateActivityParams() {
+    //
+  }
+
+  @Override
+  public boolean deduplicateEvents() {
+    return true;
+  }
+}

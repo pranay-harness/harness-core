@@ -1,0 +1,122 @@
+package io.harness.cdng.jira.resources.service;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.GARVIT;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
+import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
+import io.harness.delegate.task.jira.JiraTaskNGResponse;
+import io.harness.encryption.SecretRefData;
+import io.harness.exception.HarnessJiraException;
+import io.harness.jira.JiraIssueCreateMetadataNG;
+import io.harness.jira.JiraProjectBasicNG;
+import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.service.DelegateGrpcClientWrapper;
+
+import com.google.common.collect.Lists;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+@OwnedBy(CDC)
+public class JiraResourceServiceTest extends CategoryTest {
+  private static final String ACCOUNT_ID = "accountId";
+  private static final String ORG_IDENTIFIER = "orgIdentifier";
+  private static final String PROJECT_IDENTIFIER = "projectIdentifier";
+  private static final String IDENTIFIER = "identifier";
+
+  private static final IdentifierRef identifierRef = IdentifierRef.builder()
+                                                         .accountIdentifier(ACCOUNT_ID)
+                                                         .identifier(IDENTIFIER)
+                                                         .projectIdentifier(PROJECT_IDENTIFIER)
+                                                         .orgIdentifier(ORG_IDENTIFIER)
+                                                         .build();
+
+  @Mock ConnectorService connectorService;
+  @Mock SecretManagerClientService secretManagerClientService;
+  @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+
+  @InjectMocks JiraResourceServiceImpl jiraResourceService;
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.of(getConnector()));
+    when(secretManagerClientService.getEncryptionDetails(any(), any()))
+        .thenReturn(Lists.newArrayList(EncryptedDataDetail.builder().build()));
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testValidateCredentials() {
+    when(delegateGrpcClientWrapper.executeSyncTask(any())).thenReturn(JiraTaskNGResponse.builder().build());
+    assertThat(jiraResourceService.validateCredentials(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testValidateCredentialsDelegateError() {
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(ErrorNotifyResponseData.builder().errorMessage("exception").build());
+    assertThatThrownBy(() -> jiraResourceService.validateCredentials(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER))
+        .isInstanceOf(HarnessJiraException.class);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetProjects() {
+    List<JiraProjectBasicNG> projects = Collections.emptyList();
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder().projects(projects).build());
+    assertThat(jiraResourceService.getProjects(identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER)).isEqualTo(projects);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetIssueCreateMeta() {
+    JiraIssueCreateMetadataNG createMetadata = new JiraIssueCreateMetadataNG();
+    when(delegateGrpcClientWrapper.executeSyncTask(any()))
+        .thenReturn(JiraTaskNGResponse.builder().issueCreateMetadata(createMetadata).build());
+    assertThat(jiraResourceService.getIssueCreateMetadata(
+                   identifierRef, ORG_IDENTIFIER, PROJECT_IDENTIFIER, null, null, null, false, false))
+        .isEqualTo(createMetadata);
+  }
+
+  private ConnectorResponseDTO getConnector() {
+    ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder()
+                                            .connectorType(ConnectorType.JIRA)
+                                            .connectorConfig(JiraConnectorDTO.builder()
+                                                                 .jiraUrl("url")
+                                                                 .username("username")
+                                                                 .passwordRef(SecretRefData.builder().build())
+                                                                 .build())
+                                            .build();
+    return ConnectorResponseDTO.builder().connector(connectorInfoDTO).build();
+  }
+}

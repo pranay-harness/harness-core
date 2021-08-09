@@ -1,0 +1,974 @@
+package io.harness.cvng.core.services.impl;
+
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.ABORTED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.RUNNING;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.WAITING;
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
+import static io.harness.cvng.core.entities.DeploymentDataCollectionTask.MAX_RETRY_COUNT;
+import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABHIJITH;
+import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.NEMANJA;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VUK;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.MockitoAnnotations.initMocks;
+
+import io.harness.CvNextGenTestBase;
+import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataCollectionExecutionStatus;
+import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.beans.DataCollectionTaskDTO;
+import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
+import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.SplunkDataCollectionInfo;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.DataCollectionTask;
+import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
+import io.harness.cvng.core.entities.DataCollectionTask.Type;
+import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
+import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
+import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.persistence.HPersistence;
+import io.harness.rule.Owner;
+
+import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.Spy;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+
+public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
+  @Inject private DataCollectionTaskService dataCollectionTaskService;
+  @Inject @Spy private DataCollectionTaskServiceImpl dataCollectionTaskServiceImpl;
+  @Inject private HPersistence hPersistence;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private MetricPackService metricPackService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private Clock clock;
+  @Inject private VerificationJobService verificationJobService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+
+  private String cvConfigId;
+  private String accountId;
+  private String orgIdentifier;
+  private String projectIdentifier;
+  private Instant fakeNow;
+  private String dataCollectionWorkerId;
+  private String verificationTaskId;
+  private CVConfig cvConfig;
+
+  @Before
+  public void setupTests() throws IllegalAccessException {
+    initMocks(this);
+    accountId = generateUuid();
+    orgIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    cvConfig = cvConfigService.save(createCVConfig());
+    cvConfigId = cvConfig.getUuid();
+    verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId);
+    dataCollectionTaskService = spy(dataCollectionTaskService);
+    clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
+    FieldUtils.writeField(
+        dataCollectionTaskService, "verificationJobInstanceService", verificationJobInstanceService, true);
+    fakeNow = clock.instant();
+    dataCollectionWorkerId = monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(cvConfig.getAccountId(),
+        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier(),
+        cvConfig.getIdentifier());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSave_handleRecoverNextTask() throws IllegalAccessException {
+    DataCollectionTask dataCollectionTask = create(SUCCESS);
+    clock = Clock.fixed(Instant.now().plus(Duration.ofMinutes(20)), ZoneOffset.UTC);
+
+    FieldUtils.writeField(dataCollectionTaskServiceImpl, "clock", clock, true);
+
+    dataCollectionTaskServiceImpl.save(dataCollectionTask);
+    dataCollectionTaskServiceImpl.handleCreateNextTask(cvConfig);
+
+    DataCollectionTask retrievedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(retrievedDataCollectionTask).isNotNull();
+    assertThat(retrievedDataCollectionTask.getStatus()).isEqualTo(SUCCESS);
+
+    DataCollectionTask dataCollectionTaskQuery = hPersistence.createQuery(DataCollectionTask.class)
+                                                     .filter(DataCollectionTaskKeys.status, QUEUED)
+                                                     .filter(DataCollectionTaskKeys.dataCollectionWorkerId,
+                                                         retrievedDataCollectionTask.getDataCollectionWorkerId())
+                                                     .get();
+
+    assertThat(dataCollectionTaskQuery).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSave_handleRecoverNextLastUpdatedStatusQueued() {
+    DataCollectionTask dataCollectionTask = create(QUEUED);
+
+    dataCollectionTaskServiceImpl.save(dataCollectionTask);
+    dataCollectionTaskServiceImpl.handleCreateNextTask(cvConfig);
+
+    DataCollectionTask retrievedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(retrievedDataCollectionTask).isNotNull();
+    assertThat(retrievedDataCollectionTask.getStatus()).isEqualTo(QUEUED);
+
+    List<DataCollectionTask> dataCollectionTaskQuery = hPersistence.createQuery(DataCollectionTask.class)
+                                                           .filter(DataCollectionTaskKeys.status, QUEUED)
+                                                           .filter(DataCollectionTaskKeys.dataCollectionWorkerId,
+                                                               retrievedDataCollectionTask.getDataCollectionWorkerId())
+                                                           .asList();
+
+    assertThat(dataCollectionTaskQuery).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSave_handleRecoverNextTaskIsAfterTwoMinutes() throws IllegalAccessException {
+    Instant currentTime = clock.instant();
+    Instant instant = currentTime.minusMillis(Duration.ofMinutes(10).toMillis());
+    DataCollectionTask dataCollectionTask = create();
+    clock = Clock.fixed(instant, ZoneOffset.UTC);
+
+    FieldUtils.writeField(dataCollectionTaskServiceImpl, "clock", clock, true);
+
+    dataCollectionTaskServiceImpl.save(dataCollectionTask);
+    dataCollectionTaskServiceImpl.handleCreateNextTask(cvConfig);
+
+    DataCollectionTask retrievedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(retrievedDataCollectionTask).isNotNull();
+
+    List<DataCollectionTask> dataCollectionTaskQuery = hPersistence.createQuery(DataCollectionTask.class)
+                                                           .filter(DataCollectionTaskKeys.status, QUEUED)
+                                                           .filter(DataCollectionTaskKeys.dataCollectionWorkerId,
+                                                               retrievedDataCollectionTask.getDataCollectionWorkerId())
+                                                           .asList();
+
+    assertThat(dataCollectionTaskQuery).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testSave_dataCollectionTask() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTaskService.save(dataCollectionTask);
+    assertThat(dataCollectionTask.getStatus()).isEqualTo(QUEUED);
+    DataCollectionTask updatedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updatedDataCollectionTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(updatedDataCollectionTask.getVerificationTaskId()).isEqualTo(dataCollectionTask.getVerificationTaskId());
+    assertThat(updatedDataCollectionTask.shouldQueueAnalysis()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTask_validAfterWhenNotSetOnGettingNextTask() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTaskService.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask =
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTaskDTO_dtoCreation() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTaskService.save(dataCollectionTask);
+    Optional<DataCollectionTaskDTO> nextTask =
+        dataCollectionTaskService.getNextTaskDTO(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
+    assertThat(nextTask.get().getAccountId()).isEqualTo(dataCollectionTask.getAccountId());
+    assertThat(nextTask.get().getDataCollectionInfo()).isEqualTo(dataCollectionTask.getDataCollectionInfo());
+    assertThat(nextTask.get().getStartTime()).isEqualTo(dataCollectionTask.getStartTime());
+    assertThat(nextTask.get().getEndTime()).isEqualTo(dataCollectionTask.getEndTime());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTaskDTO_notPresent() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTaskService.save(dataCollectionTask);
+    Optional<DataCollectionTaskDTO> nextTask =
+        dataCollectionTaskService.getNextTaskDTO(dataCollectionTask.getAccountId(), "invalid-worker-id");
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTask_validAfterWhenSetToFutureOnGettingNextTask() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTask.setValidAfter(Instant.now().plus(10, ChronoUnit.MINUTES));
+    dataCollectionTaskService.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask =
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTask_validAfterWhenSetToPastOnGettingNextTask() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTask.setValidAfter(clock.instant().minus(10, ChronoUnit.MINUTES));
+    dataCollectionTaskService.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask =
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTask_ExecutionStatusFilterOnGettingNextTask() {
+    DataCollectionTask dataCollectionTask = create();
+    dataCollectionTask.setStatus(DataCollectionExecutionStatus.RUNNING);
+    hPersistence.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask =
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isFalse();
+    dataCollectionTask.setStatus(QUEUED);
+    hPersistence.save(dataCollectionTask);
+    nextTask = dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTask.getUuid());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTask_executionStatusUpdateOnGettingNextTask() {
+    DataCollectionTask dataCollectionTask = createAndSave(QUEUED);
+    Optional<DataCollectionTask> nextTask =
+        dataCollectionTaskService.getNextTask(dataCollectionTask.getAccountId(), dataCollectionWorkerId);
+    assertThat(nextTask.get().getStatus()).isEqualTo(DataCollectionExecutionStatus.RUNNING);
+    DataCollectionTask reloadedDataCollectionTask = getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(reloadedDataCollectionTask.getStatus()).isEqualTo(DataCollectionExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTask_orderOnGettingNextTask() throws InterruptedException {
+    List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
+    long time = clock.millis();
+    for (int i = 0; i < 5; i++) {
+      DataCollectionTask dataCollectionTask = create();
+      // dataCollectionTask.setLastUpdatedAt(time + i);
+      // TODO: find a way to set lastUpdatedAt.
+      Thread.sleep(1);
+      dataCollectionTasks.add(dataCollectionTask);
+      hPersistence.save(dataCollectionTask);
+    }
+    Thread.sleep(1);
+    // dataCollectionTasks.get(0).setLastUpdatedAt(time + 6);
+    hPersistence.save(dataCollectionTasks.get(0));
+    for (int i = 1; i < 5; i++) {
+      Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+      assertThat(nextTask.isPresent()).isTrue();
+      assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTasks.get(i).getUuid());
+    }
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getUuid()).isEqualTo(dataCollectionTasks.get(0).getUuid());
+    assertThat(dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId).isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetNextTask_taskPickedUpAgainAfterNotCompletedForMoreThanFiveMinutes() throws IllegalAccessException {
+    DataCollectionTask dataCollectionTask = create(DataCollectionExecutionStatus.RUNNING);
+    clock = Clock.fixed(Instant.now().plus(15, ChronoUnit.MINUTES), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    hPersistence.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    assertThat(nextTask.get().getRetryCount()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetNextTask_withBothQueuedAndRunningTask() throws IllegalAccessException {
+    clock = Clock.fixed(Instant.now().plus(6, ChronoUnit.MINUTES), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+
+    DataCollectionTask queuedDataCollectionTask = create(QUEUED);
+    DataCollectionTask runningDataCollectionTask = create(DataCollectionExecutionStatus.RUNNING);
+    hPersistence.save(queuedDataCollectionTask);
+    hPersistence.save(runningDataCollectionTask);
+
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+    clock = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetNextTask_withAbortedTask() throws IllegalAccessException {
+    DataCollectionTask abortedDataCollectionTask = create(ABORTED);
+    hPersistence.save(abortedDataCollectionTask);
+
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testGetNextTask_withExceededRetryCountDeployment() {
+    DataCollectionTask dataCollectionTask = create(QUEUED, Type.DEPLOYMENT);
+    dataCollectionTask.setRetryCount(MAX_RETRY_COUNT + 1);
+    hPersistence.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextTask_withExceededRetryCountServiceGuard() {
+    DataCollectionTask dataCollectionTask = create(QUEUED, Type.SERVICE_GUARD);
+    dataCollectionTask.setRetryCount(MAX_RETRY_COUNT + 1);
+    hPersistence.save(dataCollectionTask);
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetValidUntil_dataCollectionTaskValidUntilIsBeingSetToOneMonth() {
+    DataCollectionTask dataCollectionTask = create(DataCollectionExecutionStatus.SUCCESS);
+    assertThat(dataCollectionTask.getValidUntil().getTime() > Instant.now().toEpochMilli()).isTrue();
+    assertThat(dataCollectionTask.getValidUntil().getTime() >= Instant.now().plus(29, ChronoUnit.DAYS).toEpochMilli())
+        .isTrue();
+    assertThat(dataCollectionTask.getValidUntil().getTime() <= Instant.now().plus(31, ChronoUnit.DAYS).toEpochMilli())
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDataCollectionTask_byId() {
+    DataCollectionTask dataCollectionTask = createAndSave(DataCollectionExecutionStatus.SUCCESS);
+    assertThat(dataCollectionTask.getUuid())
+        .isEqualTo(dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid()).getUuid());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_taskStatusToSuccess() {
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updated.getStatus()).isEqualTo(DataCollectionExecutionStatus.SUCCESS);
+    assertThat(updated.getException()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_multipleCallsWithSuccessAndThenFailure() {
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTaskResult failure = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                           .status(DataCollectionExecutionStatus.FAILED)
+                                           .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                           .exception("socket timeout")
+                                           .build();
+    DataCollectionTask updatedTask = hPersistence.get(DataCollectionTask.class, dataCollectionTask.getUuid());
+    assertThat(updatedTask.getStatus()).isEqualTo(SUCCESS);
+    assertThat(updatedTask.getException()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_taskStatusSuccessShouldCreateNextTask() {
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING);
+    DataCollectionTaskResult result = DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask nextTask = hPersistence.createQuery(DataCollectionTask.class)
+                                      .filter(DataCollectionTaskKeys.accountId, accountId)
+                                      .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                      .filter(DataCollectionTaskKeys.status, QUEUED)
+                                      .order(DataCollectionTaskKeys.lastUpdatedAt)
+                                      .get();
+
+    assertThat(nextTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(nextTask.getStartTime()).isEqualTo(dataCollectionTask.getEndTime());
+    assertThat(nextTask.getEndTime()).isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES));
+    assertThat(nextTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
+    assertThat(nextTask.getValidAfter())
+        .isEqualTo(dataCollectionTask.getEndTime().plus(5, ChronoUnit.MINUTES).plus(DATA_COLLECTION_DELAY));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_disabledCVConfigShouldNotCreateNextTask() {
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING);
+    DataCollectionTaskResult result = DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    cvConfigService.setHealthMonitoringFlag(
+        accountId, orgIdentifier, projectIdentifier, Collections.singletonList(cvConfig.getIdentifier()), false);
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask nextTask = hPersistence.createQuery(DataCollectionTask.class)
+                                      .filter(DataCollectionTaskKeys.accountId, accountId)
+                                      .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                      .filter(DataCollectionTaskKeys.status, QUEUED)
+                                      .order(DataCollectionTaskKeys.lastUpdatedAt)
+                                      .get();
+
+    assertThat(nextTask).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_ifLastSuccessIsBefore2Hour() throws IllegalAccessException {
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING);
+    DataCollectionTaskResult result = DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+
+    Clock clock = Clock.fixed(this.clock.instant().plus(Duration.ofHours(3)), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask nextTask = hPersistence.createQuery(DataCollectionTask.class)
+                                      .filter(DataCollectionTaskKeys.accountId, accountId)
+                                      .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                      .filter(DataCollectionTaskKeys.status, QUEUED)
+                                      .order(DataCollectionTaskKeys.lastUpdatedAt)
+                                      .get();
+
+    assertThat(nextTask.getStatus()).isEqualTo(QUEUED);
+    Instant expectedStartTime = Instant.parse("2020-04-22T11:00:00Z");
+    assertThat(nextTask.getStartTime()).isEqualTo(expectedStartTime);
+    assertThat(nextTask.getEndTime()).isEqualTo(expectedStartTime.plus(5, ChronoUnit.MINUTES));
+    assertThat(nextTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
+    assertThat(nextTask.getValidAfter())
+        .isEqualTo(expectedStartTime.plus(5, ChronoUnit.MINUTES).plus(DATA_COLLECTION_DELAY));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_retryFailedTask() {
+    Exception exception = new RuntimeException("exception msg");
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.FAILED)
+                                          .stacktrace(ExceptionUtils.getStackTrace(exception))
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .exception(exception.getMessage())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updated.getStatus()).isEqualTo(QUEUED);
+    assertThat(updated.getRetryCount()).isEqualTo(1);
+    assertThat(updated.getException()).isEqualTo(exception.getMessage());
+    assertThat(updated.getStacktrace()).isEqualTo(ExceptionUtils.getStackTrace(exception));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_deploymentDataCollectionDontRetryIfRetryCountExceeds() {
+    Exception exception = new RuntimeException("exception msg");
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING, Type.DEPLOYMENT);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.FAILED)
+                                          .stacktrace(ExceptionUtils.getStackTrace(exception))
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .exception(exception.getMessage())
+                                          .build();
+    MAX_RETRY_COUNT = 2;
+    int maxRetry = MAX_RETRY_COUNT;
+    IntStream.range(0, maxRetry).forEach(index -> {
+      dataCollectionTaskService.updateTaskStatus(result);
+      DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
+      assertThat(updated.getStatus()).isEqualTo(QUEUED);
+      assertThat(updated.getRetryCount()).isEqualTo(index + 1);
+      assertThat(updated.getException()).isEqualTo(exception.getMessage());
+      assertThat(updated.getStacktrace()).isEqualTo(ExceptionUtils.getStackTrace(exception));
+      markRunning(updated.getUuid());
+    });
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updated.getStatus()).isEqualTo(DataCollectionExecutionStatus.FAILED);
+    assertThat(updated.getRetryCount()).isEqualTo(maxRetry);
+    assertThat(updated.getException()).isEqualTo(exception.getMessage());
+    assertThat(updated.getStacktrace()).isEqualTo(ExceptionUtils.getStackTrace(exception));
+
+    VerificationJobInstance jobInstanceWithProgressLog =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(jobInstanceWithProgressLog.getProgressLogs()).hasSize(1);
+    assertThat(jobInstanceWithProgressLog.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(jobInstanceWithProgressLog.getProgressLogs().get(0))
+        .isEqualTo(VerificationJobInstance.DataCollectionProgressLog.builder()
+                       .executionStatus(DataCollectionExecutionStatus.FAILED)
+                       .verificationTaskId(verificationTaskId)
+                       .startTime(dataCollectionTask.getStartTime())
+                       .createdAt(clock.instant())
+                       .endTime(dataCollectionTask.getEndTime())
+                       .log("Data collection failed with exception: exception msg")
+                       .isFinalState(false)
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_deploymentSuccessful() {
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING, Type.DEPLOYMENT);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updated.getStatus()).isEqualTo(SUCCESS);
+    assertThat(updated.getRetryCount()).isEqualTo(0);
+    assertThat(updated.getException()).isNull();
+    assertThat(updated.getStacktrace()).isNull();
+    VerificationJobInstance jobInstanceWithProgressLog =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(jobInstanceWithProgressLog.getProgressLogs()).hasSize(1);
+    assertThat(jobInstanceWithProgressLog.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(jobInstanceWithProgressLog.getProgressLogs().get(0))
+        .isEqualTo(VerificationJobInstance.DataCollectionProgressLog.builder()
+                       .executionStatus(SUCCESS)
+                       .verificationTaskId(verificationTaskId)
+                       .startTime(dataCollectionTask.getStartTime())
+                       .createdAt(clock.instant())
+                       .endTime(dataCollectionTask.getEndTime())
+                       .log("Data collection task successful")
+                       .isFinalState(false)
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_serviceGuardCreateNewTaskIfRetryTaskIsTooOld() throws IllegalAccessException {
+    Exception exception = new RuntimeException("exception msg");
+    DataCollectionTask dataCollectionTask = createAndSave(RUNNING, Type.SERVICE_GUARD);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.FAILED)
+                                          .stacktrace(ExceptionUtils.getStackTrace(exception))
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .exception(exception.getMessage())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    markRunning(dataCollectionTask.getUuid());
+    Clock clock = Clock.fixed(this.clock.instant().plus(Duration.ofHours(3)), ZoneOffset.UTC);
+    FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
+    assertThat(updated.getStatus()).isEqualTo(DataCollectionExecutionStatus.FAILED);
+    assertThat(updated.getRetryCount()).isEqualTo(1);
+    assertThat(updated.getException()).isEqualTo("exception msg");
+    DataCollectionTask newTask =
+        hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.status, QUEUED).get();
+    assertThat(newTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(newTask.getRetryCount()).isEqualTo(1);
+    assertThat(newTask.getValidAfter()).isEqualTo(Instant.parse("2020-04-22T13:02:16Z"));
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_DeploymentWithAbortedNextTask() throws IllegalAccessException {
+    createVerificationJobInstance();
+    DataCollectionTask dataCollectionTask2 = createAndSave(ABORTED, Type.DEPLOYMENT);
+    DataCollectionTask dataCollectionTask1 = create(RUNNING, Type.DEPLOYMENT);
+    dataCollectionTask1.setNextTaskId(dataCollectionTask2.getUuid());
+    hPersistence.save(dataCollectionTask1);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask1.getUuid())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask dataCollectionTask2FromDb =
+        dataCollectionTaskService.getDataCollectionTask(dataCollectionTask2.getUuid());
+    // Assert that aborted task is not queued
+    assertThat(dataCollectionTask2FromDb.getStatus()).isEqualTo(ABORTED);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void handleCreateNextTask_forFirstTaskAndMetricsConfig() {
+    AppDynamicsCVConfig cvConfig = getCVConfig();
+    dataCollectionTaskService.handleCreateNextTask(cvConfig);
+    DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
+                                       .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                       .get();
+    assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(AppDynamicsDataCollectionInfo.class);
+    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
+    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+    assertThat(savedTask.getVerificationTaskId())
+        .isEqualTo(verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId));
+    assertThat(savedTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
+  }
+
+  @Test
+  @Owner(developers = NEMANJA)
+  @Category(UnitTests.class)
+  public void testDeleteDataCollectionTask() throws IllegalAccessException {
+    String taskId = generateUuid();
+    VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
+    FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
+    dataCollectionTaskService.deletePerpetualTasks(accountId, taskId);
+    verify(verificationManagerService, times(1)).deletePerpetualTask(accountId, taskId);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testAbortDataCollectionTasks() {
+    List<DataCollectionTask> dataCollectionTasks =
+        Arrays.stream(DataCollectionExecutionStatus.values())
+            .map(status -> create(status, Type.DEPLOYMENT))
+            .peek(dataCollectionTask -> dataCollectionTask.setVerificationTaskId(verificationTaskId))
+            .collect(Collectors.toList());
+    hPersistence.save(dataCollectionTasks);
+    dataCollectionTaskService.abortDeploymentDataCollectionTasks(Lists.newArrayList(verificationTaskId));
+    // WAITING and QUEUED status needs to changed to ABORTED
+    dataCollectionTasks.stream()
+        .filter(dataCollectionTask
+            -> dataCollectionTask.getStatus().equals(WAITING) || dataCollectionTask.getStatus().equals(QUEUED))
+        .map(dataCollectionTask -> dataCollectionTask.getUuid())
+        .forEach(uuid -> {
+          DataCollectionTask dataCollectionTask = hPersistence.get(DataCollectionTask.class, uuid);
+          assertThat(dataCollectionTask.getStatus()).isEqualTo(ABORTED);
+        });
+    // status other than WAITING and QUEUED should remain the same
+    dataCollectionTasks.stream()
+        .filter(dataCollectionTask
+            -> !(dataCollectionTask.getStatus().equals(WAITING) || dataCollectionTask.getStatus().equals(QUEUED)))
+        .forEach(dataCollectionTask -> {
+          DataCollectionTask updatedDataCollectionTask =
+              hPersistence.get(DataCollectionTask.class, dataCollectionTask.getUuid());
+          assertThat(updatedDataCollectionTask.getStatus()).isEqualTo(dataCollectionTask.getStatus());
+        });
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testHandleCreateNextTask_forLogConfig() {
+    SplunkCVConfig cvConfig = getSplunkCVConfig();
+    dataCollectionTaskService.handleCreateNextTask(cvConfig);
+    DataCollectionTask savedTask = hPersistence.createQuery(DataCollectionTask.class)
+                                       .filter(DataCollectionTaskKeys.verificationTaskId, verificationTaskId)
+                                       .get();
+    assertThat(savedTask.getStatus()).isEqualTo(QUEUED);
+    assertThat(savedTask.getDataCollectionInfo()).isInstanceOf(SplunkDataCollectionInfo.class);
+    assertThat(savedTask.getEndTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getEndTime());
+    assertThat(savedTask.getStartTime()).isEqualTo(cvConfig.getFirstTimeDataCollectionTimeRange().getStartTime());
+    assertThat(savedTask.getDataCollectionWorkerId())
+        .isEqualTo(monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
+            accountId, orgIdentifier, projectIdentifier, cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier()));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateSeqTasks() {
+    List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
+    for (int minute = 0; minute < 10; minute++) {
+      DataCollectionTask dataCollectionTask = create();
+      dataCollectionTasks.add(dataCollectionTask);
+    }
+    dataCollectionTaskService.createSeqTasks(dataCollectionTasks);
+    for (int i = 0; i < dataCollectionTasks.size(); i++) {
+      dataCollectionTasks.set(i, dataCollectionTaskService.getDataCollectionTask(dataCollectionTasks.get(i).getUuid()));
+    }
+    assertThat(dataCollectionTasks.get(0).getStatus()).isEqualTo(QUEUED);
+    for (int i = 0; i < 9; i++) {
+      assertThat(dataCollectionTasks.get(i + 1).getUuid()).isEqualTo(dataCollectionTasks.get(i).getNextTaskId());
+    }
+    assertThat(dataCollectionTasks.get(dataCollectionTasks.size() - 1).getNextTaskId()).isNull();
+    for (int i = 1; i < 10; i++) {
+      assertThat(dataCollectionTasks.get(i).getStatus()).isEqualTo(DataCollectionExecutionStatus.WAITING);
+    }
+    assertThat(fakeNow).isEqualTo(dataCollectionTasks.get(0).getValidAfter());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetNextTaskDTOs() {
+    hPersistence.save(create());
+    List<DataCollectionTaskDTO> nextTaskDTOs =
+        dataCollectionTaskService.getNextTaskDTOs(accountId, dataCollectionWorkerId);
+    assertThat(nextTaskDTOs.size()).isEqualTo(1);
+    int numOfTasks = 100;
+    List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
+    for (int i = 0; i < numOfTasks; i++) {
+      dataCollectionTasks.add(create());
+    }
+    hPersistence.save(dataCollectionTasks);
+    nextTaskDTOs = dataCollectionTaskService.getNextTaskDTOs(accountId, dataCollectionWorkerId);
+    assertThat(nextTaskDTOs.size()).isEqualTo(CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS);
+  }
+
+  private AppDynamicsCVConfig getCVConfig() {
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setUuid(cvConfigId);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setApplicationName("cv-app");
+    cvConfig.setTierName("docker-tier");
+    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
+    cvConfig.setConnectorIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier("serviceIdentifier");
+    cvConfig.setEnvIdentifier("envIdentifier");
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
+    cvConfig.setApplicationName("applicationName");
+    cvConfig.setTierName("tierName");
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setEnabled(true);
+    cvConfig.setMetricPack(
+        metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS)
+            .get(0));
+    return cvConfig;
+  }
+
+  private SplunkCVConfig getSplunkCVConfig() {
+    SplunkCVConfig cvConfig = new SplunkCVConfig();
+    cvConfig.setEnabled(true);
+    cvConfig.setCreatedAt(clock.millis());
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setUuid(cvConfigId);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
+    cvConfig.setConnectorIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier("serviceIdentifier");
+    cvConfig.setEnvIdentifier("envIdentifier");
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
+    cvConfig.setQuery("excetpion");
+    cvConfig.setServiceInstanceIdentifier("host");
+    return cvConfig;
+  }
+
+  private DataCollectionTask getDataCollectionTask(String dataCollectionTaskId) {
+    return hPersistence.get(DataCollectionTask.class, dataCollectionTaskId);
+  }
+
+  private DataCollectionTask create() {
+    return create(QUEUED);
+  }
+
+  private DataCollectionInfo createDataCollectionInfo() {
+    return AppDynamicsDataCollectionInfo.builder().build();
+  }
+
+  private DataCollectionTask create(DataCollectionExecutionStatus executionStatus) {
+    return create(executionStatus, Type.SERVICE_GUARD);
+  }
+  private DataCollectionTask create(DataCollectionExecutionStatus executionStatus, Type type) {
+    if (type == Type.SERVICE_GUARD) {
+      return ServiceGuardDataCollectionTask.builder()
+          .verificationTaskId(verificationTaskId)
+          .type(Type.SERVICE_GUARD)
+          .dataCollectionWorkerId(dataCollectionWorkerId)
+          .accountId(accountId)
+          .startTime(fakeNow.minus(Duration.ofMinutes(7)))
+          .endTime(fakeNow.minus(Duration.ofMinutes(2)))
+          .status(executionStatus)
+          .dataCollectionInfo(createDataCollectionInfo())
+          .build();
+    } else {
+      return DeploymentDataCollectionTask.builder()
+          .verificationTaskId(verificationTaskId)
+          .dataCollectionWorkerId(dataCollectionWorkerId)
+          .type(Type.DEPLOYMENT)
+          .accountId(accountId)
+          .startTime(fakeNow.minus(Duration.ofMinutes(7)))
+          .endTime(fakeNow.minus(Duration.ofMinutes(2)))
+          .status(executionStatus)
+          .dataCollectionInfo(createDataCollectionInfo())
+          .build();
+    }
+  }
+
+  private DataCollectionTask createAndSave(DataCollectionExecutionStatus executionStatus) {
+    DataCollectionTask dataCollectionTask = create(executionStatus);
+    hPersistence.save(dataCollectionTask);
+    return dataCollectionTask;
+  }
+
+  private DataCollectionTask createAndSave(DataCollectionExecutionStatus executionStatus, Type type) {
+    DataCollectionTask dataCollectionTask = create(executionStatus, type);
+    hPersistence.save(dataCollectionTask);
+    return dataCollectionTask;
+  }
+
+  private CVConfig createCVConfig() {
+    SplunkCVConfig cvConfig = new SplunkCVConfig();
+    fillCommon(cvConfig);
+    cvConfig.setQuery("exception");
+    cvConfig.setServiceInstanceIdentifier(generateUuid());
+    return cvConfig;
+  }
+
+  private void fillCommon(CVConfig cvConfig) {
+    cvConfig.setVerificationType(VerificationType.LOG);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setEnabled(true);
+    cvConfig.setConnectorIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    cvConfig.setProductName(generateUuid());
+  }
+
+  private VerificationJobInstance createVerificationJobInstance() {
+    VerificationJobDTO verificationJobDTO = newVerificationJobDTO();
+    verificationJobService.create(accountId, verificationJobDTO);
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(
+        accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
+            .accountId(accountId)
+            .executionStatus(ExecutionStatus.QUEUED)
+            .deploymentStartTime(Instant.ofEpochMilli(clock.millis()))
+            .resolvedJob(verificationJob)
+            .startTime(Instant.ofEpochMilli(clock.millis() + Duration.ofMinutes(2).toMillis()))
+            .build();
+
+    verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
+
+    verificationJobInstanceService.create(verificationJobInstance);
+    verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
+    return verificationJobInstance;
+  }
+  private VerificationJobDTO newVerificationJobDTO() {
+    TestVerificationJobDTO testVerificationJob = new TestVerificationJobDTO();
+    testVerificationJob.setIdentifier(generateUuid());
+    testVerificationJob.setJobName(generateUuid());
+    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
+    testVerificationJob.setMonitoringSources(Arrays.asList(generateUuid()));
+    testVerificationJob.setServiceIdentifier(generateUuid());
+    testVerificationJob.setOrgIdentifier(orgIdentifier);
+    testVerificationJob.setProjectIdentifier(projectIdentifier);
+    testVerificationJob.setEnvIdentifier(generateUuid());
+    testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJob.setDuration("15m");
+    testVerificationJob.setBaselineVerificationJobInstanceId(generateUuid());
+    return testVerificationJob;
+  }
+
+  private void markRunning(String uuid) {
+    UpdateOperations<DataCollectionTask> updateOperations =
+        hPersistence.createUpdateOperations(DataCollectionTask.class).set(DataCollectionTaskKeys.status, RUNNING);
+    Query<DataCollectionTask> query =
+        hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.uuid, uuid);
+    hPersistence.update(query, updateOperations);
+  }
+}

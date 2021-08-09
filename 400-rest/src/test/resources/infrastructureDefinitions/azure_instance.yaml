@@ -1,0 +1,17 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AZURE
+deploymentType: SSH
+infrastructure:
+- type: AZURE_INFRA
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  hostConnectionAttrsName: TEST_CLOUD_PROVIDER
+  resourceGroup: default
+  subscriptionId: 12d2db62-5aa9-471d-84bb-faa489b3e319
+  tags:
+  - key: name
+    value: name
+  - key: managed-by
+    value: someone
+scopedServices:
+- httpd

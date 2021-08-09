@@ -1,0 +1,20 @@
+extend type Query {
+  ssoProvider(ssoProviderId: String!): SSOProvider @dataFetcher(name: ssoProvider)
+  ssoProviders(limit: Int!, offset: Int): SSOProviderConnection @dataFetcher(name: ssoProviderConnection)
+}
+
+type SSOProvider {
+  id: String
+  name: String
+  ssoType: SSOType
+}
+
+enum SSOType {
+  LDAP
+  SAML
+}
+
+type SSOProviderConnection {
+  pageInfo: PageInfo
+  nodes: [SSOProvider]
+}

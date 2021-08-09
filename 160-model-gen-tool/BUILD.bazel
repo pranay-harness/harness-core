@@ -1,0 +1,35 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/macros.bzl", "run_analysis")
+
+java_binary(
+    name = "module",
+    testonly = True,
+    srcs = glob(["src/main/java/**/*.java"]),
+    main_class = "io.harness.DataGenApplication",
+    resources = [
+        "//160-model-gen-tool/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//230-model-test:module",
+        "//400-rest:module",
+        "//990-commons-test:module",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:com_github_scribejava_scribejava_apis",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_clojure_clojure",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+run_analysis(
+    run_duplicated = False,
+    run_sonar = False,
+)

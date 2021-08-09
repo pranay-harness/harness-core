@@ -1,0 +1,78 @@
+pipeline:
+  name: Production Primary Deployment
+  identifier: prod_primary_deployment
+  stages:
+    - stage:
+        identifier: deploymentStage1
+        name: deployment-stage-1
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              name: manager
+              identifier: manager
+            serviceDefinition:
+              type: "Kubernetes"
+              spec:
+                artifacts:
+                  primary:
+                    type: Dockerhub
+                    spec:
+                      connectorRef: myDocker1
+                      imagePath: "library/ubuntu"
+                      tag: "latest"
+                      tagRegex: "groov*"
+                  sidecars:
+                    - sidecar:
+                        identifier: sidecar1
+                        type: Dockerhub
+                        spec:
+                          connectorRef: myDocker2
+                          imagePath: "library/redis"
+                          tag: "latest"
+                    - sidecar:
+                        identifier: sidecar2
+                        type: Dockerhub
+                        spec:
+                          connectorRef: myDocker3
+                          imagePath: "library/mongo"
+                          tag: "latest"
+          execution:
+            steps:
+              - step:
+                  name: "Rollout Deployment"
+                  identifier: rollout-deployment
+                  type: Http
+                  timeout: 100s
+                  spec:
+                    method: GET
+                    url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5
+    - stage:
+        identifier: deploymentStage2
+        name: deployment-stage-2
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              name: delegate
+              identifier: delegate
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                artifacts:
+                  primary:
+                    type: Dockerhub
+                    spec:
+                      connectorRef: myDocker4
+                      imagePath: "library/nginx"
+                      tag: "latest"
+          execution:
+            steps:
+              - step:
+                  name: "http"
+                  identifier: http
+                  type: Http
+                  timeout: 100s
+                  spec:
+                    method: GET
+                    url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5

@@ -1,0 +1,73 @@
+extend type Query {
+  # Get details about a Harness Service.
+  service(serviceId: String!): Service @dataFetcher(name: service)
+
+  # Get a list of Harness Services, by applicationId. This returns paginated data.
+  services(filters: [ServiceFilter], limit: Int!, offset: Int): ServiceConnection @dataFetcher(name: serviceConnection)
+}
+
+# Service Type
+type Service {
+  # Service ID
+  id: String
+  # Name of the Service
+  name: String
+  # Description of the Service
+  description: String
+  # Artifact type deployed by this Service
+  artifactType: String
+  # Deployment Type: SSH, Helm, or Kubernetes
+  deploymentType: String
+
+  createdAt: DateTime
+  createdBy: User
+
+  artifactSources: [ArtifactSource]
+    @dataFetcher(
+      name: serviceArtifactSourceConnection
+      contextFieldArgsMap: "{ \"serviceId\": \"id\", \"applicationId\": \"applicationId\"}"
+    )
+}
+
+type ServiceConnection {
+  pageInfo: PageInfo
+  nodes: [Service]
+}
+
+input ServiceFilter {
+  application: IdFilter
+  service: IdFilter
+  tag: ServiceTagFilter
+  deploymentType: DeploymentTypeFilter
+}
+
+input DeploymentTypeFilter {
+  operator: EnumOperator
+  values: [DeploymentType]
+}
+
+enum DeploymentType {
+  SSH
+  AWS_CODEDEPLOY
+  ECS
+  SPOTINST
+  KUBERNETES
+  HELM
+  AWS_LAMBDA
+  AMI
+  WINRM
+  PCF
+  AZURE_VMSS
+  AZURE_WEBAPP
+  CUSTOM
+}
+
+input ServiceTagFilter {
+  entityType: ServiceTagType
+  tags: [TagInput]
+}
+
+enum ServiceTagType {
+  APPLICATION
+  SERVICE
+}

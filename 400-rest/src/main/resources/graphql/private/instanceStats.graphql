@@ -1,0 +1,23 @@
+enum InstanceEntityAggregation {
+  Application
+  Service
+  Environment
+  CloudProvider
+  InstanceType
+}
+
+input InstanceAggregation {
+  entityAggregation: InstanceEntityAggregation
+  timeAggregation: TimeSeriesAggregation
+  tagAggregation: InstanceTagAggregation
+}
+
+input InstanceTagAggregation {
+  entityType: InstanceTagType
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics about instances.
+  instanceStats(filters: [InstanceFilter], groupBy: [InstanceAggregation]): Data @dataFetcher(name: instanceStats)
+}

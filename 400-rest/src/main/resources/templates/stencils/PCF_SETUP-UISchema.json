@@ -1,0 +1,3 @@
+{
+  "ui:order": ["pcfAppName", "useCurrentRunningCount", "currentRunningCount", "maxInstances", "resizeStrategy", "route", "timeoutIntervalInMinutes", "olderActiveVersionCountToKeep"]
+}

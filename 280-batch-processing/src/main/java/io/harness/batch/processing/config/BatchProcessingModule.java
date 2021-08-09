@@ -1,0 +1,125 @@
+package io.harness.batch.processing.config;
+
+import static io.harness.AuthorizationServiceHeader.BATCH_PROCESSING;
+
+import io.harness.annotations.retry.MethodExecutionHelper;
+import io.harness.annotations.retry.RetryOnException;
+import io.harness.annotations.retry.RetryOnExceptionInterceptor;
+import io.harness.batch.processing.metrics.CeCloudMetricsService;
+import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
+import io.harness.batch.processing.metrics.ProductMetricsService;
+import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
+import io.harness.batch.processing.tasklet.util.ClusterHelperImpl;
+import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
+import io.harness.ccm.anomaly.service.itfc.AnomalyService;
+import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudServiceImpl;
+import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.intf.ClusterRecordService;
+import io.harness.ccm.commons.service.intf.InstanceDataService;
+import io.harness.ccm.communication.CESlackWebhookService;
+import io.harness.ccm.communication.CESlackWebhookServiceImpl;
+import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewCustomFieldService;
+import io.harness.ccm.views.service.ViewsBillingService;
+import io.harness.ccm.views.service.impl.CEViewServiceImpl;
+import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
+import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
+import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.ff.FeatureFlagService;
+import io.harness.ff.FeatureFlagServiceImpl;
+import io.harness.govern.ProviderMethodInterceptor;
+import io.harness.lock.PersistentLocker;
+import io.harness.lock.noop.PersistentNoopLocker;
+import io.harness.mongo.MongoConfig;
+import io.harness.persistence.HPersistence;
+import io.harness.remote.client.ClientMode;
+import io.harness.threading.ExecutorModule;
+import io.harness.time.TimeModule;
+
+import software.wings.dl.WingsMongoPersistence;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
+import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
+import software.wings.service.impl.instance.DeploymentServiceImpl;
+import software.wings.service.impl.security.NoOpSecretManagerImpl;
+import software.wings.service.intfc.ce.CeAccountExpirationChecker;
+import software.wings.service.intfc.instance.CloudToHarnessMappingService;
+import software.wings.service.intfc.instance.DeploymentService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
+import software.wings.service.intfc.security.SecretManager;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.matcher.Matchers;
+import java.util.concurrent.Executors;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class BatchProcessingModule extends AbstractModule {
+  BatchMainConfig batchMainConfig;
+  BatchProcessingModule(BatchMainConfig batchMainConfig) {
+    this.batchMainConfig = batchMainConfig;
+  }
+  @Override
+  protected void configure() {
+    bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
+    bind(HPersistence.class).to(WingsMongoPersistence.class);
+    bind(WingsPersistence.class).to(WingsMongoPersistence.class);
+    bind(DeploymentService.class).to(DeploymentServiceImpl.class);
+    bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
+    bind(ProductMetricsService.class).to(ProductMetricsServiceImpl.class);
+    bind(CESlackWebhookService.class).to(CESlackWebhookServiceImpl.class);
+    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
+    bind(CeCloudMetricsService.class).to(CeCloudMetricsServiceImpl.class);
+    bind(CEViewService.class).to(CEViewServiceImpl.class);
+    bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
+    bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
+    bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
+    bind(AnomalyService.class).to(AnomalyServiceImpl.class);
+    install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
+        batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId(), ClientMode.PRIVILEGED));
+    bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
+    bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
+    bind(RecommendationCrudService.class).to(RecommendationCrudServiceImpl.class);
+    bind(ClusterHelper.class).to(ClusterHelperImpl.class);
+
+    bindCFServices();
+
+    bindRetryOnExceptionInterceptor();
+  }
+
+  /**
+   * This dependency only exists for the CFMigrationService which BatchProcessing will never use. However,
+   * since it is sharing the same module, we have to provide an implementation for the same. Hence we are using
+   * NOOP over here
+   */
+  private void bindCFServices() {
+    ExecutorModule.getInstance().setExecutorService(Executors.newCachedThreadPool());
+    install(ExecutorModule.getInstance());
+    install(TimeModule.getInstance());
+
+    bind(PersistentLocker.class).to(PersistentNoopLocker.class).in(Scopes.SINGLETON);
+    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
+  }
+
+  private void bindRetryOnExceptionInterceptor() {
+    bind(MethodExecutionHelper.class); // untargetted binding for eager loading
+    ProviderMethodInterceptor retryOnExceptionInterceptor =
+        new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
+  }
+
+  @Provides
+  @Singleton
+  MongoConfig mongoConfig(BatchMainConfig batchMainConfig) {
+    return batchMainConfig.getHarnessMongo();
+  }
+}

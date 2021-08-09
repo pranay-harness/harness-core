@@ -1,0 +1,15 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: AMI
+infrastructure:
+- type: AWS_AMI
+  amiDeploymentType: AWS_ASG
+  asgIdentifiesWorkload: false
+  autoScalingGroupName: ASG
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  hostNameConvention: ${host.ec2Instance.publicDnsName.split('\.')[0]}
+  region: us-east-1
+  useTrafficShift: false
+scopedServices:
+- httpd

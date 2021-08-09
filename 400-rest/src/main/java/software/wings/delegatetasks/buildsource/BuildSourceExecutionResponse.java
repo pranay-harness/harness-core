@@ -1,0 +1,34 @@
+package software.wings.delegatetasks.buildsource;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.DelegateMetaInfo;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.logging.CommandExecutionStatus;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+/**
+ * Created by anubhaw on 7/20/18.
+ */
+@OwnedBy(CDC)
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+public class BuildSourceExecutionResponse implements DelegateTaskNotifyResponseData {
+  private DelegateMetaInfo delegateMetaInfo;
+  private BuildSourceResponse buildSourceResponse;
+  private String errorMessage;
+  private CommandExecutionStatus commandExecutionStatus;
+  private String artifactStreamId;
+}

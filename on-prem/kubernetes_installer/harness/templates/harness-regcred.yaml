@@ -1,0 +1,8 @@
+apiVersion: v1
+stringData:
+  .dockercfg: '{"{{ .Values.docker.registry.authsUrl }}":{"username":"{{ .Values.docker.registry.username }}","password":"{{ .Values.docker.registry.password }}","email":"{{ .Values.docker.registry.email }}"}}'
+kind: Secret
+metadata:
+  name: regcred
+  namespace: harness
+type: kubernetes.io/dockercfg

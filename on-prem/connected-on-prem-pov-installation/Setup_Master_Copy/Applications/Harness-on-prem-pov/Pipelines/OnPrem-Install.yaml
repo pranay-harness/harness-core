@@ -1,0 +1,33 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: ENV_STATE
+  name: Install MongoDB
+  parallel: false
+  workflowName: Install MongoDB
+- type: ENV_STATE
+  name: Install Manager
+  parallel: false
+  workflowName: Install Manager
+  workflowVariables:
+  - name: DELEGATE_VERSION
+    value: '556'
+  - name: WATCHER_VERSION
+    value: '63'
+  - name: MANAGER_VERSION
+    value: '4394'
+- type: ENV_STATE
+  name: Install Learning Engine
+  parallel: true
+  workflowName: Install Learning Engine
+  workflowVariables:
+  - name: LEARNING_ENGINE_VERSION
+    value: portal-4394-python
+- type: ENV_STATE
+  name: Install Proxy
+  parallel: true
+  workflowName: Install Proxy
+- type: ENV_STATE
+  name: Install UI
+  parallel: true
+  workflowName: Install UI

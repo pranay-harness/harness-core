@@ -1,0 +1,36 @@
+{
+  "graphName": "MAIN",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "RepeatByInstances",
+      "type": "REPEAT",
+      "x": 200,
+      "y": 50,
+      "origin":true,
+      "properties": {
+        "repeatElementExpression": "${instances()}",
+        "executionStrategyExpression":"${SIMPLE_WORKFLOW_REPEAT_STRATEGY}"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Command",
+      "type": "COMMAND",
+      "x": 200,
+      "y": 150,
+      "properties": {
+        "commandName": "${SIMPLE_WORKFLOW_COMMAND_NAME}",
+        "name" : "Command"
+      }
+    }
+  ],
+  "links": [
+    {
+      "id": "l2",
+      "from": "n1",
+      "to": "n2",
+      "type": "repeat"
+    }
+  ]
+}

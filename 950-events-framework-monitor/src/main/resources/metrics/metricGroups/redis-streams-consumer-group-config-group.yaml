@@ -1,0 +1,7 @@
+name: Redis Streams Consumer groups
+identifier: redis_streams_consumer_groups
+labels:
+  - streamName
+  - namespace
+  - usecaseName
+  - consumergroupName

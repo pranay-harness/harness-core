@@ -1,0 +1,51 @@
+.stacked-bar-chart{
+    -fx-background-color: transparent;
+}
+
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
+
+.default-color0.chart-bar {
+    -fx-bar-fill: #48a5f3;
+}
+
+.default-color1.chart-bar {
+    -fx-bar-fill: #9385f1;
+}
+
+.default-color2.chart-bar {
+    -fx-bar-fill: #53cd7c;
+}
+
+.default-color3.chart-bar {
+    -fx-bar-fill: #fbbe3d;
+}
+
+.default-color4.chart-bar {
+    -fx-bar-fill: #f46c74;
+}
+
+.default-color5.chart-bar {
+    -fx-bar-fill: #55dcd3;
+}
+
+.default-color6.chart-bar {
+    -fx-bar-fill: #ea77c0;
+}
+
+.default-color7.chart-bar {
+    -fx-bar-fill: #ff8e3c;
+}
+
+.default-color8.chart-bar {
+    -fx-bar-fill: #b26009;
+}
+
+.default-color9.chart-bar {
+    -fx-bar-fill: #1958ad;
+}

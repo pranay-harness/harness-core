@@ -1,0 +1,126 @@
+harness-mongo:
+  uri: mongodb://localhost:27017/harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 50
+events-mongo:
+  uri: mongodb://localhost:27017/events
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"
+  timescaledbUsername: "postgres"
+  timescaledbPassword: ""
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+  isHealthCheckNeeded: false
+
+batchQueryConfig:
+  queryBatchSize: 4000
+  instanceDataBatchSize: 5000
+  syncJobDisabled: false
+
+podInfo:
+  name: batch-processing-0
+  replica: 1
+  isolatedReplica: 0
+
+awsS3SyncConfig:
+  awsS3BucketName: awsS3BucketNamePlaceHolder
+  awsAccessKey: awsS3SyncAccessKeyPlaceHolder
+  awsSecretKey: awsS3SyncSecretKeyPlaceHolder
+  region: awsS3SyncRegionPlaceHolder
+
+azureStorageSyncConfig:
+  azureStorageAccountName: PlaceHolder
+  azureStorageContainerName: PlaceHolder
+  azureAppClientId: PlaceHolder
+  azureAppClientSecret: PlaceHolder
+  azureTenantId: PlaceHolder
+  azureSasToken: PlaceHolder
+  syncJobDisabled: true
+
+billingDataPipelineConfig:
+  gcpProjectId: gcpProjectIdPlaceHolder
+  gcsBasePath: gcsBasePathPlaceHolder
+  gcpPipelinePubSubTopic: "ce-gcpdata"
+  gcpUseNewPipeline: false
+  awsUseNewPipeline: false
+  clusterDataGcsBucketName: "clusterdata-qa"
+  clusterDataGcsBackupBucketName: "clusterdata-qa-backup"
+  awsRoleName: harnessContinuousEfficiencyRole
+
+smtp:
+  type: SMTP
+  host: host_placeholder
+  port: 465
+  fromAddress: ce-noreply@harness.io
+  useSSL: true
+  username: smtp_username_placeholder
+  password: "smtp_password_placeholder"
+
+segmentConfig:
+  enabled: false
+  apiKey: "segment_api_key"
+
+baseUrl: https://localhost:8000
+
+cfClientConfig:
+  apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
+
+reportScheduleConfig:
+  enabled: true
+  templateName: "ce_scheduled_report"
+
+scheduler-jobs-config:
+  budgetAlertsJobCron: "0 30 14 * * ?"
+  weeklyReportsJobCron: "0 0 14 * * MON"
+  budgetCostUpdateJobCron: "0 0 14 * * ?"
+
+cePythonService:
+  pythonServiceUrl: "http://0.0.0.0:8081"
+  useProphet: false
+
+banzaiConfig:
+  host: "http://35.232.8.217"
+  port: 80
+
+ngManagerServiceHttpClientConfig:
+  baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+# banzaicloud/telescopes repo
+banzaiRecommenderConfig:
+  baseUrl: http://104.155.154.180:9090/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

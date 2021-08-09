@@ -1,0 +1,31 @@
+trigger:
+  name: first trigger
+  identifier: first_trigger
+  target:
+    targetIdentifier: myPipeline
+    type: Pipeline
+    spec:
+      runtimeInputYaml:  ''
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        repoUrl: https://github.com/test/myrepo
+        event: Pull Request
+        actions:
+          - opened
+          - closed
+        payloadConditions:
+          - key: sourceBranch
+            operator: equals
+            value: dev
+          - key: targetBranch
+            operator: in
+            value: master, on-prem
+          - key: ${pull_request.number}
+            operator: regex
+            value: ^pr-[0-9a-f]{7}$
+        pathFilters:
+          - path1
+          - path2

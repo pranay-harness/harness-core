@@ -1,0 +1,35 @@
+{
+  "blocks" : [
+    {
+      "type" : "section",
+      "text" : {
+        "type" : "mrkdwn",
+        "text" : "*Approval Required for pipeline <${pipelineExecutionLink}|${pipelineName}> triggered by ${triggeredBy}*\n\n*Approval message:*\n${approvalMessage}"
+      },
+      "fields" : [
+        {"type" : "mrkdwn", "text" : "*Organization:*\n${orgIdentifier}"},
+        {"type" : "mrkdwn", "text" : "*Project:*\n${orgIdentifier}"},
+        {"type" : "mrkdwn", "text" : "*Triggered by:*\n${triggeredBy}"}
+      ]
+    },
+    {
+      "type" : "section",
+      "text" : {
+        "type" : "mrkdwn",
+        "text" : "_Pipeline started on ${startedAt} and approval expires on ${expiresAt}_"
+      }
+    },
+    {
+      "type" : "context",
+      "elements" : [
+        {
+          "type" : "image",
+          "image_url" :
+              "https://s3.amazonaws.com/wings-assets/slackicons/paused.png",
+          "alt_text" : "Expires in"
+        },
+        {"type" : "mrkdwn", "text" : "${timeRemainingForApproval}"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "expand": "plans",
+  "link": {
+    "href": "http://localhost:8085/rest/api/latest/plan",
+    "rel": "self"
+  },
+  "plans": {
+    "size": 1001,
+    "expand": "plan",
+    "start-index": 0,
+    "max-result": 1000,
+    "plan": [
+      {
+        "shortName": "plan-1",
+        "shortKey": "PLAN",
+        "type": "chain",
+        "enabled": false,
+        "link": {
+          "href": "http://localhost:8085/rest/api/latest/plan/TES-PLAN",
+          "rel": "self"
+        },
+        "key": "TES-PLAN",
+        "name": "test-1 - plan-1",
+        "planKey": {
+          "key": "TES-PLAN"
+        }
+      },
+      {
+        "shortName": "plan-10",
+        "shortKey": "PLN10",
+        "type": "chain",
+        "enabled": true,
+        "link": {
+          "href": "http://localhost:8085/rest/api/latest/plan/TES-PLN10",
+          "rel": "self"
+        },
+        "key": "TES-PLN10",
+        "name": "test-1 - plan-10",
+        "planKey": {
+          "key": "TES-PLN10"
+        }
+      },
+      {
+        "shortName": "plan-100",
+        "shortKey": "PLN100",
+        "type": "chain",
+        "enabled": true,
+        "link": {
+          "href": "http://localhost:8085/rest/api/latest/plan/TES-PLN100",
+          "rel": "self"
+        },
+        "key": "TES-PLN100",
+        "name": "test-1 - plan-100",
+        "planKey": {
+          "key": "TES-PLN100"
+        }
+      },
+      {
+        "shortName": "plan-1000",
+        "shortKey": "PLN1000",
+        "type": "chain",
+        "enabled": true,
+        "link": {
+          "href": "http://localhost:8085/rest/api/latest/plan/TES-PLN1000",
+          "rel": "self"
+        },
+        "key": "TES-PLN1000",
+        "name": "test-1 - plan-1000",
+        "planKey": {
+          "key": "TES-PLN1000"
+        }
+      },
+      {
+        "shortName": "plan-10000",
+        "shortKey": "PLN10000",
+        "type": "chain",
+        "enabled": true,
+        "link": {
+          "href": "http://localhost:8085/rest/api/latest/plan/TES-PLN10000",
+          "rel": "self"
+        },
+        "key": "TES-PLN10000",
+        "name": "test-1 - plan-10000",
+        "planKey": {
+          "key": "TES-PLN10000"
+        }
+      }
+    ]
+  }
+}

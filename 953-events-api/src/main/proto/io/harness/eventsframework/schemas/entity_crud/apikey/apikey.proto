@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package io.harness.eventsframework.entity_crud.apikey;
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message ApiKeyEntityChangeDTO {
+  string accountIdentifier = 1;
+  string orgIdentifier = 2;
+  string projectIdentifier = 3;
+  string apiKeyType = 4;
+  string parentIdentifier = 5;
+  string identifier = 6;
+}

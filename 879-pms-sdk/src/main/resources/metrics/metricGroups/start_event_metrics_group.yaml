@@ -1,0 +1,6 @@
+name: Start Metrics Group
+identifier: start_event_group
+labels:
+  - accountId
+  - orgIdentifier
+  - projectIdentifier

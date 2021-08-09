@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.datacollection;
+
+option java_multiple_files = true;
+
+message K8ActivityCollectionPerpetualTaskParams {
+  string account_id = 1;
+  string data_collection_worker_id = 2;
+  bytes data_collection_info = 3;
+}

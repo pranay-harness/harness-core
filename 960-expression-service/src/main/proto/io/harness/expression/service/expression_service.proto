@@ -1,0 +1,35 @@
+syntax = "proto3";
+package io.harness.expression.service;
+
+option java_multiple_files = true;
+option go_package = "960_expression_service";
+
+message ExpressionRequest {
+  repeated ExpressionQuery queries = 1;
+}
+
+message ExpressionQuery {
+  string jexl = 1;          // JEXL expression string
+  string json_context = 2;  // json object containing expression context
+  bool is_skip_condition = 3;
+}
+
+message ExpressionResponse {
+  repeated ExpressionValue values = 1;
+}
+
+message ExpressionValue {
+  string jexl = 1;   // JEXL expression string
+  string value = 2;  // value of evaluated expression
+  enum EvaluationStatus {
+    SUCCESS = 0;
+    ERROR = 1;
+  }
+  EvaluationStatus status_code = 3;
+  string error_message = 4;
+}
+
+service ExpressionEvaulatorService {
+  // resolves JEXL expression with given context
+  rpc evaluateExpression(ExpressionRequest) returns (ExpressionResponse);
+}

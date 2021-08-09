@@ -1,0 +1,10 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+continueWithDefaultValues: false
+executionName: w1
+executionType: Workflow
+manifestSelections:
+- serviceName: k8s
+  type: WEBHOOK_VARIABLE
+triggerCondition:
+- type: WEBHOOK

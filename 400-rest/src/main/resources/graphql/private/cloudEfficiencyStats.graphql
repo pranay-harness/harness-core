@@ -1,0 +1,170 @@
+extend type Query {
+  cloudTimeSeriesStats(
+    limit: Int
+    offset: Int
+    includeOthers: Boolean
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudBillingGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudTimeSeriesStats @dataFetcher(name: cloudTimeSeriesStats)
+
+  cloudEntityStats(
+    limit: Int
+    offset: Int
+    includeOthers: Boolean
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudBillingGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudEntityStats @dataFetcher(name: cloudEntityStats)
+
+  cloudTrendStats(
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudBillingGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudTrendStats @dataFetcher(name: cloudTrendStats)
+
+  cloudFilterValues(
+    limit: Int
+    offset: Int
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudBillingGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudFilterData @dataFetcher(name: cloudFilterValues)
+
+  cloudOverview(
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudBillingGroupBy]
+    sortCriteria: [CloudSortCriteria]
+  ): CloudOverviewData @dataFetcher(name: cloudOverview)
+}
+
+type CloudTimeSeriesStats {
+  stats: [TimeSeriesDataPoints]
+}
+
+type CloudEntityStats {
+  stats: [CloudEntityData]
+}
+
+type CloudEntityData {
+  id: String
+  region: String
+  awsLinkedAccount: String
+  awsUsageType: String
+  awsInstanceType: String
+  awsService: String
+  awsBlendedCost: Number
+  awsUnblendedCost: Number
+  awsTag: String
+
+  gcpProjectId: String
+  gcpProduct: String
+  gcpSkuDescription: String
+  gcpSkuId: String
+  gcpLabel: String
+  gcpTotalCost: Number
+  gcpDiscount: Number
+  gcpSubTotalCost: Number
+  costTrend: Number
+}
+
+type CloudTrendStats {
+  cost: BillingStatsInfo
+  unBlendedCost: BillingStatsInfo
+  blendedCost: BillingStatsInfo
+}
+
+type CloudFilterData {
+  data: [CloudFilterDataPoint]
+}
+
+type CloudOverviewData {
+  totalCost: Number
+  data: [CloudOverviewDataPoint]
+}
+
+type CloudOverviewDataPoint {
+  name: String
+  cost: Number
+  trend: Number
+}
+
+type CloudFilterDataPoint {
+  region: [EntityData]
+  awsLinkedAccount: [EntityData]
+  awsUsageType: [EntityData]
+  awsService: [EntityData]
+  awsInstanceType: [EntityData]
+  gcpProjectId: [EntityData]
+  gcpProduct: [EntityData]
+  gcpSku: [EntityData]
+  gcpBillingAccount: [EntityData]
+  gcpLabels: [K8sLabel]
+  awsTags: [K8sLabel]
+}
+
+input CloudBillingFilter {
+  startTime: TimeFilter
+  endTime: TimeFilter
+  preAggregatedTableStartTime: TimeFilter
+  preAggregatedTableEndTime: TimeFilter
+  billingAccountId: IdFilter
+  projectId: IdFilter
+  product: IdFilter
+  sku: IdFilter
+  region: IdFilter
+  awsLinkedAccount: IdFilter
+  awsUsageType: IdFilter
+  awsInstanceType: IdFilter
+  awsService: IdFilter
+  cloudProvider: IdFilter
+  labelsKey: IdFilter
+  labelsValue: IdFilter
+  tagsKey: IdFilter
+  tagsValue: IdFilter
+  labels: IdFilter
+  tags: IdFilter
+}
+
+input CloudBillingGroupBy {
+  entityGroupBy: CloudEntityGroupBy
+  timeTruncGroupby: CETimeTruncGroupby
+}
+
+enum CloudEntityGroupBy {
+  billingAccountId
+  projectId
+  projectNumber
+  product
+  sku
+  skuId
+  labelsKey
+  labelsValue
+  tagsKey
+  tagsValue
+  region
+  usageAmount
+  usageUnit
+  awsLinkedAccount
+  awsUsageType
+  awsInstanceType
+  awsService
+  cloudProvider
+}
+
+input CloudSortCriteria {
+  sortType: CloudSortType
+  sortOrder: SortOrder
+}
+
+enum CloudSortType {
+  Time
+  gcpCost
+  awsBlendedCost
+  awsUnblendedCost
+}

@@ -1,0 +1,4502 @@
+[
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 590,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 932,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 984,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 590,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 828,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 801,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 790,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1050,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 995,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1180,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 998,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 570,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 823,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1090,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 653,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.38,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.47,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.63,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.2,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.45,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.69,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.96,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.86,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.11,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.08,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 7
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.41,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.33,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.14,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.22,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.38,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.47,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.63,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.2,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.45,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.69,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.96,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.86,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.11,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.08,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 7
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.41,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.33,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.14,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.22,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.38,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.47,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.63,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.2,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.45,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.69,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.96,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.86,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.11,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.08,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 7
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.41,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.33,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.14,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 3.22,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 590,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 932,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 984,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 590,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 828,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 801,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 790,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1050,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 995,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1180,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 998,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 570,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 823,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1090,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 653,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 590,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 932,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 984,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 590,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 828,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 801,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 790,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1050,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 995,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1180,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 998,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 570,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 823,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 1090,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-13-153",
+    "averageResponseTime": 653,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 912,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 851,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 735,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 910,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 800,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 634,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 622,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 691,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 710,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 638,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 676,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 911,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 921,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 759,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 869,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.28,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.16,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.3,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.64,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.47,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.15,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.05,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.03,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.04,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.31,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.31,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.24,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.08,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.27,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.28,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.28,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.16,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.3,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.64,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.47,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.15,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.05,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.03,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.04,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.31,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.31,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.24,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.08,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.27,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.28,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.28,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.16,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.3,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.64,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.47,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.15,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.05,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.03,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 8
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.04,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.31,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.31,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.24,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.08,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.27,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 3.28,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 912,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 851,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 735,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 910,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 800,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 634,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 622,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 691,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 710,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 638,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 676,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 911,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 921,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 759,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 869,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 912,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 851,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 735,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 910,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 800,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 634,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 622,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 691,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 710,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 638,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 676,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 911,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 921,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 759,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-8-144",
+    "averageResponseTime": 869,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1000,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 611,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 955,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 978,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 825,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1060,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 922,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 716,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 991,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 614,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 950,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 920,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 765,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 822,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1010,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.32,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.44,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.9,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.91,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.94,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 6
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.82,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 5
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.77,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.22,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.32,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.54,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.49,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 4.48,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.2,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.23,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 6
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.66,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.32,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.44,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.9,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.91,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.94,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 6
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.82,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 5
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.77,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.22,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.32,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.54,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.49,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 4.48,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.2,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.23,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 6
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.66,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.32,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.44,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.9,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.91,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 2.94,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 6
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.82,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 5
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.77,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.22,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.32,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.54,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.49,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 11
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 4.48,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.2,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.23,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 6
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 3.66,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1000,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 611,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 955,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 978,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 825,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1060,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 922,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 716,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 991,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 614,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 950,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 920,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 765,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 822,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1010,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1000,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 611,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 955,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 978,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 825,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1060,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 922,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 716,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 991,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 614,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 950,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 10
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 920,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 13
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 765,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 9
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 822,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 14
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-12-79",
+    "averageResponseTime": 1010,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 12
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.689,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.751,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.734,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.7,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.837,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.677,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 1.63,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.994,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.704,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.678,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.705,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.689,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.751,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.734,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.7,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.837,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.677,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 1.63,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.994,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.704,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.678,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.705,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.689,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.751,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.734,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.7,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.837,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.677,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 1.63,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.994,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.704,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.675,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.678,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0.705,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-58-253",
+    "averageResponseTime": 0,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 0
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3270,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3270,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3290,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.764,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.818,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.776,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.742,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.749,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.767,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.756,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.737,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.702,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.695,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.684,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.712,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.73,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "Java/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.746,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.764,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.818,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.776,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.742,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.749,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.767,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.756,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.737,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.702,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.695,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.684,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.712,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.73,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.746,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.764,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.818,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.776,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.742,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.749,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.767,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.756,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.737,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.702,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.695,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.684,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.72,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.712,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.73,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransaction/Job/software.wings.scheduler.StateMachineExecutionCleanupJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 0.746,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 1
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3270,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3270,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3290,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "OtherTransactionTotalTime/Job/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 0,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 1,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3270,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 2,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3270,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 3,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 4,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 5,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 6,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 7,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 8,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 9,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3290,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 10,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 11,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3260,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 12,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 13,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  },
+  {
+    "name": "Java/software.wings.scheduler.ArtifactCollectionJob/execute",
+    "dataCollectionMinute": 14,
+    "apdexScore": -1,
+    "host": "ip-172-31-1-92",
+    "averageResponseTime": 3250,
+    "error": -1,
+    "throughput": -1,
+    "callCount": 3
+  }
+]

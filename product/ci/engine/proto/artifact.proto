@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package io.harness.product.ci.engine.proto;
+
+option java_multiple_files = true;
+option go_package = "cienginepb";
+
+message Artifact {
+  oneof metadata {
+    DockerArtifactMetadata docker_artifact = 1;
+    FileArtifactMetadata file_artifact = 2;
+  }
+}
+
+message DockerArtifactMetadata {
+  string registry_type = 1;
+  string registry_url = 2;
+  repeated DockerImageMetadata docker_images = 3;
+}
+message DockerImageMetadata {
+  string image = 1;
+  string digest = 3;
+}
+
+message FileArtifactMetadata {
+  repeated FileArtifact file_artifacts = 1;
+}
+
+message FileArtifact {
+  string name = 1;
+  string url = 2;
+}

@@ -1,0 +1,33 @@
+extend type Query {
+  k8sWorkloadRecommendations(filters: [WorkloadFilter], limit: Int!, offset: Int): WorkloadRecommendationConnection
+    @dataFetcher(name: k8sWorkloadRecommendations)
+  k8sWorkloadHistogram(
+    cluster: String!
+    namespace: String!
+    workloadName: String!
+    workloadType: String!
+    startDate: DateTime!
+    endDate: DateTime!
+  ): WorkloadHistogramData @dataFetcher(name: k8sWorkloadHistogram)
+}
+
+type WorkloadHistogramData {
+  containerHistogramDataList: [ContainerHistogramData]
+}
+
+type ContainerHistogramData {
+  containerName: String
+  cpuHistogram: HistogramExp
+  memoryHistogram: HistogramExp
+}
+
+type HistogramExp {
+  firstBucketSize: Number
+  growthRatio: Number
+  numBuckets: Int
+  minBucket: Int
+  maxBucket: Int
+  bucketWeights: [Number]
+  totalWeight: Number
+  precomputed: [Number]
+}

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package io.harness.event;
+
+option java_multiple_files = true;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+service EventPublisher {
+  rpc Publish(PublishRequest) returns (PublishResponse);
+}
+
+message PublishRequest {
+  repeated PublishMessage messages = 1;
+}
+
+message PublishMessage {
+  google.protobuf.Any payload = 1;
+  map<string, string> attributes = 2;
+  google.protobuf.Timestamp occurred_at = 3;
+  string message_id = 4;
+  string category = 5;
+}
+
+message PublishResponse {}

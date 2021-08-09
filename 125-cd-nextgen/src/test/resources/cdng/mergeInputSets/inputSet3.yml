@@ -1,0 +1,72 @@
+inputSet:
+  identifier: input3
+  name: input3
+  pipeline:
+    identifier: myPipeline1
+    stages:
+      - stage:
+          identifier: qa
+          type: Deployment
+          spec:
+            serviceConfig:
+              serviceDefinition:
+                type: Kubernetes # Can it be type to make it consistent with other types
+                spec:
+                  artifacts:
+                    primary:
+                      type: Dockerhub
+                      spec:
+                        imagePath: image1
+                    sidecars:
+                      - sidecar:
+                          identifier: sidecar1
+                          type: Dockerhub
+                          spec:
+                            imagePath: sidecarimage
+                            tag: tag1
+                  manifests:
+                    - manifest:
+                        identifier: specFiles
+                        type: K8sManifest
+                        spec:
+                          store:
+                            type: Git
+                            spec:
+                              branch: master
+                              paths:
+                                - path2
+                                - path1
+                  manifestOverrideSets:
+                    - overrideSet:
+                        identifier: overrideSet1
+                        manifests:
+                          - manifest:
+                              identifier: baseValues
+                              type: K8sManifest
+                              spec:
+                                store:
+                                  type: Git
+                                  # Git|Local
+                                  spec:
+                                    connectorRef: my-git-connector
+                                    branch: masterOverride1
+            infrastructure:
+              infrastructureDefinition:
+                type: KubernetesDirect
+                spec:
+                  namespace: prod
+            execution:
+              steps:
+                - parallel:
+                    - step:
+                        identifier: rolloutDeployment
+                        type: K8sRollingDeploy
+                        spec:
+                          timeout: 100
+                          skipDryRun: true
+              rollbackSteps:
+                - step:
+                    identifier: rollbackRolloutDeployment1
+                    type: K8sRollingRollback
+                    spec:
+                      timeout: 1000

@@ -1,0 +1,87 @@
+pipeline:
+  identifier: myPipeline1
+  stages:
+  - stage:
+      identifier: qa
+      type: Deployment
+      spec:
+        serviceConfig:
+          serviceDefinition:
+            type: Kubernetes
+            spec:
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    imagePath: image2
+                sidecars:
+                - sidecar:
+                    identifier: sidecar1
+                    type: Dockerhub
+                    spec:
+                      imagePath: sidecarimage
+                      tag: tag2
+              manifests:
+              - manifest:
+                  identifier: specFiles
+                  type: K8sManifest
+                  spec:
+                    store:
+                      type: Git
+                      spec:
+                        branch: master
+                        paths:
+                        - path3
+                        - path4
+              manifestOverrideSets:
+              - overrideSet:
+                  identifier: overrideSet1
+                  manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my-git-connector
+                            branch: masterOverride2
+        infrastructure:
+          infrastructureDefinition:
+            type: KubernetesDirect
+            spec:
+              connectorRef: <+input>
+              namespace: prod2
+        execution:
+          steps:
+          - parallel:
+            - step:
+                identifier: rolloutDeployment
+                type: K8sRollingDeploy
+                spec:
+                  timeout: 100
+                  skipDryRun: true
+          rollbackSteps:
+          - step:
+              identifier: rollbackRolloutDeployment1
+              type: K8sRollingRollback
+              spec:
+                timeout: 5
+  - stage:
+      identifier: prod
+      type: Deployment
+      spec:
+        serviceConfig:
+          useFromStage:
+            stage: new-qa
+          stageOverrides:
+            manifests:
+            - manifest:
+                identifier: prodOverride
+                type: Values
+                spec:
+                  store:
+                    type: Git
+                    spec:
+                      connectorRef: my-connector
+                      branch: <+input>

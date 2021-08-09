@@ -1,0 +1,17 @@
+{
+  "delegateSelectors": null,
+  "credential": {
+    "type": "ManualConfig",
+    "spec": {
+      "masterUrl": "https://abc.com",
+      "auth": {
+        "type": "UsernamePassword",
+        "spec": {
+          "username": "userName",
+          "usernameRef": null,
+          "passwordRef": "account.passwordRef"
+        }
+      }
+    }
+  }
+}

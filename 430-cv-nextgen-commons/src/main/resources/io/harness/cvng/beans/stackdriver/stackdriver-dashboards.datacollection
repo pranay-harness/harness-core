@@ -1,0 +1,19 @@
+Var header = {}
+Var headerVal = concat("Bearer ", Env:accessToken)
+Var:header.put("Authorization", Var:headerVal)
+
+Var dashboardUrl = concat(Env:baseUrl, Env:project, "/dashboards")
+Var responseList = []
+Var dashboardResponse = sync-call(url=Var:dashboardUrl, header=Var:header)
+Var dashboardList = extract(Var:dashboardResponse, $.dashboards)
+
+foreach dashboard in Var:dashboardList {
+  Var name = extract(Var:dashboard, $.displayName)
+  Var relativeUrl = extract(Var:dashboard, $.name)
+  Var dashMap = {}
+  Var:dashMap.put("name", Var:name)
+  Var:dashMap.put("path", Var:relativeUrl)
+  Var:responseList.append(Var:dashMap)
+}
+
+return Var:responseList

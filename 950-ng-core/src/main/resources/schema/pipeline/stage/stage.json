@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "type": {
+      "enum": [
+        "Deployment",
+        "Approval"
+      ]
+    },
+    "name": {
+      "type": "string"
+    },
+    "identifier": {
+      "type": "string"
+    }
+  },
+  "if": {
+    "properties": {
+      "type": {
+        "const": "Deployment"
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "spec": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "$ref": "<<schema/pipeline/stage/service/service.json>>"
+          },
+          "infrastructure": {
+            "$ref": "<<schema/pipeline/stage/infra/infrastructure.json>>"
+          },
+          "execution": {
+            "$ref": "<<schema/pipeline/stage/execution/execution.json>>"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

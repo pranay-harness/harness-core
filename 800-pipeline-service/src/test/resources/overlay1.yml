@@ -1,0 +1,9 @@
+overlayInputSet:
+  identifier: overlay1
+  name : thisName
+  tags:
+    isOverlaySet : yes it is
+  description: this is an overlay input set
+  inputSetReferences:
+    - inputSet2
+    - inputSet22

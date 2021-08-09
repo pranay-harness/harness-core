@@ -1,0 +1,920 @@
+[
+  {
+    "name": "Harness heartbeat metric",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "level": "H0",
+    "values": {},
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/WEB-INF/jsp/_403.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/WEB-INF/jsp/_403.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/WEB-INF/jsp/_403.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/index.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "averageResponseTime": 1.09,
+      "callCount": 13.0,
+      "throughput": 0.211,
+      "requestsPerMinute": 12.0,
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/index.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "averageResponseTime": 1.19,
+      "callCount": 11.0,
+      "throughput": 0.189,
+      "requestsPerMinute": 11.0,
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/index.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "averageResponseTime": 1.41,
+      "callCount": 7.0,
+      "throughput": 0.114,
+      "requestsPerMinute": 6.0,
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/inside/display.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/inside/display.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/inside/display.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Display",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Display",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Display",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Register",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Register",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Register",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/addTask",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/addTask",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/addTask",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/default",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/default",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/default",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/WebServletPath/RequestLogin",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/WebServletPath/RequestLogin",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/WebServletPath/RequestLogin",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-0-38",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "Harness heartbeat metric",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "level": "H0",
+    "values": {},
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/WEB-INF/jsp/_403.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/WEB-INF/jsp/_403.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/WEB-INF/jsp/_403.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/index.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "averageResponseTime": 2.03,
+      "callCount": 12.0,
+      "throughput": 0.2,
+      "requestsPerMinute": 12.0,
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/index.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "averageResponseTime": 1.8,
+      "callCount": 12.0,
+      "throughput": 0.2,
+      "requestsPerMinute": 12.0,
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/index.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "averageResponseTime": 1.78,
+      "callCount": 2.0,
+      "throughput": 0.04,
+      "requestsPerMinute": 2.0,
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/inside/display.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/inside/display.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/JSP/inside/display.jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Display",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Display",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Display",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Register",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Register",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/Register",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/addTask",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/addTask",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/addTask",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/default",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/default",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/default",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/Servlet/jsp",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/WebServletPath/RequestLogin",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180580000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/WebServletPath/RequestLogin",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180640000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  },
+  {
+    "name": "WebTransaction/WebServletPath/RequestLogin",
+    "applicationId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowId": "pamgwigQRmiyuV5ePVWLsg",
+    "workflowExecutionId": "SLz58C52SWCzVqzi_YQDjg",
+    "serviceId": "NBKJds57Rv2c80NUShRZSQ",
+    "stateExecutionId": "sWNcP394SP6YCn9AcbQ7bA",
+    "timeStamp": 1508180700000,
+    "dataCollectionMinute": 0,
+    "host": "ip-172-31-11-65",
+    "values": {
+      "apdexScore": 1.0
+    },
+    "createdAt": 0,
+    "lastUpdatedAt": 0
+  }
+]

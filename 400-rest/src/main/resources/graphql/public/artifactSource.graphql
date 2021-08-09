@@ -1,0 +1,290 @@
+interface ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+
+type ACRArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  subscriptionId: String
+  registryName: String
+  repositoryName: String
+  azureCloudProviderId: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type AmazonS3ArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  awsCloudProviderId: String
+  bucket: String
+  artifactPaths: [String]
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type AMIArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  awsCloudProviderId: String
+  region: String
+  awsTags: [KeyValuePair]
+  amiResourceFilters: [KeyValuePair]
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type ArtifactoryArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  properties: ArtifactoryProps
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type AzureArtifactsArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  packageType: String
+  scope: String
+  project: String
+  feedName: String
+  packageName: String
+  azureConnectorId: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+
+type AzureMachineImageArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  # Azure Cloud Provider ID
+  azureCloudProviderId: String
+  # Valid azure image type
+  imageType: AzureImageType
+  # Azure subscription ID
+  subscriptionId: String
+  # Requires resource group, image gallery & image definition names
+  imageDefinition: AzureImageDefinitionProps
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+
+type BambooArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  bambooConnectorId: String
+  planKey: String
+  artifactPaths: [String]
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type CustomArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type DockerArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  imageName: String
+  dockerConnectorId: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type ECRArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  region: String
+  imageName: String
+  awsCloudProviderId: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type GCRArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  gcpCloudProviderId: String
+  registryHostName: String
+  dockerImageName: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type GCSArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  gcpCloudProviderId: String
+  projectId: String
+  bucket: String
+  artifactPaths: [String]
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type JenkinsArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  jobName: String
+  artifactPaths: [String]
+  jenkinsConnectorId: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type NexusArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  properties: NexusProps
+  parameters: [String]
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+type SFTPArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  artifactPaths: [String]
+  sftpConnectorId: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+
+type SMBArtifactSource implements ArtifactSource {
+  #Artifact Source Id
+  id: String
+  # Artifact source display name
+  name: String
+  createdAt: DateTime
+  artifactPaths: [String]
+  smbConnectorId: String
+  artifacts(limit: Int!, offset: Int): ArtifactConnection
+    @dataFetcher(name: artifactConnection, contextFieldArgsMap: "{ \"ArtifactSource\": \"id\"}")
+}
+
+type KeyValuePair {
+  key: String
+  value: String
+}
+
+interface ArtifactoryProps {
+  artifactoryConnectorId: String
+  repository: String
+}
+
+#Properties for docker artifact types
+type ArtifactoryDockerProps implements ArtifactoryProps {
+  artifactoryConnectorId: String
+  repository: String
+  dockerImageName: String
+  dockerRepositoryServer: String
+}
+
+#Properties for all non-docker artifact types
+type ArtifactoryFileProps implements ArtifactoryProps {
+  artifactoryConnectorId: String
+  repository: String
+  artifactPath: String
+}
+
+interface NexusProps {
+  nexusConnectorId: String
+  repository: String
+  repositoryFormat: NexusRepositoryFormat
+}
+
+enum NexusRepositoryFormat {
+  DOCKER
+  MAVEN
+  NPM
+  NUGET
+}
+
+type NexusDockerProps implements NexusProps {
+  nexusConnectorId: String
+  repository: String
+  repositoryFormat: NexusRepositoryFormat
+  dockerImageName: String
+  dockerRegistryUrl: String
+}
+
+type NexusMavenProps implements NexusProps {
+  nexusConnectorId: String
+  repository: String
+  repositoryFormat: NexusRepositoryFormat
+  groupId: String
+  artifactId: [String]
+  extension: String
+  classifier: String
+}
+
+type NexusNugetProps implements NexusProps {
+  nexusConnectorId: String
+  repository: String
+  repositoryFormat: NexusRepositoryFormat
+  packageName: String
+}
+
+type NexusNpmProps implements NexusProps {
+  nexusConnectorId: String
+  repository: String
+  repositoryFormat: NexusRepositoryFormat
+  packageName: String
+}
+
+type AzureImageDefinitionProps {
+  # Resource group name
+  resourceGroup: String
+  # image gallery name
+  imageGalleryName: String
+  # image definition name
+  imageDefinitionName: String
+}
+
+enum AzureImageType {
+  IMAGE_GALLERY
+}

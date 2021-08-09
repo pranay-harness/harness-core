@@ -1,0 +1,12 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: AWS_CODEDEPLOY
+infrastructure:
+- type: AWS_AWS_CODEDEPLOY
+  applicationName: Test
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  deploymentConfig: Test
+  deploymentGroup: test-group
+  hostNameConvention: ${host.ec2Instance.privateDnsName.split('\.')[0]}
+  region: us-east-1

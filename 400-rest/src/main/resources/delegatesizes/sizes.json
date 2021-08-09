@@ -1,0 +1,36 @@
+{
+  "availableSizes" : [
+    {
+      "size" : "LAPTOP",
+      "label" : "Laptop",
+      "taskLimit" : "50",
+      "replicas" : "1",
+      "ram" : "1650",
+      "cpu" : "0.5"
+    },
+    {
+      "size" : "SMALL",
+      "label" : "Small",
+      "taskLimit" : "100",
+      "replicas" : "2",
+      "ram" : "3300",
+      "cpu" : "1"
+    },
+    {
+      "size" : "MEDIUM",
+      "label" : "Medium",
+      "taskLimit" : "200",
+      "replicas" : "4",
+      "ram" : "6600",
+      "cpu" : "2"
+    },
+    {
+      "size" : "LARGE",
+      "label" : "Large",
+      "taskLimit" : "400",
+      "replicas" : "8",
+      "ram" : "13200",
+      "cpu" : "4"
+    }
+  ]
+}

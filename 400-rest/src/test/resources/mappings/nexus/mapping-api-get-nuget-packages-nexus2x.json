@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/local/repositories/MyNuGet/content/"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-nuget-packages-nexus2x.xml",
+    "headers": {
+      "Content-Type": "application/xml"
+    }
+  }
+}

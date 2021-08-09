@@ -1,0 +1,20 @@
+enum WorkflowEntityAggregation {
+  Application
+  OrchestrationWorkflowType
+  Workflow
+}
+
+input WorkflowAggregation {
+  entityAggregation: WorkflowEntityAggregation
+  tagAggregation: WorkflowTagAggregation
+}
+
+input WorkflowTagAggregation {
+  entityType: WorkflowTagType
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics about Workflows.
+  workflowStats(filters: [WorkflowFilter], groupBy: [WorkflowAggregation]): Data @dataFetcher(name: workflowStats)
+}

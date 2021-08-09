@@ -1,0 +1,4 @@
+connectors:
+  - port: 9901
+    secure: false
+secret: secret

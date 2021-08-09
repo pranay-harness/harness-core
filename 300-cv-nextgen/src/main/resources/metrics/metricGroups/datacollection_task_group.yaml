@@ -1,0 +1,7 @@
+name: DataCollectionTask
+identifier: data_collection_task
+labels:
+  - accountId
+  - dataCollectionTaskType
+  - provider
+  - retryCount

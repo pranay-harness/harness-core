@@ -1,0 +1,24 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: WINRM
+infrastructure:
+- type: AWS_SSH
+  awsInstanceFilter:
+    tags:
+    - key: Name
+      value: name
+    - key: CreatedBy
+      value: someone
+    vpcIds:
+    - vpc-2e38c849
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  desiredCapacity: 0
+  hostConnectionAttrsName: TEST_CLOUD_PROVIDER
+  hostConnectionType: PRIVATE_DNS
+  hostNameConvention: ${host.ec2Instance.privateDnsName.split('\.')[0]}
+  loadBalancerName: test
+  region: us-west-1
+  setDesiredCapacity: false
+  useAutoScalingGroup: false
+  usePublicDns: false

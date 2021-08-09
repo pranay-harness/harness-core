@@ -1,0 +1,43 @@
+{
+  "tid": 10,
+  "action": "coreui_Browse",
+  "method": "read",
+  "result": {
+    "success": true,
+    "data": [
+      {
+        "id": "mygroup/myartifact/1.2",
+        "text": "1.2",
+        "type": "component",
+        "leaf": false,
+        "componentId": "93b9b9eb9a7ecb06b379623dfef3496c",
+        "assetId": null
+      },
+      {
+        "id": "mygroup/myartifact/maven-metadata.xml",
+        "text": "maven-metadata.xml",
+        "type": "asset",
+        "leaf": true,
+        "componentId": null,
+        "assetId": "912d0fe7b81923929ee08845ecc8234d"
+      },
+      {
+        "id": "mygroup/myartifact/maven-metadata.xml.md5",
+        "text": "maven-metadata.xml.md5",
+        "type": "asset",
+        "leaf": true,
+        "componentId": null,
+        "assetId": "912d0fe7b81923928a9f0ed3db941ae1"
+      },
+      {
+        "id": "mygroup/myartifact/maven-metadata.xml.sha1",
+        "text": "maven-metadata.xml.sha1",
+        "type": "asset",
+        "leaf": true,
+        "componentId": null,
+        "assetId": "7f6379d32f8dd78f2c6085556d2c85b5"
+      }
+    ]
+  },
+  "type": "rpc"
+}

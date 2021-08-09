@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package io.harness.owner;
+
+option java_multiple_files = true;
+option go_package = "920_delegate_service_beans";
+
+// Organization unique identifier
+message OrgIdentifier {
+  string id = 1;
+}
+
+// Project unique identifier
+message ProjectIdentifier {
+  string id = 1;
+}

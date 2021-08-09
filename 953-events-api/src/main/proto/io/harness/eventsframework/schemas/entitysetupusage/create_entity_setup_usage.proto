@@ -1,0 +1,14 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entitysetupusage;
+
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message EntitySetupUsageCreateDTO {
+  string accountIdentifier = 1;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntity = 2;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredByEntity = 3;
+  int64 createdAt = 4;
+}

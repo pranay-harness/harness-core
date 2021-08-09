@@ -1,0 +1,31 @@
+{
+  "connector": {
+    "name": "name",
+    "identifier": "identifier",
+    "description": "description",
+    "orgIdentifier": "orgIdentifier",
+    "projectIdentifier": "projectIdentifier",
+    "tags": {
+      "company": "Harness",
+      "env": "dev"
+    },
+    "type": "K8sCluster",
+    "spec": {
+      "delegateSelectors": null,
+      "credential": {
+        "type": "ManualConfig",
+        "spec": {
+          "masterUrl": "https://abc.com",
+          "auth": {
+            "type": "UsernamePassword",
+            "spec": {
+              "username": "userName",
+              "usernameRef": null,
+              "passwordRef": "account.passwordRef"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+package io.harness.beans.outcomes;
+
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.dependencies.ServiceDependency;
+import io.harness.pms.sdk.core.data.Outcome;
+
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import org.springframework.data.annotation.TypeAlias;
+
+@Data
+@Builder
+@TypeAlias("dependencyOutcome")
+@JsonTypeName("dependencyOutcome")
+@OwnedBy(CI)
+public class DependencyOutcome implements Outcome {
+  List<ServiceDependency> serviceDependencyList;
+}

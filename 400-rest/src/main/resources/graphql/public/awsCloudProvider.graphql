@@ -1,0 +1,60 @@
+input AwsCloudProviderInput {
+  name: String!
+
+  credentialsType: AwsCredentialsType
+  ec2IamCredentials: Ec2IamCredentials
+  manualCredentials: AwsManualCredentials
+
+  crossAccountAttributes: AwsCrossAccountAttributes
+  defaultRegion: String
+}
+
+enum AwsCredentialsType {
+  EC2_IAM
+  MANUAL
+}
+
+input Ec2IamCredentials {
+  delegateSelector: String!
+  usageScope: UsageScopeInput
+}
+
+input AwsManualCredentials {
+  accessKey: String
+  accessKeySecretId: String
+  secretKeySecretId: String!
+}
+
+input AwsCrossAccountAttributes {
+  assumeCrossAccountRole: Boolean
+  crossAccountRoleArn: String!
+  externalId: String
+}
+
+input UpdateAwsCloudProviderInput {
+  name: String
+
+  credentialsType: AwsCredentialsType
+  ec2IamCredentials: UpdateEc2IamCredentials
+  manualCredentials: UpdateAwsManualCredentials
+
+  crossAccountAttributes: UpdateAwsCrossAccountAttributes
+  defaultRegion: String
+}
+
+input UpdateEc2IamCredentials {
+  delegateSelector: String
+  usageScope: UsageScopeInput
+}
+
+input UpdateAwsManualCredentials {
+  accessKey: String
+  accessKeySecretId: String
+  secretKeySecretId: String
+}
+
+input UpdateAwsCrossAccountAttributes {
+  assumeCrossAccountRole: Boolean
+  crossAccountRoleArn: String
+  externalId: String
+}

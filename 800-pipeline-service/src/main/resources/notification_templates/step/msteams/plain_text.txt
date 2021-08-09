@@ -1,0 +1,10 @@
+{
+  "@type": "MessageCard",
+  "themeColor": "#FFFFFF",
+  "summary": "${event_name}",
+  "sections": [
+    {
+      "activityTitle": "${message}"
+    }
+  ]
+}

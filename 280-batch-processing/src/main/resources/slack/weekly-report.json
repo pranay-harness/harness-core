@@ -1,0 +1,88 @@
+{
+  "blocks": [
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "plain_text",
+          "text": "Your Cloud Cost Management Weekly Report (${DATE})",
+          "emoji": true
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*All Clusters Cost*\n>Total: ${TOTAL_CLUSTER_COST} (${TOTAL_CLUSTER_COST_CHANGE_PERCENT} | ${TOTAL_CLUSTER_COST_DIFF})\n>Idle: ${TOTAL_CLUSTER_IDLE_COST} (${TOTAL_CLUSTER_IDLE_COST_CHANGE_PERCENT} | ${TOTAL_CLUSTER_IDLE_COST_DIFF})\n>Unallocated: ${TOTAL_CLUSTER_UNALLOCATED_COST} (${TOTAL_CLUSTER_UNALLOCATED_COST_CHANGE_PERCENT} | ${TOTAL_CLUSTER_UNALLOCATED_COST_DIFF})"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "plain_text",
+        "text": " ",
+        "emoji": true
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "plain_text",
+        "text": "Largest week over week changes",
+        "emoji": true
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Applications*\n>Application: <${Application_SLACK_URL}|${Application_NAME}> ${Application_COST} (${Application_COST_CHANGE_PERCENT} | ${Application_COST_DIFF})\n>Service: <${Service_SLACK_URL}|${Service_NAME}> ${Service_COST} (${Service_COST_CHANGE_PERCENT} | ${Service_COST_DIFF})\n>Environment: <${Environment_SLACK_URL}|${Environment_NAME}> ${Environment_COST} (${Environment_COST_CHANGE_PERCENT} | ${Environment_COST_DIFF})\n"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Cluster*\n>Cluster: <${Cluster_SLACK_URL}|${Cluster_NAME}> ${Cluster_COST} (${Cluster_COST_CHANGE_PERCENT} | ${Cluster_COST_DIFF})\n>Namespace: <${Namespace_SLACK_URL}|${Namespace_NAME}> ${Namespace_COST} (${Namespace_COST_CHANGE_PERCENT} | ${Namespace_COST_DIFF})\n>Workload: <${Workload_SLACK_URL}|${Workload_NAME}> ${Workload_COST} (${Workload_COST_CHANGE_PERCENT} | ${Workload_COST_DIFF})\n"
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "plain_text",
+        "text": " ",
+        "emoji": true
+      }
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Explore",
+            "emoji": true
+          },
+          "url": "${url}",
+          "value": "click_me_123"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "plain_text",
+        "text": " ",
+        "emoji": true
+      }
+    },
+    {
+      "type": "divider"
+    }
+  ]
+}

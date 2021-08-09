@@ -1,0 +1,32 @@
+package software.wings.service.impl.aws.model;
+
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import static software.wings.service.impl.aws.model.AwsAsgRequest.AwsAsgRequestType.LIST_ASG_INSTANCES;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.security.encryption.EncryptedDataDetail;
+
+import software.wings.beans.AwsConfig;
+
+import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
+public class AwsAsgListInstancesRequest extends AwsAsgRequest {
+  private String autoScalingGroupName;
+
+  @Builder
+  public AwsAsgListInstancesRequest(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+    super(awsConfig, encryptionDetails, LIST_ASG_INSTANCES, region);
+    this.autoScalingGroupName = autoScalingGroupName;
+  }
+}

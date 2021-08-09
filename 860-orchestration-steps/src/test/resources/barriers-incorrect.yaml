@@ -1,0 +1,113 @@
+pipeline:
+  name: Test-2
+  identifier: Test-2
+  flowControl:
+    barriers:
+      - identifier: myBarrierId1
+        name: myBarrier1Name
+      - identifier: myBarrierId2
+        name: myBarrier2Name
+      - identifier: myBarrierId3
+        name: myBarrier3Name
+    resourceConstraints:
+      - identifier: rcId1
+        name: rc1
+  stages:
+    - stage:
+        name: VBStage
+        identifier: VBStage
+        description: ''
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceDefinition:
+              spec:
+                artifacts:
+                  sidecars: []
+              type: Kubernetes
+            service:
+              name: VBSvc
+              identifier: VBSvc
+          infrastructure:
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: org.SampleK8s
+                namespace: <+input>
+                releaseName: <+input>
+            environment:
+              name: VBEnv
+              identifier: VBEnv
+              type: PreProduction
+          executions:
+            - parallel:
+                - steps:
+                    - step:
+                        name: step2
+                        type: myStep
+                    - step:
+                        name: Barrier
+                        type: Barrier
+                        timeout: 10m
+                        spec:
+                          barrierRef: myBarrierId1
+                    - step:
+                        name: step3
+                        type: myStep
+            - steps:
+                - step:
+                    name: step1
+                    type: myStep
+                - step:
+                    name: Barrier
+                    type: Barrier
+                    timeout: 20m
+                    spec:
+                      barrierRef: myBarrierId2
+                - step:
+                    name: step2
+                    type: myStep
+                - step:
+                    name: step3
+                    type: myStep
+    - stage:
+        name: SampleStage
+        identifier: SampleStage
+        description: ''
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceDefinition:
+              spec:
+                artifacts:
+                  sidecars: []
+              type: Kubernetes
+            service:
+              name: VBSvc
+              identifier: VBSvc
+          infrastructure:
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: org.SampleK8s
+                namespace: <+input>
+                releaseName: <+input>
+            environment:
+              name: VBEnv
+              identifier: VBEnv
+              type: PreProduction
+          executions:
+            - steps:
+                - step:
+                    name: step2
+                    type: myStep
+                - step:
+                    name: Barrier
+                    type: Barrier
+                    timeout: 10m
+                    spec:
+                      barrierRef: myBarrierId7
+                - step:
+                    name: step3
+                    type: myStep
+

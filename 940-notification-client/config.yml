@@ -1,0 +1,42 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: http
+      port: 9010
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: http
+      port: 8002
+      maxRequestHeaderSize: 100KiB
+
+allowedOrigins:
+  - https://localhost:8181
+  - https://127.0.0.1:8181
+  - http://localhost:8000
+  - http://127.0.0.1:8000
+  - https://localhost:8000
+  - https://127.0.0.1:8000
+  -
+mongo:
+  uri: mongodb://localhost:27017/notification
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+enableAuth: false
+
+notificationClient:
+  messageBroker:
+    type: MONGO
+    uri: mongodb://localhost:27017/notification
+    connectTimeout: 30000
+    serverSelectionTimeout: 90000
+    maxConnectionIdleTime: 600000
+    connectionsPerHost: 300
+  httpClient:
+    baseUrl: http://localhost:9005/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  secrets:
+    notificationClientSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

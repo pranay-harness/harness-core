@@ -1,0 +1,12 @@
+{
+  "@type": "MessageCard",
+  "themeColor": "${THEME_COLOR}",
+  "summary": "Harness Notification",
+  "sections": [
+    {
+      "activityTitle": "No Active Delegates for Account ${ACCOUNT_ID}",
+      "activitySubtitle": "Harness Alert",
+      "activityImage": "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png"
+    }
+  ]
+}

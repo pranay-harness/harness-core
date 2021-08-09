@@ -1,0 +1,13 @@
+inputSet:
+  identifier: input1
+  name: input1
+  pipeline:
+    identifier: myPipeline1
+    stages:
+      - stage:
+          identifier: prod
+          type: Deployment
+          spec:
+            serviceConfig:
+              useFromStage:
+                stage: qa

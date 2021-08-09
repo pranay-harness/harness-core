@@ -1,0 +1,67 @@
+package io.harness.aggregator.consumers;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
+import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
+import io.harness.annotations.dev.OwnedBy;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.List;
+import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(PL)
+@Singleton
+@Slf4j
+public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssignmentDBO> {
+  private final ACLRepository aclRepository;
+  private final RoleAssignmentRepository roleAssignmentRepository;
+  private final ChangeConsumerService changeConsumerService;
+
+  @Override
+  public void consumeUpdateEvent(String id, RoleAssignmentDBO updatedRoleAssignmentDBO) {
+    if (!StringUtils.isEmpty(updatedRoleAssignmentDBO.getRoleIdentifier())
+        || !StringUtils.isEmpty(updatedRoleAssignmentDBO.getResourceGroupIdentifier())
+        || !StringUtils.isEmpty(updatedRoleAssignmentDBO.getPrincipalIdentifier())
+        || updatedRoleAssignmentDBO.getDisabled() != null) {
+      log.info("Number of ACLs deleted: {}", deleteACLs(id));
+      Optional<RoleAssignmentDBO> roleAssignment = roleAssignmentRepository.findById(id);
+      if (roleAssignment.isPresent()) {
+        long createdCount = createACLs(roleAssignment.get());
+        log.info("Number of ACLs created: {}", createdCount);
+      }
+    }
+  }
+
+  @Override
+  public void consumeDeleteEvent(String id) {
+    log.info("Number of ACLs deleted: {}", deleteACLs(id));
+  }
+
+  private long deleteACLs(String id) {
+    return aclRepository.deleteByRoleAssignmentId(id);
+  }
+
+  private long createACLs(RoleAssignmentDBO roleAssignment) {
+    List<ACL> aclsToCreate = changeConsumerService.getAClsForRoleAssignment(roleAssignment);
+    return aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
+  }
+
+  @Override
+  public void consumeCreateEvent(String id, RoleAssignmentDBO newRoleAssignmentDBO) {
+    Optional<RoleAssignmentDBO> roleAssignmentOptional = roleAssignmentRepository.findByIdentifierAndScopeIdentifier(
+        newRoleAssignmentDBO.getIdentifier(), newRoleAssignmentDBO.getScopeIdentifier());
+    if (!roleAssignmentOptional.isPresent()) {
+      log.info("Role assignment has been deleted, not processing role assignment create event for id: {}", id);
+      return;
+    }
+    log.info("Number of ACLs created: {}", createACLs(newRoleAssignmentDBO));
+  }
+}

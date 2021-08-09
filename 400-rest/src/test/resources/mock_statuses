@@ -1,0 +1,48 @@
+[
+  {
+    "self": "selfUri",
+    "id": "01",
+    "name": "Issue Type",
+    "subtask": false,
+    "statuses": [
+      {
+        "self": "selfUri",
+        "name": "To Do",
+        "id": "1"
+      },
+      {
+        "self": "selfUri",
+        "name": "In Progress",
+        "id": "2"
+      },
+      {
+        "self": "selfUri",
+        "name": "Done",
+        "id": "3"
+      }
+    ]
+  },
+  {
+    "self": "selfUri",
+    "id": "02",
+    "name": "Bug",
+    "subtask": false,
+    "statuses": [
+      {
+        "self": "selfUri",
+        "name": "To Do",
+        "id": "1"
+      },
+      {
+        "self": "selfUri",
+        "name": "In Progress",
+        "id": "2"
+      },
+      {
+        "self": "selfUri",
+        "name": "Done",
+        "id": "3"
+      }
+    ]
+  }
+]

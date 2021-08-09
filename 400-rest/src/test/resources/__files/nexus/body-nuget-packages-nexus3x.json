@@ -1,0 +1,35 @@
+{
+  "tid": 10,
+  "action": "coreui_Browse",
+  "method": "read",
+  "result": {
+    "success": true,
+    "data": [
+      {
+        "id": "AdamsLair.Duality.Samples.BasicMenu",
+        "text": "AdamsLair.Duality.Samples.BasicMenu",
+        "type": "folder",
+        "leaf": false,
+        "componentId": null,
+        "assetId": null
+      },
+      {
+        "id": "NuGet.Package.Sample",
+        "text": "NuGet.Package.Sample",
+        "type": "folder",
+        "leaf": false,
+        "componentId": null,
+        "assetId": null
+      },
+      {
+        "id": "NuGet.Sample.Package",
+        "text": "NuGet.Sample.Package",
+        "type": "folder",
+        "leaf": false,
+        "componentId": null,
+        "assetId": null
+      }
+    ]
+  },
+  "type": "rpc"
+}

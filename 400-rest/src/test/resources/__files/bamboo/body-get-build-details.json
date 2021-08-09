@@ -1,0 +1,131 @@
+{
+  "expand": "changes,metadata,plan,vcsRevisions,artifacts,comments,labels,jiraIssues,stages",
+  "link": {
+    "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/result/TP-PLAN2-4",
+    "rel": "self"
+  },
+  "plan": {
+    "shortName": "plan-1",
+    "shortKey": "PLAN2",
+    "type": "chain",
+    "enabled": true,
+    "link": {
+      "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/plan/TP-PLAN2",
+      "rel": "self"
+    },
+    "key": "TP-PLAN2",
+    "name": "Test Project - plan-1",
+    "planKey": {
+      "key": "TP-PLAN2"
+    }
+  },
+  "planName": "plan-1",
+  "projectName": "Test Project",
+  "buildResultKey": "TP-PLAN2-4",
+  "vcsRevisionKey": "45d0f90134e3397477ad9a4a500302b6e3756dda",
+  "vcsRevisions": {
+    "size": 1,
+    "start-index": 0,
+    "max-result": 1
+  },
+  "artifacts": {
+    "size": 0,
+    "start-index": 0,
+    "max-result": 0
+  },
+  "stages": {
+    "size": 1,
+    "expand": "stage",
+    "start-index": 0,
+    "max-result": 1,
+    "stage": [
+      {
+        "expand": "results",
+        "name": "Default Stage",
+        "results": {
+          "size": 1,
+          "expand": "result",
+          "start-index": 0,
+          "max-result": 1,
+          "result": [
+            {
+              "expand": "changes,testResults,metadata,logEntries,plan,vcsRevisions,artifacts,comments,labels,jiraIssues",
+              "link": {
+                "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/result/TP-PLAN2-JOB1-4",
+                "rel": "self"
+              },
+              "plan": {
+                "shortName": "Default Job",
+                "shortKey": "PLAN-JOB1",
+                "type": "job",
+                "enabled": true,
+                "link": {
+                  "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/plan/TP-PLAN2-JOB1",
+                  "rel": "self"
+                },
+                "key": "TP-PLAN2-JOB1",
+                "name": "Test Project - plan-1 - Default Job",
+                "planKey": {
+                  "key": "TP-PLAN2-JOB1"
+                }
+              },
+              "planName": "Default Job",
+              "projectName": "Test Project",
+              "stage": "Default Stage",
+              "buildResultKey": "TP-PLAN2-JOB1-4",
+              "vcsRevisionKey": "45d0f90134e3397477ad9a4a500302b6e3756dda",
+              "artifacts": {
+                "size": 2,
+                "start-index": 0,
+                "max-result": 2,
+                "artifact": [
+                  {
+                    "name": "Build log",
+                    "link": {
+                      "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/download/TP-PLAN2-JOB1/build_logs/TP-PLAN2-JOB1-4.log",
+                      "rel": "self"
+                    },
+                    "producerJobKey": "TP-PLAN2-JOB1-4",
+                    "shared": false
+                  },
+                  {
+                    "name": "myartifacts",
+                    "link": {
+                      "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/browse/TP-PLAN2-4/artifact/JOB1/myartifacts/todolist.war",
+                      "rel": "self"
+                    },
+                    "producerJobKey": "TP-PLAN2-JOB1-4",
+                    "shared": false,
+                    "size": 13569097,
+                    "prettySizeDescription": "12 MB"
+                  }
+                ]
+              },
+              "parent": {
+                "href": "http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/rest/api/latest/result/TP-PLAN-4",
+                "rel": "parent"
+              },
+              "key": "TP-PLAN2-JOB1-4",
+              "planResultKey": {
+                "key": "TP-PLAN2-JOB1-4",
+                "entityKey": {
+                  "key": "TP-PLAN2-JOB1"
+                },
+                "resultNumber": 4
+              },
+              "state": "Successful",
+              "buildState": "Successful",
+              "number": 4,
+              "buildNumber": 4
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "key": "TP-PLAN2-4",
+  "state": "Successful",
+  "buildState": "Successful",
+  "number": 4,
+  "buildNumber": 4
+}

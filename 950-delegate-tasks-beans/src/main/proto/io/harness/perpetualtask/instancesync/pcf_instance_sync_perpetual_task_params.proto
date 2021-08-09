@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.instancesync;
+
+option java_multiple_files = true;
+
+message PcfInstanceSyncPerpetualTaskParams {
+  string infra_mapping_id = 1;
+  string application_name = 2;
+  string org_name = 3;
+  string space = 4;
+  bytes pcf_config = 5;
+  bytes encrypted_data = 6;
+}

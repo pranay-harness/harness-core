@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package io.harness.delegateprofile;
+
+option java_multiple_files = true;
+option go_package = "920_delegate_service_beans";
+
+import "955-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/delegateprofile/delegate_profile.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/paging/paging.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/owner/owner.proto";
+import "io/harness/virtualstack/virtual_stack.proto";
+
+service DelegateProfileService {
+  rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc AddProfile(AddProfileRequest) returns (AddProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc DeleteProfile(DeleteProfileRequest) returns (DeleteProfileResponse);
+  rpc UpdateProfileScopingRules(UpdateProfileScopingRulesRequest) returns (UpdateProfileScopingRulesResponse);
+  rpc UpdateProfileSelectors(UpdateProfileSelectorsRequest) returns (UpdateProfileSelectorsResponse);
+  rpc GetProfileV2(GetProfileV2Request) returns (GetProfileResponse);
+  rpc UpdateProfileScopingRulesV2(UpdateProfileScopingRulesV2Request) returns (UpdateProfileScopingRulesResponse);
+  rpc DeleteProfileV2(DeleteProfileV2Request) returns (DeleteProfileResponse);
+  rpc UpdateProfileSelectorsV2(UpdateProfileSelectorsV2Request) returns (UpdateProfileSelectorsResponse);
+  rpc UpdateProfileV2(UpdateProfileRequest) returns (UpdateProfileResponse);
+}
+
+message ListProfilesRequest {
+  delegate.AccountId account_id = 1;
+  paging.PageRequestGrpc page_request = 2;
+  owner.OrgIdentifier org_id = 3;
+  owner.ProjectIdentifier project_id = 4;
+  bool ng = 5;
+}
+
+message ListProfilesResponse {
+  DelegateProfilePageResponseGrpc response = 1;
+}
+
+message GetProfileRequest {
+  delegate.AccountId account_id = 1;
+  ProfileId profile_id = 2;
+}
+
+message GetProfileV2Request {
+  delegate.AccountId account_id = 1;
+  owner.OrgIdentifier org_id = 2;
+  owner.ProjectIdentifier project_id = 3;
+  ProfileIdentifier profile_identifier = 4;
+}
+
+message GetProfileResponse {
+  DelegateProfileGrpc profile = 1;
+}
+
+message AddProfileRequest {
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  DelegateProfileGrpc profile = 2;
+}
+
+message AddProfileResponse {
+  DelegateProfileGrpc profile = 1;
+}
+
+message UpdateProfileRequest {
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  DelegateProfileGrpc profile = 2;
+}
+
+message UpdateProfileResponse {
+  DelegateProfileGrpc profile = 1;
+}
+
+message DeleteProfileRequest {
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  delegate.AccountId account_id = 2;
+  ProfileId profile_id = 3;
+}
+
+message DeleteProfileV2Request {
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  delegate.AccountId account_id = 2;
+  owner.OrgIdentifier org_id = 3;
+  owner.ProjectIdentifier project_id = 4;
+  ProfileIdentifier profile_identifier = 5;
+}
+
+message DeleteProfileResponse {}
+
+message UpdateProfileScopingRulesRequest {
+  delegate.AccountId account_id = 1;
+  ProfileId profile_id = 2;
+  repeated ProfileScopingRule scoping_rules = 3;
+}
+
+message UpdateProfileScopingRulesResponse {
+  DelegateProfileGrpc profile = 1;
+}
+
+message UpdateProfileSelectorsRequest {
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  delegate.AccountId account_id = 2;
+  ProfileId profile_id = 3;
+  repeated ProfileSelector selectors = 4;
+}
+
+message UpdateProfileSelectorsV2Request {
+  io.harness.virtualstack.VirtualStackRequest virtual_stack = 1;
+  delegate.AccountId account_id = 2;
+  owner.OrgIdentifier org_id = 3;
+  owner.ProjectIdentifier project_id = 4;
+  ProfileIdentifier profile_identifier = 5;
+  repeated ProfileSelector selectors = 6;
+}
+
+message UpdateProfileSelectorsResponse {
+  DelegateProfileGrpc profile = 1;
+}
+
+message UpdateProfileScopingRulesV2Request {
+  delegate.AccountId account_id = 1;
+  owner.OrgIdentifier org_id = 2;
+  owner.ProjectIdentifier project_id = 3;
+  ProfileIdentifier profile_identifier = 4;
+  repeated ProfileScopingRule scoping_rules = 5;
+}

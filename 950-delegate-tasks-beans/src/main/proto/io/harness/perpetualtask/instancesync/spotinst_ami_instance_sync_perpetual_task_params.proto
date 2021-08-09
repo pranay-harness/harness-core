@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.instancesync;
+
+option java_multiple_files = true;
+
+message SpotinstAmiInstanceSyncPerpetualTaskParams {
+  string region = 1;
+  string elastigroup_id = 2;
+  bytes aws_config = 3;
+  bytes spotinst_config = 4;
+  bytes aws_encrypted_data = 5;
+  bytes spotinst_encrypted_data = 6;
+}

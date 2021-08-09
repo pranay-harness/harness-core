@@ -1,0 +1,13 @@
+[{
+  "_id" : "6fFPFOlKRjqnhZyCxRDIjg",
+  "stateType" : "CLOUD_WATCH",
+  "analysisMinute" : 26066870,
+  "groupName" : "default",
+  "overallMetricScores" : {
+    "EstimatedProcessedBytes" : 1.0
+  },
+  "cvConfigId" : "2BlodZojT76deEqRnNdcCQ",
+  "aggregatedRisk" : 0,
+  "tag" : "ELB",
+  "appId" : "Wk6TjV-FTruiZMRfhyxSDQ"
+}]

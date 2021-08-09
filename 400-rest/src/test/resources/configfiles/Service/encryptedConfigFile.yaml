@@ -1,0 +1,7 @@
+harnessApiVersion: '1.0'
+type: CONFIG_FILE
+checksumType: MD5
+encrypted: true
+fileName: safeharness:FILE_ID
+targetFilePath: configFile.txt
+targetToAllEnv: true

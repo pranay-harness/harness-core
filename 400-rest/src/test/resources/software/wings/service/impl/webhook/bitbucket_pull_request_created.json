@@ -1,0 +1,216 @@
+{
+  "pullrequest": {
+    "rendered": {
+      "description": {
+        "raw": "README.md edited online with Bitbucket",
+        "markup": "markdown",
+        "html": "<p>README.md edited online with Bitbucket</p>",
+        "type": "rendered"
+      },
+      "title": {
+        "raw": "README.md edited online with Bitbucket",
+        "markup": "markdown",
+        "html": "<p>README.md edited online with Bitbucket</p>",
+        "type": "rendered"
+      }
+    },
+    "type": "pullrequest",
+    "description": "README.md edited online with Bitbucket",
+    "links": {
+      "decline": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/decline"
+      },
+      "commits": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/commits"
+      },
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14"
+      },
+      "comments": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/comments"
+      },
+      "merge": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/merge"
+      },
+      "html": {
+        "href": "https://bitbucket.org/harshjain12/harshrepo/pull-requests/14"
+      },
+      "activity": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/activity"
+      },
+      "diff": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/diff"
+      },
+      "approve": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/approve"
+      },
+      "statuses": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/pullrequests/14/statuses"
+      }
+    },
+    "title": "README.md edited online with Bitbucket",
+    "close_source_branch": true,
+    "reviewers": [],
+    "id": 14,
+    "destination": {
+      "commit": {
+        "hash": "55a8e490dcc7",
+        "type": "commit",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/commit/55a8e490dcc7"
+          },
+          "html": {
+            "href": "https://bitbucket.org/harshjain12/harshrepo/commits/55a8e490dcc7"
+          }
+        }
+      },
+      "repository": {
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/harshjain12/harshrepo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7Bf9b329ed-32d9-4cf1-988c-ff4afdbc9d27%7D?ts=default"
+          }
+        },
+        "type": "repository",
+        "name": "HarshRepo",
+        "full_name": "harshjain12/harshrepo",
+        "uuid": "{f9b329ed-32d9-4cf1-988c-ff4afdbc9d27}"
+      },
+      "branch": {
+        "name": "master"
+      }
+    },
+    "created_on": "2019-06-03T12:44:06.039451+00:00",
+    "summary": {
+      "raw": "README.md edited online with Bitbucket",
+      "markup": "markdown",
+      "html": "<p>README.md edited online with Bitbucket</p>",
+      "type": "rendered"
+    },
+    "source": {
+      "commit": {
+        "hash": "8e2dc01e4c18",
+        "type": "commit",
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo/commit/8e2dc01e4c18"
+          },
+          "html": {
+            "href": "https://bitbucket.org/harshjain12/harshrepo/commits/8e2dc01e4c18"
+          }
+        }
+      },
+      "repository": {
+        "links": {
+          "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo"
+          },
+          "html": {
+            "href": "https://bitbucket.org/harshjain12/harshrepo"
+          },
+          "avatar": {
+            "href": "https://bytebucket.org/ravatar/%7Bf9b329ed-32d9-4cf1-988c-ff4afdbc9d27%7D?ts=default"
+          }
+        },
+        "type": "repository",
+        "name": "HarshRepo",
+        "full_name": "harshjain12/harshrepo",
+        "uuid": "{f9b329ed-32d9-4cf1-988c-ff4afdbc9d27}"
+      },
+      "branch": {
+        "name": "harshBranch"
+      }
+    },
+    "comment_count": 0,
+    "state": "OPEN",
+    "task_count": 0,
+    "participants": [],
+    "reason": "",
+    "updated_on": "2019-06-03T12:44:06.102535+00:00",
+    "author": {
+      "username": "harshjain12",
+      "display_name": "Harsh Jain",
+      "uuid": "{e693cd40-0dbc-4fc3-832d-bebebfaff68f}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/%7Be693cd40-0dbc-4fc3-832d-bebebfaff68f%7D"
+        },
+        "html": {
+          "href": "https://bitbucket.org/%7Be693cd40-0dbc-4fc3-832d-bebebfaff68f%7D/"
+        },
+        "avatar": {
+          "href": "https://avatar-cdn.atlassian.com/5cb5280e9eec1011988bb9d1?by=id&sg=5VQk%2BA8weUnSQeaaFe9y0tXw6pY%3D&d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FHJ-1.svg"
+        }
+      },
+      "nickname": "Harsh Jain",
+      "type": "user",
+      "account_id": "5cb5280e9eec1011988bb9d1"
+    },
+    "merge_commit": null,
+    "closed_by": null
+  },
+  "repository": {
+    "scm": "git",
+    "website": "",
+    "name": "HarshRepo",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/harshjain12/harshrepo"
+      },
+      "html": {
+        "href": "https://bitbucket.org/harshjain12/harshrepo"
+      },
+      "avatar": {
+        "href": "https://bytebucket.org/ravatar/%7Bf9b329ed-32d9-4cf1-988c-ff4afdbc9d27%7D?ts=default"
+      }
+    },
+    "full_name": "harshjain12/harshrepo",
+    "owner": {
+      "username": "harshjain12",
+      "display_name": "Harsh Jain",
+      "uuid": "{e693cd40-0dbc-4fc3-832d-bebebfaff68f}",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/%7Be693cd40-0dbc-4fc3-832d-bebebfaff68f%7D"
+        },
+        "html": {
+          "href": "https://bitbucket.org/%7Be693cd40-0dbc-4fc3-832d-bebebfaff68f%7D/"
+        },
+        "avatar": {
+          "href": "https://avatar-cdn.atlassian.com/5cb5280e9eec1011988bb9d1?by=id&sg=5VQk%2BA8weUnSQeaaFe9y0tXw6pY%3D&d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FHJ-1.svg"
+        }
+      },
+      "nickname": "Harsh Jain",
+      "type": "user",
+      "account_id": "5cb5280e9eec1011988bb9d1"
+    },
+    "type": "repository",
+    "is_private": true,
+    "uuid": "{f9b329ed-32d9-4cf1-988c-ff4afdbc9d27}"
+  },
+  "actor": {
+    "username": "harshjain12",
+    "display_name": "Harsh Jain",
+    "uuid": "{e693cd40-0dbc-4fc3-832d-bebebfaff68f}",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/%7Be693cd40-0dbc-4fc3-832d-bebebfaff68f%7D"
+      },
+      "html": {
+        "href": "https://bitbucket.org/%7Be693cd40-0dbc-4fc3-832d-bebebfaff68f%7D/"
+      },
+      "avatar": {
+        "href": "https://avatar-cdn.atlassian.com/5cb5280e9eec1011988bb9d1?by=id&sg=5VQk%2BA8weUnSQeaaFe9y0tXw6pY%3D&d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FHJ-1.svg"
+      }
+    },
+    "nickname": "Harsh Jain",
+    "type": "user",
+    "account_id": "5cb5280e9eec1011988bb9d1"
+  }
+}

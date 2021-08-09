@@ -1,0 +1,78 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: h2
+      port: 5050
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 5457
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: h2
+      port: 5051
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders: []
+
+
+logging:
+  level: INFO
+  loggers:
+    com.novemberain.quartz.mongodb: WARN
+    org.quartz.plugins: WARN
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    #the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
+    #TODO : remove this suppression when the mentioned issue is resolved
+    com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
+mongo:
+  uri: mongodb://localhost:27017/harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+
+serviceSecret:
+  managerToCommandLibraryServiceSecret: a611aa13eb1d5e77bc3295517ebe65gh1
+
+tag:
+  importantTags:
+    - Azure
+    - Kubernetes
+    - Gcp
+    - Aws
+  allowedTags:
+    - Azure
+    - Kubernetes
+    - Gcp
+    - Aws
+
+cfClientConfig:
+  apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false

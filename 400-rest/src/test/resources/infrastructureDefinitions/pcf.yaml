@@ -1,0 +1,12 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: PCF
+deploymentType: PCF
+infrastructure:
+- type: PCF_PCF
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  organization: Harness
+  routeMaps:
+  - cdteamsatyampcfdebug31556901416980yml.cfapps.io
+  - todoplannercf2.cfapps.io
+  space: development

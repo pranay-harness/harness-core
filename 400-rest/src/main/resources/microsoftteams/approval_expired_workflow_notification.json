@@ -1,0 +1,12 @@
+{
+  "@type": "MessageCard",
+  "themeColor": "${THEME_COLOR}",
+  "summary": "Harness Notification",
+  "sections": [
+    {
+      "activityTitle": "Workflow Execution ${STATUS_CAMELCASE} - [${WORKFLOW_NAME}](${WORKFLOW_URL}) ${VERB} in **${APP_NAME}** application",
+      "activitySubtitle": "Workflow Notification",
+      "activityImage": "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+package io.harness.lock;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+import java.time.Duration;
+
+/**
+ * Locker interface to acquire and release locks.
+ *
+ * @author Rishi
+ */
+@OwnedBy(PL)
+public interface PersistentLocker {
+  /**
+   * Acquire lock.
+   *
+   * @param name    the lock name
+   * @param timeout for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock acquireLock(String name, Duration timeout);
+
+  /**
+   * Acquire ephemeral lock.
+   *
+   * @param name    the lock name
+   * @param timeout for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock acquireEphemeralLock(String name, Duration timeout);
+
+  /**
+   * Acquire lock.
+   *
+   * @param entityClass the entity class
+   * @param entityId    the entity id
+   * @param timeout     for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock acquireLock(Class entityClass, String entityId, Duration timeout);
+
+  /**
+   * Try to acquire lock.
+   *
+   * @param entityClass the entity class
+   * @param entityId    the entity id
+   * @param timeout     for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock tryToAcquireLock(Class entityClass, String entityId, Duration timeout);
+
+  /**
+   * Try to acquire ephemeral lock.
+   *
+   * @param entityClass the entity class
+   * @param entityId    the entity id
+   * @param timeout     for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock tryToAcquireEphemeralLock(Class entityClass, String entityId, Duration timeout);
+
+  /**
+   * Try to acquire lock.
+   *
+   * @param name    the lock name
+   * @param timeout for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock tryToAcquireLock(String name, Duration timeout);
+
+  /**
+   * Try to acquire an infinite lock with periodic lease refreshing after every 30 seconds
+   *
+   * @param name    the lock name
+   * @param waitTime wait time to acquire lock
+   * @return AcquiredLock object
+   */
+  AcquiredLock tryToAcquireInfiniteLockWithPeriodicRefresh(String name, Duration waitTime);
+
+  /**
+   * Try to acquire ephemeral lock.
+   *
+   * @param name    the lock name
+   * @param timeout for how long to keep the lock if the app crashes
+   * @return AcquiredLock object
+   */
+  AcquiredLock tryToAcquireEphemeralLock(String name, Duration timeout);
+
+  /**
+   * Acquire lock.
+   *
+   * @param entityClass the entity class
+   * @param entityId    the entity id
+   * @param lockTimeout for how long to keep the lock if the app crashes
+   * @param waitTimeout  how long to wait to acquire the lock
+   * @return AcquiredLock object
+   */
+  AcquiredLock waitToAcquireLock(Class entityClass, String entityId, Duration lockTimeout, Duration waitTimeout);
+
+  AcquiredLock waitToAcquireLock(String name, Duration lockTimeout, Duration waitTimeout);
+
+  /**
+   * Destroy lock.
+   *
+   * @param acquiredLock  already acquired lock
+   */
+  void destroy(AcquiredLock acquiredLock);
+}

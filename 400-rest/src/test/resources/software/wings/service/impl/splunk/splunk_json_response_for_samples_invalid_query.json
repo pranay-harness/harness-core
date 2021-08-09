@@ -1,0 +1,147 @@
+{
+  "preview": false,
+  "init_offset": 0,
+  "messages": [],
+  "fields": [
+    {
+      "name": "_time",
+      "groupby_rank": "0"
+    },
+    {
+      "name": "/opt/splunk/var/log/introspection/resource_usage.log",
+      "data_source": "sum(events)",
+      "splitby_field": "series",
+      "splitby_value": "/opt/splunk/var/log/introspection/resource_usage.log"
+    },
+    {
+      "name": "/opt/splunk/var/log/splunk/health.log",
+      "data_source": "sum(events)",
+      "splitby_field": "series",
+      "splitby_value": "/opt/splunk/var/log/splunk/health.log"
+    },
+    {
+      "name": "/opt/splunk/var/log/splunk/metrics.log",
+      "data_source": "sum(events)",
+      "splitby_field": "series",
+      "splitby_value": "/opt/splunk/var/log/splunk/metrics.log"
+    },
+    {
+      "name": "/opt/splunk/var/log/splunk/splunkd_access.log",
+      "data_source": "sum(events)",
+      "splitby_field": "series",
+      "splitby_value": "/opt/splunk/var/log/splunk/splunkd_access.log"
+    },
+    {
+      "name": "http:httpcollector",
+      "data_source": "sum(events)",
+      "splitby_field": "series",
+      "splitby_value": "http:httpcollector"
+    },
+    {
+      "name": "OTHER",
+      "data_source": "sum(events)",
+      "splitby_field": "series",
+      "splitby_special": "other",
+      "splitby_value": "OTHER"
+    },
+    {
+      "name": "_span"
+    }
+  ],
+  "results": [
+    {
+      "_time": "2020-07-17T08:43:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "27.0000000",
+      "/opt/splunk/var/log/splunk/health.log": "6.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "80.00000000",
+      "http:httpcollector": "9.00000000000",
+      "OTHER": "15.0000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:44:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "60.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "12.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "170.0000000000",
+      "/opt/splunk/var/log/splunk/splunkd_access.log": "63.00000000",
+      "http:httpcollector": "21.0000000000",
+      "OTHER": "72.00000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:45:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "65.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "12.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "172.0000000000",
+      "http:httpcollector": "20.000000000",
+      "OTHER": "16.00000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:46:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "26.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "6.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "85.0000000",
+      "http:httpcollector": "10.00000",
+      "OTHER": "7.000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:47:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "51.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "12.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "165.0000000000",
+      "http:httpcollector": "21.0000000000",
+      "OTHER": "20.0000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:48:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "54.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "12.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "161.0000000000",
+      "/opt/splunk/var/log/splunk/splunkd_access.log": "17.0000",
+      "http:httpcollector": "20.00000000000",
+      "OTHER": "25.0000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:49:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "62.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "12.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "179.0000000000",
+      "/opt/splunk/var/log/splunk/splunkd_access.log": "34.000000000",
+      "http:httpcollector": "20.0000000000",
+      "OTHER": "46.00000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:50:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "67.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "12.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "178.000000000",
+      "http:httpcollector": "20.0000000000",
+      "OTHER": "44.00000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:51:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "80.0000000",
+      "/opt/splunk/var/log/splunk/health.log": "18.0000000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "184.0000000000",
+      "http:httpcollector": "20.0000000000",
+      "OTHER": "19.00000000000",
+      "_span": "60"
+    },
+    {
+      "_time": "2020-07-17T08:52:00.000+00:00",
+      "/opt/splunk/var/log/introspection/resource_usage.log": "52.0000000000",
+      "/opt/splunk/var/log/splunk/health.log": "13.00000000",
+      "/opt/splunk/var/log/splunk/metrics.log": "164.0000000000",
+      "http:httpcollector": "11.00000000000",
+      "OTHER": "17.00000000000",
+      "_span": "60"
+    }
+  ],
+  "highlighted": {}
+}

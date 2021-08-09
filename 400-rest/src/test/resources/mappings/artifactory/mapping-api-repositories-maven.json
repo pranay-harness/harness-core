@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/artifactory/api/repositories/harness-maven"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-repositories-maven-api.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

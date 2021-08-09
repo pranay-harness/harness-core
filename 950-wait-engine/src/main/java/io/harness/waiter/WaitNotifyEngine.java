@@ -1,0 +1,170 @@
+package io.harness.waiter;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
+
+import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.logging.AutoLogRemoveContext;
+import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ErrorResponseData;
+import io.harness.tasks.ProgressData;
+import io.harness.tasks.ResponseData;
+import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
+import io.harness.waiter.persistence.PersistenceWrapper;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.DuplicateKeyException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
+ * No entry in the waitQueue found for the correlationIds:
+ */
+@Singleton
+@Slf4j
+@OwnedBy(HarnessTeam.DEL)
+public class WaitNotifyEngine {
+  @Inject private PersistenceWrapper persistenceWrapper;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject private NotifyQueuePublisherRegister publisherRegister;
+
+  public String waitForAllOn(String publisherName, NotifyCallback notifyCallback, String... correlationIds) {
+    return waitForAllOn(publisherName, notifyCallback, null, correlationIds);
+  }
+
+  public String waitForAllOn(
+      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, String... correlationIds) {
+    Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
+
+    if (log.isDebugEnabled()) {
+      log.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
+    }
+    final List<String> list;
+    if (correlationIds.length == 1) {
+      list = singletonList(correlationIds[0]);
+    } else {
+      // In case of multiple items, we have to make sure that all of them are unique
+      Set<String> set = new HashSet<>();
+      Collections.addAll(set, correlationIds);
+      list = new ArrayList<>(set);
+    }
+
+    return waitForAllOn(publisherName, callback, progressCallback, list);
+  }
+
+  public String waitForAllOnInList(String publisherName, OldNotifyCallback callback, List<String> list) {
+    return waitForAllOn(publisherName, callback, null, list);
+  }
+
+  public String waitForAllOn(
+      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, List<String> list) {
+    final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder()
+                                                        .uuid(generateUuid())
+                                                        .callback(callback)
+                                                        .progressCallback(progressCallback)
+                                                        .publisher(publisherName);
+
+    waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
+
+    final String waitInstanceId = persistenceWrapper.save(waitInstanceBuilder.build());
+
+    WaitInstance waitInstance;
+    if ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstanceForExistingResponse(waitInstanceId, list))
+        != null) {
+      if (isEmpty(waitInstance.getWaitingOnCorrelationIds())
+          && waitInstance.getCallbackProcessingAt() < System.currentTimeMillis()) {
+        sendNotification(waitInstance);
+      }
+    }
+
+    return waitInstanceId;
+  }
+
+  public void progressOn(String correlationId, ProgressData progressData) {
+    Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
+
+    if (log.isDebugEnabled()) {
+      log.debug("notify request received for the correlationId : {}", correlationId);
+    }
+
+    try {
+      persistenceWrapper.save(ProgressUpdate.builder()
+                                  .uuid(generateUuid())
+                                  .correlationId(correlationId)
+                                  .createdAt(currentTimeMillis())
+                                  .progressData(kryoSerializer.asDeflatedBytes(progressData))
+                                  .build());
+    } catch (Exception exception) {
+      log.error("Failed to notify for progress of type " + progressData.getClass().getSimpleName(), exception);
+    }
+  }
+
+  public String doneWith(String correlationId, ResponseData response) {
+    return doneWith(correlationId, response, response instanceof ErrorResponseData);
+  }
+
+  private String doneWith(String correlationId, ResponseData response, boolean error) {
+    Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
+
+    if (log.isDebugEnabled()) {
+      log.debug("notify request received for the correlationId : {}", correlationId);
+    }
+
+    try {
+      persistenceWrapper.save(NotifyResponse.builder()
+                                  .uuid(correlationId)
+                                  .createdAt(currentTimeMillis())
+                                  .responseData(kryoSerializer.asDeflatedBytes(response))
+                                  .error(error || response instanceof ErrorResponseData)
+                                  .build());
+      handleNotifyResponse(correlationId);
+      return correlationId;
+    } catch (DuplicateKeyException | org.springframework.dao.DuplicateKeyException exception) {
+      log.warn("Unexpected rate of DuplicateKeyException per correlation", exception);
+    } catch (Exception exception) {
+      log.error("Failed to notify for response of type " + response.getClass().getSimpleName(), exception);
+    }
+    return null;
+  }
+
+  public void sendNotification(WaitInstance waitInstance) {
+    try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(WaitInstanceLogContext.ID)) {
+      String publisher = waitInstance.getPublisher();
+
+      final NotifyQueuePublisher notifyQueuePublisher = publisherRegister.obtain(waitInstance.getPublisher());
+
+      if (notifyQueuePublisher == null) {
+        // There is nothing smart that we can do.
+        // If there is no publisher we should let people evaluate and handle the problem.
+        log.error("Unknown publisher {}", publisher);
+        return;
+      }
+
+      notifyQueuePublisher.send(aNotifyEvent().waitInstanceId(waitInstance.getUuid()).build());
+    }
+  }
+
+  public void handleNotifyResponse(String uuid) {
+    WaitInstance waitInstance;
+    while ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstance(uuid)) != null) {
+      if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+        sendNotification(waitInstance);
+      }
+    }
+  }
+}

@@ -1,0 +1,71 @@
+extend type Query {
+  # Get details about a Harness Environment.
+  environment(environmentId: String!): Environment @dataFetcher(name: environment)
+
+  # Get details about one or multiple Harness Environments.
+  environments(filters: [EnvironmentFilter], limit: Int!, offset: Int): EnvironmentConnection
+    @dataFetcher(name: environmentConnection)
+}
+
+input infraDefConnectionData {
+  InfrastructureId: String
+  EnvironmentId: String
+}
+
+input EnvironmentFilter {
+  application: IdFilter
+  environment: IdFilter
+  environmentType: EnvironmentTypeFilter
+  tag: EnvironmentTagFilter
+}
+
+input EnvironmentTypeFilter {
+  operator: EnumOperator
+  values: [EnvironmentType]
+}
+
+enum EnvironmentTagType {
+  APPLICATION
+}
+
+input EnvironmentTagFilter {
+  entityType: EnvironmentTagType
+  tags: [TagInput]
+}
+
+type Environment {
+  id: String
+  name: String
+  description: String
+  type: EnvironmentType
+  createdAt: DateTime
+  createdBy: User
+  application: Application
+    @dataFetcher(name: application, useBatch: false, contextFieldArgsMap: "{ \"applicationId\": \"appId\"}")
+  infrastructureDefinitions(
+    filters: [InfrastructureDefinitionFilter]
+    limit: Int!
+    offset: Int
+  ): InfrastructureDefinitionConnection
+    @dataFetcher(name: infrastructureDefinitionConnection, contextFieldArgsMap: "{ \"Environment\": \"id\"}")
+}
+
+type EnvironmentConnection {
+  pageInfo: PageInfo
+  nodes: [Environment]
+}
+
+enum EnvironmentType {
+  PROD
+  NON_PROD
+}
+
+input EnvFilterInput {
+  filterTypes: EnvFilterType
+  envIds: String
+}
+
+type EnvFilter {
+  filterTypes: [EnvFilterType]
+  envIds: [String]
+}

@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.instancesync;
+
+option java_multiple_files = true;
+
+message CustomDeploymentInstanceSyncTaskParams {
+  string app_id = 1;
+  string account_id = 2;
+  string script = 3;
+  string output_path_key = 4;
+}

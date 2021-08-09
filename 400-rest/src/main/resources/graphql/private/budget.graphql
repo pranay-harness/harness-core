@@ -1,0 +1,56 @@
+extend type Query {
+  # Get details about CCM Budget.
+  budget(budgetId: String!): BudgetDataList @dataFetcher(name: budget)
+
+  # Get list of budgets for an account.
+  budgetList: [BudgetTableData] @dataFetcher(name: budgetList)
+
+  budgetTrendStats(budgetId: String!): BudgetTrendStats @dataFetcher(name: budgetTrendStats)
+
+  budgetNotifications(filters: [CCMFilter]): BudgetNotificationsData @dataFetcher(name: budgetNotifications)
+}
+
+type BudgetDataList {
+  data: [BudgetData]
+  forecastCost: Number
+}
+
+type BudgetData {
+  time: Number
+  actualCost: Number
+  budgetVariance: Number
+  budgeted: Number
+  budgetVariancePercentage: Number
+}
+
+type BudgetTableData {
+  name: String
+  id: String
+  type: String
+  scopeType: String
+  appliesTo: [String]
+  appliesToIds: [String]
+  environment: String
+  alertAt: [Number]
+  notifications: [String]
+  budgetedAmount: Number
+  actualAmount: Number
+  forecastCost: Number
+  lastMonthCost: Number
+  lastUpdatedAt: Number
+}
+
+type BudgetTrendStats {
+  totalCost: BillingStatsInfo
+  forecastCost: BillingStatsInfo
+  budgetDetails: BudgetTableData
+  status: String
+}
+
+type BudgetNotificationsData {
+  data: BudgetNotifications
+}
+
+type BudgetNotifications {
+  count: Number
+}

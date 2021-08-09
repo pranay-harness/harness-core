@@ -1,0 +1,80 @@
+{
+  "items" : [ {
+    "id" : "bWF2ZW4tcmVsZWFzZXM6Yzc3MDE2OWMwYjJlM2VkOGVmMzU2YWE0ZTliMmZlNDY",
+    "repository" : "maven-releases",
+    "format" : "maven2",
+    "group" : "mygroup",
+    "name" : "myartifact",
+    "version" : "1.0",
+    "assets" : [ {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war",
+      "path" : "mygroup/myartifact/1.0/myartifact-1.0.war",
+      "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjFkYzQxOWYyMGZmNDY4ZjU",
+      "repository" : "maven-releases",
+      "format" : "maven2",
+      "checksum" : {
+        "sha1" : "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "md5" : "d41d8cd98f00b204e9800998ecf8427e"
+      }
+    }, {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war.md5",
+      "path" : "mygroup/myartifact/1.0/myartifact-1.0.war.md5",
+      "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YmE3YTE1OTYwNzUxZTE4ZjQ",
+      "repository" : "maven-releases",
+      "format" : "maven2",
+      "checksum" : {
+        "sha1" : "67a74306b06d0c01624fe0d0249a570f4d093747",
+        "md5" : "74be16979710d4c4e7c6647856088456"
+      }
+    }, {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war.sha1",
+      "path" : "mygroup/myartifact/1.0/myartifact-1.0.war.sha1",
+      "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YmUyYzliZWU1NGMwMTllNzI",
+      "repository" : "maven-releases",
+      "format" : "maven2",
+      "checksum" : {
+        "sha1" : "10a34637ad661d98ba3344717656fcc76209c2f8",
+        "md5" : "0144712dd81be0c3d9724f5e56ce6685"
+      }
+    } ]
+  }, {
+    "id" : "bWF2ZW4tcmVsZWFzZXM6Yzc3MDE2OWMwYjJlM2VkODAyYTEzZDk2MDhkYTg4N2U",
+    "repository" : "maven-releases",
+    "format" : "maven2",
+    "group" : "mygroup",
+    "name" : "myartifact",
+    "version" : "1.8",
+    "assets" : [ {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.8/myartifact-1.8.war",
+      "path" : "mygroup/myartifact/1.8/myartifact-1.8.war",
+      "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjQ5ZTVmMGE0MWQxMmI5NDM",
+      "repository" : "maven-releases",
+      "format" : "maven2",
+      "checksum" : {
+        "sha1" : "528747466475a0adc57ab014d90bd8fbc9b88ed5",
+        "md5" : "cddf533a8ea7a4edc46930cfb1b06e3e"
+      }
+    }, {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.8/myartifact-1.8.war.md5",
+      "path" : "mygroup/myartifact/1.8/myartifact-1.8.war.md5",
+      "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjljNDljYzViYzk4OTgyZjI",
+      "repository" : "maven-releases",
+      "format" : "maven2",
+      "checksum" : {
+        "sha1" : "4fd0e7e6671e20ea24dae1d610d623a6f7b25309",
+        "md5" : "14e2f80d56b2aa226d2d947a3108705c"
+      }
+    }, {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.8/myartifact-1.8.war.sha1",
+      "path" : "mygroup/myartifact/1.8/myartifact-1.8.war.sha1",
+      "id" : "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjA3OWU4ZWU2YjQ0MjUyMDQ",
+      "repository" : "maven-releases",
+      "format" : "maven2",
+      "checksum" : {
+        "sha1" : "8d7ba9a60915c795e6e4998a90f606f688c5aa65",
+        "md5" : "10f8a902bdd5ad13a7780dfaef4e6b1b"
+      }
+    } ]
+  } ],
+  "continuationToken" : null
+}

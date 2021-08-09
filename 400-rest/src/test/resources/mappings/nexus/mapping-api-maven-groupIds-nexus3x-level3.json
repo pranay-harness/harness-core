@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/nexus/service/extdirect",
+    "bodyPatterns": [ {
+      "equalToJson" : "{\"action\":\"coreui_Browse\",\"method\":\"read\",\"data\":[{\"repositoryName\":\"maven-releases\",\"node\":\"mygroup/myartifact\"}],\"type\":\"rpc\",\"tid\":10}"
+    }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-maven-groupIds-nexus3x-level3.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

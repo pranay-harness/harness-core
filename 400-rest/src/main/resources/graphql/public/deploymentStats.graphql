@@ -1,0 +1,77 @@
+enum DeploymentEntityAggregation {
+  Application
+  Service
+  Environment
+  EnvironmentType
+  CloudProvider
+  Status
+  TriggeredBy
+  Trigger
+  Workflow
+  Pipeline
+}
+
+enum DeploymentSortType {
+  Duration
+  Count
+}
+
+input DeploymentSortCriteria {
+  sortType: DeploymentSortType
+  sortOrder: SortOrder
+}
+
+input DeploymentFilter {
+  application: IdFilter
+  service: IdFilter
+  cloudProvider: IdFilter
+  environment: IdFilter
+  environmentType: EnvironmentTypeFilter
+  deploymentType: DeploymentTypeFilter
+  orchestrationWorkflowType: OrchestrationWorkflowTypeFilter
+  status: IdFilter
+  endTime: TimeFilter
+  startTime: TimeFilter
+  duration: NumberFilter
+  rollbackDuration: NumberFilter
+  triggeredBy: IdFilter
+  trigger: IdFilter
+  workflow: IdFilter
+  pipeline: IdFilter
+  tag: DeploymentTagFilter
+}
+
+input DeploymentAggregationFunction {
+  count: CountAggregateOperation
+  duration: DurationAggregateOperation
+  rollbackDuration: DurationAggregateOperation
+  instancesDeployed: CountAggregateOperation
+}
+
+enum DurationAggregateOperation {
+  AVERAGE
+  MIN
+  MAX
+}
+
+input DeploymentAggregation {
+  entityAggregation: DeploymentEntityAggregation
+  timeAggregation: TimeSeriesAggregation
+  tagAggregation: DeploymentTagAggregation
+}
+
+input DeploymentTagAggregation {
+  entityType: DeploymentTagType
+  tagName: String
+}
+
+extend type Query {
+  #Get statistics about one or multiple deployments.
+  deploymentStats(
+    aggregateFunction: DeploymentAggregationFunction
+    filters: [DeploymentFilter]
+    groupBy: [DeploymentAggregation]
+    sortCriteria: [DeploymentSortCriteria]
+    includeIndirectExecutions: Boolean
+  ): Data @dataFetcher(name: deploymentStats)
+}

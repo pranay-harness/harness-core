@@ -1,0 +1,9 @@
+{
+  "ui:order": ["query", "assertion", "waitInterval", "executeWithPreviousSteps"],
+  "query": {
+    "ui:widget": "textarea"
+  },
+  "assertion": {
+    "ui:widget": "textarea"
+  }
+}

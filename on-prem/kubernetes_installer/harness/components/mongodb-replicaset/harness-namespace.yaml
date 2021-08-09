@@ -1,0 +1,9 @@
+---
+# Source: harness-kubernetes/templates/harness-namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: harness-mongo-1
+
+---
+

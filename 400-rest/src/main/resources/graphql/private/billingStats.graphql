@@ -1,0 +1,535 @@
+extend type Query {
+  billingStatsTimeSeries(
+    limit: Int
+    includeOthers: Boolean
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): BillingStackedTimeSeriesData @dataFetcher(name: billingStatsTimeSeries)
+
+  gcpBillingTimeSeriesStats(
+    filters: [CCMFilter]
+    aggregateFunction: CCMAggregationFunction
+    groupBy: [CCMGroupBy]
+  ): GcpBillingTimeSeriesStats @dataFetcher(name: gcpBillingTimeSeriesStats)
+
+  billingTrendStats(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+  ): BillingStatsData @dataFetcher(name: billingTrendStats)
+
+  billingForecastCost(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+  ): BillingStatsData @dataFetcher(name: billingForecastCost)
+
+  gcpBillingTrendStats(filters: [CCMFilter]): BillingStatsData @dataFetcher(name: gcpBillingTrendStats)
+
+  idleCostTrendStats(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+  ): IdleCostStatsData @dataFetcher(name: idleCostTrendStats)
+
+  billingStatsEntity(
+    limit: Int
+    offset: Int
+    includeOthers: Boolean
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): BillingEntityData @dataFetcher(name: billingStatsEntity)
+
+  gcpBillingEntityData(
+    filters: [CloudBillingFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CloudBillingGroupBy]
+  ): GcpBillingEntityData @dataFetcher(name: gcpBillingEntityStats)
+
+  billingStatsFilterValues(
+    limit: Int
+    offset: Int
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): BillingFilterData @dataFetcher(name: billingStatsFilterValues)
+
+  billingJobProcessedValues: BillingJobProcessedData @dataFetcher(name: billingJobProcessed)
+
+  efficiencyStats(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+  ): EfficiencyStatsData @dataFetcher(name: efficiencyStats)
+
+  sunburstChartStats(
+    limit: Int
+    includeOthers: Boolean
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): SunburstChartData @dataFetcher(name: sunburstChartStats)
+
+  nodeAndPodDetails(
+    limit: Int
+    offset: Int
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    groupBy: [CCMGroupBy]
+    sortCriteria: [BillingSortCriteria]
+  ): NodeAndPodData @dataFetcher(name: nodeAndPodDetails)
+
+  ceActivePodCount(
+    filters: [CCMFilter]
+    aggregateFunction: [CCMAggregationFunction]
+    sortCriteria: [BillingSortCriteria]
+  ): PodCountTimeSeriesData @dataFetcher(name: ceActivePodCount)
+}
+
+input CCMAggregationFunction {
+  operationType: CCMAggregateOperation
+  columnName: String
+}
+
+enum CCMAggregateOperation {
+  SUM
+  MAX
+  MIN
+  AVG
+  COUNT
+}
+
+input CCMGroupBy {
+  entityGroupBy: CCMEntityGroupBy
+  timeTruncGroupby: CETimeTruncGroupby
+  timeAggregation: CCMTimeSeriesAggregation
+  tagAggregation: BillingDataTagAggregation
+  labelAggregation: BillingDataLabelAggregation
+}
+
+enum CCMEntityGroupBy {
+  Application
+  Service
+  Cluster
+  StartTime
+  Environment
+  Region
+  CloudServiceName
+  TaskId
+  InstanceType
+  LaunchType
+  WorkloadName
+  WorkloadType
+  Namespace
+  ClusterType
+  ClusterName
+  CloudProvider
+  PROJECT
+  Node
+  Pod
+  PV
+}
+
+input CETimeTruncGroupby {
+  resolution: TimeGroupType
+}
+
+input CCMTimeSeriesAggregation {
+  timeGroupType: TimeGroupType
+}
+
+input BillingDataTagAggregation {
+  entityType: BillingDataTagType
+  tagName: String
+}
+
+input BillingDataLabelAggregation {
+  name: String
+}
+
+input BillingSortCriteria {
+  sortType: BillingSortType
+  sortOrder: SortOrder
+}
+
+enum BillingSortType {
+  Time
+  Amount
+  storageCost
+  IdleCost
+  Application
+  Service
+  Cluster
+  Environment
+  CloudServiceName
+  TaskId
+  LaunchType
+  WorkloadName
+  Namespace
+  CloudProvider
+  Node
+  Pod
+}
+
+type BillingEntityDataPoint {
+  id: String
+  name: String
+  type: String
+  totalCost: Number
+  idleCost: Number
+  cpuIdleCost: Number
+  memoryIdleCost: Number
+  costTrend: Number
+  trendType: String
+  region: String
+  launchType: String
+  cloudServiceName: String
+  workloadName: String
+  workloadType: String
+  namespace: String
+  clusterType: String
+  clusterId: String
+  label: String
+  totalNamespaces: Number
+  totalWorkloads: Number
+  maxCpuUtilization: Number
+  maxMemoryUtilization: Number
+  avgCpuUtilization: Number
+  avgMemoryUtilization: Number
+  unallocatedCost: Number
+  networkCost: Number
+  appId: String
+  appName: String
+  clusterName: String
+  efficiencyScore: Number
+  efficiencyScoreTrend: Number
+  storageCost: Number
+  memoryBillingAmount: Number
+  cpuBillingAmount: Number
+  storageUnallocatedCost: Number
+  memoryUnallocatedCost: Number
+  cpuUnallocatedCost: Number
+  storageRequest: Number
+  storageUtilizationValue: Number
+  storageActualIdleCost: Number
+}
+
+type GcpBillingEntityDataPoint {
+  id: String
+  name: String
+  projectNumber: String
+  totalCost: Number
+  discounts: Number
+  subTotal: Number
+  productType: String
+  usage: String
+  region: String
+}
+
+type GcpBillingEntityData {
+  data: [GcpBillingEntityDataPoint]
+}
+
+type SunburstChartData {
+  totalCost: Number
+  gridData: [SunburstGridDataPoint]
+}
+
+type SunburstChartDataPoint {
+  id: String
+  parent: String
+  name: String
+  type: String
+  value: Number
+  clusterType: String
+  instanceType: String
+  metadata: SunburstGridDataPoint
+}
+
+type SunburstGridDataPoint {
+  id: String
+  name: String
+  type: String
+  clusterType: String
+  trend: Number
+  value: Number
+  efficiencyScore: Number
+}
+
+type BillingEntityData {
+  data: [BillingEntityDataPoint]
+  info: String
+}
+
+type BillingFilterDataPoint {
+  cloudServiceNames: [EntityData]
+  taskIds: [EntityData]
+  launchTypes: [EntityData]
+  workloadNames: [EntityData]
+  namespaces: [EntityData]
+  cloudProviders: [EntityData]
+  applications: [EntityData]
+  environments: [EntityData]
+  services: [EntityData]
+  clusters: [EntityData]
+  instances: [EntityData]
+  k8sLabels: [K8sLabel]
+  tags: [Tags]
+}
+
+type Tags {
+  name: String
+  values: [String]
+}
+
+type EntityData {
+  name: String
+  id: String
+  type: String
+}
+
+type BillingFilterData {
+  data: [BillingFilterDataPoint]
+  isHourlyDataPresent: Boolean
+  total: Number
+}
+
+type BillingJobProcessedData {
+  lastProcessedTime: DateTime
+}
+
+type BillingStatsData {
+  totalCost: BillingStatsInfo
+  costTrend: BillingStatsInfo
+  forecastCost: BillingStatsInfo
+  idleCost: BillingStatsInfo
+  utilizedCost: BillingStatsInfo
+  unallocatedCost: BillingStatsInfo
+  systemCost: BillingStatsInfo
+  efficiencyScore: BillingStatsInfo
+}
+
+type EfficiencyStatsData {
+  context: ContextInfo
+  efficiencyBreakdown: StatsBreakdownInfo
+  efficiencyData: EfficiencyInfo
+}
+
+type IdleCostStatsData {
+  totalIdleCost: BillingStatsInfo
+  cpuIdleCost: BillingStatsInfo
+  memoryIdleCost: BillingStatsInfo
+  storageIdleCost: BillingStatsInfo
+  unallocatedCost: BillingStatsInfo
+}
+
+type BillingStackedTimeSeriesData {
+  data: [BillingStackedTimeSeriesDataPoint]
+  cpuIdleCost: [BillingStackedTimeSeriesDataPoint]
+  memoryIdleCost: [BillingStackedTimeSeriesDataPoint]
+  cpuUtilMetrics: [BillingStackedTimeSeriesDataPoint]
+  memoryUtilMetrics: [BillingStackedTimeSeriesDataPoint]
+  cpuUtilValues: [BillingStackedTimeSeriesDataPoint]
+  memoryUtilValues: [BillingStackedTimeSeriesDataPoint]
+  cpuRequest: [BillingStackedTimeSeriesDataPoint]
+  memoryRequest: [BillingStackedTimeSeriesDataPoint]
+  cpuLimit: [BillingStackedTimeSeriesDataPoint]
+  memoryLimit: [BillingStackedTimeSeriesDataPoint]
+  label: String
+  info: String
+}
+
+type GcpBillingTimeSeriesStats {
+  stats: [TimeSeriesDataPoints]
+}
+
+type TimeSeriesDataPoints {
+  values: [DataPoint]
+  time: DateTime
+}
+
+type BillingStackedTimeSeriesDataPoint {
+  values: [BillingDataPoint]
+  time: DateTime
+}
+
+type BillingDataPoint {
+  key: Reference # Key refers to the label
+  value: Number
+}
+
+type BillingStatsInfo {
+  statsLabel: String
+  statsDescription: String
+  statsValue: String
+  statsTrend: String
+  value: Number
+}
+
+type ContextInfo {
+  totalCost: Number
+  costTrend: Number
+  totalCostDescription: String
+}
+
+type StatsBreakdownInfo {
+  total: Number
+  utilized: Number
+  idle: Number
+  unallocated: Number
+}
+
+type EfficiencyInfo {
+  efficiencyScore: Number
+  trend: Number
+}
+
+type ResourceStatsInfo {
+  type: String
+  info: StatsBreakdownInfo
+}
+
+input CCMFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  cluster: IdFilter
+  cloudServiceName: IdFilter
+  launchType: IdFilter
+  taskId: IdFilter
+  namespace: IdFilter
+  workloadName: IdFilter
+  workloadType: IdFilter
+  startTime: TimeFilter
+  endTime: TimeFilter
+  cloudProvider: IdFilter
+  tag: BillingDataTagFilter
+  label: BillingDataLabelFilter
+  nodeInstanceId: IdFilter
+  podInstanceId: IdFilter
+  parentInstanceId: IdFilter
+  envType: CEEnvironmentTypeFilter
+  labelSearch: IdFilter
+  tagSearch: IdFilter
+  instanceType: IdFilter
+  storageUtilizationValue: NumberFilter
+}
+
+input BillingDataLabelFilter {
+  operator: IdOperator
+  labels: [K8sLabelInput]
+}
+
+input BillingDataTagFilter {
+  operator: IdOperator
+  entityType: BillingDataTagType
+  tags: [TagInput]
+}
+
+enum BillingDataTagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+}
+
+input CEEnvironmentTypeFilter {
+  type: EnvType
+}
+
+enum EnvType {
+  ALL
+  PROD
+  NON_PROD
+}
+
+type NodeAndPodData {
+  data: [NodeAndPodDataPoint]
+  pvData: [PVDataPoint]
+  info: String
+}
+
+type PVDataPoint {
+  id: String
+  instanceId: String
+  instanceName: String
+  claimName: String
+  claimNamespace: String
+  clusterName: String
+  clusterId: String
+  storageClass: String
+  volumeType: String
+  cloudProvider: String
+  region: String
+
+  capacity: Number
+  storageRequest: Number
+  storageUtilizationValue: Number
+
+  storageCost: Number
+  storageActualIdleCost: Number
+  storageUnallocatedCost: Number
+
+  createTime: Number
+  deleteTime: Number
+}
+
+type NodeAndPodDataPoint {
+  id: String
+  nodeId: String
+  name: String
+  namespace: String
+  workload: String
+  clusterName: String
+  clusterId: String
+  node: String
+  nodePoolName: String
+  cloudProviderInstanceId: String
+  podCapacity: String
+  totalCost: Number
+  idleCost: Number
+  systemCost: Number
+  networkCost: Number
+  unallocatedCost: Number
+  cpuAllocatable: Number
+  memoryAllocatable: Number
+  cpuRequested: Number
+  memoryRequested: Number
+  cpuUnitPrice: Number
+  memoryUnitPrice: Number
+  instanceCategory: String
+  machineType: String
+  createTime: Number
+  deleteTime: Number
+  qosClass: String
+  storageUtilizationValue: Number
+  storageActualIdleCost: Number
+  storageCost: Number
+  memoryBillingAmount: Number
+  cpuBillingAmount: Number
+  storageUnallocatedCost: Number
+  memoryUnallocatedCost: Number
+  cpuUnallocatedCost: Number
+  memoryIdleCost: Number
+  cpuIdleCost: Number
+  storageRequest: Number
+}
+
+type PodCountTimeSeriesData {
+  data: [PodCountTimeSeriesDataPoint]
+}
+
+type PodCountTimeSeriesDataPoint {
+  values: [PodCountDataPoint]
+  time: DateTime
+}
+
+type PodCountDataPoint {
+  key: Reference
+  value: Number
+}

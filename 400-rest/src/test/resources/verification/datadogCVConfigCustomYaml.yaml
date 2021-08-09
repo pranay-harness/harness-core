@@ -1,0 +1,26 @@
+type: DATA_DOG
+accountId: kmpySmUISimoRrJL6NL73w
+alertThreshold: 0.5
+analysisTolerance: LOW
+connectorName: Datadog247
+customMetrics:
+  service:test:
+  - datadogMetricType: Custom
+    displayName: mymetricName2
+    metricName: testMetric.test2
+    mlMetricType: INFRA
+    tags:
+    - Custom
+    txnName: testGroup
+  - datadogMetricType: Custom
+    displayName: mymetricName
+    metricName: testMetric.test
+    mlMetricType: INFRA
+    tags:
+    - Custom
+    txnName: testGroup
+enabled24x7: false
+envName: ECSEnvironment
+harnessApplicationName: ECSVerification
+name: test
+serviceName: ECS-AWS-service

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package io.harness.managerclient;
+
+option java_multiple_files = true;
+option go_package = "920_delegate_agent_beans";
+
+message DelegateVersionsQuery {}
+
+message DelegateVersions {
+  repeated string delegate_version = 2;
+}
+
+message HttpsCertRequirementQuery {}
+
+message HttpsCertRequirement {
+  enum CertRequirement {
+    UNKNOWN_REQUIREMENT = 0;
+
+    CERTIFICATE_REQUIRED = 1;
+  }
+  CertRequirement cert_requirement = 1;
+}
+
+message AccountPreferenceQuery {}
+
+message AccountPreference {
+  int64 delegateSecretsCacheTTLInHours = 1;
+}

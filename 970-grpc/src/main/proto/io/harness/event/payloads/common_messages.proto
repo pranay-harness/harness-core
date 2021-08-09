@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package io.harness.event.payloads;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message Lifecycle {
+  string instance_id = 1;
+  enum EventType {
+    EVENT_TYPE_INVALID = 0;
+    EVENT_TYPE_START = 1;
+    EVENT_TYPE_STOP = 2;
+  }
+  EventType type = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  google.protobuf.Timestamp created_timestamp = 4;
+  string cluster_id = 5;
+  string setting_id = 6;
+}

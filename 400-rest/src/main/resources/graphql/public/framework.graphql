@@ -1,0 +1,11 @@
+# DateTime
+scalar DateTime
+
+scalar Number
+
+type PageInfo {
+  hasMore: Boolean
+  total: Int
+  offset: Int
+  limit: Int
+}

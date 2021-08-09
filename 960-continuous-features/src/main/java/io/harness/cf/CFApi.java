@@ -1,0 +1,96 @@
+package io.harness.cf;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.openapi.ApiClient;
+import io.harness.cf.openapi.api.DefaultApi;
+import io.harness.cf.openapi.model.FeatureState;
+import io.harness.cf.openapi.model.PatchInstruction;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+@OwnedBy(HarnessTeam.CF)
+public class CFApi extends DefaultApi {
+  public CFApi() {}
+
+  public CFApi(ApiClient apiClient) {
+    super(apiClient);
+  }
+
+  public List<PatchInstruction> getFeatureFlagRulesForTargetingAccounts(
+      Collection<String> accountIDs, int startPriority) {
+    int priority = startPriority;
+    List<PatchInstruction> patchInstructions = new ArrayList<>();
+    for (String account : accountIDs) {
+      PatchInstruction patchInstruction = PatchInstruction.builder()
+                                              .kind("addRule")
+                                              .parameters(AddRuleParam.getParamsForAccountID(account, priority))
+                                              .build();
+      patchInstructions.add(patchInstruction);
+      priority = priority + 100;
+    }
+    return patchInstructions;
+  }
+
+  public PatchInstruction removeRule(String ruleID) {
+    return PatchInstruction.builder().kind("removeRule").parameters(new RemoveRuleParam(ruleID)).build();
+  }
+
+  public PatchInstruction getFeatureFlagDefaultServePatchInstruction(boolean variation) {
+    String variationString;
+    if (variation) {
+      variationString = "true";
+    } else {
+      variationString = "false";
+    }
+
+    return PatchInstruction.builder()
+        .kind("updateDefaultServe")
+        .parameters(new UpdateDefaultServeParams(variationString))
+        .build();
+  }
+
+  public PatchInstruction getFeatureFlagOnPatchInstruction(boolean state) {
+    String stateString;
+    if (state) {
+      stateString = FeatureState.ON.getValue();
+    } else {
+      stateString = FeatureState.OFF.getValue();
+    }
+
+    return PatchInstruction.builder()
+        .kind("setFeatureFlagState")
+        .parameters(new FeatureFlagStateParams(stateString))
+        .build();
+  }
+
+  public PatchInstruction getAddTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstruction.builder()
+        .kind("addTargetsToVariationTargetMap")
+        .parameters(new AddTargetToVariationMapParams(variation, targets))
+        .build();
+  }
+
+  public PatchInstruction getRemoveTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstruction.builder()
+        .kind("removeTargetsToVariationTargetMap")
+        .parameters(new RemoveTargetToVariationMapParams(variation, targets))
+        .build();
+  }
+
+  public PatchInstruction getAddSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstruction.builder()
+        .kind("addSegmentToVariationTargetMap")
+        .parameters(new AddSegmentToVariationMapParams(variation, segments))
+        .build();
+  }
+
+  public PatchInstruction getRemoveSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstruction.builder()
+        .kind("removeSegmentToVariationTargetMap")
+        .parameters(new RemoveSegmentToVariationMapParams(variation, segments))
+        .build();
+  }
+}

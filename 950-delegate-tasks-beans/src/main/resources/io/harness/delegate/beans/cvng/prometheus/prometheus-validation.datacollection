@@ -1,0 +1,10 @@
+Var validateQuery = "api/v1/query?query=up"
+Var fullQuery = concat(Env:baseUrl, Var:validateQuery)
+Var result = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+Var status = extract(Var:result, $.status)
+Var returnVal = "false"
+
+if Var:status == "success" {
+    returnVal = "true"
+}
+return Var:returnVal

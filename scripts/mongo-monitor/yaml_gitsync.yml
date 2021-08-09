@@ -1,0 +1,34 @@
+metrics:
+  - yamlchangeset_count:
+      check_interval:   10      # seconds
+      query:            "db.yamlChangeSet.find({}).count()"
+  - yamlchangeset_completed_count:
+      check_interval:   10      # seconds
+      query:            "db.yamlChangeSet.find({status:'COMPLETED'}).count()"
+  - yamlchangeset_queued_count:
+      check_interval:   10      # seconds
+      query:            "db.yamlChangeSet.find({status:'QUEUED'}).count()"
+  - yamlchangeset_running_count:
+      check_interval:   10      # seconds
+      query:            "db.yamlChangeSet.find({status:'RUNNING'}).count()"
+  - yamlchangeset_failed_count:
+      check_interval:   10      # seconds
+      query:            "db.yamlChangeSet.find({status:'FAILED'}).count()"
+  - yamlchangeset_skipped_count:
+      check_interval:   10      # seconds
+      query:            "db.yamlChangeSet.find({status:'SKIPPED'}).count()"
+  - gitcommits_count:
+      check_interval:   10      # seconds
+      query:            "db.gitCommits.find({}).count()"
+  - gitcommits_completed_count:
+      check_interval:   10      # seconds
+      query:            "db.gitCommits.find({status:'COMPLETED'}).count()"
+  - gitcommits_queued_count:
+      check_interval:   10      # seconds
+      query:            "db.gitCommits.find({status:'QUEUED'}).count()"
+  - gitcommits_running_count:
+      check_interval:   10      # seconds
+      query:            "db.gitCommits.find({status:'RUNNING'}).count()"
+  - gitcommits_failed_count:
+      check_interval:   10      # seconds
+      query:            "db.gitCommits.find({status:'FAILED'}).count()"

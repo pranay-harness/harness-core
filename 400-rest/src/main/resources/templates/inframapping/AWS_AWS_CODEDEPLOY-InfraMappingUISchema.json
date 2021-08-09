@@ -1,0 +1,11 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
+  "applicationName" : {"ui:disabled":true},
+  "deploymentGroup": {"ui:disabled":true},
+  "deploymentConfig": {"ui:disabled":true},
+  "ui:order": [  "name", "autoPopulate","serviceId","deploymentType","computeProviderSettingId",
+    "region", "applicationName", "deploymentGroup", "deploymentConfig" ,"infraMappingType","computeProviderType"]
+
+}

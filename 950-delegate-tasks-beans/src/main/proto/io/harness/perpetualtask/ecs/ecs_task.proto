@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.ecs;
+
+option java_multiple_files = true;
+
+message EcsPerpetualTaskParams {
+  string cluster_name = 1;
+  string region = 2;
+  bytes aws_config = 3;
+  bytes encryption_detail = 4;
+  string cluster_id = 5;
+  string setting_id = 6;
+}

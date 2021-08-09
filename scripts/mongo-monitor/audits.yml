@@ -1,0 +1,13 @@
+metrics:
+  - audits_count:
+      check_interval:   10      # seconds
+      query:            "db.audits.find({}).count()"
+
+  - audits_files_count:
+      check_interval:   10      # seconds
+      query:            "db.audits.files.find({}).count()"
+
+  - audits_files_average_size:
+      check_interval:   10      # seconds
+      query:            "db.audits.chunks.stats().avgObjSize"
+

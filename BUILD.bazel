@@ -1,0 +1,288 @@
+exports_files([
+    "tools/bazel/signer.sh",
+])
+
+########################################################################################################
+####################################################  Go Starts Here    ####################################################
+########################################################################################################
+
+# Refer for a list of all gazelle directives: http://www.lib4dev.in/info/bazelbuild/bazel-gazelle/112655189
+# gazelle:exclude src/vendor
+# gazelle:exclude vendor
+# gazelle:exclude build
+# gazelle:exclude */target
+# gazelle:exclude {990-commons-test,980-commons,970-grpc,970-api-services-beans,965-git-sync-commons,960-notification-beans,950-timeout-engine,950-delegate-tasks-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,890-pms-contracts,400-rest,460-capability,160-stress-tester}
+
+# gazelle:exclude .git/
+# gazelle:exclude pkg/
+## gazelle:proto_strip_import_prefix /proto/harness.io/
+
+load("@com_github_bazelbuild_buildtools//buildifier:def.bzl", "buildifier")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/wings-software/portal
+gazelle(name = "gazelle")
+
+load("@io_bazel_rules_go//go:def.bzl", "nogo")
+
+buildifier(
+    name = "buildifier",
+)
+
+nogo(
+    name = "nogo_vet",
+    vet = True,
+    visibility = ["//visibility:public"],
+)
+
+########################################################################################################
+####################################################  JAVA Starts Here    ####################################################
+########################################################################################################
+
+load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
+load("//tools/bazel/sonarqube:defs.bzl", "get_sonar_targets")
+
+java_plugin(
+    name = "lombok_plugin",
+    processor_class = "lombok.launch.AnnotationProcessorHider$AnnotationProcessor",
+    visibility = ["//visibility:public"],
+    deps = ["@maven//:org_projectlombok_lombok"],
+)
+
+java_library(
+    name = "lombok",
+    exported_plugins = [":lombok_plugin"],
+    visibility = ["//visibility:public"],
+    exports = ["@maven//:org_projectlombok_lombok"],
+)
+
+modules = [
+    "//110-change-data-capture",
+    "//120-ng-manager",
+    "//121-instance",
+    "//122-ng-authentication-settings",
+    "//123-ng-core-user",
+    "//125-cd-nextgen",
+    "//136-git-sync-manager",
+    #"//160-model-gen-tool",
+    "//160-stress-tester",
+    #"//190-deployment-functional-tests",
+    #"//200-functional-test",
+    "//210-command-library-server",
+    #"//220-graphql-test",
+    #"//230-model-test",
+    "//260-delegate",
+    "//270-delegate-service-app",
+    "//270-verification",
+    "//280-batch-processing",
+    "//300-cv-nextgen",
+    "//310-ci-manager",
+    "//320-ci-execution",
+    "//330-ci-beans",
+    "//340-ce-nextgen",
+    "//350-event-server",
+    "//360-cg-manager",
+    "//375-ce-graphql",
+    "//380-cg-graphql",
+    "//390-db-migration",
+    "//400-rest",
+    "//410-cg-rest",
+    "//420-delegate-agent",
+    "//420-delegate-service",
+    "//425-verification-commons",
+    "//430-cv-nextgen-commons",
+    "//440-connector-nextgen",
+    "//445-cg-connectors",
+    "//450-ce-views",
+    "//460-capability",
+    "//470-alert",
+    "//490-ce-commons",
+    "//800-pipeline-service",
+    "//810-ng-triggers",
+    "//815-cg-triggers",
+    "//820-platform-service",
+    "//830-notification-service",
+    "//830-resource-group",
+    "//835-notification-senders",
+    "//840-template-service",
+    "//860-orchestration-steps",
+    "//860-orchestration-visualization",
+    "//865-cg-events",
+    "//867-polling-contracts",
+    "//870-cg-orchestration",
+    "//870-orchestration",
+    "//874-orchestration-delay",
+    "//876-orchestration-beans",
+    "//878-pipeline-service-utilities",
+    "//878-pms-coupling",
+    "//879-pms-sdk",
+    "//882-pms-sdk-core",
+    "//884-pms-commons",
+    "//888-pms-client",
+    "//889-yaml-commons",
+    "//890-pms-contracts",
+    "//890-sm-core",
+    "//900-git-sync-sdk",
+    "//910-delegate-service-driver",
+    "//910-delegate-task-grpc-service",
+    "//920-delegate-agent-beans",
+    "//920-delegate-service-beans",
+    "//920-ng-signup",
+    "//925-access-control-service",
+    "//930-delegate-tasks",
+    "//930-ng-core-clients",
+    "//930-ng-license-manager",
+    "//935-analyser-service",
+    "//937-persistence-tracer",
+    "//940-cg-audit-service",
+    "//940-feature-flag",
+    "//940-ng-audit-service",
+    "//940-notification-client",
+    "//940-primary-version-manager",
+    "//940-resource-group-beans",
+    "//940-secret-manager-client",
+    "//945-account-mgmt",
+    "//945-license-usage-sdk",
+    "//945-ng-audit-client",
+    "//946-access-control-aggregator",
+    "//947-access-control-core",
+    "//948-access-control-admin-client",
+    "//948-access-control-sdk",
+    "//949-access-control-commons",
+    "//950-command-library-common",
+    "//950-common-entities",
+    "//950-delegate-tasks-beans",
+    "//950-events-framework",
+    "//950-events-framework-monitor",
+    "//950-log-client",
+    "//950-ng-authentication-service",
+    "//950-ng-core",
+    "//950-ng-project-n-orgs",
+    "//950-telemetry",
+    #"//950-timeout-engine",
+    "//950-wait-engine",
+    "//950-walktree-visitor",
+    "//951-ng-audit-commons",
+    "//952-scm-java-client",
+    "//953-events-api",
+    "//953-git-sync-commons",
+    "//954-connector-beans",
+    "//954-feature-flag-sdk",
+    "//955-alert-beans",
+    "//955-cg-yaml",
+    "//955-delegate-beans",
+    "//955-filters-sdk",
+    "//955-outbox-sdk",
+    "//955-setup-usage-sdk",
+    "//956-feature-flag-beans",
+    "//958-migration-sdk",
+    "//958-ng-file-service-sdk",
+    "//959-cg-beans",
+    "//959-file-service-commons",
+    "//959-psql-database-models",
+    "//960-api-services",
+    "//960-continuous-features",
+    "//960-expression-service",
+    "//960-ng-core-beans",
+    "//960-ng-license-beans",
+    "//960-ng-license-usage-beans",
+    "//960-ng-signup-beans",
+    "//960-notification-beans",
+    "//960-persistence",
+    "//960-watcher",
+    "//960-yaml-sdk",
+    "//965-api-key-filter",
+    "//970-api-services-beans",
+    "//970-grpc",
+    "//970-ng-commons",
+    "//970-rbac-core",
+    "//970-telemetry-beans",
+    "//970-watcher-beans",
+    "//980-commons",
+    "//980-recaster",
+    "//999-annotations",
+]
+
+filegroup(
+    name = "git",
+    srcs = glob(
+        [".git/**/*"],
+        exclude = [".git/**/*[*"],  # gitk creates temp files with []
+    ),
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "coverage_report",
+    srcs = ["bazel-out/_coverage/_coverage_report.dat"],
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "test_reports",
+    srcs = glob(["bazel-testlogs/**/test.xml"]),
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+
+sonarqube(
+    name = "sq",
+    srcs = [],
+    coverage_report = ":coverage_report",
+    modules = get_sonar_targets(modules),
+    project_key = "portal_bazel",
+    project_name = "Bazel Portal",
+    scm_info = [":git"],
+    tags = ["manual"],
+    targets = [],
+)
+
+filegroup(
+    name = "resource",
+    srcs = [
+        "cert.pem",
+        "key.pem",
+        "keystore.jks",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+load("@rules_python//python:defs.bzl", "py_runtime", "py_runtime_pair")
+
+py_runtime(
+    name = "python3_runtime",
+    files = ["@python_interpreter//:files"],
+    interpreter = "@python_interpreter//:python_bin",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)
+
+py_runtime_pair(
+    name = "py_runtime_pair",
+    py2_runtime = None,
+    py3_runtime = ":python3_runtime",
+)
+
+toolchain(
+    name = "py_toolchain",
+    toolchain = ":py_runtime_pair",
+    toolchain_type = "@bazel_tools//tools/python:toolchain_type",
+)
+
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "alpn_boot_8.1.13.v20181017_tar",
+    files = {
+        "@alpn_boot_8.1.13.v20181017//file": "alpn-boot-8.1.13.v20181017.jar",
+    },
+    mode = "0644",
+    package_dir = "/opt/harness-delegate",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    visibility = ["//visibility:public"],
+)

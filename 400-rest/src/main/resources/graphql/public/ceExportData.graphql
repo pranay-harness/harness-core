@@ -1,0 +1,192 @@
+extend type Query {
+  # Beta: Cloud Cost Management export data apis
+  ceClusterBillingData(
+    limit: Int
+    offset: Int
+    filters: [ceFilter]
+    aggregateFunction: [ceAggregation]
+    groupBy: [ceGroupBy]
+    sortCriteria: [ceSort]
+    select: [ceSelect]
+  ): ceClusterBillingData @dataFetcher(name: ceClusterBillingData)
+}
+
+input ceFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  cluster: IdFilter
+  ecsService: IdFilter
+  launchType: IdFilter
+  task: IdFilter
+  namespace: IdFilter
+  workload: IdFilter
+  startTime: TimeFilter
+  endTime: TimeFilter
+  node: IdFilter
+  pod: IdFilter
+  instanceType: IdFilter
+  tag: ceTagFilter
+  label: ceLabelFilter
+}
+
+input ceTagFilter {
+  entityType: ceTagType
+  tags: [TagInput]
+}
+
+input ceLabelFilter {
+  labels: [K8sLabelInput]
+}
+
+input K8sLabelInput {
+  name: String
+  values: [String]
+}
+
+input ceAggregation {
+  function: ceAggregationFunction
+  cost: ceCost
+  utilization: ceUtilization
+}
+
+enum ceAggregationFunction {
+  SUM
+  AVG
+}
+
+enum ceCost {
+  TOTALCOST
+  IDLECOST
+  UNALLOCATEDCOST
+}
+
+enum ceUtilization {
+  CPU_REQUEST
+  CPU_LIMIT
+  CPU_UTILIZATION_VALUE
+  MEMORY_REQUEST
+  MEMORY_LIMIT
+  MEMORY_UTILIZATION_VALUE
+}
+
+input ceGroupBy {
+  entity: ceEntityGroupBy
+  time: ceTimeAggregation
+  tagAggregation: ceTagAggregation
+  labelAggregation: ceLabelAggregation
+}
+
+enum ceEntityGroupBy {
+  Application
+  Service
+  Cluster
+  Environment
+  Region
+  EcsService
+  Task
+  LaunchType
+  Workload
+  WorkloadType
+  Namespace
+  Node
+  Pod
+}
+
+input ceTimeAggregation {
+  timePeriod: TimeGroupType
+}
+
+enum TimeGroupType {
+  HOUR
+  DAY
+  WEEK
+  MONTH
+}
+
+input ceTagAggregation {
+  entityType: ceTagType
+  tagName: String
+}
+
+enum ceTagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+}
+
+input ceLabelAggregation {
+  name: String
+}
+
+input ceSort {
+  sortType: ceSortType
+  order: SortOrder
+}
+
+enum ceSortType {
+  TIME
+  TOTALCOST
+  IDLECOST
+  UNALLOCATEDCOST
+}
+
+type ceClusterBillingData {
+  data: [BillingDataEntry]
+}
+
+type BillingDataEntry {
+  totalCost: Number
+  idleCost: Number
+  unallocatedCost: Number
+  systemCost: Number
+  avgCpuUtilization: Number
+  avgMemoryUtilization: Number
+  cpuRequest: Number
+  memoryRequest: Number
+  cpuLimit: Number
+  memoryLimit: Number
+  region: String
+  k8s: ceK8sEntity
+  ecs: ceEcsEntity
+  harness: ceHarnessEntity
+  clusterType: String
+  cluster: String
+  clusterId: String
+  instanceType: String
+  startTime: DateTime
+  labelName: String
+  labelValue: String
+  tagName: String
+  tagValue: String
+}
+
+type ceK8sEntity {
+  workload: String
+  workloadType: String
+  namespace: String
+  node: String
+  pod: String
+  selectedLabels: [ceK8sLabels]
+}
+
+type ceK8sLabels {
+  name: String
+  value: String
+}
+
+type ceEcsEntity {
+  service: String
+  taskId: String
+  launchType: String
+}
+
+type ceHarnessEntity {
+  service: String
+  application: String
+  environment: String
+}
+
+input ceSelect {
+  labels: [String]
+}

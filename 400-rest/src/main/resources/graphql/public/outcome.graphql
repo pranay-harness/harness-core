@@ -1,0 +1,14 @@
+interface Outcome {
+  execution: Execution
+}
+
+type OutcomeConnection {
+  pageInfo: PageInfo
+  nodes: [Outcome]
+}
+
+type DeploymentOutcome implements Outcome {
+  execution: Execution @dataFetcher(name: execution)
+  service: Service @dataFetcher(name: service, useBatch: true)
+  environment: Environment @dataFetcher(name: environment, useBatch: true)
+}

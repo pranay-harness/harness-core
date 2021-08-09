@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "branch.go",
+        "comment.go",
+        "common.go",
+        "pr.go",
+        "push.go",
+    ],
+    importpath = "github.com/wings-software/portal/product/ci/scm/converter",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//product/ci/scm/proto:go_default_library",
+        "@com_github_drone_go_scm//scm:go_default_library",
+        "@com_github_golang_protobuf//ptypes:go_default_library_gen",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["pr_test.go"],
+    embed = [":go_default_library"],
+)

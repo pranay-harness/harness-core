@@ -1,0 +1,59 @@
+extend type Query {
+  # Get a Pipeline object by ID.
+  pipeline(pipelineId: String!): Pipeline @dataFetcher(name: pipeline)
+
+  # Get details about one or multiple Pipelines.
+  pipelines(filters: [PipelineFilter], limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: pipelineConnection)
+
+  # Get a Pipeline object by ID.
+  pipelineByName(pipelineName: String!, applicationId: String!): Pipeline @dataFetcher(name: pipeline)
+}
+
+enum PipelineFilterType {
+  Application
+  Pipeline
+}
+
+input PipelineFilter {
+  application: IdFilter
+  pipeline: IdFilter
+  tag: PipelineTagFilter
+}
+
+input PipelineTagFilter {
+  entityType: PipelineTagType
+  tags: [TagInput]
+}
+
+enum PipelineTagType {
+  APPLICATION
+  PIPELINE
+}
+
+# Type for pipeline
+type Pipeline {
+  # Pipeline identifier
+  id: String
+
+  # Name of the Pipeline
+  name: String
+
+  # Description of the Pipeline
+  description: String
+
+  createdAt: DateTime
+  createdBy: User
+
+  #Variables in the Pipeline
+  pipelineVariables: [Variable]
+    @dataFetcher(
+      name: pipelineVariableConnection
+      contextFieldArgsMap: "{ \"pipelineId\": \"id\", \"applicationId\": \"appId\" }"
+    )
+}
+
+type PipelineConnection {
+  pageInfo: PageInfo
+  nodes: [Pipeline]
+}

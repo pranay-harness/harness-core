@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/artifactory/api/search/aql",
+    "bodyPatterns": [ {
+      "contains": "harness-rpm"
+    }
+    ]
+  },
+
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-rpm-files-api.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

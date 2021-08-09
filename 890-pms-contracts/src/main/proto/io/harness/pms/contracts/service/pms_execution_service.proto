@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.service;
+
+option java_multiple_files = true;
+
+service PmsExecutionService {
+  rpc updateExecutionSummary(ExecutionSummaryUpdateRequest) returns (ExecutionSummaryResponse);
+}
+
+message ExecutionSummaryUpdateRequest {
+  string planExecutionId = 1;
+  string moduleName = 2;
+  string nodeUuid = 3;
+  string nodeModuleInfoJson = 4;
+  string pipelineModuleInfoJson = 5;
+  string nodeExecutionId = 6;
+}
+
+message ExecutionSummaryResponse {}

@@ -1,0 +1,11 @@
+Var validateQuery = "api/v2/metrics?pageSize=5"
+Var fullQuery = concat(Env:baseUrl, Var:validateQuery)
+print Var:fullQuery
+
+Var response = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+print Var:response
+
+Var result = "true"
+return Var:result
+
+

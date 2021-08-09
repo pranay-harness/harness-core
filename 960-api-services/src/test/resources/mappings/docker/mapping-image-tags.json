@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/v2/repositories/image/tags?page_size=10"
+  },
+  "response": {
+    "status": 401,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

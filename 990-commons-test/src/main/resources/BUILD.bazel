@@ -1,0 +1,13 @@
+package(default_visibility = ["//visibility:public"])
+
+load("//:tools/bazel/macros.bzl", "resources")
+
+filegroup(
+    name = "resource",
+    srcs = [
+        "logback-test.xml",
+        "secrets.properties",
+    ],
+)
+
+resources()

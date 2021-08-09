@@ -1,0 +1,40 @@
+name: Api Call Log metrics
+identifier: api_call_log_metrics
+metricGroup: api_call_log
+metrics:
+  - metricName: api_call_execution_time
+    metricDefinition: Time taken to complete the request.
+    type: Duration
+    distribution: [ 0m, 15s, 30s, 1m, 2m, 4m, 8m, 16m, 32m]
+    unit: "ms"
+
+  - metricName: api_call_response_size
+    metricDefinition: Response size for Api Call
+    type: Distribution
+    distribution: [0, 10, 50,100,1000,5000,10000,50000]
+    unit: "By"
+
+  - metricName: api_call_response_code_1xx
+    metricDefinition: count of api call responses with response code 1xx
+    type: Count
+    unit: "1"
+
+  - metricName: api_call_response_code_2xx
+    metricDefinition: count of api call responses with response code 2xx
+    type: Count
+    unit: "1"
+
+  - metricName: api_call_response_code_3xx
+    metricDefinition: count of api call responses with response code 3xx
+    type: Count
+    unit: "1"
+
+  - metricName: api_call_response_code_4xx
+    metricDefinition: count of api call responses with response code 4xx
+    type: Count
+    unit: "1"
+
+  - metricName: api_call_response_code_5xx
+    metricDefinition: count of api call responses with response code 5xx
+    type: Count
+    unit: "1"

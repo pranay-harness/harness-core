@@ -1,0 +1,56 @@
+extend type Query {
+  # Get details about a Harness Application
+  application(applicationId: String!): Application @dataFetcher(name: application)
+
+  # Get details about Harness Applications.
+  applications(filters: [ApplicationFilter], limit: Int!, offset: Int): ApplicationConnection
+    @dataFetcher(name: applicationConnection)
+  # Fetch details about a Harness Application by it's name
+  applicationByName(name: String!): Application @dataFetcher(name: application)
+}
+
+type Application {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  # Beta: When this is set to true, all manual triggers will require API Key authorization.
+  # Doc link: https://docs.harness.io/article/mc2lxsas4c-trigger-a-deployment-using-c-url#option_enforce_api_keys_for_manual_triggers
+  isManualTriggerAuthorized: Boolean
+
+  services(limit: Int!, offset: Int): ServiceConnection
+    @dataFetcher(name: serviceConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+  workflows(limit: Int!, offset: Int): WorkflowConnection
+    @dataFetcher(name: workflowConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+  pipelines(limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: pipelineConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+  environments(limit: Int!, offset: Int): EnvironmentConnection
+    @dataFetcher(name: environmentConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+}
+
+type ApplicationConnection {
+  pageInfo: PageInfo
+  nodes: [Application]
+}
+
+enum ApplicationFilterType {
+  Application
+}
+
+input ApplicationFilter {
+  application: IdFilter
+  tag: ApplicationTagFilter
+}
+
+input ApplicationTagFilter {
+  entityType: ApplicationTagType
+  tags: [TagInput]
+}
+
+enum ApplicationTagType {
+  APPLICATION
+}

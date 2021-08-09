@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package io.harness.pingpong;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+service DelegateServicePingPong {
+  rpc TryPing(PingDelegateService) returns (PongDelegateService);
+}
+
+message PingDelegateService {
+  string delegate_id = 1;
+  google.protobuf.Timestamp ping_timestamp = 2;
+  string process_id = 3;
+  string version = 4;
+}
+
+message PongDelegateService {}

@@ -1,0 +1,1 @@
+This module provides utilities that can be used by various services that might want to utilize pms-sdk.

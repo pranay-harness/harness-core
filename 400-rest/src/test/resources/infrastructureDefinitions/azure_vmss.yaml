@@ -1,0 +1,16 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AZURE
+deploymentType: AZURE_VMSS
+infrastructure:
+- type: AZURE_VMSS
+  baseVMSSName: BASE_VMSS_NAME
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  passwordSecretTextName: PASSWORD_SECRET_TEXT_NAME
+  resourceGroupName: RES_GRP_NAME
+  subscriptionId: SUBS_ID
+  userName: USERNAME
+  vmssAuthType: PASSWORD
+  vmssDeploymentType: NATIVE_VMSS
+scopedServices:
+- httpd

@@ -1,0 +1,70 @@
+{
+  "workflowType": "PIPELINE",
+  "serviceId": null,
+  "commandName": null,
+  "executionStrategy": null,
+  "artifacts": null,
+  "artifactIdNames": null,
+  "orchestrationId": null,
+  "serviceInstances": null,
+  "serviceInstanceIdNames": null,
+  "executionCredential": null,
+  "errorStrategy": null,
+  "triggeredFromPipeline": false,
+  "pipelineId": null,
+  "pipelinePhaseElementId": null,
+  "pipelinePhaseParallelIndex": 0,
+  "stageName": null,
+  "workflowVariables": {
+    "pipelineInfra": "62pv3U26RnmaLYFiZxjiTg",
+    "service2": "NA2uRPKLTqm9VU3dPENb-g"
+  },
+  "notes": null,
+  "triggeredBy": null,
+  "createdByType": "USER",
+  "triggeringApiKeyId": null,
+  "excludeHostsWithSameArtifact": false,
+  "notifyTriggeredUserOnly": false,
+  "artifactVariables": [
+    {
+      "entityType": "SERVICE",
+      "entityId": "NA2uRPKLTqm9VU3dPENb-g",
+      "artifactStreamSummaries": [
+        {
+          "artifactStreamId": "CchJMhP6Tn6nFyca5lE1zw",
+          "settingId": null,
+          "displayName": null,
+          "name": null,
+          "lastCollectedArtifact": null,
+          "defaultArtifact": {
+            "uuid": "FAtIyyQiQOuVlGoLTV_yLg",
+            "uiDisplayName": "Tag# v3.0",
+            "buildNo": "v3.0"
+          }
+        }
+      ],
+      "displayInfo": {
+        "services": [
+          "hello"
+        ]
+      },
+      "uiDisplayName": "Tag# v3.0",
+      "name": "artifact",
+      "mandatory": false,
+      "value": "FAtIyyQiQOuVlGoLTV_yLg",
+      "fixed": false,
+      "allowedList": [
+        "CchJMhP6Tn6nFyca5lE1zw"
+      ],
+      "allowMultipleValues": false,
+      "metadata": {},
+      "type": "ARTIFACT"
+    }
+  ],
+  "targetToSpecificHosts": false,
+  "hosts": null,
+  "continueWithDefaultValues": false,
+  "helmCharts": null,
+  "manifestVariables": null,
+  "helmChartIdNames": null
+}

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution;
+
+option java_multiple_files = true;
+
+message ExecutionErrorInfo {
+  string message = 1;
+}

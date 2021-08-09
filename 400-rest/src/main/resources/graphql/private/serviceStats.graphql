@@ -1,0 +1,21 @@
+enum ServiceEntityAggregation {
+  Application
+  ArtifactType
+  DeploymentType
+  Service
+}
+
+input ServiceAggregation {
+  entityAggregation: ServiceEntityAggregation
+  tagAggregation: ServiceTagAggregation
+}
+
+input ServiceTagAggregation {
+  entityType: ServiceTagType
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics about Harness Services.
+  serviceStats(filters: [ServiceFilter], groupBy: [ServiceAggregation]): Data @dataFetcher(name: serviceStats)
+}

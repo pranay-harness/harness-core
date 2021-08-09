@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.connector;
+import "google/protobuf/wrappers.proto";
+
+option java_multiple_files = true;
+
+message ConnectorHeartbeatTaskParams {
+  string account_identifier = 1;
+  google.protobuf.StringValue org_identifier = 2;
+  google.protobuf.StringValue project_identifier = 3;
+  string connector_identifier = 4;
+  bytes connector_validation_params = 5;
+}

@@ -1,0 +1,111 @@
+type Reference {
+  id: String
+  name: String
+  type: String
+}
+
+type DataPoint {
+  key: Reference # Key refers to the label
+  value: Number
+}
+
+enum AggregateOperation {
+  SUM
+  AVERAGE
+  MAX
+  MIN
+}
+
+enum CountAggregateOperation {
+  SUM
+}
+
+enum EntityType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+  WORKFLOW
+  PIPELINE
+  INSTANCE
+  DEPLOYMENT
+  CLOUD_PROVIDER
+  CONNECTOR
+  TRIGGER
+  ARTIFACT
+  COLLABORATION_PROVIDER
+  PROVISIONER
+}
+
+type Filter {
+  key: String
+  value: String
+}
+
+type GroupBy {
+  entityType: String
+}
+
+#This structure will serve pie charts / donut charts
+type AggregatedData {
+  dataPoints: [DataPoint]
+}
+
+type SinglePointData {
+  dataPoint: DataPoint
+}
+
+type StackedDataPoint {
+  key: Reference
+  values: [DataPoint]
+}
+
+type StackedData {
+  dataPoints: [StackedDataPoint]
+}
+
+type TimeSeriesDataPoint {
+  value: Number
+  time: DateTime
+}
+
+#This data structure will serve timeseries graphs
+type TimeSeriesData {
+  dataPoints: [TimeSeriesDataPoint]
+  label: String
+}
+
+enum TimeAggregationType {
+  HOUR
+  DAY
+  WEEK
+  MONTH
+}
+
+enum DataType {
+  STRING
+  NUMBER
+}
+
+input TimeSeriesAggregation {
+  timeAggregationType: TimeAggregationType
+  timeAggregationValue: Int
+}
+
+#This data structure will be useful for bar charts which are aggregated over a period of time
+
+enum SortOrder {
+  ASCENDING
+  DESCENDING
+}
+
+type StackedTimeSeriesDataPoint {
+  values: [DataPoint]
+  time: DateTime
+}
+
+type StackedTimeSeriesData {
+  data: [StackedTimeSeriesDataPoint]
+  label: String
+}
+
+union Data = AggregatedData | SinglePointData | StackedData | TimeSeriesData | StackedTimeSeriesData

@@ -1,0 +1,12 @@
+enum ConnectorTypeAggregation {
+  Type
+}
+
+input ConnectorAggregation {
+  typeAggregation: ConnectorTypeAggregation
+}
+
+extend type Query {
+  # Get statistics for a Connector.
+  connectorStats(filters: [ConnectorFilter], groupBy: [ConnectorAggregation]): Data @dataFetcher(name: connectorStats)
+}

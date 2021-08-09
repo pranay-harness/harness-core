@@ -1,0 +1,35 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string"
+		},
+		"identifier": {
+			"type": "string"
+		},
+		"description": {
+			"type": "string"
+		},
+		"orgIdentifier": {
+			"type": "string"
+		},
+		"projectIdentifier": {
+			"type": "string"
+		},
+		"variables": {
+			"$ref": "http://harness.io%2Fyamlschema%2Fschemafile%3Ffilename%3Dschema%2Fvariables%2Fvariables.json"
+		},
+		"stages": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"stage": {
+						"$ref": "http://harness.io%2Fyamlschema%2Fschemafile%3Ffilename%3Dschema%2Fpipeline%2Fstage%2Fstage.json"
+					}
+				}
+			}
+		}
+	}
+}

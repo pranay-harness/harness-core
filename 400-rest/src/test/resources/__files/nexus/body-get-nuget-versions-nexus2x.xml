@@ -1,0 +1,14 @@
+<content>
+    <data>
+        <content-item>
+            <resourceURI>
+                https://nexus2.harness.io/service/local/repositories/MyNuGet/content/NuGet.Sample.Package/1.0.0.18279/
+            </resourceURI>
+            <relativePath>/NuGet.Sample.Package/1.0.0.18279/</relativePath>
+            <text>1.0.0.18279</text>
+            <leaf>false</leaf>
+            <lastModified>2019-07-08 09:48:14.0 UTC</lastModified>
+            <sizeOnDisk>-1</sizeOnDisk>
+        </content-item>
+    </data>
+</content>

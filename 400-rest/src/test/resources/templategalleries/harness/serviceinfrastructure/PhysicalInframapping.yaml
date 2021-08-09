@@ -1,0 +1,16 @@
+name: "Physical Data Center"
+gallery: "Harness"
+namespace: "io.harness.serviceinfrastructure.physical"
+version: "1"
+systemTags: [SERVICE, TOMCAT, WAR]
+templateObject:
+  type: "SERVICE_INFRA"
+  infrastructureMapping:
+    infraMappingType: PHYSICAL_DATA_CENTER_SSH
+    computeProviderName: physical_data_center2
+    computeProviderType: PHYSICAL_DATA_CENTER
+    connection: User/Password
+    deploymentType: SSH
+    hostNames:
+     - localhost
+

@@ -1,0 +1,16 @@
+{
+  "repo": "harness-maven-snapshots",
+  "path": "/io/harness/todolist/1.0-SNAPSHOT",
+  "created": "2017-09-30T18:30:57.804Z",
+  "createdBy": "admin",
+  "lastModified": "2017-09-30T18:30:57.804Z",
+  "modifiedBy": "admin",
+  "lastUpdated": "2017-09-30T18:30:57.804Z",
+  "children": [
+    {
+      "uri": "/todolist-1.0-20170930.183057-1.war",
+      "folder": false
+    }
+  ],
+  "uri": "https://harness.jfrog.io/harness/api/storage/harness-maven-snapshots/io/harness/todolist/1.0-SNAPSHOT"
+}

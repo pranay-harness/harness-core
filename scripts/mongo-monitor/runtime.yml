@@ -1,0 +1,40 @@
+metrics:
+  - workflow_running_count:
+      check_interval:   10      # seconds
+      query:            "db.workflowExecutions.find({status:'RUNNING', workflowType: {$ne : 'PIPELINE'}}).count()"
+
+  - workflow_executions_count:
+      check_interval:   10      # seconds
+      query:            "db.workflowExecutions.find({}).count()"
+
+  - workflow_executions_document_size:
+      check_interval:   10      # seconds
+      query:            "db.workflowExecutions.stats().avgObjSize"
+
+  - state_execution_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.stateExecutionInstances.find({}).count()"
+
+  - state_execution_instances_document_size:
+      check_interval:   10      # seconds
+      query:            "db.stateExecutionInstances.stats().avgObjSize"
+
+  - sweeping_output_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.sweepingOutput2.find({}).count()"
+
+  - sweeping_output_instances_document_size:
+      check_interval:   10      # seconds
+      query:            "db.sweepingOutput2.stats().avgObjSize"
+
+  - barrier_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.barrierInstances.find({}).count()"
+
+  - resource_constraint_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.resourceConstraintInstances.find({}).count()"
+
+  - resource_secret_usage_logs_count:
+      check_interval:   10      # seconds
+      query:            "db.secretUsageLogs.find({}).count()"

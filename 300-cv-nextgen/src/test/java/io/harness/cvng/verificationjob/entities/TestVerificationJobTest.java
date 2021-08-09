@@ -1,0 +1,121 @@
+package io.harness.cvng.verificationjob.entities;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.harness.CategoryTest;
+import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.rule.Owner;
+
+import java.time.Duration;
+import java.util.Optional;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+public class TestVerificationJobTest extends CategoryTest {
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testValidateParams() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    testVerificationJob.validateParams();
+    testVerificationJob.setSensitivity(null);
+    assertThatThrownBy(() -> testVerificationJob.validateParams())
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("sensitivity should not be null");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testResolveAdditionsFields_emptyLastExecution() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    assertThat(testVerificationJob.getBaselineVerificationJobInstanceId()).isNull();
+    VerificationJobInstanceService verificationJobInstanceService = mock(VerificationJobInstanceService.class);
+    when(verificationJobInstanceService.getLastSuccessfulTestVerificationJobExecutionId(any(), any(), any(), any()))
+        .thenReturn(Optional.empty());
+    testVerificationJob.resolveAdditionsFields(verificationJobInstanceService);
+    assertThat(testVerificationJob.getBaselineVerificationJobInstanceId()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testResolveAdditionsFields_withValidBaseline() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    assertThat(testVerificationJob.getBaselineVerificationJobInstanceId()).isNull();
+    VerificationJobInstanceService verificationJobInstanceService = mock(VerificationJobInstanceService.class);
+    String baseline = generateUuid();
+    when(verificationJobInstanceService.getLastSuccessfulTestVerificationJobExecutionId(any(), any(), any(), any()))
+        .thenReturn(Optional.of(baseline));
+    testVerificationJob.resolveAdditionsFields(verificationJobInstanceService);
+    assertThat(testVerificationJob.getBaselineVerificationJobInstanceId()).isEqualTo(baseline);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetDTO_lastBaseline() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    TestVerificationJobDTO testVerificationJobDTO =
+        (TestVerificationJobDTO) testVerificationJob.getVerificationJobDTO();
+    assertThat(testVerificationJobDTO.getBaselineVerificationJobInstanceId()).isEqualTo("LAST");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetDTO_ignoreCasesInSensitivity() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    testVerificationJob.setSensitivity("High", false);
+    String baseline = generateUuid();
+    testVerificationJob.setBaselineVerificationJobInstanceId(baseline);
+    TestVerificationJobDTO testVerificationJobDTO =
+        (TestVerificationJobDTO) testVerificationJob.getVerificationJobDTO();
+    assertThat(testVerificationJobDTO.getSensitivity()).isEqualTo("HIGH");
+    assertThat(testVerificationJob.getSensitivity()).isEqualTo(Sensitivity.HIGH);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetDTO_ignoreCasesInSensitivityInvalid() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    testVerificationJob.setSensitivity("HigH", false);
+    assertThatThrownBy(() -> testVerificationJob.getVerificationJobDTO())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No enum mapping found for HigH");
+    assertThatThrownBy(() -> testVerificationJob.getSensitivity())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No enum mapping found for HigH");
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetDTO_validBaseline() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    String baseline = generateUuid();
+    testVerificationJob.setBaselineVerificationJobInstanceId(baseline);
+    TestVerificationJobDTO testVerificationJobDTO =
+        (TestVerificationJobDTO) testVerificationJob.getVerificationJobDTO();
+    assertThat(testVerificationJobDTO.getBaselineVerificationJobInstanceId()).isEqualTo(baseline);
+  }
+
+  private TestVerificationJob createTestVerificationJob() {
+    TestVerificationJob testVerificationJob = new TestVerificationJob();
+    testVerificationJob.setDuration(Duration.ofMinutes(2));
+    testVerificationJob.setServiceIdentifier("service", false);
+    testVerificationJob.setEnvIdentifier("env", false);
+    testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
+    return testVerificationJob;
+  }
+}

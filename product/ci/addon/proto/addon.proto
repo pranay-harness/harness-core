@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package io.harness.product.ci.addon.proto;
+
+option java_multiple_files = true;
+option go_package = "ciaddonpb";
+
+import "product/ci/engine/proto/execution.proto";
+import "product/ci/engine/proto/artifact.proto";
+
+message ExecuteStepRequest {
+  io.harness.product.ci.engine.proto.UnitStep step = 1;
+  // Path to store temporary files
+  string tmpFilePath = 2;
+  // Output of all the previously executed steps of a stage
+  map<string, io.harness.product.ci.engine.proto.StepOutput> prev_step_outputs = 3;
+}
+
+message ExecuteStepResponse {
+  map<string, string> output = 1;  // Step output
+  int32 num_retries = 2;
+  io.harness.product.ci.engine.proto.Artifact artifact = 3;  // Artifact metadata
+}
+
+message SignalStopRequest {}
+
+message SignalStopResponse {}
+
+service Addon {
+  // Synchronous RPC to execute a step
+  rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
+
+  // Synchronous RPC to send a signal to stop GRPC server
+  rpc SignalStop(SignalStopRequest) returns (SignalStopResponse);
+}

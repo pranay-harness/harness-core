@@ -1,0 +1,16 @@
+-
+  metricName: "trend-error-metric"
+  metricType: "ERROR"
+  metricGroupName: "*"
+  actionType: "ignore"
+  comparisonType: "delta"
+  thresholdType: "ACT_WHEN_HIGHER"
+  value: "0.01"
+-
+  metricName: "trend-error-metric"
+  metricType: "ERROR"
+  metricGroupName: "*"
+  actionType: "ignore"
+  comparisonType: "ratio"
+  thresholdType: "ACT_WHEN_HIGHER"
+  value: "0.01"

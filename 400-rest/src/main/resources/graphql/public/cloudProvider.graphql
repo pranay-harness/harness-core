@@ -1,0 +1,147 @@
+extend type Query {
+  # Get details about a Cloud Provider.
+  cloudProvider(cloudProviderId: String!): CloudProvider @dataFetcher(name: cloudProvider)
+
+  # Get details about Cloud Providers.
+  cloudProviders(filters: [CloudProviderFilter], limit: Int!, offset: Int): CloudProviderConnection
+    @dataFetcher(name: cloudProviderConnection)
+
+  # Beta
+  cloudProviderByName(name: String!): CloudProvider @dataFetcher(name: cloudProvider)
+}
+
+input CloudProviderFilter {
+  cloudProvider: IdFilter
+  cloudProviderType: CloudProviderTypeFilter
+  isCEEnabled: CEEnabledFilter
+  createdAt: TimeFilter
+}
+
+input CEEnabledFilter {
+  operator: EnumOperator
+  values: [Boolean]
+}
+
+input CloudProviderTypeFilter {
+  operator: EnumOperator
+  values: [CloudProviderType]
+}
+
+enum CloudProviderType {
+  PHYSICAL_DATA_CENTER
+  AWS
+  AZURE
+  GCP
+  KUBERNETES_CLUSTER
+  PCF
+  SPOT_INST
+}
+
+interface CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+}
+
+type CloudProviderConnection {
+  pageInfo: PageInfo
+  nodes: [CloudProvider]
+}
+
+type CEHealthStatus {
+  isHealthy: Boolean
+  isCEConnector: Boolean
+  messages: [String]
+  clusterHealthStatusList: [CEClusterHealth]
+}
+
+type CEClusterHealth {
+  clusterId: String
+  clusterName: String
+  errors: [String]
+  messages: [String]
+  lastEventTimestamp: Number
+}
+
+type ClusterError {
+  clusterId: String
+  clusterErrors: [String]
+}
+
+type AwsCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+  ceHealthStatus: CEHealthStatus @dataFetcher(name: ceHealthStatus)
+}
+
+type PhysicalDataCenterCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+}
+
+type AzureCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+}
+
+type GcpCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+  delegateSelectors: [String]
+}
+
+type KubernetesCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+  skipK8sEventCollection: Boolean
+  ceHealthStatus: CEHealthStatus @dataFetcher(name: ceHealthStatus)
+}
+
+type PcfCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+}
+
+type SpotInstCloudProvider implements CloudProvider {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+  type: String
+  isContinuousEfficiencyEnabled: Boolean
+}

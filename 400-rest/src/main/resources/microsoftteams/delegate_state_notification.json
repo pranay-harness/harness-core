@@ -1,0 +1,12 @@
+{
+  "@type": "MessageCard",
+  "themeColor": "${THEME_COLOR}",
+  "summary": "Harness Notification",
+  "sections": [
+    {
+      "activityTitle": "${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} ${HOST_NAMES}",
+      "activitySubtitle": "Harness Alert",
+      "activityImage": "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png"
+    }
+  ]
+}

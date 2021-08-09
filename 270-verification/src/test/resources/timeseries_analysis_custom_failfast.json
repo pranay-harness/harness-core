@@ -1,0 +1,90 @@
+{
+  "_id" : "_M5pB-OlT66Lg2GkFezASQ",
+  "stateType" : "APM_VERIFICATION",
+  "workflowExecutionId" : "ACesgWK7RfKRtohPbpNwLw",
+  "stateExecutionId" : "testStateExecutionId",
+  "analysisMinute" : 3,
+  "groupName" : "default",
+  "transactions" : {
+    "0" : {
+      "txn_name" : "TransactionTest",
+      "txn_tag" : "default",
+      "is_key_transaction" : false,
+      "metrics" : {
+        "0" : {
+          "metric_name" : "Errors",
+          "metric_type" : "ERROR",
+          "alert_type" : "0",
+          "control" : {
+            "data" : [
+              [
+                0.0,
+                50.0,
+                50.0,
+                49.0
+              ]
+            ],
+            "data_type" : "ERROR",
+            "host_names" : [
+              "harness-example-deployment-76d9549b7c-t4lxr"
+            ]
+          },
+          "test" : {
+            "data" : [
+              [
+                0.0,
+                1.0,
+                32.0,
+                49.0
+              ]
+            ],
+            "data_type" : "ERROR",
+            "host_names" : [
+              "harness-example-deployment-canary-54dc94f988-vl7ww"
+            ]
+          },
+          "results" : {
+            "harness-example-deployment-canary-54dc94f988-vl7ww" : {
+              "test_data" : [
+                0.0,
+                1.0,
+                32.0,
+                49.0
+              ],
+              "control_index" : 0,
+              "test_index" : 0,
+              "risk" : 0,
+              "score" : 0.0,
+              "upperThreshold" : [
+                0.1,
+                0.1,
+                0.1,
+                0.1
+              ],
+              "lowerThreshold" : [
+                0.1,
+                0.1,
+                0.1,
+                0.1
+              ],
+              "hostName" : "harness-example-deployment-canary-54dc94f988-vl7ww"
+            }
+          },
+          "control_avg" : 37.25,
+          "test_avg" : 20.5,
+          "max_risk" : -1,
+          "max_key_transaction_score" : 0.0,
+          "long_term_pattern" : 0,
+          "predictability" : 0.0,
+          "txn_relative_risk" : 0.0,
+          "should_fail_fast" : true
+        }
+      }
+    }
+  },
+  "aggregatedRisk" : -1,
+  "shouldFailFast" : true,
+  "failFastErrorMsg" : "Failed due to fail fast threshold for following transaction(s)/metric(s): TransactionTest/Errors",
+  "appId" : "ikk0HCHlSWqhBUrTZQtCEQ"
+
+}

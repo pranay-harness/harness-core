@@ -1,0 +1,36 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "handler.go",
+        "header.go",
+        "helper.go",
+        "middleware.go",
+        "store.go",
+        "stream.go",
+        "token.go",
+    ],
+    importpath = "github.com/wings-software/portal/product/log-service/handler",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//product/log-service/config:go_default_library",
+        "//product/log-service/logger:go_default_library",
+        "//product/log-service/store:go_default_library",
+        "//product/log-service/stream:go_default_library",
+        "@com_github_dchest_authcookie//:go_default_library",
+        "@com_github_go_chi_chi//:go_default_library",
+        "@org_golang_x_sync//errgroup:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["middleware_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//product/log-service/config:go_default_library",
+        "@com_github_dchest_authcookie//:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+    ],
+)

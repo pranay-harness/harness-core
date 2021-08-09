@@ -1,0 +1,21 @@
+{
+  "items" : [ {
+    "id" : "aGFybmVzcy1ucG06Yzc3MDE2OWMwYjJlM2VkODU0MGMyOGEwOWQ0Njk4ZTQ",
+    "repository" : "harness-npm",
+    "format" : "npm",
+    "group" : null,
+    "name" : "npm-app1",
+    "version" : "1.0.0",
+    "assets" : [ {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/harness-npm/npm-app1/-/npm-app1-1.0.0.tgz",
+      "path" : "npm-app1/-/npm-app1-1.0.0.tgz",
+      "id" : "aGFybmVzcy1ucG06MzZlM2RlYzhkZTUyOGM5YmM3NzFkMzBiMTU3OTU0MDE",
+      "repository" : "harness-npm",
+      "format" : "npm",
+      "checksum" : {
+        "sha1" : "1a65e4a52b3e8387bfc5e47cf0544d4d7360df31"
+      }
+    } ]
+  } ],
+  "continuationToken" : null
+}

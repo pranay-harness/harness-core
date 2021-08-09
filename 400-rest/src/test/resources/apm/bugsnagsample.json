@@ -1,0 +1,437 @@
+[
+  {
+    "id": "5ee289f7005b8e6132010000",
+    "url": "https://api.bugsnag.com/projects/58ebe6286eadb00016cb2255/events/5ee289f7005b8e6132010000",
+    "project_url": "https://api.bugsnag.com/projects/58ebe6286eadb00016cb2255",
+    "is_full_report": true,
+    "error_id": "5ebc6e16929c3800175438f9",
+    "received_at": "2020-06-11T19:45:59.000Z",
+    "exceptions": [
+      {
+        "error_class": "TypeError",
+        "message": "Cannot read property '450' of undefined",
+        "stacktrace": [
+          {
+            "column_number": 118,
+            "in_project": true,
+            "line_number": 312,
+            "method": "Object._updateGalleryImageFromFilteredMediaGallery",
+            "file": "src/app/views/store/pages/products/gallery.ts",
+            "code": {
+              "309": "",
+              "310": "\t_updateGalleryImageFromFilteredMediaGallery() {",
+              "311": "\t\tconst index = $('.js-thumbnails').slick('slickCurrentSlide');",
+              "312": "\t\t$('.js-main-image-container .slick-active img').attr('src', window.dataLayer.filteredMediaGallery[index].IMAGEPATHS[450]);",
+              "313": "\t},",
+              "314": "",
+              "315": "\t_updateActiveGalleryImageFromFinish(finish) {"
+            },
+            "macho_uuid": null,
+            "source_control_link": "https://github.com/buildcom/node-store/blob/714a51cd2342f939b8f5db07e9f0ba20563f8d40/src/app/views/store/pages/products/gallery.ts#L312",
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 7,
+            "in_project": true,
+            "line_number": 306,
+            "method": "Object._updateGalleryImageFromClick",
+            "file": "src/app/views/store/pages/products/gallery.ts",
+            "code": {
+              "303": "\t},",
+              "304": "",
+              "305": "\t_updateGalleryImageFromClick(finish) {",
+              "306": "\t\tthis._updateGalleryImageFromFilteredMediaGallery();",
+              "307": "\t\tthis._updateFinishGalleryImage(finish);",
+              "308": "\t},",
+              "309": ""
+            },
+            "macho_uuid": null,
+            "source_control_link": "https://github.com/buildcom/node-store/blob/714a51cd2342f939b8f5db07e9f0ba20563f8d40/src/app/views/store/pages/products/gallery.ts#L306",
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 8,
+            "in_project": true,
+            "line_number": 265,
+            "method": "Object._handleFinishClickedHasFinishImage",
+            "file": "src/app/views/store/pages/products/gallery.ts",
+            "code": {
+              "262": "\t_handleFinishClickedHasFinishImage(finish) {",
+              "263": "\t\tif (finish.images) {",
+              "264": "\t\t\tthis._updateZoomImage(finish);",
+              "265": "\t\t\tthis._updateGalleryImageFromClick(finish);",
+              "266": "\t\t\tthis._updateFinishThumbnail(finish);",
+              "267": "\t\t\tthis._navigateToFinishThumbnail();",
+              "268": "\t\t}"
+            },
+            "macho_uuid": null,
+            "source_control_link": "https://github.com/buildcom/node-store/blob/714a51cd2342f939b8f5db07e9f0ba20563f8d40/src/app/views/store/pages/products/gallery.ts#L265",
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 8,
+            "in_project": true,
+            "line_number": 236,
+            "method": "Object._handleFinishClicked",
+            "file": "src/app/views/store/pages/products/gallery.ts",
+            "code": {
+              "233": "\t\t$('#js-no-finish-image').remove();",
+              "234": "",
+              "235": "\t\tif (hasFinishImage) {",
+              "236": "\t\t\tthis._handleFinishClickedHasFinishImage(finish);",
+              "237": "\t\t} else {",
+              "238": "\t\t\tthis._handleFinishClickedHasNoFinishImage(finish);",
+              "239": "\t\t}"
+            },
+            "macho_uuid": null,
+            "source_control_link": "https://github.com/buildcom/node-store/blob/714a51cd2342f939b8f5db07e9f0ba20563f8d40/src/app/views/store/pages/products/gallery.ts#L236",
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 56,
+            "in_project": false,
+            "line_number": 335,
+            "method": "triggerEvents",
+            "file": "node_modules/backbone/backbone.js",
+            "code": {
+              "332": "    var ev, i = -1, l = events.length, a1 = args[0], a2 = args[1], a3 = args[2];",
+              "333": "    switch (args.length) {",
+              "334": "      case 0: while (++i < l) (ev = events[i]).callback.call(ev.ctx); return;",
+              "335": "      case 1: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1); return;",
+              "336": "      case 2: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2); return;",
+              "337": "      case 3: while (++i < l) (ev = events[i]).callback.call(ev.ctx, a1, a2, a3); return;",
+              "338": "      default: while (++i < l) (ev = events[i]).callback.apply(ev.ctx, args); return;"
+            },
+            "macho_uuid": null,
+            "source_control_link": null,
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 18,
+            "in_project": false,
+            "line_number": 322,
+            "method": "triggerApi",
+            "file": "node_modules/backbone/backbone.js",
+            "code": {
+              "319": "      var events = objEvents[name];",
+              "320": "      var allEvents = objEvents.all;",
+              "321": "      if (events && allEvents) allEvents = allEvents.slice();",
+              "322": "      if (events) triggerEvents(events, args);",
+              "323": "      if (allEvents) triggerEvents(allEvents, [name].concat(args));",
+              "324": "    }",
+              "325": "    return objEvents;"
+            },
+            "macho_uuid": null,
+            "source_control_link": null,
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 15,
+            "in_project": false,
+            "line_number": 110,
+            "method": "eventsApi",
+            "file": "node_modules/backbone/backbone.js",
+            "code": {
+              "107": "      }",
+              "108": "    } else {",
+              "109": "      // Finally, standard events.",
+              "110": "      events = iteratee(events, name, callback, opts);",
+              "111": "    }",
+              "112": "    return events;",
+              "113": "  };"
+            },
+            "macho_uuid": null,
+            "source_control_link": null,
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 4,
+            "in_project": false,
+            "line_number": 312,
+            "method": "Object.trigger",
+            "file": "node_modules/backbone/backbone.js",
+            "code": {
+              "309": "    var args = Array(length);",
+              "310": "    for (var i = 0; i < length; i++) args[i] = arguments[i + 1];",
+              "311": "",
+              "312": "    eventsApi(triggerApi, this._events, name, void 0, args);",
+              "313": "    return this;",
+              "314": "  };",
+              "315": ""
+            },
+            "macho_uuid": null,
+            "source_control_link": null,
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 11,
+            "in_project": true,
+            "line_number": 84,
+            "method": "Object.updatePage",
+            "file": "src/app/views/store/pages/products/finish.js",
+            "code": {
+              "81": "\t\tconst clickedFinishIsAlreadySelected = this.model.isSelected();",
+              "82": "\t\tlet $compareButton = $('.js-compare-toggle-btn');",
+              "83": "\t\tthis.model.set('index', $(event.currentTarget).data('iterator'));",
+              "84": "\t\tBackbone.trigger(finishClickedEvent, this.model.toJSON());",
+              "85": "\t\tBackbone.trigger('omniture:finishselected', this.model.toJSON());",
+              "86": "\t\tthis.$('[type=radio]').prop('checked', true);",
+              "87": "\t\tthis.updateHistory();"
+            },
+            "macho_uuid": null,
+            "source_control_link": "https://github.com/buildcom/node-store/blob/714a51cd2342f939b8f5db07e9f0ba20563f8d40/src/app/views/store/pages/products/finish.js#L84",
+            "source_control_name": "github"
+          },
+          {
+            "column_number": 26,
+            "in_project": false,
+            "line_number": 5237,
+            "method": "HTMLLIElement.dispatch",
+            "file": "node_modules/jquery/dist/jquery.js",
+            "code": {
+              "5234": "\t\t\t\t\tevent.data = handleObj.data;",
+              "5235": "",
+              "5236": "\t\t\t\t\tret = ( ( jQuery.event.special[ handleObj.origType ] || {} ).handle ||",
+              "5237": "\t\t\t\t\t\thandleObj.handler ).apply( matched.elem, args );",
+              "5238": "",
+              "5239": "\t\t\t\t\tif ( ret !== undefined ) {",
+              "5240": "\t\t\t\t\t\tif ( ( event.result = ret ) === false ) {"
+            },
+            "macho_uuid": null,
+            "source_control_link": null,
+            "source_control_name": "github"
+          }
+        ]
+      }
+    ],
+    "threads": [],
+    "metaData": {
+      "user": {
+        "isBot": false,
+        "isInternal": false,
+        "isLoggedIn": false
+      },
+      "device": {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.61 Safari/537.36"
+      },
+      "custom": {
+        "theme": "build",
+        "page": "product:display",
+        "platform": "node",
+        "siteName": "build",
+        "serverName": "node-store-pr-14"
+      }
+    },
+    "customDiagnostics": {},
+    "request": {
+      "url": "https://www.build.com/monte-carlo-maverick-max/s1232074?uid=2951035",
+      "clientIp": "184.170.166.39"
+    },
+    "app": {
+      "releaseStage": "production",
+      "version": "8964"
+    },
+    "device": {
+      "locale": "en-US",
+      "time": "2020-06-11T19:46:00.205Z",
+      "osName": "Windows 10.0",
+      "browserName": "Chrome",
+      "browserVersion": "83.0.4103"
+    },
+    "user": {
+      "id": "184.170.166.39"
+    },
+    "breadcrumbs": [
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:44:31.301Z",
+        "metaData": {
+          "targetText": "Next",
+          "targetSelector": "BUTTON.slick-next.slick-arrow"
+        }
+      },
+      {
+        "type": "request",
+        "name": "XMLHttpRequest succeeded",
+        "timestamp": "2020-06-11T19:44:32.213Z",
+        "metaData": {
+          "status": 200,
+          "request": "POST /2Ztkihy4/xhr/api/v2/collector"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:44:32.410Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.slick-slide.slick-active:nth-child(13) > DIV > IMG.product-gallery__thumbnail-image.pointer"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:44:42.478Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.slick-slide.slick-active:nth-child(15) > DIV > IMG.pointer.product-gallery__thumbnail-image.pa2"
+        }
+      },
+      {
+        "type": "request",
+        "name": "XMLHttpRequest succeeded",
+        "timestamp": "2020-06-11T19:45:41.658Z",
+        "metaData": {
+          "status": 200,
+          "request": "GET https://api2.branch.io/v1/has-app/key_live_bbxmRKxFcO0JOsmiUoWPEhghFze0AIt7?browser_fingerprint_id=689161979678027010&instrumentation=%7B%22init-began-at%22%3A%221323%22%2C%22%2Fv1%2Fhas-app-brtt%22%3A%22303%22%2C%22%2F_r-brtt%22%3A%22384%22%2C%22%2Fv1%2Fdeepview-brtt%22%3A%22328%22%2C%22%2Fv1%2Fpageview-brtt%22%3A%22151%22%7D"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:45:44.357Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-3045418.ba.br2.bw1.b--theme-grey.hover-b--theme-grey-medium.pointer.relative > IMG.pa1:nth-child(1)"
+        }
+      },
+      {
+        "type": "error",
+        "name": "TypeError",
+        "timestamp": "2020-06-11T19:45:44.392Z",
+        "metaData": {
+          "errorClass": "TypeError",
+          "errorMessage": "Cannot read property '450' of undefined",
+          "severity": "error"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:45:48.518Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-2951036.ba.br2.bw1.b--theme-grey.hover-b--theme-grey-medium.pointer.relative > IMG.pa1:nth-child(1)"
+        }
+      },
+      {
+        "type": "error",
+        "name": "TypeError",
+        "timestamp": "2020-06-11T19:45:48.559Z",
+        "metaData": {
+          "errorClass": "TypeError",
+          "errorMessage": "Cannot read property '450' of undefined",
+          "severity": "error"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:45:49.626Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-3045418.ba.br2.bw1.hover-b--theme-grey-medium.pointer.relative.b--theme-grey > IMG.pa1:nth-child(1)"
+        }
+      },
+      {
+        "type": "error",
+        "name": "TypeError",
+        "timestamp": "2020-06-11T19:45:49.652Z",
+        "metaData": {
+          "errorClass": "TypeError",
+          "errorMessage": "Cannot read property '450' of undefined",
+          "severity": "error"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:45:50.671Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-2951036.ba.br2.bw1.hover-b--theme-grey-medium.pointer.relative.b--theme-grey > IMG.pa1:nth-child(1)"
+        }
+      },
+      {
+        "type": "error",
+        "name": "TypeError",
+        "timestamp": "2020-06-11T19:45:50.688Z",
+        "metaData": {
+          "errorClass": "TypeError",
+          "errorMessage": "Cannot read property '450' of undefined",
+          "severity": "error"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:45:52.071Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-3045419.ba.br2.bw1.b--theme-grey.hover-b--theme-grey-medium.pointer.relative > IMG.pa1:nth-child(1)"
+        }
+      },
+      {
+        "type": "error",
+        "name": "TypeError",
+        "timestamp": "2020-06-11T19:45:52.103Z",
+        "metaData": {
+          "errorClass": "TypeError",
+          "errorMessage": "Cannot read property '450' of undefined",
+          "severity": "error"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:45:53.196Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-2951035.ba.br2.bw1.hover-b--theme-grey-medium.pointer.relative.b--theme-grey > IMG.pa1:nth-child(1)"
+        }
+      },
+      {
+        "type": "error",
+        "name": "TypeError",
+        "timestamp": "2020-06-11T19:45:53.226Z",
+        "metaData": {
+          "errorClass": "TypeError",
+          "errorMessage": "Cannot read property '450' of undefined",
+          "severity": "error"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:45:57.194Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-3876018.ba.br2.bw1.b--theme-grey.hover-b--theme-grey-medium.pointer.relative > IMG.pa1:nth-child(1)"
+        }
+      },
+      {
+        "type": "error",
+        "name": "TypeError",
+        "timestamp": "2020-06-11T19:45:57.205Z",
+        "metaData": {
+          "errorClass": "TypeError",
+          "errorMessage": "Cannot read property '450' of undefined",
+          "severity": "error"
+        }
+      },
+      {
+        "type": "user",
+        "name": "UI click",
+        "timestamp": "2020-06-11T19:46:00.169Z",
+        "metaData": {
+          "targetText": "(...)",
+          "targetSelector": "DIV.js-finish-swatch.js-gallery-thumbnail.js-finish-3499413.ba.br2.bw1.b--theme-grey.hover-b--theme-grey-medium.pointer.relative > IMG.pa1:nth-child(1)"
+        }
+      }
+    ],
+    "context": "/monte-carlo-maverick-max/s1232074",
+    "severity": "error",
+    "unhandled": true
+  }
+]

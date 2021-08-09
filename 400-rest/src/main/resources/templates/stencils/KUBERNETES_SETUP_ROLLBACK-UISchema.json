@@ -1,0 +1,10 @@
+{
+  "commandName": { "ui:widget": "hidden" },
+  "desiredInstanceCount": { "ui:widget": "hidden" },
+  "fixedInstances": { "ui:widget": "hidden" },
+  "maxInstances": { "ui:widget": "hidden" },
+  "resizeStrategy": { "ui:widget": "hidden" },
+  "serviceSteadyStateTimeout": { "ui:widget": "hidden" },
+  "ui:order": ["commandName", "desiredInstanceCount", "fixedInstances", "maxInstances", "resizeStrategy", "serviceSteadyStateTimeout"]
+}
+

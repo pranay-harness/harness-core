@@ -1,0 +1,4 @@
+{
+  "type": { "ui:widget": "hidden" },
+  "ui:order": ["type", "url"]
+}

@@ -1,0 +1,285 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controller/rest/applications/cv-app/metric-data"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "end-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634954000"
+          } ],
+          "metric-path" : [ {
+            "matcher" : "exact",
+            "value" : "Business Transaction Performance|Business Transactions|docker-tier|*|Average Response Time (ms)"
+          } ],
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "JSON"
+          } ],
+          "rollup" : [ {
+            "matcher" : "exact",
+            "value" : "false"
+          } ],
+          "start-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634894000"
+          } ],
+          "time-range-type" : [ {
+            "matcher" : "exact",
+            "value" : "BETWEEN_TIMES"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAM2WX2/aMBTF3/spLJ42iQ7/ixPzBoVKSAMqlG0PVTVZicu8EYfZDmJq+t3nENoVhjpUsTaRokjn3hx849+xuAZ3ZwC0MumMSkZpC3QBRTSgnPP2n8JEZLIqtfrxuOzH1t9dhCGOeFRe5Nky11K7LqIhRazsraQRcwlm0vqClSBWmQTvMvu+9cTySrhvtWVhlZbWgtgIbUXiVK7BlTS3ucmETmR5qMGWaZ78kObcKWnKjsvTfKGs68h1IpdVwz9XcWvkz0Lq5NdmEdPJ8Ot4NHm6wM9iUUhbVa8338gXrBPGVT4jPVYL/4NVFQWcM0IjBv3VrhvzJCmM8e61AdrKtegqiSBGGCXbQqZ0bRXwiOAHUaxrMWIo4luxsHIm9HyzG84U8sE5L2rfcCvYItu8jCBGDNOtuqpmqk1DGqCo/TiXToVJB3KlRPX1qhboa/fg5uy+fRiRkFB8BCKc4WYhYuTcP7zUcEL4Hhv7VBwJRLALBGb7KAQvhQAzEkIYsYMHxXgYz0YXYNCLe2AyjcHl9NNk8N82V+lUrj98t8vTbupz8BNyFPyoafD76a37mM9V449IvBsAuBeAI/lnu/wHf52EL8WfsIhTGIRvT/9rQO+jzjhpwrS+0c9qOl+G/fPR5PK1Eh9AdHD4/cRD2KzEK21VKpuedfRs1umRWSdwN+wYnSztFPt/UTiI3p7/x509Ofng5je5U5qfDgwAAA==",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Length" : [ "550" ],
+          "Content-Type" : [ "application/json;charset=UTF-8" ],
+          "Date" : [ "Wed, 09 Sep 2020 07:06:51 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "Set-Cookie" : [ "JSESSIONID=1b04658315f6376089b0b006338c; Path=/controller; HttpOnly; Secure" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controller/rest/applications/cv-app/metric-data"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "end-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634954000"
+          } ],
+          "metric-path" : [ {
+            "matcher" : "exact",
+            "value" : "Business Transaction Performance|Business Transactions|docker-tier|*|Stall Count"
+          } ],
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "JSON"
+          } ],
+          "rollup" : [ {
+            "matcher" : "exact",
+            "value" : "false"
+          } ],
+          "start-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634894000"
+          } ],
+          "time-range-type" : [ {
+            "matcher" : "exact",
+            "value" : "BETWEEN_TIMES"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAO1W3W+bMBB/719h5TldDDgG8tZ8VEJqSNXR9qGqJgsumVewM9tUmUb/9xnSD7qiqdWUZQ9BstDd77jz3f3O+Ab9PEKoV4BRPI2yHhoh4pCh73lB/wWIWQE11Bsn82qcaLtGjovdkDrVRBZrKUCYkUN84tDqs2F5jiayFKbX8nHOzNetj1JzAVqjRDGhWWq4FOgc1FKqgokUqi4DXWUyvQN1bDioamBkJnOuzUDB9xK0OZMrLt5GXjawSH80gRfx7Ms8itubumK5/bxGb5pCWEAbpkzCC4jEnOc2SI06wzCkHgkotk9/ayjTtFTKet86cB7VW6WpVU+WBRevRLZpi6WGCyZWTYGXLNfw5KjJo2Woy6It3td7f4UbJjKmsincc1YXrQEt9oBujx76bzvtUs/HOPBJV6vns+QimqDpSXKC4kWCTheX8XRnDeUig82nb3r9l03sTrSm9BC77nsojfGeKc2F5hkcyPxBMhOXunZ5++fycyd3wmWPBiHBtJPL/zbPHY4q7jySfhvVIAz2PKqwSWFdGxym9YPTan88NPT+BxZbQ7YCNbiejY+j+HRnpPY94r/rSuXu/Uq1si+rOnD6D5xGt78AhbWHIzsLAAA=",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Length" : [ "473" ],
+          "Content-Type" : [ "application/json;charset=UTF-8" ],
+          "Date" : [ "Wed, 09 Sep 2020 07:06:51 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "Set-Cookie" : [ "JSESSIONID=1b0464eefd56200c9f5d9c0d8201; Path=/controller; HttpOnly; Secure" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controller/rest/applications/cv-app/metric-data"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "end-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634954000"
+          } ],
+          "metric-path" : [ {
+            "matcher" : "exact",
+            "value" : "Business Transaction Performance|Business Transactions|docker-tier|*|Calls per Minute"
+          } ],
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "JSON"
+          } ],
+          "rollup" : [ {
+            "matcher" : "exact",
+            "value" : "false"
+          } ],
+          "start-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634894000"
+          } ],
+          "time-range-type" : [ {
+            "matcher" : "exact",
+            "value" : "BETWEEN_TIMES"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAM2WbWvbMBDH3/dTiLxOFz/Kdt41DwXD7JTibS9KGcK+ZNpsKZPkkjH3u0+y2y7NUlZCvdkQjO6Ou9P9f5xzg36eITSqQAmax8UITZEbWDhy/XD825GSCoxrlCyz63iOFhfZBUpXGbpcfUgXo73IK6K+tJGzWlIGUqJMECZJrihn6ArEmouKsByaYwGyKXj+DcS5oiCaiQ4kGxCTT8vZeZxeNnNSlhJtQaCEslpBV3gt4HsNLP/R1l2ly89JnO739JGUNUjjvUG3Z/fjP6/s2Z7vW/bRK8+ypJllUv+mtmM5kWU1c15tOQOmprYXeDZ+obEeJqJ4wUsq1YQySQt4i4mYYWiHVESojFYQs4SWuobx2n4UYdcLsaWfcRfI87wWQmfvEtgP5s6oWoAeQyvKzPnpSHb7x1rCNWGbdsprUkp4zMTrLo/zYJB19Sztnen+mUU3zwoiigXcUWLG1tbRvvsXBHdxGHnWEBjvG+pOt79AHUbhEKCGXQ5bEzBMroNesA4OqQ5OhdoIHrie+5othp0hCC5go1/aNEi9/V709g/19k/W28GO5/jR/19iT4L2u80C1/VeBbc9DLj1naV6zzd0oAsN9wI4PgQcnwq4g/V/USsMjn7C/i3hlBWwe/dVbt+IcHT7Cw/2hel6CwAA",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Length" : [ "504" ],
+          "Content-Type" : [ "application/json;charset=UTF-8" ],
+          "Date" : [ "Wed, 09 Sep 2020 07:06:51 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "Set-Cookie" : [ "JSESSIONID=1b046cda1e1e67403f9e2843f9a9; Path=/controller; HttpOnly; Secure" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    }, {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controller/rest/applications/cv-app/metric-data"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "end-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634954000"
+          } ],
+          "metric-path" : [ {
+            "matcher" : "exact",
+            "value" : "Business Transaction Performance|Business Transactions|docker-tier|*|Errors per Minute"
+          } ],
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "JSON"
+          } ],
+          "rollup" : [ {
+            "matcher" : "exact",
+            "value" : "false"
+          } ],
+          "start-time" : [ {
+            "matcher" : "exact",
+            "value" : "1599634894000"
+          } ],
+          "time-range-type" : [ {
+            "matcher" : "exact",
+            "value" : "BETWEEN_TIMES"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAO1WXW+bMBR976+w8pwuBsxX3pomlZAGqSq2PVRVZcFN6i7YmW2qTKP/vQbalabspSpKHoZkIe65HPv6nmO4Rn9OEBoVoCXLonyEpohYxPUdxx2/AgktoIZGszSuZqkyY2rZ2A49qzoXxVZw4HpqEZ9YXrWQUkiFtiBRzHipYdRhuqT6rmUqFeOgFEol5YpmmgmOLkGuhCwoz6DqS1BVLrKfIE81A1lNtMjFhik9kfCrBKW/ijXj/5p/1STx7Hcz/TJZ3MZR0l3ad7oxJDV63WyKAZSmUqesgIjHbGOmqlHLDUPPIYGHzTVuE0WWlVIa9pbAeg63QV2HXjILxt880l33sVRwRfm62ewV3Sh4IRJlS2M/B1RZdN97qNfeDZiV85zKfA4PjNZb14AGe0Q3J4/j9123PcfHOPCtvrbHi/QqOkfzs/QMJcsUXSy/JfPB2sp4Drsv92r7Ka3sL9fxgpBgNzx8tQMWWTvZxVZvkftOxvgonMy4YjkcqYf9QTzs73vY/6iHie3ZZuDDi/pvPwdXN+49sPbUHYTBUagbdhls64T/Av+QwM0nygudYzi1TSJdg5z8WMxOo+RiYJn7DiGHr7nzu7U2NxP6pKrRzRONBif0hwoAAA==",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Length" : [ "481" ],
+          "Content-Type" : [ "application/json;charset=UTF-8" ],
+          "Date" : [ "Wed, 09 Sep 2020 07:06:51 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "Set-Cookie" : [ "JSESSIONID=1b04657a9119b96fa0a38755baae; Path=/controller; HttpOnly; Secure" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2020-09-09T12:36:52+05:30"
+  }
+}

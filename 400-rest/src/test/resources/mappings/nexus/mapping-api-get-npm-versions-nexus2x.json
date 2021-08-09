@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/content/repositories/npmjs/abbrev"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-npm-versions-nexus2x.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

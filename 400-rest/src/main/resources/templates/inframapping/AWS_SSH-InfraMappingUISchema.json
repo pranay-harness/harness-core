@@ -1,0 +1,13 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
+  "restrictionType": { "ui:widget": "hidden" },
+  "restrictionExpression": { "ui:widget": "hidden" },
+  "awsInstanceFilter":{
+    "ui:order":["vpcIds","tags","subnetIds","securityGroupIds"]
+  },
+  "ui:order": [  "name", "autoPopulate","serviceId", "deploymentType","computeProviderSettingId", "region", "loadBalancerId", "usePublicDns",
+    "infraMappingType","computeProviderType", "hostConnectionAttrs" , "provisionInstances", "awsInstanceFilter", "autoScalingGroupName","setDesiredCapacity","desiredCapacity"]
+
+}

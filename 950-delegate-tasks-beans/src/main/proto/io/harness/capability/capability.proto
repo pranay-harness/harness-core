@@ -1,0 +1,164 @@
+syntax = "proto3";
+
+package io.harness.capability;
+
+option java_multiple_files = true;
+option go_package = "240_capability";
+
+// A check for which we dry run a delegate to see whether it is able to execute
+// a particular action or not. Checks should be small and modular, and should
+// correlate to checking properties of the delegate. Before you add a new
+// capability, please add Matt Lin on the delegate team as a required reviewer,
+// or ask beforehand if an existing capability should be extended.
+
+// Capabilities are
+// - independent (one capability should not influence each other)
+// - consistent (they are either allowed, or not)
+// - self proving (validation through use)
+
+// Next ID: 19
+message CapabilityParameters {
+  oneof capability {
+    AwsRegionParameters aws_region_parameters = 4;
+    ChartMuseumParameters chart_museum_parameters = 5;
+    GitInstallationParameters git_installation_parameters = 11;
+    HelmInstallationParameters helm_installation_parameters = 10;
+    HttpConnectionParameters http_connection_parameters = 6;
+    KustomizeParameters kustomize_parameters = 13;
+    PcfAutoScalarParameters pcf_auto_scalar_parameters = 14;
+    PcfConnectivityParameters pcf_connectivity_parameters = 15;
+    PcfInstallationParameters pcf_installation_parameters = 18;
+    ProcessExecutorParameters process_executor_parameters = 7;
+    SftpCapabilityParameters sftp_capability_parameters = 3;
+    SmbConnectionParameters smb_connection_parameters = 2;
+    SmtpParameters smtp_parameters = 12;
+    SocketConnectivityParameters socket_connectivity_parameters = 8;
+    SystemEnvParameters system_env_parameters = 9;
+    TestingCapability testing_capability = 1;
+    WinrmHostValidationParameters winrm_host_validation_parameters = 16;
+    LiteEngineConnectionParameters lite_engine_connection_parameters = 17;
+  }
+}
+
+// Testing whether we can connect to AWS in a given region
+message AwsRegionParameters {
+  string region = 1;
+}
+
+// Whether chart museum is enabled or not
+message ChartMuseumParameters {}
+
+// Whether or not git command line is installed on a delegate or not, regardless
+// of the specific java connector used for git.
+message GitInstallationParameters {}
+
+// Testing whether a delegate can connect to a given HTTP resource
+message HttpConnectionParameters {
+  string url = 1;
+
+  message Header {
+    string key = 1;
+    string value = 2;
+  }
+
+  repeated Header headers = 2;
+}
+
+// Testing whether the delegate can execute a given command -- a quick catch all for
+// any one-off resource check
+message ProcessExecutorParameters {
+  // list of atoms for the argument
+  repeated string args = 1;
+}
+
+// Testing whether a delegate can make the given sftp connection
+message SftpCapabilityParameters {
+  string sftp_url = 1;
+}
+
+// Testing whether a connection can be established to a given SMB url
+// Next ID: 2
+message SmbConnectionParameters {
+  string smb_url = 1;
+}
+
+// Whether the specified version of helm is installed or not
+message HelmInstallationParameters {
+  // Next ID: 3
+  enum HelmVersion {
+    HELM_VERSION_UNSPECIFIED = 0;
+    V2 = 1;
+    V3 = 2;
+  }
+  HelmVersion helm_version = 1;
+}
+
+// Whether a specific SMTP (email server) endpoint is reachable or not.
+message SmtpParameters {
+  bool use_ssl = 1;
+  bool start_tls = 2;
+  string host = 3;
+  int32 port = 4;
+  string username = 5;
+}
+
+// Testing whether a connection can be established to a given URL
+message SocketConnectivityParameters {
+  string host_name = 1;
+  int32 port = 2;
+  string url = 3;
+}
+
+// Checks whether the comparate is equal to the property or not
+message SystemEnvParameters {
+  string property = 1;
+  string comparate = 2;
+}
+
+// Checks whether kustomize is installed or not
+message KustomizeParameters {
+  string plugin_root_dir = 1;
+}
+
+message PcfAutoScalarParameters {
+  // Next ID: 3
+  enum CfCliVersion {
+    CF_VERSION_UNSPECIFIED = 0;
+    V6 = 1;
+    V7 = 2;
+  }
+  CfCliVersion cf_cli_version = 1;
+}
+
+message PcfConnectivityParameters {
+  string endpoint_url = 1;
+}
+
+// Whether the specified version of CF CLI is installed or not
+message PcfInstallationParameters {
+  // Next ID: 3
+  enum CfCliVersion {
+    CF_VERSION_UNSPECIFIED = 0;
+    V6 = 1;
+    V7 = 2;
+  }
+  CfCliVersion cf_cli_version = 1;
+}
+
+// A testing method for capabilities
+message TestingCapability {}
+
+// Testing WinRM Host reachable or not
+message WinrmHostValidationParameters {
+  string hostname = 4;
+  int32 port = 2;
+  bool use_ssl = 3;
+  string domain = 1;
+}
+
+// Testing whether a delegate can connect to a given Lite engine resource
+message LiteEngineConnectionParameters {
+  string ip = 1;
+  int32 port = 2;
+  bool is_local = 3;
+}

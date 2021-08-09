@@ -1,0 +1,6 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
+  "ui:order": [ "name", "autoPopulate","serviceId", "deploymentType","computeProviderSettingId", "organization", "space","tempRouteMap", "routeMaps", "infraMappingType","computeProviderType"]
+}

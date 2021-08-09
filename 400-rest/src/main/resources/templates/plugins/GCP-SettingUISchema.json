@@ -1,0 +1,4 @@
+{
+  "custom:encryptedFields": [ "serviceAccountKeyFileContent" ],
+  "ui:order": [ "type", "serviceAccountKeyFileContent" ]
+}

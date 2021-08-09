@@ -1,0 +1,21 @@
+{
+  "connector": {
+    "name": "name",
+    "identifier": "identifier",
+    "description": "description",
+    "orgIdentifier": "orgIdentifier",
+    "projectIdentifier": "projectIdentifier",
+    "tags": {
+      "company" : "Harness",
+      "env" : "dev"
+    },
+    "type":"Artifactory",
+    "spec" : {
+      "delegateSelectors": null,
+      "artifactoryServerUrl" : "https://artifactoryurl",
+      "auth" : {
+        "type" : "Anonymous"
+      }
+    }
+  }
+}

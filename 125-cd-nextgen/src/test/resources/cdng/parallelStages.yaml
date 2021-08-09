@@ -1,0 +1,286 @@
+pipeline:
+  name: Test Pipline
+  identifier: Test_Pipline
+  description: ""
+  stages:
+    - stage:
+        identifier: qaStage
+        name: qa stage
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              identifier: manager
+              name: manager
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/spec
+                  - manifest:
+                      identifier: qaOverride
+                      type: Values
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/baseValues.yaml
+                              - test/qa/values_1.yaml
+          infrastructure:
+            environment:
+              identifier: stagingInfra
+              type: PreProduction
+              tags:
+                cloud: GCP
+                team: cdp
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: account.argocd-account
+                namespace: harness
+                releaseName: testingqa
+          execution:
+            steps:
+              - step:
+                  name: http step 1
+                  identifier: httpStep1
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: https://google.com
+              - step:
+                  name: http step 2
+                  identifier: httpStep2
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: https://google.com
+            rollbackSteps: []
+    - parallel:
+        - stage:
+            identifier: qaStage2
+            name: qa stage2
+            type: Deployment
+            spec:
+              serviceConfig:
+                service:
+                  identifier: manager
+                  name: manager
+                serviceDefinition:
+                  type: Kubernetes
+                  spec:
+                    manifests:
+                      - manifest:
+                          identifier: baseValues
+                          type: K8sManifest
+                          spec:
+                            store:
+                              type: Git
+                              spec:
+                                connectorRef: my_git_connector
+                                gitFetchType: Branch
+                                branch: master
+                                paths:
+                                  - test/spec
+                      - manifest:
+                          identifier: qaOverride
+                          type: Values
+                          spec:
+                            store:
+                              type: Git
+                              spec:
+                                connectorRef: my_git_connector
+                                gitFetchType: Branch
+                                branch: master
+                                paths:
+                                  - test/baseValues.yaml
+                                  - test/qa/values_1.yaml
+              infrastructure:
+                environment:
+                  identifier: stagingInfra
+                  type: PreProduction
+                  tags:
+                    cloud: GCP
+                    team: cdp
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    connectorRef: account.argocd-account
+                    namespace: harness
+                    releaseName: testingqa
+              execution:
+                steps:
+                  - step:
+                      name: http step 1
+                      identifier: httpStep1
+                      type: Http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: https://google.com
+                  - step:
+                      name: http step 2
+                      identifier: httpStep2
+                      type: Http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: https://google.com
+                rollbackSteps: []
+        - stage:
+            identifier: qaStage3
+            name: qa stage3
+            type: Deployment
+            spec:
+              serviceConfig:
+                service:
+                  identifier: manager
+                  name: manager
+                serviceDefinition:
+                  type: Kubernetes
+                  spec:
+                    manifests:
+                      - manifest:
+                          identifier: baseValues
+                          type: K8sManifest
+                          spec:
+                            store:
+                              type: Git
+                              spec:
+                                connectorRef: my_git_connector
+                                gitFetchType: Branch
+                                branch: master
+                                paths:
+                                  - test/spec
+                      - manifest:
+                          identifier: qaOverride
+                          type: Values
+                          spec:
+                            store:
+                              type: Git
+                              spec:
+                                connectorRef: my_git_connector
+                                gitFetchType: Branch
+                                branch: master
+                                paths:
+                                  - test/baseValues.yaml
+                                  - test/qa/values_1.yaml
+              infrastructure:
+                environment:
+                  identifier: stagingInfra
+                  type: PreProduction
+                  tags:
+                    cloud: GCP
+                    team: cdp
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    connectorRef: account.argocd-account
+                    namespace: harness
+                    releaseName: testingqa
+              execution:
+                steps:
+                  - step:
+                      name: http step 1
+                      identifier: httpStep1
+                      type: Http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: https://google.com
+                  - step:
+                      name: http step 2
+                      identifier: httpStep2
+                      type: Http
+                      spec:
+                        socketTimeoutMillis: 1000
+                        method: GET
+                        url: https://google.com
+                rollbackSteps: []
+    - stage:
+        identifier: qaStage4
+        name: qa stage4
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              identifier: manager
+              name: manager
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/spec
+                  - manifest:
+                      identifier: qaOverride
+                      type: Values
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/baseValues.yaml
+                              - test/qa/values_1.yaml
+          infrastructure:
+            environment:
+              identifier: stagingInfra
+              type: PreProduction
+              tags:
+                cloud: GCP
+                team: cdp
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: account.argocd-account
+                namespace: harness
+                releaseName: testingqa
+          execution:
+            steps:
+              - step:
+                  name: http step 1
+                  identifier: httpStep1
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: https://google.com
+              - step:
+                  name: http step 2
+                  identifier: httpStep2
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: https://google.com
+            rollbackSteps: []

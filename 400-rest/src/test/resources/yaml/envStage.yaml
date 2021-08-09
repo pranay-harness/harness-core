@@ -1,0 +1,15 @@
+type: ENV_STATE
+name: ssh host
+parallel: false
+runtimeInputs:
+  runtimeInputVariables:
+  - Environment
+  - InfraDefinition_KUBERNETES
+  timeout: 432000000
+  timeoutAction: END_EXECUTION
+  userGroupNames:
+  - USER_GROUP
+skipCondition:
+  type: DO_NOT_SKIP
+stageName: STAGE 2
+workflowName: WORKFLOW_NAME

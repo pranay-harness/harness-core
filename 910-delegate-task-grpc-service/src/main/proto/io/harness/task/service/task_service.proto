@@ -1,0 +1,130 @@
+syntax = "proto3";
+
+package io.harness.task.service;
+
+option java_multiple_files = true;
+option go_package = "910_delegate_task_grpc_service";
+
+import "955-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/delegate/progress.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/delegate/task.proto";
+
+import "920-delegate-service-beans/src/main/proto/io/harness/callback/callback.proto";
+
+import "product/ci/engine/proto/artifact.proto";
+
+import "google/protobuf/duration.proto";
+
+message TaskProgressRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+}
+
+message TaskProgressResponse {
+  io.harness.delegate.TaskExecutionStage current_stage = 1;
+}
+
+message ExecuteParkedTaskRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  google.protobuf.Duration total_expiry = 3;  // total time in seconds, before execution will be aborted
+}
+
+message ExecuteParkedTaskResponse {
+  io.harness.delegate.TaskId task_id = 1;
+}
+
+message FetchParkedTaskStatusRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  callback.DelegateCallbackToken callback_token = 3;  // callback id for fetching response provider
+  TaskType task_type = 4;                             // task type
+}
+
+message FetchParkedTaskStatusResponse {
+  io.harness.delegate.TaskId task_id = 1;
+  TaskType task_type = 2;
+  bool have_response_data = 3;
+  oneof response_data {
+    JiraTaskResponse jira_task_response = 4;
+    HTTPTaskResponse http_task_response = 5;
+  }
+  bytes serialized_task_results = 6;
+}
+
+message HTTPTaskResponse {
+  string httpResponseBody = 1;
+  int32 httpResponseCode = 2;
+}
+
+// Jira Task Response data
+message JiraTaskResponse {
+  string id = 1;           // jira issue id
+  string key = 2;          // jira issue key
+  string description = 3;  // jira description
+}
+
+enum TaskType {
+  JIRA = 0;
+  HTTP = 1;
+}
+
+message SendTaskStatusRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  callback.DelegateCallbackToken callback_token = 3;
+  TaskStatusData task_status_data = 4;
+}
+
+message TaskStatusData {
+  oneof status_data {
+    StepStatus step_status = 1;
+  }
+}
+message StepStatus {
+  int32 num_retries = 1;
+  google.protobuf.Duration total_time_taken = 2;
+  StepExecutionStatus step_execution_status = 3;
+  oneof output {
+    StepMapOutput step_output = 4;
+  }
+  string error_message = 5;
+  io.harness.product.ci.engine.proto.Artifact artifact = 6;
+}
+
+enum StepExecutionStatus {
+  SUCCESS = 0;
+  FAILURE = 1;
+  RUNNING = 2;
+  QUEUED = 3;
+  SKIPPED = 4;
+  ABORTED = 5;
+}
+
+message StepMapOutput {
+  map<string, string> output = 1;
+}
+
+message SendTaskStatusResponse {
+  bool success = 1;
+}
+
+message SendTaskProgressRequest {
+  io.harness.delegate.AccountId account_id = 1;
+  io.harness.delegate.TaskId task_id = 2;
+  callback.DelegateCallbackToken callback_token = 3;
+  io.harness.delegate.TaskResponseData task_response_data = 4;
+}
+
+message SendTaskProgressResponse {
+  bool success = 1;
+}
+
+service TaskService {
+  // resolves JEXL expression with given context
+  rpc ExecuteParkedTask(ExecuteParkedTaskRequest) returns (ExecuteParkedTaskResponse);
+  rpc TaskProgress(TaskProgressRequest) returns (TaskProgressResponse);
+  rpc FetchParkedTaskStatus(FetchParkedTaskStatusRequest) returns (FetchParkedTaskStatusResponse);
+  rpc SendTaskStatus(SendTaskStatusRequest) returns (SendTaskStatusResponse);
+  rpc SendTaskProgress(SendTaskProgressRequest) returns (SendTaskProgressResponse);
+}

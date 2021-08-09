@@ -1,0 +1,7 @@
+{
+  "ui:order" :
+  [
+    "analysisServerConfigId", "orgId", "projectId", "comparisonStrategy", "analysisTolerance",
+    "hostnameTemplate", "timeDuration",  "executeWithPreviousSteps", "*"
+  ]
+}

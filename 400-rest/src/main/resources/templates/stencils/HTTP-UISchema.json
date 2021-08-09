@@ -1,0 +1,12 @@
+{
+  "ui:order": ["url", "method", "header", "body", "assertion", "executeWithPreviousSteps"],
+  "header": {
+    "ui:placeholder": "Content-Type: application/json, Accept: application/json,..."
+  },
+  "body": {
+    "ui:widget": "textarea"
+  },
+  "assertion": {
+    "ui:widget": "textarea"
+  }
+}

@@ -1,0 +1,37 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["evaluator.go"],
+    importpath = "github.com/wings-software/portal/product/ci/engine/legacy/jexl",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//960-expression-service/src/main/proto/io/harness/expression/service:go_default_library",
+        "//commons/go/lib/expression-service/grpc:go_default_library",
+        "//commons/go/lib/expressions:go_default_library",
+        "//commons/go/lib/utils:go_default_library",
+        "//product/ci/engine/output:go_default_library",
+        "@com_github_gogo_protobuf//jsonpb:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+        "@org_golang_google_grpc//metadata:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["evaluator_test.go"],
+    embed = [":go_default_library"],
+    deps = [
+        "//960-expression-service/src/main/proto/io/harness/expression/service:go_default_library",
+        "//commons/go/lib/expression-service/grpc:go_default_library",
+        "//commons/go/lib/expression-service/grpc/mocks:go_default_library",
+        "//commons/go/lib/logs:go_default_library",
+        "//product/ci/engine/output:go_default_library",
+        "@com_github_golang_mock//gomock:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

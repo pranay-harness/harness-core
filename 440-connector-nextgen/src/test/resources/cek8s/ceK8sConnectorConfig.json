@@ -1,0 +1,21 @@
+{
+  "connector": {
+    "type": "CEK8sCluster",
+    "name": "name_ph",
+    "identifier": "identifier_ph",
+    "orgIdentifier": "orgIdentifier_ph",
+    "description": "description_ph",
+    "projectIdentifier": "projectIdentifier_ph",
+    "tags": {
+      "company": "Harness",
+      "env": "dev"
+    },
+    "spec": {
+      "featuresEnabled": [
+        "OPTIMIZATION",
+        "VISIBILITY"
+      ],
+      "connectorRef": "account.k8s_cd"
+    }
+  }
+}

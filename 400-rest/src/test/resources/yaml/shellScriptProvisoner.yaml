@@ -1,0 +1,4 @@
+harnessApiVersion: '1.0'
+type: SHELL_SCRIPT
+description: This is for documentation
+scriptBody: aws configure set default.region us-west-1

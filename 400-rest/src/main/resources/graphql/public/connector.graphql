@@ -1,0 +1,310 @@
+extend type Query {
+  # Get details about a Connector.
+  connector(connectorId: String!): Connector @dataFetcher(name: connector)
+
+  # Get details about Connectors.
+  connectors(filters: [ConnectorFilter], limit: Int!, offset: Int): ConnectorConnection
+    @dataFetcher(name: connectorConnection)
+}
+
+input ConnectorFilter {
+  connector: IdFilter
+  connectorType: ConnectorTypeFilter
+  createdAt: TimeFilter
+}
+
+input ConnectorTypeFilter {
+  operator: EnumOperator
+  values: [ConnectorType]
+}
+
+enum ConnectorType {
+  SMTP
+  JENKINS
+  BAMBOO
+  SPLUNK
+  ELK
+  LOGZ
+  SUMO
+  APP_DYNAMICS
+  NEW_RELIC
+  DYNA_TRACE
+  BUG_SNAG
+  DATA_DOG
+  APM_VERIFICATION
+  PROMETHEUS
+  ELB
+  SLACK
+  DOCKER
+  ECR
+  GCR
+  NEXUS
+  ARTIFACTORY
+  AMAZON_S3
+  GCS
+  GIT
+  SMB
+  JIRA
+  SFTP
+  SERVICENOW
+  HTTP_HELM_REPO
+  AMAZON_S3_HELM_REPO
+  GCS_HELM_REPO
+}
+
+enum UrlType {
+  REPO
+  ACCOUNT
+}
+
+interface Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type ConnectorConnection {
+  pageInfo: PageInfo
+  nodes: [Connector]
+}
+
+type AmazonS3Connector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ApmVerificationConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type AppDynamicsConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ArtifactoryConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type BambooConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type BugSnagConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type DataDogConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type DockerConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  delegateSelectors: [String]
+  createdAt: DateTime
+  createdBy: User
+}
+type DynaTraceConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ECRConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ElbConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ElkConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type GCRConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type GCSConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type CustomCommitDetails {
+  authorName: String
+  authorEmailId: String
+  commitMessage: String
+}
+type GitConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+
+  userName: String
+  URL: String
+  urlType: UrlType
+  branch: String
+  passwordSecretId: String
+  sshSettingId: String
+  webhookUrl: String
+  generateWebhookUrl: Boolean
+  customCommitDetails: CustomCommitDetails
+  usageScope: UsageScope
+  delegateSelectors: [String]
+}
+type JenkinsConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type JiraConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type LogzConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type NewRelicConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type NexusConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type PrometheusConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type ServiceNowConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SftpConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SlackConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SMBConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SmtpConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SplunkConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+type SumoConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type GCSHelmRepoConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type HttpHelmRepoConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}
+
+type AmazonS3HelmRepoConnector implements Connector {
+  id: String
+  name: String
+  description: String
+  createdAt: DateTime
+  createdBy: User
+}

@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/nexus/service/extdirect",
+    "bodyPatterns": [ {
+      "contains": "readReferences"
+    }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-repositories-docker-api.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

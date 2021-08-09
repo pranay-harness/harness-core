@@ -1,0 +1,275 @@
+EC2:
+    - metricName: CPUUtilization
+      displayName: CPU Usage
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Percent
+
+    - metricName: DiskReadBytes
+      displayName: Disk Read Bytes
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Kilobytes
+
+    - metricName: DiskReadOps
+      displayName: Disk Read Ops
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Count
+      unit: Count
+
+    - metricName: DiskWriteBytes
+      displayName: Disk Write Bytes
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Kilobytes
+
+    - metricName: DiskWriteOps
+      displayName: Disk Write Ops
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Count
+
+    - metricName: NetworkIn
+      displayName: Network In
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Kilobytes
+
+    - metricName: NetworkOut
+      displayName: Network Out
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Kilobytes
+
+    - metricName: NetworkPacketsIn
+      displayName: Network Packets In
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: false
+      statistics: Average
+      unit: Count
+
+    - metricName: NetworkPacketsOut
+      displayName: Network Packets Out
+      dimension: InstanceId
+      dimensionDisplay: Host name expression
+      metricType: VALUE
+      enabledDefault: false
+      statistics: Average
+      unit: Count
+
+ELB:
+    - metricName: HTTPCode_Backend_2XX
+      displayName: HTTP 2XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: VALUE_LOWER
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: HTTPCode_Backend_3XX
+      displayName: HTTP 3XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: HTTPCode_Backend_4XX
+      displayName: HTTP 4XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: HTTPCode_Backend_5XX
+      displayName: HTTP 5XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: HTTPCode_Target_2XX_Count
+      displayName: HTTP Target 2XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: VALUE_LOWER
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: HTTPCode_Target_3XX_Count
+      displayName: HTTP Target 3XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: HTTPCode_Target_4XX_Count
+      displayName: HTTP Target 4XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: HTTPCode_Target_5XX_Count
+      displayName: HTTP Target 5XX
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: Latency
+      displayName: Latency
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Average
+      unit: Milliseconds
+
+    - metricName: RequestCount
+      displayName: Request Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: THROUGHPUT
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: EstimatedProcessedBytes
+      displayName: Estimated Processed Bytes
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Kilobytes
+
+    - metricName: EstimatedALBNewConnectionCount
+      displayName: Estimated ALB New Connection Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: VALUE_LOWER
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: EstimatedALBActiveConnectionCount
+      displayName: Estimated ALB Active Connection Count
+      dimension: LoadBalancerName
+      dimensionDisplay: Load balancer name
+      metricType: VALUE_LOWER
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+LAMBDA:
+    - metricName: Invocations
+      displayName: Invocations Sum
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: THROUGHPUT
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: Errors
+      displayName: Errors Sum
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: Throttles
+      displayName: Throttles Sum
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: ERROR
+      enabledDefault: true
+      statistics: Sum
+      unit: Count
+
+    - metricName: Duration
+      displayName: Duration Average
+      dimension: FunctionName
+      dimensionDisplay: Lambda Function Name
+      metricType: RESP_TIME
+      enabledDefault: true
+      statistics: Average
+      unit: Milliseconds
+
+ECS:
+    - metricName: CPUReservation
+      displayName: CPU Reservation
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Percent
+
+    - metricName: CPUUtilization
+      displayName: CPU Utilization
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Percent
+
+    - metricName: MemoryReservation
+      displayName: Memory Reservation
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Percent
+
+    - metricName: MemoryUtilization
+      displayName: Memory Utilization
+      dimension: ClusterName
+      dimensionDisplay: Cluster Name
+      metricType: VALUE
+      enabledDefault: true
+      statistics: Average
+      unit: Percent
+
+

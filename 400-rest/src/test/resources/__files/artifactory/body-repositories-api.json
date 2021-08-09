@@ -1,0 +1,27 @@
+[
+  {
+    "key": "harness-maven",
+    "type": "LOCAL",
+    "url": "http://harness.jfrog.io/harness/harness-maven"
+  },
+  {
+    "key": "harness-rpm",
+    "type": "LOCAL",
+    "url": "https://harness.jfrog.io/harness/harness-rpm"
+  },
+  {
+    "key": "docker",
+    "type": "VIRTUAL",
+    "url": "https://harness.jfrog.io/harness/docker"
+  },
+  {
+  "key": "harness-maven-snapshots",
+  "type": "LOCAL",
+  "url": "http://harness.jfrog.io/harness/harness-maven-snapshots"
+  },
+  {
+    "key": "harness-ivy",
+    "type": "LOCAL",
+    "url": "http://harness.jfrog.io/harness/harness-ivy"
+  }
+]

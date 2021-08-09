@@ -1,0 +1,255 @@
+{
+  "preview": false,
+  "init_offset": 0,
+  "messages": [],
+  "fields": [
+    {
+      "name": "_bkt"
+    },
+    {
+      "name": "_cd"
+    },
+    {
+      "name": "_indextime"
+    },
+    {
+      "name": "_raw"
+    },
+    {
+      "name": "_serial"
+    },
+    {
+      "name": "_si"
+    },
+    {
+      "name": "_sourcetype"
+    },
+    {
+      "name": "_subsecond"
+    },
+    {
+      "name": "_time"
+    },
+    {
+      "name": "host"
+    },
+    {
+      "name": "index"
+    },
+    {
+      "name": "linecount"
+    },
+    {
+      "name": "source"
+    },
+    {
+      "name": "sourcetype"
+    },
+    {
+      "name": "splunk_server"
+    }
+  ],
+  "results": [
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3193",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-26 18:10:39,278 [GitChangeSet] INFO  software.wings.yaml.gitSync.GitChangeSetRunnable - Not continuing with GitChangeSetRunnable job",
+      "_serial": "0",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".845",
+      "_time": "2020-05-21T11:05:51.845+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3184",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-26 18:13:19,770 [main-app-pool-7] INFO  software.wings.app.DelegateQueueTask - 0 tasks were rebroadcast",
+      "_serial": "1",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".827",
+      "_time": "2020-05-21T11:05:51.827+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3175",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:51,808 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[Thread-4]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.logging.LoggingListener\u001b[0;39m - Service PingPongClient [TERMINATED] terminated from STOPPING \u001b[33m\u001b[0;39m ",
+      "_serial": "2",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".808",
+      "_time": "2020-05-21T11:05:51.808+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3165",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:51,808 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[ChronicleQueueMonitor STOPPING]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.logging.LoggingListener\u001b[0;39m - Service ChronicleQueueMonitor [TERMINATED] terminated from STOPPING \u001b[33m\u001b[0;39m ",
+      "_serial": "3",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".808",
+      "_time": "2020-05-21T11:05:51.808+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3156",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:51,807 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[Thread-4]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.logging.LoggingListener\u001b[0;39m - Service PingPongClient [TERMINATED] stopping from RUNNING \u001b[33m\u001b[0;39m ",
+      "_serial": "4",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".807",
+      "_time": "2020-05-21T11:05:51.807+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3146",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:51,807 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[ChronicleQueueMonitor STOPPING]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.logging.LoggingListener\u001b[0;39m - Service ChronicleQueueMonitor [TERMINATED] stopping from RUNNING \u001b[33m\u001b[0;39m ",
+      "_serial": "5",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".807",
+      "_time": "2020-05-21T11:05:51.807+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3137",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:51,804 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[Thread-3]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.event.client.impl.appender.ChronicleEventAppender\u001b[0;39m - Shutting down publisher \u001b[33m\u001b[0;39m ",
+      "_serial": "6",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".804",
+      "_time": "2020-05-21T11:05:51.804+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3129",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:51,794 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[Thread-3]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.delegate.app.DelegateApplication\u001b[0;39m - Message service has been closed. \u001b[33m\u001b[0;39m ",
+      "_serial": "7",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".794",
+      "_time": "2020-05-21T11:05:51.794+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3120",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:51,733 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[New I/O worker #1]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.delegate.service.DelegateAgentServiceImpl\u001b[0;39m - Event:CLOSE, message:[CLOSE] \u001b[33m\u001b[0;39m ",
+      "_serial": "8",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".733",
+      "_time": "2020-05-21T11:05:51.733+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    },
+    {
+      "_bkt": "main~0~490CA3EE-A4E8-46F6-B21C-037E4C81AFC7",
+      "_cd": "0:3109",
+      "_indextime": "1590381121",
+      "_raw": "2020-05-21 11:05:49,478 \u001b[34m[999.0.0]\u001b[0;39m \u001b[1;32m37808\u001b[0;39m \u001b[32m[system-0]\u001b[0;39m \u001b[34mINFO \u001b[0;39m \u001b[36mio.harness.delegate.service.DelegateAgentServiceImpl\u001b[0;39m - Delegate LvsYg-9nQiq45BXunNK2Fg received heartbeat response 55s after sending. 55s since last response. \u001b[33m\u001b[0;39m ",
+      "_serial": "9",
+      "_si": [
+        "splunk-dev",
+        "main"
+      ],
+      "_sourcetype": "delegate-logs-local",
+      "_subsecond": ".478",
+      "_time": "2020-05-21T11:05:49.478+00:00",
+      "host": "splunk-dev",
+      "index": "main",
+      "linecount": "1",
+      "source": "delegate.2020-05-21.log",
+      "sourcetype": "delegate-logs-local",
+      "splunk_server": "splunk-dev"
+    }
+  ],
+  "highlighted": {}
+}

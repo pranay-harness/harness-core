@@ -1,0 +1,43 @@
+pipeline:
+  identifier: myPipeline1
+  stages:
+  - stage:
+      identifier: qa
+      type: Deployment
+      spec:
+        serviceConfig:
+          serviceDefinition:
+            type: Kubernetes
+            spec:
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    tag: myPipeline1.stages.qa.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.tag
+                sidecars:
+                - sidecar:
+                    identifier: sidecar1
+                    type: Dockerhub
+                    spec:
+                      imagePath: myPipeline1.stages.qa.spec.serviceConfig.serviceDefinition.spec.artifacts.sidecars.sidecar.spec.imagePath
+        infrastructure:
+          infrastructureDefinition:
+            type: KubernetesDirect
+            spec:
+              connectorRef: myPipeline1.stages.qa.spec.infrastructure.infrastructureDefinition.spec.connectorRef
+  - stage:
+      identifier: prod
+      type: Deployment
+      spec:
+        serviceConfig:
+          stageOverrides:
+            manifests:
+            - manifest:
+                identifier: prodOverride
+                type: Values
+                spec:
+                  store:
+                    type: Git
+                    spec:
+                      connectorRef: myPipeline1.stages.prod.spec.serviceConfig.stageOverrides.manifests.prodOverride.spec.store.spec.connectorRef
+                      metadata: myPipeline1.stages.prod.spec.serviceConfig.stageOverrides.manifests.prodOverride.spec.store.spec.metadata

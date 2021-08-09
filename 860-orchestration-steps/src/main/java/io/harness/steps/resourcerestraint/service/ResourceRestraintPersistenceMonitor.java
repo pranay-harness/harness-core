@@ -1,0 +1,82 @@
+package io.harness.steps.resourcerestraint.service;
+
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
+import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
+import static java.time.Duration.ofSeconds;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.WingsException;
+import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import io.harness.logging.ExceptionLogger;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
+import io.harness.mongo.iterator.filter.SpringFilterExpander;
+import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
+@OwnedBy(PIPELINE)
+@Slf4j
+public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRestraintInstance> {
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject private ResourceRestraintInstanceService resourceRestraintInstanceService;
+  @Inject MongoTemplate mongoTemplate;
+
+  public void registerIterators() {
+    PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
+                                              .name("ResourceRestraintInstance-Monitor")
+                                              .poolSize(2)
+                                              .interval(ofSeconds(60))
+                                              .build();
+    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(executorOptions,
+        ResourceRestraintPersistenceMonitor.class,
+        MongoPersistenceIterator.<ResourceRestraintInstance, SpringFilterExpander>builder()
+            .clazz(ResourceRestraintInstance.class)
+            .fieldName(ResourceRestraintInstanceKeys.nextIteration)
+            .filterExpander(q -> q.addCriteria(where(ResourceRestraintInstanceKeys.state).in(ACTIVE, BLOCKED)))
+            .targetInterval(ofSeconds(30))
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .acceptableExecutionTime(ofSeconds(30))
+            .handler(this)
+            .schedulingType(REGULAR)
+            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
+            .redistribute(true));
+  }
+
+  @Override
+  public void handle(ResourceRestraintInstance instance) {
+    String constraintId = instance.getResourceRestraintId();
+    boolean toUnblock = false;
+    try {
+      if (BLOCKED == instance.getState()) {
+        toUnblock = true;
+      } else if (ACTIVE == instance.getState()) {
+        if (resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance)) {
+          log.info("The following resource constraint needs to be unblocked: {}", constraintId);
+          toUnblock = true;
+        }
+      }
+
+      if (toUnblock) {
+        // unblock the constraints
+        resourceRestraintInstanceService.updateBlockedConstraints(ImmutableSet.of(constraintId));
+      }
+
+    } catch (WingsException e) {
+      ExceptionLogger.logProcessedMessages(e, MANAGER, log);
+    } catch (RuntimeException e) {
+      log.error("", e);
+    }
+  }
+}

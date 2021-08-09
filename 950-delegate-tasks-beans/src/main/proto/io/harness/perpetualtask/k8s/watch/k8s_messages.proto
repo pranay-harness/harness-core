@@ -1,0 +1,251 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.k8s.watch;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+
+message Quantity {
+  int64 amount = 1;
+  string unit = 2;
+}
+
+message Resource {
+  map<string, Quantity> requests = 1;
+  map<string, Quantity> limits = 2;
+}
+
+message Container {
+  string name = 1;
+  string image = 2;
+  Resource resource = 3;
+}
+
+message Owner {
+  string uid = 1;
+  string kind = 2;
+  string name = 3;
+  map<string, string> labels = 4;
+  int64 replicas = 5;
+}
+
+message Volume {
+  enum VolumeType {
+    VOLUME_TYPE_UNSPECIFIED = 0;
+    VOLUME_TYPE_PVC = 1;
+  }
+  VolumeType type = 1;
+  Quantity request = 2;
+  // the identifier: claimName in case of PVC
+  string id = 3;
+}
+
+message PodInfo {
+  string cloud_provider_id = 2;
+  string pod_uid = 3;
+  string pod_name = 4;
+  string namespace = 5;
+  string node_name = 6;
+  Resource total_resource = 7;
+  google.protobuf.Timestamp creation_timestamp = 8;
+  // label without value is invalid
+  map<string, string> labels = 9;
+  Owner top_level_owner = 11;
+  repeated Container containers = 12;
+  string cluster_id = 13;
+  string cluster_name = 14;
+  string kube_system_uid = 15;
+  string qos_class = 16;
+  repeated Volume volume = 17;
+  map<string, string> namespace_labels = 18;
+  map<string, string> metadata_annotations = 19;
+}
+
+message PodEvent {
+  string cloud_provider_id = 2;
+  string pod_uid = 3;
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_SCHEDULED = 1;
+    EVENT_TYPE_TERMINATED = 2;
+  }
+  EventType type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string cluster_id = 6;
+  string kube_system_uid = 7;
+}
+
+message PVInfo {
+  // pricing based on PVType
+  enum PVType {
+    PV_TYPE_UNSPECIFIED = 0;
+    PV_TYPE_GCE_PERSISTENT_DISK = 1;
+    PV_TYPE_AWS_EBS = 2;
+    PV_TYPE_AZURE_DISK = 3;
+    PV_TYPE_NFS = 4;
+  }
+  PVType pv_type = 2;
+
+  google.protobuf.Timestamp creation_timestamp = 4;
+
+  // last pvc connected to this pv
+  string claim_name = 5;
+  string claim_namespace = 6;
+  // pv data
+  string pv_uid = 7;
+  string pv_name = 8;
+  string reclaim_policy = 9;
+  string storage_class_type = 10 [deprecated = true];  // depricated for storage_class_params
+  string status = 11;
+  Quantity capacity = 12;
+  map<string, string> labels = 13;
+
+  // cluster data
+  string cluster_id = 14;
+  string cluster_name = 15;
+  string cloud_provider_id = 16;
+  string kube_system_uid = 17;
+
+  map<string, string> storage_class_params = 18;
+}
+
+message PVEvent {
+  string cloud_provider_id = 2;
+  string pv_uid = 3;
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_START = 1;
+    EVENT_TYPE_STOP = 2;
+    EVENT_TYPE_EXPANSION = 3;
+  }
+  EventType event_type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string pv_name = 6;
+  string cluster_id = 7;
+  string kube_system_uid = 8;
+}
+
+message NodeInfo {
+  string cloud_provider_id = 2;
+  string node_uid = 3;
+  string node_name = 4;
+  google.protobuf.Timestamp creation_time = 5;
+  map<string, string> labels = 6;
+  map<string, Quantity> allocatable_resource = 7;
+  string cluster_id = 8;
+  string cluster_name = 9;
+  string provider_id = 10;
+  string kube_system_uid = 11;
+}
+
+message NodeEvent {
+  string cloud_provider_id = 2;
+  string node_uid = 3;
+  enum EventType {
+    EVENT_TYPE_UNSPECIFIED = 0;
+    EVENT_TYPE_START = 1;
+    EVENT_TYPE_STOP = 2;
+  }
+  EventType type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string node_name = 6;
+  string cluster_id = 7;
+  string kube_system_uid = 8;
+}
+
+message K8SClusterSyncEvent {
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  repeated string active_pod_uids = 4;
+  repeated string active_node_uids = 5;
+  google.protobuf.Timestamp last_processed_timestamp = 6;
+  string kube_system_uid = 7;
+  repeated string active_pv_uids = 8;
+  int32 version = 9;
+  map<string, string> active_pod_uids_map = 10;
+  map<string, string> active_node_uids_map = 11;
+  map<string, string> active_pv_uids_map = 12;
+}
+
+// uniquely identify a k8s resource within a cluster
+message K8sObjectReference {
+  string kind = 1;
+  string name = 2;
+  string namespace = 3;
+  string uid = 4;
+  // optional
+  string resource_version = 5;
+}
+
+// Cluster events
+message K8sClusterEvent {
+  // cluster details
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  // event details
+  string reason = 4;
+  string message = 5;
+  string source_component = 6;
+  K8sObjectReference involved_object = 7;
+  string kube_system_uid = 8;
+}
+
+message K8sWatchEvent {
+  // cluster details
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  // type of watch event
+  enum Type {
+    TYPE_UNSPECIFIED = 0;
+    TYPE_ADDED = 1;
+    TYPE_UPDATED = 2;
+    TYPE_DELETED = 3;
+  }
+  Type type = 4;
+  // reference to the resource
+  K8sObjectReference resource_ref = 5;
+
+  // old resource version and yaml
+  // only present for UPDATED & DELETED
+  string old_resource_version = 6;
+  string old_resource_yaml = 7;
+
+  // old resource version and yaml
+  // only present for UPDATED & ADDED
+  string new_resource_version = 8;
+  string new_resource_yaml = 9;
+
+  // description of the change
+  string description = 10;
+  string kube_system_uid = 11;
+}
+
+// Resource specification for a k8s workload
+message K8sWorkloadSpec {
+  message ContainerSpec {
+    string name = 1;
+    map<string, string> requests = 2;
+    map<string, string> limits = 3;
+  }
+
+  string cluster_id = 1;
+  string cluster_name = 2;
+  string cloud_provider_id = 3;
+  string kube_system_uid = 4;
+
+  string workload_kind = 5;
+  string workload_name = 6;
+  string namespace = 7;
+
+  repeated ContainerSpec container_specs = 8;
+  repeated ContainerSpec init_container_specs = 9;
+
+  int64 replicas = 10;
+  string uid = 11;
+
+  int32 version = 12;
+}

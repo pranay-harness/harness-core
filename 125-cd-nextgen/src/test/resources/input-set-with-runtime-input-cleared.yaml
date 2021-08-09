@@ -1,0 +1,20 @@
+inputSet:
+  identifier: "identifier"
+  pipeline:
+    identifier: "myPipeline1"
+    stages:
+    - stage:
+        identifier: "qa"
+        type: "Deployment"
+        spec:
+          serviceConfig:
+            serviceDefinition:
+              type: "Kubernetes"
+              spec:
+                artifacts:
+                  sidecars:
+                  - sidecar:
+                      identifier: "sidecar1"
+                      type: "Dockerhub"
+                      spec:
+                        tag: "latest"

@@ -1,0 +1,12 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+continueWithDefaultValues: false
+executionName: tp_1
+executionType: Pipeline
+manifestSelections:
+- pipelineName: tp_2
+  serviceName: k8s
+  type: LAST_COLLECTED
+triggerCondition:
+- type: PIPELINE_COMPLETION
+  pipelineName: tp_2

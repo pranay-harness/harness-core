@@ -1,0 +1,23 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: ENV_STATE
+  name: Install MongoDB
+  parallel: false
+  workflowName: Install MongoDB
+- type: ENV_STATE
+  name: Install Proxy
+  parallel: false
+  workflowName: Install Proxy
+- type: ENV_STATE
+  name: Install Manager
+  parallel: true
+  workflowName: Install Manager
+- type: ENV_STATE
+  name: Install UI
+  parallel: true
+  workflowName: Install UI
+- type: ENV_STATE
+  name: Install Learning Engine
+  parallel: true
+  workflowName: Install Learning Engine

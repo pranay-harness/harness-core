@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package io.harness.managerclient;
+
+option java_multiple_files = true;
+option go_package = "920_delegate_agent_beans";
+
+import "google/protobuf/any.proto";
+
+// TODO: migrate manager client service to gRPC
+
+// Next ID: 3
+message GetDelegatePropertiesRequest {
+  string account_id = 1;
+
+  // request a property and fill out the params defined in manager_client_execution. Unsupported
+  // request entries will result in throwing an error and nothing will be returned. Note that
+  // we do not deduplicate entries, so that if two identical entries are requested you will get
+  // two identical entries in the response.
+  repeated google.protobuf.Any request_entry = 2;
+}
+
+message GetDelegatePropertiesResponse {
+  // Values for the properties that have been requested, in mostly the order that they were
+  // requested
+  repeated google.protobuf.Any response_entry = 1;
+}

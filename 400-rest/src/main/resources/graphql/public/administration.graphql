@@ -1,0 +1,10 @@
+type User {
+  id: String
+  name: String
+  email: String
+}
+
+type APIKey {
+  id: String
+  name: String
+}

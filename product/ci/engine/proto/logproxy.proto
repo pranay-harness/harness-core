@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package io.harness.product.ci.engine.proto;
+
+option java_multiple_files = true;
+option go_package = "cienginepb";
+
+// Definitions to interact with log service
+
+// Avoiding a dependency on golang objects here.
+// Deserialization of lines will be done on the sidecar to see if the format is matched.
+// If the format of a line does not match what is expected by the log service, we will return an error
+message WriteRequest {
+  string key = 1;
+  repeated string lines = 2;
+}
+
+message WriteResponse {}
+
+message OpenRequest {
+  string key = 1;
+}
+
+message OpenResponse {}
+
+message UploadRequest {
+  string key = 1;
+  repeated string lines = 2;
+}
+
+message UploadResponse {}
+
+message CloseRequest {
+  string key = 1;
+}
+
+message CloseResponse {}
+
+message UploadLinkRequest {
+  string key = 1;
+}
+
+message UploadLinkResponse {
+  string link = 1;
+}
+
+message UploadUsingLinkRequest {
+  string link = 1;
+  repeated string lines = 2;
+}
+
+message UploadUsingLinkResponse {}
+
+service LogProxy {
+  // RPC to write to a stream
+  rpc Write(WriteRequest) returns (WriteResponse);
+
+  // RPC to open a stream
+  rpc Open(OpenRequest) returns (OpenResponse);
+
+  // RPC to get an upload link
+  rpc UploadLink(UploadLinkRequest) returns (UploadLinkResponse);
+
+  // RPC to upload using a link
+  rpc UploadUsingLink(stream UploadUsingLinkRequest) returns (UploadUsingLinkResponse) {};
+
+  // RPC to close a stream
+  rpc Close(CloseRequest) returns (CloseResponse);
+}

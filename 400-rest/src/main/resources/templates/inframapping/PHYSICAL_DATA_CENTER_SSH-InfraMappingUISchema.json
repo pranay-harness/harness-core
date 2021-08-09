@@ -1,0 +1,8 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
+  "hostNames": { "ui:widget": "hostNamesWidget" },
+  "ui:order": ["name", "autoPopulate","serviceId", "deploymentType","computeProviderSettingId", "loadBalancerId", "hostNames", "hostConnectionAttrs","infraMappingType","computeProviderType"]
+
+}

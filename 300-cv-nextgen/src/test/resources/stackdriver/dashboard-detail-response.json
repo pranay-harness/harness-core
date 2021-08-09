@@ -1,0 +1,527 @@
+[
+  {
+    "widgetName":"Kms Transition Queues Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_kms_transition_queues_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Prune Queues Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_prune_queues_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Generic Queues Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_generic_queues_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Instance Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_instance_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Alerts Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_alerts_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Alerts Open Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_alerts_open_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Perpetualtask Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_perpetualtask_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Perpetualtask Unassigned Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_perpetualtask_unassigned_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Workflow Executions Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_workflow_executions_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Workflow Executions Document Size",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_workflow_executions_document_size\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"State Execution Instances Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_state_execution_instances_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"State Execution Instances Document Size",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_state_execution_instances_document_size\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Sweeping Output Instances Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_sweeping_output_instances_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Sweeping Output Instances Document Size",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_sweeping_output_instances_document_size\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Barrier Instances Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_barrier_instances_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Resource Constraint Instances Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_resource_constraint_instances_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Resource Secret Usage Logs Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_resource_secret_usage_logs_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Workflow Running Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_workflow_running_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Yamlchangeset Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_yamlchangeset_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Yamlchangeset Completed Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_yamlchangeset_completed_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Yamlchangeset Queued Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_yamlchangeset_queued_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Yamlchangeset Running Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_yamlchangeset_running_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Yamlchangeset Failed Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_yamlchangeset_failed_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Yamlchangeset Skipped Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_yamlchangeset_skipped_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  },
+  {
+    "widgetName":"Gitcommits Count",
+    "dataSets":[
+      {
+        "timeSeriesQuery":{
+          "timeSeriesFilter":{
+            "filter":"metric.type=\"custom.googleapis.com/user/x_mongo_qa_gitcommits_count\" resource.type=\"global\"",
+            "aggregation":{
+              "perSeriesAligner":"ALIGN_MEAN"
+            },
+            "secondaryAggregation":{
+
+            }
+          },
+          "unitOverride":"1"
+        },
+        "plotType":"LINE",
+        "minAlignmentPeriod":"60s"
+      }
+    ]
+  }
+]

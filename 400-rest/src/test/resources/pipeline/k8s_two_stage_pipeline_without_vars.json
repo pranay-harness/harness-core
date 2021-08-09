@@ -1,0 +1,189 @@
+{
+  "name": "template-pipeline-multi",
+  "description": null,
+  "pipelineStages": [
+    {
+      "name": "STAGE 2",
+      "parallel": false,
+      "pipelineStageElements": [
+        {
+          "uuid": "KZPqXENuRbKqkuISe07JAQ",
+          "name": "k8s-stage-1",
+          "type": "ENV_STATE",
+          "parallelIndex": 1,
+          "properties": {
+            "workflowVariables": {
+              "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+              "AppDynamics_Tier": "214198",
+              "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+              "InfraDefinition_KUBERNETES": "${pipelineInfra}",
+              "xxz": "",
+              "message": "Stage 1 message",
+              "AppDynamics_Application": "15588",
+              "buildNumber": "${pipelineBuildNumber}",
+              "ServiceId": "${service1}"
+            },
+            "pipelineStageElementId": "KZPqXENuRbKqkuISe07JAQ",
+            "timeoutAction": "END_EXECUTION",
+            "envId": "imRBOGz2ReyY89dr4K-vrQ",
+            "pipelineStageParallelIndex": 1,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeout": 86400000,
+            "pipelineId": "rF1mCEaETZ2gEXljOTwhrQ",
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "stageName": "STAGE 2",
+            "disable": false,
+            "disableAssertion": null,
+            "workflowId": "9zhGmY7FTlSnj2ALPvPTOQ"
+          },
+          "workflowVariables": {
+            "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+            "AppDynamics_Tier": "214198",
+            "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+            "InfraDefinition_KUBERNETES": "${pipelineInfra}",
+            "xxz": "",
+            "message": "Stage 1 message",
+            "AppDynamics_Application": "15588",
+            "buildNumber": "${pipelineBuildNumber}",
+            "ServiceId": "${service1}"
+          },
+          "runtimeInputsConfig": {
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "timeout": 86400000,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeoutAction": "END_EXECUTION"
+          },
+          "disable": false,
+          "disableAssertion": null,
+          "valid": true,
+          "validationMessage": null
+        }
+      ],
+      "valid": true,
+      "validationMessage": null,
+      "looped": false,
+      "loopedVarName": null
+    },
+    {
+      "name": "STAGE 2",
+      "parallel": false,
+      "pipelineStageElements": [
+        {
+          "uuid": "iibzVUjNTlWsv23lQIrkWw",
+          "name": "k8s-stage-2",
+          "type": "ENV_STATE",
+          "parallelIndex": 2,
+          "properties": {
+            "workflowVariables": {
+              "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+              "ServiceId": "${service2}",
+              "InfraDefinition_KUBERNETES": "${pipelineInfra}",
+              "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+              "AppDynamics_Application": "15588",
+              "AppDynamics_Tier": "214198",
+              "message": "Random Message",
+              "buildNumber": "${pipelineBuildNumber2}",
+              "xxz": ""
+            },
+            "pipelineStageElementId": "iibzVUjNTlWsv23lQIrkWw",
+            "timeoutAction": "END_EXECUTION",
+            "envId": "imRBOGz2ReyY89dr4K-vrQ",
+            "pipelineStageParallelIndex": 2,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeout": 86400000,
+            "pipelineId": "rF1mCEaETZ2gEXljOTwhrQ",
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "stageName": "STAGE 2",
+            "disable": false,
+            "disableAssertion": null,
+            "workflowId": "9zhGmY7FTlSnj2ALPvPTOQ"
+          },
+          "workflowVariables": {
+            "AppDynamics_Server": "1E9uuNwoTKq6go8vOz6oRA",
+            "AppDynamics_Tier": "214198",
+            "Environment": "imRBOGz2ReyY89dr4K-vrQ",
+            "InfraDefinition_KUBERNETES": "${pipelineInfra}",
+            "xxz": "",
+            "message": "Random Message",
+            "AppDynamics_Application": "15588",
+            "buildNumber": "${pipelineBuildNumber2}",
+            "ServiceId": "${service2}"
+          },
+          "runtimeInputsConfig": {
+            "runtimeInputVariables": [
+              "InfraDefinition_KUBERNETES",
+              "ServiceId"
+            ],
+            "timeout": 86400000,
+            "userGroupIds": [
+              "8u4n0jVISS2zv8LFRuj2uw"
+            ],
+            "timeoutAction": "END_EXECUTION"
+          },
+          "disable": false,
+          "disableAssertion": null,
+          "valid": true,
+          "validationMessage": null
+        }
+      ],
+      "valid": true,
+      "validationMessage": null,
+      "looped": false,
+      "loopedVarName": null
+    }
+  ],
+  "stateEtaMap": {
+    "iibzVUjNTlWsv23lQIrkWw": 11285,
+    "KZPqXENuRbKqkuISe07JAQ": 23980
+  },
+  "services": [],
+  "workflowExecutions": [],
+  "valid": true,
+  "validationMessage": null,
+  "templatized": false,
+  "hasSshInfraMapping": false,
+  "failureStrategies": [],
+  "pipelineVariables": [],
+  "envIds": [],
+  "workflowIds": [],
+  "envParameterized": false,
+  "deploymentTypes": [],
+  "envSummaries": [],
+  "hasBuildWorkflow": false,
+  "infraMappingIds": [],
+  "infraDefinitionIds": [],
+  "keywords": [
+    "pipeline",
+    "template-rolling-k8s-wf",
+    "admin@harness.io",
+    "template-pipeline-multi",
+    "admin"
+  ],
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "sample": false,
+  "tagLinks": null,
+  "uuid": "rF1mCEaETZ2gEXljOTwhrQ",
+  "appId": "nCLN8c84SqWPr44sqg65JQ",
+  "createdBy": {
+    "uuid": "lv0euRhKRCyiXWzS7pOg6g",
+    "name": "Admin",
+    "email": "admin@harness.io"
+  },
+  "createdAt": 1603858389476,
+  "lastUpdatedAt": 1604425048739
+}

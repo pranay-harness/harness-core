@@ -1,0 +1,23 @@
+inputSet:
+  identifier: input2
+  name: input2
+  pipeline:
+    identifier: myPipeline1
+    stages:
+      - stage:
+          identifier: prod
+          type: Deployment
+          spec:
+            serviceConfig:
+              useFromStage:
+                stage: new-qa
+              stageOverrides:
+                manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}
+                  - manifest:
+                      identifier: prodOverride
+                      type: Values
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my-connector

@@ -1,0 +1,40 @@
+{
+  "items" : [ {
+    "id" : "bnVnZXQtaG9zdGVkOmM3NzAxNjljMGIyZTNlZDgyMjdjYmQxMDZhNDc1Nzhi",
+    "repository" : "nuget-hosted",
+    "format" : "nuget",
+    "group" : null,
+    "name" : "NuGet.Sample.Package",
+    "version" : "1.0.0.0",
+    "assets" : [ {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.0",
+      "path" : "NuGet.Sample.Package/1.0.0.0",
+      "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWI3MDkyYTJlYTJlYjAxYTlm",
+      "repository" : "nuget-hosted",
+      "format" : "nuget",
+      "checksum" : {
+        "sha1" : "2114317833a0aa18a11f5e6685d81c8c23bd37d4",
+        "sha512" : "14dd447cf0a20f322c17170e1ce41aeee011d5ff3bec4d28e0f3b9acdf1ed43c0ce990d763b6693bfe3c4ffaf640908c717a4504747197a3df6d41bfedd60ba3"
+      }
+    } ]
+  }, {
+    "id" : "bnVnZXQtaG9zdGVkOmM3NzAxNjljMGIyZTNlZDg1MGQ0M2ZlOGUzZTE0ZGY1",
+    "repository" : "nuget-hosted",
+    "format" : "nuget",
+    "group" : null,
+    "name" : "NuGet.Sample.Package",
+    "version" : "1.0.0.18279",
+    "assets" : [ {
+      "downloadUrl" : "http://localhost:8881/nexus/repository/nuget-hosted/NuGet.Sample.Package/1.0.0.18279",
+      "path" : "NuGet.Sample.Package/1.0.0.18279",
+      "id" : "bnVnZXQtaG9zdGVkOjM2ZTNkZWM4ZGU1MjhjOWJhYjRjYTIyM2Q5YWU3NDQ2",
+      "repository" : "nuget-hosted",
+      "format" : "nuget",
+      "checksum" : {
+        "sha1" : "88e1963e0f01fbe40d0f09cdd999d3a779c05a2f",
+        "sha512" : "ef7cb22fd7a3e9d34a4767b58d52ade48cf616600cff0f01b097d2635605c6da37087a38db5b9b61353edc912cfc246cea360b2115dc2acefab696de1882da4a"
+      }
+    } ]
+  } ],
+  "continuationToken" : null
+}

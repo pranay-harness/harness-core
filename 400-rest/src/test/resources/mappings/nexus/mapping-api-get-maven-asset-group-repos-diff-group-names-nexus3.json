@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/rest/v1/search/assets?repository=maven-internal&maven.groupId=com.mygroup&maven.artifactId=myartifact&version=1.0"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-maven-asset-group-repos-nexus3.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

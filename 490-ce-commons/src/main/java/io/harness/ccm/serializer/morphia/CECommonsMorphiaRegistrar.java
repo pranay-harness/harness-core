@@ -1,0 +1,74 @@
+package io.harness.ccm.serializer.morphia;
+
+import io.harness.ccm.budget.ApplicationBudgetScope;
+import io.harness.ccm.budget.ClusterBudgetScope;
+import io.harness.ccm.budget.PerspectiveBudgetScope;
+import io.harness.ccm.commons.entities.AWSConnectorToBucketMapping;
+import io.harness.ccm.commons.entities.ClusterRecord;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.DataGeneratedNotification;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LatestClusterInfo;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECluster;
+import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
+import io.harness.ccm.commons.entities.k8s.K8sYaml;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sNodeRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
+import io.harness.morphia.MorphiaRegistrar;
+import io.harness.morphia.MorphiaRegistrarHelperPut;
+
+import java.util.Set;
+
+public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
+  @Override
+  public void registerClasses(Set<Class> set) {
+    // batch
+    set.add(BatchJobInterval.class);
+    set.add(BatchJobScheduledData.class);
+    set.add(CEDataCleanupRequest.class);
+    set.add(CEMetadataRecord.class);
+    set.add(DataGeneratedNotification.class);
+    set.add(InstanceData.class);
+    set.add(LastReceivedPublishedMessage.class);
+    set.add(LatestClusterInfo.class);
+
+    // billing
+    set.add(BillingDataPipelineRecord.class);
+    set.add(Budget.class);
+    set.add(CECloudAccount.class);
+    set.add(CECluster.class);
+    set.add(CloudBillingTransferRun.class);
+    set.add(AWSConnectorToBucketMapping.class);
+
+    // events
+    set.add(CeExceptionRecord.class);
+    set.add(PublishedMessage.class);
+
+    // k8s
+    set.add(K8sWorkload.class);
+    set.add(K8sYaml.class);
+    set.add(ClusterRecord.class);
+
+    // k8s.recommendation
+    set.add(K8sNodeRecommendation.class);
+    set.add(K8sWorkloadRecommendation.class);
+    set.add(PartialRecommendationHistogram.class);
+  }
+  @Override
+  public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
+    h.put("ccm.budget.ApplicationBudgetScope", ApplicationBudgetScope.class);
+    h.put("ccm.budget.ClusterBudgetScope", ClusterBudgetScope.class);
+    h.put("ccm.budget.PerspectiveBudgetScope", PerspectiveBudgetScope.class);
+  }
+}

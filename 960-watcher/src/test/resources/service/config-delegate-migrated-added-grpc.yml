@@ -1,0 +1,17 @@
+accountId: kmpySmUISimoRrJL6NL73w
+accountSecret: 2f6b0988b6fb3370073c3d0505baee59
+managerUrl: https://app.harness.io/api
+verificationServiceUrl: https://app.harness.io/verification
+cvNextGenUrl: https://localhost:6060/cv/api/
+heartbeatIntervalMs: 60000
+localDiskPath: /tmp
+doUpgrade: false
+pollForTasks: false
+description: description here
+queueFilePath: ../eventQueue
+grpcServiceEnabled: false
+grpcServiceConnectors:
+port: 8080
+grpcServiceTokenSecret: j6ErHMBlC2dn6WctNQKt0xfyo_PZuK7ls0Z4d6XCaBg
+managerAuthority: manager-grpc-app.harness.io
+managerTarget: app.harness.io

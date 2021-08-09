@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package io.harness.event.payloads;
+
+option java_multiple_files = true;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+message AggregatedUsage {
+  int64 avg_cpu_nano = 1;
+  int64 max_cpu_nano = 2;
+  int64 avg_memory_byte = 3;
+  int64 max_memory_byte = 4;
+}
+
+message AggregatedStorage {
+  int64 avg_capacity_byte = 1;
+  int64 avg_used_byte = 2;
+}
+
+message NodeMetric {
+  string cloud_provider_id = 1;
+  string name = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  google.protobuf.Duration window = 4;
+  reserved 5;  // deprecation
+  string cluster_id = 6;
+  string kube_system_uid = 7;
+  AggregatedUsage aggregated_usage = 8;
+}
+
+message PodMetric {
+  string cloud_provider_id = 1;
+  string name = 2;
+  string namespace = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  google.protobuf.Duration window = 5;
+  reserved 6;  // deprecation
+  string cluster_id = 7;
+  string kube_system_uid = 8;
+  AggregatedUsage aggregated_usage = 9;
+}
+
+message PVMetric {
+  string cloud_provider_id = 1;
+  string name = 2;
+  string namespace = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  google.protobuf.Duration window = 5;
+  string cluster_id = 7;
+  string kube_system_uid = 8;
+  AggregatedStorage aggregated_storage = 9;
+  string pod_uid = 10;
+}

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/artifactory/api/docker/docker/v2/wingsplugins/todolist/tags/list"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-docker-tags-api.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

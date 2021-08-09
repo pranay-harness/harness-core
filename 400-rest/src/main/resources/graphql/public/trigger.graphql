@@ -1,0 +1,271 @@
+extend type Query {
+  # Get details about a Trigger.
+  trigger(triggerId: String!): Trigger @dataFetcher(name: trigger)
+
+  # Get a list of Harness Triggers, This returns paginated data.
+  triggers(filters: [TriggerFilter], limit: Int!, offset: Int): TriggerConnection @dataFetcher(name: triggerConnection)
+
+  # Get details about a Trigger  by it's name
+  triggerByName(triggerName: String!, applicationId: String!): Trigger @dataFetcher(name: trigger)
+}
+
+type Trigger {
+  # Trigger ID
+  id: String
+  # Name of the trigger
+  name: String
+  # Description of the Trigger
+  description: String
+  # The condition that will execute the Trigger: On new artifact, On pipeline completion, On Cron schedule, On webhook, On New Manifest
+  condition: TriggerCondition
+  # Action performed by the trigger: Execute workflow/pipeline
+  action: TriggerAction
+  createdAt: DateTime
+  createdBy: User
+  excludeHostsWithSameArtifact: Boolean
+}
+
+type WebhoookDetails {
+  webhookURL: String
+  method: String
+  header: String
+  payload: String
+}
+
+interface TriggerCondition {
+  triggerConditionType: TriggerConditionType
+}
+
+enum TriggerConditionType {
+  NEW_ARTIFACT
+  PIPELINE_COMPLETION
+  SCHEDULED
+  WEBHOOK
+  NEW_MANIFEST
+}
+
+type OnNewArtifact implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  artifactSourceId: String
+  artifactSourceName: String
+  artifactFilter: String
+  regex: Boolean
+}
+
+type OnPipelineCompletion implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  pipelineId: String
+  pipelineName: String
+}
+
+type OnWebhook implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  webhookSource: WebhookSource
+  webhookDetails: WebhoookDetails
+  webhookEvent: WebhookEvent
+  branchRegex: String
+  branchName: String
+  repoName: String
+  deployOnlyIfFilesChanged: Boolean
+  filePaths: [String]
+  gitConnectorId: String
+  gitConnectorName: String
+  #Beta: Webhook secret to authorize Github webhooks
+  webhookSecret: String
+}
+
+type OnSchedule implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  cronExpression: String!
+  cronDescription: String!
+  onNewArtifactOnly: Boolean
+}
+
+#Beta: details for trigger with condition 'On Manifest changes'
+type OnNewManifest implements TriggerCondition {
+  triggerConditionType: TriggerConditionType
+  versionRegex: String
+  appManifestId: String
+  appManifestName: String
+  serviceId: String
+}
+
+enum WebhookSource {
+  GITHUB
+  GITLAB
+  BITBUCKET
+  CUSTOM
+}
+
+type WebhookEvent {
+  event: String
+  action: String
+}
+
+interface TriggerAction {
+  variables: [TriggerVariableValue]
+  artifactSelections: [ArtifactSelection]
+  #Beta: Helm chart selections needed to trigger the execution
+  manifestSelections: [ManifestSelection]
+}
+
+type WorkflowAction implements TriggerAction {
+  workflowId: String
+  workflowName: String
+  variables: [TriggerVariableValue]
+  artifactSelections: [ArtifactSelection]
+  #Beta: Helm chart selections needed to trigger the execution
+  manifestSelections: [ManifestSelection]
+}
+
+type PipelineAction implements TriggerAction {
+  pipelineId: String
+  pipelineName: String
+  variables: [TriggerVariableValue]
+  artifactSelections: [ArtifactSelection]
+  #Beta: Helm chart selections needed to trigger the execution
+  manifestSelections: [ManifestSelection]
+  # Beta: Coninue with default values as defined in pipeline
+  continueWithDefaultValues: Boolean
+}
+
+type TriggerVariableValue {
+  name: String
+  value: String
+}
+
+interface ArtifactSelection {
+  serviceId: String
+  serviceName: String
+}
+
+type FromTriggeringArtifactSource implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+}
+
+type LastCollected implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  artifactSourceId: String
+  artifactSourceName: String
+  regex: Boolean
+  artifactFilter: String
+}
+
+type LastDeployedFromWorkflow implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  workflowId: String
+  workflowName: String
+}
+
+type LastDeployedFromPipeline implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  pipelineId: String
+  pipelineName: String
+}
+
+type FromTriggeringPipeline implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+}
+
+type FromWebhookPayload implements ArtifactSelection {
+  serviceId: String
+  serviceName: String
+  artifactSourceId: String
+  artifactSourceName: String
+}
+
+#Beta: Helm chart selections needed to trigger the execution
+interface ManifestSelection {
+  serviceId: String
+  serviceName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+enum ManifestSelectionType {
+  #Beta: Manifest will be selected from the triggering application manifest
+  FROM_APP_MANIFEST
+  #Beta: Last collected Manifest for the service will be selected
+  LAST_COLLECTED
+  #Beta: Last succesfully deployed Manifest from the workflow/pipeline for the service will be selected
+  LAST_DEPLOYED
+  #Beta: Manifest will be selected from the triggering pipeline
+  PIPELINE_SOURCE
+  #Beta: Manifest for the service will be selected from the webhook payload
+  WEBHOOK_VARIABLE
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is FROM_APP_MANIFEST
+type FromTriggeringAppManifest implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is LAST_COLLECTED
+type LastCollectedManifest implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  appManifestId: String
+  appManifestName: String
+  versionRegex: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is LAST_DEPLOYED workflow
+type LastDeployedManifestFromWorkflow implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  workflowId: String
+  workflowName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is LAST_DEPLOYED pipeline
+type LastDeployedManifestFromPipeline implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  pipelineId: String
+  pipelineName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is PIPELINE_SOURCE
+type ManifestFromTriggeringPipeline implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+#Beta: Manifest selection details when ManifestSelectionType is WEBHOOK_VARIABLE
+type ManifestFromWebhookPayload implements ManifestSelection {
+  serviceId: String
+  serviceName: String
+  appManifestId: String
+  appManifestName: String
+  manifestSelectionType: ManifestSelectionType
+}
+
+type TriggerConnection {
+  pageInfo: PageInfo
+  nodes: [Trigger]
+}
+
+input TriggerFilter {
+  trigger: IdFilter
+  application: IdFilter
+  tag: TriggerTagFilter
+}
+
+input TriggerTagFilter {
+  entityType: TriggerTagType
+  tags: [TagInput]
+}
+
+enum TriggerTagType {
+  APPLICATION
+}

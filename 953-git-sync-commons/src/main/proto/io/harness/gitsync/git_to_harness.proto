@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package io.harness.gitsync;
+
+option java_multiple_files = true;
+
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
+import "io/harness/gitsync/change_type.proto";
+import "google/protobuf/wrappers.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+
+service GitToHarnessService {
+  rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
+  rpc process(GitToHarnessProcessRequest) returns (ProcessingResponse);
+}
+
+message ChangeSets {
+  repeated ChangeSet change_set = 1;
+}
+
+message ChangeSet {
+  string yaml = 1;
+  string account_id = 2;
+  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 3;
+  google.protobuf.StringValue object_id = 4;
+  io.harness.gitsync.ChangeType change_type = 5;
+  string file_path = 6;
+  YamlGitConfigInfo yaml_git_config_info = 7;
+  string change_set_id = 8;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entityRefForDeletion = 9;
+}
+
+message ProcessingResponse {
+  repeated FileProcessingResponse response = 1;
+  string account_id = 2;
+  ProcessingFailureStage processing_failure_stage = 3;
+  // used for sending status
+  // false: reached the last stage of processing and processing_failure_stage can be ignored.
+  // true: failed in one of the stages.
+  bool is_error = 4;
+}
+
+message FileProcessingResponse {
+  string file_path = 1;
+  FileProcessingStatus status = 2;
+  google.protobuf.StringValue error_msg = 3;
+}
+
+enum FileProcessingStatus {
+  SUCCESS = 0;
+  FAILURE = 1;
+  SKIPPED = 2;
+  // Used for internal flag for files not processed. Externally it is same as SKIPPED.
+  UNPROCESSED = 3;
+}
+
+enum ProcessingFailureStage {
+  RECEIVE_STAGE = 0;
+  SORT_STAGE = 1;
+  PROCESS_STAGE = 2;
+  POST_PROCESS_STAGE = 3;
+}
+
+message GitToHarnessInfo {
+  string branch = 1;
+  string repo_url = 2;
+}
+
+message GitToHarnessProcessRequest {
+  ChangeSets change_sets = 1;
+  GitToHarnessInfo gitToHarnessBranchInfo = 2;
+  string account_id = 3;
+  google.protobuf.StringValue commit_id = 4;
+}
+
+message YamlGitConfigInfo {
+  google.protobuf.StringValue yaml_git_config_org_identifier = 1;
+  google.protobuf.StringValue yaml_git_config_project_identifier = 2;
+  string yaml_git_config_id = 3;
+  string account_id = 4;
+}

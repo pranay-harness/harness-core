@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "downloadUrl": "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/7.0/myartifact-7.0-binary.jar",
+      "path": "mygroup/myartifact/7.0/myartifact-7.0-binary.jar",
+      "id": "bWF2ZW4tcmVsZWFzZXM6MzZlM2RlYzhkZTUyOGM5YjYzMThjZTUxYWRlNzI3NmE",
+      "repository": "maven-releases",
+      "format": "maven2",
+      "checksum": {
+        "sha1": "134cbf41fd14b88c44339e21484794cd39c84a5d",
+        "md5": "9c31649dbb7e21e5912d007ed52cacc4"
+      }
+    }
+  ],
+  "continuationToken": null
+}

@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package io.harness.event.payloads;
+
+option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
+import "io/harness/event/payloads/common_messages.proto";
+
+message EcsTaskInfo {
+  EcsTaskDescription ecs_task_description = 1;
+  ReservedResource ecs_task_resource = 2;
+}
+
+message EcsTaskDescription {
+  string task_arn = 1;
+  string cluster_arn = 2;
+  string service_name = 3;
+  string container_instance_arn = 4;
+  string launch_type = 5;
+  string desired_status = 6;
+  string region = 7;
+  string cluster_id = 8;
+  string setting_id = 9;
+}
+
+message EcsTaskLifecycle {
+  Lifecycle lifecycle = 1;
+}
+
+message ReservedResource {
+  double cpu = 1;
+  double memory = 2;
+}
+
+message EcsContainerInstanceDescription {
+  string container_instance_arn = 1;
+  string cluster_arn = 2;
+  string ec2_instance_id = 3;
+  string operating_system = 4;
+  string region = 5;
+  string cluster_id = 6;
+  string setting_id = 7;
+}
+
+message EcsContainerInstanceInfo {
+  EcsContainerInstanceDescription ecs_container_instance_description = 1;
+  ReservedResource ecs_container_instance_resource = 2;
+}
+
+message EcsContainerInstanceLifecycle {
+  Lifecycle lifecycle = 1;
+}
+
+message EcsUtilization {
+  string cluster_arn = 1;
+  string cluster_name = 2;
+  // Empty in case of cluster level metrics
+  string service_arn = 3;
+  // Empty in case of cluster level metrics
+  string service_name = 4;
+  message MetricValue {
+    // CPUUtilization, MemoryUtilization
+    string metric_name = 1;
+    // Maximum, Average
+    string statistic = 2;
+    repeated google.protobuf.Timestamp timestamps = 3;
+    repeated double values = 4;
+  }
+  repeated MetricValue metric_values = 5;
+  string cluster_id = 6;
+  string setting_id = 7;
+}
+
+message EcsSyncEvent {
+  string cluster_arn = 1;
+  repeated string active_ec2_instance_arns = 2;
+  repeated string active_container_instance_arns = 3;
+  repeated string active_task_arns = 4;
+  google.protobuf.Timestamp last_processed_timestamp = 5;
+  string cluster_id = 6;
+  string setting_id = 7;
+}

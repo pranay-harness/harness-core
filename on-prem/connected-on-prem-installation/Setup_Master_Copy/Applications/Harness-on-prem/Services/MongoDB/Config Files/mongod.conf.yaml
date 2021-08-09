@@ -1,0 +1,8 @@
+harnessApiVersion: '1.0'
+type: CONFIG_FILE
+checksum: 5f679169b7f71bf7375c0cfbad8c3301
+checksumType: MD5
+encrypted: false
+fileName: mongod.conf
+targetFilePath: mongod.conf
+targetToAllEnv: true

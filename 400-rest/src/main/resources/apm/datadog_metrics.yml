@@ -1,0 +1,109 @@
+Servlet:
+  -
+    metricName: trace.servlet.request.duration
+    mlMetricType: RESP_TIME
+    datadogMetricType: Servlet
+    displayName: Request Duration
+  -
+    metricName: trace.servlet.request.errors
+    mlMetricType: ERROR
+    datadogMetricType: Servlet
+    displayName: Errors
+  -
+    metricName: trace.servlet.request.hits
+    mlMetricType: THROUGHPUT
+    datadogMetricType: Servlet
+    displayName: Hits
+
+System:
+  -
+    metricName: system.load.1
+    mlMetricType: INFRA
+    datadogMetricType: System
+    displayName: System Load 1
+  -
+      metricName: system.mem.used
+      mlMetricType: INFRA
+      datadogMetricType: System
+      displayName: System Mem Used
+  -
+      metricName: system.cpu.iowait
+      mlMetricType: INFRA
+      datadogMetricType: System
+      displayName: IO Wait
+
+Kubernetes:
+  -
+      metricName: kubernetes.cpu.usage.total
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 CPU Usage
+      transformation: /1000000000/kubernetes.cpu.capacity{*}.rollup(avg,60)*100
+  -
+      metricName: kubernetes.memory.usage
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Mem usage
+  -
+      metricName: kubernetes.io.write_bytes
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 IO Write bytes
+  -
+      metricName: kubernetes.memory.usage_pct
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Mem usage percentage
+  -
+      metricName: kubernetes.filesystem.usage_pct
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Filesystem usage percentage
+  -
+      metricName: kubernetes.filesystem.usage
+      mlMetricType: INFRA
+      datadogMetricType: Kubernetes
+      displayName: K8 Filesystem usage
+
+
+Docker:
+  -
+      metricName: docker.cpu.usage
+      mlMetricType: INFRA
+      datadogMetricType: Docker
+      displayName: Docker CPU Usage
+
+  -
+      metricName: docker.mem.rss
+      mlMetricType: INFRA
+      datadogMetricType: Docker
+      displayName: Docker RSS Memory (%)
+      transformation: /docker.mem.limit{${hostFilter}:${host}}.rollup(avg,60)*100
+      transformation24x7: /docker.mem.limit{${applicationFilter}}.rollup(avg,60)*100
+
+  -
+      metricName: docker.cpu.throttled
+      mlMetricType: INFRA
+      datadogMetricType: Docker
+      displayName: Docker CPU Throttled
+
+ECS:
+  -
+      metricName: ecs.fargate.cpu.user
+      mlMetricType: INFRA
+      datadogMetricType: ECS
+      displayName: ECS Container CPU Usage
+
+  -
+      metricName: ecs.fargate.mem.rss
+      mlMetricType: INFRA
+      datadogMetricType: ECS
+      displayName: ECS Container RSS Memory
+      transformation: /ecs.fargate.mem.limit{container_id:${host}}.rollup(avg,60)*100
+      transformation24x7: /ecs.fargate.mem.limit{${applicationFilter}}.rollup(avg,60)*100
+
+  -
+      metricName: ecs.fargate.mem.usage
+      mlMetricType: INFRA
+      datadogMetricType: ECS
+      displayName: ECS Container Memory Usage

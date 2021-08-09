@@ -1,0 +1,174 @@
+package io.harness.event.client.impl.tailer;
+
+import static com.google.common.base.Verify.verify;
+import static java.util.Objects.requireNonNull;
+
+import io.harness.event.EventPublisherGrpc.EventPublisherBlockingStub;
+import io.harness.event.PublishMessage;
+import io.harness.event.PublishRequest;
+import io.harness.flow.BackoffScheduler;
+import io.harness.logging.LoggingListener;
+
+import com.google.common.util.concurrent.AbstractScheduledService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.impl.RollingChronicleQueue;
+import net.openhft.chronicle.wire.DocumentContext;
+
+/**
+ * Tails the chronicle-queue and publishes the events over rpc.
+ * <p/>
+ * Intentionally not thread-safe as CQ tailers are also not thread-safe. The methods in this class, and {@link
+ * FileDeletionManager} are supposed to be executed by the same single thread.
+ */
+@Slf4j
+@Singleton
+public class ChronicleEventTailer extends AbstractScheduledService {
+  private static final String READ_TAILER = "read-tailer";
+
+  // Batching settings
+  private static final int MAX_BATCH_COUNT = 5000;
+  private static final int MAX_BATCH_BYTES = 1024 * 1024; // 1MiB
+
+  private final ExcerptTailer readTailer;
+
+  private final FileDeletionManager fileDeletionManager;
+  private final BackoffScheduler scheduler;
+  private final Sampler sampler;
+
+  private final EventPublisherBlockingStub blockingStub;
+
+  private final RollingChronicleQueue queue;
+
+  @Inject
+  ChronicleEventTailer(EventPublisherBlockingStub blockingStub, @Named("tailer") RollingChronicleQueue chronicleQueue,
+      FileDeletionManager fileDeletionManager, @Named("tailer") BackoffScheduler backoffScheduler) {
+    this.blockingStub = blockingStub;
+    this.queue = chronicleQueue;
+    this.readTailer = chronicleQueue.createTailer(READ_TAILER);
+    this.fileDeletionManager = fileDeletionManager;
+    this.scheduler = backoffScheduler;
+    this.sampler = new Sampler(Duration.ofMinutes(1));
+    addListener(new LoggingListener(this), MoreExecutors.directExecutor());
+  }
+
+  @Override
+  protected void startUp() {
+    try {
+      log.info("Starting up");
+      if (fileDeletionManager.getSentIndex() == 0 && readTailer.index() != 0) {
+        // Only for migration when readTailer is present, and sentTailer is not.
+        log.info("Index of sent-tailer is 0. Setting it to read-tailer index");
+        fileDeletionManager.setSentIndex(readTailer.index());
+      }
+      printStats();
+      fileDeletionManager.deleteOlderFiles();
+    } catch (Exception e) {
+      log.error("Exception in startUp", e);
+    }
+  }
+
+  @Override
+  protected void shutDown() {
+    try {
+      log.info("Shutting down");
+      printStats();
+      fileDeletionManager.deleteOlderFiles();
+    } catch (Exception e) {
+      log.error("Exception in shutDown", e);
+    } finally {
+      this.queue.close();
+      log.info("Successfully closed the queue.");
+    }
+  }
+
+  private void printStats() {
+    try {
+      long readIndex = readTailer.index();
+      long sentIndex = fileDeletionManager.getSentIndex();
+      long endIndex = queue.createTailer().toEnd().index();
+      long excerptCount = queue.countExcerpts(readIndex, endIndex);
+      log.info("index.read-tailer={},  index.sent-tailer={}, index.end={}, excerptCount={}", readIndex, sentIndex,
+          endIndex, excerptCount);
+    } catch (Exception e) {
+      log.error("Exception in printStats", e);
+    }
+  }
+
+  @Override
+  protected void runOneIteration() {
+    // service will terminate if exception is not caught.
+    try {
+      sampler.updateTime();
+      sampler.sampled(() -> log.info("Checking for messages to publish"));
+      Batch batchToSend = new Batch(MAX_BATCH_BYTES, MAX_BATCH_COUNT);
+      while (!batchToSend.isFull()) {
+        long endIndex = queue.createTailer().toEnd().index();
+        try (DocumentContext dc = readTailer.readingDocument()) {
+          if (!dc.isPresent()) {
+            sampler.sampled(() -> log.info("Reached end of queue"));
+            long readIndex = readTailer.index();
+            if (readIndex < endIndex) {
+              readTailer.moveToIndex(endIndex);
+              fileDeletionManager.setSentIndex(endIndex);
+              log.warn(
+                  "Observed readTailer not at end with no document context. Moved from {} to {}", readIndex, endIndex);
+            }
+            break;
+          }
+          try {
+            verify(dc.wire() != null, "Null wire with document context present");
+            byte[] bytes = requireNonNull(dc.wire()).read().bytes();
+            if (bytes != null) {
+              PublishMessage message = PublishMessage.parseFrom(bytes);
+              batchToSend.add(message);
+            } else {
+              // could happen in case of an error during append with document context open.
+              log.warn("Read NULL message. Skipping");
+            }
+          } catch (Exception e) {
+            log.error("Exception while parsing message", e);
+          }
+        }
+      }
+      if (batchToSend.isFull()) {
+        log.info("Batch is full");
+      }
+      if (!batchToSend.isEmpty()) {
+        PublishRequest publishRequest = PublishRequest.newBuilder().addAllMessages(batchToSend.getMessages()).build();
+        try {
+          blockingStub.withDeadlineAfter(30, TimeUnit.SECONDS).publish(publishRequest);
+          log.info("Published {} messages successfully", batchToSend.size());
+          fileDeletionManager.setSentIndex(readTailer.index());
+          scheduler.recordSuccess();
+        } catch (Exception e) {
+          log.warn("Exception during message publish", e);
+          QueueUtils.moveToIndex(readTailer, fileDeletionManager.getSentIndex());
+          scheduler.recordFailure();
+        }
+      } else {
+        sampler.sampled(() -> log.info("Skipping message publish as batch is empty"));
+      }
+    } catch (Exception e) {
+      log.error("Encountered exception", e);
+    } finally {
+      try {
+        sampler.sampled(this::printStats);
+        sampler.sampled(fileDeletionManager::deleteOlderFiles);
+      } catch (Exception e) {
+        log.error("Encountered exception in finally", e);
+      }
+    }
+  }
+
+  @Override
+  protected Scheduler scheduler() {
+    return scheduler;
+  }
+}

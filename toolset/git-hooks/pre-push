@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+pushd `dirname $0` > /dev/null && cd ../.. && BASEDIR=$(pwd -L) && popd > /dev/null
+BASENAME=`basename $0`
+
+SCRIPT=$BASEDIR/toolset/git-hooks/${BASENAME}.sh
+
+if [ -e $SCRIPT ]
+then
+    . $SCRIPT
+fi

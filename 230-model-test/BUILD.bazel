@@ -1,0 +1,52 @@
+load("//:tools/bazel/macros.bzl", "run_analysis")
+
+java_library(
+    name = "module",
+    testonly = True,
+    srcs = glob([
+        "src/main/java/**/*.java",
+    ]),
+    resources = [
+        "//230-model-test/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//400-rest:module",
+        "//970-rbac-core:module",
+        "//990-commons-test:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_module_jackson_module_afterburner",
+        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_code_gson_gson",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_spotify_docker_client",
+        "@maven//:io_github_benas_random_beans",
+        "@maven//:io_rest_assured_rest_assured",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_eclipse_jgit_org_eclipse_jgit",
+        "@maven//:org_jboss_aerogear_aerogear_otp_java",
+        "@maven//:org_jsoup_jsoup",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+java_binary(
+    name = "app",
+    testonly = True,
+    main_class = "io.harness.testframework.framework.ManagerExecutor",
+    runtime_deps = [
+        ":module",
+    ],
+)
+
+run_analysis(
+    run_duplicated = False,
+    run_sonar = False,
+)

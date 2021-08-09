@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/rest/v1/search?sort=version&direction=desc&repository=maven-internal&maven.groupId=com.mygroup&maven.artifactId=myartifact"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-maven-versions-nexus3-diff-group-names.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

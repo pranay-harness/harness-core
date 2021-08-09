@@ -1,0 +1,32 @@
+{
+  "connector": {
+    "type": "CEAws",
+    "name": "name_ph",
+    "identifier": "identifier_ph",
+    "orgIdentifier": "orgIdentifier_ph",
+    "description": "description_ph",
+    "projectIdentifier": "projectIdentifier_ph",
+    "tags": {
+      "company" : "Harness",
+      "env" : "dev"
+    },
+    "spec": {
+      "featuresEnabled": [
+        "BILLING",
+        "VISIBILITY",
+        "OPTIMIZATION"
+      ],
+      "curAttributes": {
+        "reportName": "report_name_utsav",
+        "s3BucketName": "ce-customer-billing-data-dev",
+        "region":"us-east-1",
+        "s3Prefix":"s3Prefix"
+      },
+      "crossAccountAccess": {
+        "crossAccountRoleArn": "arn:aws:iam::890436954479:role/harnessCERole",
+        "externalId": "harness:108817434118:kmpySmUISimoRrJL6NL73w"
+      },
+      "awsAccountId":"890436954479"
+    }
+  }
+}

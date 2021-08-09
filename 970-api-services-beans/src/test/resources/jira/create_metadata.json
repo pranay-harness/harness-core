@@ -1,0 +1,2314 @@
+{
+  "expand": "projects",
+  "projects": [
+    {
+      "expand": "issuetypes",
+      "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+      "id": "10000",
+      "key": "JEL",
+      "name": "Jellycone",
+      "avatarUrls": {
+        "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+        "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+        "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+        "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+      },
+      "issuetypes": [
+        {
+          "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10003",
+          "id": "10003",
+          "description": "A task that needs to be done.",
+          "iconUrl": "https://jira.dev.harness.io/secure/viewavatar?size=xsmall&avatarId=10318&avatarType=issuetype",
+          "name": "Task",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": { "type": "string", "system": "summary" },
+              "name": "Summary",
+              "fieldId": "summary",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": { "type": "issuetype", "system": "issuetype" },
+              "name": "Issue Type",
+              "fieldId": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10003",
+                  "id": "10003",
+                  "description": "A task that needs to be done.",
+                  "iconUrl": "https://jira.dev.harness.io/secure/viewavatar?size=xsmall&avatarId=10318&avatarType=issuetype",
+                  "name": "Task",
+                  "subtask": false,
+                  "avatarId": 10318
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": { "type": "user", "system": "reporter" },
+              "name": "Reporter",
+              "fieldId": "reporter",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/search?username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Component/s",
+              "fieldId": "components",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10001",
+                  "id": "10001",
+                  "name": "test"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10000",
+                  "id": "10000",
+                  "name": "TestComp1"
+                }
+              ]
+            },
+            "description": {
+              "required": false,
+              "schema": { "type": "string", "system": "description" },
+              "name": "Description",
+              "fieldId": "description",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix Version/s",
+              "fieldId": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": ["set", "add", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10000",
+                  "id": "10000",
+                  "name": "Version 1.0",
+                  "archived": false,
+                  "released": true,
+                  "releaseDate": "2020-04-20",
+                  "userReleaseDate": "20/Apr/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10001",
+                  "id": "10001",
+                  "name": "Version 2.0",
+                  "archived": false,
+                  "released": false,
+                  "releaseDate": "2020-05-04",
+                  "overdue": true,
+                  "userReleaseDate": "04/May/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10002",
+                  "id": "10002",
+                  "name": "Version 3.0",
+                  "archived": false,
+                  "released": false,
+                  "projectId": 10000
+                }
+              ]
+            },
+            "priority": {
+              "required": false,
+              "schema": { "type": "priority", "system": "priority" },
+              "name": "Priority",
+              "fieldId": "priority",
+              "hasDefaultValue": true,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/1",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/highest.svg",
+                  "name": "Highest",
+                  "id": "1"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/2",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/high.svg",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/4",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/low.svg",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/5",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/lowest.svg",
+                  "name": "Lowest",
+                  "id": "5"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                "name": "Medium",
+                "id": "3"
+              }
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "fieldId": "labels",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "fieldId": "issuelinks",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/2/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": ["add"]
+            },
+            "customfield_10102": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10102
+              },
+              "name": "Epic Link",
+              "fieldId": "customfield_10102",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10101": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10101
+              },
+              "name": "Sprint",
+              "fieldId": "customfield_10101",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "resolution": {
+              "required": false,
+              "schema": { "type": "resolution", "system": "resolution" },
+              "name": "Resolution",
+              "fieldId": "resolution",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10000",
+                  "name": "Done",
+                  "id": "10000"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10001",
+                  "name": "Won't Do",
+                  "id": "10001"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10002",
+                  "name": "Duplicate",
+                  "id": "10002"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10003",
+                  "name": "Cannot Reproduce",
+                  "id": "10003"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10100",
+                  "name": "To Do",
+                  "id": "10100"
+                }
+              ]
+            },
+            "timetracking": {
+              "required": false,
+              "schema": { "type": "timetracking", "system": "timetracking" },
+              "name": "Time Tracking",
+              "fieldId": "timetracking",
+              "hasDefaultValue": false,
+              "operations": ["set", "edit"]
+            },
+            "customfield_10200": {
+              "required": false,
+              "schema": {
+                "type": "project",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:project",
+                "customId": 10200
+              },
+              "name": "TestCustomFields",
+              "fieldId": "customfield_10200",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            },
+            "customfield_10202": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:labels",
+                "customId": 10202
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10202",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/null/suggest?customFieldId=10202&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10206": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10206
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10206",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10207": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10207
+              },
+              "name": "number",
+              "fieldId": "customfield_10207",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10208": {
+              "required": false,
+              "schema": {
+                "type": "option-with-child",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+                "customId": 10208
+              },
+              "name": "number2",
+              "fieldId": "customfield_10208",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": []
+            },
+            "customfield_10203": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10203
+              },
+              "name": "test custom fields",
+              "fieldId": "customfield_10203",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10209": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "user",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker",
+                "customId": 10209
+              },
+              "name": "Approvers",
+              "fieldId": "customfield_10209",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/users/picker?fieldName=customfield_10209&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10210": {
+              "required": false,
+              "schema": {
+                "type": "date",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:date",
+                "customId": 10210
+              },
+              "name": "Custom Date",
+              "fieldId": "customfield_10210",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10211": {
+              "required": false,
+              "schema": {
+                "type": "datetime",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datetime",
+                "customId": 10211
+              },
+              "name": "customtime",
+              "fieldId": "customfield_10211",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10204": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "option",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+                "customId": 10204
+              },
+              "name": "testcustomfields",
+              "fieldId": "customfield_10204",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/customFieldOption/10102",
+                  "value": "1",
+                  "id": "10102"
+                }
+              ]
+            },
+            "customfield_10212": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10212
+              },
+              "name": "CustomArray",
+              "fieldId": "customfield_10212",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "assignee": {
+              "required": false,
+              "schema": { "type": "user", "system": "assignee" },
+              "name": "Assignee",
+              "fieldId": "assignee",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/assignable/search?issueKey=null&username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "project": {
+              "required": true,
+              "schema": { "type": "project", "system": "project" },
+              "name": "Project",
+              "fieldId": "project",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10000",
+          "id": "10000",
+          "description": "The sub-task of the issue",
+          "iconUrl": "https://jira.dev.harness.io/images/icons/issuetypes/subtask_alternate.png",
+          "name": "Sub-task",
+          "subtask": true,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": { "type": "string", "system": "summary" },
+              "name": "Summary",
+              "fieldId": "summary",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": { "type": "issuetype", "system": "issuetype" },
+              "name": "Issue Type",
+              "fieldId": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10000",
+                  "id": "10000",
+                  "description": "The sub-task of the issue",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/issuetypes/subtask_alternate.png",
+                  "name": "Sub-task",
+                  "subtask": true
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": { "type": "user", "system": "reporter" },
+              "name": "Reporter",
+              "fieldId": "reporter",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/search?username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Component/s",
+              "fieldId": "components",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10001",
+                  "id": "10001",
+                  "name": "test"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10000",
+                  "id": "10000",
+                  "name": "TestComp1"
+                }
+              ]
+            },
+            "description": {
+              "required": false,
+              "schema": { "type": "string", "system": "description" },
+              "name": "Description",
+              "fieldId": "description",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix Version/s",
+              "fieldId": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": ["set", "add", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10000",
+                  "id": "10000",
+                  "name": "Version 1.0",
+                  "archived": false,
+                  "released": true,
+                  "releaseDate": "2020-04-20",
+                  "userReleaseDate": "20/Apr/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10001",
+                  "id": "10001",
+                  "name": "Version 2.0",
+                  "archived": false,
+                  "released": false,
+                  "releaseDate": "2020-05-04",
+                  "overdue": true,
+                  "userReleaseDate": "04/May/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10002",
+                  "id": "10002",
+                  "name": "Version 3.0",
+                  "archived": false,
+                  "released": false,
+                  "projectId": 10000
+                }
+              ]
+            },
+            "priority": {
+              "required": false,
+              "schema": { "type": "priority", "system": "priority" },
+              "name": "Priority",
+              "fieldId": "priority",
+              "hasDefaultValue": true,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/1",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/highest.svg",
+                  "name": "Highest",
+                  "id": "1"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/2",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/high.svg",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/4",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/low.svg",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/5",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/lowest.svg",
+                  "name": "Lowest",
+                  "id": "5"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                "name": "Medium",
+                "id": "3"
+              }
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "fieldId": "labels",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "fieldId": "issuelinks",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/2/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": ["add"]
+            },
+            "customfield_10102": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10102
+              },
+              "name": "Epic Link",
+              "fieldId": "customfield_10102",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10101": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10101
+              },
+              "name": "Sprint",
+              "fieldId": "customfield_10101",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "resolution": {
+              "required": false,
+              "schema": { "type": "resolution", "system": "resolution" },
+              "name": "Resolution",
+              "fieldId": "resolution",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10000",
+                  "name": "Done",
+                  "id": "10000"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10001",
+                  "name": "Won't Do",
+                  "id": "10001"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10002",
+                  "name": "Duplicate",
+                  "id": "10002"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10003",
+                  "name": "Cannot Reproduce",
+                  "id": "10003"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10100",
+                  "name": "To Do",
+                  "id": "10100"
+                }
+              ]
+            },
+            "timetracking": {
+              "required": false,
+              "schema": { "type": "timetracking", "system": "timetracking" },
+              "name": "Time Tracking",
+              "fieldId": "timetracking",
+              "hasDefaultValue": false,
+              "operations": ["set", "edit"]
+            },
+            "customfield_10200": {
+              "required": false,
+              "schema": {
+                "type": "project",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:project",
+                "customId": 10200
+              },
+              "name": "TestCustomFields",
+              "fieldId": "customfield_10200",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            },
+            "customfield_10202": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:labels",
+                "customId": 10202
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10202",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/null/suggest?customFieldId=10202&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10206": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10206
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10206",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10207": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10207
+              },
+              "name": "number",
+              "fieldId": "customfield_10207",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10208": {
+              "required": false,
+              "schema": {
+                "type": "option-with-child",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+                "customId": 10208
+              },
+              "name": "number2",
+              "fieldId": "customfield_10208",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": []
+            },
+            "customfield_10203": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10203
+              },
+              "name": "test custom fields",
+              "fieldId": "customfield_10203",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10209": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "user",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker",
+                "customId": 10209
+              },
+              "name": "Approvers",
+              "fieldId": "customfield_10209",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/users/picker?fieldName=customfield_10209&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10210": {
+              "required": false,
+              "schema": {
+                "type": "date",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:date",
+                "customId": 10210
+              },
+              "name": "Custom Date",
+              "fieldId": "customfield_10210",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10211": {
+              "required": false,
+              "schema": {
+                "type": "datetime",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datetime",
+                "customId": 10211
+              },
+              "name": "customtime",
+              "fieldId": "customfield_10211",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10204": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "option",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+                "customId": 10204
+              },
+              "name": "testcustomfields",
+              "fieldId": "customfield_10204",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/customFieldOption/10102",
+                  "value": "1",
+                  "id": "10102"
+                }
+              ]
+            },
+            "customfield_10212": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10212
+              },
+              "name": "CustomArray",
+              "fieldId": "customfield_10212",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "assignee": {
+              "required": false,
+              "schema": { "type": "user", "system": "assignee" },
+              "name": "Assignee",
+              "fieldId": "assignee",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/assignable/search?issueKey=null&username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "project": {
+              "required": true,
+              "schema": { "type": "project", "system": "project" },
+              "name": "Project",
+              "fieldId": "project",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            },
+            "parent": {
+              "required": true,
+              "schema": { "type": "issuelink", "system": "parent" },
+              "name": "Parent",
+              "fieldId": "parent",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            }
+          }
+        },
+        {
+          "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10002",
+          "id": "10002",
+          "description": "Created by Jira Software - do not edit or delete. Issue type for a user story.",
+          "iconUrl": "https://jira.dev.harness.io/images/icons/issuetypes/story.svg",
+          "name": "Story",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": { "type": "string", "system": "summary" },
+              "name": "Summary",
+              "fieldId": "summary",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": { "type": "issuetype", "system": "issuetype" },
+              "name": "Issue Type",
+              "fieldId": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10002",
+                  "id": "10002",
+                  "description": "Created by Jira Software - do not edit or delete. Issue type for a user story.",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/issuetypes/story.svg",
+                  "name": "Story",
+                  "subtask": false
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": { "type": "user", "system": "reporter" },
+              "name": "Reporter",
+              "fieldId": "reporter",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/search?username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Component/s",
+              "fieldId": "components",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10001",
+                  "id": "10001",
+                  "name": "test"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10000",
+                  "id": "10000",
+                  "name": "TestComp1"
+                }
+              ]
+            },
+            "description": {
+              "required": false,
+              "schema": { "type": "string", "system": "description" },
+              "name": "Description",
+              "fieldId": "description",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix Version/s",
+              "fieldId": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": ["set", "add", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10000",
+                  "id": "10000",
+                  "name": "Version 1.0",
+                  "archived": false,
+                  "released": true,
+                  "releaseDate": "2020-04-20",
+                  "userReleaseDate": "20/Apr/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10001",
+                  "id": "10001",
+                  "name": "Version 2.0",
+                  "archived": false,
+                  "released": false,
+                  "releaseDate": "2020-05-04",
+                  "overdue": true,
+                  "userReleaseDate": "04/May/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10002",
+                  "id": "10002",
+                  "name": "Version 3.0",
+                  "archived": false,
+                  "released": false,
+                  "projectId": 10000
+                }
+              ]
+            },
+            "priority": {
+              "required": false,
+              "schema": { "type": "priority", "system": "priority" },
+              "name": "Priority",
+              "fieldId": "priority",
+              "hasDefaultValue": true,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/1",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/highest.svg",
+                  "name": "Highest",
+                  "id": "1"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/2",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/high.svg",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/4",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/low.svg",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/5",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/lowest.svg",
+                  "name": "Lowest",
+                  "id": "5"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                "name": "Medium",
+                "id": "3"
+              }
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "fieldId": "labels",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "fieldId": "issuelinks",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/2/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": ["add"]
+            },
+            "customfield_10102": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10102
+              },
+              "name": "Epic Link",
+              "fieldId": "customfield_10102",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10101": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10101
+              },
+              "name": "Sprint",
+              "fieldId": "customfield_10101",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "resolution": {
+              "required": false,
+              "schema": { "type": "resolution", "system": "resolution" },
+              "name": "Resolution",
+              "fieldId": "resolution",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10000",
+                  "name": "Done",
+                  "id": "10000"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10001",
+                  "name": "Won't Do",
+                  "id": "10001"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10002",
+                  "name": "Duplicate",
+                  "id": "10002"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10003",
+                  "name": "Cannot Reproduce",
+                  "id": "10003"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10100",
+                  "name": "To Do",
+                  "id": "10100"
+                }
+              ]
+            },
+            "timetracking": {
+              "required": false,
+              "schema": { "type": "timetracking", "system": "timetracking" },
+              "name": "Time Tracking",
+              "fieldId": "timetracking",
+              "hasDefaultValue": false,
+              "operations": ["set", "edit"]
+            },
+            "customfield_10200": {
+              "required": false,
+              "schema": {
+                "type": "project",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:project",
+                "customId": 10200
+              },
+              "name": "TestCustomFields",
+              "fieldId": "customfield_10200",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            },
+            "customfield_10202": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:labels",
+                "customId": 10202
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10202",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/null/suggest?customFieldId=10202&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10206": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10206
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10206",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10207": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10207
+              },
+              "name": "number",
+              "fieldId": "customfield_10207",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10208": {
+              "required": false,
+              "schema": {
+                "type": "option-with-child",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+                "customId": 10208
+              },
+              "name": "number2",
+              "fieldId": "customfield_10208",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": []
+            },
+            "customfield_10203": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10203
+              },
+              "name": "test custom fields",
+              "fieldId": "customfield_10203",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10209": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "user",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker",
+                "customId": 10209
+              },
+              "name": "Approvers",
+              "fieldId": "customfield_10209",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/users/picker?fieldName=customfield_10209&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10210": {
+              "required": false,
+              "schema": {
+                "type": "date",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:date",
+                "customId": 10210
+              },
+              "name": "Custom Date",
+              "fieldId": "customfield_10210",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10211": {
+              "required": false,
+              "schema": {
+                "type": "datetime",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datetime",
+                "customId": 10211
+              },
+              "name": "customtime",
+              "fieldId": "customfield_10211",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10204": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "option",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+                "customId": 10204
+              },
+              "name": "testcustomfields",
+              "fieldId": "customfield_10204",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/customFieldOption/10102",
+                  "value": "1",
+                  "id": "10102"
+                }
+              ]
+            },
+            "customfield_10212": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10212
+              },
+              "name": "CustomArray",
+              "fieldId": "customfield_10212",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "assignee": {
+              "required": false,
+              "schema": { "type": "user", "system": "assignee" },
+              "name": "Assignee",
+              "fieldId": "assignee",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/assignable/search?issueKey=null&username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "project": {
+              "required": true,
+              "schema": { "type": "project", "system": "project" },
+              "name": "Project",
+              "fieldId": "project",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10004",
+          "id": "10004",
+          "description": "A problem which impairs or prevents the functions of the product.",
+          "iconUrl": "https://jira.dev.harness.io/secure/viewavatar?size=xsmall&avatarId=10303&avatarType=issuetype",
+          "name": "Bug",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "summary": {
+              "required": true,
+              "schema": { "type": "string", "system": "summary" },
+              "name": "Summary",
+              "fieldId": "summary",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": { "type": "issuetype", "system": "issuetype" },
+              "name": "Issue Type",
+              "fieldId": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10004",
+                  "id": "10004",
+                  "description": "A problem which impairs or prevents the functions of the product.",
+                  "iconUrl": "https://jira.dev.harness.io/secure/viewavatar?size=xsmall&avatarId=10303&avatarType=issuetype",
+                  "name": "Bug",
+                  "subtask": false,
+                  "avatarId": 10303
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": { "type": "user", "system": "reporter" },
+              "name": "Reporter",
+              "fieldId": "reporter",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/search?username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Component/s",
+              "fieldId": "components",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10001",
+                  "id": "10001",
+                  "name": "test"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10000",
+                  "id": "10000",
+                  "name": "TestComp1"
+                }
+              ]
+            },
+            "description": {
+              "required": false,
+              "schema": { "type": "string", "system": "description" },
+              "name": "Description",
+              "fieldId": "description",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix Version/s",
+              "fieldId": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": ["set", "add", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10000",
+                  "id": "10000",
+                  "name": "Version 1.0",
+                  "archived": false,
+                  "released": true,
+                  "releaseDate": "2020-04-20",
+                  "userReleaseDate": "20/Apr/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10001",
+                  "id": "10001",
+                  "name": "Version 2.0",
+                  "archived": false,
+                  "released": false,
+                  "releaseDate": "2020-05-04",
+                  "overdue": true,
+                  "userReleaseDate": "04/May/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10002",
+                  "id": "10002",
+                  "name": "Version 3.0",
+                  "archived": false,
+                  "released": false,
+                  "projectId": 10000
+                }
+              ]
+            },
+            "priority": {
+              "required": false,
+              "schema": { "type": "priority", "system": "priority" },
+              "name": "Priority",
+              "fieldId": "priority",
+              "hasDefaultValue": true,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/1",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/highest.svg",
+                  "name": "Highest",
+                  "id": "1"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/2",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/high.svg",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/4",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/low.svg",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/5",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/lowest.svg",
+                  "name": "Lowest",
+                  "id": "5"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                "name": "Medium",
+                "id": "3"
+              }
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "fieldId": "labels",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "environment": {
+              "required": false,
+              "schema": { "type": "string", "system": "environment" },
+              "name": "Environment",
+              "fieldId": "environment",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "versions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "versions"
+              },
+              "name": "Affects Version/s",
+              "fieldId": "versions",
+              "hasDefaultValue": false,
+              "operations": ["set", "add", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10000",
+                  "id": "10000",
+                  "name": "Version 1.0",
+                  "archived": false,
+                  "released": true,
+                  "releaseDate": "2020-04-20",
+                  "userReleaseDate": "20/Apr/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10001",
+                  "id": "10001",
+                  "name": "Version 2.0",
+                  "archived": false,
+                  "released": false,
+                  "releaseDate": "2020-05-04",
+                  "overdue": true,
+                  "userReleaseDate": "04/May/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10002",
+                  "id": "10002",
+                  "name": "Version 3.0",
+                  "archived": false,
+                  "released": false,
+                  "projectId": 10000
+                }
+              ]
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "fieldId": "issuelinks",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/2/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": ["add"]
+            },
+            "customfield_10102": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10102
+              },
+              "name": "Epic Link",
+              "fieldId": "customfield_10102",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10101": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10101
+              },
+              "name": "Sprint",
+              "fieldId": "customfield_10101",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "timetracking": {
+              "required": false,
+              "schema": { "type": "timetracking", "system": "timetracking" },
+              "name": "Time Tracking",
+              "fieldId": "timetracking",
+              "hasDefaultValue": false,
+              "operations": ["set", "edit"]
+            },
+            "resolution": {
+              "required": false,
+              "schema": { "type": "resolution", "system": "resolution" },
+              "name": "Resolution",
+              "fieldId": "resolution",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10000",
+                  "name": "Done",
+                  "id": "10000"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10001",
+                  "name": "Won't Do",
+                  "id": "10001"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10002",
+                  "name": "Duplicate",
+                  "id": "10002"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10003",
+                  "name": "Cannot Reproduce",
+                  "id": "10003"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10100",
+                  "name": "To Do",
+                  "id": "10100"
+                }
+              ]
+            },
+            "customfield_10200": {
+              "required": false,
+              "schema": {
+                "type": "project",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:project",
+                "customId": 10200
+              },
+              "name": "TestCustomFields",
+              "fieldId": "customfield_10200",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            },
+            "customfield_10202": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:labels",
+                "customId": 10202
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10202",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/null/suggest?customFieldId=10202&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10206": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10206
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10206",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10207": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10207
+              },
+              "name": "number",
+              "fieldId": "customfield_10207",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10208": {
+              "required": false,
+              "schema": {
+                "type": "option-with-child",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+                "customId": 10208
+              },
+              "name": "number2",
+              "fieldId": "customfield_10208",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": []
+            },
+            "customfield_10203": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10203
+              },
+              "name": "test custom fields",
+              "fieldId": "customfield_10203",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10209": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "user",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker",
+                "customId": 10209
+              },
+              "name": "Approvers",
+              "fieldId": "customfield_10209",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/users/picker?fieldName=customfield_10209&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10212": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10212
+              },
+              "name": "CustomArray",
+              "fieldId": "customfield_10212",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "assignee": {
+              "required": false,
+              "schema": { "type": "user", "system": "assignee" },
+              "name": "Assignee",
+              "fieldId": "assignee",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/assignable/search?issueKey=null&username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "project": {
+              "required": true,
+              "schema": { "type": "project", "system": "project" },
+              "name": "Project",
+              "fieldId": "project",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10001",
+          "id": "10001",
+          "description": "Created by Jira Software - do not edit or delete. Issue type for a big user story that needs to be broken down.",
+          "iconUrl": "https://jira.dev.harness.io/images/icons/issuetypes/epic.svg",
+          "name": "Epic",
+          "subtask": false,
+          "expand": "fields",
+          "fields": {
+            "customfield_10104": {
+              "required": true,
+              "schema": {
+                "type": "string",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-label",
+                "customId": 10104
+              },
+              "name": "Epic Name",
+              "fieldId": "customfield_10104",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "summary": {
+              "required": true,
+              "schema": { "type": "string", "system": "summary" },
+              "name": "Summary",
+              "fieldId": "summary",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "issuetype": {
+              "required": true,
+              "schema": { "type": "issuetype", "system": "issuetype" },
+              "name": "Issue Type",
+              "fieldId": "issuetype",
+              "hasDefaultValue": false,
+              "operations": [],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/issuetype/10001",
+                  "id": "10001",
+                  "description": "Created by Jira Software - do not edit or delete. Issue type for a big user story that needs to be broken down.",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/issuetypes/epic.svg",
+                  "name": "Epic",
+                  "subtask": false
+                }
+              ]
+            },
+            "reporter": {
+              "required": true,
+              "schema": { "type": "user", "system": "reporter" },
+              "name": "Reporter",
+              "fieldId": "reporter",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/search?username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "components": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "component",
+                "system": "components"
+              },
+              "name": "Component/s",
+              "fieldId": "components",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10001",
+                  "id": "10001",
+                  "name": "test"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/component/10000",
+                  "id": "10000",
+                  "name": "TestComp1"
+                }
+              ]
+            },
+            "description": {
+              "required": false,
+              "schema": { "type": "string", "system": "description" },
+              "name": "Description",
+              "fieldId": "description",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "fixVersions": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "version",
+                "system": "fixVersions"
+              },
+              "name": "Fix Version/s",
+              "fieldId": "fixVersions",
+              "hasDefaultValue": false,
+              "operations": ["set", "add", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10000",
+                  "id": "10000",
+                  "name": "Version 1.0",
+                  "archived": false,
+                  "released": true,
+                  "releaseDate": "2020-04-20",
+                  "userReleaseDate": "20/Apr/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10001",
+                  "id": "10001",
+                  "name": "Version 2.0",
+                  "archived": false,
+                  "released": false,
+                  "releaseDate": "2020-05-04",
+                  "overdue": true,
+                  "userReleaseDate": "04/May/20",
+                  "projectId": 10000
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/version/10002",
+                  "id": "10002",
+                  "name": "Version 3.0",
+                  "archived": false,
+                  "released": false,
+                  "projectId": 10000
+                }
+              ]
+            },
+            "priority": {
+              "required": false,
+              "schema": { "type": "priority", "system": "priority" },
+              "name": "Priority",
+              "fieldId": "priority",
+              "hasDefaultValue": true,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/1",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/highest.svg",
+                  "name": "Highest",
+                  "id": "1"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/2",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/high.svg",
+                  "name": "High",
+                  "id": "2"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                  "name": "Medium",
+                  "id": "3"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/4",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/low.svg",
+                  "name": "Low",
+                  "id": "4"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/priority/5",
+                  "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/lowest.svg",
+                  "name": "Lowest",
+                  "id": "5"
+                }
+              ],
+              "defaultValue": {
+                "self": "https://jira.dev.harness.io/rest/api/2/priority/3",
+                "iconUrl": "https://jira.dev.harness.io/images/icons/priorities/medium.svg",
+                "name": "Medium",
+                "id": "3"
+              }
+            },
+            "labels": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "system": "labels"
+              },
+              "name": "Labels",
+              "fieldId": "labels",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/suggest?query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "issuelinks": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "issuelinks",
+                "system": "issuelinks"
+              },
+              "name": "Linked Issues",
+              "fieldId": "issuelinks",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/2/issue/picker?currentProjectId=&showSubTaskParent=true&showSubTasks=true&currentIssueKey=null&query=",
+              "hasDefaultValue": false,
+              "operations": ["add"]
+            },
+            "customfield_10102": {
+              "required": false,
+              "schema": {
+                "type": "any",
+                "custom": "com.pyxis.greenhopper.jira:gh-epic-link",
+                "customId": 10102
+              },
+              "name": "Epic Link",
+              "fieldId": "customfield_10102",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10101": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.pyxis.greenhopper.jira:gh-sprint",
+                "customId": 10101
+              },
+              "name": "Sprint",
+              "fieldId": "customfield_10101",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "resolution": {
+              "required": false,
+              "schema": { "type": "resolution", "system": "resolution" },
+              "name": "Resolution",
+              "fieldId": "resolution",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10000",
+                  "name": "Done",
+                  "id": "10000"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10001",
+                  "name": "Won't Do",
+                  "id": "10001"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10002",
+                  "name": "Duplicate",
+                  "id": "10002"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10003",
+                  "name": "Cannot Reproduce",
+                  "id": "10003"
+                },
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/resolution/10100",
+                  "name": "To Do",
+                  "id": "10100"
+                }
+              ]
+            },
+            "timetracking": {
+              "required": false,
+              "schema": { "type": "timetracking", "system": "timetracking" },
+              "name": "Time Tracking",
+              "fieldId": "timetracking",
+              "hasDefaultValue": false,
+              "operations": ["set", "edit"]
+            },
+            "customfield_10200": {
+              "required": false,
+              "schema": {
+                "type": "project",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:project",
+                "customId": 10200
+              },
+              "name": "TestCustomFields",
+              "fieldId": "customfield_10200",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            },
+            "customfield_10202": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "string",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:labels",
+                "customId": 10202
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10202",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/labels/null/suggest?customFieldId=10202&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10206": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10206
+              },
+              "name": "Test Custom Fields",
+              "fieldId": "customfield_10206",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10207": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10207
+              },
+              "name": "number",
+              "fieldId": "customfield_10207",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10208": {
+              "required": false,
+              "schema": {
+                "type": "option-with-child",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:cascadingselect",
+                "customId": 10208
+              },
+              "name": "number2",
+              "fieldId": "customfield_10208",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": []
+            },
+            "customfield_10203": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10203
+              },
+              "name": "test custom fields",
+              "fieldId": "customfield_10203",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10209": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "user",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multiuserpicker",
+                "customId": 10209
+              },
+              "name": "Approvers",
+              "fieldId": "customfield_10209",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/1.0/users/picker?fieldName=customfield_10209&query=",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"]
+            },
+            "customfield_10210": {
+              "required": false,
+              "schema": {
+                "type": "date",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:date",
+                "customId": 10210
+              },
+              "name": "Custom Date",
+              "fieldId": "customfield_10210",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10211": {
+              "required": false,
+              "schema": {
+                "type": "datetime",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:datetime",
+                "customId": 10211
+              },
+              "name": "customtime",
+              "fieldId": "customfield_10211",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "customfield_10204": {
+              "required": false,
+              "schema": {
+                "type": "array",
+                "items": "option",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:multicheckboxes",
+                "customId": 10204
+              },
+              "name": "testcustomfields",
+              "fieldId": "customfield_10204",
+              "hasDefaultValue": false,
+              "operations": ["add", "set", "remove"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/customFieldOption/10102",
+                  "value": "1",
+                  "id": "10102"
+                }
+              ]
+            },
+            "customfield_10212": {
+              "required": false,
+              "schema": {
+                "type": "number",
+                "custom": "com.atlassian.jira.plugin.system.customfieldtypes:float",
+                "customId": 10212
+              },
+              "name": "CustomArray",
+              "fieldId": "customfield_10212",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "assignee": {
+              "required": false,
+              "schema": { "type": "user", "system": "assignee" },
+              "name": "Assignee",
+              "fieldId": "assignee",
+              "autoCompleteUrl": "https://jira.dev.harness.io/rest/api/latest/user/assignable/search?issueKey=null&username=",
+              "hasDefaultValue": false,
+              "operations": ["set"]
+            },
+            "project": {
+              "required": true,
+              "schema": { "type": "project", "system": "project" },
+              "name": "Project",
+              "fieldId": "project",
+              "hasDefaultValue": false,
+              "operations": ["set"],
+              "allowedValues": [
+                {
+                  "self": "https://jira.dev.harness.io/rest/api/2/project/10000",
+                  "id": "10000",
+                  "key": "JEL",
+                  "name": "Jellycone",
+                  "projectTypeKey": "software",
+                  "avatarUrls": {
+                    "48x48": "https://jira.dev.harness.io/secure/projectavatar?avatarId=10324",
+                    "24x24": "https://jira.dev.harness.io/secure/projectavatar?size=small&avatarId=10324",
+                    "16x16": "https://jira.dev.harness.io/secure/projectavatar?size=xsmall&avatarId=10324",
+                    "32x32": "https://jira.dev.harness.io/secure/projectavatar?size=medium&avatarId=10324"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

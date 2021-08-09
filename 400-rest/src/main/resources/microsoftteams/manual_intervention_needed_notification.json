@@ -1,0 +1,12 @@
+{
+  "@type": "MessageCard",
+  "themeColor": "${THEME_COLOR}",
+  "summary": "Harness Notification",
+  "sections": [
+    {
+      "activityTitle": "Manual Intervention Needed - [${WORKFLOW_NAME}](${WORKFLOW_URL}) requires manual intervention for **${ARTIFACT}** in **${ENV}**, triggered by **${USER_NAME}** in **${APP_NAME}** application",
+      "activitySubtitle": "*Started ${START_DATE} and ${VERB} at ${END_DATE}*",
+      "activityImage": "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png"
+    }
+  ]
+}

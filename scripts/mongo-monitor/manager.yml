@@ -1,0 +1,68 @@
+metrics:
+  - notify_responses_count:
+      check_interval:   10      # seconds
+      query:            "db.notifyResponses.find({}).count()"
+
+  - notify_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.notifyQueue.find({}).count()"
+
+  - execution_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.executionQueue.find({}).count()"
+
+  - wait_instances_count:
+      check_interval:   10      # seconds
+      query:            "db.waitInstances.find({}).count()"
+
+  - collector_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.collectorQueue2.find({}).count()"
+
+  - delay_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.delayQueue.find({}).count()"
+
+  - deployment_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.deploymentEventQueue.find({}).count()"
+
+  - deployment_timeseries_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.deploymentTimeSeriesEventQueue.find({}).count()"
+
+  - email_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.emailQueue2.find({}).count()"
+
+  - instance_change_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.instanceChangeQueue.find({}).count()"
+
+  - instance_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.instanceEventQueue.find({}).count()"
+
+  - kms_transition_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.kmsTransitionEvent2.find({}).count()"
+
+  - prune_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.pruneQueue2.find({}).count()"
+
+  - generic_queues_count:
+      check_interval:   10      # seconds
+      query:            "db.genericEvent.find({}).count()"
+
+  - instance_count:
+      check_interval:   600      # seconds
+      query:            "db.instance.find({}).count()"
+
+  - alerts_count:
+      check_interval:   10      # seconds
+      query:            "db.alerts.find({}).count()"
+
+  - alerts_open_count:
+      check_interval:   10      # seconds
+      query:            "db.alerts.find({status: 'Open'}).count()"

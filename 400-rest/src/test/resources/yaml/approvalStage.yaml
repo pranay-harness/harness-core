@@ -1,0 +1,17 @@
+type: APPROVAL
+name: Approval 0
+parallel: false
+properties:
+  workflowVariables: null
+  userGroups:
+  - USER_GROUP
+  variables:
+  - name: t1
+    value: are
+  stageName: STAGE 1
+  timeoutMillis: 3000000
+  approvalStateType: USER_GROUP
+  sweepingOutputName: t1
+skipCondition:
+  type: ALWAYS_SKIP
+stageName: STAGE 1

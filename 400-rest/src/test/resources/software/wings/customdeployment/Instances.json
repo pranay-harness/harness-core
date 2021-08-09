@@ -1,0 +1,129 @@
+{
+  "hosts" : {
+    "sensitive": false,
+    "type": [
+      "tuple",
+      [
+        [
+          "object",
+          {
+            "access_ip_v4": "string",
+            "access_ip_v6": "string",
+            "admin_pass": "string",
+            "all_metadata": [
+              "map",
+              "string"
+            ],
+            "all_tags": [
+              "set",
+              "string"
+            ],
+            "timeouts": [
+              "object",
+              {
+                "create": "string",
+                "delete": "string",
+                "update": "string"
+              }
+            ],
+            "user_data": "string",
+            "vendor_options": [
+              "set",
+              [
+                "object",
+                {
+                  "detach_ports_before_destroy": "bool",
+                  "ignore_resize_confirmation": "bool"
+                }
+              ]
+            ],
+            "volume": [
+              "set",
+              [
+                "object",
+                {
+                  "device": "string",
+                  "id": "string",
+                  "volume_id": "string"
+                }
+              ]
+            ]
+          }
+        ]
+      ]
+    ],
+    "value": [
+      {
+        "access_ip_v4": "10.244.12.13",
+        "access_ip_v6": "",
+        "admin_pass": null,
+        "all_metadata": {
+          "type": "app-vm"
+        },
+        "metadata": {
+          "type": "app-vm"
+        },
+        "name": "0-harness-test.test-app",
+        "network": [
+          {
+            "access_network": false,
+            "fixed_ip_v4": "10.244.12.13",
+            "fixed_ip_v6": "",
+            "floating_ip": "",
+            "mac": "fa:16:3e:b1:8f:2b",
+            "name": "provider-3219",
+            "port": "832c9073-c12d-4ea4-922f-9c6b0b7bd0ed",
+            "uuid": "9cd77f59-1e88-4543-abe3-1b1deb5abecb"
+          }
+        ]
+      },
+      {
+        "access_ip_v4": "10.244.12.15",
+        "access_ip_v6": "",
+        "admin_pass": null,
+        "all_metadata": {
+          "type": "app-vm"
+        },
+        "metadata": {
+          "type": "app-vm"
+        },
+        "name": "0-harness-test.test-app",
+        "network": [
+          {
+            "access_network": false,
+            "fixed_ip_v4": "10.244.12.15",
+            "fixed_ip_v6": "",
+            "floating_ip": "",
+            "mac": "fa:16:3e:b1:8f:2b",
+            "name": "provider-3219",
+            "port": "832c9073-c12d-4ea4-922f-9c6b0b7bd0ed",
+            "uuid": "9cd77f59-1e88-4543-abe3-1b1deb5abecb"
+          }
+        ]
+      },
+      {
+        "access_ip_v4": "10.244.12.17",
+        "access_ip_v6": "10.20.30.40",
+        "admin_pass": null,
+        "all_metadata": {
+          "type": "app-vm"
+        },
+        "metadata": {
+          "type": "app-vm"
+        },
+        "network": [
+          {
+            "access_network": false,
+            "fixed_ip_v4": "10.244.12.15",
+            "fixed_ip_v6": "",
+            "floating_ip": "",
+            "mac": "fa:16:3e:b1:8f:2b",
+            "name": "provider-3219",
+            "port": "832c9073-c12d-4ea4-922f-9c6b0b7bd0ed",
+            "uuid": "9cd77f59-1e88-4543-abe3-1b1deb5abecb"
+          }
+        ]
+      }
+    ]
+  }
+}

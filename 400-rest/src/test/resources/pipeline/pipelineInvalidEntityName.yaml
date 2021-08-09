@@ -1,0 +1,14 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: ENV_STATE
+  name: k8s-allTemp
+  parallel: false
+  skipCondition:
+    type: DO_NOT_SKIP
+  stageName: STAGE 1
+  workflowName: k8s-allTemp
+  workflowVariables:
+  - entityType: ENVIRONMENT
+    name: Environment
+    value: qa

@@ -1,0 +1,12 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+continueWithDefaultValues: false
+description: testing
+executionName: tp_1
+executionType: Pipeline
+triggerCondition:
+- type: WEBHOOK
+workflowVariables:
+- entityType: USER_GROUP
+  name: variable1
+  value: Account Administrator

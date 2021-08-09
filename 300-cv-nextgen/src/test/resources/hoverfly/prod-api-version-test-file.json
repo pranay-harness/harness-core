@@ -1,0 +1,52 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/api/version"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "app.harness.io"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAG2Puw6CQBBF/2VqFBDFSOejsdDGxMZYDDDqJuwu2VkMhvDvDiEkFpb3zJnk3g40eTygR8i6PgBHbBtXkCR4k2NlzdE87E+EDOJ5NF+laZxAAHmjqvIsAkzkqfzeaq28sDQXtsxHunNoipdQRxUhU8iIHMpb24rglSb2qGsRFlG0TqJZvElSGEo1ZrhORWqnNLoPZN41FEzx+rdeSXVlPydbyiK4bLcX6MeVtTVMJ2LGJzFkt3v/BVkBQtsLAQAA",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Alt-Svc" : [ "clear" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Type" : [ "application/json;charset=utf-8" ],
+          "Date" : [ "Tue, 04 Aug 2020 11:19:08 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Strict-Transport-Security" : [ "max-age=15724800; includeSubDomains" ],
+          "Vary" : [ "Accept-Encoding" ],
+          "Via" : [ "1.1 google" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2020-08-04T16:49:08+05:30"
+  }
+}

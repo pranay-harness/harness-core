@@ -1,0 +1,39 @@
+harnessApiVersion: '1.0'
+type: OTHER
+commandUnitType: COMMAND
+commandUnits:
+  - command: |2-
+
+        # Execute as root and pass environment variables
+        # su -p -
+
+        # Execute as root via user credentials (with root privileges)
+        # sudo -E su -p -
+
+        # The following variables are absolute paths defined as:
+        # ${HOME}/${appName}/${serviceName}/${serviceTemplateName}/[runtime|backup|staging]
+
+        mkdir -p "$WINGS_RUNTIME_PATH"
+        mkdir -p "$WINGS_BACKUP_PATH"
+        mkdir -p "$WINGS_STAGING_PATH"
+    commandUnitType: SETUP_ENV
+    deploymentType: SSH
+    name: Setup Env
+  - command: |-
+        sudo docker exec -it harnessManager bash -c 'touch maintenance'
+        output=`echo $?`
+
+        if [ "$output" != "0" ]; then
+              echo "No container running";
+        else
+            echo "Container now set into maintenance mode";
+            echo "Sleeping now for 30 s"
+            sleep 30
+            echo "Killing the container now"
+            sudo docker kill harnessManager
+        fi
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Setup into maintenance mode and kill manager
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+targetToAllEnv: true

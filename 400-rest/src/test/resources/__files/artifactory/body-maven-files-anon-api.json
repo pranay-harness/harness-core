@@ -1,0 +1,17 @@
+{
+  "uri": "http://localhost:8080/artifactory/api/storage/harness-maven",
+  "repo": "harness-maven",
+  "path": "",
+  "createdBy": "userY",
+  "modifiedBy": "userX",
+  "children": [
+    {
+      "uri": "/myartifact1",
+      "folder": true
+    },
+    {
+      "uri": "/myartifact2",
+      "folder": false
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+pipeline:
+  name: My Deployment Pipeline
+  identifier: myPipeline1
+  description: This is my first pipeline. It is really concrete
+  stages:
+    - stage:
+        name: qa
+        identifier: qa
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              name: service1
+              identifier: <+input>
+            serviceDefinition:
+              type: Kubernetes # Can it be type to make it consistent with other types
+              spec:
+                artifacts:
+                  primary:
+                    type: Dockerhub
+                    spec:
+                      connectorRef: npQuotecenter
+                      imagePath: <+input>
+                      tag: "latest"
+                  sidecars:
+                    - sidecar:
+                        identifier: sidecar1
+                        type: Dockerhub
+                        spec:
+                          connectorRef: myDocker2
+                          imagePath: <+input>
+                          tag: <+input>
+                manifests:
+                  - manifest:
+                      identifier: specFiles
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: org.myGitConnector
+                            gitFetchType: Branch
+                            branch: <+input>
+                            paths: <+input>.allowedValues(['paths1', 'master/paths2', 'paths3'])
+                manifestOverrideSets:
+                  - overrideSet:
+                      identifier: overrideSet1
+                      manifests:
+                        - manifest:
+                            identifier: baseValues
+                            type: K8sManifest
+                            spec:
+                              store:
+                                type: Git
+                                # Git|Local
+                                spec:
+                                  connectorRef: <+input>
+                                  gitFetchType: Branch
+                                  branch: <+input>
+                                  paths:
+                                    - test/spec
+          infrastructure:
+            environment:
+              name: <+input>
+              identifier: <+input>
+              type: PreProduction
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: <+input>
+                namespace: <+input>.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
+          execution:
+            steps:
+              - parallel:
+                  - step:
+                      name: "Rollout Deployment"
+                      identifier: rolloutDeployment
+                      type: K8sRollingDeploy
+                      spec:
+                        timeout: <+input>.allowedValues(100, 1000, 100)
+                        skipDryRun: <+input>.allowedValues(true, false)
+              - stepGroup:
+                  identifier: HttpValidationSteps
+                  steps:
+                    - step:
+                        identifier: HttpValidation
+                        type: Http
+                        spec:
+                          timeout: 300s
+                          url: http://httpstat.us/500
+              - step:
+                  name: http step 1
+                  identifier: httpStep1
+                  type: Http
+                  spec:
+                    timeout: 300s
+                    method: GET
+                    url: http://httpstat.us/500
+            rollbackSteps:
+              - step:
+                  name: "Rollback Rollout Deployment"
+                  identifier: rollbackRolloutDeployment1
+                  type: K8sRollingRollback
+                  spec:
+                    timeout: <+input>.allowedValues(100, 1000, 100)
+              - step:
+                  name: http rollback step 2
+                  identifier: httpStep4
+                  type: Http
+                  spec:
+                    timeout: 300s
+                    method: GET
+                    url: http://httpstat.us/200
+    - stage:
+        identifier: prod
+        name: Prod stage
+        type: Deployment
+        spec:
+          serviceConfig:
+            useFromStage:
+              stage: <+input>.regex(^prod*)
+            stageOverrides:
+              manifests:
+                - manifest:
+                    identifier: prodOverride
+                    type: Values
+                    spec:
+                      store:
+                        type: Git
+                        spec:
+                          connectorRef: <+input>
+                          gitFetchType: Branch
+                          branch: <+input>
+                          paths:
+                            - test/prod/values.yaml
+              useManifestOverrideSets:
+                - overrideSet1
+                - overrideSet2
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    tag: "1.18"
+          infrastructure:
+            useFromStage:
+              stage: qaStage
+              overrides:
+                environment:
+                  identifier: <+input>
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    connectorRef: account.myK8sConnector
+                    namespace: <+input>.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
+          execution:
+            steps:
+              - step:
+                  name: Rollout Deployment
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  spec:
+                    timeout: 300s
+                    skipDryRun: false

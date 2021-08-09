@@ -1,0 +1,34 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
+
+proto_library(
+    name = "ciscmpb_proto",
+    srcs = ["scm.proto"],
+    visibility = ["//visibility:public"],
+    deps = ["@com_google_protobuf//:timestamp_proto"],
+)
+
+go_proto_library(
+    name = "ciscmpb_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "github.com/wings-software/portal/product/ci/scm/proto",
+    proto = ":ciscmpb_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":ciscmpb_go_proto"],
+    importpath = "github.com/wings-software/portal/product/ci/scm/proto",
+    visibility = ["//visibility:public"],
+)
+
+harness_grpc_library(
+    name = "ciscm_java_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ciscmpb_proto",
+    ],
+)

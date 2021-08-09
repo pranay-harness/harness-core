@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.perpetualtask.instancesync;
+
+option java_multiple_files = true;
+
+message AwsLambdaInstanceSyncPerpetualTaskParams {
+  bytes aws_config = 1;
+  bytes encrypted_data = 2;
+  string region = 3;
+  string function_name = 4;
+  string qualifier = 5;
+  int64 start_date = 6;
+}

@@ -1,0 +1,37 @@
+input UsageScopeInput {
+  appEnvScopes: [AppEnvScopeInput!]
+}
+
+input AppEnvScopeInput {
+  application: AppScopeFilterInput!
+  environment: EnvScopeFilterInput!
+}
+
+input EnvScopeFilterInput {
+  filterType: EnvFilterType
+  envId: String
+}
+
+input AppScopeFilterInput {
+  filterType: FilterType
+  appId: String
+}
+
+type UsageScope {
+  appEnvScopes: [AppEnvScope]
+}
+
+type AppEnvScope {
+  application: AppScopeFilter
+  environment: EnvScopeFilter
+}
+
+type EnvScopeFilter {
+  filterType: EnvFilterType
+  envId: String
+}
+
+type AppScopeFilter {
+  filterType: FilterType
+  appId: String
+}

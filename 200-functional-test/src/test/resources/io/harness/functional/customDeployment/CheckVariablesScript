@@ -1,0 +1,11 @@
+set -e
+echo ${infra.custom.vars.url}
+echo ${infra.custom.vars.username}
+echo ${infra.custom.vars.namespace}
+echo ${infra.custom.vars.cluster}
+echo "${infra.custom.vars.secretKey}"
+if [ "${infra.custom.vars.url}" == "qa.harness.io" ] && [ "${infra.custom.vars.username}" == "user" ] && [ "${infra.custom.vars.cluster}" == "myCluster" ] && [ "${infra.custom.vars.namespace}" == "null" ] && [ "${infra.custom.vars.repoName}" == "" ] && [ ! -z "${infra.custom.vars.secretKey}" ]; then
+    echo "Test for accessing Infra Variables access in workflow successful"
+else
+    exit 1
+fi

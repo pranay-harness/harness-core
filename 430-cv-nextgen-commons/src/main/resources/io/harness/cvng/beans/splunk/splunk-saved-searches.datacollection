@@ -1,0 +1,14 @@
+Var savedSearchURL = concat(Env:baseUrl, "services/saved/searches/?output_mode=json&count=1000")
+Var results = sync-call(url=Var:savedSearchURL, header=Env:commonHeaders)
+Var savedSearches = []
+Var entry = extract(Var:results, $.entry)
+foreach search in Var:entry {
+  Var savedSearch = {}
+  Var name = extract(Var:search, $.name)
+  Var:savedSearch.put("title", Var:name)
+  Var searchQuery = extract(Var:search, $.content.search)
+  Var:savedSearch.put("searchQuery", Var:searchQuery)
+  print Var:savedSearch
+  Var:savedSearches.append(Var:savedSearch)
+}
+return Var:savedSearches

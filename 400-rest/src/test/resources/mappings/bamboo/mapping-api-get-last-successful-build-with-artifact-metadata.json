@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/rest/api/latest/result/TP-PLAN.json?authType=basic&buildstate=Successful&max-results=1&expand=results.result.artifacts.artifact"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/bamboo/body-get-last-successful-build-with-artifact-metadata.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

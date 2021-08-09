@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/service/rest/v1/search?repository=maven-releases&maven.groupId=mygroup&maven.artifactId=myartifact&maven.extension=jar&maven.classifier=binary"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-get-versions-with-extension-classifier.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

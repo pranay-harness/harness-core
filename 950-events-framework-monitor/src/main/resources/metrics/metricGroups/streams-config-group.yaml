@@ -1,0 +1,6 @@
+name: Redis Streams
+identifier: redis_streams
+labels:
+  - name
+  - namespace
+  - usecaseName

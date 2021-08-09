@@ -1,0 +1,54 @@
+<content>
+    <data>
+        <content-item>
+            <resourceURI>
+                http://localhost:8881/nexus/service/local/repositories/npmjs/content/parse-json/
+            </resourceURI>
+            <relativePath>/parse-json/</relativePath>
+            <text>parse-json</text>
+            <leaf>false</leaf>
+            <lastModified>2019-07-03 18:21:33.0 UTC</lastModified>
+            <sizeOnDisk>-1</sizeOnDisk>
+        </content-item>
+        <content-item>
+            <resourceURI>
+                http://localhost:8881/nexus/service/local/repositories/npmjs/content/abbrev/
+            </resourceURI>
+            <relativePath>/abbrev/</relativePath>
+            <text>abbrev</text>
+            <leaf>false</leaf>
+            <lastModified>2019-07-03 18:21:42.0 UTC</lastModified>
+            <sizeOnDisk>-1</sizeOnDisk>
+        </content-item>
+        <content-item>
+            <resourceURI>
+                http://localhost:8881/nexus/service/local/repositories/npmjs/content/chalk/
+            </resourceURI>
+            <relativePath>/chalk/</relativePath>
+            <text>chalk</text>
+            <leaf>false</leaf>
+            <lastModified>2019-07-03 18:21:49.0 UTC</lastModified>
+            <sizeOnDisk>-1</sizeOnDisk>
+        </content-item>
+        <content-item>
+            <resourceURI>
+                http://localhost:8881/nexus/service/local/repositories/npmjs/content/argparse/
+            </resourceURI>
+            <relativePath>/argparse/</relativePath>
+            <text>argparse</text>
+            <leaf>false</leaf>
+            <lastModified>2019-07-03 18:21:47.0 UTC</lastModified>
+            <sizeOnDisk>-1</sizeOnDisk>
+        </content-item>
+        <content-item>
+            <resourceURI>
+                http://localhost:8881/nexus/service/local/repositories/npmjs/content/camelcase/
+            </resourceURI>
+            <relativePath>/camelcase/</relativePath>
+            <text>camelcase</text>
+            <leaf>false</leaf>
+            <lastModified>2019-07-03 18:21:28.0 UTC</lastModified>
+            <sizeOnDisk>-1</sizeOnDisk>
+        </content-item>
+    </data>
+</content>

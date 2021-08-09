@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.events;
+
+option java_multiple_files = true;
+
+enum OrchestrationEventType {
+  UNKNOWN = 0;
+  ORCHESTRATION_START = 1;
+  ORCHESTRATION_END = 2;
+  NODE_EXECUTION_STATUS_UPDATE = 3;
+  INTERVENTION_WAIT_START = 4;
+  PLAN_EXECUTION_STATUS_UPDATE = 5;
+  PLAN_EXECUTION_SUCCESS = 6;
+  PLAN_EXECUTION_FAILED = 7;
+  PLAN_EXECUTION_PAUSED = 8;
+  NODE_EXECUTION_START = 9;
+  NODE_EXECUTION_UPDATE = 10;  // Event triggered when there is a node update without any status change.
+  STEP_DETAILS_UPDATE = 11;
+}

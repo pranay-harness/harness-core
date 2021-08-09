@@ -1,0 +1,166 @@
+pipeline:
+  name: "Manager Service Deployment"
+  identifier: managerServiceDeployment
+  stages:
+    - stage:
+        identifier: qaStage
+        name: "qa stage"
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              identifier: manager
+            serviceDefinition:
+              type: "Kubernetes"
+              spec:
+                artifacts:
+                  primary:
+                    type: Dockerhub
+                    spec:
+                      connectorRef: "https://registry.hub.docker.com/"
+                      imagePath: "library/nginx"
+                      tag: "1.18"
+                manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          # Git|Local
+                          spec:
+                            connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/spec
+            stageOverrides:
+              manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}
+                - manifest:
+                    identifier: qaOverride
+                    type: Values
+                    spec:
+                      store:
+                        type: Git
+                        spec:
+                          connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q
+                          gitFetchType: Branch
+                          branch: master
+                          paths:
+                            - test/qa/values_1.yaml
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    tag: "1.18"
+          infrastructure:
+            environment:
+              identifier: stagingInfra
+              type: PreProduction
+              tags:
+                cloud: GCP
+                team: cdp
+            # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
+            # Dynamic type ???
+            infrastructureDefinition:
+              # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED
+              # Dynamic type ???
+              type: KubernetesDirect
+              spec:
+                # Spec for Infrastructure Type kubernetes-direct
+                connectorRef: pEIkEiNPSgSUsbWDDyjNKw
+                # namespace
+                namespace: harness
+                # release name
+                releaseName: testingqa
+          execution:
+            steps:
+              - step:
+                  name: "Rollout Deployment"
+                  identifier: rolloutDeployment1
+                  type: K8sRollingDeploy
+                  spec:
+                    timeout: 120000
+                    skipDryRun: false
+            rollbackSteps:
+              - step:
+                  name: "Rollback Rollout Deployment"
+                  identifier: rollbackRolloutDeployment1
+                  type: K8sRollingRollback
+                  spec:
+                    timeout: 120000
+              - step:
+                  identifier: shellScript1
+                  type: ShellScript
+                  spec:
+                    executeOnDelegate: true
+                    connectionType: SSH
+                    scriptType: BASH
+                    scriptString: |
+                      echo 'I should be executed during rollback'
+    - stage:
+        identifier: prodStage
+        name: "prod stage"
+        type: Deployment
+        spec:
+          serviceConfig:
+            useFromStage:
+              stage: qaStage
+            stageOverrides:
+              manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}
+                - manifest:
+                    identifier: prodOverride
+                    type: Values
+                    spec:
+                      store:
+                        type: Git
+                        spec:
+                          connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q
+                          gitFetchType: Branch
+                          branch: master
+                          paths:
+                            - test/prod/values.yaml
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    tag: "1.18"
+          infrastructure:
+            useFromStage:
+              stage: qaStage
+              overrides:
+                environment:
+                  identifier: prodInfra
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    releaseName: testingProd
+          execution:
+            steps:
+              - stepGroup:
+                  name: StepGroup1
+                  identifier: StepGroup1
+                  steps:
+                    - parallel:
+                        - step:
+                            name: http step 1
+                            identifier: httpStep1
+                            type: Http
+                            spec:
+                              socketTimeoutMillis: 1000
+                              method: GET
+                              url: http://httpstat.us/200
+              - step:
+                  name: "Rollout Deployment"
+                  identifier: rolloutDeployment2
+                  type: K8sRollingDeploy
+                  spec:
+                    timeout: 120000
+                    skipDryRun: false
+            rollbackSteps:
+              - step:
+                  name: "Rollback Rollout Deployment"
+                  identifier: rollbackRolloutDeployment2
+                  type: K8sRollingRollback
+                  spec:
+                    timeout: 120000

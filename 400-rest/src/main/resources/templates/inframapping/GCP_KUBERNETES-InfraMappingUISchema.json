@@ -1,0 +1,8 @@
+{
+  "computeProviderType": { "ui:widget": "hidden" },
+  "infraMappingType": { "ui:widget": "hidden" },
+  "deploymentType": { "ui:widget": "hidden" },
+  "namespace":{"ui:placeholder": "default"},
+  "ui:order": [ "name", "autoPopulate","serviceId", "deploymentType","computeProviderSettingId","clusterName","namespace","infraMappingType","computeProviderType"]
+
+}

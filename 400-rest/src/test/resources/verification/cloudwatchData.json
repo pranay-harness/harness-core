@@ -1,0 +1,38 @@
+[
+  {
+    "_id" : "KKlb2YhRTIGJycRGat9Xow",
+    "stateType" : "CLOUD_WATCH",
+    "name" : "CV-QA-load-balancer",
+    "workflowId" : "hVAIiVwdRkOW-itlMZkM1g",
+    "workflowExecutionId" : "tjuDGZ06TleZhJuPO64_cQ",
+    "serviceId" : "1_LuUDTeSPOsTQFPUzL3nw",
+    "stateExecutionId" : "BXBjVF44R0GyBwO_ekoXpg",
+
+    "dataCollectionMinute" : 0,
+    "host" : "CV-QA-load-balancer",
+    "tag" : "ELB",
+    "groupName" : "default",
+    "values" : {
+      "EstimatedProcessedBytes" : 4712.0
+    },
+    "appId" : "L9EsvOEzQcyF4ysMeEJZjg"
+  },
+  {
+    "_id" : "vmCjATcXRo2sV4vQC-znUA",
+    "stateType" : "CLOUD_WATCH",
+    "name" : "CV-QA-load-balancer",
+    "workflowId" : "hVAIiVwdRkOW-itlMZkM1g",
+    "workflowExecutionId" : "tjuDGZ06TleZhJuPO64_cQ",
+    "serviceId" : "1_LuUDTeSPOsTQFPUzL3nw",
+    "stateExecutionId" : "BXBjVF44R0GyBwO_ekoXpg",
+    "dataCollectionMinute" : 1,
+    "host" : "CV-QA-load-balancer",
+    "tag" : "ELB",
+    "groupName" : "default",
+    "values" : {
+      "EstimatedProcessedBytes" : 4760.0
+    },
+    "appId" : "L9EsvOEzQcyF4ysMeEJZjg"
+  }
+
+]

@@ -1,0 +1,6 @@
+infrastructureDefinition:
+  type: KubernetesDirect
+  spec:
+    connectorRef: account.KubernetesConnector
+    namespace: ng-testing
+    releaseName: release-pipeline

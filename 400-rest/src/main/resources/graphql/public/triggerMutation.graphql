@@ -1,0 +1,265 @@
+extend type Mutation {
+  #Creates a new Trigger and returns it
+  createTrigger(input: CreateTriggerInput!): TriggerPayload @dataFetcher(name: createTrigger)
+  #Updates a Trigger and returns it.
+  updateTrigger(input: UpdateTriggerInput!): UpdateTriggerPayload @dataFetcher(name: updateTrigger)
+  #Deletes a Trigger.
+  deleteTrigger(input: DeleteTriggerInput!): DeleteTriggerPayload @dataFetcher(name: deleteTrigger)
+}
+
+input CreateTriggerInput {
+  clientMutationId: String
+  #Name of the Trigger
+  name: String!
+  #Application Id In which Trigger will be created
+  applicationId: String!
+  #Description of the Trigger
+  description: String
+  #Condition of which Trigger will execute
+  condition: TriggerConditionInput!
+  #Action performed on trigger execute: Workflow/Pipeline execution
+  action: TriggerActionInput!
+}
+
+input UpdateTriggerInput {
+  #Id of Trigger to be updated
+  triggerId: String!
+  clientMutationId: String
+  #Name of the Trigger
+  name: String!
+  #Application Id
+  applicationId: String!
+  #Description of the Trigger
+  description: String
+  #Condition of which Trigger will execute
+  condition: TriggerConditionInput!
+  #Action performed on trigger execute: Workflow/Pipeline execution
+  action: TriggerActionInput!
+}
+
+input DeleteTriggerInput {
+  clientMutationId: String
+  #Application Id
+  applicationId: String!
+  #Id of Trigger to be deleted
+  triggerId: String!
+}
+
+input TriggerConditionInput {
+  #Condition to execute Trigger: ON_NEW_ARTIFACT, ON_PIPELINE_COMPLETION, ON_SCHEDULE, ON_WEBHOOK, ON_NEW_MANIFEST
+  conditionType: ConditionType!
+  #Should be provided when conditionType is ON_NEW_ARTIFACT.
+  artifactConditionInput: ArtifactConditionInput
+  #Should be provided when conditionType is ON_PIPELINE_COMPLETION.
+  pipelineConditionInput: PipelineConditionInput
+  #Should be provided when conditionType is ON_SCHEDULE.
+  scheduleConditionInput: ScheduleConditionInput
+  #Should be provided when conditionType is ON_WEBHOOK.
+  webhookConditionInput: WebhookConditionInput
+  #Beta: Should be provided when conditionType is ON_NEW_MANIFEST.
+  manifestConditionInput: ManifestConditionInput
+}
+
+#Beta: Should be provided when conditionType is ON_NEW_MANIFEST.
+input ManifestConditionInput {
+  appManifestId: String!
+  versionRegex: String
+}
+
+input ArtifactConditionInput {
+  #Artifact Source Id: A new Artifact in this ArtifactSource matching the Artifact Filter will execute the Trigger.
+  artifactSourceId: String!
+  #Build/Tag Filter: Artifacts matching this Filter only will execte the Trigger, Can be Exact match or Regex
+  artifactFilter: String
+  #Regex, True if the Artifact Filter String is provided as regex.
+  regex: Boolean
+}
+
+input PipelineConditionInput {
+  #PipelineId: The trigger will be executed on success of this pipeline.
+  pipelineId: String!
+}
+
+input ScheduleConditionInput {
+  onNewArtifactOnly: Boolean
+  #Cron Expression: The time format must be a cron quartz expression.
+  cronExpression: String!
+}
+
+input WebhookConditionInput {
+  #Source of the webhook: GITHUB/GITLAB/BITBUCKET/CUSTOM(curl based)
+  webhookSourceType: WebhookSource!
+  #Github event, Required if webhookSourceType = GITHUB
+  githubEvent: GitHubEvent
+  #Bitbucket  event, Required if webhookSourceType = BITBUCKET
+  bitbucketEvent: BitbucketEvent
+  #Gitlab  event, Required if webhookSourceType = GITLAB
+  gitlabEvent: GitlabEvent
+  #Branch filter, can be used if using PullRequest or Push events.
+  branchRegex: String
+  # Only for Native Helm and Helm-based Kubernetes deployments. Event type should be PUSH.
+  deployOnlyIfFilesChanged: Boolean
+  #The file names/paths when changed and Pushed, will execute this Trigger.
+  filePaths: [String]
+  #Source Repo Provider setup in Harness
+  gitConnectorId: String
+  #Branch in which the filePaths exist.
+  branchName: String
+  #Git repository name in case when Account level Git connector is provided
+  repoName: String
+  #Beta: Webhook secret to authorize Github webhooks
+  webhookSecret: String
+}
+
+input GitHubEvent {
+  #Github event type like PUSH, PULL_REQUEST, etc
+  event: GitHubEventType
+  #Github Action for the event type.
+  action: GitHubAction
+}
+
+enum GitHubEventType {
+  PULL_REQUEST
+  PUSH
+  DELETE
+  ANY
+  RELEASE
+  PACKAGE
+}
+
+enum GitHubAction {
+  CLOSED
+  EDITED
+  OPENED
+  REOPENED
+  ASSIGNED
+  UNASSIGNED
+  LABELED
+  UNLABELED
+  SYNCHRONIZED
+  REVIEW_REQUESTED
+  REVIEW_REQUESTED_REMOVED
+  PACKAGE_PUBLISHED
+  CREATED
+  PUBLISHED
+  RELEASED
+  UNPUBLISHED
+  DELETED
+  PRE_RELEASED
+}
+
+enum BitbucketEvent {
+  DIAGNOSTICS_PING
+
+  ANY
+  FORK
+  UPDATED
+  COMMIT_COMMENT_CREATED
+
+  BUILD_STATUS_CREATED
+  BUILD_STATUS_UPDATED
+  PUSH
+  REFS_CHANGED
+
+  ISSUE_ANY
+  ISSUE_CREATED
+  ISSUE_UPDATED
+  ISSUE_COMMENT_CREATED
+
+  PULL_REQUEST_ANY
+  PULL_REQUEST_CREATED
+  PULL_REQUEST_UPDATED
+  PULL_REQUEST_APPROVED
+  PULL_REQUEST_APPROVAL_REMOVED
+  PULL_REQUEST_MERGED
+  PULL_REQUEST_DECLINED
+  PULL_REQUEST_COMMENT_CREATED
+  PULL_REQUEST_COMMENT_UPDATED
+  PULL_REQUEST_COMMENT_DELETED
+}
+
+enum GitlabEvent {
+  PULL_REQUEST
+  PUSH
+  ANY
+}
+
+enum ConditionType {
+  ON_NEW_ARTIFACT
+  ON_PIPELINE_COMPLETION
+  ON_SCHEDULE
+  ON_WEBHOOK
+  ON_NEW_MANIFEST
+}
+
+input TriggerActionInput {
+  #Execution type: Workflow/Pipeline
+  executionType: ExecutionType!
+  #Entity identifier of the Workflow or Pipeline
+  entityId: String!
+  #Variable inputs required for the execution
+  variables: [VariableInput]
+  #Artifact Selections required for the execution
+  artifactSelections: [ArtifactSelectionInput]
+  #Beta: Manifest Selections required for the execution
+  manifestSelections: [ManifestSelectionInput]
+  #Skip deployment on the host, if the same artifact is already deployed
+  excludeHostsWithSameArtifact: Boolean
+  # Beta: Coninue with default values as defined in pipeline
+  continueWithDefaultValues: Boolean
+}
+
+input ArtifactSelectionInput {
+  #Id of the service providing artifact selection for
+  serviceId: String!
+  #Artifact Selection type
+  artifactSelectionType: ArtifactSelectionType!
+  # Artifact source Id to select artifact from. Required for LAST_COLLECTED,FROM_PAYLOAD_SOURCE
+  artifactSourceId: String
+  # If Artifact Build/Tag Filter is regex match or not
+  regex: Boolean
+  #Artifact Build/Tag to filter artifacts when using LAST_COLLECTED
+  artifactFilter: String
+  #Workflow Id to select artifact from, Required when using LAST_DEPLOYED_WORKFLOW
+  workflowId: String
+  #Pipeline Id to select artifact from, Required when using LAST_DEPLOYED_PIPELINE
+  pipelineId: String
+}
+
+enum ArtifactSelectionType {
+  FROM_TRIGGERING_ARTIFACT
+  FROM_TRIGGERING_PIPELINE
+  FROM_PAYLOAD_SOURCE
+  LAST_COLLECTED
+  LAST_DEPLOYED_WORKFLOW
+  LAST_DEPLOYED_PIPELINE
+}
+
+#Beta: Manifest Selections required for the execution
+input ManifestSelectionInput {
+  #Id of the service providing manifest selection for
+  serviceId: String!
+  manifestSelectionType: ManifestSelectionType!
+  # Application Manifest Id to select helm chart from. Required for LAST_COLLECTED,WEBHOOK_VARIABLE
+  appManifestId: String
+  #Version regex to filter artifacts when using LAST_COLLECTED
+  versionRegex: String
+  #Workflow Id to select helm chart from, Required when using LAST_DEPLOYED WORKFLOW
+  workflowId: String
+  #Pipeline Id to select artifact from, Required when using LAST_DEPLOYED PIPELINE
+  pipelineId: String
+}
+
+type TriggerPayload {
+  clientMutationId: String
+  trigger: Trigger
+}
+
+type DeleteTriggerPayload {
+  clientMutationId: String
+}
+
+type UpdateTriggerPayload {
+  clientMutationId: String
+  trigger: Trigger
+}

@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/artifactory/api/search",
+    "queryParameters": {
+      "v": {
+        "contains": "1.1"
+      }
+    }
+    },
+
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/artifactory/body-artifact-gav-search-api.json",
+    "headers": {
+      "Content-Type": "text/plain"
+    }
+  }
+}

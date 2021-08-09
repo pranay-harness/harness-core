@@ -1,0 +1,7 @@
+step:
+  identifier: restoreCacheResults
+  name: restore-cache-step-name
+  type: RestoreCache
+  spec:
+    key: test_results
+    failIfNotExist: false

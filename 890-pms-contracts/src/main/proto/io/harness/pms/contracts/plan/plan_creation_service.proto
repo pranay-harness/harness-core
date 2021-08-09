@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/plan/plan_node_proto.proto";
+import "io/harness/pms/contracts/plan/graph_layout.proto";
+import "io/harness/pms/contracts/plan/variables.proto";
+import "io/harness/pms/contracts/plan/execution_metadata.proto";
+import "io/harness/pms/contracts/triggers/trigger_payload.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
+
+service PlanCreationService {
+  rpc createPlan(PlanCreationBlobRequest) returns (PlanCreationResponse);
+  rpc createFilter(FilterCreationBlobRequest) returns (FilterCreationResponse);
+  rpc createVariablesYaml(VariablesCreationBlobRequest) returns (VariablesCreationResponse);
+}
+
+message PlanCreationBlobRequest {
+  map<string, YamlFieldBlob> dependencies = 1;
+  map<string, PlanCreationContextValue> context = 4;
+}
+
+message PlanCreationResponse {
+  oneof response {
+    ErrorResponse errorResponse = 1;
+    PlanCreationBlobResponse blobResponse = 2;
+  }
+}
+
+message PlanCreationBlobResponse {
+  map<string, PlanNodeProto> nodes = 1;
+  map<string, YamlFieldBlob> dependencies = 2;
+  string startingNodeId = 3;
+  map<string, PlanCreationContextValue> context = 4;
+  GraphLayoutInfo graphLayoutInfo = 5;
+}
+
+message GraphLayoutInfo {
+  string startingNodeId = 1;
+  map<string, GraphLayoutNode> layoutNodes = 2;
+}
+
+message PlanCreationContextValue {
+  oneof value {
+    string stringValue = 1;
+    ExecutionMetadata metadata = 2;
+  }
+  triggers.TriggerPayload triggerPayload = 3;
+}
+
+message YamlFieldBlob {
+  string name = 1;
+  bytes blob = 2;
+}
+
+message FilterCreationBlobRequest {
+  map<string, YamlFieldBlob> dependencies = 1;
+  SetupMetadata setupMetadata = 2;
+}
+
+message FilterCreationResponse {
+  oneof response {
+    ErrorResponse errorResponse = 1;
+    FilterCreationBlobResponse blobResponse = 2;
+  }
+}
+
+message FilterCreationBlobResponse {
+  string filter = 1;
+  uint32 stageCount = 2;
+  map<string, YamlFieldBlob> dependencies = 3;
+  map<string, YamlFieldBlob> resolvedDependencies = 4;
+  string startingNodeId = 6;
+  repeated io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntities = 7;
+  repeated string stageNames = 8;
+}
+
+message VariablesCreationBlobRequest {
+  map<string, YamlFieldBlob> dependencies = 1;
+  VariablesCreationMetadata metadata = 2;
+}
+
+message VariablesCreationResponse {
+  oneof response {
+    ErrorResponse errorResponse = 1;
+    VariablesCreationBlobResponse blobResponse = 2;
+  }
+}
+
+message VariablesCreationBlobResponse {
+  map<string, YamlProperties> yamlProperties = 1;
+  map<string, YamlFieldBlob> dependencies = 2;
+  map<string, YamlFieldBlob> resolvedDependencies = 3;
+  repeated ErrorResponse errorResponse = 4;
+  map<string, YamlOutputProperties> yamlOutputProperties = 5;
+}
+
+message ErrorResponse {
+  repeated string messages = 1;
+}
+
+message SetupMetadata {
+  string accountId = 1;
+  string projectId = 2;
+  string orgId = 3;
+  bytes gitSyncBranchContext = 4;
+}
+
+message VariablesCreationMetadata {
+  bytes gitSyncBranchContext = 1;
+}

@@ -1,0 +1,20 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: SSH
+infrastructure:
+- type: AWS_SSH
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  desiredCapacity: 0
+  expressions:
+    loadBalancerId: lb
+    vpcIds: ${tf.vpc}
+    region: ${terraform.region}
+    tags: tag
+  hostConnectionAttrsName: TEST_CLOUD_PROVIDER
+  hostConnectionType: PRIVATE_DNS
+  hostNameConvention: ${host.ec2Instance.privateDnsName.split('\.')[0]}
+  setDesiredCapacity: false
+  useAutoScalingGroup: false
+  usePublicDns: false
+provisioner: infraProvisioner

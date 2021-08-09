@@ -1,0 +1,159 @@
+extend type Mutation {
+  # Beta: Trigger a Workflow/Pipeline Execution.
+  startExecution(input: StartExecutionInput!): StartExecutionPayload @dataFetcher(name: startExecution)
+}
+
+extend type Query {
+  #Beta: Get required inputs to start an execution of a Workflow or Pipeline
+  executionInputs(
+    #Workflow or Pipeline identifier. Use WorkflowByName API to fetch this information
+    entityId: String!
+    #Application identifier of a Workflow or Pipeline. Use applicationByName API to fetch this information
+    applicationId: String!
+    # Execution type: workflow/ pipeline
+    executionType: ExecutionType!
+    #Variable inputs if the Workflow or Pipeline is templatized. Provide the required variable values to know about the required inputs
+    variableInputs: [VariableInput]
+  ): ExecutionInputs @dataFetcher(name: executionInputs)
+}
+
+type ExecutionInputs {
+  #List of Services that need artifact input
+  serviceInputs: [Service]
+  #Beta: List of Services that need manifest input
+  serviceManifestInputs: [Service]
+}
+
+input StartExecutionInput {
+  clientMutationId: String
+
+  #Application identifier of a Workflow or Pipeline
+  applicationId: String!
+  #Entity identifier of a Workflow or Pipeline
+  entityId: String!
+  #Workflow or Pipeline
+  executionType: ExecutionType!
+  #Variable inputs required for the executio
+  variableInputs: [VariableInput]
+  #Service inputs required for the execution
+  serviceInputs: [ServiceInput]
+  #Execution notes
+  notes: String
+  #Skip deployment on the host, if the same artifact is already deployed
+  excludeHostsWithSameArtifact: Boolean
+  #Set to true if the deployment target is specific hosts. Provide specificHosts field along with this.
+  targetToSpecificHosts: Boolean
+  #List of hostnames, if targeted to a specific host
+  specificHosts: [String]
+  #Beta: Continue with default values in case of pipelines with runtime variables
+  continueWithDefaultValues: Boolean
+}
+
+enum ExecutionType {
+  WORKFLOW
+  PIPELINE
+}
+
+input VariableInput {
+  #name of the variable
+  name: String!
+  #value of the variable
+  variableValue: VariableValue!
+}
+
+input VariableValue {
+  #type of the value: name or if
+  type: VariableValueType!
+  #value
+  value: String!
+}
+
+enum VariableValueType {
+  ID
+  NAME
+  EXPRESSION
+}
+
+input ServiceInput {
+  #name of the service providing input for
+  name: String!
+  #artifact inputs fot the service
+  artifactValueInput: ArtfifactValueInput
+  #Beta: Manifest inputs for the service
+  manifestValueInput: ManifestValueInput
+}
+
+input ArtfifactValueInput {
+  #type of the artifactValue: Build number, artifactId or parameterized artifact source
+  valueType: ArtifactInputType!
+
+  #artifact Id input if value type is ARTIFACT_ID
+  artifactId: ArtifactIdInput
+
+  #Build number input if value type is BUILD_NUMBER
+  buildNumber: BuildNumberInput
+
+  #Parameterized artifact source input if value type is PARAMETERIZED_ARTIFACT_SOURCE
+  parameterizedArtifactSource: ParameterizedArtifactSourceInput
+}
+
+enum ArtifactInputType {
+  ARTIFACT_ID
+  BUILD_NUMBER
+  PARAMETERIZED_ARTIFACT_SOURCE
+}
+
+input ArtifactIdInput {
+  #artifactId
+  artifactId: String!
+}
+
+input BuildNumberInput {
+  #name of the artifact source to which the specified build number comes from
+  artifactSourceName: String!
+  #build number to deploy
+  buildNumber: String!
+}
+
+input ParameterizedArtifactSourceInput {
+  #name of the artifact source to which the specified build number comes from
+  artifactSourceName: String!
+  #build number to deploy
+  buildNumber: String!
+  #parameters and their runtime values
+  parameterValueInputs: [ParameterValueInput]
+}
+
+input ManifestValueInput {
+  valueType: ManifestInputType!
+  #Beta: helm chart id if value type is HELM_CHART_ID
+  helmChartId: String
+  #Beta: Build number input if value type is BUILD_NUMBER
+  versionNumber: VersionNumberInput
+}
+
+input VersionNumberInput {
+  #Beta: Name of the application manifest
+  appManifestName: String!
+  #Beta: helm chart version number to be deployed
+  versionNumber: String!
+}
+
+enum ManifestInputType {
+  HELM_CHART_ID
+  VERSION_NUMBER
+}
+
+input ParameterValueInput {
+  #parameter name
+  name: String!
+  #runtime value for parameter
+  value: String!
+}
+
+type StartExecutionPayload {
+  clientMutationId: String
+  execution: Execution
+  #Get This field to know if there are any Warnings/Messages but the execution can be started successfully. For Example in case of user providing extra inputs.
+  warningMessage: String
+}

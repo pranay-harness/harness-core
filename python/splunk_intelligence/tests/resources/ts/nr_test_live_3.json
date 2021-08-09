@@ -1,0 +1,134 @@
+[
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "nquixUZ9Sa-GrQDla_8z7Q",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "G5adqFWYS9i5FOFegS2IbQ",
+        "timeStamp": 1519842600000,
+        "dataCollectionMinute": 1,
+        "host": "harness-30-b4b5b6f95-6zblg",
+        "values": {
+            "averageResponseTime": 0.0259,
+            "callCount": 1611.0,
+            "throughput": 26.8,
+            "requestsPerMinute": 1610.0,
+            "error": 141.0,
+            "apdexScore": 0.91
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "nquixUZ9Sa-GrQDla_8z7Q",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "G5adqFWYS9i5FOFegS2IbQ",
+        "timeStamp": 1519842660000,
+        "dataCollectionMinute": 2,
+        "host": "harness-30-b4b5b6f95-6zblg",
+        "values": {
+            "averageResponseTime": 0.0251,
+            "callCount": 1582.0,
+            "throughput": 26.4,
+            "requestsPerMinute": 1580.0,
+            "error": 134.0,
+            "apdexScore": 0.92
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "nquixUZ9Sa-GrQDla_8z7Q",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "G5adqFWYS9i5FOFegS2IbQ",
+        "timeStamp": 1519842540000,
+        "dataCollectionMinute": 0,
+        "host": "harness-30-b4b5b6f95-6zblg",
+        "values": {
+            "averageResponseTime": 0.107,
+            "callCount": 1364.0,
+            "throughput": 22.7,
+            "requestsPerMinute": 1360.0,
+            "error": 130.0,
+            "apdexScore": 0.9
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "nquixUZ9Sa-GrQDla_8z7Q",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "G5adqFWYS9i5FOFegS2IbQ",
+        "timeStamp": 1519842600000,
+        "dataCollectionMinute": 1,
+        "host": "harness-30-b4b5b6f95-cpq2s",
+        "values": {
+            "averageResponseTime": 0.14,
+            "callCount": 1610.0,
+            "throughput": 26.8,
+            "requestsPerMinute": 1610.0,
+            "error": 136.0,
+            "apdexScore": 0.92
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "nquixUZ9Sa-GrQDla_8z7Q",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "G5adqFWYS9i5FOFegS2IbQ",
+        "timeStamp": 1519842660000,
+        "dataCollectionMinute": 2,
+        "host": "harness-30-b4b5b6f95-cpq2s",
+        "values": {
+            "averageResponseTime": 0.089,
+            "callCount": 1581.0,
+            "throughput": 26.3,
+            "requestsPerMinute": 1580.0,
+            "error": 133.0,
+            "apdexScore": 0.92
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    },
+    {
+        "stateType": "NEW_RELIC",
+        "name": "Go/word",
+        "applicationId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowId": "rCth6EJcS1KZMflrjBIM4g",
+        "workflowExecutionId": "nquixUZ9Sa-GrQDla_8z7Q",
+        "serviceId": "rPm7GRI8TWS5LFtxrf9Z4Q",
+        "stateExecutionId": "G5adqFWYS9i5FOFegS2IbQ",
+        "timeStamp": 1519842540000,
+        "dataCollectionMinute": 0,
+        "host": "harness-30-b4b5b6f95-cpq2s",
+        "values": {
+            "averageResponseTime": 0.113,
+            "callCount": 1366.0,
+            "throughput": 22.8,
+            "requestsPerMinute": 1370.0,
+            "error": 131.0,
+            "apdexScore": 0.9
+        },
+        "createdAt": 0,
+        "lastUpdatedAt": 0
+    }
+]

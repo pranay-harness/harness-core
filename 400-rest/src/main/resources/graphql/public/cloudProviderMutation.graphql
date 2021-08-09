@@ -1,0 +1,139 @@
+extend type Mutation {
+  # Beta
+  createCloudProvider(input: CreateCloudProviderInput!): CreateCloudProviderPayload
+    @dataFetcher(name: createCloudProvider)
+
+  # Beta
+  updateCloudProvider(input: UpdateCloudProviderInput!): UpdateCloudProviderPayload
+    @dataFetcher(name: updateCloudProvider)
+
+  # Beta
+  deleteCloudProvider(input: DeleteCloudProviderInput!): DeleteCloudProviderPayload
+    @dataFetcher(name: deleteCloudProvider)
+}
+
+input CreateCloudProviderInput {
+  clientMutationId: String
+  cloudProviderType: CloudProviderType!
+  pcfCloudProvider: PcfCloudProviderInput
+  spotInstCloudProvider: SpotInstCloudProviderInput
+  gcpCloudProvider: GcpCloudProviderInput
+  k8sCloudProvider: K8sCloudProviderInput
+  physicalDataCenterCloudProvider: PhysicalDataCenterCloudProviderInput
+  azureCloudProvider: AzureCloudProviderInput
+  awsCloudProvider: AwsCloudProviderInput
+}
+
+input UpdateCloudProviderInput {
+  clientMutationId: String
+  cloudProviderId: String!
+  cloudProviderType: CloudProviderType!
+  pcfCloudProvider: UpdatePcfCloudProviderInput
+  spotInstCloudProvider: UpdateSpotInstCloudProviderInput
+  gcpCloudProvider: UpdateGcpCloudProviderInput
+  k8sCloudProvider: UpdateK8sCloudProviderInput
+  physicalDataCenterCloudProvider: UpdatePhysicalDataCenterCloudProviderInput
+  azureCloudProvider: UpdateAzureCloudProviderInput
+  awsCloudProvider: UpdateAwsCloudProviderInput
+}
+
+input DeleteCloudProviderInput {
+  clientMutationId: String
+  cloudProviderId: String!
+}
+
+type CreateCloudProviderPayload {
+  clientMutationId: String
+  cloudProvider: CloudProvider
+}
+
+type UpdateCloudProviderPayload {
+  clientMutationId: String
+  cloudProvider: CloudProvider
+}
+
+type DeleteCloudProviderPayload {
+  clientMutationId: String
+}
+
+input PcfCloudProviderInput {
+  name: String!
+
+  endpointUrl: String!
+  userName: String
+  userNameSecretId: String
+  passwordSecretId: String!
+
+  skipValidation: Boolean
+}
+
+input SpotInstCloudProviderInput {
+  name: String!
+
+  accountId: String!
+  tokenSecretId: String!
+}
+
+input GcpCloudProviderInput {
+  name: String!
+  useDelegate: Boolean
+  delegateSelector: String
+  useDelegateSelectors: Boolean
+  delegateSelectors: [String!]
+  serviceAccountKeySecretId: String
+  skipValidation: Boolean
+}
+
+input PhysicalDataCenterCloudProviderInput {
+  name: String!
+  usageScope: UsageScopeInput
+}
+
+input AzureCloudProviderInput {
+  name: String!
+
+  clientId: String!
+  tenantId: String!
+  keySecretId: String!
+}
+
+input UpdatePcfCloudProviderInput {
+  name: String
+
+  endpointUrl: String
+  userName: String
+  userNameSecretId: String
+  passwordSecretId: String
+
+  skipValidation: Boolean
+}
+
+input UpdateSpotInstCloudProviderInput {
+  name: String
+
+  accountId: String
+  tokenSecretId: String
+}
+
+input UpdateGcpCloudProviderInput {
+  name: String
+  useDelegate: Boolean
+  delegateSelector: String
+  useDelegateSelectors: Boolean
+  delegateSelectors: [String!]
+  serviceAccountKeySecretId: String
+  skipValidation: Boolean
+}
+
+input UpdatePhysicalDataCenterCloudProviderInput {
+  name: String
+  usageScope: UsageScopeInput
+}
+
+input UpdateAzureCloudProviderInput {
+  name: String
+
+  clientId: String
+  tenantId: String
+  keySecretId: String
+}

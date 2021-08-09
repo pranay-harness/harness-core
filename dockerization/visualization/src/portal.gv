@@ -1,0 +1,119 @@
+digraph G {
+        rankdir="LR"
+        node [shape=box];
+        edge [fontsize=10]
+
+        subgraph cluster_1 {
+        "us.gcr.io/platform-205701/harness/feature-manager-openjdk-8u242";
+        "us.gcr.io/platform-205701/harness/feature-verification-service-openjdk-8u242";
+        "us.gcr.io/platform-205701/harness/feature-event-server-openjdk-8u242";
+        "us.gcr.io/platform-205701/harness/feature-command-library-server-openjdk-8u242";
+        "us.gcr.io/platform-205701/harness/feature-cv-nextgen-openjdk-8u242";
+        "us.gcr.io/platform-205701/harness/feature-ci-manager-openjdk-8u242";
+        "us.gcr.io/platform-205701/harness/feature-ng-manager-openjdk-8u242"
+        node [style=filled];
+
+        label = "Feature branch repos";
+        color=blue
+        }
+
+        subgraph cluster_2 {
+            subgraph cluster_3 {
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/batch-processing";
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/command-library-server";
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/event-server";
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/cv-nextgen"
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/manager";
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/ng-manager";
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/verification-service";
+            "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/delegate-proxy";
+            node [style=filled];
+
+            label = "SaaS";
+            color=brown
+            }
+            subgraph cluster_4 {
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/batch-processing";
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/command-library-server";
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/event-server";
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/cv-nextgen"
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/manager";
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/ng-manager";
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/verification-service";
+            "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/delegate-proxy";
+            node [style=filled];
+
+            label = "on-prem - gcp";
+            color=blue
+            }
+            subgraph cluster_5 {
+            "harness/batch-processing";
+            "harness/command-library-server";
+            "harness/event-server";
+            "harness/cv-nextgen"
+            "harness/manager";
+            "harness/ng-manager";
+            "harness/verification-service";
+            "harness/delegate-proxy";
+            node [style=filled];
+
+            label = "on-prem docker-hub unsigned";
+            color=brown
+            }
+            subgraph cluster_6 {
+            "harness/manager-signed";
+            "harness/verification-service-signed";
+            node [style=filled];
+
+            label = "on-prem docker-hub signed";
+            color=blue
+            }
+        label = "Portal release branch repos";
+        color=green
+        }
+
+        "alpine:3.12" -> "us.gcr.io/platform-205701/alpine:safe"
+        "openjdk:8u242-jre" -> "us.gcr.io/platform-205701/harness/serverjre_8:242python"
+
+        "us.gcr.io/platform-205701/alpine:safe" -> "us.gcr.io/platform-205701/alpine:safe-apm" [label="portal-alpine-base-apm"]
+        "us.gcr.io/platform-205701/alpine:safe" -> "us.gcr.io/platform-205701/harness/feature-command-library-server-openjdk-8u242"[label="openjdk-portal-feature -> openjdk-command-library-server-dockerizer-feature"]
+        "us.gcr.io/platform-205701/alpine:safe" -> "us.gcr.io/platform-205701/harness/feature-event-server-openjdk-8u242"[label="openjdk-portal-feature -> openjdk-event-server-dockerizer-feature"]
+
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/feature-manager-openjdk-8u242"[label="openjdk-portal-feature -> openjdk-manager-dockerizer-feature"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/feature-verification-service-openjdk-8u242"[label="openjdk-portal-feature -> openjdk-verification-dockerizer-feature"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/feature-ci-manager-openjdk-8u242"[label="openjdk-portal-feature -> ci-manager-dockerizer-feature"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/feature-ng-manager-openjdk-8u242"[label="openjdk-release-portal -> ng-manager-dockerizer-feature"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/feature-cv-nextgen-openjdk-8u242"[label="openjdk-portal-feature -> openjdk-cv-nextgen-dockerizer-feature"]
+
+
+        "us.gcr.io/platform-205701/alpine:safe" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/event-server"[label="openjdk-release-portal -> openjdk-release-event-server-dockerizer, PURPOSE=saas"]
+        "us.gcr.io/platform-205701/harness/serverjre_8:242python" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/batch-processing"[label="openjdk-release-portal -> openjdk-release-batch-processing-dockerizer, PURPOSE=saas"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/command-library-server"[label="openjdk-release-portal -> openjdk-release-command-library-server-dockerizer, PURPOSE=saas"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/manager"[label="openjdk-release-portal -> openjdk-release-manager-dockerizer, PURPOSE=saas"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/verification-service"[label="openjdk-release-portal -> openjdk-release-verification-dockerizer, PURPOSE=saas"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/ng-manager"[label="openjdk-release-portal -> openjdk-release-ng-manager-dockerizer, PURPOSE=saas"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/delegate-proxy"[label="openjdk-release-portal -> storage-proxy-docker-image, PURPOSE=saas"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/saas-openjdk-8u242/cv-nextgen"[label="openjdk-release-portal -> openjdk-release-cv-nextgen-dockerizer, PURPOSE=saas"]
+
+        "us.gcr.io/platform-205701/alpine:safe" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/event-server"[label="openjdk-release-portal -> openjdk-release-event-server-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/harness/serverjre_8:242python" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/batch-processing"[label="openjdk-release-portal -> openjdk-release-batch-processing-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/command-library-server"[label="openjdk-release-portal -> openjdk-release-command-library-server-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/manager"[label="openjdk-release-portal -> openjdk-release-manager-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/verification-service"[label="openjdk-release-portal -> openjdk-release-verification-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/ng-manager"[label="openjdk-release-portal -> openjdk-release-ng-manager-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/delegate-proxy"[label="openjdk-release-portal -> storage-proxy-docker-image, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/cv-nextgen"[label="openjdk-release-portal -> openjdk-release-cv-nextgen-dockerizer, PURPOSE=on-prem"]
+
+        "us.gcr.io/platform-205701/alpine:safe" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/event-server"[label="openjdk-release-portal -> openjdk-release-event-server-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/harness/serverjre_8:242python" -> "us.gcr.io/platform-205701/harness/on-prem-openjdk-8u242/batch-processing"[label="openjdk-release-portal -> openjdk-release-batch-processing-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/command-library-server"[label="openjdk-release-portal -> openjdk-release-command-library-server-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/manager"[label="openjdk-release-portal -> openjdk-release-manager-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/verification-service"[label="openjdk-release-portal -> openjdk-release-verification-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/ng-manager"[label="openjdk-release-portal -> openjdk-release-ng-manager-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/delegate-proxy"[label="openjdk-release-portal -> storage-proxy-docker-image, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/cv-nextgen"[label="openjdk-release-portal -> openjdk-release-cv-nextgen-dockerizer, PURPOSE=on-prem"]
+
+
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/manager-signed"[label="openjdk-release-portal -> openjdk-release-manager-dockerizer, PURPOSE=on-prem"]
+        "us.gcr.io/platform-205701/alpine:safe-apm" -> "harness/verification-service-signed"[label="openjdk-release-portal -> openjdk-release-verification-dockerizer, PURPOSE=on-prem"]
+        }

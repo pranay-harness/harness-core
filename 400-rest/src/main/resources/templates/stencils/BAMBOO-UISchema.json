@@ -1,0 +1,9 @@
+{
+  "ui:order": ["bambooConfigId", "planName", "parameters", "waitInterval", "timeoutMillis"],
+  "variables": {
+    "classNames": "__2Col"
+  },
+  "filePathsForAssertion": {
+    "classNames": "__2Col"
+  }
+}

@@ -1,0 +1,9 @@
+- collectionUrl: customLogVerificationQuery
+  collectionBody: body${host}
+  responseType: JSON
+  method: POST
+  responseMapping:
+    hostJsonPath: hits.hits[*]._source.kubernetes.pod.name
+    timestampJsonPath: hits.hits[*]._source.@timestamp
+    timeStampFormat: hh:mm a
+    logMessageJsonPath: hits.hits[*]._source.log

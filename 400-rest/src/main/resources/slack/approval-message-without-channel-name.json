@@ -1,0 +1,31 @@
+{
+  "username" : "Harness",
+  "icon_url" : "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png",
+  "blocks" : [
+    {
+      "text" : {
+        "text" : "${approvalMessage} \n*Approval Pending*, would you like to _approve_?",
+        "type" : "mrkdwn"
+      },
+      "type" : "section"
+    },
+    {
+      "elements" : [
+        {
+          "action_id" : "button_accept",
+          "text" : {"text" : "Approve", "type" : "plain_text"},
+          "type" : "button",
+          "value" : "${slackApprovalParams}"
+        },
+        {
+          "action_id" : "button_reject",
+          "text" : {"text" : "Reject", "type" : "plain_text"},
+          "type" : "button",
+          "value" : "${slackApprovalParams}"
+        }
+      ],
+      "type" : "actions",
+      "block_id" : "actionblock789"
+    }
+  ]
+}

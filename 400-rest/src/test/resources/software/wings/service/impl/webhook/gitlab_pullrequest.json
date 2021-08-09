@@ -1,0 +1,126 @@
+{
+  "object_kind": "merge_request",
+  "event_type": "merge_request",
+  "user": {
+    "name": "Harsh Jain",
+    "username": "harshjain123",
+    "avatar_url": "https://secure.gravatar.com/avatar/2541002afb2d2a7ec9df1f293a83ce47?s=80&d=identicon"
+  },
+  "project": {
+    "id": 12603683,
+    "name": "HarshProject",
+    "description": "Description",
+    "web_url": "https://gitlab.com/harshjain123/harshproject",
+    "avatar_url": null,
+    "git_ssh_url": "git@gitlab.com:harshjain123/harshproject.git",
+    "git_http_url": "https://gitlab.com/harshjain123/harshproject.git",
+    "namespace": "harshjain123",
+    "visibility_level": 0,
+    "path_with_namespace": "harshjain123/harshproject",
+    "default_branch": "master",
+    "ci_config_path": null,
+    "homepage": "https://gitlab.com/harshjain123/harshproject",
+    "url": "git@gitlab.com:harshjain123/harshproject.git",
+    "ssh_url": "git@gitlab.com:harshjain123/harshproject.git",
+    "http_url": "https://gitlab.com/harshjain123/harshproject.git"
+  },
+  "object_attributes": {
+    "assignee_id": null,
+    "author_id": 4069234,
+    "created_at": "2019-06-03 12:57:05 UTC",
+    "description": "",
+    "head_pipeline_id": 64435558,
+    "id": 30651913,
+    "iid": 1,
+    "last_edited_at": null,
+    "last_edited_by_id": null,
+    "merge_commit_sha": null,
+    "merge_error": null,
+    "merge_params": {
+      "force_remove_source_branch": "0"
+    },
+    "merge_status": "can_be_merged",
+    "merge_user_id": null,
+    "merge_when_pipeline_succeeds": false,
+    "milestone_id": null,
+    "source_branch": "harshBranch",
+    "source_project_id": 12603683,
+    "state": "opened",
+    "target_branch": "master",
+    "target_project_id": 12603683,
+    "time_estimate": 0,
+    "title": "Update HarshFile",
+    "updated_at": "2019-06-03 12:57:05 UTC",
+    "updated_by_id": null,
+    "url": "https://gitlab.com/harshjain123/harshproject/merge_requests/1",
+    "source": {
+      "id": 12603683,
+      "name": "HarshProject",
+      "description": "Description",
+      "web_url": "https://gitlab.com/harshjain123/harshproject",
+      "avatar_url": null,
+      "git_ssh_url": "git@gitlab.com:harshjain123/harshproject.git",
+      "git_http_url": "https://gitlab.com/harshjain123/harshproject.git",
+      "namespace": "harshjain123",
+      "visibility_level": 0,
+      "path_with_namespace": "harshjain123/harshproject",
+      "default_branch": "master",
+      "ci_config_path": null,
+      "homepage": "https://gitlab.com/harshjain123/harshproject",
+      "url": "git@gitlab.com:harshjain123/harshproject.git",
+      "ssh_url": "git@gitlab.com:harshjain123/harshproject.git",
+      "http_url": "https://gitlab.com/harshjain123/harshproject.git"
+    },
+    "target": {
+      "id": 12603683,
+      "name": "HarshProject",
+      "description": "Description",
+      "web_url": "https://gitlab.com/harshjain123/harshproject",
+      "avatar_url": null,
+      "git_ssh_url": "git@gitlab.com:harshjain123/harshproject.git",
+      "git_http_url": "https://gitlab.com/harshjain123/harshproject.git",
+      "namespace": "harshjain123",
+      "visibility_level": 0,
+      "path_with_namespace": "harshjain123/harshproject",
+      "default_branch": "master",
+      "ci_config_path": null,
+      "homepage": "https://gitlab.com/harshjain123/harshproject",
+      "url": "git@gitlab.com:harshjain123/harshproject.git",
+      "ssh_url": "git@gitlab.com:harshjain123/harshproject.git",
+      "http_url": "https://gitlab.com/harshjain123/harshproject.git"
+    },
+    "last_commit": {
+      "id": "9ae4a42b564e4ad9607358776a4f1363d4f7a9a6",
+      "message": "Update HarshFile",
+      "timestamp": "2019-06-03T12:56:57Z",
+      "url": "https://gitlab.com/harshjain123/harshproject/commit/9ae4a42b564e4ad9607358776a4f1363d4f7a9a6",
+      "author": {
+        "name": "Harsh Jain",
+        "email": "mail2hjain34@gmail.com"
+      }
+    },
+    "work_in_progress": false,
+    "total_time_spent": 0,
+    "human_total_time_spent": null,
+    "human_time_estimate": null,
+    "assignee_ids": [
+
+    ]
+  },
+  "labels": [
+
+  ],
+  "changes": {
+    "total_time_spent": {
+      "previous": null,
+      "current": 0
+    }
+  },
+  "repository": {
+    "name" : "HarshProject",
+             "url" : "git@gitlab.com:harshjain123/harshproject.git",
+                     "description" : "Description",
+                                     "homepage"
+        : "https://gitlab.com/harshjain123/harshproject"
+  }
+}

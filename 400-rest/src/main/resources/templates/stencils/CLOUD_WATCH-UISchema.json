@@ -1,0 +1,6 @@
+{
+  "ui:order" : [
+    "analysisServerConfigId", "region", "comparisonStrategy",
+    "analysisTolerance", "timeDuration"
+  ]
+}

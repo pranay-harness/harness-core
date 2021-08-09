@@ -1,0 +1,52 @@
+extend type Query {
+  #Get details about an infrastructure using Id
+  infrastructureDefinition(infrastructureId: String!): InfrastructureDefinition
+    @dataFetcher(name: infrastructureDefinition)
+
+  #Get details about an infrastructure using name
+  infrastructureDefinitionByName(infrastructureName: String!, environmentId: String!): InfrastructureDefinition
+    @dataFetcher(name: infrastructureDefinition)
+
+  #Get infrastructures using filters
+  infrastructureDefinitions(
+    filters: [InfrastructureDefinitionFilter]
+    limit: Int!
+    offset: Int
+  ): InfrastructureDefinitionConnection @dataFetcher(name: infrastructureDefinitionConnection)
+}
+
+input InfrastructureDefinitionFilter {
+  environment: IdFilter
+  infrastructureDefinition: IdFilter
+  tag: InfrastructureDefinitionTagFilter
+  deploymentType: StringFilter
+}
+
+input InfrastructureDefinitionTagFilter {
+  entityType: InfrastructureDefinitionTagType
+  tags: [TagInput]
+}
+
+enum InfrastructureDefinitionTagType {
+  ENVIRONMENT
+}
+
+input infrastructureDefinitionData {
+  InfrastructureId: String
+  InfrastructureName: String
+  EnvId: String
+}
+
+type InfrastructureDefinitionConnection {
+  pageInfo: PageInfo
+  nodes: [InfrastructureDefinition]
+}
+
+type InfrastructureDefinition {
+  id: String
+  name: String
+  createdAt: DateTime
+  deploymentType: String
+  scopedToServices: [String]
+  environment: Environment
+}

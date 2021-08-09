@@ -1,0 +1,75 @@
+package software.wings.verification.cloudwatch;
+
+import static io.harness.rule.OwnerRule.SOWMYA;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.sm.StateType;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+@Slf4j
+public class CloudWatchCVServiceConfigurationTest extends WingsBaseTest {
+  private static final String configName = "configName";
+  private static final String accountId = "accountId";
+  private static final String connectorId = "connectorId";
+  private static final String envId = "envId";
+  private static final String serviceId = "serviceId";
+  private static final StateType stateType = StateType.CLOUD_WATCH;
+
+  private Map<String, List<CloudWatchMetric>> getLBMetrics() {
+    Map<String, List<CloudWatchMetric>> metrics = new HashMap<>();
+    List<CloudWatchMetric> list = new ArrayList<>();
+    list.add(CloudWatchMetric.builder().metricName("metric1").metricType("type1").build());
+    list.add(CloudWatchMetric.builder().metricName("metric1").metricType("type1").build());
+    metrics.put("Key1", list);
+    return metrics;
+  }
+
+  private CloudWatchCVServiceConfiguration createCloudWatchConfig() {
+    CloudWatchCVServiceConfiguration config = new CloudWatchCVServiceConfiguration();
+    config.setName(configName);
+    config.setAccountId(accountId);
+    config.setConnectorId(connectorId);
+    config.setEnvId(envId);
+    config.setServiceId(serviceId);
+    config.setStateType(stateType);
+    config.setEnabled24x7(true);
+
+    config.setLoadBalancerMetrics(getLBMetrics());
+
+    return config;
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCloneCloudWatchConfig() {
+    CloudWatchCVServiceConfiguration config = createCloudWatchConfig();
+
+    CloudWatchCVServiceConfiguration clonedConfig = (CloudWatchCVServiceConfiguration) config.deepCopy();
+
+    assertThat(clonedConfig.getName()).isEqualTo(configName);
+    assertThat(clonedConfig.getAccountId()).isEqualTo(accountId);
+    assertThat(clonedConfig.getConnectorId()).isEqualTo(connectorId);
+    assertThat(clonedConfig.getEnvId()).isEqualTo(envId);
+    assertThat(clonedConfig.getServiceId()).isEqualTo(serviceId);
+    assertThat(clonedConfig.getStateType()).isEqualTo(stateType);
+    assertThat(clonedConfig.isEnabled24x7()).isTrue();
+
+    assertThat(clonedConfig.getLoadBalancerMetrics()).isEqualTo(getLBMetrics());
+    assertThat(clonedConfig.getRegion()).isNull();
+    assertThat(clonedConfig.getEc2InstanceNames()).isNull();
+  }
+}

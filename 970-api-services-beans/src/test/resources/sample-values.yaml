@@ -1,0 +1,15 @@
+Master:
+  Name: jenkins-master
+  lifecycle:
+  #  postStart:
+  #      - "-a"
+  RollingUpdate: {}
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+  customInitContainers: []
+Slave:
+  InstallPlugins:
+  - kubernetes:1.14.0
+  - workflow-job:2.31

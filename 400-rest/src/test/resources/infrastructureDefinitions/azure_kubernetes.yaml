@@ -1,0 +1,12 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AZURE
+deploymentType: KUBERNETES
+infrastructure:
+- type: AZURE_KUBERNETES
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  clusterName: myHarnessCluster
+  namespace: default
+  releaseName: release-${infra.kubernetes.infraId}
+  resourceGroup: default
+  subscriptionId: 12d2db62-5aa9-471d-84bb-faa489b3e319

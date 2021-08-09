@@ -1,0 +1,163 @@
+pipeline:
+  name: My Deployment Pipeline
+  identifier: myPipeline1
+  description: This is my first pipeline. It is really concrete
+  stages:
+  - stage:
+      identifier: qa
+      name: qa
+      type: Deployment
+      spec:
+        serviceConfig:
+          service:
+            identifier: service1
+            name: service1
+          serviceDefinition:
+            type: Kubernetes
+            spec:
+              artifacts:
+                primary:
+                  type: Dockerhub
+                  spec:
+                    connectorRef: npQuotecenter
+                    imagePath: image2
+                    tag: latest
+                sidecars:
+                - sidecar:
+                    identifier: sidecar1
+                    type: Dockerhub
+                    spec:
+                      connectorRef: myDocker2
+                      imagePath: sidecarimage
+                      tag: tag2
+              manifests:
+              - manifest:
+                  identifier: specFiles
+                  type: K8sManifest
+                  spec:
+                    store:
+                      type: Git
+                      spec:
+                        connectorRef: myGitConnector
+                        gitFetchType: Branch
+                        branch: master
+                        paths:
+                        - path3
+                        - path4
+              manifestOverrideSets:
+              - overrideSet:
+                  identifier: overrideSet1
+                  manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my-git-connector
+                            gitFetchType: Branch
+                            branch: masterOverride2
+                            paths:
+                            - test/spec
+        infrastructure:
+          infrastructureDefinition:
+            type: KubernetesDirect
+            spec:
+              connectorRef: <+input>
+              namespace: prod2
+          environment:
+            name: env1
+            identifier: env1
+            type: PreProduction
+        execution:
+          steps:
+          - parallel:
+            - step:
+                identifier: rolloutDeployment
+                name: Rollout Deployment
+                type: K8sRollingDeploy
+                spec:
+                  timeout: 100
+                  skipDryRun: true
+          - stepGroup:
+              identifier: HttpValidationSteps
+              steps:
+              - step:
+                  identifier: HttpValidation
+                  type: Http
+                  spec:
+                    url: http://httpstat.us/500
+                    socketTimeoutMillis: 30000
+          - step:
+              identifier: httpStep1
+              name: http step 1
+              type: Http
+              spec:
+                url: http://httpstat.us/500
+                method: GET
+                socketTimeoutMillis: 1000
+          rollbackSteps:
+          - step:
+              identifier: rollbackRolloutDeployment1
+              name: Rollback Rollout Deployment
+              type: K8sRollingRollback
+              spec:
+                timeout: 5
+          - step:
+              identifier: httpStep4
+              name: http rollback step 2
+              type: Http
+              spec:
+                url: http://httpstat.us/200
+                method: GET
+                socketTimeoutMillis: 1000
+  - stage:
+      identifier: prod
+      name: Prod stage
+      type: Deployment
+      spec:
+        serviceConfig:
+          useFromStage:
+            stage: new-qa
+          stageOverrides:
+            artifacts:
+              primary:
+                type: Dockerhub
+                spec:
+                  tag: 1.18
+            useManifestOverrideSets:
+            - overrideSet1
+            - overrideSet2
+            manifests:
+            - manifest:
+                identifier: prodOverride
+                type: Values
+                spec:
+                  store:
+                    type: Git
+                    spec:
+                      connectorRef: my-connector
+                      gitFetchType: Branch
+                      branch: <+input>
+                      paths:
+                      - test/prod/values.yaml
+        infrastructure:
+          useFromStage:
+            stage: qaStage
+            overrides:
+              environment:
+                identifier: env1
+              infrastructureDefinition:
+                type: KubernetesDirect
+                spec:
+                  releaseName: testingprod
+        execution:
+          steps:
+          - step:
+              identifier: rolloutDeployment
+              name: Rollout Deployment
+              type: K8sRollingDeploy
+              spec:
+                timeout: 120000
+                skipDryRun: false

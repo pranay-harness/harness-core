@@ -1,0 +1,50 @@
+LOADBALANCER:
+    - metricName: loadbalancing.googleapis.com/https/backend_latencies
+      metric: HTTPSBackendLatencies
+      displayName: Backend Latencies
+      unit: ms
+      kind: ERROR
+      valueType: Distribution
+
+    - metricName: loadbalancing.googleapis.com/https/request_count
+      metric: HTTPSRequestCount
+      displayName: Request Count
+      unit: number
+      kind: THROUGHPUT
+      valueType: Int64
+
+PODNAME:
+    - metricName: kubernetes.io/container/memory/request_utilization
+      metric: MemoryRequestUtilization
+      displayName: Memory Request Utilization
+      unit: number
+      kind: VALUE
+      valueType: Int64
+
+    - metricName: kubernetes.io/container/cpu/core_usage_time
+      metric: CPUUsageTime
+      displayName: CPU Usage Time
+      unit: number
+      kind: VALUE
+      valueType: Int64
+
+    - metricName: kubernetes.io/container/memory/request_bytes
+      metric: MemoryRequest
+      displayName: Memory Request
+      unit: number
+      kind: VALUE
+      valueType: Int64
+
+    - metricName: kubernetes.io/container/cpu/limit_utilization
+      metric: CPULimitUtilization
+      displayName: CPU Limit Utilization
+      unit: number
+      kind: VALUE
+      valueType: Int64
+
+    - metricName: kubernetes.io/container/cpu/request_utilization
+      metric: CPURequestUtilization
+      displayName: CPU Request Utilization
+      unit: number
+      kind: VALUE
+      valueType: Int64

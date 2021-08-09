@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/rest/api/latest/plan.json?authType=basic&max-results=1"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/bamboo/body-get-total-plans.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

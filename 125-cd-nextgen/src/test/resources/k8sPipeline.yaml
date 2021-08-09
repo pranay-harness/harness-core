@@ -1,0 +1,79 @@
+pipeline:
+  name: "Manager Service Deployment"
+  identifier: k8s
+  tags:
+    company: harness
+  stages:
+    - stage:
+        identifier: qaStage
+        name: "qa stage"
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              identifier: manager
+              name: manager
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                artifacts:
+                  primary:
+                    type: "Dockerhub"
+                    spec:
+                      connectorRef: account.docker
+                      imagePath: "library/nginx"
+                      tag: "1.19"
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          # Git|Local
+                          spec:
+                            connectorRef: my_git_connector
+                            # Branch | Commit
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/spec
+                  - manifest:
+                      identifier: qaOverride
+                      type: Values
+                      spec:
+                        store:
+                          type: Git  #Git|Local
+                          spec:
+                            connectorRef: my_git_connector
+                            # Branch | Commit
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/baseValues.yaml
+                              - test/qa/values_1.yaml
+          infrastructure:
+            environment:
+              identifier: stagingInfra
+              type: PreProduction
+              tags:
+                cloud: GCP
+                team: cdp
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                # Spec for Infrastructure Type kubernetes-direct
+                connectorRef: account.argocd-account
+                # namespace
+                namespace: harness
+                # release name
+                releaseName: testingqa
+          execution:
+            steps:
+              - step:
+                  name: "Rollout Deployment"
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  spec:
+                    timeout: 120000
+                    skipDryRun: false

@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package log.verification;
+
+option java_package = "software.wings.service.impl.verification.generated";
+option java_outer_classname = "TimeSeriesMetricRecordProto";
+
+message MetricValues {
+  map<string, double> metricValues = 1;
+}
+
+message MetricDeeplinks {
+  map<string, string> metricDeeplinks = 1;
+}
+
+message TxnMetricValues {
+  map<string, MetricValues> values = 1;
+  map<string, MetricDeeplinks> deeplinkMetadata = 2;
+}

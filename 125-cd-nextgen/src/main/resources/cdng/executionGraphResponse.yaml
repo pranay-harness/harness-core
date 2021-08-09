@@ -1,0 +1,119 @@
+{
+  "rootNodeId": "Ty_-CSAoShC7huCAzfjl6g",
+  "nodeMap": {
+    "gYO3l4TQQvSaDAf1LEQ5aQ": {
+      "uuid": "gYO3l4TQQvSaDAf1LEQ5aQ",
+      "name": "environment",
+      "endTs": 1600079943495,
+      "stepType": "ENVIRONMENT",
+      "status": "SUCCESS"
+    },
+    "YLap7hH0SpOXgKW0ZSF44A": {
+      "uuid": "YLap7hH0SpOXgKW0ZSF44A",
+      "name": "artifacts",
+      "endTs": 1600079941395,
+      "lastUpdatedAt": 1600079941395,
+      "stepType": "ARTIFACT_FORK_STEP",
+      "status": "SUCCESS"
+    },
+    "uhkk3uOKRU-izlEDn8qXlA": {
+      "uuid": "uhkk3uOKRU-izlEDn8qXlA",
+      "name": "MANIFESTS",
+      "endTs": 1600079931903,
+      "stepType": "MANIFEST_STEP",
+      "status": "SUCCESS"
+    },
+    "WQihquIbS0SwRb6Fv18heg": {
+      "uuid": "WQihquIbS0SwRb6Fv18heg",
+      "name": "infrastructureSpecification",
+      "endTs": 1600079944451,
+      "stepType": "INFRASTRUCTURE",
+      "status": "SUCCESS"
+    },
+    "0ugp-sh-QCSKLXaAzk9BSA": {
+      "uuid": "0ugp-sh-QCSKLXaAzk9BSA",
+      "name": "service",
+      "endTs": 1600079942433,
+      "stepType": "SERVICE_STEP",
+      "status": "SUCCESS"
+    },
+    "-T6xJ7S2SSWPgMZWc05LYg": {
+      "uuid": "-T6xJ7S2SSWPgMZWc05LYg",
+      "name": "infrastructure",
+      "endTs": 1600079945407,
+      "stepType": "SECTION_CHAIN",
+      "status": "SUCCESS"
+    },
+    "Ty_-CSAoShC7huCAzfjl6g": {
+      "uuid": "Ty_-CSAoShC7huCAzfjl6g",
+      "name": "qa stage",
+      "stepType": "SECTION_CHAIN",
+      "status": "RUNNING"
+    },
+    "bI4RNYnNQnaVYkEfasFjzg": {
+      "uuid": "bI4RNYnNQnaVYkEfasFjzg",
+      "name": "primary",
+      "endTs": 1600079940404,
+      "stepType": "ARTIFACT_STEP",
+      "status": "SUCCESS"
+    },
+    "WOLUCzOCQDWyjJyOLN_9TQ": {
+      "uuid": "WOLUCzOCQDWyjJyOLN_9TQ",
+      "name": "Rollout Deployment",
+      "stepType": "K8S_ROLLING",
+      "status": "RUNNING"
+    },
+    "EBb7aN29SDmnoBrS3js0RA": {
+      "uuid": "EBb7aN29SDmnoBrS3js0RA",
+      "name": "execution",
+      "stepType": "SECTION_CHAIN",
+      "status": "RUNNING"
+    }
+  },
+  "nodeAdjacencyListMap": {
+    "gYO3l4TQQvSaDAf1LEQ5aQ": {
+      "children": [],
+      "next": "WQihquIbS0SwRb6Fv18heg"
+    },
+    "YLap7hH0SpOXgKW0ZSF44A": {
+      "children": [
+        "bI4RNYnNQnaVYkEfasFjzg"
+      ]
+    },
+    "uhkk3uOKRU-izlEDn8qXlA": {
+      "children": []
+    },
+    "WQihquIbS0SwRb6Fv18heg": {
+      "children": []
+    },
+    "0ugp-sh-QCSKLXaAzk9BSA": {
+      "children": [
+        "YLap7hH0SpOXgKW0ZSF44A",
+        "uhkk3uOKRU-izlEDn8qXlA"
+      ],
+      "next": "-T6xJ7S2SSWPgMZWc05LYg"
+    },
+    "-T6xJ7S2SSWPgMZWc05LYg": {
+      "children": [
+        "gYO3l4TQQvSaDAf1LEQ5aQ"
+      ],
+      "next": "EBb7aN29SDmnoBrS3js0RA"
+    },
+    "Ty_-CSAoShC7huCAzfjl6g": {
+      "children": [
+        "0ugp-sh-QCSKLXaAzk9BSA"
+      ]
+    },
+    "bI4RNYnNQnaVYkEfasFjzg": {
+      "children": []
+    },
+    "WOLUCzOCQDWyjJyOLN_9TQ": {
+      "children": []
+    },
+    "EBb7aN29SDmnoBrS3js0RA": {
+      "children": [
+        "WOLUCzOCQDWyjJyOLN_9TQ"
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: AWS_LAMBDA
+infrastructure:
+- type: AWS_AWS_LAMBDA
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  expressions:
+    role: iam
+    securityGroupIds: ${terraform.sg}
+    vpcId: ${vpc}
+    region: region
+    subnetIds: ${terraform.subnet}
+provisioner: infraProvisioner

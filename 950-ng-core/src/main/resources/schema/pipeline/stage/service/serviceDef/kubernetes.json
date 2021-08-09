@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "primary": {
+          "$ref": "<<schema/pipeline/stage/service/serviceDef/artifact/artifact.json>>"
+        }
+      }
+    },
+    "artifactOverrideSets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "overrideSet": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identifier": {
+                  "type": "string"
+                },
+                "artifacts": {
+                  "type": "object",
+                  "properties": {
+                    "sidecars": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sidecar": {
+                            "$ref": "<<schema/pipeline/stage/service/serviceDef/artifact/artifactWithIdentifier.json>>"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "manifests": {
+      "$ref": "<<schema/pipeline/stage/service/serviceDef/manifests/manifests.json>>"
+    },
+    "manifestOverrideSets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "overrideSet": {
+            "type": "object",
+            "properties": {
+              "identifier": {
+                "type": "string"
+              },
+              "manifests": {
+                "$ref": "<<schema/pipeline/stage/service/serviceDef/manifests/manifests.json>>"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

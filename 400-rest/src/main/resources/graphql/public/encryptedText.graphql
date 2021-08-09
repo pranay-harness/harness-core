@@ -1,0 +1,35 @@
+input EncryptedTextInput {
+  secretManagerId: String
+  name: String!
+  value: String
+  secretReference: String
+  parameters: [EncryptedDataParams]
+  usageScope: UsageScopeInput
+  scopedToAccount: Boolean
+  inheritScopesFromSM: Boolean
+}
+
+input UpdateEncryptedText {
+  name: String
+  value: String
+  secretReference: String
+  parameters: [EncryptedDataParams]
+  usageScope: UsageScopeInput
+  scopedToAccount: Boolean
+  inheritScopesFromSM: Boolean
+}
+
+input EncryptedDataParams {
+  name: String
+  value: String
+}
+
+type EncryptedText implements Secret {
+  secretManagerId: String
+  name: String
+  secretType: SecretType
+  id: String
+  usageScope: UsageScope
+  scopedToAccount: Boolean
+  inheritScopesFromSM: Boolean
+}

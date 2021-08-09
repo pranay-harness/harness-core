@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/v2/image_500/tags/list"
+  },
+  "response": {
+    "status": 500,
+    "body": "Not found",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

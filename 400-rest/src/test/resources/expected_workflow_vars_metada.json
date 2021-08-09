@@ -1,0 +1,36 @@
+[
+  {
+    "name": "service2",
+    "description": "Variable for Service entity in Rollback Rolling",
+    "mandatory": true,
+    "runtimeInput": true,
+    "value": "NA2uRPKLTqm9VU3dPENb-g",
+    "fixed": false,
+    "allowMultipleValues": false,
+    "metadata": {
+      "artifactType": "DOCKER",
+      "deploymentType": "KUBERNETES",
+      "relatedField": "pipelineInfra",
+      "entityType": "SERVICE",
+      "stateType": "PHASE"
+    },
+    "type": "ENTITY"
+  },
+  {
+    "name": "pipelineInfra",
+    "description": "Variable for Infrastructure Definition entity in Rollback Rolling",
+    "mandatory": true,
+    "runtimeInput": true,
+    "value": "CzcfKUN2Q_eCrlrV66r4ug",
+    "fixed": false,
+    "allowMultipleValues": false,
+    "metadata": {
+      "relatedField": "service1,service2",
+      "deploymentType": "KUBERNETES",
+      "envId": "imRBOGz2ReyY89dr4K-vrQ",
+      "entityType": "INFRASTRUCTURE_DEFINITION",
+      "stateType": "PHASE"
+    },
+    "type": "ENTITY"
+  }
+]

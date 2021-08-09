@@ -1,0 +1,39 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBindingList
+items:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: rolebinding-1
+    labels:
+      app: prometheus-operator-prometheus
+      chart: prometheus-operator-5.12.3
+      release: "release-name"
+      heritage: "Tiller"
+      namespace: "kube-system"
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: release-name-prometheus-op-prometheus
+  subjects:
+  - kind: ServiceAccount
+    name: release-name-prometheus-op-prometheus
+    namespace: default
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: rolebinding-2
+    labels:
+      app: prometheus-operator-prometheus
+      chart: prometheus-operator-5.12.3
+      release: "release-name"
+      heritage: "Tiller"
+      namespace: "default"
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: release-name-prometheus-op-prometheus
+  subjects:
+    - kind: ServiceAccount
+      name: release-name-prometheus-op-prometheus
+      namespace: default

@@ -1,0 +1,123 @@
+name: "CVNG tasks status count"
+identifier: "cvng_tasks_status_counts"
+metricGroup: "account"
+metrics:
+- metricName: "cvng_step_task_non_final_status_count"
+  metricDefinition: "CVNGStepTask non final status count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "cvng_step_task_in_progress_count"
+  metricDefinition: "CVNGStepTask IN_PROGRESS count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "analysis_state_machine_non_final_status_count"
+  metricDefinition: "AnalysisStateMachine non final status count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "analysis_state_machine_created_count"
+  metricDefinition: "AnalysisStateMachine CREATED count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "analysis_state_machine_running_count"
+  metricDefinition: "AnalysisStateMachine RUNNING count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "analysis_state_machine_retry_count"
+  metricDefinition: "AnalysisStateMachine RETRY count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "analysis_state_machine_transition_count"
+  metricDefinition: "AnalysisStateMachine TRANSITION count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "data_collection_task_non_final_status_count"
+  metricDefinition: "DataCollectionTask non final status count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "data_collection_task_queued_count"
+  metricDefinition: "DataCollectionTask QUEUED count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "data_collection_task_running_count"
+  metricDefinition: "DataCollectionTask RUNNING count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "data_collection_task_waiting_count"
+  metricDefinition: "DataCollectionTask WAITING count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "verification_job_instance_non_final_status_count"
+  metricDefinition: "VerificationJobInstance non final status count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "verification_job_instance_queued_count"
+  metricDefinition: "VerificationJobInstance QUEUED count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "verification_job_instance_running_count"
+  metricDefinition: "VerificationJobInstance RUNNING count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "learning_engine_task_non_final_status_count"
+  metricDefinition: "LearningEngineTask non final status count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "learning_engine_task_queued_count"
+  metricDefinition: "LearningEngineTask QUEUED count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null
+- metricName: "learning_engine_task_running_count"
+  metricDefinition: "LearningEngineTask RUNNING count"
+  type: "LastValue"
+  distribution: null
+  unit: "1"
+  measure: null
+  view: null

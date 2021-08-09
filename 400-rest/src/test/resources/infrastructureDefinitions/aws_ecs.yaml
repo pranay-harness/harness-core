@@ -1,0 +1,17 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AWS
+deploymentType: ECS
+infrastructure:
+- type: AWS_ECS
+  assignPublicIp: false
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  clusterName: ecs-cluster
+  executionRole: arn:aws:iam::448640225317:role/OrganizationAccountAccessRole
+  launchType: FARGATE
+  region: us-east-1
+  securityGroupIds:
+  - sg-01f9750e6902eaf14
+  subnetIds:
+  - subnet-0581525f93ec3267f
+  vpcId: vpc-058e7fbdc7163accf

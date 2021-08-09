@@ -1,0 +1,19 @@
+{
+  "request" : {
+    "url" : "/crumbIssuer/api/json",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "/jenkins/body-api-json-wausd.json",
+    "headers" : {
+      "Server" : "nginx/1.4.6 (Ubuntu)",
+      "Date" : "Mon, 24 Oct 2016 23:08:17 GMT",
+      "Content-Type" : "application/json;charset=UTF-8",
+      "Connection" : "keep-alive",
+      "X-Content-Type-Options" : "nosniff",
+      "X-Jenkins" : "2.19.1",
+      "X-Jenkins-Session" : "07785e17"
+    }
+  }
+}

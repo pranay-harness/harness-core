@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "version": "1.1",
+      "integration": false
+    },
+    {
+      "version": "1.0.1.0-20170930.195729-1",
+      "integration": true
+    },
+    {
+      "version": "1.0.0-20170930.195402-1",
+      "integration": true
+    },
+    {
+      "version": "1.0",
+      "integration": false
+    }
+  ]
+}

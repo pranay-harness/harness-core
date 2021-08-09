@@ -1,0 +1,50 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: https
+      port: 8725
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 8726
+      maxRequestHeaderSize: 100KiB
+
+mongo:
+  uri: mongodb://localhost:27017/git-test-harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+gitSyncClientConfig:
+  target: localhost:13001
+  authority: localhost
+
+grpcServerConfig:
+  connectors:
+    - port: 12011
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 12012
+
+redis:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "dummyRedisUrl"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+  password: ""
+
+scmConnectionConfig:
+  url: localhost:8091

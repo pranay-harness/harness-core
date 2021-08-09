@@ -1,0 +1,72 @@
+directive @dataFetcher(
+  name: DataFetcherEnum!
+  useBatch: Boolean = false
+  contextFieldArgsMap: String
+) on FIELD_DEFINITION
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query
+type Mutation
+
+enum NumericOperator {
+  EQUALS
+  GREATER_THAN
+  GREATER_THAN_OR_EQUALS
+  IN
+  LESS_THAN
+  LESS_THAN_OR_EQUALS
+  NOT_EQUALS
+}
+
+enum TimeOperator {
+  EQUALS
+  BEFORE
+  AFTER
+}
+
+enum StringOperator {
+  EQUALS
+  IN
+}
+
+enum IdOperator {
+  EQUALS
+  IN
+  NOT_NULL
+  NOT_IN
+  LIKE
+}
+
+enum EnumOperator {
+  EQUALS
+  IN
+}
+
+input StringFilter {
+  operator: StringOperator!
+  values: [String]!
+}
+
+input IdFilter {
+  operator: IdOperator!
+  values: [String]!
+}
+
+input NumberFilter {
+  operator: NumericOperator!
+  values: [Number]!
+}
+
+input TimeFilter {
+  operator: TimeOperator!
+  value: DateTime!
+}
+
+input EntityTypeFilter {
+  operator: EnumOperator
+  values: [EntityType]
+}

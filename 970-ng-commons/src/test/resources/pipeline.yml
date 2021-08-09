@@ -1,0 +1,11 @@
+infrastructure:
+  inner1: kubernetes-direct
+  inner2: <+abc> == "def"
+  inner3:  <+input>
+  inner4: <+input>.allowedValues(dev, <+env>, <+env2>, stage)
+  inner5: <+input>.allowedValues(jexl(<+env> == 'prod' ? 'dev, qa':'prod, stage'))
+  inner6: <+input>.regex(^prod*)
+  inner7: 4.3
+  inner8: <+input>.allowedValues(jexl(<+env> == 'dev' ? (<+team> == 'a' ? 'dev_a, dev_b':'dev_qa, dev_qb'):'prod, stage'))
+  inner9: valueFromInputSet.allowedValues(dev, nondev, prod)
+  inner10: <+dollar.expr.from.inputSet>.allowedValues(dev, <+env>, <+env2>, stage)

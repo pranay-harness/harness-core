@@ -1,0 +1,35 @@
+pipeline:
+  identifier: NAME_PLACEHOLDER
+  name: Integration Pipeline
+  description: DESCRIPTION_PLACEHOLDER
+  stages:
+    - stage:
+        identifier: buildharnessportal
+        type: CI
+        spec:
+          description: This stage is run hourly to build binaries from master and upload
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: account.ciplayground
+              namespace: harness-delegate
+          cloneCodebase: true # default is true
+          execution:
+            steps:
+              - step:
+                  identifier: ping
+                  type: Run
+                  spec:
+                    command: |
+                      sleep 10
+                      redis-cli -h cache ping
+                    image: "shubham149/redis"
+                    resources:
+                      limits:
+                        cpu: 400
+                        memory: 500
+          dependencies:
+            - identifier: cache
+              type: Service
+              spec:
+                image: "shubham149/redis"

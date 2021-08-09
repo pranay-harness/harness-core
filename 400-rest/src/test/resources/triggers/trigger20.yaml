@@ -1,0 +1,8 @@
+harnessApiVersion: '1.0'
+type: TRIGGER
+continueWithDefaultValues: false
+executionName: w1
+executionType: Workflow
+triggerCondition:
+- type: NEW_MANIFEST
+  serviceName: k8s

@@ -1,0 +1,8 @@
+harnessApiVersion: '1.0'
+type: CONFIG_FILE
+checksum: 1ade0f805b01ba1dcbd7f9aaa041694a
+checksumType: MD5
+encrypted: false
+fileName: initialize_replica_set.js
+targetFilePath: initialize_replica_set.js
+targetToAllEnv: true

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/nexus/repository/docker-group/v2/wingsplugins/todolist/tags/list"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/nexus/body-docker-tags-api.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

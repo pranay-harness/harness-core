@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["s3_uploader_mock.go"],
+    importpath = "github.com/wings-software/portal/commons/go/lib/awsutils/mocks",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_aws_aws_sdk_go//service/s3/s3manager:go_default_library",
+        "@com_github_golang_mock//gomock:go_default_library",
+    ],
+)

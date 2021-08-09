@@ -1,0 +1,3 @@
+{
+  "ui:order": ["zone", "nodeCount", "machineType"]
+}

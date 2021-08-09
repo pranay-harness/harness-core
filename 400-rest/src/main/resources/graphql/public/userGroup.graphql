@@ -1,0 +1,195 @@
+extend type Mutation {
+  createUserGroup(input: CreateUserGroupInput!): CreateUserGroupPayload @dataFetcher(name: createUserGroup)
+  updateUserGroup(input: UpdateUserGroupInput!): UpdateUserGroupPayload @dataFetcher(name: updateUserGroup)
+  updateUserGroupPermissions(input: UpdateUserGroupPermissionsInput): UpdateUserGroupPermissionsPayload
+    @dataFetcher(name: updateUserGroupPermissions)
+  deleteUserGroup(input: DeleteUserGroupInput!): DeleteUserGroupPayload @dataFetcher(name: deleteUserGroup)
+  addUserToUserGroup(input: AddUserToUserGroupInput!): AddUserToUserGroupPayload @dataFetcher(name: addUserToUserGroup)
+  removeUserFromUserGroup(input: RemoveUserFromUserGroupInput!): RemoveUserFromUserGroupPayload
+    @dataFetcher(name: removeUserFromUserGroup)
+  addAccountPermission(input: AddAccountPermissionInput!): AddAccountPermissionPayload
+    @dataFetcher(name: addAccountPermission)
+  addAppPermission(input: AddAppPermissionInput!): AddAppPermissionPayload @dataFetcher(name: addAppPermission)
+}
+
+extend type Query {
+  userGroup(userGroupId: String!): UserGroup @dataFetcher(name: userGroup)
+  userGroups(limit: Int!, offset: Int): UserGroupConnection @dataFetcher(name: userGroupConnection)
+  userGroupByName(name: String!): UserGroup @dataFetcher(name: userGroup)
+}
+
+input CreateUserGroupInput {
+  clientMutationId: String
+  name: String!
+  description: String
+  userIds: [String]
+  ssoSetting: SSOSettingInput
+  permissions: Permissions
+  notificationSettings: NotificationSettingsInput
+}
+
+input UpdateUserGroupInput {
+  clientMutationId: String
+  name: String
+  userGroupId: String!
+  description: String
+  userIds: [String]
+  ssoSetting: SSOSettingInput
+  permissions: Permissions
+  notificationSettings: NotificationSettingsInput
+}
+
+input SSOSettingInput {
+  ldapSettings: LDAPSettingsInput
+  samlSettings: SAMLSettingsInput
+}
+
+input LDAPSettingsInput {
+  ssoProviderId: String!
+  groupName: String!
+  groupDN: String!
+}
+
+input SAMLSettingsInput {
+  ssoProviderId: String!
+  groupName: String!
+}
+
+input UpdateUserGroupPermissionsInput {
+  clientMutationId: String
+  userGroupId: String!
+  permissions: Permissions!
+}
+
+input DeleteUserGroupInput {
+  clientMutationId: String
+  userGroupId: String!
+}
+
+input AddUserToUserGroupInput {
+  clientMutationId: String
+  userGroupId: String!
+  userId: String!
+}
+
+type AddUserToUserGroupPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+input RemoveUserFromUserGroupInput {
+  clientMutationId: String
+  userGroupId: String!
+  userId: String!
+}
+
+type RemoveUserFromUserGroupPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+input AddAccountPermissionInput {
+  clientMutationId: String
+  userGroupId: String!
+  accountPermission: AccountPermissionType
+}
+
+type AddAccountPermissionPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+input AddAppPermissionInput {
+  clientMutationId: String
+  userGroupId: String!
+  appPermission: ApplicationPermissionInput
+}
+
+type AddAppPermissionPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+type UserGroup {
+  id: String
+  name: String
+  description: String
+  users(limit: Int!, offset: Int): UserConnection
+    @dataFetcher(name: userConnection, contextFieldArgsMap: "{ \"userGroup\": \"id\"}")
+  ssoSetting: LinkedSSOSetting
+  importedByScim: Boolean
+  isSSOLinked: Boolean
+  notificationSettings: NotificationSettings
+  permissions: UserGroupPermissions
+}
+
+type UserGroupConnection {
+  pageInfo: PageInfo
+  nodes: [UserGroup]
+}
+
+type CreateUserGroupPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+type UpdateUserGroupPayload {
+  clientMutationId: String
+  userGroup: UserGroup
+}
+
+interface LinkedSSOSetting {
+  ssoProviderId: String
+}
+
+type LDAPSettings implements LinkedSSOSetting {
+  ssoProviderId: String
+  groupName: String
+  groupDN: String
+}
+
+type SAMLSettings implements LinkedSSOSetting {
+  ssoProviderId: String
+  groupName: String
+}
+
+type UpdateUserGroupPermissionsPayload {
+  clientMutationId: String
+  permissions: UserGroupPermissions
+}
+
+input NotificationSettingsInput {
+  sendNotificationToMembers: Boolean
+  sendMailToNewMembers: Boolean
+  groupEmailAddresses: [String]
+  slackNotificationSetting: SlackNotificationSettingInput
+  pagerDutyIntegrationKey: String
+  microsoftTeamsWebhookUrl: String
+}
+
+input SlackNotificationSettingInput {
+  slackChannelName: String
+  slackWebhookURL: String
+}
+
+type NotificationSettings {
+  sendNotificationToMembers: Boolean
+  sendMailToNewMembers: Boolean
+  groupEmailAddresses: [String]
+  slackNotificationSetting: SlackNotificationSetting
+  microsoftTeamsWebhookUrl: String
+}
+
+type SlackNotificationSetting {
+  slackChannelName: String
+  slackWebhookURL: String
+}
+
+enum RequestStatus {
+  SUCCESS
+  FAILED
+}
+
+type DeleteUserGroupPayload {
+  clientMutationId: String
+}

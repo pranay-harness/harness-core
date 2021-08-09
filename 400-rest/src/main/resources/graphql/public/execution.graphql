@@ -1,0 +1,232 @@
+extend type Query {
+  # Get the execution status of a Workflow.
+  execution(executionId: String!): Execution @dataFetcher(name: execution)
+
+  # Get a list of executions, with filtering options.
+  executions(
+    filters: [ExecutionFilter] #Set this flag to true to include workflow executions along pipeline
+    includeIndirectExecutions: Boolean
+    limit: Int!
+    offset: Int
+  ): ExecutionConnection @dataFetcher(name: executionConnection)
+}
+
+input ExecutionFilter {
+  execution: IdFilter
+  application: IdFilter
+  service: IdFilter
+  cloudProvider: IdFilter
+  environment: IdFilter
+  environmentType: EnvironmentTypeFilter
+  status: IdFilter
+  endTime: TimeFilter
+  startTime: TimeFilter
+  duration: NumberFilter
+  triggeredBy: IdFilter
+  trigger: IdFilter
+  workflow: IdFilter
+  pipeline: IdFilter
+  creationTime: TimeFilter
+  pipelineExecutionId: IdFilter
+  tag: DeploymentTagFilter
+}
+
+input DeploymentTagFilter {
+  entityType: DeploymentTagType
+  tags: [TagInput]
+}
+
+enum DeploymentTagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+  DEPLOYMENT
+}
+
+enum ExecutionStatus {
+  ABORTED
+  ERROR
+  FAILED
+  PAUSED
+  QUEUED
+  RESUMED
+  RUNNING
+  SUCCESS
+  WAITING
+  SKIPPED
+  REJECTED
+  EXPIRED
+}
+
+enum ExecuteOptions {
+  WEB_UI
+  GRAPHQL_API
+}
+
+type ExecutedByUser {
+  user: User
+  using: ExecuteOptions
+}
+
+type ExecutedByAPIKey {
+  apiKey: APIKey
+  using: ExecuteOptions
+}
+
+type ExecutedAlongPipeline {
+  execution: PipelineExecution @dataFetcher(name: execution)
+}
+
+type ExecutedByTrigger {
+  trigger: Trigger @dataFetcher(name: trigger)
+}
+
+union Cause = ExecutedByUser | ExecutedAlongPipeline | ExecutedByTrigger | ExecutedByAPIKey
+
+interface Execution {
+  id: String
+  application: Application
+  createdAt: DateTime
+  startedAt: DateTime
+  endedAt: DateTime
+  status: ExecutionStatus
+  cause: Cause
+  notes: String
+  tags: [DeploymentTag]
+  failureDetails: String
+}
+
+type DeploymentTag {
+  name: String
+  value: String
+}
+
+type ExecutionConnection {
+  pageInfo: PageInfo
+  nodes: [Execution]
+}
+
+# Type for workflow execution
+type WorkflowExecution implements Execution {
+  # Workflow Execution Id
+  id: String
+
+  application: Application
+    @dataFetcher(name: application, useBatch: true, contextFieldArgsMap: "{ \"applicationId\": \"appId\"}")
+
+  # DateTime when execution started
+  createdAt: DateTime
+
+  # DateTime when execution started
+  startedAt: DateTime
+
+  # DateTime when execution ended
+  endedAt: DateTime
+
+  # Artifact used during deployment
+  artifacts: [Artifact]
+
+  # Artifact used during rollback deployment
+  rollbackArtifacts: [Artifact]
+
+  # Status of the workflow
+  status: ExecutionStatus
+
+  outcomes: OutcomeConnection @dataFetcher(name: outcomeConnection, contextFieldArgsMap: "{ \"executionId\": \"id\"}")
+
+  workflow: Workflow
+    @dataFetcher(name: workflow, useBatch: true, contextFieldArgsMap: "{ \"workflowId\": \"workflowId\"}")
+
+  cause: Cause
+
+  notes: String
+
+  tags: [DeploymentTag]
+
+  failureDetails: String
+}
+
+# Type for pipeline execution
+type PipelineExecution implements Execution {
+  # Workflow Execution Id
+  id: String
+
+  application: Application
+    @dataFetcher(name: application, useBatch: true, contextFieldArgsMap: "{ \"applicationId\": \"appId\"}")
+
+  # DateTime when execution started
+  createdAt: DateTime
+
+  # DateTime when execution started
+  startedAt: DateTime
+
+  # DateTime when execution ended
+  endedAt: DateTime
+
+  # Status of the workflow
+  status: ExecutionStatus
+
+  pipeline: Pipeline
+    @dataFetcher(name: pipeline, useBatch: true, contextFieldArgsMap: "{ \"pipelineId\": \"pipelineId\"}")
+
+  cause: Cause
+
+  notes: String
+
+  tags: [DeploymentTag]
+
+  # Execution details of every stage
+  pipelineStageExecutions: [PipelineStageExecution]
+
+  memberExecutions: ExecutionConnection
+    @dataFetcher(name: executionConnection, contextFieldArgsMap: "{ \"PipelineExecution\": \"id\"}")
+
+  failureDetails: String
+}
+
+interface PipelineStageExecution {
+  # Pipeline stage element ID
+  pipelineStageElementId: String
+  # Pipeline step name
+  pipelineStepName: String
+  # Pipeline stage name
+  pipelineStageName: String
+}
+
+type ApprovalStageExecution implements PipelineStageExecution {
+  # Pipeline stage element ID
+  pipelineStageElementId: String
+  # Pipeline step name
+  pipelineStepName: String
+  # Pipeline stage name
+  pipelineStageName: String
+
+  # Execution status of the stage
+  status: ExecutionStatus
+
+  # Approval method type
+  approvalStepType: ApprovalStepType
+}
+
+type WorkflowStageExecution implements PipelineStageExecution {
+  # Pipeline stage element ID
+  pipelineStageElementId: String
+  # Pipeline step name
+  pipelineStepName: String
+  # Pipeline stage name
+  pipelineStageName: String
+
+  # Workflow execution ID
+  workflowExecutionId: String
+  # Stage execution status
+  status: ExecutionStatus
+  # List of runtime variables
+  runtimeInputVariables: [Variable]
+}
+
+enum ApprovalStepType {
+  JIRA
+  SERVICENOW
+  USER_GROUP
+  SHELL_SCRIPT
+}

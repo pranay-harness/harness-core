@@ -1,0 +1,21 @@
+name: "Test Script"
+gallery: "Harness"
+folderPath: "Harness/Shell Scripts"
+version: "1"
+description: "This is a shell script template"
+keywords: [shellscript]
+referencedTemplateUri: "Harness/Shell Scripts/Test Script:1"
+variables:
+- name: "scriptString"
+  description: "Script to execute"
+- name: "timeoutMillis"
+  description: "Type of script"
+  value: 600000
+- name: "outputVars"
+  description: "Script Output (List of environment variables)"
+templateObject:
+  type: "SHELL_SCRIPT"
+  scriptString: "${scriptString}"
+  scriptType: "BASH"
+  timeoutMillis: ${timeoutMillis}
+  outputVars: "${outputVars}"

@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+package io.harness.product.ci.engine.proto;
+
+option java_multiple_files = true;
+option go_package = "cienginepb";
+
+import "product/ci/engine/proto/publish_artifact.proto";
+
+enum ShellType {
+  SH = 0;
+  BASH = 1;
+}
+
+message StepContext {
+  int32 num_retries = 1;  // Deprecated
+  int64 execution_timeout_secs = 2;
+}
+
+message PublishArtifactsStep {
+  repeated UploadFile files = 1;
+  repeated BuildPublishImage images = 2;
+}
+
+message Report {
+  enum Type {
+    UNKNOWN = 0;
+    JUNIT = 1;
+  }
+  Type type = 2;
+  // List of paths to collect reports from. Can be regex as well.
+  repeated string paths = 3;
+}
+
+message RunTestsStep {
+  string args = 1;
+  string language = 2;   // language used for running tests. Java | Python | Go etc.
+  string buildTool = 3;  // build tool used for running tests. maven | bazel | gradle.
+  string testAnnotations = 4;
+  string packages = 5;
+  bool runOnlySelectedTests = 6;
+  StepContext context = 7;
+  uint32 container_port = 8;           // Port of the container on which run step needs to be executed.
+  repeated Report reports = 9;         // Spec for publishing junit reports
+  string preTestCommand = 10;          // Pre-commands to setup environment before running tests
+  string postTestCommand = 11;         // Post commands after running tests
+  repeated string envVarOutputs = 12;  // produced output variables
+  // TODO (Vistaar): Proxy this call from addon to LE.
+  string diff_files = 13;
+  map<string, string> environment = 14;
+}
+
+message RunStep {
+  string command = 1;
+  StepContext context = 2;
+  repeated string env_var_outputs = 3;  // output variables to export as step outcome
+  uint32 container_port = 4;            // Deprecated. Port of the container on which run step needs to be executed
+  repeated Report reports = 5;
+  map<string, string> environment = 6;
+  ShellType shell_type = 7;
+}
+
+message PluginStep {
+  string image = 1;
+  StepContext context = 2;
+  // Deprecated. Port of the container on which plugin step needs to be executed
+  uint32 container_port = 3;
+  // Optional. Entrypoint for plugin step. If empty, it calls docker registry to retrieve the entrypoint
+  repeated string entrypoint = 4;
+  map<string, string> environment = 5;
+  string artifact_file_path = 6;  // file path to store generated artifact file
+}
+
+message SaveCacheStep {
+  string key = 1;
+  repeated string paths = 2;
+}
+
+message RestoreCacheStep {
+  string key = 1;
+  bool fail_if_not_exist = 2;
+}
+
+message UnitStep {
+  string id = 1;
+  string display_name = 2;
+  oneof step {
+    RunStep run = 3;
+    SaveCacheStep save_cache = 4;
+    RestoreCacheStep restore_cache = 5;
+    PublishArtifactsStep publish_artifacts = 6;
+    PluginStep plugin = 9;
+    RunTestsStep runTests = 10;
+  }
+  string callback_token = 7;
+  string task_id = 8;
+  string skip_condition = 11;
+  string log_key = 12;
+  string account_id = 13;
+  uint32 container_port = 14;  // Port of the container on which step needs to be executed
+}
+
+message ParallelStep {
+  string id = 1;
+  string display_name = 2;
+  repeated UnitStep steps = 3;
+}
+
+message Step {
+  oneof step {
+    ParallelStep parallel = 1;
+    UnitStep unit = 2;
+  }
+}
+
+message Execution {
+  repeated Step steps = 1;
+  string account_id = 2;
+}
+
+message UpdateStateRequest {
+  enum Action {
+    UNKNOWN = 0;
+    PAUSE = 1;
+    RESUME = 2;
+  }
+  Action action = 1;
+}
+
+message UpdateStateResponse {}
+
+message GetImageEntrypointRequest {
+  string id = 1;
+  string image = 2;
+  string secret = 3;  // docker config secret for image
+}
+
+message GetImageEntrypointResponse {
+  repeated string entrypoint = 1;
+  repeated string args = 2;
+}
+
+message StepOutput {
+  map<string, string> output = 2;
+}
+
+message EvaluateJEXLRequest {
+  string step_id = 1;
+  repeated string expressions = 2;
+  map<string, StepOutput> step_outputs = 3;  // Output of all the previously executed steps of a stage
+}
+
+message EvaluateJEXLResponse {
+  map<string, string> evaluated_expressions = 1;  // expression is key & value is evaluated expression
+}
+
+message PingRequest {}
+
+message PingResponse {}
+
+message ExecuteStepRequest {
+  string execution_id = 1;
+  UnitStep step = 2;
+  string tmp_file_path = 3;
+  string delegate_svc_endpoint = 4;
+}
+
+message ExecuteStepResponse {}
+
+service LiteEngine {
+  // Synchronous RPC to execute a step
+  // Deprecated
+  rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
+
+  // Synchronous RPC to fetch image entrypoint
+  rpc GetImageEntrypoint(GetImageEntrypointRequest) returns (GetImageEntrypointResponse);
+
+  // Synchronous RPC to evaluate JEXL expression
+  rpc EvaluateJEXL(EvaluateJEXLRequest) returns (EvaluateJEXLResponse);
+
+  // Synchronous RPC to check health of lite-engine service.
+  rpc Ping(PingRequest) returns (PingResponse);
+
+  // Asynchronous RPC that starts execution of a step.
+  // It is idempotent such that if two requests are fired with same id, then
+  // only one request will start execution of the step.
+  rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
+}

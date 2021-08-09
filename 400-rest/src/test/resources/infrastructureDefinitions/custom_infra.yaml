@@ -1,0 +1,13 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: CUSTOM
+deploymentType: CUSTOM
+deploymentTypeTemplateUri: Harness/My-Deployment-Types/My-Webshphere
+infrastructure:
+- type: CUSTOM
+  deploymentTypeTemplateVersion: '1'
+  infraVariables:
+  - name: clusterName
+    value: production-us-east-1
+  - name: username
+    value: admin

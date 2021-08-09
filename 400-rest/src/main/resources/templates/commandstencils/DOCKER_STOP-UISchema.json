@@ -1,0 +1,6 @@
+{
+  "commandString": {
+    "ui:widget": "textarea",
+    "classNames": "__execCommandTextarea"
+  }
+}

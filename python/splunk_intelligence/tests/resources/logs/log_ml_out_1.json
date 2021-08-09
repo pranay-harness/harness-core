@@ -1,0 +1,1677 @@
+{
+    "_id" : "_0bwLNSyQry62m8NSmVt6A",
+    "stateExecutionId" : "DSytWSRPQaqzMFv2HruETw",
+    "applicationId" : "-jRbnwPZRoOLj2NEhrbJnQ",
+    "stateType" : "SPLUNKV2",
+    "logCollectionMinute" : 3,
+    "isBaseLineCreated" : true,
+    "query" : "*exception* OR *error*",
+    "score" : 0.21,
+    "unknown_events" : [
+        [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "6",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 12,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:54,628 \u001b[32m[pool-10-thread-11]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=KSTEUrneQl263_Y9aOX9AQ, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=KSTEUrneQl263_Y9aOX9AQ), closedAt=0) ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.854862700346732,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ],
+        [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 12,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:55,239 \u001b[32m[pool-10-thread-14]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=UMn5VYHwSYuzO9EPzFTVhQ, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=UMn5VYHwSYuzO9EPzFTVhQ), closedAt=0) ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.854862700346732,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ]
+    ],
+    "test_events" : {
+        "10000" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "11",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 8,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,508 \u001b[32m[dw-172 - POST /api/users]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$33d255c4\u001b[0;39m - USER_ALREADY_REGISTERED error for existingUser - User{name='Admin', email='admin@harness.io', companyName='null', accountName='null', roles=[Role{name='Account Administrator', description='Account Adminitrator members have all the access within account', accountId='kmpySmUISimoRrJL6NL73w', permissions=[], roleType=ACCOUNT_ADMIN, allApps=false}], accounts=[Account{companyName='Harness Inc', accountName='Harness Inc', accountKey='2f6b0988b6fb3370073c3d0505baee59'}], lastLogin=0, emailVerified=true, statsFetchedOn=0} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 8,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:55,909 \u001b[32m[dw-141 - GET /api/users/verify-email?email=admin@harness.io]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$33d255c4\u001b[0;39m - USER_ALREADY_REGISTERED error for existingUser - User{name='Admin', email='admin@harness.io', companyName='null', accountName='null', roles=[Role{name='Account Administrator', description='Account Adminitrator members have all the access within account', accountId='kmpySmUISimoRrJL6NL73w', permissions=[], roleType=ACCOUNT_ADMIN, allApps=false}], accounts=[Account{companyName='Harness Inc', accountName='Harness Inc', accountKey='2f6b0988b6fb3370073c3d0505baee59'}], lastLogin=0, emailVerified=true, statsFetchedOn=0} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "1010001" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "6",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 1000000,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:54,628 \u001b[32m[pool-10-thread-11]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=KSTEUrneQl263_Y9aOX9AQ, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=KSTEUrneQl263_Y9aOX9AQ), closedAt=0) ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.854862700346732,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ],
+        "1010000" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 1000001,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:55,239 \u001b[32m[pool-10-thread-14]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=UMn5VYHwSYuzO9EPzFTVhQ, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=UMn5VYHwSYuzO9EPzFTVhQ), closedAt=0) ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.854862700346732,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ],
+        "10002" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "9",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,509 \u001b[32m[dw-172 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=USER_ALREADY_REGISTERED, errorType=ERROR, message=User with this email is already registered.} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "1" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 13,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 11,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:42,008 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-11]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url null connectivity. \njava.net.MalformedURLException: null\n\tat java.net.URL.<init>(URL.java:627)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)\nCaused by: java.lang.NullPointerException: null\n\tat java.net.URL.<init>(URL.java:532)\n\t... 10 common frames omitted",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10001" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "10",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 1,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,509 \u001b[32m[dw-172 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: USER_ALREADY_REGISTERED \nsoftware.wings.exception.WingsException: USER_ALREADY_REGISTERED\n\tat software.wings.service.impl.UserServiceImpl.verifyRegisteredOrAllowed(UserServiceImpl.java:252)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:146)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.971428571428571,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 1,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:55,640 \u001b[32m[dw-159 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: INVALID_EMAIL \nsoftware.wings.exception.WingsException: INVALID_EMAIL\n\tat software.wings.service.impl.UserServiceImpl.verifyRegisteredOrAllowed(UserServiceImpl.java:245)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:146)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.971428571428571,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "8",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 1,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,931 \u001b[32m[dw-159 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: DOMAIN_NOT_ALLOWED_TO_REGISTER \nsoftware.wings.exception.WingsException: DOMAIN_NOT_ALLOWED_TO_REGISTER\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:144)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.971428571428571,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "3" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 10,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:33,508 \u001b[32m[dw-207 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_ARTIFACT_SERVER, errorType=ERROR, message=Jenkins URL must be a valid URL} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "2" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 13,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:37,872 \u001b[32m[dw-206 - POST /api/splunkv2/get-logs?accountId=kmpySmUISimoRrJL6NL73w&clusterLevel=L0&compareCurrent=false]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.GenericExceptionMapper\u001b[0;39m - Exception occurred: null \njava.lang.NullPointerException: null\n\tat software.wings.sm.StateMachineExecutionSimulator.getStatusBreakdown(StateMachineExecutionSimulator.java:79)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.refreshBreakdown(WorkflowExecutionServiceImpl.java:1505)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.listExecutions(WorkflowExecutionServiceImpl.java:238)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIds(AnalysisServiceImpl.java:225)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIdWithLogs(AnalysisServiceImpl.java:205)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLogData(AnalysisServiceImpl.java:161)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.SplunkResource.getRawLogData(SplunkResource.java:65)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "5" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 2,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 2,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:31,978 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-13]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url BAD_URL connectivity. \njava.net.MalformedURLException: no protocol: BAD_URL\n\tat java.net.URL.<init>(URL.java:593)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "4" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 4,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:33,508 \u001b[32m[dw-207 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: INVALID_ARTIFACT_SERVER \nsoftware.wings.exception.WingsException: INVALID_ARTIFACT_SERVER\n\tat software.wings.service.impl.JenkinsBuildServiceImpl.validateArtifactServer(JenkinsBuildServiceImpl.java:151)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.joor.Reflect.on(Reflect.java:677)\n\tat org.joor.Reflect.call(Reflect.java:379)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:47)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:20)\n\tat software.wings.delegatetasks.AbstractDelegateRunnableTask.run(AbstractDelegateRunnableTask.java:40)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10006" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 7,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:55,646 \u001b[32m[dw-159 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_EMAIL, errorType=ERROR, message=Email is not a valid email.} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10008" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "7",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 9,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,932 \u001b[32m[dw-159 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=DOMAIN_NOT_ALLOWED_TO_REGISTER, errorType=ERROR, message=DOMAIN_NOT_ALLOWED_TO_REGISTER} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10005" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 5,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:56,660 \u001b[32m[dw-159 - GET /api/users/verify-email?email=xyz@some-domain.io]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$33d255c4\u001b[0;39m - USER_DOMAIN_NOT_ALLOWED error for emailAddress - xyz@some-domain.io ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        ]
+    },
+    "control_events" : {
+        "10000" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "13",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 8,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,137 \u001b[32m[dw-158 - POST /api/users]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$48621316\u001b[0;39m - USER_ALREADY_REGISTERED error for existingUser - User{name='Admin', email='admin@harness.io', companyName='null', accountName='null', roles=[Role{name='Account Administrator', description='Account Adminitrator members have all the access within account', accountId='kmpySmUISimoRrJL6NL73w', permissions=[], roleType=ACCOUNT_ADMIN, allApps=false}], accounts=[Account{companyName='Harness Inc', accountName='Harness Inc', accountKey='2f6b0988b6fb3370073c3d0505baee59'}], lastLogin=0, emailVerified=true, statsFetchedOn=0} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 8,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:27,624 \u001b[32m[dw-141 - GET /api/users/verify-email?email=admin@harness.io]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$48621316\u001b[0;39m - USER_ALREADY_REGISTERED error for existingUser - User{name='Admin', email='admin@harness.io', companyName='null', accountName='null', roles=[Role{name='Account Administrator', description='Account Adminitrator members have all the access within account', accountId='kmpySmUISimoRrJL6NL73w', permissions=[], roleType=ACCOUNT_ADMIN, allApps=false}], accounts=[Account{companyName='Harness Inc', accountName='Harness Inc', accountKey='2f6b0988b6fb3370073c3d0505baee59'}], lastLogin=0, emailVerified=true, statsFetchedOn=0} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10009" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "8",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 3,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:26,190 \u001b[32m[pool-10-thread-4]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=055ht8SNS_ixVyVndlXQWg, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=055ht8SNS_ixVyVndlXQWg), closedAt=0) ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "3" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 2,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:01,151 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-15]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url BAD_URL connectivity. \njava.net.MalformedURLException: no protocol: BAD_URL\n\tat java.net.URL.<init>(URL.java:593)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10008" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "9",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 9,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,478 \u001b[32m[dw-141 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=DOMAIN_NOT_ALLOWED_TO_REGISTER, errorType=ERROR, message=DOMAIN_NOT_ALLOWED_TO_REGISTER} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "1" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 11,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:09,886 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-13]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url null connectivity. \njava.net.MalformedURLException: null\n\tat java.net.URL.<init>(URL.java:627)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)\nCaused by: java.lang.NullPointerException: null\n\tat java.net.URL.<init>(URL.java:532)\n\t... 10 common frames omitted",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10001" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "10",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 1,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,476 \u001b[32m[dw-141 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: DOMAIN_NOT_ALLOWED_TO_REGISTER \nsoftware.wings.exception.WingsException: DOMAIN_NOT_ALLOWED_TO_REGISTER\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:143)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "12",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 1,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,142 \u001b[32m[dw-158 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: USER_ALREADY_REGISTERED \nsoftware.wings.exception.WingsException: USER_ALREADY_REGISTERED\n\tat software.wings.service.impl.UserServiceImpl.verifyRegisteredOrAllowed(UserServiceImpl.java:246)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:145)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "6",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 1,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:27,432 \u001b[32m[dw-135 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: INVALID_EMAIL \nsoftware.wings.exception.WingsException: INVALID_EMAIL\n\tat software.wings.service.impl.UserServiceImpl.verifyRegisteredOrAllowed(UserServiceImpl.java:239)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:145)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10002" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "11",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,144 \u001b[32m[dw-158 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=USER_ALREADY_REGISTERED, errorType=ERROR, message=User with this email is already registered.} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "2" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 13,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:07,039 \u001b[32m[dw-135 - POST /api/splunkv2/get-logs?accountId=kmpySmUISimoRrJL6NL73w&clusterLevel=L0&compareCurrent=false]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.GenericExceptionMapper\u001b[0;39m - Exception occurred: null \njava.lang.NullPointerException: null\n\tat software.wings.sm.StateMachineExecutionSimulator.getStatusBreakdown(StateMachineExecutionSimulator.java:79)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.refreshBreakdown(WorkflowExecutionServiceImpl.java:1505)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.listExecutions(WorkflowExecutionServiceImpl.java:238)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIds(AnalysisServiceImpl.java:225)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIdWithLogs(AnalysisServiceImpl.java:205)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLogData(AnalysisServiceImpl.java:161)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.SplunkResource.getRawLogData(SplunkResource.java:65)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "5" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 4,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:03,247 \u001b[32m[dw-203 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: INVALID_ARTIFACT_SERVER \nsoftware.wings.exception.WingsException: INVALID_ARTIFACT_SERVER\n\tat software.wings.service.impl.JenkinsBuildServiceImpl.validateArtifactServer(JenkinsBuildServiceImpl.java:151)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.joor.Reflect.on(Reflect.java:677)\n\tat org.joor.Reflect.call(Reflect.java:379)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:47)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:20)\n\tat software.wings.delegatetasks.AbstractDelegateRunnableTask.run(AbstractDelegateRunnableTask.java:40)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "4" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 10,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:03,247 \u001b[32m[dw-203 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_ARTIFACT_SERVER, errorType=ERROR, message=Jenkins URL must be a valid URL} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10006" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 7,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:27,432 \u001b[32m[dw-135 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_EMAIL, errorType=ERROR, message=Email is not a valid email.} ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10007" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 6,
+                "unexpected_freq" : false,
+                "text" : "RestResponse{responseMessages=[ResponseMessage{code=INVALID_ARGUMENT, errorType=ERROR, message=email not a well-formed email address}]}",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10003" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "7",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 12,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:26,996 \u001b[32m[pool-10-thread-6]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=axNvTFUnSr2Fi4hMRZdteA, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=axNvTFUnSr2Fi4hMRZdteA), closedAt=0) ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10004" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 12,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 11,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:53,437 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-1]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url null connectivity. \njava.net.MalformedURLException: null\n\tat java.net.URL.<init>(URL.java:627)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)\nCaused by: java.lang.NullPointerException: null\n\tat java.net.URL.<init>(URL.java:532)\n\t... 10 common frames omitted",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ],
+        "10005" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 5,
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:28,351 \u001b[32m[dw-141 - GET /api/users/verify-email?email=xyz@some-domain.io]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$48621316\u001b[0;39m - USER_DOMAIN_NOT_ALLOWED error for emailAddress - xyz@some-domain.io ",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ]
+    },
+    "control_clusters" : {
+        "11" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510346040000
+                    },
+                    {
+                        "count" : 12,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 11,
+                "tags" : [
+                    "java.net.url.",
+                    "init",
+                    "null",
+                    "frames",
+                    "omitted"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:09,886 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-13]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url null connectivity. \njava.net.MalformedURLException: null\n\tat java.net.URL.<init>(URL.java:627)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)\nCaused by: java.lang.NullPointerException: null\n\tat java.net.URL.<init>(URL.java:532)\n\t... 10 common frames omitted",
+                "x" : 0.0716695503499543,
+                "y" : 0.60044567752987,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "12" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "7",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 12,
+                "tags" : [
+                    "accountid=axnvtfunsr2fi4hmrzdtea",
+                    "alert",
+                    "type=noactivedelegates",
+                    "alertdata=noactivedelegatesalert",
+                    "status=open"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:26,996 \u001b[32m[pool-10-thread-6]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=axNvTFUnSr2Fi4hMRZdteA, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=axNvTFUnSr2Fi4hMRZdteA), closedAt=0) ",
+                "x" : -0.553230973090011,
+                "y" : -0.371103180418171,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "13" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 13,
+                "tags" : [
+                    "org.eclipse.jetty.servlet.servlethandler",
+                    "cachedchain.dofilter",
+                    "org.glassfish.jersey.servlet.servletcontainer.service",
+                    "2.run",
+                    "org.glassfish.jersey.internal.errors.process"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:07,039 \u001b[32m[dw-135 - POST /api/splunkv2/get-logs?accountId=kmpySmUISimoRrJL6NL73w&clusterLevel=L0&compareCurrent=false]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.GenericExceptionMapper\u001b[0;39m - Exception occurred: null \njava.lang.NullPointerException: null\n\tat software.wings.sm.StateMachineExecutionSimulator.getStatusBreakdown(StateMachineExecutionSimulator.java:79)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.refreshBreakdown(WorkflowExecutionServiceImpl.java:1505)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.listExecutions(WorkflowExecutionServiceImpl.java:238)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIds(AnalysisServiceImpl.java:225)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIdWithLogs(AnalysisServiceImpl.java:205)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLogData(AnalysisServiceImpl.java:161)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.SplunkResource.getRawLogData(SplunkResource.java:65)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : -0.562875443609837,
+                "y" : 0.165087177651607,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "0" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "11",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 0,
+                "tags" : [
+                    "code=user_already_registered",
+                    "registered",
+                    "message=user",
+                    "email",
+                    "responsemessage"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,144 \u001b[32m[dw-158 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=USER_ALREADY_REGISTERED, errorType=ERROR, message=User with this email is already registered.} ",
+                "x" : 0.167239317899386,
+                "y" : -0.258369972244718,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "1" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "10",
+                        "time" : 1510345980000
+                    },
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "12",
+                        "time" : 1510345980000
+                    },
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "6",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 1,
+                "tags" : [
+                    "cachedchain.dofilter",
+                    "org.eclipse.jetty.servlet.servlethandler",
+                    "org.glassfish.jersey.servlet.servletcontainer.service",
+                    "org.glassfish.jersey.internal.errors.process",
+                    "2.run"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,476 \u001b[32m[dw-141 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: DOMAIN_NOT_ALLOWED_TO_REGISTER \nsoftware.wings.exception.WingsException: DOMAIN_NOT_ALLOWED_TO_REGISTER\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:143)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : -0.607190079546567,
+                "y" : 0.161729026926424,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "2" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 2,
+                "tags" : [
+                    "java.net.url.",
+                    "init",
+                    "bad_url",
+                    "protocol",
+                    "validating"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:01,151 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-15]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url BAD_URL connectivity. \njava.net.MalformedURLException: no protocol: BAD_URL\n\tat java.net.URL.<init>(URL.java:593)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0107235488103075,
+                "y" : 0.63044769704812,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "3" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "8",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 3,
+                "tags" : [
+                    "accountid=055ht8sns_ixvyvndlxqwg",
+                    "alert",
+                    "type=noactivedelegates",
+                    "alertdata=noactivedelegatesalert",
+                    "available"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:26,190 \u001b[32m[pool-10-thread-4]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=055ht8SNS_ixVyVndlXQWg, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=055ht8SNS_ixVyVndlXQWg), closedAt=0) ",
+                "x" : -0.459775835008391,
+                "y" : -0.427357991885472,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "4" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 4,
+                "tags" : [
+                    "software.wings.delegatetasks.serviceimpldelegatetask.run",
+                    "invalid_artifact_server",
+                    "software.wings.delegatetasks.abstractdelegaterunnabletask.run",
+                    "software.wings.service.impl.jenkinsbuildserviceimpl.validateartifactserver",
+                    "org.joor.reflect.on"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:03,247 \u001b[32m[dw-203 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: INVALID_ARTIFACT_SERVER \nsoftware.wings.exception.WingsException: INVALID_ARTIFACT_SERVER\n\tat software.wings.service.impl.JenkinsBuildServiceImpl.validateArtifactServer(JenkinsBuildServiceImpl.java:151)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.joor.Reflect.on(Reflect.java:677)\n\tat org.joor.Reflect.call(Reflect.java:379)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:47)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:20)\n\tat software.wings.delegatetasks.AbstractDelegateRunnableTask.run(AbstractDelegateRunnableTask.java:40)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : -0.360601222951033,
+                "y" : 0.520427314671328,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "5" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 5,
+                "tags" : [
+                    "emailaddress",
+                    "email=xyz",
+                    "user_domain_not_allowed",
+                    "36msoftware.wings.service.impl.userserviceimpl",
+                    "enhancerbyguice"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:28,351 \u001b[32m[dw-141 - GET /api/users/verify-email?email=xyz@some-domain.io]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$48621316\u001b[0;39m - USER_DOMAIN_NOT_ALLOWED error for emailAddress - xyz@some-domain.io ",
+                "x" : 0.587311393749307,
+                "y" : 0.434651573557345,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "6" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 6,
+                "tags" : [
+                    "responsemessages=",
+                    "restresponse",
+                    "code=invalid_argument",
+                    "address",
+                    "message=email"
+                ],
+                "unexpected_freq" : false,
+                "text" : "RestResponse{responseMessages=[ResponseMessage{code=INVALID_ARGUMENT, errorType=ERROR, message=email not a well-formed email address}]}",
+                "x" : 0.656325774188415,
+                "y" : -0.191521648137073,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "7" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 7,
+                "tags" : [
+                    "code=invalid_email",
+                    "valid",
+                    "message=email",
+                    "email",
+                    "errortype=error"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:27,432 \u001b[32m[dw-135 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_EMAIL, errorType=ERROR, message=Email is not a valid email.} ",
+                "x" : 0.477431919002188,
+                "y" : -0.339022773153496,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "8" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "13",
+                        "time" : 1510345980000
+                    },
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 8,
+                "tags" : [
+                    "account",
+                    "existinguser",
+                    "harness.io",
+                    "roles=",
+                    "role"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,137 \u001b[32m[dw-158 - POST /api/users]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$48621316\u001b[0;39m - USER_ALREADY_REGISTERED error for existingUser - User{name='Admin', email='admin@harness.io', companyName='null', accountName='null', roles=[Role{name='Account Administrator', description='Account Adminitrator members have all the access within account', accountId='kmpySmUISimoRrJL6NL73w', permissions=[], roleType=ACCOUNT_ADMIN, allApps=false}], accounts=[Account{companyName='Harness Inc', accountName='Harness Inc', accountKey='2f6b0988b6fb3370073c3d0505baee59'}], lastLogin=0, emailVerified=true, statsFetchedOn=0} ",
+                "x" : 0.485488251093416,
+                "y" : 0.217645548466499,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "9" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "9",
+                        "time" : 1510345980000
+                    }
+                ],
+                "cluster_label" : 9,
+                "tags" : [
+                    "code=domain_not_allowed_to_register",
+                    "message=domain_not_allowed_to_register",
+                    "responsemessage",
+                    "errortype=error",
+                    "post"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:33:25,478 \u001b[32m[dw-141 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=DOMAIN_NOT_ALLOWED_TO_REGISTER, errorType=ERROR, message=DOMAIN_NOT_ALLOWED_TO_REGISTER} ",
+                "x" : 0.0559060990814417,
+                "y" : -0.614589804966647,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        },
+        "10" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510346040000
+                    }
+                ],
+                "cluster_label" : 10,
+                "tags" : [
+                    "message=jenkins",
+                    "code=invalid_artifact_server",
+                    "valid",
+                    "accountid=kmpysmuisimorrjl6nl73w",
+                    "errortype=error"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-10 20:34:03,247 \u001b[32m[dw-203 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_ARTIFACT_SERVER, errorType=ERROR, message=Jenkins URL must be a valid URL} ",
+                "x" : 0.343882579099395,
+                "y" : -0.549228328072966,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        }
+    },
+    "unknown_clusters" : {
+        "0" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "6",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 12,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:54,628 \u001b[32m[pool-10-thread-11]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=KSTEUrneQl263_Y9aOX9AQ, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=KSTEUrneQl263_Y9aOX9AQ), closedAt=0) ",
+                "x" : -0.459593336998773,
+                "y" : -0.506248291045582,
+                "diff_tags" : [
+                    "accountid=axnvtfunsr2fi4hmrzdtea",
+                    "accountid=ksteurneql263_y9aox9aq"
+                ],
+                "alert_score" : 0.857142857142857,
+                "test_score" : 0.15,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        },
+        "1" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 12,
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:55,239 \u001b[32m[pool-10-thread-14]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.AlertServiceImpl\u001b[0;39m - Alert opened: Alert(accountId=UMn5VYHwSYuzO9EPzFTVhQ, type=NoActiveDelegates, status=Open, title=No delegates are available, category=Setup, severity=Error, alertData=NoActiveDelegatesAlert(accountId=UMn5VYHwSYuzO9EPzFTVhQ), closedAt=0) ",
+                "x" : -0.535207812504577,
+                "y" : -0.439550876521715,
+                "diff_tags" : [
+                    "accountid=umn5vyhwsyuzo9epzftvhq",
+                    "accountid=axnvtfunsr2fi4hmrzdtea"
+                ],
+                "alert_score" : 0.857142857142857,
+                "test_score" : 0.15,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        }
+    },
+    "test_clusters" : {
+        "0" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "9",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 0,
+                "tags" : [
+                    "code=user_already_registered",
+                    "registered",
+                    "message=user",
+                    "email",
+                    "responsemessage"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,509 \u001b[32m[dw-172 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=USER_ALREADY_REGISTERED, errorType=ERROR, message=User with this email is already registered.} ",
+                "x" : 0.167238025201609,
+                "y" : -0.258371164508249,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "11" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 13,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 11,
+                "tags" : [
+                    "java.net.url.",
+                    "init",
+                    "null",
+                    "frames",
+                    "omitted"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:42,008 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-11]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url null connectivity. \njava.net.MalformedURLException: null\n\tat java.net.URL.<init>(URL.java:627)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)\nCaused by: java.lang.NullPointerException: null\n\tat java.net.URL.<init>(URL.java:532)\n\t... 10 common frames omitted",
+                "x" : 0.0716695665393244,
+                "y" : 0.600445711063182,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "1" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "10",
+                        "time" : 1510379820000
+                    },
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510379820000
+                    },
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "8",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 1,
+                "tags" : [
+                    "cachedchain.dofilter",
+                    "org.eclipse.jetty.servlet.servlethandler",
+                    "org.glassfish.jersey.servlet.servletcontainer.service",
+                    "org.glassfish.jersey.internal.errors.process",
+                    "2.run"
+                ],
+                "anomalous_counts" : [
+                    1,
+                    1,
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,509 \u001b[32m[dw-172 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: USER_ALREADY_REGISTERED \nsoftware.wings.exception.WingsException: USER_ALREADY_REGISTERED\n\tat software.wings.service.impl.UserServiceImpl.verifyRegisteredOrAllowed(UserServiceImpl.java:252)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.UserServiceImpl.register(UserServiceImpl.java:146)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.UserResource.register(UserResource.java:126)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : -0.594178172346275,
+                "y" : 0.159250410066072,
+                "alert_score" : 0.0,
+                "test_score" : 0.971428571428571,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "2" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 2,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "5",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 2,
+                "tags" : [
+                    "java.net.url.",
+                    "init",
+                    "bad_url",
+                    "protocol",
+                    "validating"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:31,978 \u001b[1;36m1.0.10\u001b[0;39m \u001b[32m[delegate-task-13]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.utils.HttpUtil\u001b[0;39m - Error occurred while validating url BAD_URL connectivity. \njava.net.MalformedURLException: no protocol: BAD_URL\n\tat java.net.URL.<init>(URL.java:593)\n\tat java.net.URL.<init>(URL.java:490)\n\tat java.net.URL.<init>(URL.java:439)\n\tat software.wings.utils.HttpUtil.connectableHttpUrl(HttpUtil.java:63)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.validate(AbstractDelegateValidateTask.java:57)\n\tat software.wings.delegatetasks.validation.AbstractDelegateValidateTask.run(AbstractDelegateValidateTask.java:36)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : 0.0107235585217196,
+                "y" : 0.630447718954359,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "13" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 13,
+                "tags" : [
+                    "org.eclipse.jetty.servlet.servlethandler",
+                    "cachedchain.dofilter",
+                    "org.glassfish.jersey.servlet.servletcontainer.service",
+                    "2.run",
+                    "org.glassfish.jersey.internal.errors.process"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:37,872 \u001b[32m[dw-206 - POST /api/splunkv2/get-logs?accountId=kmpySmUISimoRrJL6NL73w&clusterLevel=L0&compareCurrent=false]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.GenericExceptionMapper\u001b[0;39m - Exception occurred: null \njava.lang.NullPointerException: null\n\tat software.wings.sm.StateMachineExecutionSimulator.getStatusBreakdown(StateMachineExecutionSimulator.java:79)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.refreshBreakdown(WorkflowExecutionServiceImpl.java:1505)\n\tat software.wings.service.impl.WorkflowExecutionServiceImpl.listExecutions(WorkflowExecutionServiceImpl.java:238)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIds(AnalysisServiceImpl.java:225)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLastSuccessfulWorkflowExecutionIdWithLogs(AnalysisServiceImpl.java:205)\n\tat software.wings.service.impl.analysis.AnalysisServiceImpl.getLogData(AnalysisServiceImpl.java:161)\n\tat ru.vyarus.guice.validator.aop.ValidationMethodInterceptor.invoke(ValidationMethodInterceptor.java:52)\n\tat software.wings.resources.SplunkResource.getRawLogData(SplunkResource.java:65)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory$1.invoke(ResourceMethodInvocationHandlerFactory.java:81)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher$1.run(AbstractJavaResourceMethodDispatcher.java:144)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.invoke(AbstractJavaResourceMethodDispatcher.java:161)\n\tat org.glassfish.jersey.server.model.internal.JavaResourceMethodDispatcherProvider$TypeOutInvoker.doDispatch(JavaResourceMethodDispatcherProvider.java:205)\n\tat org.glassfish.jersey.server.model.internal.AbstractJavaResourceMethodDispatcher.dispatch(AbstractJavaResourceMethodDispatcher.java:99)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.invoke(ResourceMethodInvoker.java:389)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:347)\n\tat org.glassfish.jersey.server.model.ResourceMethodInvoker.apply(ResourceMethodInvoker.java:102)\n\tat org.glassfish.jersey.server.ServerRuntime$2.run(ServerRuntime.java:326)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:271)\n\tat org.glassfish.jersey.internal.Errors$1.call(Errors.java:267)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:315)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:297)\n\tat org.glassfish.jersey.internal.Errors.process(Errors.java:267)\n\tat org.glassfish.jersey.process.internal.RequestScope.runInScope(RequestScope.java:317)\n\tat org.glassfish.jersey.server.ServerRuntime.process(ServerRuntime.java:305)\n\tat org.glassfish.jersey.server.ApplicationHandler.handle(ApplicationHandler.java:1154)\n\tat org.glassfish.jersey.servlet.WebComponent.serviceImpl(WebComponent.java:473)\n\tat org.glassfish.jersey.servlet.WebComponent.service(WebComponent.java:427)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:388)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:341)\n\tat org.glassfish.jersey.servlet.ServletContainer.service(ServletContainer.java:228)\n\tat io.dropwizard.jetty.NonblockingServletHolder.handle(NonblockingServletHolder.java:49)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1689)\n\tat io.dropwizard.servlets.ThreadNameFilter.doFilter(ThreadNameFilter.java:34)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.handle(AllowedMethodsFilter.java:50)\n\tat io.dropwizard.jersey.filter.AllowedMethodsFilter.doFilter(AllowedMethodsFilter.java:44)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat software.wings.filter.AuditResponseFilter.doFilter(AuditResponseFilter.java:55)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.handle(CrossOriginFilter.java:308)\n\tat org.eclipse.jetty.servlets.CrossOriginFilter.doFilter(CrossOriginFilter.java:262)\n\tat org.eclipse.jetty.servlet.ServletHandler$CachedChain.doFilter(ServletHandler.java:1676)\n\tat org.eclipse.jetty.servlet.ServletHandler.doHandle(ServletHandler.java:581)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doHandle(ContextHandler.java:1174)\n\tat org.eclipse.jetty.servlet.ServletHandler.doScope(ServletHandler.java:511)\n\tat org.eclipse.jetty.server.handler.ContextHandler.doScope(ContextHandler.java:1106)\n\tat org.eclipse.jetty.server.handler.ScopedHandler.handle(ScopedHandler.java:141)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat com.codahale.metrics.jetty9.InstrumentedHandler.handle(InstrumentedHandler.java:240)\n\tat io.dropwizard.jetty.RoutingHandler.handle(RoutingHandler.java:51)\n\tat org.eclipse.jetty.server.handler.gzip.GzipHandler.handle(GzipHandler.java:396)\n\tat io.dropwizard.jetty.BiDiGzipHandler.handle(BiDiGzipHandler.java:68)\n\tat org.eclipse.jetty.server.handler.RequestLogHandler.handle(RequestLogHandler.java:56)\n\tat org.eclipse.jetty.server.handler.StatisticsHandler.handle(StatisticsHandler.java:169)\n\tat org.eclipse.jetty.server.handler.HandlerWrapper.handle(HandlerWrapper.java:134)\n\tat org.eclipse.jetty.server.Server.handle(Server.java:524)\n\tat org.eclipse.jetty.server.HttpChannel.handle(HttpChannel.java:319)\n\tat org.eclipse.jetty.server.HttpConnection.onFillable(HttpConnection.java:253)\n\tat org.eclipse.jetty.io.AbstractConnection$ReadCallback.succeeded(AbstractConnection.java:273)\n\tat org.eclipse.jetty.io.FillInterest.fillable(FillInterest.java:95)\n\tat org.eclipse.jetty.io.SelectChannelEndPoint$2.run(SelectChannelEndPoint.java:93)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.executeProduceConsume(ExecuteProduceConsume.java:303)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.produceConsume(ExecuteProduceConsume.java:148)\n\tat org.eclipse.jetty.util.thread.strategy.ExecuteProduceConsume.run(ExecuteProduceConsume.java:136)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:671)\n\tat org.eclipse.jetty.util.thread.QueuedThreadPool$2.run(QueuedThreadPool.java:589)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : -0.562875443609807,
+                "y" : 0.165087177651572,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "4" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "4",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 4,
+                "tags" : [
+                    "software.wings.delegatetasks.serviceimpldelegatetask.run",
+                    "invalid_artifact_server",
+                    "software.wings.delegatetasks.abstractdelegaterunnabletask.run",
+                    "software.wings.service.impl.jenkinsbuildserviceimpl.validateartifactserver",
+                    "org.joor.reflect.on"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:33,508 \u001b[32m[dw-207 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: INVALID_ARTIFACT_SERVER \nsoftware.wings.exception.WingsException: INVALID_ARTIFACT_SERVER\n\tat software.wings.service.impl.JenkinsBuildServiceImpl.validateArtifactServer(JenkinsBuildServiceImpl.java:151)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.joor.Reflect.on(Reflect.java:677)\n\tat org.joor.Reflect.call(Reflect.java:379)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:47)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:20)\n\tat software.wings.delegatetasks.AbstractDelegateRunnableTask.run(AbstractDelegateRunnableTask.java:40)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+                "x" : -0.360601356187138,
+                "y" : 0.520427372811035,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "5" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "1",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 5,
+                "tags" : [
+                    "emailaddress",
+                    "email=xyz",
+                    "user_domain_not_allowed",
+                    "36msoftware.wings.service.impl.userserviceimpl",
+                    "enhancerbyguice"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:56,660 \u001b[32m[dw-159 - GET /api/users/verify-email?email=xyz@some-domain.io]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$33d255c4\u001b[0;39m - USER_DOMAIN_NOT_ALLOWED error for emailAddress - xyz@some-domain.io ",
+                "x" : 0.587311393894896,
+                "y" : 0.434651573418005,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "7" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 7,
+                "tags" : [
+                    "code=invalid_email",
+                    "valid",
+                    "message=email",
+                    "email",
+                    "errortype=error"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:55,646 \u001b[32m[dw-159 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_EMAIL, errorType=ERROR, message=Email is not a valid email.} ",
+                "x" : 0.477431919002065,
+                "y" : -0.339022773153326,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "8" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "11",
+                        "time" : 1510379820000
+                    },
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "2",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 8,
+                "tags" : [
+                    "account",
+                    "existinguser",
+                    "harness.io",
+                    "roles=",
+                    "role"
+                ],
+                "anomalous_counts" : [
+                    1,
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,508 \u001b[32m[dw-172 - POST /api/users]\u001b[0;39m \u001b[31mWARN \u001b[0;39m \u001b[36msoftware.wings.service.impl.UserServiceImpl$$EnhancerByGuice$$33d255c4\u001b[0;39m - USER_ALREADY_REGISTERED error for existingUser - User{name='Admin', email='admin@harness.io', companyName='null', accountName='null', roles=[Role{name='Account Administrator', description='Account Adminitrator members have all the access within account', accountId='kmpySmUISimoRrJL6NL73w', permissions=[], roleType=ACCOUNT_ADMIN, allApps=false}], accounts=[Account{companyName='Harness Inc', accountName='Harness Inc', accountKey='2f6b0988b6fb3370073c3d0505baee59'}], lastLogin=0, emailVerified=true, statsFetchedOn=0} ",
+                "x" : 0.485988101217897,
+                "y" : 0.217460957324335,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "9" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "7",
+                        "time" : 1510379820000
+                    }
+                ],
+                "cluster_label" : 9,
+                "tags" : [
+                    "code=domain_not_allowed_to_register",
+                    "message=domain_not_allowed_to_register",
+                    "responsemessage",
+                    "errortype=error",
+                    "post"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:57:53,932 \u001b[32m[dw-159 - POST /api/users]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=DOMAIN_NOT_ALLOWED_TO_REGISTER, errorType=ERROR, message=DOMAIN_NOT_ALLOWED_TO_REGISTER} ",
+                "x" : 0.055906099081981,
+                "y" : -0.614589804967178,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        },
+        "10" : {
+            "ip-172-31-1-92" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "ip-172-31-1-92",
+                        "old_label" : "3",
+                        "time" : 1510379880000
+                    }
+                ],
+                "cluster_label" : 10,
+                "tags" : [
+                    "message=jenkins",
+                    "code=invalid_artifact_server",
+                    "valid",
+                    "accountid=kmpysmuisimorrjl6nl73w",
+                    "errortype=error"
+                ],
+                "anomalous_counts" : [
+                    1
+                ],
+                "unexpected_freq" : false,
+                "text" : "2017-11-11 05:58:33,508 \u001b[32m[dw-207 - POST /api/settings/?accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - ResponseMessage{code=INVALID_ARTIFACT_SERVER, errorType=ERROR, message=Jenkins URL must be a valid URL} ",
+                "x" : 0.343882579119107,
+                "y" : -0.549228328065161,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1.0,
+                "freq_score" : 0.0
+            }
+        }
+    },
+    "cluster_scores" : {
+        "unknown" : {
+            "0" : {
+                "unexpected_freq" : false,
+                "alert_score" : 0.0,
+                "test_score" : 0.15,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            },
+            "1" : {
+                "unexpected_freq" : false,
+                "alert_score" : 0.0,
+                "test_score" : 0.15,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        }
+    },
+    "createdAt" : 1510380046151,
+    "lastUpdatedAt" : 1510380046151
+}

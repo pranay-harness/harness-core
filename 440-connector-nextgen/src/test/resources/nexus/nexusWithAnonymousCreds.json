@@ -1,0 +1,22 @@
+{
+  "connector": {
+    "name": "name",
+    "identifier": "identifier",
+    "description": "description",
+    "orgIdentifier": "orgIdentifier",
+    "projectIdentifier": "projectIdentifier",
+    "tags": {
+      "company": "Harness",
+      "env": "dev"
+    },
+    "type": "Nexus",
+    "spec": {
+      "nexusServerUrl": "https://nexusUrl.com",
+      "version": "3.x",
+      "auth": {
+        "type": "Anonymous"
+      },
+      "delegateSelectors": null
+    }
+  }
+}

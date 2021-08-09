@@ -1,0 +1,8 @@
+connectors:
+  - port: 9901
+    secure: true
+    certFilePath: cert.pem
+    keyFilePath: key.pem
+  - port: 9902
+    secure: false
+secret: secret

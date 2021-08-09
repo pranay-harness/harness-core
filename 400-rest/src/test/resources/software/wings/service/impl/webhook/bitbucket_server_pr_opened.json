@@ -1,0 +1,185 @@
+{
+  "eventKey": "pr:opened",
+  "date": "2020-07-10T10:20:18+0000",
+  "actor": {
+    "name": "harnessadmin",
+    "emailAddress": "guna@harness.io",
+    "id": 1,
+    "displayName": "Harness Admin",
+    "active": true,
+    "slug": "harnessadmin",
+    "type": "NORMAL",
+    "links": {
+      "self": [
+        {
+          "href": "https://bitbucket.dev.harness.io/users/harnessadmin"
+        }
+      ]
+    }
+  },
+  "pullRequest": {
+    "id": 1,
+    "version": 0,
+    "title": "README.md edited online with Bitbucket",
+    "state": "OPEN",
+    "open": true,
+    "closed": false,
+    "createdDate": 1594376418590,
+    "updatedDate": 1594376418590,
+    "fromRef": {
+      "id": "refs/heads/update-readme",
+      "displayId": "update-readme",
+      "latestCommit": "d194d171a97b8e1c7e668b29c6deb18630f199e6",
+      "repository": {
+        "slug": "git-sync-igor-bb-server",
+        "id": 16,
+        "name": "git-sync-igor-bb-server",
+        "hierarchyId": "7347e184116d52dcbefa",
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "statusMessage": "Available",
+        "forkable": true,
+        "project": {
+          "key": "~HARNESSADMIN",
+          "id": 23,
+          "name": "Harness Admin",
+          "type": "PERSONAL",
+          "owner": {
+            "name": "harnessadmin",
+            "emailAddress": "guna@harness.io",
+            "id": 1,
+            "displayName": "Harness Admin",
+            "active": true,
+            "slug": "harnessadmin",
+            "type": "NORMAL",
+            "links": {
+              "self": [
+                {
+                  "href": "https://bitbucket.dev.harness.io/users/harnessadmin"
+                }
+              ]
+            }
+          },
+          "links": {
+            "self": [
+              {
+                "href": "https://bitbucket.dev.harness.io/users/harnessadmin"
+              }
+            ]
+          }
+        },
+        "public": false,
+        "links": {
+          "clone": [
+            {
+              "href": "https://bitbucket.dev.harness.io/scm/~harnessadmin/git-sync-igor-bb-server.git",
+              "name": "http"
+            },
+            {
+              "href": "ssh://git@bitbucket.dev.harness.io:7999/~harnessadmin/git-sync-igor-bb-server.git",
+              "name": "ssh"
+            }
+          ],
+          "self": [
+            {
+              "href": "https://bitbucket.dev.harness.io/users/harnessadmin/repos/git-sync-igor-bb-server/browse"
+            }
+          ]
+        }
+      }
+    },
+    "toRef": {
+      "id": "refs/heads/master",
+      "displayId": "master",
+      "latestCommit": "ccc02e837b93ec32fff13b368ba934e2adb24385",
+      "repository": {
+        "slug": "git-sync-igor-bb-server",
+        "id": 16,
+        "name": "git-sync-igor-bb-server",
+        "hierarchyId": "7347e184116d52dcbefa",
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "statusMessage": "Available",
+        "forkable": true,
+        "project": {
+          "key": "~HARNESSADMIN",
+          "id": 23,
+          "name": "Harness Admin",
+          "type": "PERSONAL",
+          "owner": {
+            "name": "harnessadmin",
+            "emailAddress": "guna@harness.io",
+            "id": 1,
+            "displayName": "Harness Admin",
+            "active": true,
+            "slug": "harnessadmin",
+            "type": "NORMAL",
+            "links": {
+              "self": [
+                {
+                  "href": "https://bitbucket.dev.harness.io/users/harnessadmin"
+                }
+              ]
+            }
+          },
+          "links": {
+            "self": [
+              {
+                "href": "https://bitbucket.dev.harness.io/users/harnessadmin"
+              }
+            ]
+          }
+        },
+        "public": false,
+        "links": {
+          "clone": [
+            {
+              "href": "https://bitbucket.dev.harness.io/scm/~harnessadmin/git-sync-igor-bb-server.git",
+              "name": "http"
+            },
+            {
+              "href": "ssh://git@bitbucket.dev.harness.io:7999/~harnessadmin/git-sync-igor-bb-server.git",
+              "name": "ssh"
+            }
+          ],
+          "self": [
+            {
+              "href": "https://bitbucket.dev.harness.io/users/harnessadmin/repos/git-sync-igor-bb-server/browse"
+            }
+          ]
+        }
+      }
+    },
+    "locked": false,
+    "author": {
+      "user": {
+        "name": "harnessadmin",
+        "emailAddress": "guna@harness.io",
+        "id": 1,
+        "displayName": "Harness Admin",
+        "active": true,
+        "slug": "harnessadmin",
+        "type": "NORMAL",
+        "links": {
+          "self": [
+            {
+              "href": "https://bitbucket.dev.harness.io/users/harnessadmin"
+            }
+          ]
+        }
+      },
+      "role": "AUTHOR",
+      "approved": false,
+      "status": "UNAPPROVED"
+    },
+    "reviewers": [],
+    "participants": [],
+    "links": {
+      "self": [
+        {
+          "href": "https://bitbucket.dev.harness.io/users/harnessadmin/repos/git-sync-igor-bb-server/pull-requests/1"
+        }
+      ]
+    }
+  }
+}

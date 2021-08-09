@@ -1,0 +1,29 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "image.go",
+        "keychain.go",
+        "util.go",
+    ],
+    importpath = "github.com/wings-software/portal/commons/go/lib/images",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_google_go_containerregistry//pkg/authn:go_default_library",
+        "@com_github_google_go_containerregistry//pkg/name:go_default_library",
+        "@com_github_google_go_containerregistry//pkg/v1:go_default_library",
+        "@com_github_google_go_containerregistry//pkg/v1/remote:go_default_library",
+        "@com_github_pkg_errors//:go_default_library",
+        "@com_github_vdemeester_k8s_pkg_credentialprovider//:go_default_library",
+        "@com_github_vdemeester_k8s_pkg_credentialprovider//secrets:go_default_library",
+        "@io_k8s_api//core/v1:go_default_library",
+    ],
+)
+
+go_test(
+    name = "go_default_test",
+    srcs = ["image_test.go"],
+    embed = [":go_default_library"],
+    deps = ["@com_github_stretchr_testify//assert:go_default_library"],
+)

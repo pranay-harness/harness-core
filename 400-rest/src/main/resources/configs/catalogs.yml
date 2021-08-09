@@ -1,0 +1,588 @@
+CARD_VIEW_SORT_BY:
+    - name: Most Recent
+      value: mostRecent
+    - name: Alphabetical Ascending
+      value: alphabeticalAscending
+    - name: Alphabetical Descending
+      value: alphabeticalDescending
+
+ARTIFACT_TYPE:
+    - name: Docker Image
+      value: DOCKER
+    - name: AMI
+      value: AMI
+    - name: Azure Machine Image
+      value: AZURE_MACHINE_IMAGE
+    - name: AWS Code Deploy
+      value: AWS_CODEDEPLOY
+    - name: AWS Lambda
+      value: AWS_LAMBDA
+    - name: Java Archive (JAR)
+      value: JAR
+    - name: RPM File
+      value: RPM
+    - name: TAR File
+      value: TAR
+    - name: Web Archive (WAR)
+      value: WAR
+    - name: ZIP File
+      value: ZIP
+    - name: Tanzu Application Services
+      value: PCF
+    - name: IIS Website
+      value: IIS
+    - name: IIS Application
+      value: IIS_APP
+    - name: IIS Virtual Directory
+      value: IIS_VirtualDirectory
+    - name: Microsoft NuGet
+      value: NUGET
+    - name: Other
+      value: OTHER
+
+ARTIFACT_SOURCE_TYPE:
+    - name: Jenkins Server
+      value: JENKINS
+    - name: Bamboo Server
+      value: BAMBOO
+    - name: Docker Repository
+      value: DOCKER
+    - name: Nexus Repository
+      value: NEXUS
+    - name: Arifactory Server
+      value: ARTIFACTORY
+
+ARTIFACT_STREAM_TYPE:
+    - name: DOCKER
+      value: Docker Registry
+    - name: ECR
+      value: ECR
+    - name: GCR
+      value: GCR
+    - name: ACR
+      value: Azure Container Registry
+    - name: ARTIFACTORY
+      value: Artifactory
+    - name: NEXUS
+      value: Nexus
+    - name: JENKINS
+      value: Jenkins
+    - name: BAMBOO
+      value: Bamboo
+    - name: GCS
+      value: Google Cloud Storage
+    - name: AMAZON_S3
+      value: Amazon S3
+    - name: AMI
+      value: AMI Repository
+    - name: AZURE_MACHINE_IMAGE
+      value: Azure Machine Image
+    - name: AZURE_ARTIFACTS
+      value: Azure Artifacts
+    - name: SMB
+      value: Samba Server
+    - name: SFTP
+      value: SFTP Server
+    - name: CUSTOM
+      value: Custom Repository
+
+
+DEPLOYMENT_STRATEGY:
+    - name: Serial
+      value: SERIAL
+    - name: Parallel
+      value: PARALLEL
+
+OS_TYPE:
+    - name: Linux - RHL
+      value: RHL
+    - name: Linux - DEB
+      value: DEB
+
+CONNECTION_TYPE:
+    - name: SSH
+      value: SSH
+    - name: VPN
+      value: VPN
+
+ACCESS_TYPE:
+    - name: SSH
+      value: SSH
+    - name: SSH_KEY
+      value: SSH_KEY
+    - name: SSH_USER_PASSWD
+      value: SSH_USER_PASSWD
+    - name: SSH_SU_APP_ACCOUNT
+      value: SSH_SU_APP_ACCOUNT
+    - name: SSH_SUDO_APP_ACCOUNT
+      value: SSH_SUDO_APP_ACCOUNT
+
+EXECUTION_TYPE:
+    - name: SSH
+      value: SSH
+
+CONTAINER_FAMILY:
+    - name: Tomcat
+      value: TOMCAT
+    - name: JBoss
+      value: JBOSS
+
+WORKFLOW_ORCHESTRATION_TYPE:
+    - name: Basic
+      value: BASIC
+    - name: Build
+      value: BUILD
+    - name: Multi-Service
+      value: MULTI_SERVICE
+    - name: Canary
+      value: CANARY
+    - name: Blue/Green
+      value: BLUE_GREEN
+    - name:  Rolling
+      value: ROLLING
+    - name: Custom Workflow
+      value: CUSTOM
+
+FAILURE_TYPE:
+    - name: Connectivity Error
+      value: CONNECTIVITY
+    - name: Authentication Failure
+      value: AUTHENTICATION
+    - name: Verification Failure
+      value: VERIFICATION_FAILURE
+    - name: Application Error
+      value: APPLICATION_ERROR
+    - name: Timeout Error
+      value: TIMEOUT_ERROR
+
+EXECUTION_SCOPE:
+    - name: Workflow
+      value: WORKFLOW
+    - name: Workflow Phase
+      value: WORKFLOW_PHASE
+
+NOTIFICATION_CONDITION:
+    - name: Success
+      value: SUCCESS
+    - name: Failure
+      value: FAILED
+    - name: Paused
+      value: PAUSED
+
+REPAIR_ACTION_CODE:
+    - name: Manual Intervention
+      value: MANUAL_INTERVENTION
+    - name: Rollback Workflow Execution
+      value: ROLLBACK_WORKFLOW
+    - name: Rollback Phase Execution
+      value: ROLLBACK_PHASE
+    - name: Ignore
+      value: IGNORE
+    - name: Retry
+      value: RETRY
+    - name: End Execution
+      value: END_EXECUTION
+    - name: Abort Workflow
+      value: ABORT_WORKFLOW_EXECUTION
+
+ACTION_AFTER_RETRY:
+    - name: Manual Intervention
+      value: MANUAL_INTERVENTION
+    - name: Rollback Workflow
+      value: ROLLBACK_WORKFLOW
+    - name: Rollback Phase
+      value: ROLLBACK_PHASE
+    - name: Ignore
+      value: IGNORE
+    - name: Retry
+      value: RETRY
+    - name: End Execution
+      value: END_EXECUTION
+
+PIPELINE_REPAIR_ACTION_CODE:
+    - name: Manual Intervention
+      value: MANUAL_INTERVENTION
+    - name: Rollback Workflow Execution
+      value: ROLLBACK_WORKFLOW
+    - name: Rollback Phase Execution
+      value: ROLLBACK_PHASE
+    - name: Ignore
+      value: IGNORE
+    - name: Retry
+      value: RETRY
+    - name: End Execution
+      value: END_EXECUTION
+
+PHASE_STEP_TYPE:
+    - name: Provision Nodes
+      value: PROVISION_NODE
+    - name: Disable/Unpublish Services
+      value: DISABLE_SERVICE
+    - name: Deploy Services
+      value: INSTALL
+    - name: Enable/Publish Services
+      value: ENABLE_SERVICE
+    - name: Verify Services
+      value: VERIFY_SERVICE
+    - name: Deprovision Nodes
+      value: DEPROVISION_NODE
+    - name: Wrap up
+      value: WRAP_UP
+
+DEPLOYMENT_TYPE:
+    - name: Secure Shell (SSH)
+      value: SSH
+    - name: AWS CodeDeploy
+      value: AWS_CODEDEPLOY
+    - name: Amazon Elastic Container Service (Amazon ECS)
+      value: ECS
+    - name: Kubernetes
+      value: KUBERNETES
+    - name: AWS Lambda
+      value: AWS_LAMBDA
+    - name: AMI
+      value: AMI
+    - name: Helm
+      value: HELM
+    - name: PCF
+      value: PCF
+    - name: Windows Remote Management (WinRM)
+      value: WINRM
+    - name: Azure Virtual Machine Scale Set
+      value: AZURE_VMSS
+    - name: Azure Web App
+      value: AZURE_WEBAPP
+
+ENVIRONMENT_TYPE:
+    - name: Production
+      value: PROD
+    - name: Non Production
+      value: NON_PROD
+
+ROLE_TYPE:
+    - name: Account Administrator
+      value: ACCOUNT_ADMIN
+    - name: Application Administrator
+      value: APPLICATION_ADMIN
+    - name: Production Support
+      value: PROD_SUPPORT
+    - name: Non-production Support
+      value: NON_PROD_SUPPORT
+
+OVERRIDE_TYPE:
+    - name: Entire Environment
+      value: ALL
+    - name: Override Specific Instances
+      value: INSTANCES
+    - name: Override Specific Zones/Tags etc.
+      value: CUSTOM
+
+SERVICE_VARIABLE_TYPE:
+    - name: Text
+      value: TEXT
+    - name: Encrypted Text
+      value: ENCRYPTED_TEXT
+    - name: Artifact
+      value: ARTIFACT
+
+
+LOG_DRIVER:
+    - name: <none>
+      value: ""
+    - name: awslogs
+      value: awslogs
+    - name: fluentd
+      value: fluentd
+    - name: gelf
+      value: gelf
+    - name: journald
+      value: journald
+    - name: json-file
+      value: json-file
+    - name: splunk
+      value: splunk
+    - name: syslog
+      value: syslog
+
+PLUGIN_CATEGORY:
+    - name: Artifact Server
+      value: Artifact
+    - name: Cloud Provider
+      value: CloudProvider
+    - name: Verification Provider
+      value: Verification
+    - name: Collaboration Provider
+      value: Collaboration
+    - name: Load Balancer
+      value: LoadBalancer
+    - name: Connection Attributes
+      value: ConnectionAttributes
+    - name: AppDynamics
+      value: APP_DYNAMICS
+    - name: Source Repository
+      value: SourceRepo
+    - name: Helm Repository
+      value: HelmRepo
+    - name: Azure Artifacts
+      value: AzureArtifacts
+
+CLOUD_PROVIDERS:
+    - name: Google Cloud Platform
+      value: GCP
+    - name: Amazon Web Services
+      value: AWS
+    - name: Microsoft Azure
+      value: AZURE
+    - name: Physical Data Center
+      value: PHYSICAL_DATA_CENTER
+    - name: Kubernetes Cluster
+      value: KUBERNETES_CLUSTER
+    - name: Pivotal Cloud Foundry
+      value: PCF
+
+FORM_FIELD_TO_ENTITY_TYPE:
+    - name: envId
+      value: ENVIRONMENT
+    - name: serviceId
+      value: SERVICE
+    - name: infraMappingId
+      value: INFRASTRUCTURE_MAPPING
+    - name: infraDefinitionId
+      value: INFRASTRUCTURE_DEFINITION
+    - name: analysisServerConfigId
+      value: APPDYNAMICS_CONFIGID
+    - name: applicationId
+      value: APPDYNAMICS_APPID
+    - name: tierId
+      value: APPDYNAMICS_TIERID
+    - name: indices
+      value: ELK_INDICES
+    - name: analysisServerConfigId
+      value: ELK_CONFIGID
+    - name: analysisServerConfigId
+      value: NEWRELIC_CONFIGID
+    - name: applicationId
+      value: NEWRELIC_APPID
+    - name: analysisServerConfigId
+      value: SUMOLOGIC_CONFIGID
+    - name: analysisServerConfigId
+      value: NEWRELIC_MARKER_CONFIGID
+    - name: applicationId
+      value: NEWRELIC_MARKER_APPID
+    - name: awsConfigId
+      value: CF_AWS_CONFIG_ID
+
+TASK_TYPES:
+    - name: Amazon EC2 Container Registry (ECR)
+      value: ECR
+    - name: Amazon Machine Image (AMI)
+      value: AMI
+    - name: Amazon S3
+      value: S3
+    - name: Amazon Web Services (AWS)
+      value: AWS
+    - name: APM
+      value: APM
+    - name: AppDynamics
+      value: APPDYNAMICS
+    - name: Artifact Collection In Pipeline
+      value: ARTIFACT_COLLECT
+    - name: Artifactory
+      value: ARTIFACTORY
+    - name: Azure Container Registry
+      value: ACR
+    - name: Bamboo
+      value: BAMBOO
+    - name: Build Source
+      value: BUILD_SOURCE
+    - name: Cloud Formation
+      value: CLOUD_FORMATION
+    - name: CloudWatch
+      value: CLOUD_WATCH
+    - name: Collaboration Provider
+      value: COLLABORATION_PROVIDER
+    - name: Command
+      value: COMMAND
+    - name: Connectivity Validation
+      value: CONNECTIVITY_VALIDATION
+    - name: Container
+      value: CONTAINER
+    - name: Cloud Cost Management
+      value: CE
+    - name: Continuous Integration
+      value: CI
+    - name: Custom Artifact Source
+      value: CUSTOM
+    - name: Custom Log Collection and Bugsnag
+      value: LOG
+    - name: Custom Manifest Fetch Values Task
+      value: CUSTOM_MANIFEST_VALUES_FETCH_TASK
+    - name: Custom Manifest Fetch Task
+      value: CUSTOM_MANIFEST_FETCH_TASK
+    - name: Docker Hub
+      value: DOCKER
+    - name: Dynatrace
+      value: DYNA_TRACE
+    - name: Elk
+      value: ELK
+    - name: Git
+      value: GIT
+    - name: Google Cloud Build
+      value: GCB
+    - name: Google Cloud Storage
+      value: GCS
+    - name: Google Container Registry
+      value: GCR
+    - name: Helm
+      value: HELM
+    - name: Helm Repo Config Validation
+      value: HELM_REPO_CONFIG_VALIDATION
+    - name: Helm Values Fetch
+      value: HELM_VALUES_FETCH_TASK
+    - name: Host Validation
+      value: HOST_VALIDATION
+    - name: HTTP Verification
+      value: HTTP
+    - name: Jenkins
+      value: JENKINS
+    - name: Jira
+      value: JIRA
+    - name: Key Management Service
+      value: KMS
+    - name: Kubernetes
+      value: K8S
+    - name: Lightweight Directory Access Protocol (LDAP)
+      value: LDAP
+    - name: Logz
+      value: LOGZ
+    - name: New Relic
+      value: NEWRELIC
+    - name: Nexus
+      value: NEXUS
+    - name: Pivotal Cloud Foundry (PCF)
+      value: PCF
+    - name: Prometheus
+      value: PROMETHEUS
+    - name: Service Guard
+      value: GUARD_24x7
+    - name: ServiceNow
+      value: SERVICENOW
+    - name: SFTP
+      value: SFTP
+    - name: Shell Script
+      value: SCRIPT
+    - name: Shell Script Provision
+      value: SHELL_SCRIPT_PROVISION
+    - name: Slack Notifications
+      value: SLACK
+    - name: SMB
+      value: SMB
+    - name: Splunk
+      value: SPLUNK
+    - name: SpotInst
+      value: SPOTINST
+    - name: Sumo Logic
+      value: SUMO
+    - name: Terraform
+      value: TERRAFORM
+    - name: Terragrunt
+      value: TERRAGRUNT
+    - name: Trigger
+      value: TRIGGER
+
+EXECUTION_STATUS:
+    - name: Aborted
+      value: ABORTED
+    - name: Discontinuing
+      value: DISCONTINUING
+    - name: Error
+      valeu: ERROR
+    - name: Failed
+      value: FAILED
+    - name: Queued
+      value: QUEUED
+    - name: Pausing
+      value: PAUSING
+    - name: Paused
+      value: PAUSED
+    - name: Running
+      value: RUNNING
+    - name: Success
+      value: SUCCESS
+    - name: Waiting
+      value: WAITING
+    - name: Rejected
+      value: REJECTED
+    - name: Expired
+      value: EXPIRED
+
+ELK_CONNECTOR_TYPE:
+    - name: Elastic Search Server
+      value: ELASTIC_SEARCH_SERVER
+    - name: Kibana Server
+      value: KIBANA_SERVER
+
+CONNECTOR_TYPES:
+    - name: Jenkins
+      value: JENKINS
+    - name: Bamboo
+      value: BAMBOO
+    - name: Docker
+      value: DOCKER
+    - name: Nexus
+      value: NEXUS
+    - name: Artifactory
+      value: ARTIFACTORY
+    - name: AppDynamics
+      value: APP_DYNAMICS
+    - name: NewRelic
+      value: NEW_RELIC
+    - name:  Splunk
+      value: SPLUNK
+    - name: ELK
+      value: ELK
+    - name: LOGZ
+      value: LOGZ
+    - name: Sumo Logic
+      value: SUMO
+    - name: SMTP
+      value: SMTP
+    - name: SLACK
+      value: SLACK
+    - name: GIT
+      value: GIT
+    - name: ELB
+      value: ELB
+
+# For AMI Resource filters, we are prefixing the filter with ami- to prevent object value conflicts in the UI
+AMI_RESOURCE_ATTRIBUTES_FILTER:
+    - name: AMI ID
+      value: ami-image-id
+    - name: AMI Name
+      value: ami-name
+    - name: Platform
+      value: ami-platform
+    - name: Owner ID
+      value: ami-owner-id
+
+CLOUD_FORMATION_SOURCE_TYPE:
+    - name: TEMPLATE_BODY
+      value: Template Body
+    - name: TEMPLATE_URL
+      value: Amazon S3
+
+TEMPLATE_TYPE:
+    - name: SSH Command
+      value: SSH
+    - name: HTTP
+      value: HTTP
+
+HELM_REPO:
+    - name: HTTP Helm Repository
+      value: HTTP_HELM_REPO
+    - name: Amazon S3 Helm Repository
+      value: AMAZON_S3_HELM_REPO
+
+AZURE_ARTIFACTS:
+  - name: Personal Access Token
+    value: AZURE_ARTIFACTS_PAT

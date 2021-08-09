@@ -1,0 +1,182 @@
+pipeline:
+  name: application pipeline
+  identifier: rollbacktest
+  stages:
+    - stage:
+        identifier: managerDeploymentStage
+        name: manager deployment stage
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              name: ManagerService
+              identifier: ManagerServiceLatest
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/spec
+          infrastructure:
+            environment:
+              name:
+              identifier: stagingInfra
+              type: PreProduction
+              tags:
+                cloud: GCP
+                team: cdp
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: myK8sConnector
+                namespace: harness
+                releaseName: testingqa
+          execution:
+            steps:
+              - step:
+                  name: http step 1
+                  identifier: httpStep1
+                  type: Http
+                  spec:
+                    timeout: 100s
+                    method: GET
+                    url: https://www.google.com/
+              - stepGroup:
+                  name: StepGroup1
+                  identifier: StepGroup1
+                  steps:
+                    - step:
+                        name: http sg1 step 1
+                        identifier: httpStep5
+                        type: Http
+                        spec:
+                          timeout: 100s
+                          method: GET
+                          url: https://www.google.com/
+                  rollbackSteps:
+                    - step:
+                        name: http sg1 rollback step 1
+                        identifier: httpStep5
+                        type: Http
+                        spec:
+                          timeout: 100s
+                          method: GET
+                          url: https://www.google.com/
+              - stepGroup:
+                  name: StepGroup2
+                  identifier: StepGroup2
+                  steps:
+                    - step:
+                        name: http sg2 step 1
+                        identifier: httpStep6
+                        type: Http
+                        spec:
+                          timeout: 100s
+                          method: GET
+                          url: https://www.google.com/
+                  rollbackSteps:
+                    - step:
+                        name: http sg2 rollback step 1
+                        identifier: httpStep7
+                        type: Http
+                        spec:
+                          timeout: 100s
+                          method: GET
+                          url: https://www.google.com/
+                    - step:
+                        name: http sg2 rollback step 2
+                        identifier: httpStep8
+                        type: Http
+                        spec:
+                          timeout: 100s
+                          method: GET
+                          url: https://www.google.com/
+              - stepGroup:
+                  name: StepGroup3
+                  identifier: StepGroup3
+                  steps:
+                    - step:
+                        name: http sg3 step 1
+                        identifier: httpStep9
+                        type: Http
+                        spec:
+                          timeout: 100s
+                          method: GET
+                          url: https://www.google.com/
+              - parallel:
+                  - step:
+                      name: http step 10
+                      identifier: httpStep10
+                      type: Http
+                      spec:
+                        timeout: 100s
+                        method: GET
+                        url: fadsfa
+                  - stepGroup:
+                      name: StepGroup4
+                      identifier: StepGroup4
+                      steps:
+                        - step:
+                            name: http sg4 step 1
+                            identifier: httpStep11
+                            type: Http
+                            spec:
+                              timeout: 100s
+                              method: GET
+                              url: fadsfa
+                      rollbackSteps:
+                        - step:
+                            name: http sg4 rollback step 1
+                            identifier: httpStep12
+                            type: Http
+                            spec:
+                              timeout: 100s
+                              method: GET
+                              url: https://www.google.com/
+                  - stepGroup:
+                      name: StepGroup5
+                      identifier: StepGroup5
+                      steps:
+                        - step:
+                            name: http sg5 step 1
+                            identifier: httpStep12
+                            type: Http
+                            spec:
+                              timeout: 100s
+                              method: GET
+                              url: fadsfa
+              - step:
+                  name: http step 2
+                  identifier: httpStep2
+                  type: Http
+                  spec:
+                    timeout: 100s
+                    method: GET
+                    url: https://www.google.com/
+            rollbackSteps:
+              - step:
+                  name: http rollback step 1
+                  identifier: httpStep3
+                  type: Http
+                  spec:
+                    timeout: 100s
+                    method: GET
+                    url: https://www.google.com/
+              - step:
+                  name: http rollback step 2
+                  identifier: httpStep4
+                  type: Http
+                  spec:
+                    timeout: 100s
+                    method: GET
+                    url: https://www.google.com/

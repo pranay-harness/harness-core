@@ -1,0 +1,68 @@
+managerUrl: https://localhost:9090/api/
+xxxxxxxx
+  applicationConnectors:
+    - type: http
+      port: 4457
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: https
+      port: 7071
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders: []
+
+scheduler:
+  schedulerName: verification_scheduler
+  instanceId: verification
+  tablePrefix: quartz_verification
+  threadCount: 25
+  autoStart: false
+
+dataStorageMode: MONGO
+
+logging:
+  level: INFO
+  loggers:
+    com.novemberain.quartz.mongodb: WARN
+    org.quartz.plugins: WARN
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    # the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
+    # TODO: remove this suppression when the mentioned issue is resolved
+    com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
+mongo:
+  uri: mongodb://localhost:27017/harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
+
+cfClientConfig:
+  apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false

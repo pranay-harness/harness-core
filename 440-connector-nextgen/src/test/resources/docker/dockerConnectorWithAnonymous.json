@@ -1,0 +1,22 @@
+{
+  "connector": {
+    "name": "name",
+    "identifier": "identifier",
+    "description": "description",
+    "orgIdentifier": "orgIdentifier",
+    "projectIdentifier": "projectIdentifier",
+    "tags": {
+      "company" : "Harness",
+      "env" : "dev"
+    },
+    "type": "DockerRegistry",
+    "spec": {
+      "delegateSelectors": null,
+      "dockerRegistryUrl": "https://index.docker.io/v2/",
+      "providerType": "DockerHub",
+      "auth": {
+        "type": "Anonymous"
+      }
+    }
+  }
+}

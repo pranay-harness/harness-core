@@ -1,0 +1,10 @@
+{
+  "commandString": {
+    "ui:widget": "textarea",
+    "classNames": "__execCommandTextarea"
+  },
+  "tailPatterns": {
+    "classNames": "__2Col"
+  },
+  "ui:order": ["commandPath", "scriptType", "commandString", "tailPatterns"]
+}

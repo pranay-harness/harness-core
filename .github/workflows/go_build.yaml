@@ -1,0 +1,49 @@
+name: Go Build
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  gobuild:
+    if: contains(github.event.pull_request.labels.*.name, 'go') || contains(github.event.pull_request.labels.*.name, 'gojava')
+    name: Go Build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Building expression service code
+        run: |
+          echo "Building golang expression service protobuf using bazel..."
+          bazel build //960-expression-service/src/main/proto/... --javacopt=' -XepDisableAllChecks'
+
+      - name: Building commons code
+        run: |
+          echo "Building golang commons code using bazel..."
+          bazel build //commons/...
+
+      - name: Building product code
+        run: |
+          echo "Building golang product code using bazel..."
+          bazel build //product/... --javacopt=' -XepDisableAllChecks'
+
+      - name: Testing commons
+        run: |
+          echo "Testing golang commons code using bazel..."
+          bazel test --test_output=all //commons/...
+
+      - name: Testing product
+        run: |
+          echo "Testing golang product code using bazel..."
+          bazel test --test_output=all //product/... --javacopt=' -XepDisableAllChecks'
+
+      - name: Coverage
+        run: |
+          export GOPATH=$(go env GOPATH)
+          export PATH=$PATH:$GOPATH/bin
+          echo $PATH
+          echo $GOPATH
+          echo "Adding gocovmerge package... "
+          go get -u github.com/wadey/gocovmerge
+          tools/go/generate_coverage.sh func

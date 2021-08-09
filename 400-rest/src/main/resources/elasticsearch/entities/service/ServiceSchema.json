@@ -1,0 +1,112 @@
+{
+  "mappings" : {
+    "properties" : {
+      "appId" : {"type" : "keyword"},
+      "appName" : {"type" :  "text", "index" : false},
+      "deployments": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "appId": {
+            "type": "keyword"
+          },
+          "envId": {
+            "type": "keyword"
+          },
+          "pipelineExecutionId": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "keyword",
+            "index": false
+          },
+          "status": {
+            "type": "keyword",
+            "index": false
+          },
+          "createdAt": {
+            "type": "long"
+          },
+          "workflowType": {
+            "type": "keyword",
+            "index": false
+          },
+          "workflowId": {
+            "type": "keyword",
+            "index": false
+          }
+        }
+      },
+      "workflows" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "name" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
+      "pipelines" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "name" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
+      "auditTimestamps" : {
+        "type" : "long"
+      },
+      "deploymentTimestamps" : {
+        "type" : "long"
+      },
+      "audits" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "appId" : {
+            "type" : "keyword"
+          },
+          "createdAt" : {
+            "type" : "keyword",
+            "index" : false
+          },
+          "auditCreatedBy" : {
+            "type" : "keyword",
+            "index" : false
+          },
+          "affectedResourceId" : {
+            "type" : "keyword"
+          },
+          "affectedResourceType" : {
+            "type" : "keyword",
+            "index" : false
+          },
+          "affectedResourceName" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
+      "deploymentType" : {
+        "type" : "keyword",
+        "index" : false
+      },
+      "artifactType" : {
+        "type" : "keyword",
+        "index" : false
+      }
+    }
+  }
+}

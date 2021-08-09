@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "properties": {
+    "dockerRegistryUrl": {
+      "type": "string",
+      "description": "The Docker Registry URL for Docker Hub. Required"
+    },
+    "auth": {
+      "type": "object",
+      "description": "Authentication scheme to indicate how to authenticate with the connector. Required",
+      "properties": {
+        "type": {
+          "enum": [
+            "UsernamePassword"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernamePassword"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "Username to access connector"
+                  },
+                  "passwordRef": {
+                    "type": "string",
+                    "description": "Password of the connector"
+                  }
+                },
+                "required": [
+                  "username",
+                  "passwordRef"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "required": [
+    "dockerRegistryUrl",
+    "auth"
+  ],
+  "additionalProperties": false
+}

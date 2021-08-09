@@ -1,0 +1,13 @@
+-r requirements-onprem.txt.orig
+nose
+sphinx
+splunk-sdk
+plotly
+debacl
+gensim
+pymongo; sys_platform == 'darwin'
+ipython==5.0; sys_platform == 'darwin'
+jupyter; sys_platform == 'darwin'
+newrelic
+mock
+gensim

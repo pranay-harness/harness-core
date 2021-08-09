@@ -1,0 +1,31 @@
+lint:
+  group: uber2
+  rules:
+    remove:
+    # Ignore non-java languages
+    - FILE_OPTIONS_REQUIRE_CSHARP_NAMESPACE
+    - FILE_OPTIONS_REQUIRE_GO_PACKAGE
+    - FILE_OPTIONS_REQUIRE_OBJC_CLASS_PREFIX
+    - FILE_OPTIONS_REQUIRE_PHP_NAMESPACE
+    
+    # Ignore documentation requirements
+    - ENUMS_HAVE_SENTENCE_COMMENTS
+    - RPCS_HAVE_SENTENCE_COMMENTS
+    - SERVICES_HAVE_SENTENCE_COMMENTS
+    - MESSAGES_HAVE_SENTENCE_COMMENTS_EXCEPT_REQUEST_RESPONSE_TYPES
+    
+    # Ignore naming requirements
+    - SERVICE_NAMES_API_SUFFIX
+    - REQUEST_RESPONSE_NAMES_MATCH_RPC
+    - WKT_DURATION_SUFFIX
+    - WKT_TIMESTAMP_SUFFIX
+    
+    # Not required as we only use java.
+    - FILE_OPTIONS_REQUIRE_JAVA_OUTER_CLASSNAME
+    - FILE_OPTIONS_REQUIRE_JAVA_PACKAGE
+
+    # Allow other types in the proto file
+    - REQUEST_RESPONSE_TYPES_ONLY_IN_FILE
+
+    # Ignore versioned package-name requirements
+    - PACKAGE_MAJOR_BETA_VERSIONED

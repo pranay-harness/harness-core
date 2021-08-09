@@ -1,0 +1,125 @@
+extend type Mutation {
+  # Creates a new Connector and returns it
+  createConnector(input: CreateConnectorInput!): CreateConnectorPayload @dataFetcher(name: createConnector)
+  # Updates a Connector and returns it.
+  updateConnector(input: UpdateConnectorInput!): UpdateConnectorPayload @dataFetcher(name: updateConnector)
+  # Deletes a Connector.
+  deleteConnector(input: DeleteConnectorInput!): DeleteConnectorPayload @dataFetcher(name: deleteConnector)
+}
+
+input CreateConnectorInput {
+  clientMutationId: String
+  connectorType: ConnectorType!
+  gitConnector: GitConnectorInput
+  dockerConnector: DockerConnectorInput
+  nexusConnector: NexusConnectorInput
+  helmConnector: HelmConnectorInput
+}
+
+input UpdateConnectorInput {
+  clientMutationId: String
+  connectorId: String!
+  connectorType: ConnectorType!
+  gitConnector: UpdateGitConnectorInput
+  dockerConnector: DockerConnectorInput
+  nexusConnector: NexusConnectorInput
+  helmConnector: HelmConnectorInput
+}
+
+input DeleteConnectorInput {
+  clientMutationId: String
+  connectorId: String!
+}
+
+type CreateConnectorPayload {
+  clientMutationId: String
+  connector: Connector
+}
+
+type UpdateConnectorPayload {
+  clientMutationId: String
+  connector: Connector
+}
+
+type DeleteConnectorPayload {
+  clientMutationId: String
+}
+
+input GitConnectorInput {
+  name: String!
+  userName: String
+  URL: String!
+  urlType: UrlType!
+  branch: String
+  passwordSecretId: String
+  sshSettingId: String
+  generateWebhookUrl: Boolean
+  customCommitDetails: CustomCommitDetailsInput
+  usageScope: UsageScopeInput
+  delegateSelectors: [String!]
+}
+
+input UpdateGitConnectorInput {
+  name: String
+  userName: String
+  URL: String
+  branch: String
+  passwordSecretId: String
+  sshSettingId: String
+  generateWebhookUrl: Boolean
+  customCommitDetails: CustomCommitDetailsInput
+  usageScope: UsageScopeInput
+  delegateSelectors: [String!]
+}
+
+input CustomCommitDetailsInput {
+  authorName: String
+  authorEmailId: String
+  commitMessage: String
+}
+
+input DockerConnectorInput {
+  name: String!
+  URL: String!
+  userName: String
+  passwordSecretId: String
+  delegateSelectors: [String]
+}
+
+input NexusConnectorInput {
+  name: String!
+  URL: String!
+  userName: String
+  passwordSecretId: String
+  delegateSelectors: [String]
+  version: NexusVersion!
+}
+
+enum NexusVersion {
+  V2
+  V3
+}
+
+input HelmConnectorInput {
+  name: String!
+  amazonS3PlatformDetails: AmazonS3PlatformInput
+  gcsPlatformDetails: GCSPlatformInput
+  httpServerPlatformDetails: HttpServerPlatformInput
+}
+
+input AmazonS3PlatformInput {
+  awsCloudProvider: String!
+  bucketName: String!
+  region: String!
+}
+
+input GCSPlatformInput {
+  googleCloudProvider: String!
+  bucketName: String!
+}
+
+input HttpServerPlatformInput {
+  URL: String!
+  userName: String
+  passwordSecretId: String
+}

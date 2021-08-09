@@ -1,0 +1,91 @@
+digraph G {
+  compound=true;
+  newrank=true;
+
+  service_api_beans [shape=rect color=green label="service api beans"];
+
+  service_api [shape=rect label="service api"];
+
+  delegate_beans [shape=rect color=green label="delegate beans"];
+
+  subgraph {
+    rank=same
+    delegate_tasks_beans [shape=rect color=green label="delegate tasks beans"];
+    tasks_add_on_beans [shape=rect color=green label="tasks add-on beans"];
+  }
+
+  subgraph {
+    rank=same
+    delegate_tasks [shape=rect label="delegate tasks"];
+    tasks_add_on [shape=rect label="tasks add-on"];
+  }
+
+  orchestration_beans [shape=rect color=green label="orchestration beans"];
+
+  orchestration [shape=rect label="orchestration"];
+
+  delegate_service_driver [shape=rect label="delegate service driver"];
+
+  subgraph {
+    rank=same
+    delegate_agent_beans [shape=rect color=green label="delegate agent beans"];
+    delegate_service_beans [shape=rect color=green label="delegate service beans"];
+  }
+
+  subgraph cluster_delegate_service
+  {
+	  label = "delegate service";
+
+    rank=same
+    delegate_service_agent [shape=rect label="agent APIs"];
+    delegate_service_ui [shape=rect label="UI APIs"];
+    delegate_service_managers [shape=rect label="manager APIs"];
+  }
+
+  subgraph {
+    rank=same
+    edge[style=invis];
+    delegate_agent [shape=rect label="delegate agent"];
+    manager_cx [shape=rect label="manager Cx"];
+    delegate_agent -> manager_cx;
+  }
+
+  delegate_service_managers -> orchestration[style=invis];
+
+  service_api -> service_api_beans;
+
+  delegate_tasks -> tasks_add_on;
+
+  delegate_tasks_beans -> delegate_beans;
+
+  delegate_tasks_beans -> service_api_beans;
+
+  delegate_tasks -> delegate_tasks_beans;
+  tasks_add_on -> tasks_add_on_beans;
+
+  delegate_tasks -> service_api [minlen=3];
+
+  delegate_agent_beans -> delegate_beans [minlen=4];
+
+  delegate_service_beans -> delegate_beans [minlen=4];
+
+  orchestration_beans -> delegate_tasks_beans;
+
+  orchestration -> delegate_service_driver;
+
+  orchestration -> orchestration_beans;
+
+  delegate_agent -> delegate_agent_beans;
+  delegate_agent -> delegate_tasks [minlen=5];
+
+  delegate_service_driver -> delegate_service_beans;
+
+  delegate_service_managers -> delegate_service_beans;
+  delegate_service_agent -> delegate_agent_beans;
+
+  manager_cx -> delegate_service_driver;
+  manager_cx -> delegate_tasks_beans;
+  manager_cx -> tasks_add_on_beans;
+
+  manager_cx -> orchestration;
+}

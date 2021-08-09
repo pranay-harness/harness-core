@@ -1,0 +1,51 @@
+{
+  "mappings" : {
+    "properties" : {"appId" : {"type" : "keyword"},
+      "appName" : {"type" :  "text", "index" : false},
+      "status" : {
+        "type" : "keyword",
+        "index" : false
+      },
+      "workflowType" : {
+        "type" : "keyword",
+        "index" : false
+      },
+      "environments" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "name" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
+      "workflows" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "name" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      },
+      "services" : {
+        "type" : "nested",
+        "properties" : {
+          "id" : {
+            "type" : "keyword"
+          },
+          "name" : {
+            "type" : "keyword",
+            "index" : false
+          }
+        }
+      }
+    }
+  }
+}

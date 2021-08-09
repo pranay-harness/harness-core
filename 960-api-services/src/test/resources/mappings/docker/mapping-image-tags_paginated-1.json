@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/v2/repositories/image-paginated/tags?page=1&page_size=1"
+  },
+  "response": {
+    "status": 400,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

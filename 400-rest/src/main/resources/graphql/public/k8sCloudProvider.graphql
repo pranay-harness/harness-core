@@ -1,0 +1,124 @@
+input K8sCloudProviderInput {
+  name: String!
+
+  clusterDetailsType: ClusterDetailsType!
+  inheritClusterDetails: InheritClusterDetails
+  manualClusterDetails: ManualClusterDetails
+
+  skipValidation: Boolean
+}
+
+enum ClusterDetailsType {
+  INHERIT_CLUSTER_DETAILS
+  MANUAL_CLUSTER_DETAILS
+}
+
+input InheritClusterDetails {
+  delegateName: String
+  delegateSelectors: [String!]
+  usageScope: UsageScopeInput
+}
+
+input ManualClusterDetails {
+  masterUrl: String!
+
+  type: ManualClusterDetailsAuthenticationType!
+  usernameAndPassword: UsernameAndPasswordAuthentication
+  serviceAccountToken: ServiceAccountToken
+  oidcToken: OIDCToken
+  none: None
+}
+
+enum ManualClusterDetailsAuthenticationType {
+  USERNAME_AND_PASSWORD
+  CLIENT_KEY_AND_CERTIFICATE
+  SERVICE_ACCOUNT_TOKEN
+  OIDC_TOKEN
+  CUSTOM
+}
+
+input UsernameAndPasswordAuthentication {
+  userName: String
+  userNameSecretId: String
+  passwordSecretId: String!
+}
+
+input ServiceAccountToken {
+  serviceAccountTokenSecretId: String!
+}
+
+input OIDCToken {
+  identityProviderUrl: String!
+  userName: String!
+  passwordSecretId: String!
+  clientIdSecretId: String!
+  clientSecretSecretId: String!
+  scopes: String!
+}
+
+input None {
+  userName: String!
+  passwordSecretId: String!
+  caCertificateSecretId: String!
+  clientCertificateSecretId: String!
+  clientKeySecretId: String!
+  clientKeyPassphraseSecretId: String!
+  clientKeyAlgorithm: String!
+  serviceAccountTokenSecretId: String!
+  usageScope: UsageScopeInput
+}
+
+input UpdateK8sCloudProviderInput {
+  name: String
+  clusterDetailsType: ClusterDetailsType
+  inheritClusterDetails: UpdateInheritClusterDetails
+  manualClusterDetails: UpdateManualClusterDetails
+
+  skipValidation: Boolean
+}
+
+input UpdateInheritClusterDetails {
+  delegateName: String
+  delegateSelectors: [String!]
+  usageScope: UsageScopeInput
+}
+
+input UpdateManualClusterDetails {
+  masterUrl: String
+  type: ManualClusterDetailsAuthenticationType
+  usernameAndPassword: UpdateUsernameAndPasswordAuthentication
+  serviceAccountToken: UpdateServiceAccountToken
+  oidcToken: UpdateOIDCToken
+  none: UpdateNone
+}
+
+input UpdateUsernameAndPasswordAuthentication {
+  userName: String
+  userNameSecretId: String
+  passwordSecretId: String
+}
+
+input UpdateServiceAccountToken {
+  serviceAccountTokenSecretId: String
+}
+
+input UpdateOIDCToken {
+  identityProviderUrl: String
+  userName: String
+  passwordSecretId: String
+  clientIdSecretId: String
+  clientSecretSecretId: String
+  scopes: String
+}
+
+input UpdateNone {
+  userName: String
+  passwordSecretId: String
+  caCertificateSecretId: String
+  clientCertificateSecretId: String
+  clientKeySecretId: String
+  clientKeyPassphraseSecretId: String
+  clientKeyAlgorithm: String
+  serviceAccountTokenSecretId: String
+  usageScope: UsageScopeInput
+}

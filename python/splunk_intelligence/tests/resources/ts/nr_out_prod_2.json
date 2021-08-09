@@ -1,0 +1,1677 @@
+{
+  "transactions": {
+    "89" : {
+      "txn_name": "XYZ_1",
+      "metrics": {
+        "0": {
+          "metric_name": "requestsPerMinute",
+          "control": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                1.0,
+                9.0,
+                -1.0,
+                1.0,
+                9.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "data_type": "THROUGHPUT",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                9.0,
+                1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "data_type": "THROUGHPUT",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "results": {
+            "webservices-pr-1-sys-id-build-com": {
+              "distance": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "control_data": [
+                0.0,
+                0.0,
+                1.0,
+                5.0,
+                9.0
+              ],
+              "test_data": [
+                9.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "control_cuts": [
+                "x",
+                "x",
+                "b",
+                "d",
+                "f"
+              ],
+              "test_cuts": [
+                "f",
+                "b",
+                "x",
+                "x",
+                "x"
+              ],
+              "optimal_cuts": "xxfbx",
+              "optimal_data": [
+                0.0,
+                0.0,
+                9.0,
+                1.0,
+                0.0
+              ],
+              "control_index": 0,
+              "test_index": 0,
+              "nn": "webservices-pr-1.sys.id.build.com",
+              "risk": 0,
+              "score": 0
+            }
+          },
+          "control_avg": 5.0,
+          "test_avg": 5.0,
+          "max_risk": 0
+        },
+        "1": {
+          "metric_name": "averageResponseTime",
+          "control": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                11.3,
+                11.3,
+                -1.0,
+                2.54,
+                2.54,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "weights": [
+              [
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                1.0,
+                9.0,
+                -1.0,
+                1.0,
+                9.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "weights_type": "COUNT",
+            "data_type": "RESP_TIME",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                13.5,
+                13.5,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "weights": [
+              [
+                -1.0,
+                -1.0,
+                9.0,
+                1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "weights_type": "COUNT",
+            "data_type": "RESP_TIME",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "results": {
+            "webservices-pr-1-sys-id-build-com": {
+              "distance": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "control_data": [
+                0.0,
+                0.0,
+                11.3,
+                6.92,
+                2.54
+              ],
+              "test_data": [
+                13.5,
+                13.5,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "control_cuts": [
+                "x",
+                "x",
+                "e",
+                "c",
+                "a"
+              ],
+              "test_cuts": [
+                "f",
+                "f",
+                "x",
+                "x",
+                "x"
+              ],
+              "optimal_cuts": "xxffx",
+              "optimal_data": [
+                0.0,
+                0.0,
+                13.5,
+                13.5,
+                0.0
+              ],
+              "control_index": 0,
+              "test_index": 0,
+              "nn": "webservices-pr-1.sys.id.build.com",
+              "risk": 0,
+              "score": 0
+            }
+          },
+          "control_avg": 6.92,
+          "test_avg": 13.5,
+          "max_risk": 0
+        },
+        "2": {
+          "metric_name": "apdexScore",
+          "control": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                1.0,
+                0.94,
+                -1.0,
+                1.0,
+                -1.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "data_type": "VALUE",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                0.94,
+                1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "data_type": "VALUE",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "results": {
+            "webservices-pr-1-sys-id-build-com": {
+              "distance": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "control_data": [
+                0.0,
+                0.0,
+                1.0,
+                0.97,
+                0.0
+              ],
+              "test_data": [
+                0.94,
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "control_cuts": [
+                "x",
+                "x",
+                "f",
+                "c",
+                "x"
+              ],
+              "test_cuts": [
+                "a",
+                "f",
+                "x",
+                "x",
+                "x"
+              ],
+              "optimal_cuts": "xxafx",
+              "optimal_data": [
+                0.0,
+                0.0,
+                0.94,
+                1.0,
+                0.0
+              ],
+              "control_index": 0,
+              "test_index": 0,
+              "nn": "webservices-pr-1.sys.id.build.com",
+              "risk": 0,
+              "score": 0
+            }
+          },
+          "control_avg": 0.98,
+          "test_avg": 0.97,
+          "max_risk": 0
+        },
+        "3": {
+          "metric_name": "error",
+          "control": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "data_type": "ERROR",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0,
+                -1.0
+              ]
+            ],
+            "data_type": "ERROR",
+            "host_names": [
+              "webservices-pr-1.sys.id.build.com"
+            ]
+          },
+          "control_avg": -1.0,
+          "test_avg": -1.0,
+          "max_risk": -1
+        }
+      }
+    },
+    "49" : {
+            "txn_name" : "XYZ_2",
+            "metrics" : {
+                "0" : {
+                    "metric_name" : "requestsPerMinute",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                10.0,
+                                18.0,
+                                19.0,
+                                7.0,
+                                57.0,
+                                30.0,
+                                -1.0,
+                                51.0,
+                                28.0,
+                                5.0,
+                                6.0,
+                                12.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                2.0,
+                                3.0,
+                                13.0,
+                                2.0,
+                                -1.0,
+                                9.0,
+                                11.0,
+                                1.0,
+                                9.0,
+                                12.0,
+                                1.0,
+                                37.0,
+                                12.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                1.14,
+                                1.25,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                14.0,
+                                27.6666666666667,
+                                40.5,
+                                13.0,
+                                12.0
+                            ],
+                            "test_data" : [
+                                6.0,
+                                5.5,
+                                7.0,
+                                16.6666666666667,
+                                12.0
+                            ],
+                            "control_cuts" : [
+                                "d",
+                                "f",
+                                "g",
+                                "d",
+                                "c"
+                            ],
+                            "test_cuts" : [
+                                "b",
+                                "b",
+                                "c",
+                                "d",
+                                "c"
+                            ],
+                            "optimal_cuts" : "bbcdc",
+                            "optimal_data" : [
+                                6.0,
+                                5.5,
+                                7.0,
+                                16.6666666666667,
+                                12.0
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "webservices-pr-1.sys.id.build.com",
+                            "risk" : 1,
+                            "score" : 0.402
+                        }
+                    },
+                    "control_avg" : 22.0909090909091,
+                    "test_avg" : 9.33333333333333,
+                    "max_risk" : 1
+                },
+                "1" : {
+                    "metric_name" : "averageResponseTime",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                2.28,
+                                1.38,
+                                0.964,
+                                1.5,
+                                1.59,
+                                1.19,
+                                -1.0,
+                                1.29,
+                                1.2,
+                                1.18,
+                                1.07,
+                                1.71,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                -1.0,
+                                10.0,
+                                18.0,
+                                19.0,
+                                7.0,
+                                57.0,
+                                30.0,
+                                -1.0,
+                                51.0,
+                                28.0,
+                                5.0,
+                                6.0,
+                                12.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                2.07,
+                                2.59,
+                                1.35,
+                                1.48,
+                                -1.0,
+                                1.14,
+                                1.06,
+                                1.05,
+                                0.945,
+                                1.14,
+                                1.15,
+                                1.14,
+                                1.07,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                2.0,
+                                3.0,
+                                13.0,
+                                2.0,
+                                -1.0,
+                                9.0,
+                                11.0,
+                                1.0,
+                                9.0,
+                                12.0,
+                                1.0,
+                                37.0,
+                                12.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                1.83,
+                                1.35133333333333,
+                                1.24,
+                                1.15,
+                                1.71
+                            ],
+                            "test_data" : [
+                                2.00333333333333,
+                                1.31,
+                                1.01833333333333,
+                                1.14333333333333,
+                                1.07
+                            ],
+                            "control_cuts" : [
+                                "g",
+                                "d",
+                                "c",
+                                "c",
+                                "f"
+                            ],
+                            "test_cuts" : [
+                                "g",
+                                "d",
+                                "b",
+                                "c",
+                                "b"
+                            ],
+                            "optimal_cuts" : "",
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "webservices-pr-1.sys.id.build.com",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 1.39581818181818,
+                    "test_avg" : 1.34875,
+                    "max_risk" : 0
+                },
+                "2" : {
+                    "metric_name" : "apdexScore",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                1.0,
+                                -1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                0.0
+                            ],
+                            "test_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "control_cuts" : [
+                                "q",
+                                "q",
+                                "q",
+                                "q",
+                                "x"
+                            ],
+                            "test_cuts" : [
+                                "q",
+                                "q",
+                                "q",
+                                "q",
+                                "q"
+                            ],
+                            "optimal_cuts" : "qqqqq",
+                            "optimal_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "webservices-pr-1.sys.id.build.com",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 1.0,
+                    "test_avg" : 1.0,
+                    "max_risk" : 0
+                },
+                "3" : {
+                    "metric_name" : "error",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "control_avg" : -1.0,
+                    "test_avg" : -1.0,
+                    "max_risk" : -1
+                }
+            }
+        },
+    "53" : {
+            "txn_name" : "XYZ_3",
+            "metrics" : {
+                "0" : {
+                    "metric_name" : "requestsPerMinute",
+                    "control" : {
+                        "data" : [
+                            [
+                                6.0,
+                                125.0,
+                                123.0,
+                                151.0,
+                                50.0,
+                                327.0,
+                                198.0,
+                                328.0,
+                                343.0,
+                                223.0,
+                                52.0,
+                                107.0,
+                                114.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                19.0,
+                                28.0,
+                                83.0,
+                                14.0,
+                                14.0,
+                                64.0,
+                                60.0,
+                                15.0,
+                                83.0,
+                                83.0,
+                                15.0,
+                                284.0,
+                                122.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                1.14,
+                                1.64,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                84.6666666666667,
+                                176.0,
+                                289.666666666667,
+                                127.333333333333,
+                                114.0
+                            ],
+                            "test_data" : [
+                                43.3333333333333,
+                                30.6666666666667,
+                                52.6666666666667,
+                                127.333333333333,
+                                122.0
+                            ],
+                            "control_cuts" : [
+                                "c",
+                                "f",
+                                "g",
+                                "d",
+                                "d"
+                            ],
+                            "test_cuts" : [
+                                "b",
+                                "b",
+                                "b",
+                                "d",
+                                "d"
+                            ],
+                            "optimal_cuts" : "bbbdd",
+                            "optimal_data" : [
+                                43.3333333333333,
+                                30.6666666666667,
+                                52.6666666666667,
+                                127.333333333333,
+                                122.0
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "webservices-pr-1.sys.id.build.com",
+                            "risk" : 1,
+                            "score" : 0.48
+                        }
+                    },
+                    "control_avg" : 165.153846153846,
+                    "test_avg" : 68.0,
+                    "max_risk" : 1
+                },
+                "1" : {
+                    "metric_name" : "averageResponseTime",
+                    "control" : {
+                        "data" : [
+                            [
+                                1.44,
+                                1.57,
+                                2.52,
+                                1.06,
+                                1.14,
+                                1.0,
+                                0.966,
+                                0.983,
+                                0.974,
+                                1.01,
+                                0.947,
+                                1.01,
+                                1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                6.0,
+                                125.0,
+                                123.0,
+                                151.0,
+                                50.0,
+                                327.0,
+                                198.0,
+                                328.0,
+                                343.0,
+                                223.0,
+                                52.0,
+                                107.0,
+                                114.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                2.26,
+                                1.48,
+                                1.12,
+                                1.2,
+                                1.2,
+                                1.02,
+                                1.16,
+                                0.989,
+                                0.939,
+                                0.919,
+                                1.53,
+                                0.99,
+                                1.02,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                19.0,
+                                28.0,
+                                83.0,
+                                14.0,
+                                14.0,
+                                64.0,
+                                60.0,
+                                15.0,
+                                83.0,
+                                83.0,
+                                15.0,
+                                284.0,
+                                122.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                1.84333333333333,
+                                1.06666666666667,
+                                0.974333333333333,
+                                0.989,
+                                1.0
+                            ],
+                            "test_data" : [
+                                1.62,
+                                1.14,
+                                1.02933333333333,
+                                1.14633333333333,
+                                1.02
+                            ],
+                            "control_cuts" : [
+                                "g",
+                                "c",
+                                "b",
+                                "c",
+                                "c"
+                            ],
+                            "test_cuts" : [
+                                "f",
+                                "d",
+                                "c",
+                                "d",
+                                "c"
+                            ],
+                            "optimal_cuts" : "",
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "webservices-pr-1.sys.id.build.com",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 1.20153846153846,
+                    "test_avg" : 1.21746153846154,
+                    "max_risk" : 0
+                },
+                "2" : {
+                    "metric_name" : "apdexScore",
+                    "control" : {
+                        "data" : [
+                            [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                0.0
+                            ],
+                            "test_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "control_cuts" : [
+                                "q",
+                                "q",
+                                "q",
+                                "q",
+                                "x"
+                            ],
+                            "test_cuts" : [
+                                "q",
+                                "q",
+                                "q",
+                                "q",
+                                "q"
+                            ],
+                            "optimal_cuts" : "qqqqq",
+                            "optimal_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "webservices-pr-1.sys.id.build.com",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 1.0,
+                    "test_avg" : 1.0,
+                    "max_risk" : 0
+                },
+                "3" : {
+                    "metric_name" : "error",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "webservices-pr-1.sys.id.build.com"
+                        ]
+                    },
+                    "control_avg" : -1.0,
+                    "test_avg" : -1.0,
+                    "max_risk" : -1
+                }
+            }
+        },
+    "70" : {
+            "txn_name" : "XYZ_4",
+            "metrics" : {
+                "0" : {
+                    "metric_name" : "requestsPerMinute",
+                    "control" : {
+                        "data" : [
+                            [
+                                3.0,
+                                78.0,
+                                81.0,
+                                92.0,
+                                21.0,
+                                199.0,
+                                118.0,
+                                194.0,
+                                215.0,
+                                128.0,
+                                37.0,
+                                72.0,
+                                70.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                15.0,
+                                21.0,
+                                50.0,
+                                5.0,
+                                0.0,
+                                37.0,
+                                27.0,
+                                2.0,
+                                54.0,
+                                57.0,
+                                6.0,
+                                149.0,
+                                65.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "THROUGHPUT",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                0.75,
+                                1.64,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                54.0,
+                                104.0,
+                                175.666666666667,
+                                79.0,
+                                70.0
+                            ],
+                            "test_data" : [
+                                28.6666666666667,
+                                14.0,
+                                27.6666666666667,
+                                70.6666666666667,
+                                65.0
+                            ],
+                            "control_cuts" : [
+                                "c",
+                                "e",
+                                "g",
+                                "d",
+                                "d"
+                            ],
+                            "test_cuts" : [
+                                "b",
+                                "b",
+                                "b",
+                                "d",
+                                "d"
+                            ],
+                            "optimal_cuts" : "bbbdd",
+                            "optimal_data" : [
+                                28.6666666666667,
+                                14.0,
+                                27.6666666666667,
+                                70.6666666666667,
+                                65.0
+                            ],
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "node1",
+                            "risk" : 1,
+                            "score" : 0.428
+                        }
+                    },
+                    "control_avg" : 100.615384615385,
+                    "test_avg" : 37.5384615384615,
+                    "max_risk" : 1
+                },
+                "1" : {
+                    "metric_name" : "averageResponseTime",
+                    "control" : {
+                        "data" : [
+                            [
+                                1.31,
+                                1.28,
+                                0.958,
+                                0.894,
+                                0.83,
+                                0.822,
+                                0.867,
+                                0.855,
+                                0.817,
+                                0.862,
+                                0.865,
+                                0.825,
+                                0.864,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                3.0,
+                                78.0,
+                                81.0,
+                                92.0,
+                                21.0,
+                                199.0,
+                                118.0,
+                                194.0,
+                                215.0,
+                                128.0,
+                                37.0,
+                                72.0,
+                                70.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                1.57,
+                                1.29,
+                                0.916,
+                                0.9,
+                                -1.0,
+                                0.878,
+                                0.939,
+                                0.95,
+                                0.831,
+                                0.825,
+                                0.837,
+                                0.834,
+                                0.806,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights" : [
+                            [
+                                15.0,
+                                21.0,
+                                50.0,
+                                5.0,
+                                0.0,
+                                37.0,
+                                27.0,
+                                2.0,
+                                54.0,
+                                57.0,
+                                6.0,
+                                149.0,
+                                65.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "weights_type" : "COUNT",
+                        "data_type" : "RESP_TIME",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                1.18266666666667,
+                                0.848666666666667,
+                                0.846333333333333,
+                                0.850666666666667,
+                                0.864
+                            ],
+                            "test_data" : [
+                                1.25866666666667,
+                                0.889,
+                                0.906666666666667,
+                                0.832,
+                                0.806
+                            ],
+                            "control_cuts" : [
+                                "g",
+                                "c",
+                                "c",
+                                "c",
+                                "c"
+                            ],
+                            "test_cuts" : [
+                                "g",
+                                "c",
+                                "c",
+                                "b",
+                                "b"
+                            ],
+                            "optimal_cuts" : "",
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "node1",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 0.926846153846154,
+                    "test_avg" : 0.964666666666666,
+                    "max_risk" : 0
+                },
+                "2" : {
+                    "metric_name" : "apdexScore",
+                    "control" : {
+                        "data" : [
+                            [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "VALUE",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "results" : {
+                        "webservices-pr-1-sys-id-build-com" : {
+                            "distance" : [
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "control_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "test_data" : [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "control_cuts" : [
+                                "q",
+                                "q",
+                                "q",
+                                "q",
+                                "q"
+                            ],
+                            "test_cuts" : [
+                                "q",
+                                "q",
+                                "q",
+                                "q",
+                                "q"
+                            ],
+                            "optimal_cuts" : "",
+                            "control_index" : 0,
+                            "test_index" : 0,
+                            "nn" : "node1",
+                            "risk" : 0,
+                            "score" : 0.0
+                        }
+                    },
+                    "control_avg" : 1.0,
+                    "test_avg" : 1.0,
+                    "max_risk" : 0
+                },
+                "3" : {
+                    "metric_name" : "error",
+                    "control" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "test" : {
+                        "data" : [
+                            [
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0,
+                                -1.0
+                            ]
+                        ],
+                        "data_type" : "ERROR",
+                        "host_names" : [
+                            "node1"
+                        ]
+                    },
+                    "control_avg" : -1.0,
+                    "test_avg" : -1.0,
+                    "max_risk" : -1
+                }
+            }
+        }
+
+  }
+}

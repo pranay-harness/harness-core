@@ -1,0 +1,67 @@
+extend type Mutation {
+  createUser(input: CreateUserInput!): CreateUserPayload @dataFetcher(name: createUser)
+  updateUser(input: UpdateUserInput!): UpdateUserPayload @dataFetcher(name: updateUser)
+  deleteUser(input: DeleteUserInput!): DeleteUserPayload @dataFetcher(name: deleteUser)
+}
+
+extend type Query {
+  #fetch a user by id
+  user(id: String!): User @dataFetcher(name: user)
+  #fetch a list of users
+  users(limit: Int!, offset: Int): UserConnection @dataFetcher(name: userConnection)
+  #fetch a user by name
+  userByName(name: String!): User @dataFetcher(name: user)
+  #fetch a user by email
+  userByEmail(email: String!): User @dataFetcher(name: user)
+}
+
+input CreateUserInput {
+  clientMutationId: String
+  name: String!
+  email: String!
+  userGroupIds: [String!]
+}
+
+type CreateUserPayload {
+  clientMutationId: String
+  user: User
+}
+
+input UpdateUserInput {
+  clientMutationId: String
+  id: String!
+  name: String
+  userGroupIds: [String!]
+}
+
+type UpdateUserPayload {
+  clientMutationId: String
+  user: User
+}
+
+input DeleteUserInput {
+  clientMutationId: String
+  id: String!
+}
+
+type DeleteUserPayload {
+  clientMutationId: String
+}
+
+extend type User {
+  id: String
+  name: String
+  email: String
+  isEmailVerified: Boolean
+  isTwoFactorAuthenticationEnabled: Boolean
+  isUserLocked: Boolean
+  isPasswordExpired: Boolean
+  isImportedFromIdentityProvider: Boolean
+  userGroups(limit: Int!, offset: Int): UserGroupConnection
+    @dataFetcher(name: userGroupConnection, contextFieldArgsMap: "{ \"User\": \"id\"}")
+}
+
+type UserConnection {
+  pageInfo: PageInfo
+  nodes: [User]
+}

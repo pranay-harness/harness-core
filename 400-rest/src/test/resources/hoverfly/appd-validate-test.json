@@ -1,0 +1,61 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/controller/rest/applications"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "harness-test.saas.appdynamics.com"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "query" : {
+          "output" : [ {
+            "matcher" : "exact",
+            "value" : "json"
+          } ]
+        },
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAALVYy4rbMBTdz1cMXs8FSbb16M50SqeLdGgndEhLCbKtJG7jB5acIZT+e+U8NqWLO5TrhSG2gw9X5yV/u7mNx6/TOels65I3t0lxz+LBtUyTu/Od2vlqbIbQ9N38wPVyU8dfPDdaXS7YquqnLryfTncSxcpMs1oAd3kNWalr0GVlwDDBSiu1dZwl8Z+/7/4FozpANfnQt26E2rU9CoxgSlOAGUbb/bB7iKCC8wGJRVANBjsPo4Q2FBjmIcBot7sJx5GcBsYhQN8No2vBDkONgsJFzimg1G7vtja4dUSCA5IqEno82XC07brAwdBGZxQoOht8VItAjYIZGqU82LFz3sO9O2BpSuIep2EMI8410pxEKuPPWSMwVBuOm4XOSHBcHBT81DV7nFC4TimQ+BfbHiNHcSCkINHJGQTevaQkUcpFrhlSrmlORA2kearcSJLV6F/ao4XQ1/2+wcZ8RskMdNuIzCDJtb9GAjhHT3MazX6MPMVGW+QppymD1Qa9LlJJEgzn2lMdtlNnkbnCGUndeC4Wq/XXx8cFjhjMUPYN2LgSWc45CUFnXqyvXRDZAzWJcEWmAO+onElDkvc1snsxJUlC5e0X+FTA8t3TEusZJAErMrguB65/McVI9Frasdrbo8eaaFQKnWDPLobd2ZPMI/biUx/d2XHeKmCbmBDMkPC1LzeTr+z80ld8ahA5iZtdjQzsFHYoJBkXJM3s4u+4T1JxP0kSutHLZg2/YuuSKpJp9IPrwO+aDY4eGdeCLvsXxWr58OHzcoWjqmT/G3c33/8AYoPpargUAAA=",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Length" : [ "611" ],
+          "Content-Type" : [ "application/json;charset=UTF-8" ],
+          "Date" : [ "Mon, 10 Aug 2020 10:11:49 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "AppDynamics" ],
+          "Set-Cookie" : [ "JSESSIONID=7dad6a50ed5296f381cc06e2cbbc; Path=/controller; HttpOnly; Secure" ],
+          "X-Content-Type-Options" : [ "nosniff" ],
+          "X-Frame-Options" : [ "SAMEORIGIN" ],
+          "X-Xss-Protection" : [ "1; mode=block" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2020-08-10T15:41:50+05:30"
+  }
+}

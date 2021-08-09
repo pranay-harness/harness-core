@@ -1,0 +1,39 @@
+extend type Mutation {
+  # Beta: Resume a pipeline with Runtime Inputs
+  pipelineResumeRuntime(input: RuntimeExecutionInputsToResumePipeline!): ContinueExecutionPayload
+    @dataFetcher(name: pipelineResumeRuntime)
+}
+
+input RuntimeExecutionInputsToResumePipeline {
+  clientMutationId: String
+  # Application ID
+  applicationId: String!
+  # Workflow Execution Id
+  pipelineExecutionId: String!
+  # Pipeline stage element ID
+  pipelineStageElementId: String!
+
+  #Variable inputs required for the execution
+  variableInputs: [VariableInput]
+  #Service inputs required for the execution
+  serviceInputs: [ServiceInput]
+}
+
+type ContinueExecutionPayload {
+  clientMutationId: String
+  status: Boolean
+}
+
+extend type Query {
+  #Beta: Get required inputs to start an execution of a Workflow or Pipeline
+  runtimeExecutionInputsToResumePipeline(
+    # Application ID
+    applicationId: String!
+    # Workflow Execution Id
+    pipelineExecutionId: String!
+    # Pipeline stage element ID
+    pipelineStageElementId: String!
+    # Variable inputs if the Workflow or Pipeline is templatized. Provide the required variable values to know about the required inputs
+    variableInputs: [VariableInput]
+  ): ExecutionInputs @dataFetcher(name: runtimeExecutionInputsToResumePipeline)
+}

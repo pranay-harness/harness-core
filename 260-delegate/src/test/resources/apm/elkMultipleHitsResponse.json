@@ -1,0 +1,276 @@
+{
+  "took": 65,
+  "timed_out": false,
+  "_shards": {
+    "total": 5,
+    "successful": 5,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": 68939,
+    "max_score": 10.260419,
+    "hits": [
+      {
+        "_index": "filebeat-6.0.1-2018.08.18",
+        "_type": "doc",
+        "_id": "8pvNTGUB5tBYcrsBDXGc",
+        "_score": 10.260419,
+        "_source": {
+          "@timestamp": "2018-08-18T11:30:30.849Z",
+          "beat": {
+            "hostname": "filebeat-zkhdf",
+            "version": "6.0.1",
+            "name": "filebeat-zkhdf"
+          },
+          "meta": {
+            "cloud": {
+              "provider": "gce",
+              "instance_id": "8324331660589772547",
+              "instance_name": "gke-qa-cluster-default-pool-a302e9dd-bfcs",
+              "machine_type": "projects/674494598921/machineTypes/custom-12-30720",
+              "availability_zone": "projects/674494598921/zones/us-west1-b",
+              "project_id": "qa-setup"
+            }
+          },
+          "offset": 46846,
+          "stream": "stdout",
+          "prospector": {
+            "type": "log"
+          },
+          "kubernetes": {
+            "labels": {
+              "version": "1.0.5922",
+              "harness.io/revision": "198",
+              "pod-template-hash": "616670438",
+              "harness-app": "harness",
+              "harness-service": "manager",
+              "harness-env": "quality-assurance",
+              "harness.io/service-infra-id": "ba653857-b760-3e20-8a4b-fb6ab1b00886",
+              "harness.io/managed": "true",
+              "harness-revision": "198"
+            },
+            "container": {
+              "name": "manager"
+            },
+            "pod": {
+              "name": "harness-manager-1.0.5922-198-b5bbc487d-bcqx6"
+            },
+            "namespace": "harness"
+          },
+          "source": "/var/lib/docker/containers/8e2f82f1dc840546ffded85183f0e249f67f844e464b8f1cab53102e3c6f603b/8e2f82f1dc840546ffded85183f0e249f67f844e464b8f1cab53102e3c6f603b-json.log",
+          "log": "ERROR StatusLogger No log4j2 configuration file found. Using default configuration: logging only errors to the console.",
+      "time": "2018-08-18T11:30:28.670345161Z"
+      }
+    },
+      {
+        "_index": "filebeat-6.0.1-2018.08.18",
+        "_type": "doc",
+        "_id": "QRVwSmUB5tBYcrsBYiC9",
+        "_score": 10.243604,
+        "_source": {
+          "@timestamp": "2018-08-18T00:30:04.313Z",
+          "beat": {
+            "version": "6.0.1",
+            "name": "filebeat-djvqm",
+            "hostname": "filebeat-djvqm"
+          },
+          "log": "ERROR StatusLogger No log4j2 configuration file found. Using default configuration: logging only errors to the console.",
+      "time": "2018-08-18T00:30:03.71041567Z",
+      "offset": 46852,
+      "kubernetes": {
+        "labels": {
+          "harness.io/service-infra-id": "ba653857-b760-3e20-8a4b-fb6ab1b00886",
+          "version": "1.0.5919",
+          "harness.io/revision": "197",
+          "pod-template-hash": "668289459",
+          "harness-revision": "197",
+          "harness-service": "manager",
+          "harness-app": "harness",
+          "harness.io/managed": "true",
+          "harness-env": "quality-assurance"
+        },
+        "pod": {
+          "name": "harness-manager-1.0.5919-197-bbd6df89f-bg57m"
+        },
+        "namespace": "harness",
+        "container": {
+          "name": "manager"
+        }
+      },
+      "stream": "stdout",
+      "source": "/var/lib/docker/containers/c352fe795b2c3b4be16f95c187ad594b8ce204ebd98a0a7c5f3f396d12b16746/c352fe795b2c3b4be16f95c187ad594b8ce204ebd98a0a7c5f3f396d12b16746-json.log",
+      "prospector": {
+        "type": "log"
+      },
+      "meta": {
+        "cloud": {
+          "provider": "gce",
+          "instance_id": "1524719259253321475",
+          "instance_name": "gke-qa-cluster-default-pool-a0a48f02-hq5f",
+          "machine_type": "projects/674494598921/machineTypes/custom-12-30720",
+          "availability_zone": "projects/674494598921/zones/us-west1-c",
+          "project_id": "qa-setup"
+        }
+      }
+      }
+    },
+      {
+        "_index": "filebeat-6.0.1-2018.08.18",
+        "_type": "doc",
+        "_id": "FhVwSmUB5tBYcrsBaS3C",
+        "_score": 10.243604,
+        "_source": {
+          "@timestamp": "2018-08-18T00:30:05.470Z",
+          "log": "ERROR StatusLogger No log4j2 configuration file found. Using default configuration: logging only errors to the console.",
+      "time": "2018-08-18T00:30:03.547300899Z",
+      "prospector": {
+        "type": "log"
+      },
+      "kubernetes": {
+        "container": {
+          "name": "manager"
+        },
+        "pod": {
+          "name": "harness-manager-1.0.5919-197-bbd6df89f-mzrw2"
+        },
+        "namespace": "harness",
+        "labels": {
+          "pod-template-hash": "668289459",
+          "harness-app": "harness",
+          "harness-env": "quality-assurance",
+          "version": "1.0.5919",
+          "harness-revision": "197",
+          "harness.io/revision": "197",
+          "harness-service": "manager",
+          "harness.io/service-infra-id": "ba653857-b760-3e20-8a4b-fb6ab1b00886",
+          "harness.io/managed": "true"
+        }
+      },
+      "meta": {
+        "cloud": {
+          "instance_id": "2398963022039985922",
+          "instance_name": "gke-qa-cluster-default-pool-a302e9dd-m69s",
+          "machine_type": "projects/674494598921/machineTypes/custom-12-30720",
+          "availability_zone": "projects/674494598921/zones/us-west1-b",
+          "project_id": "qa-setup",
+          "provider": "gce"
+        }
+      },
+      "source": "/var/lib/docker/containers/e5856a84c7e3fe1e54e9ea04dc83872a22043ab27c8db56fa7865bf8091de966/e5856a84c7e3fe1e54e9ea04dc83872a22043ab27c8db56fa7865bf8091de966-json.log",
+      "stream": "stdout",
+      "beat": {
+        "hostname": "filebeat-lvtqm",
+        "version": "6.0.1",
+        "name": "filebeat-lvtqm"
+      },
+      "offset": 46856
+      }
+    },
+      {
+        "_index": "filebeat-6.0.1-2018.08.18",
+        "_type": "doc",
+        "_id": "opvNTGUB5tBYcrsBEHKI",
+        "_score": 10.243604,
+        "_source": {
+          "@timestamp": "2018-08-18T11:30:31.595Z",
+          "source": "/var/lib/docker/containers/a4c1910f496a7f06d8c0e608a1ac3c4ca47e7d1ae19d1b1132c294944ccddf7b/a4c1910f496a7f06d8c0e608a1ac3c4ca47e7d1ae19d1b1132c294944ccddf7b-json.log",
+          "offset": 46854,
+          "prospector": {
+            "type": "log"
+          },
+          "beat": {
+            "version": "6.0.1",
+            "name": "filebeat-d697z",
+            "hostname": "filebeat-d697z"
+          },
+          "log": "ERROR StatusLogger No log4j2 configuration file found. Using default configuration: logging only errors to the console.",
+      "stream": "stdout",
+      "time": "2018-08-18T11:30:30.503623005Z",
+      "kubernetes": {
+        "pod": {
+          "name": "harness-manager-1.0.5922-198-b5bbc487d-rqx6p"
+        },
+        "namespace": "harness",
+        "labels": {
+          "harness-service": "manager",
+          "pod-template-hash": "616670438",
+          "harness.io/managed": "true",
+          "harness-app": "harness",
+          "harness-env": "quality-assurance",
+          "harness.io/revision": "198",
+          "harness-revision": "198",
+          "harness.io/service-infra-id": "ba653857-b760-3e20-8a4b-fb6ab1b00886",
+          "version": "1.0.5922"
+        },
+        "container": {
+          "name": "manager"
+        }
+      },
+      "meta": {
+        "cloud": {
+          "availability_zone": "projects/674494598921/zones/us-west1-a",
+          "project_id": "qa-setup",
+          "provider": "gce",
+          "instance_id": "8939905481761992451",
+          "instance_name": "gke-qa-cluster-default-pool-eaf237d3-7368",
+          "machine_type": "projects/674494598921/machineTypes/custom-12-30720"
+        }
+      }
+      }
+    },
+      {
+        "_index": "filebeat-6.0.1-2018.08.18",
+        "_type": "doc",
+        "_id": "fi9GTmUB5tBYcrsBLrrS",
+        "_score": 10.243604,
+        "_source": {
+          "@timestamp": "2018-08-18T18:22:26.430Z",
+          "source": "/var/lib/docker/containers/866eb099e477a05edf4b15188c51db70e1794e1e5f990727348a184fb8d5e916/866eb099e477a05edf4b15188c51db70e1794e1e5f990727348a184fb8d5e916-json.log",
+          "stream": "stdout",
+          "kubernetes": {
+            "pod": {
+              "name": "harness-manager-1.0.5922-199-656965f8ff-pcq4j"
+            },
+            "namespace": "harness",
+            "labels": {
+              "harness.io/managed": "true",
+              "version": "1.0.5922",
+              "harness.io/service-infra-id": "ba653857-b760-3e20-8a4b-fb6ab1b00886",
+              "harness-env": "quality-assurance",
+              "harness.io/revision": "199",
+              "harness-service": "manager",
+              "harness-revision": "199",
+              "harness-app": "harness",
+              "pod-template-hash": "2125219499"
+            },
+            "container": {
+              "name": "manager"
+            }
+          },
+          "beat": {
+            "hostname": "filebeat-lvtqm",
+            "version": "6.0.1",
+            "name": "filebeat-lvtqm"
+          },
+          "meta": {
+            "cloud": {
+              "instance_id": "2398963022039985922",
+              "instance_name": "gke-qa-cluster-default-pool-a302e9dd-m69s",
+              "machine_type": "projects/674494598921/machineTypes/custom-12-30720",
+              "availability_zone": "projects/674494598921/zones/us-west1-b",
+              "project_id": "qa-setup",
+              "provider": "gce"
+            }
+          },
+          "offset": 46852,
+          "log": "sample logs responses",
+      "time": "2018-08-18T18:22:24.992194191Z",
+      "prospector": {
+        "type": "log"
+      }
+      }
+    }
+    ]
+  }
+}

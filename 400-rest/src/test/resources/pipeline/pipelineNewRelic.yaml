@@ -1,0 +1,32 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: ENV_STATE
+  name: New-relic
+  parallel: false
+  skipCondition:
+    type: DO_NOT_SKIP
+  stageName: STAGE 1
+  workflowName: New-relic
+  workflowVariables:
+  - entityType: NEWRELIC_CONFIGID
+    name: NewRelic_Server
+    value: ${server}
+  - entityType: NEWRELIC_APPID
+    name: NewRelic_Application
+    value: ${app}
+- type: APPROVAL
+  name: Approval 1
+  parallel: true
+  properties:
+    userGroups:
+    - test
+    variables: null
+    stageName: STAGE 1
+    timeoutMillis: 86400000
+    approvalStateType: USER_GROUP
+    sweepingOutputName: ''
+  skipCondition:
+    expression: 10 == 10
+    type: CONDITIONAL_SKIP
+  stageName: STAGE 1

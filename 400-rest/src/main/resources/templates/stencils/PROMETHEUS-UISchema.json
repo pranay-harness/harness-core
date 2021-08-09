@@ -1,0 +1,11 @@
+
+{
+  "ui:order" :
+      [
+        "analysisServerConfigId", "timeDuration", "comparisonStrategy",
+        "analysisTolerance", "includePreviousPhaseNodes", "*"
+      ],
+      "metaData" : {
+    "ui:widget" : "textarea"
+  }
+}

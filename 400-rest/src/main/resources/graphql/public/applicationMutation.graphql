@@ -1,0 +1,104 @@
+extend type Mutation {
+  #Creates a new Application and returns it
+  createApplication(input: CreateApplicationInput!): CreateApplicationPayload @dataFetcher(name: createApplication)
+  #Updates an application and returns it.
+  updateApplication(input: UpdateApplicationInput!): UpdateApplicationPayload @dataFetcher(name: updateApplication)
+  #Deletes an application.
+  deleteApplication(input: DeleteApplicationInput!): DeleteApplicationPayload @dataFetcher(name: deleteApplication)
+  #Updates  Application Git Sync Configuration. Creates the configuration, in case it does not exist. Returns updated git sync configuration.
+  updateApplicationGitSyncConfig(input: UpdateApplicationGitSyncConfigInput!): UpdateApplicationGitSyncConfigPayload
+    @dataFetcher(name: updateApplicationGitSyncConfig)
+  #Removes Git Sync Configuration associated with an application. Returns updated application.
+  removeApplicationGitSyncConfig(input: RemoveApplicationGitSyncConfigInput!): RemoveApplicationGitSyncConfigPayload
+    @dataFetcher(name: removeApplicationGitSyncConfig)
+  #Enable/disable Git Sync for an application. Returns updated application.
+  updateApplicationGitSyncConfigStatus(
+    input: UpdateApplicationGitSyncConfigStatusInput!
+  ): UpdateApplicationGitSyncConfigStatusPayload @dataFetcher(name: updateApplicationGitSyncConfigStatus)
+}
+
+type UpdateApplicationGitSyncConfigPayload {
+  clientMutationId: String
+  gitSyncConfig: GitSyncConfig
+}
+
+input UpdateApplicationGitSyncConfigStatusInput {
+  clientMutationId: String
+  applicationId: String!
+  syncEnabled: Boolean!
+}
+
+input RemoveApplicationGitSyncConfigInput {
+  clientMutationId: String
+  applicationId: String!
+}
+
+input UpdateApplicationGitSyncConfigInput {
+  clientMutationId: String
+  applicationId: String!
+  gitConnectorId: String!
+  branch: String!
+  #Specify the repository name. If your Harness Source Repo Provider uses the Git Account type, provide the Repo Name to use from that account.
+  repositoryName: String
+  syncEnabled: Boolean!
+}
+
+input CreateApplicationInput {
+  clientMutationId: String
+  name: String!
+  description: String
+  # Beta: When this is set to true, all manual triggers will require API Key authorization.
+  # Doc link: https://docs.harness.io/article/mc2lxsas4c-trigger-a-deployment-using-c-url#option_enforce_api_keys_for_manual_triggers
+  isManualTriggerAuthorized: Boolean
+}
+input UpdateApplicationInput {
+  clientMutationId: String
+  applicationId: String!
+  name: String
+  description: String
+  # Beta: When this is set to true, all manual triggers will require API Key authorization.
+  # Doc link: https://docs.harness.io/article/mc2lxsas4c-trigger-a-deployment-using-c-url#option_enforce_api_keys_for_manual_triggers
+  isManualTriggerAuthorized: Boolean
+}
+
+input DeleteApplicationInput {
+  clientMutationId: String
+  applicationId: String!
+}
+
+type CreateApplicationPayload {
+  clientMutationId: String
+  application: Application
+}
+
+type UpdateApplicationPayload {
+  clientMutationId: String
+  application: Application
+}
+
+type DeleteApplicationPayload {
+  clientMutationId: String
+}
+
+type GitSyncConfig {
+  gitConnector: GitConnector
+    @dataFetcher(name: connector, contextFieldArgsMap: "{ \"connectorId\": \"gitConnectorId\"}")
+  branch: String
+  syncEnabled: Boolean
+  repositoryName: String
+}
+
+extend type Application {
+  gitSyncConfig: GitSyncConfig
+    @dataFetcher(name: applicationGitSyncConfig, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+}
+
+type UpdateApplicationGitSyncConfigStatusPayload {
+  clientMutationId: String
+  gitSyncConfig: GitSyncConfig
+}
+
+type RemoveApplicationGitSyncConfigPayload {
+  clientMutationId: String
+  application: Application
+}

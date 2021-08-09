@@ -1,0 +1,790 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/limit-ranger": "LimitRanger plugin set: cpu request for container nginx"
+                },
+                "creationTimestamp": "2020-08-19T07:51:27Z",
+                "generateName": "cd-statefulset-",
+                "labels": {
+                    "app": "nginx",
+                    "controller-revision-hash": "cd-statefulset-5c77787cf9",
+                    "harness.io/release-name": "release-ee0b2d7f-f3c5-3964-a7ec-dc92b6630437",
+                    "statefulset.kubernetes.io/pod-name": "cd-statefulset-0"
+                },
+                "name": "cd-statefulset-0",
+                "namespace": "default",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "StatefulSet",
+                        "name": "cd-statefulset",
+                        "uid": "fdc8f787-17f5-11ea-8f48-42010a800034"
+                    }
+                ],
+                "resourceVersion": "140311000",
+                "selfLink": "/api/v1/namespaces/default/pods/cd-statefulset-0",
+                "uid": "1a86e740-32b3-467d-a3fa-e6c4af8bab7a"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "nginx",
+                        "ports": [
+                            {
+                                "containerPort": 80,
+                                "name": "web",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "100m"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/usr/share/nginx/html",
+                                "name": "www"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-d6k6r",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "hostname": "cd-statefulset-0",
+                "nodeName": "gke-harness-test-pool-1-df0a6179-g16f",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "subdomain": "nginx",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "name": "www",
+                        "persistentVolumeClaim": {
+                            "claimName": "www-cd-statefulset-0"
+                        }
+                    },
+                    {
+                        "name": "default-token-d6k6r",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-d6k6r"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-19T07:51:27Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-19T08:41:01Z",
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-19T08:41:01Z",
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-19T07:51:27Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://ad72210140fd385183a178da7e34b9b47f6fdcf6302f963c94b96f54b82d0691",
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imageID": "docker-pullable://k8s.gcr.io/nginx-slim@sha256:8b4501fe0fe221df663c22e16539f399e89594552f400408303c42f3dd8d0e52",
+                        "lastState": {},
+                        "name": "nginx",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2020-08-19T08:41:01Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.128.0.49",
+                "phase": "Running",
+                "podIP": "10.60.61.11",
+                "qosClass": "Burstable",
+                "startTime": "2020-08-19T07:51:27Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/limit-ranger": "LimitRanger plugin set: cpu request for container nginx"
+                },
+                "creationTimestamp": "2020-08-16T22:58:40Z",
+                "generateName": "cd-statefulset-",
+                "labels": {
+                    "app": "nginx",
+                    "controller-revision-hash": "cd-statefulset-5c77787cf9",
+                    "harness.io/release-name": "release-ee0b2d7f-f3c5-3964-a7ec-dc92b6630437",
+                    "statefulset.kubernetes.io/pod-name": "cd-statefulset-1"
+                },
+                "name": "cd-statefulset-1",
+                "namespace": "default",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "StatefulSet",
+                        "name": "cd-statefulset",
+                        "uid": "fdc8f787-17f5-11ea-8f48-42010a800034"
+                    }
+                ],
+                "resourceVersion": "140139273",
+                "selfLink": "/api/v1/namespaces/default/pods/cd-statefulset-1",
+                "uid": "2a3e8a66-439a-4a82-ac9a-e2e53e577266"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "nginx",
+                        "ports": [
+                            {
+                                "containerPort": 80,
+                                "name": "web",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "100m"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/usr/share/nginx/html",
+                                "name": "www"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-d6k6r",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "hostname": "cd-statefulset-1",
+                "nodeName": "gke-harness-test-pool-1-df0a6179-s8wq",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "subdomain": "nginx",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "name": "www",
+                        "persistentVolumeClaim": {
+                            "claimName": "www-cd-statefulset-1"
+                        }
+                    },
+                    {
+                        "name": "default-token-d6k6r",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-d6k6r"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-16T22:58:40Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T22:58:15Z",
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T22:58:15Z",
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-16T22:58:40Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://ab963a3bb60d682b8fbe9bbd959e2a9b4079d3de634a20cc55609653aae9ff7f",
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imageID": "docker-pullable://k8s.gcr.io/nginx-slim@sha256:8b4501fe0fe221df663c22e16539f399e89594552f400408303c42f3dd8d0e52",
+                        "lastState": {},
+                        "name": "nginx",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2020-08-18T22:58:14Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.128.0.158",
+                "phase": "Running",
+                "podIP": "10.60.47.19",
+                "qosClass": "Burstable",
+                "startTime": "2020-08-16T22:58:40Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/limit-ranger": "LimitRanger plugin set: cpu request for container nginx"
+                },
+                "creationTimestamp": "2020-08-16T08:21:12Z",
+                "generateName": "k8sv2-statefulset-",
+                "labels": {
+                    "app": "nginx",
+                    "controller-revision-hash": "k8sv2-statefulset-54cbbc86c7",
+                    "harness.io/release-name": "release-62406fb5-8691-39e2-b8c0-e85b6bb4f6ec",
+                    "statefulset.kubernetes.io/pod-name": "k8sv2-statefulset-0"
+                },
+                "name": "k8sv2-statefulset-0",
+                "namespace": "default",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "StatefulSet",
+                        "name": "k8sv2-statefulset",
+                        "uid": "13a0d2c4-9e98-11ea-a37f-42010a800081"
+                    }
+                ],
+                "resourceVersion": "140008898",
+                "selfLink": "/api/v1/namespaces/default/pods/k8sv2-statefulset-0",
+                "uid": "3af21535-c9fd-4b0d-98a5-06a0cb692803"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "nginx",
+                        "ports": [
+                            {
+                                "containerPort": 80,
+                                "name": "web",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "100m"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/usr/share/nginx/html",
+                                "name": "www"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-d6k6r",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "hostname": "k8sv2-statefulset-0",
+                "nodeName": "gke-harness-test-pool-1-df0a6179-ht25",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "subdomain": "nginx",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "name": "www",
+                        "persistentVolumeClaim": {
+                            "claimName": "www-k8sv2-statefulset-0"
+                        }
+                    },
+                    {
+                        "name": "default-token-d6k6r",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-d6k6r"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-16T08:21:12Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T15:37:38Z",
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T15:37:38Z",
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-16T08:21:12Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://84d123d089d3ba3b61ad4aff864905786b482ffee3a42579cf108b8efe241d80",
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imageID": "docker-pullable://k8s.gcr.io/nginx-slim@sha256:8b4501fe0fe221df663c22e16539f399e89594552f400408303c42f3dd8d0e52",
+                        "lastState": {},
+                        "name": "nginx",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2020-08-18T15:37:38Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.128.0.60",
+                "phase": "Running",
+                "podIP": "10.60.44.19",
+                "qosClass": "Burstable",
+                "startTime": "2020-08-16T08:21:12Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/limit-ranger": "LimitRanger plugin set: cpu request for container nginx"
+                },
+                "creationTimestamp": "2020-08-17T01:08:17Z",
+                "generateName": "statefulset-test-",
+                "labels": {
+                    "app": "nginx",
+                    "controller-revision-hash": "statefulset-test-796c8bf5ff",
+                    "harness.io/release-name": "release-72ecd85e-cc54-3448-8e58-1a6e7c200597",
+                    "statefulset.kubernetes.io/pod-name": "statefulset-test-0"
+                },
+                "name": "statefulset-test-0",
+                "namespace": "default",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "StatefulSet",
+                        "name": "statefulset-test",
+                        "uid": "6d3df97e-03e9-4e6b-96a7-d901eb24abdb"
+                    }
+                ],
+                "resourceVersion": "140141603",
+                "selfLink": "/api/v1/namespaces/default/pods/statefulset-test-0",
+                "uid": "3c800ea6-7f46-4281-a351-1c436858b563"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "nginx",
+                        "ports": [
+                            {
+                                "containerPort": 80,
+                                "name": "web",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "100m"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/usr/share/nginx/html",
+                                "name": "www"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-d6k6r",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "hostname": "statefulset-test-0",
+                "nodeName": "gke-harness-test-pool-1-df0a6179-qmb6",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "subdomain": "nginx",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "name": "www",
+                        "persistentVolumeClaim": {
+                            "claimName": "www-statefulset-test-0"
+                        }
+                    },
+                    {
+                        "name": "default-token-d6k6r",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-d6k6r"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-17T01:08:17Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T23:05:41Z",
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T23:05:41Z",
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-17T01:08:17Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://22c674f1c30d9550e8504abccd41eab7b7416949fa2f7e9ead6eccc9be105db1",
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imageID": "docker-pullable://k8s.gcr.io/nginx-slim@sha256:8b4501fe0fe221df663c22e16539f399e89594552f400408303c42f3dd8d0e52",
+                        "lastState": {},
+                        "name": "nginx",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2020-08-18T23:05:40Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.128.0.62",
+                "phase": "Running",
+                "podIP": "10.60.48.14",
+                "qosClass": "Burstable",
+                "startTime": "2020-08-17T01:08:17Z"
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Pod",
+            "metadata": {
+                "annotations": {
+                    "kubernetes.io/limit-ranger": "LimitRanger plugin set: cpu request for container nginx"
+                },
+                "creationTimestamp": "2020-08-15T01:02:15Z",
+                "generateName": "statefulset-test-",
+                "labels": {
+                    "app": "nginx",
+                    "controller-revision-hash": "statefulset-test-796c8bf5ff",
+                    "harness.io/release-name": "release-72ecd85e-cc54-3448-8e58-1a6e7c200597",
+                    "statefulset.kubernetes.io/pod-name": "statefulset-test-1"
+                },
+                "name": "statefulset-test-1",
+                "namespace": "default",
+                "ownerReferences": [
+                    {
+                        "apiVersion": "apps/v1",
+                        "blockOwnerDeletion": true,
+                        "controller": true,
+                        "kind": "StatefulSet",
+                        "name": "statefulset-test",
+                        "uid": "6d3df97e-03e9-4e6b-96a7-d901eb24abdb"
+                    }
+                ],
+                "resourceVersion": "140127002",
+                "selfLink": "/api/v1/namespaces/default/pods/statefulset-test-1",
+                "uid": "cdff119a-790d-4f32-95eb-56a41c363856"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "nginx",
+                        "ports": [
+                            {
+                                "containerPort": 80,
+                                "name": "web",
+                                "protocol": "TCP"
+                            }
+                        ],
+                        "resources": {
+                            "requests": {
+                                "cpu": "100m"
+                            }
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/usr/share/nginx/html",
+                                "name": "www"
+                            },
+                            {
+                                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                                "name": "default-token-d6k6r",
+                                "readOnly": true
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "enableServiceLinks": true,
+                "hostname": "statefulset-test-1",
+                "nodeName": "gke-harness-test-pool-1-df0a6179-f2fh",
+                "priority": 0,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "default",
+                "serviceAccountName": "default",
+                "subdomain": "nginx",
+                "terminationGracePeriodSeconds": 30,
+                "tolerations": [
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/not-ready",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    },
+                    {
+                        "effect": "NoExecute",
+                        "key": "node.kubernetes.io/unreachable",
+                        "operator": "Exists",
+                        "tolerationSeconds": 300
+                    }
+                ],
+                "volumes": [
+                    {
+                        "name": "www",
+                        "persistentVolumeClaim": {
+                            "claimName": "www-statefulset-test-1"
+                        }
+                    },
+                    {
+                        "name": "default-token-d6k6r",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "default-token-d6k6r"
+                        }
+                    }
+                ]
+            },
+            "status": {
+                "conditions": [
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-15T01:02:15Z",
+                        "status": "True",
+                        "type": "Initialized"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T22:17:18Z",
+                        "status": "True",
+                        "type": "Ready"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-18T22:17:18Z",
+                        "status": "True",
+                        "type": "ContainersReady"
+                    },
+                    {
+                        "lastProbeTime": null,
+                        "lastTransitionTime": "2020-08-15T01:02:15Z",
+                        "status": "True",
+                        "type": "PodScheduled"
+                    }
+                ],
+                "containerStatuses": [
+                    {
+                        "containerID": "docker://6c2b2e870de97c81cc3d5da14d8433935e180e16f23260f4043d0b62ad169548",
+                        "image": "k8s.gcr.io/nginx-slim:0.8",
+                        "imageID": "docker-pullable://k8s.gcr.io/nginx-slim@sha256:8b4501fe0fe221df663c22e16539f399e89594552f400408303c42f3dd8d0e52",
+                        "lastState": {},
+                        "name": "nginx",
+                        "ready": true,
+                        "restartCount": 0,
+                        "state": {
+                            "running": {
+                                "startedAt": "2020-08-18T22:17:17Z"
+                            }
+                        }
+                    }
+                ],
+                "hostIP": "10.128.0.145",
+                "phase": "Running",
+                "podIP": "10.60.42.23",
+                "qosClass": "Burstable",
+                "startTime": "2020-08-15T01:02:15Z"
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": "",
+        "selfLink": ""
+    }
+}

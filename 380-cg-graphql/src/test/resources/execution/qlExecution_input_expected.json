@@ -1,0 +1,13 @@
+{
+ "serviceInputs": [{
+   "id" : "serviceId",
+   "applicationId": "appId",
+   "name" : "serviceName",
+   "description" : "description",
+   "artifactType": "DOCKER",
+   "deploymentType": "HELM",
+   "createdAt": 0,
+   "createdBy": null
+ }],
+  "serviceManifestInputs":null
+}

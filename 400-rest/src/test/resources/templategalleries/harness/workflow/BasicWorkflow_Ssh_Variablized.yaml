@@ -1,0 +1,41 @@
+name: "Basic Deployment Parameterized"
+gallery: "Harness"
+namespace: "io.harness.workflow.ssh"
+version: "1"
+systemTags: [Workflow, Ssh, Basic]
+variables:
+  - type: EnvironmentRef
+    name: "Environment"
+    description: "bla bla"
+  - type: ServiceRef
+    name: "Service"
+    artifactType: "WAR"
+templateObject:
+  type: Workflow
+  workflowType: "BASIC"
+  environment:
+    valueFrom:
+      var: "${Environment}"
+  phases:
+  - name: "Phase 1"
+    service:
+      valueFrom:
+        var: "${Service}"
+    infraMapping:
+      value:
+        name: "${ServiceInfra_Ssh}"
+        deploymentType: SSH
+    sections:
+    - name: "Provision Nodes"
+      type: ProvisionNode
+      steps:
+      - value:
+         name: "Select Nodes"
+         type: DcNodeSelect
+         instanceCount: 1
+         excludeSelectedHostsFromFuturePhases: true
+    - name: "Deploy Service"
+      type: DeployService
+      steps:
+      - valueFrom:
+         serviceRef: Install
