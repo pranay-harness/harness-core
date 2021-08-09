@@ -16,7 +16,7 @@ import java.util.List;
 public class TemplateMigrationProvider implements MigrationProvider {
   @Override
   public String getServiceName() {
-    return ModuleType.TEMPLATE_SERVICE.getDisplayName();
+    return ModuleType.TEMPLATESERVICE.getDisplayName();
   }
 
   @Override
