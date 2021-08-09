@@ -97,4 +97,6 @@ public interface ArtifactStreamService extends OwnedByService {
   List<String> getArtifactStreamParameters(String artifactStreamId);
 
   void deleteArtifacts(String accountId, ArtifactStream artifactStream);
+
+  ArtifactStream fetchByArtifactSourceVariableValue(String appId, String variableValue);
 }

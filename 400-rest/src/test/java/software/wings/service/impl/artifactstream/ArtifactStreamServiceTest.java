@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -4302,5 +4303,51 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(auditServiceHelper, times(1)).reportDeleteForAuditing(anyString(), any());
     verify(artifactStreamServiceBindingService, times(1)).deleteByArtifactStream(UUID, false);
     verify(wingsPersistence).delete(ArtifactStream.class, APP_ID, UUID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenPatternIsNotMatching() {
+    assertThatThrownBy(
+        () -> artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "artifactName-serviceName"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenPatternIsNotMatching2() {
+    assertThatThrownBy(() -> artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "(serviceName)"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForWrongServiceName() {
+    when(serviceResourceService.getServiceByName(APP_ID, "serviceName")).thenReturn(null);
+    assertThatThrownBy(
+        () -> artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "artifactSource (serviceName)"))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Service with name serviceName doesn't exist");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldFetchArtifactStreamByVariableValue() {
+    when(serviceResourceService.getServiceByName(APP_ID, "serviceName"))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    ArtifactStream artifactStream =
+        DockerArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).name("artifactSource").build();
+    when(artifactStreamServiceBindingService.listArtifactStreams(APP_ID, SERVICE_ID))
+        .thenReturn(Collections.singletonList(artifactStream));
+
+    ArtifactStream artifactStream1 =
+        artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "artifactSource (serviceName)");
+    assertThat(artifactStream1.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
   }
 }
