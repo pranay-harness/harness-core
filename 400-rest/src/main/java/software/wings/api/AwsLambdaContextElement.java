@@ -23,7 +23,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsLambdaContextElement implements ContextElement {
   public static final String AWS_LAMBDA_REQUEST_PARAM = "AWS_LAMBDA_REQUEST_PARAM";
 

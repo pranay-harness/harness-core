@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -39,10 +39,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-/**
- * Created by anubhaw on 1/10/17.
- */
-@OwnedBy(CDP)
+@OwnedBy(CDC)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface InfrastructureMappingService
     extends OwnedByEnvironment, OwnedByInfrastructureProvisioner, OwnedByInfrastructureDefinition {
