@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -10,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
@@ -70,6 +72,7 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 
+@OwnedBy(PL)
 @ValidateOnExecution
 @BreakDependencyOn("software.wings.scheduler.LdapGroupSyncJob")
 @Singleton
