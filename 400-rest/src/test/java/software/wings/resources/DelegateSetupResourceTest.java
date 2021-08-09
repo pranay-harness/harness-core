@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -40,12 +41,17 @@ import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateGroupDetails;
+import io.harness.delegate.beans.DelegateGroupListing;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
+import io.harness.delegate.filter.DelegateFilterPropertiesDTO;
+import io.harness.delegate.resources.DelegateSetupResourceV2;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.DelegateCache;
+import io.harness.service.intfc.DelegateSetupService;
 
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateScalingGroup;
@@ -75,6 +81,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
+import org.assertj.core.util.Lists;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.joda.time.DateTime;
 import org.junit.ClassRule;
@@ -89,6 +96,7 @@ import org.mockito.ArgumentCaptor;
 public class DelegateSetupResourceTest {
   private static String accountId = "ACCOUNT_ID";
   private static DelegateService delegateService = mock(DelegateService.class);
+  private static DelegateSetupService delegateSetupService = mock(DelegateSetupService.class);
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
   private static DelegateScopeService delegateScopeService = mock(DelegateScopeService.class);
   private static DownloadTokenService downloadTokenService = mock(DownloadTokenService.class);
@@ -114,6 +122,7 @@ public class DelegateSetupResourceTest {
               bind(httpServletRequest).to(HttpServletRequest.class);
             }
           })
+          .instance(new DelegateSetupResourceV2(delegateSetupService, accessControlClient))
           .type(WingsExceptionMapper.class)
           .build();
 
@@ -135,6 +144,30 @@ public class DelegateSetupResourceTest {
     verify(delegateService, atLeastOnce()).list(pageRequest);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void listV2ShouldReturnDelegates() {
+    PageRequest<DelegateGroupDetails> pageRequest = new PageRequest<>();
+    pageRequest.setOffset("0");
+    DelegateGroupDetails delegateGroupDetails = DelegateGroupDetails.builder().groupName("group name").build();
+    when(delegateSetupService.listDelegateGroupDetailsV2(eq(ACCOUNT_ID), eq("orgId"), eq("projectId"), any(), any(),
+             any(DelegateFilterPropertiesDTO.class), eq(pageRequest)))
+        .thenReturn(DelegateGroupListing.builder().delegateGroupDetails(Lists.list(delegateGroupDetails)).build());
+    RestResponse<DelegateGroupListing> restResponse =
+        RESOURCES.client()
+            .target("/setup/delegates/ng/v2?accountId=" + ACCOUNT_ID + "&orgId=orgId&projectId=projectId")
+            .request()
+            .post(entity(DelegateFilterPropertiesDTO.builder().build(), MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<DelegateGroupListing>>() {});
+
+    verify(delegateSetupService, atLeastOnce())
+        .listDelegateGroupDetailsV2(
+            ACCOUNT_ID, "orgId", "projectId", null, null, DelegateFilterPropertiesDTO.builder().build(), pageRequest);
+    assertThat(restResponse.getResource().getDelegateGroupDetails()).isNotEmpty();
+    assertThat(restResponse.getResource().getDelegateGroupDetails().get(0).getGroupName()).isEqualTo("group name");
   }
 
   @Test
