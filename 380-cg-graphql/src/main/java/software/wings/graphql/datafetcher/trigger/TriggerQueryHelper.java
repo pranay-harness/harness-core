@@ -3,9 +3,7 @@ package software.wings.graphql.datafetcher.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -33,7 +31,6 @@ import org.mongodb.morphia.query.Query;
 @Singleton
 @Slf4j
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class TriggerQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected TagHelper tagHelper;

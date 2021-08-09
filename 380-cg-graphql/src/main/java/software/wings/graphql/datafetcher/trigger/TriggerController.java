@@ -4,9 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -47,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class TriggerController {
   @Inject AppService appService;
   @Inject TriggerActionController triggerActionController;

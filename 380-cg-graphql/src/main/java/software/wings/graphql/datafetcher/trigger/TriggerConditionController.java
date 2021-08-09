@@ -14,9 +14,7 @@ import static software.wings.graphql.schema.type.trigger.QLGitHubAction.packageA
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.pullRequestActions;
 import static software.wings.graphql.schema.type.trigger.QLGitHubAction.releaseActions;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -73,7 +71,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class TriggerConditionController {
   @Inject TriggerActionController triggerActionController;
   @Inject MainConfiguration mainConfiguration;

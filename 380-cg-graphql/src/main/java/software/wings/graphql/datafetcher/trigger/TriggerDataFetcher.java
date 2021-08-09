@@ -3,9 +3,7 @@ package software.wings.graphql.datafetcher.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -26,7 +24,6 @@ import com.google.inject.Inject;
 import java.util.Collections;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class TriggerDataFetcher extends AbstractObjectDataFetcher<QLTrigger, QLTriggerQueryParameters> {
   private static final String EMPTY_TRIGGER_NAME = "Trigger Name should not be empty";
   @Inject HPersistence persistence;
