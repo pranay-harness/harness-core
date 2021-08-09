@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.util.List;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -90,7 +89,7 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   @Override
   public <T> List<T> find(Query query, Class<T> entityClass, String collectionName) {
     if (traceMode == TraceMode.ENABLED) {
-      traceQuery(query.getQueryObject(), query.getSortObject(), collectionName);
+      traceQuery(query, entityClass);
     }
     return super.find(query, entityClass, collectionName);
   }
@@ -98,17 +97,13 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   @Override
   public <T> T findOne(Query query, Class<T> entityClass, String collectionName) {
     if (traceMode == TraceMode.ENABLED) {
-      traceQuery(query.getQueryObject(), query.getSortObject(), collectionName);
+      traceQuery(query, entityClass);
     }
     return super.findOne(query, entityClass, collectionName);
   }
 
   private <T> void traceQuery(Query query, Class<T> entityClass) {
-    traceQuery(query.getQueryObject(), query.getSortObject(), getCollectionName(entityClass));
-  }
-
-  public void traceQuery(Document queryDoc, Document sortDoc, String collectionName) {
-    tracerSubject.fireInform(Tracer::trace, queryDoc, sortDoc, collectionName, this);
+    tracerSubject.fireInform(Tracer::trace, query, entityClass, this);
   }
 
   public interface Executor<R> {
