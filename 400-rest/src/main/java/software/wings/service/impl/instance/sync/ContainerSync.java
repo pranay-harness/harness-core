@@ -1,5 +1,11 @@
 package software.wings.service.impl.instance.sync;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
@@ -9,10 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Interface for all types of container instance sync activities
- * @author rktummala on 09/01/17
- */
+@OwnedBy(PL)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public interface ContainerSync {
   ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest);
 

@@ -1,7 +1,10 @@
 package software.wings.api;
 
-import io.harness.annotations.dev.HarnessTeam;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -12,5 +15,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._959_CG_BEANS)
 public abstract class DeploymentInfo {}

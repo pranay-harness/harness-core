@@ -4,6 +4,7 @@ import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_C
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -23,8 +24,11 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -115,12 +119,11 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @author rktummala on 02/03/18
- */
 @Singleton
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
+@BreakDependencyOn("software.wings.dl.WingsPersistence")
 public class ContainerInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private ContainerSync containerSync;
   @Inject private transient K8sStateHelper k8sStateHelper;
@@ -212,6 +215,10 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           if (responseData != null && instanceSyncFlow == PERPETUAL_TASK) {
             ContainerSyncResponse syncResponse = (ContainerSyncResponse) responseData;
             if (!responseBelongsToCurrentSetOfContainers(containerMetadata, syncResponse)) {
+              continue;
+            }
+            // don't update ecs instances if delegate response is failure
+            if (syncResponse != null && syncResponse.getCommandExecutionStatus() == FAILURE) {
               continue;
             }
           }
