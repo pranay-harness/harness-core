@@ -20,21 +20,12 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
-  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
-          ExpressionEvaluator maskingEvaluator, GitConfigDTO gitConfig, List<EncryptedDataDetail> encryptionDetails, SSHKeySpecDTO sshKeySpecDTO) {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesSimpleCheck(GitConfigDTO gitConfig) {
     List<ExecutionCapability> capabilityList = new ArrayList<>();
     GitAuthType gitAuthType = gitConfig.getGitAuthType();
     switch (gitAuthType) {
       case HTTP:
-        if (gitConfig.getGitConnectionType() ==  GitConnectionType.ACCOUNT) {
-          capabilityList.add(GitConnectionNGCapability.builder()
-                  .encryptedDataDetails(encryptionDetails)
-                  .gitConfig(ScmConnectorMapper.toGitConfigDTO(gitConfig))
-                  .sshKeySpecDTO(sshKeySpecDTO)
-                  .build());
-        } else {
-          capabilityList.addAll(ScmGitCapabilityHelper.getHttpConnectionCapability(gitConfig));
-        }
+        capabilityList.addAll(ScmGitCapabilityHelper.getHttpConnectionCapability(gitConfig));
         break;
       case SSH:
         capabilityList.add(SocketConnectivityExecutionCapability.builder()
@@ -45,6 +36,18 @@ public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
       default:
         throw new UnknownEnumTypeException("gitAuthType", gitAuthType.getDisplayName());
     }
+
+    populateDelegateSelectorCapability(capabilityList, gitConfig.getDelegateSelectors());
+    return capabilityList;
+  }
+
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(GitConfigDTO gitConfig) {
+    List<ExecutionCapability> capabilityList = new ArrayList<>();
+
+    capabilityList.add(SocketConnectivityExecutionCapability.builder()
+            .hostName(getGitSSHHostname(gitConfig))
+            .port(getGitSSHPort(gitConfig))
+            .build());
 
     populateDelegateSelectorCapability(capabilityList, gitConfig.getDelegateSelectors());
     return capabilityList;
