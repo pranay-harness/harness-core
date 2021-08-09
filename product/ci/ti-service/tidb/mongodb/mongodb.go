@@ -728,13 +728,13 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 
 	// merging nodes
 	// get all the nids which are from the dest branch
-	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo, "account": req.AccountId}
+	f := bson.M{"account": req.AccountId, "vcs_info.branch": branch, "vcs_info.repo": repo}
 	dNids, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
 	// get all the nids from the source branch which need to be merged
-	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": req.AccountId}
+	f = bson.M{"account": req.AccountId, "vcs_info.commit_id": commit, "vcs_info.repo": repo}
 	srcNids, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
