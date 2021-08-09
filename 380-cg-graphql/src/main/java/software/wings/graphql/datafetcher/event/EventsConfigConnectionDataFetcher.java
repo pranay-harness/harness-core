@@ -5,9 +5,7 @@ import static io.harness.beans.FeatureName.APP_TELEMETRY;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CgEventConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -26,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class EventsConfigConnectionDataFetcher
     extends AbstractArrayDataFetcher<QLEventsConfig, QLEventsConfigsQueryParameters> {
   @Inject private FeatureFlagService featureFlagService;

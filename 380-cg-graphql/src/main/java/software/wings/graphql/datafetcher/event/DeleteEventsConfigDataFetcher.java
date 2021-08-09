@@ -4,10 +4,8 @@ import static io.harness.beans.FeatureName.APP_TELEMETRY;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.service.EventConfigService;
@@ -25,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class DeleteEventsConfigDataFetcher
     extends BaseMutatorDataFetcher<QLDeleteEventsConfigInput, QLDeleteEventsConfigPayload> {
   @Inject private FeatureFlagService featureFlagService;
