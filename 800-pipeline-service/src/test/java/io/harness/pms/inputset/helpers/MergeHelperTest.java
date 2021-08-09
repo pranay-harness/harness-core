@@ -2,7 +2,6 @@ package io.harness.pms.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
-import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
 import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
 import static io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper.getInvalidFQNsInInputSet;
 import static io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer.sanitizeInputSet;
@@ -26,7 +25,6 @@ import io.harness.rule.Owner;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,57 +42,6 @@ public class MergeHelperTest extends CategoryTest {
     } catch (IOException e) {
       throw new InvalidRequestException("Could not read resource file: " + filename);
     }
-  }
-
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
-  public void testCreateTemplateFromPipeline() {
-    String filename = "pipeline-extensive.yml";
-    String yaml = readFile(filename);
-    String templateYaml = createTemplateFromPipeline(yaml);
-
-    String resFile = "pipeline-extensive-template.yml";
-    String resTemplate = readFile(resFile);
-    assertThat(templateYaml).isEqualTo(resTemplate);
-  }
-
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
-  public void testMergeInputSetIntoPipeline() {
-    String filename = "pipeline-extensive.yml";
-    String yaml = readFile(filename);
-
-    String inputSet = "runtimeInput1.yml";
-    String inputSetYaml = readFile(inputSet);
-
-    String res = mergeInputSetIntoPipeline(yaml, inputSetYaml, false);
-    String resYaml = res.replace("\"", "");
-
-    String mergedYamlFile = "pipeline-extensive-merged.yml";
-    String mergedYaml = readFile(mergedYamlFile);
-
-    assertThat(resYaml).isEqualTo(mergedYaml);
-  }
-
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
-  public void testMergeInputSetIntoServiceDependenciesPipeline() {
-    String filename = "service-dependencies-pipeline.yaml";
-    String yaml = readFile(filename);
-
-    String inputSet = "service-dependencies-runtime-input.yaml";
-    String inputSetYaml = readFile(inputSet);
-
-    String res = mergeInputSetIntoPipeline(yaml, inputSetYaml, false);
-    String resYaml = res.replace("\"", "");
-
-    String mergedYamlFile = "service-dependencies-pipeline-merged.yaml";
-    String mergedYaml = readFile(mergedYamlFile);
-
-    assertThat(resYaml).isEqualTo(mergedYaml);
   }
 
   @Test
@@ -121,29 +68,6 @@ public class MergeHelperTest extends CategoryTest {
     String invalidFQN2 = "pipeline.stages.stage[identifier:qaStage].absolutelyWrongKey.";
     assertThat(invalidFQNs.stream().map(FQN::display).collect(Collectors.toList()).contains(invalidFQN1)).isTrue();
     assertThat(invalidFQNs.stream().map(FQN::display).collect(Collectors.toList()).contains(invalidFQN2)).isTrue();
-  }
-
-  @Test
-  @Owner(developers = NAMAN)
-  @Category(UnitTests.class)
-  public void testMergeInputSets() {
-    String inputSet1 = "inputSet1.yml";
-    String inputSetYaml1 = readFile(inputSet1);
-    String inputSet2 = "inputSet2.yml";
-    String inputSetYaml2 = readFile(inputSet2);
-    List<String> inputSetYamlList = new ArrayList<>();
-    inputSetYamlList.add(inputSetYaml1);
-    inputSetYamlList.add(inputSetYaml2);
-
-    String filename = "pipeline-extensive.yml";
-    String yaml = readFile(filename);
-    String templateYaml = createTemplateFromPipeline(yaml);
-
-    String mergedYaml = mergeInputSets(templateYaml, inputSetYamlList, false);
-
-    String inputSetMerged = "input12-merged.yml";
-    String inputSetYamlMerged = readFile(inputSetMerged);
-    assertThat(mergedYaml).isEqualTo(inputSetYamlMerged);
   }
 
   @Test

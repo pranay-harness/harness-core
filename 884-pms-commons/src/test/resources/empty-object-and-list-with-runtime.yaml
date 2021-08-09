@@ -1,0 +1,59 @@
+pipeline:
+  name: pipeline-vars-1
+  identifier: pipelinevars1
+  variables:
+    - name: name2
+      type: String
+      value: ""
+  tags:
+    company : harness
+  stages:
+    - stage:
+        name: deploy
+        identifier: deploy
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceDefinition:
+              spec:
+                artifacts:
+                  primary:
+                    type: Dockerhub
+                    spec:
+                      connectorRef: DOCKER_NEW_TEST
+                      imagePath: ok/ok
+                      tag: <+input>
+                manifests: []
+              type: Kubernetes
+            service:
+              name: svc
+              identifier: svc
+          infrastructure:
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: <+input>
+                namespace: rs
+                releaseName: ns
+            environment:
+              name: infra
+              identifier: infra
+              type: Production
+              tags:
+                company : harness
+
+          execution:
+            steps:
+              - step:
+                  name: Rollout Deployment
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+            rollbackSteps:
+              - step:
+                  name: Rollback Rollout Deployment
+                  identifier: rollbackRolloutDeployment
+                  type: K8sRollingRollback
+                  spec: {}
