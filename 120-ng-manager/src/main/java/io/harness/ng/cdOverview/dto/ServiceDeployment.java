@@ -15,4 +15,5 @@ import lombok.experimental.FieldDefaults;
 public class ServiceDeployment {
   long time;
   DeploymentCount deployments;
+  DeploymentChangeRates rate;
 }
