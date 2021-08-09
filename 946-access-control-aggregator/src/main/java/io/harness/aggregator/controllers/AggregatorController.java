@@ -34,8 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AggregatorController implements Runnable {
   private final AggregatorPrimarySyncController primarySyncController;
   private final AggregatorSecondarySyncController secondarySyncController;
-  private final ExecutorService primarySyncExecutorService;
-  private final ExecutorService secondarySyncExecutorService;
 
   private final AggregatorSecondarySyncStateRepository aggregatorSecondarySyncStateRepository;
   private final ACLRepository secondaryACLRepository;
@@ -57,14 +55,14 @@ public class AggregatorController implements Runnable {
     this.mongoReconciliationOffsetRepository = mongoReconciliationOffsetRepository;
     this.persistentLocker = persistentLocker;
     this.queueController = queueController;
-    this.primarySyncExecutorService = Executors.newSingleThreadExecutor(
-        new ThreadFactoryBuilder().setNameFormat("aggregator-primary-sync-controller").build());
-    this.secondarySyncExecutorService = Executors.newSingleThreadExecutor(
-        new ThreadFactoryBuilder().setNameFormat("aggregator-secondary-sync-controller").build());
   }
 
   @Override
   public void run() {
+    ExecutorService primarySyncExecutorService = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder().setNameFormat("aggregator-primary-sync-controller").build());
+    ExecutorService secondarySyncExecutorService = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder().setNameFormat("aggregator-secondary-sync-controller").build());
     Future<?> primarySyncFuture = null;
     Future<?> secondarySyncFuture = null;
     log.info("Aggregator Controller has started");
