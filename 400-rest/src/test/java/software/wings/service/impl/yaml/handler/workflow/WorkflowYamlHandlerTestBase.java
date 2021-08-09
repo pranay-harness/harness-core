@@ -6,6 +6,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -215,6 +216,7 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
         .dockerImageName("testDockerImageName")
         .sourceName("gcr.io_exploration-161417_todolist")
         .name("gcr.io_exploration-161417_todolist")
+        .uuid(ARTIFACT_STREAM_ID)
         .build();
   }
 
