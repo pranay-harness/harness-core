@@ -1,6 +1,6 @@
 package io.harness.licensing.helpers;
 
-import io.harness.licensing.ModuleType;
+import io.harness.ModuleType;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO;
@@ -51,6 +51,10 @@ public class ModuleLicenseSummaryHelper {
             if (temp.getWorkloads() != null) {
               cdLicenseSummaryDTO.setTotalWorkload(
                   ModuleLicenseUtils.computeAdd(cdLicenseSummaryDTO.getTotalWorkload(), temp.getWorkloads()));
+            }
+            if (temp.getServiceInstances() != null) {
+              cdLicenseSummaryDTO.setTotalServiceInstances(ModuleLicenseUtils.computeAdd(
+                  cdLicenseSummaryDTO.getTotalServiceInstances(), temp.getServiceInstances()));
             }
           }
         };
