@@ -1,5 +1,6 @@
 package io.harness.licensing;
 
+import io.harness.ModuleType;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 import io.harness.licensing.mappers.LicenseObjectMapper;
 

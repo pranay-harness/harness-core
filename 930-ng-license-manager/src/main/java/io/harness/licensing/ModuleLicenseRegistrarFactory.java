@@ -1,5 +1,6 @@
 package io.harness.licensing;
 
+import io.harness.ModuleType;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 import io.harness.licensing.interfaces.clients.local.CDLocalClient;
 import io.harness.licensing.interfaces.clients.local.CELocalClient;
@@ -15,6 +16,7 @@ import io.harness.licensing.mappers.modules.CVLicenseObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ModuleLicenseRegistrarFactory {
   private static Map<ModuleType, ModuleLicenseRegistrar> registrar = new HashMap<>();
@@ -40,5 +42,9 @@ public class ModuleLicenseRegistrarFactory {
 
   public static Class<? extends ModuleLicenseClient> getModuleLicenseClient(ModuleType moduleType) {
     return registrar.get(moduleType).getModuleLicenseClient();
+  }
+
+  public static Set<ModuleType> getSupportedModuleTypes() {
+    return registrar.keySet();
   }
 }
