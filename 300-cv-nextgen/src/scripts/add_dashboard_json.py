@@ -9,6 +9,11 @@ count_metric_template = None
 lastvalue_metric_template = None
 duration_metric_template = None
 output_json_strings_list = []
+def batch(iterable, n=1):
+  l = len(iterable)
+  for ndx in range(0, l, n):
+    yield iterable[ndx:min(ndx + n, l)]
+
 def metric_template_json(template, metric_name, title):
   return template.replace("$metric_name", metric_name).replace("$title", title)
 with open('count_metric_template.json', 'r') as file:
@@ -39,8 +44,11 @@ for metric_def_file_path in metric_def_file_paths:
 tasks_template = None
 with open('tasks_template.tf', 'r') as file:
   tasks_template = file.read()
-tasks_tf = tasks_template.replace("$json_array", json.dumps(output_json_strings_list, indent=2))
-task_tf_file = open("./../../../scripts/terraform/stackdriver/cvng/dashboard.tf", "w+")
-task_tf_file.write(tasks_tf)
-task_tf_file.close()
-print(output_json_strings_list)
+batch_no = 1
+for batch in batch(output_json_strings_list, 30): #stackdriver only supports 40 in a dashboard.
+  tasks_tf = tasks_template.replace("$json_array", json.dumps(batch, indent=2)).replace("$batch_no", str(batch_no))
+  task_tf_file = open("./../../../scripts/terraform/stackdriver/cvng/dashboard" + str(batch_no) + ".tf", "w+")
+  task_tf_file.write(tasks_tf)
+  task_tf_file.close()
+  print(batch)
+  batch_no += 1;

@@ -5,6 +5,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.common.VerificationConstants.MAX_RETRIES;
 import static software.wings.delegatetasks.cv.CVConstants.RETRY_SLEEP_DURATION;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -37,6 +39,7 @@ import net.jodah.failsafe.RetryPolicy;
 import retrofit2.Call;
 
 @Slf4j
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class AbstractDataCollectionTask<T extends DataCollectionInfoV2> extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private Injector injector;
