@@ -3,6 +3,7 @@ package io.harness.delegate.app;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 
 import software.wings.app.MainConfiguration;
@@ -26,6 +27,7 @@ public class DelegateServiceConfig extends MainConfiguration implements AssetsBu
   @JsonProperty("delegateServiceUrl") private String delegateServiceUrl;
   @JsonProperty("grpcServerClassicConfig") private GrpcServerConfig grpcServerClassicConfig;
   @JsonProperty("delegateServiceSecret") private String delegateServiceSecret;
+  @JsonProperty("grpcClientClassicConfig") private GrpcClientConfig grpcClientClassicConfig;
 
   private static final String IS_OPTION_HEAD_HTTP_METHOD_BLOCKED = "IS_OPTION_HEAD_REQUEST_METHOD_BLOCKED";
 
