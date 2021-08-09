@@ -11,7 +11,9 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
@@ -73,6 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @ValidateOnExecution
 @BreakDependencyOn("software.wings.scheduler.LdapGroupSyncJob")
 @Singleton
