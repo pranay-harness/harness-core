@@ -1,10 +1,9 @@
-package software.wings.service.impl;
+package io.harness.delegate.beans.polling;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.delegate.beans.polling.PollingResponseInfc;
 import io.harness.logging.CommandExecutionStatus;
 
 import lombok.Builder;
