@@ -7,12 +7,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.CENextGenConfiguration;
 import io.harness.ccm.ccmAws.AwsAccountConnectionDetailsHelper;
 import io.harness.ccm.commons.entities.AwsAccountConnectionDetail;
+import io.harness.ccm.commons.entities.billing.CEGcpServiceAccount;
+import io.harness.ccm.serviceAccount.CEGcpServiceAccountService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.io.IOException;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -31,6 +34,7 @@ import org.springframework.stereotype.Service;
 public class ConnectorSetup {
   @Inject CENextGenConfiguration configuration;
   @Inject AwsAccountConnectionDetailsHelper awsAccountConnectionDetailsHelper;
+  @Inject CEGcpServiceAccountService ceGcpServiceAccountService;
 
   @GET
   @Path("/azureappclientid")
@@ -45,5 +49,19 @@ public class ConnectorSetup {
   public ResponseDTO<AwsAccountConnectionDetail> getAwsAccountConnectionDetail(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     return ResponseDTO.newResponse(awsAccountConnectionDetailsHelper.getAwsAccountConnectorDetail(accountId));
+  }
+
+  @GET
+  @Path("/gcpserviceaccount")
+  @ApiOperation(value = "Provision and Get GCP Service Account", nickname = "gcpserviceaccount")
+  public ResponseDTO<String> getGcpServiceAccount(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
+    CEGcpServiceAccount ceGcpServiceAccount = null;
+    try {
+      ceGcpServiceAccount = ceGcpServiceAccountService.provisionAndRetrieveServiceAccount(
+          accountId, configuration.getGcpConfig().getGcpProjectId());
+    } catch (IOException e) {
+      log.error("Unable to get the default service account.", e);
+    }
+    return ResponseDTO.newResponse(ceGcpServiceAccount.getEmail());
   }
 }

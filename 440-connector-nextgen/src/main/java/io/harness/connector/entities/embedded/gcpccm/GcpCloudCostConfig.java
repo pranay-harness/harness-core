@@ -29,5 +29,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class GcpCloudCostConfig extends Connector {
   @NotEmpty List<CEFeatures> featuresEnabled;
   @NotNull String projectId;
+  @NotNull String serviceAccountEmail;
   @Nullable GcpBillingExportDetails billingExportDetails;
 }

@@ -1862,7 +1862,8 @@
         {
           "type": "object",
           "required": [
-            "projectId"
+            "projectId",
+            "serviceAccountEmail"
           ],
           "properties": {
             "billingExportSpec": {
@@ -1881,6 +1882,9 @@
               "minLength": 1
             },
             "projectId": {
+              "type": "string"
+            },
+            "serviceAccountEmail": {
               "type": "string"
             }
           }

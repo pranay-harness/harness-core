@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.service.intf.AwsEntityChangeEventService;
+import io.harness.ccm.service.intf.GCPEntityChangeEventService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -32,6 +33,7 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   @Inject AwsEntityChangeEventService awsEntityChangeEventService;
   @Inject EntityChangeHandler entityChangeHandler;
   @Inject CEMetadataRecordDao ceMetadataRecordDao;
+  @Inject GCPEntityChangeEventService gcpEntityChangeEventService;
 
   @Override
   public boolean handleMessage(Message message) {
@@ -55,6 +57,14 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
         String action = metadataMap.get(ACTION);
         if (action != null) {
           return awsEntityChangeEventService.processAWSEntityChangeEvent(entityChangeDTO, action);
+        }
+      }
+
+      if (isCEGCPEvent(metadataMap)) {
+        EntityChangeDTO entityChangeDTO = getEntityChangeDTO(message);
+        String action = metadataMap.get(ACTION);
+        if (action != null) {
+          return processGCPEntityChangeEvent(entityChangeDTO, action);
         }
       }
     }
@@ -153,6 +163,18 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
         break;
       case DELETE_ACTION:
         entityChangeHandler.handleDeleteEvent(entityChangeDTO, connectorEntityType);
+        break;
+      default:
+        log.error("Change Event of type %s, not handled", action);
+    }
+    return true;
+  }
+
+  private boolean processGCPEntityChangeEvent(EntityChangeDTO entityChangeDTO, String action) {
+    log.info("In processEntityChangeEvent {}, {} ", entityChangeDTO, action);
+    switch (action) {
+      case CREATE_ACTION:
+        gcpEntityChangeEventService.processGCPEntityCreateEvent(entityChangeDTO);
         break;
       default:
         log.error("Change Event of type %s, not handled", action);

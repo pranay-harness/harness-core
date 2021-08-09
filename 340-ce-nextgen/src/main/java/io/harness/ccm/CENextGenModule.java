@@ -30,11 +30,19 @@ import io.harness.ccm.service.impl.AWSOrganizationHelperServiceImpl;
 import io.harness.ccm.service.impl.AwsEntityChangeEventServiceImpl;
 import io.harness.ccm.service.impl.BudgetServiceImpl;
 import io.harness.ccm.service.impl.CEYamlServiceImpl;
+import io.harness.ccm.service.impl.GCPEntityChangeEventServiceImpl;
 import io.harness.ccm.service.intf.AWSBucketPolicyHelperService;
 import io.harness.ccm.service.intf.AWSOrganizationHelperService;
 import io.harness.ccm.service.intf.AwsEntityChangeEventService;
 import io.harness.ccm.service.intf.BudgetService;
 import io.harness.ccm.service.intf.CEYamlService;
+import io.harness.ccm.service.intf.GCPEntityChangeEventService;
+import io.harness.ccm.serviceAccount.CEGcpServiceAccountService;
+import io.harness.ccm.serviceAccount.CEGcpServiceAccountServiceImpl;
+import io.harness.ccm.serviceAccount.GcpResourceManagerService;
+import io.harness.ccm.serviceAccount.GcpResourceManagerServiceImpl;
+import io.harness.ccm.serviceAccount.GcpServiceAccountService;
+import io.harness.ccm.serviceAccount.GcpServiceAccountServiceImpl;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
@@ -178,6 +186,7 @@ public class CENextGenModule extends AbstractModule {
     // Bind Services
     bind(CEYamlService.class).to(CEYamlServiceImpl.class);
     bind(AwsClient.class).to(AwsClientImpl.class);
+    bind(GCPEntityChangeEventService.class).to(GCPEntityChangeEventServiceImpl.class);
     bind(AwsEntityChangeEventService.class).to(AwsEntityChangeEventServiceImpl.class);
 
     install(new CENextGenPersistenceModule());
@@ -208,6 +217,9 @@ public class CENextGenModule extends AbstractModule {
     bind(CENextGenConfiguration.class).toInstance(configuration);
     bind(SQLConverter.class).to(SQLConverterImpl.class);
     bind(BigQueryService.class).to(BigQueryServiceImpl.class);
+    bind(CEGcpServiceAccountService.class).to(CEGcpServiceAccountServiceImpl.class);
+    bind(GcpServiceAccountService.class).to(GcpServiceAccountServiceImpl.class);
+    bind(GcpResourceManagerService.class).to(GcpResourceManagerServiceImpl.class);
     bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
     bind(CEViewService.class).to(CEViewServiceImpl.class);
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
