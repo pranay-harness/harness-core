@@ -14,7 +14,6 @@ import io.harness.models.constants.InstanceSyncConstants;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import groovy.util.logging.Slf4j;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.FindAndReplaceOptions;
@@ -31,7 +30,6 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @OwnedBy(HarnessTeam.DX)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
-@Slf4j
 public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   private MongoTemplate mongoTemplate;
 
