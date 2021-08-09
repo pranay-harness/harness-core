@@ -1,0 +1,31 @@
+[
+  {
+    "createIndexes":"vis_edges",
+    "indexes":[
+      {
+        "key":{
+          "caller":1.0
+        },
+        "name":"caller_1"
+      },
+      {
+        "key":{
+          "account":1.0,
+          "vcs_info.branch":1.0,
+          "vcs_info.commit_id":1.0,
+          "vcs_info.repo":1.0
+        },
+        "name":"account_1_vcs_info.branch_1_vcs_info.commit_id_1_vcs_info.repo_1"
+      },
+      {
+        "key":{
+          "account":1.0,
+          "vcs_info.branch":1.0,
+          "caller":1.0,
+          "vcs_info.repo":1.0
+        },
+        "name":"account_1_vcs_info.branch_1_caller_1_vcs_info.repo_1"
+      }
+    ]
+  }
+]
