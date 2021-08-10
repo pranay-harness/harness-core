@@ -274,6 +274,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
 @BreakDependencyOn("software.wings.app.MainConfiguration")
+@BreakDependencyOn("software.wings.beans.User")
 @OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
   /**
