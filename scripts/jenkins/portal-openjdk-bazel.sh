@@ -27,6 +27,7 @@ cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/manager/scripts/ .
+mv scripts/start_process_bazel.sh scripts/start_process.sh
 
 cp ../../protocol.info .
 echo ${JDK} > jdk.txt
@@ -53,7 +54,6 @@ cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/delegate-service-app/Dockerfile-delegate-service-app-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/delegate-service-app/Dockerfile-delegate-service-app-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/delegate-service-app/scripts/ .
-mv scripts/start_process_bazel.sh scripts/start_process.sh
 
 cp ../../protocol.info .
 echo ${JDK} > jdk.txt
