@@ -9,6 +9,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.bean.PollingInfo;
+import io.harness.polling.bean.PollingType;
 import io.harness.polling.bean.manifest.HelmChartManifestInfo;
 import io.harness.polling.contracts.GcsHelmPayload;
 import io.harness.polling.contracts.HelmVersion;
@@ -25,17 +26,19 @@ public class PollingRequestToPollingDocumentMapper {
   public PollingDocument toPollingDocument(PollingItem pollingItem) {
     Qualifier qualifier = pollingItem.getQualifier();
     PollingInfo pollingInfo;
+    PollingDocument.PollingDocumentBuilder pollingDocumentBuilder = PollingDocument.builder();
     switch (pollingItem.getCategory()) {
       case MANIFEST:
+        pollingDocumentBuilder.pollingType(PollingType.MANIFEST);
         pollingInfo = getManifestPollingInfo(pollingItem.getPayloadType(), pollingItem.getConnectorRef());
         break;
       case ARTIFACT:
+        pollingDocumentBuilder.pollingType(PollingType.ARTIFACT);
       default:
         throw new InvalidRequestException("Unsupported category type " + pollingItem.getCategory());
     }
 
-    return PollingDocument.builder()
-        .accountId(qualifier.getAccountId())
+    return pollingDocumentBuilder.accountId(qualifier.getAccountId())
         .orgIdentifier(qualifier.getOrganizationId())
         .projectIdentifier(qualifier.getProjectId())
         .signatures(Collections.singletonList(qualifier.getSignature()))
