@@ -45,6 +45,7 @@ public class EntityChangeHandler {
     if (ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
       log.info("Connector Entity Type 2: {}", connectorEntityType);
       handleCEK8sCreate(entityChangeDTO);
+      log.info("Connector Entity Type 3: {}", connectorEntityType);
     }
   }
 
@@ -97,11 +98,13 @@ public class EntityChangeHandler {
   }
 
   public void handleCEK8sCreate(EntityChangeDTO entityChangeDTO) {
+    log.info("EntityChangeDTO: {}", entityChangeDTO);
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
     boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
     log.info("accountIdentifier {},ceK8sConnectorIdentifier {}, isPTEnabled {}", accountIdentifier,
         ceK8sConnectorIdentifier, isPTEnabled);
+    log.info("Dummy");
     log.info(accountIdentifier);
     log.info(ceK8sConnectorIdentifier);
     log.info(isPTEnabled);
