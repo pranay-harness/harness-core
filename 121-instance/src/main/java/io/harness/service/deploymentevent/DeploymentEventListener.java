@@ -1,4 +1,4 @@
-package io.harness.service;
+package io.harness.service.deploymentevent;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.ROLLBACK_STEPS;

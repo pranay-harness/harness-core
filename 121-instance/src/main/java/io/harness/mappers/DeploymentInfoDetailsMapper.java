@@ -17,7 +17,6 @@ public class DeploymentInfoDetailsMapper {
     return DeploymentInfoDetailsDTO.builder()
         .deploymentInfoDTO(DeploymentInfoMapper.toDTO(deploymentInfoDetails.getDeploymentInfo()))
         .lastUsedAt(deploymentInfoDetails.getLastUsedAt())
-        .deploymentSummaryId(deploymentInfoDetails.getDeploymentSummaryId())
         .build();
   }
 
@@ -25,7 +24,6 @@ public class DeploymentInfoDetailsMapper {
     return DeploymentInfoDetails.builder()
         .deploymentInfo(DeploymentInfoMapper.toEntity(deploymentInfoDetailsDTO.getDeploymentInfoDTO()))
         .lastUsedAt(deploymentInfoDetailsDTO.getLastUsedAt())
-        .deploymentSummaryId(deploymentInfoDetailsDTO.getDeploymentSummaryId())
         .build();
   }
 

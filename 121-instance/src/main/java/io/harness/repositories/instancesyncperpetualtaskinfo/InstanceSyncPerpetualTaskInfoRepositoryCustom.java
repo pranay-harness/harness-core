@@ -1,4 +1,4 @@
-package io.harness.repositories.instancesyncperpetualtask;
+package io.harness.repositories.instancesyncperpetualtaskinfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -8,6 +8,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.DX)
-public interface InstanceSyncPerpetualTaskRepositoryCustom {
+public interface InstanceSyncPerpetualTaskInfoRepositoryCustom {
   InstanceSyncPerpetualTaskInfo update(Criteria criteria, Update update);
 }

@@ -1,4 +1,4 @@
-package io.harness.repositories.instancesyncperpetualtask;
+package io.harness.repositories.instancesyncperpetualtaskinfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -16,7 +16,8 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.DX)
-public class InstanceSyncPerpetualTaskRepositoryCustomImpl implements InstanceSyncPerpetualTaskRepositoryCustom {
+public class InstanceSyncPerpetualTaskInfoRepositoryCustomImpl
+    implements InstanceSyncPerpetualTaskInfoRepositoryCustom {
   private MongoTemplate mongoTemplate;
 
   @Override
