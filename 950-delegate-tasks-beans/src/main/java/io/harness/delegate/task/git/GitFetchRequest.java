@@ -35,8 +35,7 @@ public class GitFetchRequest implements ActivityAccess, TaskParameters, Executio
     for (GitFetchFilesConfig gitFetchFilesConfig : gitFetchFilesConfigs) {
       GitStoreDelegateConfig gitStoreDelegateConfig = gitFetchFilesConfig.getGitStoreDelegateConfig();
       capabilities.addAll(GitCapabilityHelper.fetchRequiredExecutionCapabilities(
-              ScmConnectorMapper.toGitConfigDTO(gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO())
-      ));
+          ScmConnectorMapper.toGitConfigDTO(gitFetchFilesConfig.getGitStoreDelegateConfig().getGitConfigDTO())));
       capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
           gitStoreDelegateConfig.getEncryptedDataDetails(), maskingEvaluator));
     }
