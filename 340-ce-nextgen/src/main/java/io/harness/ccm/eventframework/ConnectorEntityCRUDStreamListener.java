@@ -156,7 +156,9 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
     log.info("In processEntityChangeEvent {}, {}, {}", entityChangeDTO, action, connectorEntityType);
     switch (action) {
       case CREATE_ACTION:
+        log.info("In CREATE_ACTION");
         entityChangeHandler.handleCreateEvent(entityChangeDTO, connectorEntityType);
+        log.info("Completed CREATE_ACTION");
         break;
       case UPDATE_ACTION:
         entityChangeHandler.handleUpdateEvent(entityChangeDTO, connectorEntityType);
