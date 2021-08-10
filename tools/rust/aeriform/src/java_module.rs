@@ -80,6 +80,7 @@ pub fn model_names() -> HashMap<String, String> {
                 target.split_whitespace().nth(0).unwrap().to_string(),
             )
         })
+        .filter(|(name, _)| name.rfind("/").unwrap_or(0) == 1)
         .collect::<HashMap<String, String>>()
 }
 
