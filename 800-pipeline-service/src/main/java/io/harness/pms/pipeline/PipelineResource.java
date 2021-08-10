@@ -74,6 +74,8 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -162,18 +164,19 @@ public class PipelineResource implements YamlSchemaResource {
     return ResponseDTO.newResponse(variablesResponse);
   }
 
-  @GET
-  @Path("check")
+  @POST
+  @Path("/check")
   @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
   @PublicApi
   public void test(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     try {
-      PollingResponse response = PollingResponse.newBuilder()
-                                     .setAccountId(accountId)
-                                     .setType(Type.HTTP_HELM)
-                                     .setSignatures(0, "111222333444")
-                                     .setBuildInfo(BuildInfo.newBuilder().setName("name").setVersions(0, "v1").build())
-                                     .build();
+      PollingResponse response =
+          PollingResponse.newBuilder()
+              .setAccountId(accountId)
+              .setType(Type.HTTP_HELM)
+              .addAllSignatures(Arrays.asList("111222333444"))
+              .setBuildInfo(BuildInfo.newBuilder().setName("name").addAllVersions(Arrays.asList("v1")).build())
+              .build();
       WebhookEventMappingResponse webhookEventMappingResponse = mapper.consumeBuildTriggerEvent(response);
       if (!webhookEventMappingResponse.isFailedToFindTrigger()) {
         List<TriggerEventResponse> responses = triggerEventExecutionHelper.processTriggersForActivation(

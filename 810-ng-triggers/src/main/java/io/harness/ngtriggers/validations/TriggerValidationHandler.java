@@ -66,9 +66,4 @@ public class TriggerValidationHandler {
 
     return validators;
   }
-
-  private TriggerDetails prepareTriggerDetails(NGTriggerEntity ngTriggerEntity) {
-    NGTriggerConfigV2 ngTriggerConfigV2 = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerEntity.getYaml());
-    return TriggerDetails.builder().ngTriggerEntity(ngTriggerEntity).ngTriggerConfigV2(ngTriggerConfigV2).build();
-  }
 }

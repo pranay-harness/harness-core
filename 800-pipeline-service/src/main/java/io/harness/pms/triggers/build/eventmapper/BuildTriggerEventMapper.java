@@ -54,7 +54,7 @@ public class BuildTriggerEventMapper {
     }
 
     if (!pollingResponse.hasBuildInfo()
-        || (pollingResponse.hasBuildInfo() || pollingResponse.getBuildInfo().getVersionsCount() == 0)) {
+        || (pollingResponse.hasBuildInfo() && pollingResponse.getBuildInfo().getVersionsCount() == 0)) {
       String msg =
           String.format("Received PollingResponse with 0 versions. No trigger evaluation needed for PollingEvent: %s",
               pollingDescriptor);
@@ -66,7 +66,8 @@ public class BuildTriggerEventMapper {
     // Apply filters
     WebhookEventMappingResponse webhookEventMappingResponse = null;
     TriggerFilter triggerFilterInAction = null;
-    FilterRequestData filterRequestData = FilterRequestData.builder().accountId(pollingResponse.getAccountId()).build();
+    FilterRequestData filterRequestData =
+        FilterRequestData.builder().accountId(pollingResponse.getAccountId()).pollingResponse(pollingResponse).build();
     try {
       for (TriggerFilter triggerFilter : triggerFilters) {
         triggerFilterInAction = triggerFilter;
