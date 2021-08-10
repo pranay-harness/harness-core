@@ -945,9 +945,14 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     // Create List<EntityStatusDetails> out of service entity list to create growth trend out of it
     List<EntityStatusDetails> entities = new ArrayList<>();
-    serviceEntities.forEach(serviceEntity
-        -> entities.add(new EntityStatusDetails(
-            serviceEntity.getCreatedAt(), serviceEntity.getDeleted(), serviceEntity.getDeletedAt())));
+    serviceEntities.forEach(serviceEntity -> {
+      if (Boolean.FALSE.equals(serviceEntity.getDeleted())) {
+        entities.add(new EntityStatusDetails(serviceEntity.getCreatedAt()));
+      } else {
+        entities.add(new EntityStatusDetails(
+            serviceEntity.getCreatedAt(), serviceEntity.getDeleted(), serviceEntity.getDeletedAt()));
+      }
+    });
 
     return new TimeValuePairListDTO<>(
         GrowthTrendEvaluator.getGrowthTrend(entities, startTimeInMs, endTimeInMs, timeGroupType));
