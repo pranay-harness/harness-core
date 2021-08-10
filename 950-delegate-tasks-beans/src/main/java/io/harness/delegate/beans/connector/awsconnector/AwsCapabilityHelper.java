@@ -27,7 +27,7 @@ public class AwsCapabilityHelper extends ConnectorCapabilityBaseHelper {
       capabilityList.add(
           HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
     } else if (credential.getAwsCredentialType() != INHERIT_FROM_DELEGATE
-        || credential.getAwsCredentialType() != IRSA) {
+        && credential.getAwsCredentialType() != IRSA) {
       throw new UnknownEnumTypeException("AWS Credential Type", String.valueOf(credential.getAwsCredentialType()));
     }
     populateDelegateSelectorCapability(capabilityList, awsConnectorDTO.getDelegateSelectors());
