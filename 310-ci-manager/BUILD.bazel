@@ -12,7 +12,7 @@ shared_dependencies = [
     "//330-ci-beans:module",
     "//870-cg-orchestration:module",
     "//940-primary-version-manager:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",

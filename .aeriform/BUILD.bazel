@@ -336,7 +336,7 @@ aeriform("//949-access-control-commons:module")
 
 aeriform("//950-command-library-common:module")
 
-aeriform("//950-common-entities:module")
+aeriform("//959-common-entities:module")
 
 aeriform("//950-delegate-tasks-beans:module")
 
