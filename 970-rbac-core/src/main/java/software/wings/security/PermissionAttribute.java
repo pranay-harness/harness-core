@@ -494,6 +494,11 @@ public class PermissionAttribute {
     MANAGE_DEPLOYMENT_FREEZES,
 
     /**
+     * Override Deployment Freezes and deploy during freeze
+     */
+    OVERRIDE_DEPLOYMENT_FREEZES,
+
+    /**
      * Manage Pipeline Governance Standards
      */
     MANAGE_PIPELINE_GOVERNANCE_STANDARDS,

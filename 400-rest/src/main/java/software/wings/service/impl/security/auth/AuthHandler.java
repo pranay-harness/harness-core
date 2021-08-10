@@ -42,6 +42,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
+import static software.wings.security.PermissionAttribute.PermissionType.OVERRIDE_DEPLOYMENT_FREEZES;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
@@ -1579,8 +1580,9 @@ public class AuthHandler {
         USER_PERMISSION_READ, AUDIT_VIEWER, MANAGE_TAGS, CE_ADMIN, CE_VIEWER, MANAGE_CLOUD_PROVIDERS, MANAGE_CONNECTORS,
         MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES, MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES,
         MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS, MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS,
-        MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES, MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS,
-        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS, MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS);
+        MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES, OVERRIDE_DEPLOYMENT_FREEZES,
+        MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS, MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS,
+        MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS);
   }
 
   private Set<Action> getAllActions() {

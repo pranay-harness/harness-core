@@ -9,6 +9,8 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELIN
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
+import static software.wings.security.PermissionAttribute.PermissionType.OVERRIDE_DEPLOYMENT_FREEZES;
 
 import static java.util.Arrays.asList;
 
@@ -47,6 +49,7 @@ public class DeploymentAuthHandler {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
+  @Inject private AuthHandler authHandler;
 
   private void authorize(List<PermissionAttribute> requiredPermissionAttributes, List<String> appIds, String entityId) {
     User user = UserThreadLocal.get();
@@ -160,5 +163,11 @@ public class DeploymentAuthHandler {
         authService.checkIfUserAllowedToDeployPipelineToEnv(appId, workflowExecution.getEnvId());
       }
     }
+  }
+
+  public void authorizeDeploymentDuringFreeze() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(OVERRIDE_DEPLOYMENT_FREEZES));
+    authHandler.authorizeAccountPermission(permissionAttributeList);
   }
 }

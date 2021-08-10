@@ -47,6 +47,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
+import static software.wings.security.PermissionAttribute.PermissionType.OVERRIDE_DEPLOYMENT_FREEZES;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
@@ -195,6 +196,8 @@ public class UserGroupPermissionsController {
         return MANAGE_IP_WHITELIST;
       case MANAGE_DEPLOYMENT_FREEZES:
         return MANAGE_DEPLOYMENT_FREEZES;
+      case OVERRIDE_DEPLOYMENT_FREEZES:
+        return OVERRIDE_DEPLOYMENT_FREEZES;
       case MANAGE_PIPELINE_GOVERNANCE_STANDARDS:
         return MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
       case VIEW_USER_AND_USER_GROUPS_AND_API_KEYS:
@@ -484,6 +487,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
       case MANAGE_DEPLOYMENT_FREEZES:
         return QLAccountPermissionType.MANAGE_DEPLOYMENT_FREEZES;
+      case OVERRIDE_DEPLOYMENT_FREEZES:
+        return QLAccountPermissionType.OVERRIDE_DEPLOYMENT_FREEZES;
       case MANAGE_IP_WHITELIST:
         return QLAccountPermissionType.MANAGE_IP_WHITELIST;
       case MANAGE_AUTHENTICATION_SETTINGS:
