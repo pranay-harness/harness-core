@@ -126,11 +126,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       ResponseDTO<byte[]> responseDTO;
       try {
         byte[] pollingItemBytes = kryoSerializer.asBytes(pollingItem);
-
-        //      executeWithExceptions(delegateAgentManagerClient.publishArtifactCollectionResult(taskId.getId(),
-        //      accountId,
-        //          RequestBody.create(MediaType.parse("application/octet-stream"), responseSerialized)));
-
         responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
             RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
       } catch (Exception exception) {
