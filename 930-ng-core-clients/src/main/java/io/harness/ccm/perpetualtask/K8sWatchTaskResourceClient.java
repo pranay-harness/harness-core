@@ -16,21 +16,20 @@ import retrofit2.http.Query;
 
 @OwnedBy(CE)
 public interface K8sWatchTaskResourceClient {
-  String MANAGER_URL_PREFIX = "/api";
-  String K8S_WATCH_TASK_RESOURCE_ENDPOINT = "/ccm/perpetual-task";
+  String K8S_WATCH_TASK_RESOURCE_ENDPOINT = "ccm/perpetual-task";
 
   String TASK_ID = "taskId";
   String ACCOUNT_ID = "accountIdentifier";
 
-  @POST(MANAGER_URL_PREFIX + K8S_WATCH_TASK_RESOURCE_ENDPOINT + "/create")
+  @POST(K8S_WATCH_TASK_RESOURCE_ENDPOINT + "/create")
   Call<ResponseDTO<String>> create(
       @NotEmpty @Query(ACCOUNT_ID) String accountId, @NotNull @Body K8sEventCollectionBundle k8sEventCollectionBundle);
 
-  @POST(MANAGER_URL_PREFIX + K8S_WATCH_TASK_RESOURCE_ENDPOINT + "/reset")
+  @POST(K8S_WATCH_TASK_RESOURCE_ENDPOINT + "/reset")
   Call<ResponseDTO<Boolean>> reset(@NotEmpty @Query(ACCOUNT_ID) String accountId,
       @NotEmpty @Query(TASK_ID) String taskId, @NotNull @Body K8sEventCollectionBundle k8sEventCollectionBundle);
 
-  @GET(MANAGER_URL_PREFIX + K8S_WATCH_TASK_RESOURCE_ENDPOINT + "/delete")
+  @GET(K8S_WATCH_TASK_RESOURCE_ENDPOINT + "/delete")
   Call<ResponseDTO<Boolean>> delete(
       @NotEmpty @Query(ACCOUNT_ID) String accountId, @NotEmpty @Query(TASK_ID) String taskId);
 }
