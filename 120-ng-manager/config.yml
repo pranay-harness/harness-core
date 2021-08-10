@@ -125,11 +125,11 @@ grpcServer:
 
 gitSyncServerConfig:
   connectors:
-    - port: 13001
+    - port: 13002
       secure: true
       keyFilePath: key.pem
       certFilePath: cert.pem
-    - port: 13002
+    - port: 13003
 
 shouldDeployWithGitSync: true
 
@@ -329,3 +329,5 @@ cacheConfig:
   cacheBackend: REDIS
   cacheNamespace: ""
   disabledCaches: [ ]
+
+hostname: localhost:7457
