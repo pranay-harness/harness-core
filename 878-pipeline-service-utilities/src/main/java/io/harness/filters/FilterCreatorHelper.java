@@ -7,6 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.exception.runtime.InvalidYamlRuntimeException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -88,6 +89,9 @@ public class FilterCreatorHelper {
         new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!secretRef.isExpression()) {
       SecretRefData secretRefData = secretRef.getValue();
+      if (secretRefData.isNull()) {
+        throw new InvalidRequestException("No value for secret provided at " + fullQualifiedDomainName);
+      }
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.getScope(),
           secretRefData.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier, metadata);
       return EntityDetailProtoDTO.newBuilder()
