@@ -4,12 +4,15 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -28,12 +31,27 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(HarnessTeam.CDC)
 public class PollingDocument implements PersistentEntity, AccountAccess, UuidAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationIdentifier_projectIdentifier_pollingType_pollingItem")
+                 .field(PollingDocumentKeys.accountId)
+                 .field(PollingDocumentKeys.orgIdentifier)
+                 .field(PollingDocumentKeys.projectIdentifier)
+                 .field(PollingDocumentKeys.pollingType)
+                 .field(PollingDocumentKeys.pollingInfo)
+                 .field(PollingDocumentKeys.signatures)
+                 .build())
+        .add(CompoundMongoIndex.builder().name("accountId").field(PollingDocumentKeys.accountId).build())
+        .build();
+  }
+
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 
   @NotNull private String accountId;
   private String orgIdentifier;
   private String projectIdentifier;
-  @NotNull private List<String> signature;
+  @NotNull private List<String> signatures;
 
   @JsonProperty("type") private PollingType pollingType;
 
