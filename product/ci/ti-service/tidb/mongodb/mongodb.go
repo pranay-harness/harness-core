@@ -173,7 +173,7 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 
 // queryHelper gets the tests that need to be run corresponding to the parsed file nodes
 // We return true if all the tests need to be selected
-func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, account string) ([]types.RunnableTest, bool, error) {
+func (mdb *MongoDb) queryHelper(ctx context.Context, targetBranch, repo string, fn []utils.Node, account string) ([]types.RunnableTest, bool, error) {
 	result := []types.RunnableTest{}
 	// Query 1
 	// Get node IDs corresponding to the packages, classes and resources by iterating over the parsed file nodes
@@ -204,7 +204,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, acco
 		// Nothing to query in DB
 		return result, false, nil
 	}
-	err := mgm.Coll(&Node{}).SimpleFind(&nodes, bson.M{"$or": allowedPairs})
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, bson.M{"$or": allowedPairs})
 	if err != nil {
 		return nil, false, err
 	}
@@ -233,7 +233,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, acco
 	// Query 2
 	// Get unique test IDs corresponding to these nodes
 	relations := []Relation{}
-	err = mgm.Coll(&Relation{}).SimpleFind(&relations,
+	err = mgm.Coll(&Relation{}).SimpleFindWithCtx(ctx, &relations,
 		bson.M{"source": bson.M{"$in": nids},
 			"vcs_info.branch": targetBranch,
 			"vcs_info.repo":   repo,
@@ -255,7 +255,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, acco
 	// Query 3
 	// Get test information corresponding to test IDs
 	tnodes := []Node{}
-	err = mgm.Coll(&Node{}).SimpleFind(&tnodes,
+	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &tnodes,
 		bson.M{"id": bson.M{"$in": tids},
 			"type":            "test",
 			"vcs_info.branch": targetBranch,
@@ -335,7 +335,7 @@ func (mdb *MongoDb) bfsWithSource(ctx context.Context, branch, pkg, cls string, 
 	ret := types.GetVgResp{}
 	all := []Node{}
 	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "package": pkg, "class": cls}
-	err := mgm.Coll(&Node{}).SimpleFind(&all, fi)
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, fi)
 	if err != nil {
 		return ret, err
 	}
@@ -364,7 +364,7 @@ func (mdb *MongoDb) bfsRandom(ctx context.Context, branch string, req types.GetV
 	ret := types.GetVgResp{}
 	opt := options.FindOptions{Limit: &req.Limit}
 	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId}
-	err := mgm.Coll(&Node{}).SimpleFind(&all, fi, &opt)
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, fi, &opt)
 	if err != nil {
 		return ret, err
 	}
@@ -437,7 +437,7 @@ func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branc
 	// Get detailed node information
 	all := []Node{}
 	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "id": bson.M{"$in": nIds}}
-	err := mgm.Coll(&Node{}).SimpleFind(&all, f)
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, f)
 	if err != nil {
 		return ret, err
 	}
@@ -492,7 +492,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 
 	// Get list of all tests with unique pkg/class information
 	all := []Node{}
-	err = mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": req.TargetBranch, "vcs_info.repo": req.Repo, "account": account})
+	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, bson.M{"type": "test", "vcs_info.branch": req.TargetBranch, "vcs_info.repo": req.Repo, "account": account})
 	if err != nil {
 		return res, err
 	}
@@ -575,7 +575,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 
 	// Get tests corresponding to parsed source and resource file nodes
-	tests, runAll, err := mdb.queryHelper(req.TargetBranch, req.Repo, fnodes, account)
+	tests, runAll, err := mdb.queryHelper(ctx, req.TargetBranch, req.Repo, fnodes, account)
 	if err != nil {
 		return res, err
 	}

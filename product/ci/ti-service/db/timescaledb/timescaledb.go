@@ -512,22 +512,25 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 	buildId, stepId, stageId string) (types.SelectionOverview, error) {
 	var ztotal, zsrc, znew, zupd, ztt, zts zero.Int
 	var repo, source, target zero.String
+	res := types.SelectionOverview{}
 	query := fmt.Sprintf(
 		`
 		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms, repo, source_branch, target_branch
 		FROM %s
 		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, tdb.SelectionTable)
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
+	defer rows.Close()
 	if err != nil {
 		tdb.Log.Errorw("could not query database for selection overview", zap.Error(err))
-		return types.SelectionOverview{}, err
+		return res, err
 	}
-	res := types.SelectionOverview{}
+	len := 0
 	for rows.Next() {
+		len++
 		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd, &ztt, &zts, &repo, &source, &target)
 		if err != nil {
 			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
-			return types.SelectionOverview{}, err
+			return res, err
 		}
 		res.Total = int(ztotal.ValueOrZero())
 		res.TimeSavedMs = int(zts.ValueOrZero())
@@ -544,7 +547,9 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 	if rows.Err() != nil {
 		return res, rows.Err()
 	}
-	defer rows.Close()
+	if len == 0 {
+		return res, errors.New("could not find a row for selection overview")
+	}
 
 	return res, nil
 }
