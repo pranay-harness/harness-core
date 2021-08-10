@@ -9,6 +9,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TriggerEventResponse;
+import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.buildtriggers.helpers.BuildTriggerHelper;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
@@ -67,7 +68,18 @@ public class BuildTriggerEventMapper {
     WebhookEventMappingResponse webhookEventMappingResponse = null;
     TriggerFilter triggerFilterInAction = null;
     FilterRequestData filterRequestData =
-        FilterRequestData.builder().accountId(pollingResponse.getAccountId()).pollingResponse(pollingResponse).build();
+        FilterRequestData.builder()
+            .accountId(pollingResponse.getAccountId())
+            .pollingResponse(pollingResponse)
+            .webhookPayloadData(WebhookPayloadData.builder()
+                                    .originalEvent(TriggerWebhookEvent.builder()
+                                                       .accountId(pollingResponse.getAccountId())
+                                                       .createdAt(System.currentTimeMillis())
+                                                       .uuid(UUIDGenerator.generateUuid())
+                                                       .payload(pollingDescriptor)
+                                                       .build())
+                                    .build())
+            .build();
     try {
       for (TriggerFilter triggerFilter : triggerFilters) {
         triggerFilterInAction = triggerFilter;

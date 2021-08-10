@@ -55,13 +55,7 @@ public class BuildTriggerValidationFilter implements TriggerFilter {
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(
               TriggerEventResponseHelper.toResponse(ALL_MAPPED_TRIGGER_FAILED_VALIDATION_FOR_POLLING_EVENT,
-                  TriggerWebhookEvent.builder()
-                      .accountId(filterRequestData.getAccountId())
-                      .payload(buildTriggerHelper.generatePollingDescriptor(filterRequestData.getPollingResponse()))
-                      .createdAt(System.currentTimeMillis())
-                      .uuid(UUIDGenerator.generateUuid())
-                      .build(),
-                  null, null,
+                  filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
                   "All Mapped Triggers failed validationfor Event: "
                       + buildTriggerHelper.generatePollingDescriptor(filterRequestData.getPollingResponse()),
                   null))

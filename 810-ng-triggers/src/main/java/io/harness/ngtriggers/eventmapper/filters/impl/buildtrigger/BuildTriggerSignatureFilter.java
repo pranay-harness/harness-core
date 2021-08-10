@@ -53,13 +53,7 @@ public class BuildTriggerSignatureFilter implements TriggerFilter {
       log.info(msg);
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(TriggerEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_FOR_EVENT_SIGNATURES,
-              TriggerWebhookEvent.builder()
-                  .accountId(filterRequestData.getAccountId())
-                  .payload(buildTriggerHelper.generatePollingDescriptor(filterRequestData.getPollingResponse()))
-                  .createdAt(System.currentTimeMillis())
-                  .uuid(UUIDGenerator.generateUuid())
-                  .build(),
-              null, null, msg, null))
+              filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null, msg, null))
           .build();
     } else {
       prepareTriggerDetails(matchedTriggers, ngTriggerEntities);
@@ -72,8 +66,7 @@ public class BuildTriggerSignatureFilter implements TriggerFilter {
   private void prepareTriggerDetails(List<TriggerDetails> matchedTriggers, List<NGTriggerEntity> ngTriggerEntities) {
     for (NGTriggerEntity ngTriggerEntity : ngTriggerEntities) {
       try {
-        matchedTriggers.add(ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity.getAccountId(),
-            ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getYaml()));
+        matchedTriggers.add(ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity));
       } catch (Exception e) {
         log.error("While processing PollingEvent, Failed to generate toTriggerDetails for Trigger: "
                 + TriggerHelper.getTriggerRef(ngTriggerEntity),

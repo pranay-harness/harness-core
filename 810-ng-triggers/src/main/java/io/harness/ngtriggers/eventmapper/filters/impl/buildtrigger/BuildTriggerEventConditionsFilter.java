@@ -56,13 +56,7 @@ public class BuildTriggerEventConditionsFilter implements TriggerFilter {
       log.info("No trigger matched polling event after event condition evaluation:");
       mappingResponseBuilder.failedToFindTrigger(true)
           .webhookEventResponse(TriggerEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_FOR_EVENT_CONDITION,
-              TriggerWebhookEvent.builder()
-                  .accountId(filterRequestData.getAccountId())
-                  .payload(buildTriggerHelper.generatePollingDescriptor(filterRequestData.getPollingResponse()))
-                  .createdAt(System.currentTimeMillis())
-                  .uuid(UUIDGenerator.generateUuid())
-                  .build(),
-              null, null,
+              filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
               "No Trigger matched conditions for payload event for Event: "
                   + buildTriggerHelper.generatePollingDescriptor(filterRequestData.getPollingResponse()),
               null))
