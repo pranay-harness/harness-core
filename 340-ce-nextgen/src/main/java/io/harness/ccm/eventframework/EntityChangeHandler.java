@@ -279,6 +279,6 @@ public class EntityChangeHandler {
   }
 
   private boolean isPerpetualTaskEnabled(String accountIdentifier) {
-    return featureFlagService.isEnabled(FeatureName.CE_NG_PERPETUAL_TASK, accountIdentifier);
+    return true;
   }
 }
