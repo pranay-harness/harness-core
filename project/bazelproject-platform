@@ -1,0 +1,22 @@
+import project/bazelproject-config
+
+directories:
+  400-rest
+  940-feature-flag
+  960-persistence
+  970-api-services-beans
+  970-grpc
+  980-commons
+  990-commons-test
+  120-ng-manager
+  360-cg-manager
+  tools/bazel
+
+import_run_configurations:
+  project/run-configurations/DelegateApp.xml
+  project/run-configurations/WingsApp.xml
+  project/run-configurations/DataGenApp.xml
+  project/run-configurations/CVNGApp.xml
+  project/run-configurations/NextGenManager.xml
+  project/run-configurations/VerificationServiceApp.xml
+  project/run-configurations/PipelineService.xml
