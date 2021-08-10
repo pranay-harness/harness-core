@@ -150,7 +150,7 @@ modules = [
     "//948-access-control-sdk",
     "//949-access-control-commons",
     "//950-command-library-common",
-    "//950-common-entities",
+    "//959-common-entities",
     "//950-delegate-tasks-beans",
     "//950-events-framework",
     "//950-events-framework-monitor",

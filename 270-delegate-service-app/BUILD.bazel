@@ -32,7 +32,7 @@ shared_dependencies = [
     "//955-delegate-beans:module",
     "//940-secret-manager-client:module",
     "//950-command-library-common:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//950-delegate-tasks-beans:module",
     "//950-events-framework:module",
     "//950-ng-core:module",
