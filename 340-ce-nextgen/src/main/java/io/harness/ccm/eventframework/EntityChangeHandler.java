@@ -100,16 +100,19 @@ public class EntityChangeHandler {
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
     boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
-    log.info("accountIdentifier {},ceK8sConnectorIdentifier {}, isPTEnabled {}", accountIdentifier, ceK8sConnectorIdentifier,
-        isPTEnabled);
-
+    log.info("accountIdentifier {},ceK8sConnectorIdentifier {}, isPTEnabled {}", accountIdentifier,
+        ceK8sConnectorIdentifier, isPTEnabled);
+    log.info(accountIdentifier);
+    log.info(ceK8sConnectorIdentifier);
+    log.info(isPTEnabled);
     if (isPTEnabled) {
+      log.info("getConnectorConfigDTO");
       ConnectorInfoDTO ceK8sConnectorInfoDTO = getConnectorConfigDTO(entityChangeDTO);
+      log.info("getConnectorConfigDTO complete");
       ConnectorConfigDTO ceK8sConnectorConfigDTO = ceK8sConnectorInfoDTO.getConnectorConfig();
       CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO =
           (CEKubernetesClusterConfigDTO) ceK8sConnectorConfigDTO;
       log.info("isVisibilityFeatureEnabled ", isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO));
-
       if (isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO)) {
         String k8sBaseConnectorRef = ceKubernetesClusterConfigDTO.getConnectorRef();
         onboardNewCEK8sConnector(getClusterRecord(
