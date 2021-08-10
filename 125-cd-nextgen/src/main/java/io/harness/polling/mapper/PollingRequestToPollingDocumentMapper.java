@@ -26,7 +26,7 @@ import java.util.Collections;
 public class PollingRequestToPollingDocumentMapper {
   public PollingDocument toPollingDocument(PollingItem pollingItem) {
     Qualifier qualifier = pollingItem.getQualifier();
-    PollingInfo pollingInfo;
+    PollingInfo pollingInfo = null;
     PollingDocumentBuilder pollingDocumentBuilder = PollingDocument.builder();
     switch (pollingItem.getCategory()) {
       case MANIFEST:

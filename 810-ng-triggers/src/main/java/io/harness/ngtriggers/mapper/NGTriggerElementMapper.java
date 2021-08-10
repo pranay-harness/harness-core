@@ -172,14 +172,10 @@ public class NGTriggerElementMapper {
 
   public TriggerDetails toTriggerDetails(NGTriggerEntity ngTriggerEntity) {
     NGTriggerConfigV2 config = toTriggerConfigV2(ngTriggerEntity.getYaml());
-    NGTriggerEntity entity = toTriggerEntity(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-        ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getIdentifier(), ngTriggerEntity.getYaml());
-
-    copyEntityFieldsOutsideOfYml(ngTriggerEntity, entity);
-    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(ngTriggerEntity).build();
   }
 
-  public TriggerDetails toMergeTriggers(NGTriggerEntity existingEntity, String newYaml) {
+  public TriggerDetails mergeTriggerEntity(NGTriggerEntity existingEntity, String newYaml) {
     NGTriggerConfigV2 config = toTriggerConfigV2(newYaml);
     NGTriggerEntity entity = toTriggerEntity(existingEntity.getAccountId(), existingEntity.getOrgIdentifier(),
         existingEntity.getProjectIdentifier(), existingEntity.getIdentifier(), newYaml);
