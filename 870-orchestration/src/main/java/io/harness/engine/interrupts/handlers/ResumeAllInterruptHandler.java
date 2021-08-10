@@ -2,14 +2,12 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.CollectionUtils.isPresent;
-import static io.harness.eraro.ErrorCode.PAUSE_ALL_ALREADY;
+import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.eraro.ErrorCode.RESUME_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
-
-import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -50,19 +48,35 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
 
   private Interrupt validateAndSave(Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
+
+    // Check if ABORT_ALL present on plan level
+    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.ABORT_ALL)) {
+      throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
+    }
+
+    // Check if RESUME_ALL present on plan level
+    if (isPresent(interrupts,
+            presentInterrupt
+            -> presentInterrupt.getType() == InterruptType.RESUME_ALL
+                && presentInterrupt.getNodeExecutionId() == null)) {
+      throw new InvalidRequestException("Execution already has RESUME_ALL interrupt", RESUME_ALL_ALREADY, USER);
+    }
+
+    // Check if RESUME_ALL already for same node
+    if (isPresent(interrupts,
+            presentInterrupt
+            -> presentInterrupt.getType() == InterruptType.RESUME_ALL && presentInterrupt.getNodeExecutionId() != null
+                && interrupt.getNodeExecutionId() != null
+                && presentInterrupt.getNodeExecutionId().equals(interrupt.getNodeExecutionId()))) {
+      throw new InvalidRequestException(
+          "Execution already has RESUME_ALL interrupt for node", RESUME_ALL_ALREADY, USER);
+    }
+
     Optional<Interrupt> pauseAllOptional = InterruptUtils.obtainOptionalInterruptFromActiveInterruptsWithPredicates(
         interrupts, interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(),
         ImmutableList.of(presentInterrupt -> presentInterrupt.getType() == InterruptType.PAUSE_ALL));
     if (!pauseAllOptional.isPresent()) {
       throw new InvalidRequestException("No PAUSE_ALL interrupt present", USER);
-    }
-
-    if (interrupt.getNodeExecutionId() != null) {
-      // stage interrupt
-      validateNodeInterruptOrThrow(interrupts, interrupt);
-    } else {
-      // plan interrupt
-      validatePlanInterruptOrThrow(interrupts);
     }
 
     Interrupt pauseAllInterrupt = pauseAllOptional.get();
@@ -98,23 +112,5 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
         EnumSet.noneOf(Status.class));
 
     return interrupt;
-  }
-
-  private void validateNodeInterruptOrThrow(List<Interrupt> activeInterrupts, Interrupt currentInterrupt) {
-    if (isPresent(activeInterrupts, presentInterrupt -> presentInterrupt.getNodeExecutionId() != null)) {
-      if (activeInterrupts.stream().anyMatch(presentInterrupt
-              -> presentInterrupt.getNodeExecutionId().equals(currentInterrupt.getNodeExecutionId())
-                  && resumeAllPredicate.test(presentInterrupt))) {
-        throw new InvalidRequestException(
-            format("Stage [%s] already has RESUME_ALL interrupt", currentInterrupt.getNodeExecutionId()),
-            PAUSE_ALL_ALREADY, USER);
-      }
-    }
-  }
-
-  private void validatePlanInterruptOrThrow(List<Interrupt> activeInterrupts) {
-    if (isPresent(activeInterrupts, resumeAllPredicate)) {
-      throw new InvalidRequestException("Execution already has RESUME_ALL interrupt", RESUME_ALL_ALREADY, USER);
-    }
   }
 }
