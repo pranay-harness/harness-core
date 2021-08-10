@@ -41,8 +41,11 @@ public class EntityChangeHandler {
 
   public void handleCreateEvent(EntityChangeDTO entityChangeDTO, String connectorEntityType) {
     // Create Events of K8s Base (CD) connectors can be safely ignored
+    log.info("In Handle Create Event -1 {}", entityChangeDTO);
     if (ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
+      log.info("In Handle Create Event - 2 {}", entityChangeDTO);
       handleCEK8sCreate(entityChangeDTO);
+      log.info("In Handle Create Event - 3 {}", entityChangeDTO);
     }
   }
 
@@ -95,16 +98,23 @@ public class EntityChangeHandler {
   }
 
   public void handleCEK8sCreate(EntityChangeDTO entityChangeDTO) {
+    log.info("EntityChangeDTO {}", entityChangeDTO);
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
     boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
+    log.info("Outside PT Enabled {}", accountIdentifier);
+    log.info("accountIdentifier {}", accountIdentifier);
+    log.info("ceK8sConnectorIdentifier {}", ceK8sConnectorIdentifier);
+    log.info("isPTEnabled {}", isPTEnabled);
 
     if (isPTEnabled) {
+      log.info("getConnectorConfigDTO");
       ConnectorInfoDTO ceK8sConnectorInfoDTO = getConnectorConfigDTO(entityChangeDTO);
       ConnectorConfigDTO ceK8sConnectorConfigDTO = ceK8sConnectorInfoDTO.getConnectorConfig();
       CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO =
           (CEKubernetesClusterConfigDTO) ceK8sConnectorConfigDTO;
       if (isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO)) {
+        log.info("In isVisibilityFeatureEnabled");
         String k8sBaseConnectorRef = ceKubernetesClusterConfigDTO.getConnectorRef();
         onboardNewCEK8sConnector(getClusterRecord(
             accountIdentifier, ceK8sConnectorIdentifier, ceK8sConnectorInfoDTO.getName(), k8sBaseConnectorRef));
@@ -279,6 +289,7 @@ public class EntityChangeHandler {
   }
 
   private boolean isPerpetualTaskEnabled(String accountIdentifier) {
+    log.info("In Perp Task Enabled");
     return featureFlagService.isEnabled(FeatureName.CE_NG_PERPETUAL_TASK, accountIdentifier);
   }
 }
