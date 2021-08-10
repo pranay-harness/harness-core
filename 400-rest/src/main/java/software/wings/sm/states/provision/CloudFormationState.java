@@ -104,8 +104,7 @@ public abstract class CloudFormationState extends State {
   @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject protected transient WingsPersistence wingsPersistence;
   @Inject protected SweepingOutputService sweepingOutputService;
-
-  @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
+  @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region")
   @DefaultValue(AWS_DEFAULT_REGION)
   @Getter
