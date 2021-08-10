@@ -1,8 +1,6 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -23,7 +21,6 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "DelegateSequenceConfigKeys")
 @Entity(value = "delegateSequenceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateSequenceConfig extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
