@@ -1397,7 +1397,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
 
     envBuildInstanceCounts.forEach(envBuildInstanceCount -> {
-      final String envId = envBuildInstanceCount.getEnvId();
+      final String envId = envBuildInstanceCount.getEnvIdentifier();
       final String envName = envBuildInstanceCount.getEnvName();
       final String buildId = envBuildInstanceCount.getTag();
       final int count = envBuildInstanceCount.getCount();

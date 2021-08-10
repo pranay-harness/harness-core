@@ -234,6 +234,8 @@ deploymentSummary {"name": "infraMappingId_k8sDeploymentKeyReleaseNameAndNumber"
 deploymentSummary {"name": "inframappingId_awsAmiDeploymentKeyAsgName_createdAtDesc", "background": true} {"infraMappingId": 1, "awsAmiDeploymentKey.autoScalingGroupName": 1, "createdAt": -1}
 deploymentSummary {"name": "inframappingId_awsCodeDeployDeploymentKeyKey_createdAtDesc", "background": true} {"infraMappingId": 1, "awsCodeDeployDeploymentKey.key": 1, "createdAt": -1}
 deploymentSummary {"name": "inframappingId_containerlabelsAndVersion", "background": true} {"infraMappingId": 1, "containerDeploymentKey.labels": 1, "containerDeploymentKey.newVersion": 1, "createdAt": -1}
+deploymentSummaryNG {"name": "idx_accountIdentifier_orgIdentifier_projectIdentifier", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
+deploymentSummaryNG {"name": "idx_instanceSyncKey_createdAt", "background": true} {"instanceSyncKey": 1, "createdAt": -1}
 deploymentTimeSeriesEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 deploymentTimeSeriesEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 ecsServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -442,7 +444,11 @@ instanceChangeQueue {"name": "earliestGet_1", "background": true, "expireAfterSe
 instanceChangeQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 instanceEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 instanceEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-instanceNG {"name": "accountId_orgId_projectId_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
+instanceNG {"name": "accountId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
+instanceNG {"name": "accountId_organizationId_projectId_infrastructureMappingId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "infrastructureMappingId": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
+instanceNG {"name": "accountId_organizationId_projectId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
+instanceNG {"name": "accountId_organizationId_projectId_serviceId_envId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "serviceIdentifier": 1, "envIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
+instanceNG {"name": "accountId_organizationId_projectId_serviceId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "serviceIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
 instanceNG {"name": "instanceKey_1", "unique": true} {"instanceKey": 1}
 instanceStats {"name": "appId_1", "background": true} {"appId": 1}
 instanceStats {"name": "createdAt_1", "background": true} {"createdAt": 1}

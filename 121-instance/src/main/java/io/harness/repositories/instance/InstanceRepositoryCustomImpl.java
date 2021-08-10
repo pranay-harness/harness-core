@@ -90,7 +90,7 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     Criteria criteria =
         getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
-            .and(InstanceKeys.serviceId)
+            .and(InstanceKeys.serviceIdentifier)
             .is(serviceId);
     Query query = new Query().addCriteria(criteria);
     return mongoTemplate.find(query, Instance.class);
@@ -116,12 +116,12 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     Criteria criteria =
         getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
-            .and(InstanceKeys.serviceId)
+            .and(InstanceKeys.serviceIdentifier)
             .is(serviceId);
 
     MatchOperation matchStage = Aggregation.match(criteria);
     GroupOperation groupEnvId =
-        group(InstanceKeys.envId, InstanceKeys.envName, InstanceSyncConstants.PRIMARY_ARTIFACT_TAG)
+        group(InstanceKeys.envIdentifier, InstanceKeys.envName, InstanceSyncConstants.PRIMARY_ARTIFACT_TAG)
             .count()
             .as(InstanceSyncConstants.COUNT);
     return mongoTemplate.aggregate(newAggregation(matchStage, groupEnvId), Instance.class, EnvBuildInstanceCount.class);
@@ -137,9 +137,9 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
       long timestampInMs, int limit) {
     Criteria criteria =
         getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
-            .and(InstanceKeys.envId)
+            .and(InstanceKeys.envIdentifier)
             .is(envId)
-            .and(InstanceKeys.serviceId)
+            .and(InstanceKeys.serviceIdentifier)
             .is(serviceId)
             .and(InstanceSyncConstants.PRIMARY_ARTIFACT_TAG)
             .in(buildIds);
@@ -171,12 +171,12 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs) {
     Criteria criteria =
         getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
-            .and(InstanceKeys.serviceId)
+            .and(InstanceKeys.serviceIdentifier)
             .in(serviceId);
 
     MatchOperation matchStage = Aggregation.match(criteria);
     GroupOperation groupEnvId =
-        group(InstanceKeys.serviceId, InstanceKeys.envType).count().as(InstanceSyncConstants.COUNT);
+        group(InstanceKeys.serviceIdentifier, InstanceKeys.envType).count().as(InstanceSyncConstants.COUNT);
 
     ProjectionOperation projection =
         Aggregation.project()
