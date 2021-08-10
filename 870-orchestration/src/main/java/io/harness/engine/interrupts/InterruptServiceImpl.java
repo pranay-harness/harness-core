@@ -78,7 +78,7 @@ public class InterruptServiceImpl implements InterruptService {
         InterruptUtils.obtainOptionalInterruptFromActiveInterrupts(interrupts, planExecutionId, nodeExecutionId);
 
     Interrupt interrupt = optionalInterrupt.orElseThrow(() -> new InvalidRequestException("Interrupt was not found"));
-
+    log.info("Interrupt found pre node invocation calculating execution check");
     return calculateExecutionCheck(nodeExecutionId, interrupt);
   }
 

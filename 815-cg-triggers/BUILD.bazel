@@ -7,6 +7,7 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//865-cg-events:module",
         "//870-cg-orchestration:module",
         "//940-feature-flag:module",
         "//956-feature-flag-beans:module",

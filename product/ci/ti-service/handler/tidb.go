@@ -130,7 +130,6 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		}
 
 		overview, err := db.GetSelectionOverview(ctx, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId)
-
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not get selection overview for VG search", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
@@ -147,7 +146,10 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			Limit:        limit,
 		}
 
-		// Make call to Mongo DB to get the visualization call graph of
+		// Make call to Mongo DB to get the visualization call graph
+		// Set timeout of 15 seconds to avoid choking the DB
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
 		graph, err := tidb.GetVg(ctx, req)
 		if err != nil {
 			WriteInternalError(w, err)

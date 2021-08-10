@@ -1,11 +1,11 @@
 package io.harness.licensing.interfaces;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
-import io.harness.licensing.ModuleType;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 

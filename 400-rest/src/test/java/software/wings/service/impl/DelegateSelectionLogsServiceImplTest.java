@@ -128,7 +128,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     delegateSelectionLogsService.save(null);
     delegateSelectionLogsService.save(BatchDelegateSelectionLog.builder().build());
 
-    verify(featureFlagService, never()).isEnabled(eq(FeatureName.ENABLE_DELEGATE_SELECTION_LOG), anyString());
+    verify(featureFlagService, never()).isNotEnabled(eq(FeatureName.DISABLE_DELEGATE_SELECTION_LOG), anyString());
   }
 
   @Test
@@ -142,7 +142,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isNotEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
@@ -168,7 +168,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
@@ -199,7 +199,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isNotEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
+    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
@@ -216,7 +216,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLog.class);
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLogTaskMetadata.class);
-    when(featureFlagService.isEnabled(FeatureName.ENABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
+    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
 
     DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
                                                         .taskId(taskId)
@@ -253,6 +253,10 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(result).isNull();
 
     result = delegateSelectionLogsService.createBatch(DelegateTask.builder().build());
+    assertThat(result).isNull();
+
+    result = delegateSelectionLogsService.createBatch(
+        DelegateTask.builder().uuid(generateUuid()).selectionLogsTrackingEnabled(false).build());
     assertThat(result).isNull();
   }
 

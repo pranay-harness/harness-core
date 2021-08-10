@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.scm;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -19,6 +22,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(CI)
 public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilitiesSimpleCheck(GitConfigDTO gitConfig) {
     List<ExecutionCapability> capabilityList = new ArrayList<>();

@@ -314,6 +314,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
+  @Inject @Named("watcherUpgradeExecutor") private ScheduledExecutorService watcherUpgradeExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("rescheduleExecutor") private ScheduledExecutorService rescheduleExecutor;
@@ -439,6 +440,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                  : "[New] Timed out waiting for go-ahead. Proceeding anyway");
         messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
         startLocalHeartbeat();
+        watcherUpgradeExecutor.scheduleWithFixedDelay(() -> {
+          try {
+            watcherUpgrade(false);
+          } catch (Exception e) {
+            log.error("Error while upgrading watcher", e);
+          }
+        }, 0, 60, TimeUnit.MINUTES);
       } else {
         log.info("Delegate process started");
         if (delegateConfiguration.isGrpcServiceEnabled()) {
@@ -1498,7 +1506,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
     if (heartbeatTimedOut) {
       log.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
+      watcherUpgrade(true);
     }
+  }
+
+  private void watcherUpgrade(boolean heartbeatTimedOut) {
     String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
     String expectedVersion = findExpectedWatcherVersion();
     if (StringUtils.equals(expectedVersion, watcherVersion)) {
@@ -1509,7 +1521,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.warn("Watcher version mismatched for {} seconds. Version is {} but should be {}",
           WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
     }
-
     boolean multiVersionRestartNeeded =
         multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
 

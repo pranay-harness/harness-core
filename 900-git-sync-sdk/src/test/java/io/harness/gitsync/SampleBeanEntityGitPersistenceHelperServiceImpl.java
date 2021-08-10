@@ -12,6 +12,7 @@ import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 
 import com.google.inject.Singleton;
+import java.util.List;
 import java.util.function.Supplier;
 
 @Singleton
@@ -94,6 +95,11 @@ public class SampleBeanEntityGitPersistenceHelperServiceImpl
 
   @Override
   public SampleBean fullSyncEntity(String accountIdentifier, String yaml) {
+    return null;
+  }
+
+  @Override
+  public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
     return null;
   }
 }

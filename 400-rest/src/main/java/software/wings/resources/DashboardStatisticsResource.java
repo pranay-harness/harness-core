@@ -22,7 +22,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo;
+import software.wings.service.impl.instance.CompareEnvironmentAggregationResponseInfo;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
@@ -256,7 +256,7 @@ public class DashboardStatisticsResource {
   @GET
   @Path("service-compare-environment")
   @ExceptionMetered
-  public RestResponse<PageResponse<CompareEnvironmentAggregationInfo>> getCompareServicesByEnvironment(
+  public RestResponse<PageResponse<CompareEnvironmentAggregationResponseInfo>> getCompareServicesByEnvironment(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, @QueryParam("envId1") String envId1,
       @QueryParam("envId2") String envId2, @QueryParam("offset") @DefaultValue("-1") int offset,
       @QueryParam("limit") @DefaultValue("-1") int limit) {

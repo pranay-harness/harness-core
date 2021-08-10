@@ -6,16 +6,17 @@ import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.helper.ConnectorEntityDetailUtils;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorService;
-import io.harness.encryption.ScopeHelper;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.FileChange;
+import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.exceptions.NGYamlParsingException;
@@ -27,6 +28,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -39,13 +41,15 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   ConnectorMapper connectorMapper;
   ConnectorService connectorService;
   ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+  ConnectorFullSyncHelper connectorFullSyncHelper;
 
   @Inject
-  public ConnectorGitSyncHelper(
-      @Named("connectorDecoratorService") ConnectorService connectorService, ConnectorMapper connectorMapper) {
+  public ConnectorGitSyncHelper(@Named("connectorDecoratorService") ConnectorService connectorService,
+      ConnectorMapper connectorMapper, ConnectorFullSyncHelper connectorFullSyncHelper) {
     this.connectorService = connectorService;
     this.connectorMapper = connectorMapper;
     configureNGObjectMapper(objectMapper);
+    this.connectorFullSyncHelper = connectorFullSyncHelper;
   }
 
   @Override
@@ -65,18 +69,7 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
 
   @Override
   public EntityDetail getEntityDetail(Connector entity) {
-    return EntityDetail.builder()
-        .name(entity.getName())
-        .type(EntityType.CONNECTORS)
-        .entityRef(IdentifierRef.builder()
-                       .accountIdentifier(entity.getAccountIdentifier())
-                       .orgIdentifier(entity.getOrgIdentifier())
-                       .projectIdentifier(entity.getProjectIdentifier())
-                       .scope(ScopeHelper.getScope(
-                           entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier()))
-                       .identifier(entity.getIdentifier())
-                       .build())
-        .build();
+    return ConnectorEntityDetailUtils.getEntityDetail(entity);
   }
 
   @Override
@@ -134,6 +127,11 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   @Override
   public String getBranchKey() {
     return ConnectorKeys.branch;
+  }
+
+  @Override
+  public List<FileChange> listAllEntities(ScopeDetails scope) {
+    return connectorFullSyncHelper.getAllEntitiesForFullSync(scope);
   }
 
   @Override

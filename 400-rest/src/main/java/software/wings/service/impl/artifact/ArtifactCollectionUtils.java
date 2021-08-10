@@ -15,6 +15,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
@@ -32,6 +33,7 @@ import static software.wings.service.impl.ArtifactoryBuildServiceImpl.MANUAL_PUL
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -146,6 +148,10 @@ public class ArtifactCollectionUtils {
   @Inject private MainConfiguration mainConfiguration;
 
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
+
+  static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
+      asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), AMAZON_S3.name(), GCS.name(),
+          SMB.name(), SFTP.name(), AZURE_ARTIFACTS.name(), AZURE_MACHINE_IMAGE.name(), CUSTOM.name()));
 
   public long getDelegateQueueTimeout(String accountId) {
     long timeout = DELEGATE_QUEUE_TIMEOUT;
@@ -637,7 +643,7 @@ public class ArtifactCollectionUtils {
   public BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
+    if (metadataOnlyStreams.contains(artifactStreamType)
         || isArtifactoryDockerOrGeneric(artifactStream, artifactType)) {
       return BuildSourceRequestType.GET_BUILDS;
     } else {
@@ -648,9 +654,8 @@ public class ArtifactCollectionUtils {
   private BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
-        || isArtifactoryDockerOrGeneric(artifactStream) || artifactStreamType.equals(JENKINS.name())
-        || artifactStreamType.equals(BAMBOO.name())) {
+    if (metadataOnlyStreams.contains(artifactStreamType) || isArtifactoryDockerOrGeneric(artifactStream)
+        || artifactStreamType.equals(JENKINS.name()) || artifactStreamType.equals(BAMBOO.name())) {
       return BuildSourceRequestType.GET_BUILDS;
     } else {
       return BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD;

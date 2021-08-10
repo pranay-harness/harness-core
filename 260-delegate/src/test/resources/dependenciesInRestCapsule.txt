@@ -496,7 +496,7 @@ org.cloudfoundry:cloudfoundry-client-reactor:jar:4.8.0.RELEASE
 org.cloudfoundry:cloudfoundry-client:jar:4.8.0.RELEASE
 org.cloudfoundry:cloudfoundry-operations:jar:4.8.0.RELEASE
 org.cloudfoundry:cloudfoundry-util:jar:4.8.0.RELEASE
-org.codehaus.groovy:groovy:jar:3.0.5
+org.codehaus.groovy:groovy:jar:3.0.7
 org.codehaus.jackson:jackson-core-asl:jar:1.9.11
 org.codehaus.janino:commons-compiler:jar:3.0.6
 org.codehaus.janino:janino:jar:3.0.6

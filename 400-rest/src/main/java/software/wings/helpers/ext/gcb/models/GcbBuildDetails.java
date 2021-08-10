@@ -7,7 +7,9 @@ import static software.wings.helpers.ext.gcb.models.GcbBuildStatus.WORKING;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,6 +24,7 @@ import lombok.Data;
 @JsonInclude(NON_NULL)
 @Data
 @Builder
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class GcbBuildDetails {
   private String id;
   private String projectId;

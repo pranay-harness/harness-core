@@ -126,7 +126,7 @@ BAZEL_MODULES="\
   //948-access-control-sdk:module \
   //949-access-control-commons:module \
   //950-command-library-common:module \
-  //950-common-entities:module \
+  //959-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
   //950-events-framework:module \
@@ -389,7 +389,7 @@ build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk
 build_bazel_module 949-access-control-commons
 build_bazel_module 950-command-library-common
-build_bazel_module 950-common-entities
+build_bazel_module 959-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-framework
 build_bazel_module 950-log-client

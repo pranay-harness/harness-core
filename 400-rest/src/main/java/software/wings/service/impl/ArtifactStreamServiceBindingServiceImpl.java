@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -15,6 +16,7 @@ import static software.wings.service.impl.ArtifactStreamServiceImpl.ARTIFACT_STR
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
@@ -35,7 +37,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamBinding;
 import software.wings.beans.artifact.ArtifactStreamSummary;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -58,11 +59,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ValidateOnExecution
 @Slf4j
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class ArtifactStreamServiceBindingServiceImpl implements ArtifactStreamServiceBindingService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private ServiceVariableService serviceVariableService;
-  @Inject private AppService appService;
   @Inject private ArtifactService artifactService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private WorkflowService workflowService;

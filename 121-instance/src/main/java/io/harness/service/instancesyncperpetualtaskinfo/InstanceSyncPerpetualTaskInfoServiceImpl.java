@@ -8,7 +8,7 @@ import io.harness.entities.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTa
 import io.harness.entities.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfo.InstanceSyncPerpetualTaskInfoKeys;
 import io.harness.mappers.DeploymentInfoDetailsMapper;
 import io.harness.mappers.InstanceSyncPerpetualTaskInfoMapper;
-import io.harness.repositories.instancesyncperpetualtask.InstanceSyncPerpetualTaskRepository;
+import io.harness.repositories.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfoInfoRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,12 +19,12 @@ import org.springframework.data.mongodb.core.query.Update;
 @OwnedBy(DX)
 @Singleton
 public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPerpetualTaskInfoService {
-  @Inject InstanceSyncPerpetualTaskRepository instanceSyncPerpetualTaskRepository;
+  @Inject InstanceSyncPerpetualTaskInfoInfoRepository instanceSyncPerpetualTaskInfoRepository;
 
   @Override
   public Optional<InstanceSyncPerpetualTaskInfoDTO> findByInfrastructureMappingId(String infrastructureMappingId) {
     Optional<InstanceSyncPerpetualTaskInfo> instanceSyncPerpetualTaskInfoOptional =
-        instanceSyncPerpetualTaskRepository.findByInfrastructureMappingId(infrastructureMappingId);
+        instanceSyncPerpetualTaskInfoRepository.findByInfrastructureMappingId(infrastructureMappingId);
     return instanceSyncPerpetualTaskInfoOptional.map(InstanceSyncPerpetualTaskInfoMapper::toDTO);
   }
 
@@ -32,7 +32,7 @@ public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPer
   public Optional<InstanceSyncPerpetualTaskInfoDTO> findByPerpetualTaskId(
       String accountIdentifier, String perpetualTaskId) {
     Optional<InstanceSyncPerpetualTaskInfo> instanceSyncPerpetualTaskInfoOptional =
-        instanceSyncPerpetualTaskRepository.findByAccountIdentifierAndPerpetualTaskId(
+        instanceSyncPerpetualTaskInfoRepository.findByAccountIdentifierAndPerpetualTaskId(
             accountIdentifier, perpetualTaskId);
     return instanceSyncPerpetualTaskInfoOptional.map(InstanceSyncPerpetualTaskInfoMapper::toDTO);
   }
@@ -41,13 +41,13 @@ public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPer
   public InstanceSyncPerpetualTaskInfoDTO save(InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO) {
     InstanceSyncPerpetualTaskInfo instanceSyncPerpetualTaskInfo =
         InstanceSyncPerpetualTaskInfoMapper.toEntity(instanceSyncPerpetualTaskInfoDTO);
-    instanceSyncPerpetualTaskInfo = instanceSyncPerpetualTaskRepository.save(instanceSyncPerpetualTaskInfo);
+    instanceSyncPerpetualTaskInfo = instanceSyncPerpetualTaskInfoRepository.save(instanceSyncPerpetualTaskInfo);
     return InstanceSyncPerpetualTaskInfoMapper.toDTO(instanceSyncPerpetualTaskInfo);
   }
 
   @Override
   public void deleteById(String accountIdentifier, String instanceSyncPerpetualTaskInfoId) {
-    instanceSyncPerpetualTaskRepository.deleteByAccountIdentifierAndId(
+    instanceSyncPerpetualTaskInfoRepository.deleteByAccountIdentifierAndId(
         accountIdentifier, instanceSyncPerpetualTaskInfoId);
   }
 
@@ -61,6 +61,6 @@ public class InstanceSyncPerpetualTaskInfoServiceImpl implements InstanceSyncPer
     Update update = new Update().set(InstanceSyncPerpetualTaskInfoKeys.deploymentInfoDetailsList,
         DeploymentInfoDetailsMapper.toDeploymentInfoDetailsEntityList(
             instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList()));
-    return InstanceSyncPerpetualTaskInfoMapper.toDTO(instanceSyncPerpetualTaskRepository.update(criteria, update));
+    return InstanceSyncPerpetualTaskInfoMapper.toDTO(instanceSyncPerpetualTaskInfoRepository.update(criteria, update));
   }
 }

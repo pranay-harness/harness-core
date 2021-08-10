@@ -24,4 +24,5 @@ import lombok.experimental.SuperBuilder;
 @JsonInclude(NON_NULL)
 public class CDLicenseSummaryDTO extends LicensesWithSummaryDTO {
   public int totalWorkload;
+  public int totalServiceInstances;
 }

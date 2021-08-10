@@ -586,6 +586,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
               .build());
     }
 
+    filters = addRollbackCountMetric(aggregateFunction, filters, selectQuery, fieldNames);
+
     if (aggregateFunction != null && aggregateFunction.getInstancesDeployed() != null) {
       FunctionCall functionCall = getFunctionCall(aggregateFunction.getInstancesDeployed());
       selectQuery.addCustomColumns(
@@ -684,6 +686,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
                   QLNumberFilter.builder().operator(QLNumberOperator.GREATER_THAN).values(new Number[] {0}).build())
               .build());
     }
+
+    filters = addRollbackCountMetric(aggregateFunction, filters, selectQuery, fieldNames);
 
     if (aggregateFunction != null && aggregateFunction.getInstancesDeployed() != null) {
       FunctionCall functionCall = getFunctionCall(aggregateFunction.getInstancesDeployed());
@@ -785,6 +789,26 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     queryMetaDataBuilder.sortCriteria(finalSortCriteria);
     queryMetaDataBuilder.filters(filters);
     return queryMetaDataBuilder.build();
+  }
+
+  private List<QLDeploymentFilter> addRollbackCountMetric(QLDeploymentAggregationFunction aggregateFunction,
+      List<QLDeploymentFilter> filters, SelectQuery selectQuery, List<DeploymentMetaDataFields> fieldNames) {
+    if (aggregateFunction != null && aggregateFunction.getRollbackCount() != null) {
+      selectQuery.addCustomColumns(
+          Converter.toColumnSqlObject(FunctionCall.countAll(), DeploymentMetaDataFields.ROLLBACK_COUNT.getFieldName()));
+      fieldNames.add(DeploymentMetaDataFields.ROLLBACK_COUNT);
+
+      if (filters == null) {
+        filters = new ArrayList<>();
+      }
+
+      filters.add(
+          QLDeploymentFilter.builder()
+              .rollbackDuration(
+                  QLNumberFilter.builder().operator(QLNumberOperator.GREATER_THAN).values(new Number[] {0}).build())
+              .build());
+    }
+    return filters;
   }
 
   private ResultType getResultType(List<QLDeploymentEntityAggregation> groupBy, QLTimeSeriesAggregation groupByTime) {

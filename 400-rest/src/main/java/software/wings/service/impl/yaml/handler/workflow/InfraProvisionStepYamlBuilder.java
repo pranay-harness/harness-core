@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
 
@@ -14,7 +15,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptionType;
 
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
@@ -36,12 +39,14 @@ public class InfraProvisionStepYamlBuilder extends StepYamlBuilder {
   private static final String ENCRYPTED_TEXT = "ENCRYPTED_TEXT";
   private static final String VALUE_TYPE = "valueType";
   private static final String VALUE = "value";
+  protected static final String PROVISIONER_NAME = "provisionerName";
   private static final List<String> ENCRYPTION_TYPES =
       Stream.of(EncryptionType.values()).map(EncryptionType::getYamlName).collect(Collectors.toList());
   public static final String YAML_REF_DELIMITER = ":";
 
   @Inject private AppService appService;
   @Inject private SecretManager secretManager;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   protected void convertPropertyIdsToNames(final String propertyName, final String appId, Object objectValue) {
     if (Objects.isNull(objectValue) || StringUtils.isBlank(appId)) {
@@ -64,6 +69,20 @@ public class InfraProvisionStepYamlBuilder extends StepYamlBuilder {
           format("Unable to update cloud provider encrypted text values with ids for property: %s", propertyName), ex,
           USER);
     }
+  }
+
+  protected String convertProvisionerIdToName(String appId, Object objectValue) {
+    String provisionerId = (String) objectValue;
+    InfrastructureProvisioner provisioner = infrastructureProvisionerService.get(appId, provisionerId);
+    notNullCheck("Provisioner not found for the given provisionerId:" + provisionerId, provisioner, USER);
+    return provisioner.getName();
+  }
+
+  protected String convertProvisionerNameToId(String appId, Object objectValue) {
+    String provisionerName = (String) objectValue;
+    InfrastructureProvisioner provisioner = infrastructureProvisionerService.getByName(appId, provisionerName);
+    notNullCheck("Provisioner not found for the given name:" + provisionerName, provisioner, USER);
+    return provisioner.getUuid();
   }
 
   private void replaceIdWithName(BasicDBObject subProperty, final String accountId) {

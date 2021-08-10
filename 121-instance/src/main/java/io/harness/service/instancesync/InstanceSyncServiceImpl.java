@@ -133,7 +133,6 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   @Override
   public void processInstanceSyncByPerpetualTask(String accountIdentifier, String perpetualTaskId,
       InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse) {
-    // TODO add some tag to all logs to denote that the flow is instance sync via perpetual task
     try (AutoLogContext ignore1 = new AccountLogContext(accountIdentifier, OverrideBehavior.OVERRIDE_ERROR);
          AutoLogContext ignore2 = InstanceSyncLogContext.builder()
                                       .instanceSyncFlow(InstanceSyncFlow.PERPETUAL_TASK_FLOW.name())
@@ -363,7 +362,6 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         .deploymentInfoDetailsDTOList(
             Collections.singletonList(DeploymentInfoDetailsDTO.builder()
                                           .deploymentInfoDTO(deploymentSummaryDTO.getDeploymentInfoDTO())
-                                          .deploymentSummaryId(deploymentSummaryDTO.getId())
                                           .lastUsedAt(System.currentTimeMillis())
                                           .build()))
         .perpetualTaskId(perpetualTaskId)
@@ -388,6 +386,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         .pipelineExecutionName(instanceDTO.getLastPipelineExecutionName())
         .pipelineExecutionId(instanceDTO.getLastPipelineExecutionId())
         .artifactDetails(instanceDTO.getPrimaryArtifact())
+        .deployedAt(instanceDTO.getLastDeployedAt())
         .build();
   }
 
@@ -404,7 +403,6 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList().add(
         DeploymentInfoDetailsDTO.builder()
             .deploymentInfoDTO(deploymentSummaryDTO.getDeploymentInfoDTO())
-            .deploymentSummaryId(deploymentSummaryDTO.getId())
             .lastUsedAt(System.currentTimeMillis())
             .build());
   }
@@ -461,7 +459,6 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
             .instanceInfoDTO(instanceInfoDTO);
 
     if (isAutoScaled) {
-      // TODO set last deployed at
       instanceDTOBuilder.lastDeployedById(InstanceSyncConstants.AUTO_SCALED)
           .lastPipelineExecutionId(InstanceSyncConstants.AUTO_SCALED)
           .lastDeployedByName(InstanceSyncConstants.AUTO_SCALED)
@@ -508,7 +505,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   private DeploymentSummaryDTO getDeploymentSummary(
       String instanceSyncKey, List<InstanceDTO> instancesInDB, boolean isAutoScaled) {
     // Fur new deployment/rollback, fetch deployment summary from local cache
-    // For autoscaled instanecs, first try to create deployment summary from present instances, otherwise fetch from DB
+    // For autoscaled instances, first try to create deployment summary from present instances, otherwise fetch from DB
     // Required to put in metadata information for artifacts into the new instances to be created
     if (!isAutoScaled) {
       DeploymentSummaryDTO deploymentSummaryDTO = InstanceSyncLocalCacheManager.getDeploymentSummary(instanceSyncKey);

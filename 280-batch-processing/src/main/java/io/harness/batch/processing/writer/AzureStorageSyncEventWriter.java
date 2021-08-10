@@ -1,6 +1,5 @@
 package io.harness.batch.processing.writer;
 
-import static io.harness.beans.FeatureName.CE_AZURE_BILLING_CONNECTOR_DETAIL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
@@ -61,9 +60,8 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     boolean areAllSyncSuccessful = true;
     areAllSyncSuccessful = areAllSyncSuccessful && syncCurrentGenAzureContainers(accountId);
-    if (featureFlagService.isEnabled(CE_AZURE_BILLING_CONNECTOR_DETAIL, accountId)) {
-      areAllSyncSuccessful = areAllSyncSuccessful && syncNextGenContainers(accountId);
-    }
+    areAllSyncSuccessful = areAllSyncSuccessful && syncNextGenContainers(accountId);
+
     if (!areAllSyncSuccessful) {
       throw new BatchProcessingException("Azure sync failed", null);
     }

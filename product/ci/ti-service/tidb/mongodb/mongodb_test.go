@@ -8,12 +8,11 @@ import (
 	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 
-	//"go.mongodb.org/mongo-driver/bson"
-	//"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"os"
 	"testing"
-	//"time"
 )
 
 var db *MongoDb
@@ -21,7 +20,7 @@ var err error
 
 func TestMain(m *testing.M) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	mongoUri := os.Getenv("TEST_MONGO_URI_TI")
+	mongoUri := os.Getenv("TEST_MONGO_URI")
 	if mongoUri == "" {
 		os.Exit(0)
 	}
@@ -39,238 +38,350 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-//
-//func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
-//	ctx := context.Background()
-//	dropNodes(ctx)
-//	dropRelations(ctx)
-//	defer dropNodes(ctx)     // drop nodes after the test is completed as well
-//	defer dropRelations(ctx) // drop relations after the test is completed as well
-//	// Setup nodes
-//	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-//	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-//	oldNode := NewNode(10, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithCommit("oldCommit"), "acct", "org", "proj")
-//	n := []interface{}{n1, n2, oldNode}
-//	db.Database.Collection(nodeColl).InsertMany(ctx, n)
-//
-//	// this should be added in nodes collection as ID: 3 is unique
-//	newNode := getNode(3)
-//	// this should be added in nodes collection as one entry already exist with ID 1
-//	nodeWithDuplicateId := getNode(1)
-//	cg := cgp.Callgraph{
-//		Nodes: []cgp.Node{newNode, nodeWithDuplicateId},
-//	}
-//	db.UploadPartialCg(ctx, &cg,
-//		getVCSInfo(),
-//		"acct",
-//		"org",
-//		"proj",
-//		"target",
-//	)
-//	// ttl script of mongo runs every 60 seconds.
-//	time.Sleep(70 * time.Second)
-//
-//	// Expectations --
-//	// - commitId of node `oldNode` is older so this node should be deleted.
-//	// - newNode is newly uploaded node with new commit so it will be added.
-//	// - node with name `nodeWithDuplicateId` already exists with same commit so it should not be added.
-//
-//	var nodes []Node
-//	curr, _ := db.Database.Collection(nodeColl).Find(ctx, bson.M{}, &options.FindOptions{})
-//	curr.All(ctx, &nodes)
-//
-//	idSet := []int{1, 2, 3}
-//
-//	// before calling fn there were 2 nodes.
-//	// In fn call one node with older commit will be removed. One with new node id will be added and one which already
-//	// exists will be skipped.
-//	for _, no := range nodes {
-//		fmt.Println(no)
-//	}
-//	assert.Equal(t, len(nodes), 3)
-//	for _, node := range nodes {
-//		fmt.Println(node.Id)
-//		assert.True(t, contains(idSet, node.Id))
-//	}
-//
-//}
-//
-//func TestMongoDb_MergeCgForNodes(t *testing.T) {
-//	ctx := context.Background()
-//	dropNodes(ctx)
-//	dropRelations(ctx)
-//	defer dropNodes(ctx)     // drop nodes after the test is completed as well
-//	defer dropRelations(ctx) // drop relations after the test is completed as well
-//	// Setup nodes
-//	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-//	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-//	n3 := NewNode(3, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
-//	n4 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
-//	n := []interface{}{n1, n2, n3, n4}
-//	db.Database.Collection(nodeColl).InsertMany(ctx, n)
-//
-//	// Expectations
-//	// - `newNode` is new node uploaded with new commit and new node so it will be added.
-//	// -  node `nodeWithDuplicateId` already exists with same commit so it should not be added.
-//	var nodes []Node
-//	curr, _ := db.Database.Collection(nodeColl).Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
-//	curr.All(ctx, &nodes)
-//
-//	assert.Equal(t, len(nodes), 2)
-//
-//	mergeReq := types.MergePartialCgRequest{
-//		AccountId:    "acct",
-//		Repo:         "repo.git",
-//		TargetBranch: "b1",
-//		Diff:         types.DiffInfo{Sha: "commit1"},
-//	}
-//	db.MergePartialCg(ctx, mergeReq)
-//
-//	// ttl script of mongo runs every 60 seconds.
-//	time.Sleep(70 * time.Second)
-//	curr, _ = db.Database.Collection(nodeColl).Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
-//	curr.All(ctx, &nodes)
-//
-//	idSet := []int{1, 2, 3}
-//	// there were 2 nodes in destination branch
-//	// there were 2 nodes in src branch -- node id 3 was unique while node id 1 was duplicate
-//	// node id 3 will be move to destination branch from the src branch while the node id 1 will be skipped
-//	// finally there should be 3 nodes in the destination branch and 0 nodes in the src branch
-//	assert.Equal(t, len(nodes), 3)
-//	for _, node := range nodes {
-//		fmt.Println(node.Id)
-//		assert.True(t, contains(idSet, node.Id))
-//	}
-//
-//	curr, _ = db.Database.Collection(nodeColl).Find(ctx, bson.M{"vcs_info.branch": "b2"}, &options.FindOptions{})
-//	curr.All(ctx, &nodes)
-//	assert.Equal(t, len(nodes), 0)
-//}
-//
-//func TestMongoDb_MergePartialCgForRelations(t *testing.T) {
-//	ctx := context.Background()
-//	dropNodes(ctx)
-//	dropRelations(ctx)
-//	defer dropNodes(ctx)     // drop nodes after the test is completed as well
-//	defer dropRelations(ctx) // drop relations after the test is completed as well
-//
-//	r1 := NewRelation(1, []int{1, 2}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-//	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-//	r3 := NewRelation(3, []int{1, 2}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")             // moved
-//	r4 := NewRelation(2, []int{1, 2, 3, 7, 8, 9}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj") // merged
-//	r5 := NewRelation(4, []int{1, 6, 3, 7}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
-//
-//	nodes := []interface{}{r1, r2, r3, r4, r5}
-//	db.Database.Collection(relnsColl).InsertMany(ctx, nodes)
-//
-//	// call merge-callgraph function
-//	mergeReq := types.MergePartialCgRequest{
-//		AccountId:    "acct",
-//		Repo:         "repo.git",
-//		TargetBranch: "b1",
-//		Diff:         types.DiffInfo{Sha: "commit1"},
-//	}
-//	db.MergePartialCg(ctx, mergeReq)
-//
-//	// ttl script of mongo runs every 60 seconds.
-//	time.Sleep(70 * time.Second)
-//
-//	var relations []Relation
-//	curr, _ := db.Database.Collection(relnsColl).Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
-//	curr.All(ctx, &relations)
-//
-//	// Expectation:
-//	// node 1 wil remain unchanged
-//	// node 2 is in both dest and src branch so it will merged and moved to dest branch
-//	// node 3 is in dest branch and it should be moved to src branch
-//	// node 4 is in dest branch and it should be moved to src branch
-//	idSet := []int{1, 2, 3, 4}
-//	assert.Equal(t, len(relations), 4)
-//	for _, reln := range relations {
-//		assert.True(t, contains(idSet, reln.Source))
-//	}
-//
-//	rel := filterRelations(1, relations)
-//	assert.Equal(t, len(rel.Tests), 2)
-//	assert.True(t, contains(rel.Tests, 1))
-//	assert.True(t, contains(rel.Tests, 2))
-//
-//	// 2 should be the merged and contain {1, 2, 3, 4, 5, 6, 7, 8, 9}
-//	rel = filterRelations(2, relations)
-//	assert.Equal(t, len(rel.Tests), 9)
-//	assert.True(t, contains(rel.Tests, 3))
-//	assert.True(t, contains(rel.Tests, 1))
-//
-//	// 3 should be moved directly
-//	rel = filterRelations(3, relations)
-//	assert.Equal(t, len(rel.Tests), 2)
-//
-//	// 4 should also be moved directly
-//	rel = filterRelations(4, relations)
-//	assert.Equal(t, len(rel.Tests), 4)
-//
-//	curr, _ = db.Database.Collection(relnsColl).Find(ctx, bson.M{"vcs_info.branch": "b2"}, &options.FindOptions{})
-//	curr.All(ctx, &relations)
-//	assert.Equal(t, len(relations), 0)
-//}
-//
-//func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
-//	ctx := context.Background()
-//	dropNodes(ctx)
-//	dropRelations(ctx)
-//	defer dropNodes(ctx)     // drop nodes after the test is completed as well
-//	defer dropRelations(ctx) // drop relations after the test is completed as well
-//
-//	r1 := NewRelation(1, []int{1, 2}, getVCSInfo(), "acc", "org", "proj")
-//	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfo(), "acc", "org", "proj")
-//	nodes := []interface{}{r1, r2}
-//	db.Database.Collection(relnsColl).InsertMany(ctx, nodes)
-//
-//	// this should be added in nodes collection as ID: 3 is unique
-//	newRelation := getRelation(3, []int{8})
-//	// this should be added in rel collection as one entry already exist with ID 1
-//	relWithDuplicateSrc := getRelation(1, []int{3, 2})
-//	cg := cgp.Callgraph{
-//		Relations: []cgp.Relation{newRelation, relWithDuplicateSrc},
-//	}
-//	db.UploadPartialCg(ctx, &cg,
-//		getVCSInfo(),
-//		"acc",
-//		"org",
-//		"proj",
-//		"target",
-//	)
-//
-//	// ttl script of mongo runs every 60 seconds.
-//	time.Sleep(70 * time.Second)
-//
-//	var relations []Relation
-//	curr, _ := db.Database.Collection(relnsColl).Find(ctx, bson.M{}, &options.FindOptions{})
-//	curr.All(ctx, &relations)
-//
-//	idSet := []int{1, 2, 3}
-//	assert.Equal(t, len(relations), 3)
-//	for _, reln := range relations {
-//		assert.True(t, contains(idSet, reln.Source))
-//	}
-//
-//	// assert key tests for relations collection:
-//	// 1 should be updated to {2, 3} + {1, 2} == {1, 2, 3}
-//	rel := filterRelations(1, relations)
-//
-//	assert.Equal(t, len(rel.Tests), 3)
-//	assert.True(t, contains(rel.Tests, 1))
-//	assert.True(t, contains(rel.Tests, 2))
-//	assert.True(t, contains(rel.Tests, 3))
-//
-//	// 2 should be the same as was created {3, 4, 5, 6}
-//	rel = filterRelations(2, relations)
-//	assert.Equal(t, len(rel.Tests), 4)
-//
-//	// 3 should be the same as was created {8}
-//	rel = filterRelations(3, relations)
-//	assert.Equal(t, len(rel.Tests), 1)
-//}
+func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+	// Setup nodes
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	oldNode := NewNode(10, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithCommit("oldCommit"), "acct", "org", "proj")
+	n := []interface{}{n1, n2, oldNode}
+	db.Database.Collection(nodeColl).InsertMany(ctx, n)
+
+	// this should be added in nodes collection as ID: 3 is unique
+	newNode := getNode(3)
+	// this should be added in nodes collection as one entry already exist with ID 1
+	nodeWithDuplicateId := getNode(1)
+	cg := cgp.Callgraph{
+		Nodes: []cgp.Node{newNode, nodeWithDuplicateId},
+	}
+	db.UploadPartialCg(ctx, &cg,
+		getVCSInfo(),
+		"acct",
+		"org",
+		"proj",
+		"target",
+	)
+	// todo change this wis manual deletion script
+	// ttl script of mongo runs every 60 seconds.
+	//time.Sleep(70 * time.Second)
+
+	// Expectations --
+	// - commitId of node `oldNode` is older so this node should be deleted.
+	// - newNode is newly uploaded node with new commit so it will be added.
+	// - node with name `nodeWithDuplicateId` already exists with same commit so it should not be added.
+
+	var nodes []Node
+	curr, _ := db.Database.Collection(nodeColl).Find(ctx, bson.M{}, &options.FindOptions{})
+	curr.All(ctx, &nodes)
+
+	idSet := []int{1, 2, 3, 10}
+
+	// before calling fn there were 2 nodes.
+	// In fn call one node with older commit will be removed. One with new node id will be added and one which already
+	// exists will be skipped.
+	for _, no := range nodes {
+		fmt.Println(no)
+	}
+	assert.Equal(t, len(nodes), 4)
+	for _, node := range nodes {
+		assert.True(t, contains(idSet, node.Id))
+	}
+
+}
+
+func TestMongoDb_MergeCgForNodes(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+	// Setup nodes
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n3 := NewNode(3, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n4 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n := []interface{}{n1, n2, n3, n4}
+	db.Database.Collection(nodeColl).InsertMany(ctx, n)
+
+	// Expectations
+	// - `newNode` is new node uploaded with new commit and new node so it will be added.
+	// -  node `nodeWithDuplicateId` already exists with same commit so it should not be added.
+	var nodes []Node
+	curr, _ := db.Database.Collection(nodeColl).Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
+	curr.All(ctx, &nodes)
+
+	assert.Equal(t, len(nodes), 2)
+
+	mergeReq := types.MergePartialCgRequest{
+		AccountId:    "acct",
+		Repo:         "repo.git",
+		TargetBranch: "b1",
+		Diff:         types.DiffInfo{Sha: "commit1"},
+	}
+	db.MergePartialCg(ctx, mergeReq)
+
+	curr, _ = db.Database.Collection(nodeColl).Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
+	curr.All(ctx, &nodes)
+
+	idSet := []int{1, 2, 3}
+	// there were 2 nodes in destination branch
+	// there were 2 nodes in src branch -- node id 3 was unique while node id 1 was duplicate
+	// node id 3 will be move to destination branch from the src branch while the node id 1 will be skipped
+	// finally there should be 3 nodes in the destination branch and 0 nodes in the src branch
+	assert.Equal(t, len(nodes), 3)
+	for _, node := range nodes {
+		fmt.Println(node.Id)
+		assert.True(t, contains(idSet, node.Id))
+	}
+
+	curr, _ = db.Database.Collection(nodeColl).Find(ctx, bson.M{"vcs_info.branch": "b2"}, &options.FindOptions{})
+	curr.All(ctx, &nodes)
+	assert.Equal(t, len(nodes), 1)
+}
+
+func TestMongoDb_MergePartialCgForTestRelations(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	r1 := NewRelation(1, []int{1, 2}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	r3 := NewRelation(3, []int{1, 2}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")             // moved
+	r4 := NewRelation(2, []int{1, 2, 3, 7, 8, 9}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj") // merged
+	r5 := NewRelation(4, []int{1, 6, 3, 7}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+
+	nodes := []interface{}{r1, r2, r3, r4, r5}
+	db.Database.Collection(relnsColl).InsertMany(ctx, nodes)
+
+	// call merge-callgraph function
+	mergeReq := types.MergePartialCgRequest{
+		AccountId:    "acct",
+		Repo:         "repo.git",
+		TargetBranch: "b1",
+		Diff:         types.DiffInfo{Sha: "commit1"},
+	}
+	db.MergePartialCg(ctx, mergeReq)
+
+	var relations []Relation
+	curr, _ := db.Database.Collection(relnsColl).Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
+	curr.All(ctx, &relations)
+
+	// Expectation:
+	// node 1 wil remain unchanged
+	// node 2 is in both dest and src branch so it will merged and moved to dest branch
+	// node 3 is in dest branch and it should be moved to src branch
+	// node 4 is in dest branch and it should be moved to src branch
+	idSet := []int{1, 2, 3, 4}
+	assert.Equal(t, len(relations), 4)
+	for _, reln := range relations {
+		assert.True(t, contains(idSet, reln.Source))
+	}
+
+	rel := filterRelations(1, relations)
+	assert.Equal(t, len(rel.Tests), 2)
+	assert.True(t, contains(rel.Tests, 1))
+	assert.True(t, contains(rel.Tests, 2))
+
+	// 2 should be the merged and contain {1, 2, 3, 4, 5, 6, 7, 8, 9}
+	rel = filterRelations(2, relations)
+	assert.Equal(t, len(rel.Tests), 9)
+	assert.True(t, contains(rel.Tests, 3))
+	assert.True(t, contains(rel.Tests, 1))
+
+	// 3 should be moved directly
+	rel = filterRelations(3, relations)
+	assert.Equal(t, len(rel.Tests), 2)
+
+	// 4 should also be moved directly
+	rel = filterRelations(4, relations)
+	assert.Equal(t, len(rel.Tests), 4)
+
+	curr, _ = db.Database.Collection(relnsColl).Find(ctx, bson.M{"vcs_info.branch": "b2"}, &options.FindOptions{})
+	curr.All(ctx, &relations)
+	assert.Equal(t, len(relations), 1)
+}
+
+func TestMongoDb_UploadPartialCgForTestRelations(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	r1 := NewRelation(1, []int{1, 2}, getVCSInfo(), "acc", "org", "proj")
+	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfo(), "acc", "org", "proj")
+
+	newNode := getNode(3) // we need it because if len(nodes) == 0, fn is not triggered
+	nodes := []interface{}{r1, r2}
+	db.Database.Collection(relnsColl).InsertMany(ctx, nodes)
+
+	// this should be added in nodes collection as ID: 3 is unique
+	newRelation := getRelation(3, []int{8})
+	// this should be added in rel collection as one entry already exist with ID 1
+	relWithDuplicateSrc := getRelation(1, []int{3, 2})
+	cg := cgp.Callgraph{
+		Nodes:         []cgp.Node{newNode},
+		TestRelations: []cgp.Relation{newRelation, relWithDuplicateSrc},
+	}
+	db.UploadPartialCg(ctx, &cg,
+		getVCSInfo(),
+		"acc",
+		"org",
+		"proj",
+		"target",
+	)
+
+	var relations []Relation
+	curr, _ := db.Database.Collection(relnsColl).Find(ctx, bson.M{}, &options.FindOptions{})
+	curr.All(ctx, &relations)
+
+	idSet := []int{1, 2, 3}
+	assert.Equal(t, len(relations), 3)
+	for _, reln := range relations {
+		assert.True(t, contains(idSet, reln.Source))
+	}
+
+	// assert key tests for relations collection:
+	// 1 should be updated to {2, 3} + {1, 2} == {1, 2, 3}
+	rel := filterRelations(1, relations)
+
+	assert.Equal(t, len(rel.Tests), 3)
+	assert.True(t, contains(rel.Tests, 1))
+	assert.True(t, contains(rel.Tests, 2))
+	assert.True(t, contains(rel.Tests, 3))
+
+	// 2 should be the same as was created {3, 4, 5, 6}
+	rel = filterRelations(2, relations)
+	assert.Equal(t, len(rel.Tests), 4)
+
+	// 3 should be the same as was created {8}
+	rel = filterRelations(3, relations)
+	assert.Equal(t, len(rel.Tests), 1)
+}
+
+func TestMongoDb_MergePartialCgForVisEdges(t *testing.T) {
+	ctx := context.Background()
+	dropVisEdges(ctx)
+	defer dropVisEdges(ctx) // drop vis_edges after the test is completed as well
+
+	r1 := NewVisEdge(1, []int{1, 2}, "acct", "org", "proj", getVCSInfoWithBranch("b1"))
+	r2 := NewVisEdge(2, []int{3, 4, 5, 6}, "acct", "org", "proj", getVCSInfoWithBranch("b1"))
+	r3 := NewVisEdge(3, []int{1, 2}, "acct", "org", "proj", getVCSInfoWithBranchAndCommit("commit1", "b2"))             // moved
+	r4 := NewVisEdge(2, []int{1, 2, 3, 7, 8, 9}, "acct", "org", "proj", getVCSInfoWithBranchAndCommit("commit1", "b2")) // merged
+	r5 := NewVisEdge(4, []int{1, 6, 3, 7}, "acct", "org", "proj", getVCSInfoWithBranchAndCommit("commit1", "b2"))
+
+	nodes := []interface{}{r1, r2, r3, r4, r5}
+	db.Database.Collection(visColl).InsertMany(ctx, nodes)
+
+	// call merge-callgraph function
+	mergeReq := types.MergePartialCgRequest{
+		AccountId:    "acct",
+		Repo:         "repo.git",
+		TargetBranch: "b1",
+		Diff:         types.DiffInfo{Sha: "commit1"},
+	}
+	db.MergePartialCg(ctx, mergeReq)
+
+	var edges []VisEdge
+	curr, _ := db.Database.Collection(visColl).Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
+	curr.All(ctx, &edges)
+
+	// Expectation:
+	// edge 1 wil remain unchanged
+	// edge 2 is in both dest and src branch so it will merged and moved to dest branch
+	// edge 3 is in dest branch and it should be moved to src branch
+	// edge 4 is in dest branch and it should be moved to src branch
+	idSet := []int{1, 2, 3, 4}
+	assert.Equal(t, len(edges), 4)
+	for _, reln := range edges {
+		assert.True(t, contains(idSet, reln.Caller))
+	}
+
+	rel := filterEdges(1, edges)
+	assert.Equal(t, len(rel.Callee), 2)
+	assert.True(t, contains(rel.Callee, 1))
+	assert.True(t, contains(rel.Callee, 2))
+
+	// 2 should be the merged and contain {1, 2, 3, 4, 5, 6, 7, 8, 9}
+	rel = filterEdges(2, edges)
+	assert.Equal(t, len(rel.Callee), 9)
+	assert.True(t, contains(rel.Callee, 3))
+	assert.True(t, contains(rel.Callee, 1))
+
+	// 3 should be moved directly
+	rel = filterEdges(3, edges)
+	assert.Equal(t, len(rel.Callee), 2)
+
+	// 4 should also be moved directly
+	rel = filterEdges(4, edges)
+	assert.Equal(t, len(rel.Callee), 4)
+
+	curr, _ = db.Database.Collection(visColl).Find(ctx, bson.M{"vcs_info.branch": "b2"}, &options.FindOptions{})
+	curr.All(ctx, &edges)
+	assert.Equal(t, len(edges), 1)
+}
+
+func TestMongoDb_UploadPartialCgForVisGraph(t *testing.T) {
+	ctx := context.Background()
+	dropVisEdges(ctx)
+	defer dropVisEdges(ctx) // drop edges after the test is completed as well
+
+	r1 := NewVisEdge(1, []int{1, 2}, "acc", "org", "proj", getVCSInfo())
+	r2 := NewVisEdge(2, []int{3, 4, 5, 6}, "acc", "org", "proj", getVCSInfo())
+	edges := []interface{}{r1, r2}
+	db.Database.Collection(visColl).InsertMany(ctx, edges)
+
+	// this should be added in edge collection as ID: 3 is unique
+	newRelation := getRelation(3, []int{8})
+	// this should be added in vis_edges collection as one entry already exist with ID 1
+	relWithDuplicateSrc := getRelation(1, []int{3, 2})
+
+	newNode := getNode(3) // we need it because if there are no nodes, fn is not triggered and it wouldn't do anything
+	cg := cgp.Callgraph{
+		Nodes:        []cgp.Node{newNode},
+		VisRelations: []cgp.Relation{newRelation, relWithDuplicateSrc},
+	}
+	db.UploadPartialCg(ctx, &cg,
+		getVCSInfo(),
+		"acc",
+		"org",
+		"proj",
+		"target",
+	)
+
+	var visEdges []VisEdge
+	curr, _ := db.Database.Collection(visColl).Find(ctx, bson.M{}, &options.FindOptions{})
+	curr.All(ctx, &visEdges)
+
+	idSet := []int{1, 2, 3}
+	assert.Equal(t, len(visEdges), 3)
+	for _, reln := range visEdges {
+		assert.True(t, contains(idSet, reln.Caller))
+	}
+
+	// assert key tests for vis_edge collection:
+	// 1 should be updated to {2, 3} + {1, 2} == {1, 2, 3}
+	rel := filterEdges(1, visEdges)
+
+	assert.Equal(t, len(rel.Callee), 3)
+	assert.True(t, contains(rel.Callee, 1))
+	assert.True(t, contains(rel.Callee, 2))
+	assert.True(t, contains(rel.Callee, 3))
+
+	// 2 should be the same as was created {3, 4, 5, 6}
+	rel = filterEdges(2, visEdges)
+	assert.Equal(t, len(rel.Callee), 4)
+
+	// 3 should be the same as was created {8}
+	rel = filterEdges(3, visEdges)
+	assert.Equal(t, len(rel.Callee), 1)
+}
 
 // Change in a unsupported file (non java file) should select all the tests.
 func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
@@ -873,6 +984,15 @@ func filterRelations(src int, relations []Relation) Relation {
 		}
 	}
 	return Relation{}
+}
+
+func filterEdges(src int, visEdges []VisEdge) VisEdge {
+	for _, rel := range visEdges {
+		if rel.Caller == src {
+			return rel
+		}
+	}
+	return VisEdge{}
 }
 
 func getRelation(src int, tests []int) cgp.Relation {
