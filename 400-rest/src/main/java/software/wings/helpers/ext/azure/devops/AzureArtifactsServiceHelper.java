@@ -41,7 +41,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 public class AzureArtifactsServiceHelper {
   private static final int CONNECT_TIMEOUT = 5;
   private static final int READ_TIMEOUT = 10;
-  private static final String AZURE_DEVOPS_SERVICES_URL = "https://dev.azure.com/";
 
   static AzureDevopsRestClient getAzureDevopsRestClient(String azureDevopsUrl) {
     String url = ensureTrailingSlash(azureDevopsUrl);
@@ -103,7 +102,13 @@ public class AzureArtifactsServiceHelper {
     // Assuming azureDevopsUrl starts with AZURE_DEVOPS_SERVICES_URL.
     try {
       validateAzureDevopsUrl(azureDevopsUrl);
-      return format("https://%s.%s", subdomain, azureDevopsUrl.substring(8));
+      if (azureDevopsUrl.startsWith("https://")) {
+        return format("https://%s.%s", subdomain, azureDevopsUrl.substring(8));
+      } else if (azureDevopsUrl.startsWith("http://")) {
+        return format("http://%s.%s", subdomain, azureDevopsUrl.substring(7));
+      } else {
+        return azureDevopsUrl;
+      }
     } catch (InvalidArtifactServerException e) {
       return azureDevopsUrl;
     }
@@ -112,12 +117,6 @@ public class AzureArtifactsServiceHelper {
   public static void validateAzureDevopsUrl(String azureDevopsUrl) {
     try {
       URI uri = new URI(azureDevopsUrl);
-      if (!uri.toString().startsWith(AZURE_DEVOPS_SERVICES_URL)) {
-        throw new InvalidArtifactServerException(
-            format("Azure DevOps URL should start with %s", AZURE_DEVOPS_SERVICES_URL));
-      } else if (uri.toString().equals(AZURE_DEVOPS_SERVICES_URL)) {
-        throw new InvalidArtifactServerException("Azure DevOps URL is incomplete");
-      }
     } catch (URISyntaxException e) {
       throw new InvalidArtifactServerException("Azure DevOps URL is invalid");
     }
