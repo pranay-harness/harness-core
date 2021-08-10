@@ -52,6 +52,8 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
       case BRANCH: {
         ListBranchesResponse listBranchesResponse = scmDelegateClient.processScmRequest(
             c -> scmServiceClient.listBranches(scmGitRefTaskParams.getScmConnector(), SCMGrpc.newBlockingStub(c)));
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            listBranchesResponse.getStatus(), listBranchesResponse.getError());
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .listBranchesResponse(listBranchesResponse.toByteArray())

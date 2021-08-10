@@ -239,7 +239,15 @@ func ListBranches(ctx context.Context, request *pb.ListBranchesRequest, log *zap
 	branchesContent, response, err := client.Git.ListBranches(ctx, request.GetSlug(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
 		log.Errorw("ListBranches failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider, e.g. authentication.
+		out = &pb.ListBranchesResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
 	log.Infow("ListBranches success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
 	var branches []string
