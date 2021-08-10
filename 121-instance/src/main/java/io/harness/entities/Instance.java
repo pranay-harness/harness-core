@@ -4,9 +4,9 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instanceinfo.InstanceInfo;
-import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
@@ -33,13 +33,53 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(HarnessTeam.DX)
 public class Instance {
   public static List<MongoIndex> mongoIndexes() {
-    // TODO add more indexes
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_idx")
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_isDeleted_createdAt_deletedAt_idx")
                  .field(InstanceKeys.accountIdentifier)
                  .field(InstanceKeys.orgIdentifier)
                  .field(InstanceKeys.projectIdentifier)
+                 .field(InstanceKeys.isDeleted)
+                 .sortField(InstanceKeys.createdAt)
+                 .sortField(InstanceKeys.deletedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_isDeleted_createdAt_deletedAt_idx")
+                 .field(InstanceKeys.accountIdentifier)
+                 .field(InstanceKeys.isDeleted)
+                 .sortField(InstanceKeys.createdAt)
+                 .sortField(InstanceKeys.deletedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_serviceId_isDeleted_createdAt_deletedAt_idx")
+                 .field(InstanceKeys.accountIdentifier)
+                 .field(InstanceKeys.orgIdentifier)
+                 .field(InstanceKeys.projectIdentifier)
+                 .field(InstanceKeys.serviceIdentifier)
+                 .field(InstanceKeys.isDeleted)
+                 .sortField(InstanceKeys.createdAt)
+                 .sortField(InstanceKeys.deletedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_infrastructureMappingId_isDeleted_createdAt_deletedAt_idx")
+                 .field(InstanceKeys.accountIdentifier)
+                 .field(InstanceKeys.orgIdentifier)
+                 .field(InstanceKeys.projectIdentifier)
+                 .field(InstanceKeys.infrastructureMappingId)
+                 .field(InstanceKeys.isDeleted)
+                 .sortField(InstanceKeys.createdAt)
+                 .sortField(InstanceKeys.deletedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_serviceId_envId_isDeleted_createdAt_deletedAt_idx")
+                 .field(InstanceKeys.accountIdentifier)
+                 .field(InstanceKeys.orgIdentifier)
+                 .field(InstanceKeys.projectIdentifier)
+                 .field(InstanceKeys.serviceIdentifier)
+                 .field(InstanceKeys.envIdentifier)
+                 .field(InstanceKeys.isDeleted)
+                 .sortField(InstanceKeys.createdAt)
+                 .sortField(InstanceKeys.deletedAt)
                  .build())
         .build();
   }
@@ -51,11 +91,11 @@ public class Instance {
   @FdUniqueIndex private String instanceKey;
   @NotEmpty private InstanceType instanceType;
 
-  private String envId;
+  private String envIdentifier;
   private String envName;
   private EnvironmentType envType;
 
-  private String serviceId;
+  private String serviceIdentifier;
   private String serviceName;
 
   private String infrastructureMappingId;
