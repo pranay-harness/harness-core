@@ -72,6 +72,7 @@ import io.harness.execution.export.background.ExportExecutionsRequestHandler;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.DelegateServiceClassicGrpcClientModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
@@ -600,6 +601,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
     modules.add(new WingsModule(configuration));
+    if (isDelegateServiceApp()) {
+      modules.add(new DelegateServiceClassicGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
+          configuration.getGrpcClientClassicConfig().getTarget(),
+          configuration.getGrpcClientClassicConfig().getAuthority()));
+    }
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
