@@ -41,7 +41,9 @@ public class EntityChangeHandler {
 
   public void handleCreateEvent(EntityChangeDTO entityChangeDTO, String connectorEntityType) {
     // Create Events of K8s Base (CD) connectors can be safely ignored
+    log.info("Connector Entity Type 1: {}", connectorEntityType);
     if (ConnectorType.CE_KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
+      log.info("Connector Entity Type 2: {}", connectorEntityType);
       handleCEK8sCreate(entityChangeDTO);
     }
   }
@@ -98,12 +100,16 @@ public class EntityChangeHandler {
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
     boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
+    log.info("accountIdentifier,ceK8sConnectorIdentifier,isPTEnabled ", accountIdentifier, ceK8sConnectorIdentifier,
+        isPTEnabled);
 
     if (isPTEnabled) {
       ConnectorInfoDTO ceK8sConnectorInfoDTO = getConnectorConfigDTO(entityChangeDTO);
       ConnectorConfigDTO ceK8sConnectorConfigDTO = ceK8sConnectorInfoDTO.getConnectorConfig();
       CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO =
           (CEKubernetesClusterConfigDTO) ceK8sConnectorConfigDTO;
+      log.info("isVisibilityFeatureEnabled ", isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO));
+
       if (isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO)) {
         String k8sBaseConnectorRef = ceKubernetesClusterConfigDTO.getConnectorRef();
         onboardNewCEK8sConnector(getClusterRecord(
