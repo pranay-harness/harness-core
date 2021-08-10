@@ -1,7 +1,6 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
@@ -32,9 +31,6 @@ import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
-import io.harness.ngtriggers.beans.response.TriggerEventResponse;
-import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
@@ -54,20 +50,12 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
-import io.harness.pms.triggers.build.eventmapper.BuildTriggerEventMapper;
-import io.harness.pms.triggers.webhook.helpers.TriggerEventExecutionHelper;
 import io.harness.pms.variables.VariableMergeServiceResponse;
-import io.harness.polling.contracts.BuildInfo;
-import io.harness.polling.contracts.PollingResponse;
-import io.harness.polling.contracts.Type;
-import io.harness.repositories.spring.TriggerEventHistoryRepository;
-import io.harness.security.annotations.PublicApi;
 import io.harness.utils.PageUtils;
 import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -120,10 +108,6 @@ public class PipelineResource implements YamlSchemaResource {
   private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
 
-  private BuildTriggerEventMapper mapper;
-  private TriggerEventExecutionHelper triggerEventExecutionHelper;
-  private TriggerEventHistoryRepository triggerEventHistoryRepository;
-
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_CREATE_AND_EDIT)
@@ -160,31 +144,6 @@ public class PipelineResource implements YamlSchemaResource {
     VariableMergeServiceResponse variablesResponse = pmsPipelineService.createVariablesResponse(pipelineEntity);
 
     return ResponseDTO.newResponse(variablesResponse);
-  }
-
-  @GET
-  @Path("check")
-  @ApiOperation(value = "Gets a pipeline by identifier", nickname = "getPipeline")
-  @PublicApi
-  public void test(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
-    try {
-      PollingResponse response = PollingResponse.newBuilder()
-                                     .setAccountId(accountId)
-                                     .setType(Type.HTTP_HELM)
-                                     .setSignatures(0, "111222333444")
-                                     .setBuildInfo(BuildInfo.newBuilder().setName("name").setVersions(0, "v1").build())
-                                     .build();
-      WebhookEventMappingResponse webhookEventMappingResponse = mapper.consumeBuildTriggerEvent(response);
-      if (!webhookEventMappingResponse.isFailedToFindTrigger()) {
-        List<TriggerEventResponse> responses = triggerEventExecutionHelper.processTriggersForActivation(
-            webhookEventMappingResponse.getTriggers(), response);
-        if (isNotEmpty(responses)) {
-          responses.forEach(resp -> triggerEventHistoryRepository.save(TriggerEventResponseHelper.toEntity(resp)));
-        }
-      }
-    } catch (Exception e) {
-      throw new InvalidRequestException("Exception in unpacking/processing of WebhookDTO event", e);
-    }
   }
 
   @GET
