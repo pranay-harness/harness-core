@@ -10,6 +10,8 @@ import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.FileChange;
+import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
@@ -23,6 +25,7 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -115,6 +118,11 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   @Override
   public String getBranchKey() {
     return PipelineEntityKeys.branch;
+  }
+
+  @Override
+  public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
+    return null;
   }
 
   @Override
