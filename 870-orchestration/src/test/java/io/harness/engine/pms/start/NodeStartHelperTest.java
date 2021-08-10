@@ -1,0 +1,173 @@
+package io.harness.engine.pms.start;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRASHANT;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.category.element.UnitTests;
+import io.harness.engine.ExecutionCheck;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
+import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.pms.commons.events.PmsEventSender;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionBuilder;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
+import io.harness.timeout.contracts.TimeoutObtainment;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
+
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import java.util.Collections;
+import java.util.EnumSet;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+@OwnedBy(HarnessTeam.PIPELINE)
+public class NodeStartHelperTest extends OrchestrationTestBase {
+  @Mock private InterruptService interruptService;
+  @Mock private NodeExecutionService nodeExecutionService;
+  @Mock private PmsEventSender pmsEventSender;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject @InjectMocks private NodeStartHelper nodeStartHelper;
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestStartNodeExecutionCheckProceedFalse() {
+    String planExecutionId = generateUuid();
+    String nodeExecutionId = generateUuid();
+    String planId = generateUuid();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(planExecutionId)
+                            .setPlanId(planId)
+                            .addLevels(Level.newBuilder()
+                                           .setRuntimeId(nodeExecutionId)
+                                           .setStepType(StepType.newBuilder().setType("DUMMY_TYPE").build())
+                                           .build())
+                            .build();
+    when(interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecutionId))
+        .thenReturn(ExecutionCheck.builder().proceed(false).build());
+    nodeStartHelper.startNode(
+        ambiance, FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build());
+
+    verify(nodeExecutionService, times(0)).get(nodeExecutionId);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestStartDiscontinuingNodeExecution() {
+    String planExecutionId = generateUuid();
+    String nodeExecutionId = generateUuid();
+    String planId = generateUuid();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(planExecutionId)
+                            .setPlanId(planId)
+                            .addLevels(Level.newBuilder()
+                                           .setRuntimeId(nodeExecutionId)
+                                           .setStepType(StepType.newBuilder().setType("DUMMY_TYPE").build())
+                                           .build())
+                            .build();
+
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .uuid(nodeExecutionId)
+                                      .ambiance(ambiance)
+                                      .status(Status.DISCONTINUING)
+                                      .mode(ExecutionMode.TASK)
+                                      .node(PlanNodeProto.newBuilder()
+                                                .setUuid(generateUuid())
+                                                .setStepType(StepType.newBuilder().setType("DUMMY_TYPE").build())
+                                                .build())
+                                      .startTs(System.currentTimeMillis())
+                                      .build();
+
+    when(interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecutionId))
+        .thenReturn(ExecutionCheck.builder().proceed(true).build());
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(nodeExecutionId), eq(Status.RUNNING), eq(null), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(null);
+
+    when(nodeExecutionService.get(eq(nodeExecutionId))).thenReturn(nodeExecution);
+
+    assertThatThrownBy(()
+                           -> nodeStartHelper.startNode(ambiance,
+                               FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build()))
+        .isInstanceOf(NodeExecutionUpdateFailedException.class)
+        .hasMessage("Cannot Start node Execution");
+
+    verify(pmsEventSender, times(0)).sendEvent(any(), any(), any(), any(), eq(true));
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestStartQueuedNodeExecution() {
+    String planExecutionId = generateUuid();
+    String nodeExecutionId = generateUuid();
+    String planId = generateUuid();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(planExecutionId)
+                            .setPlanId(planId)
+                            .addLevels(Level.newBuilder()
+                                           .setRuntimeId(nodeExecutionId)
+                                           .setStepType(StepType.newBuilder().setType("DUMMY_TYPE").build())
+                                           .build())
+                            .build();
+
+    NodeExecutionBuilder builder =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId)
+            .ambiance(ambiance)
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY_TYPE").build())
+                      .addTimeoutObtainments(TimeoutObtainment.newBuilder()
+                                                 .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                                                 .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                                                     AbsoluteSdkTimeoutTrackerParameters.builder()
+                                                         .timeout(ParameterField.createValueField("30m"))
+                                                         .build()))))
+                      .build())
+            .startTs(System.currentTimeMillis());
+
+    when(interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecutionId))
+        .thenReturn(ExecutionCheck.builder().proceed(true).build());
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(nodeExecutionId), eq(Status.RUNNING), eq(null), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(builder.status(Status.RUNNING).build());
+
+    when(nodeExecutionService.update(eq(nodeExecutionId), any()))
+        .thenReturn(
+            builder.status(Status.RUNNING).timeoutInstanceIds(Collections.singletonList(generateUuid())).build());
+
+    nodeStartHelper.startNode(
+        ambiance, FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build());
+
+    verify(pmsEventSender, times(1)).sendEvent(any(), any(), any(), any(), eq(true));
+  }
+}
