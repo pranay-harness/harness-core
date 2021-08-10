@@ -173,7 +173,7 @@ public abstract class TerragruntProvisionState extends State {
   @Inject protected TerragruntStateHelper terragruntStateHelper;
   @Inject protected TerraformPlanHelper terraformPlanHelper;
 
-  @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
+  @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
   @Attributes(title = "Variables") @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
   @Attributes(title = "Backend Configs")
