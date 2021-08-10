@@ -8,6 +8,7 @@ import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.polling.bean.PollingDocument;
+import io.harness.polling.bean.PollingDocument.PollingDocumentBuilder;
 import io.harness.polling.bean.PollingInfo;
 import io.harness.polling.bean.PollingType;
 import io.harness.polling.bean.manifest.HelmChartManifestInfo;
@@ -26,7 +27,7 @@ public class PollingRequestToPollingDocumentMapper {
   public PollingDocument toPollingDocument(PollingItem pollingItem) {
     Qualifier qualifier = pollingItem.getQualifier();
     PollingInfo pollingInfo;
-    PollingDocument.PollingDocumentBuilder pollingDocumentBuilder = PollingDocument.builder();
+    PollingDocumentBuilder pollingDocumentBuilder = PollingDocument.builder();
     switch (pollingItem.getCategory()) {
       case MANIFEST:
         pollingDocumentBuilder.pollingType(PollingType.MANIFEST);
@@ -34,6 +35,7 @@ public class PollingRequestToPollingDocumentMapper {
         break;
       case ARTIFACT:
         pollingDocumentBuilder.pollingType(PollingType.ARTIFACT);
+        break;
       default:
         throw new InvalidRequestException("Unsupported category type " + pollingItem.getCategory());
     }
