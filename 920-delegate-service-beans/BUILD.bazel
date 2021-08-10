@@ -5,7 +5,7 @@ load("//:tools/bazel/macros.bzl", "run_analysis")
 shared_dependencies = [
     "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
     "//955-delegate-beans:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//950-delegate-tasks-beans:module",
     "//955-alert-beans:module",
     "//960-persistence:module",

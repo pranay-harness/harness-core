@@ -7,7 +7,7 @@ shared_dependencies = [
     "//940-feature-flag:module",
     "//950-wait-engine:module",
     "//950-delegate-tasks-beans:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//955-delegate-beans:module",
     "//959-cg-beans:module",
     "//960-persistence:module",
