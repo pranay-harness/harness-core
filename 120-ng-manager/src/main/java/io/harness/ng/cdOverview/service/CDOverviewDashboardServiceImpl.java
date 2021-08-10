@@ -905,7 +905,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     double frequency = totalDeployments / numberOfDays;
     double prevFrequency = prevTotalDeployments / numberOfDays;
 
-    double totalDeploymentChangeRate = calculateChangeRate(totalDeployments, prevTotalDeployments);
+    double totalDeploymentChangeRate = calculateChangeRate(prevTotalDeployments, totalDeployments);
     double failureRateChangeRate = getFailureRateChangeRate(serviceDeploymentList, prevServiceDeploymentList);
     double frequencyChangeRate = calculateChangeRate(prevFrequency, frequency);
 
