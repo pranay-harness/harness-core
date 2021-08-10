@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,8 +15,9 @@ import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.mongodb.BasicDBList;
@@ -24,23 +27,33 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(HarnessTeam.CDP)
-public class TerraformProvisionStepYamlBuilderTest extends WingsBaseTest {
+public class TerraformProvisionStepYamlBuilderTest extends CategoryTest {
   private static final String NAME = "name";
   private static final String VALUE = "value";
   private static final String VALUE_TYPE = "valueType";
   private static final String VARIABLES_PROPERTY = "variables";
+  private static final String PROVISIONER_ID = "provisionerId";
+  private static final String PROVISIONER_NAME = "provisionerName";
   private static String APP_ID = "app-id";
   private static String ACCOUNT_ID = "accountId";
 
   @Mock private AppService appService;
   @Mock private SecretManager secretManager;
+  @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @InjectMocks private TerraformProvisionStepYamlBuilder cloudProvisionStepYamlBuilder;
 
@@ -69,6 +82,25 @@ public class TerraformProvisionStepYamlBuilderTest extends WingsBaseTest {
     BasicDBObject secretBasicDBObject = getSecretBasicDBObject(encryptedId);
     secretBasicDBObject.put(VALUE, expectedSecretName);
     assertThat(variables).contains(secretBasicDBObject);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testConvertIdToNameForProvisioner() {
+    Object objectValue = "id_of_provisioner";
+    Map<String, Object> outputProperties = new HashMap<>();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(infrastructureProvisionerService.get(APP_ID, (String) objectValue))
+        .thenReturn(TerraformInfrastructureProvisioner.builder().name("TF").build());
+
+    cloudProvisionStepYamlBuilder.convertIdToNameForKnownTypes(
+        PROVISIONER_ID, objectValue, outputProperties, APP_ID, new HashMap<>());
+
+    assertThat(outputProperties.size()).isEqualTo(1);
+    assertThat(outputProperties.get(PROVISIONER_ID)).isNull();
+    assertThat(outputProperties.get(PROVISIONER_NAME)).isEqualTo("TF");
   }
 
   private BasicDBList populateVariablesPropertyBasicDBList(String encryptedId) {
@@ -126,6 +158,23 @@ public class TerraformProvisionStepYamlBuilderTest extends WingsBaseTest {
     LinkedHashMap<String, String> secretSubProperty = getSecretLinkedHashMap(secretName);
     secretSubProperty.put(VALUE, expectedEncryptedId);
     assertThat(variables).contains(secretSubProperty);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testConvertNameToIdForProvisioner() {
+    Object objectValue = "TF";
+    Map<String, Object> outputProperties = new HashMap<>();
+
+    when(infrastructureProvisionerService.getByName(APP_ID, "TF"))
+        .thenReturn(TerraformInfrastructureProvisioner.builder().uuid("id").build());
+    cloudProvisionStepYamlBuilder.convertNameToIdForKnownTypes(
+        PROVISIONER_NAME, objectValue, outputProperties, APP_ID, ACCOUNT_ID, new HashMap<>());
+
+    assertThat(outputProperties.size()).isEqualTo(1);
+    assertThat(outputProperties.get(PROVISIONER_ID)).isEqualTo("id");
+    assertThat(outputProperties.get(PROVISIONER_NAME)).isNull();
   }
 
   private List<LinkedHashMap<String, String>> populateVariablesPropertyList(String secretName) {
