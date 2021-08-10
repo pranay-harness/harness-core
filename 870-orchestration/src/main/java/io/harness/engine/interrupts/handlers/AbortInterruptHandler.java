@@ -10,6 +10,7 @@ import static io.harness.pms.contracts.execution.Status.APPROVAL_WAITING;
 import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.contracts.execution.Status.PAUSING;
+import static io.harness.pms.contracts.execution.Status.QUEUED;
 import static io.harness.pms.contracts.execution.Status.RESOURCE_WAITING;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
@@ -58,7 +59,7 @@ public class AbortInterruptHandler implements InterruptHandler {
     try (AutoLogContext ignore = interrupt.autoLogContext()) {
       NodeExecution nodeExecution =
           nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.DISCONTINUING, null,
-              EnumSet.of(RUNNING, INTERVENTION_WAITING, TIMED_WAITING, ASYNC_WAITING, TASK_WAITING, PAUSING,
+              EnumSet.of(QUEUED, RUNNING, INTERVENTION_WAITING, TIMED_WAITING, ASYNC_WAITING, TASK_WAITING, PAUSING,
                   RESOURCE_WAITING, APPROVAL_WAITING));
 
       if (nodeExecution == null) {

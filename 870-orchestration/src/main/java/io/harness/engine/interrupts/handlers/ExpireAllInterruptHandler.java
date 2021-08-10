@@ -41,12 +41,6 @@ public class ExpireAllInterruptHandler extends InterruptPropagatorHandler implem
       throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
     }
 
-    // Check if plan is running
-    PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
-    if (StatusUtils.isFinalStatus(planExecution.getStatus())) {
-      throw new InvalidRequestException("Plan Execution is already finished");
-    }
-
     // Check if EXPIRE_ALL already
     if (isPresent(interrupts,
             presentInterrupt
@@ -63,6 +57,12 @@ public class ExpireAllInterruptHandler extends InterruptPropagatorHandler implem
                 && presentInterrupt.getNodeExecutionId().equals(interrupt.getNodeExecutionId()))) {
       throw new InvalidRequestException(
           "Execution already has EXPIRE_ALL interrupt for node", EXPIRE_ALL_ALREADY, USER);
+    }
+
+    // Check if plan is running
+    PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
+    if (StatusUtils.isFinalStatus(planExecution.getStatus())) {
+      throw new InvalidRequestException("Plan Execution is already finished");
     }
 
     Interrupt savedInterrupt = interruptService.save(interrupt);
