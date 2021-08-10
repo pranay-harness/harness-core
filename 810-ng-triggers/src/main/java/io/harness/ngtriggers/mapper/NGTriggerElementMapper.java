@@ -179,6 +179,15 @@ public class NGTriggerElementMapper {
     return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
   }
 
+  public TriggerDetails toMergeTriggers(NGTriggerEntity existingEntity, String newYaml) {
+    NGTriggerConfigV2 config = toTriggerConfigV2(newYaml);
+    NGTriggerEntity entity = toTriggerEntity(existingEntity.getAccountId(), existingEntity.getOrgIdentifier(),
+        existingEntity.getProjectIdentifier(), existingEntity.getIdentifier(), newYaml);
+
+    copyEntityFieldsOutsideOfYml(existingEntity, entity);
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
+  }
+
   private void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
     if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
       if (isNotEmpty(existingEntity.getMetadata().getBuildMetadata().getSignature())) {
