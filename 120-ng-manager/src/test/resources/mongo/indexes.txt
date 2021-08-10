@@ -590,6 +590,8 @@ pipelines {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "c
 pipelines {"name": "accountId_1", "background": true} {"accountId": 1}
 pipelines {"name": "appId_1", "background": true} {"appId": 1}
 pipelines {"name": "createdAt_1", "background": true} {"createdAt": 1}
+pollingDocuments {"name": "accountId", "background": true} {"accountId": 1}
+pollingDocuments {"name": "accountId_organizationIdentifier_projectIdentifier_pollingType_pollingItem", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "pollingType": 1, "pollingInfo": 1, "signatures": 1}
 preferences {"name": "appId_1", "background": true} {"appId": 1}
 preferences {"name": "createdAt_1", "background": true} {"createdAt": 1}
 preferences {"name": "preference_index", "background": true} {"accountId": 1, "userId": 1, "name": 1}

@@ -46,10 +46,11 @@ public class PollingResponseHandler {
   private PolledItemPublisher polledItemPublisher;
 
   @Inject
-  public PollingResponseHandler(
-      PollingService pollingService, PollingPerpetualTaskService pollingPerpetualTaskService) {
+  public PollingResponseHandler(PollingService pollingService, PollingPerpetualTaskService pollingPerpetualTaskService,
+      PolledItemPublisher polledItemPublisher) {
     this.pollingService = pollingService;
     this.pollingPerpetualTaskService = pollingPerpetualTaskService;
+    this.polledItemPublisher = polledItemPublisher;
   }
 
   public void handlePollingResponse(
@@ -60,7 +61,7 @@ public class PollingResponseHandler {
       pollingPerpetualTaskService.deletePerpetualTask(perpetualTaskId, accountId);
       return;
     }
-    if (EmptyPredicate.isEmpty(pollingDocument.getSignature())) {
+    if (EmptyPredicate.isEmpty(pollingDocument.getSignatures())) {
       pollingService.delete(pollingDocument);
       return;
     }
@@ -74,7 +75,10 @@ public class PollingResponseHandler {
   private void handleSuccessResponse(PollingDocument pollingDocument, PollingResponseInfc pollingResponseInfc) {
     String accountId = pollingDocument.getAccountId();
     String pollDocId = pollingDocument.getUuid();
-    pollingService.updateFailedAttempts(accountId, pollDocId, 0);
+
+    if (pollingDocument.getFailedAttempts() > 0) {
+      pollingService.updateFailedAttempts(accountId, pollDocId, 0);
+    }
 
     List<String> newVersions = new ArrayList<>();
 
@@ -110,7 +114,7 @@ public class PollingResponseHandler {
             .setBuildInfo(
                 BuildInfo.newBuilder().setName(polledResponseResult.getName()).addAllVersions(newVersions).build())
             .setType(polledResponseResult.getType())
-            .addAllSignatures(pollingDocument.getSignature())
+            .addAllSignatures(pollingDocument.getSignatures())
             .build());
   }
 
