@@ -31,8 +31,7 @@ public class CIExecutionConstants {
   // Constants for implicit git clone step
   public static final String GIT_CLONE_STEP_ID = "harness-git-clone";
   public static final String GIT_CLONE_STEP_NAME = "Git clone";
-  public static final Integer GIT_CLONE_DEPTH = 50;
-  public static final Integer GIT_CLONE_MANUAL_DEPTH = 1;
+  public static final Integer GIT_CLONE_MANUAL_DEPTH = 50;
   public static final String GIT_CLONE_DEPTH_ATTRIBUTE = "depth";
   public static final String PR_CLONE_STRATEGY_ATTRIBUTE = "PR_CLONE_STRATEGY";
   public static final String GIT_SSL_NO_VERIFY = "GIT_SSL_NO_VERIFY";
