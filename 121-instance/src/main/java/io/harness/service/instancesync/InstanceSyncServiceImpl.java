@@ -363,7 +363,6 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
         .deploymentInfoDetailsDTOList(
             Collections.singletonList(DeploymentInfoDetailsDTO.builder()
                                           .deploymentInfoDTO(deploymentSummaryDTO.getDeploymentInfoDTO())
-                                          .deploymentSummaryId(deploymentSummaryDTO.getId())
                                           .lastUsedAt(System.currentTimeMillis())
                                           .build()))
         .perpetualTaskId(perpetualTaskId)
@@ -404,7 +403,6 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     instanceSyncPerpetualTaskInfoDTO.getDeploymentInfoDetailsDTOList().add(
         DeploymentInfoDetailsDTO.builder()
             .deploymentInfoDTO(deploymentSummaryDTO.getDeploymentInfoDTO())
-            .deploymentSummaryId(deploymentSummaryDTO.getId())
             .lastUsedAt(System.currentTimeMillis())
             .build());
   }
