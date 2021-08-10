@@ -328,6 +328,14 @@ public class SignupServiceImpl implements SignupService {
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
     AccountDTO account = createAccount(signupDTO);
     UserInfo oAuthUser = createOAuthUser(dto, account);
+    boolean rbacSetupSuccessful = busyPollUntilAccountRBACSetupCompletes(account.getIdentifier(), oAuthUser.getUuid());
+    if (FALSE.equals(rbacSetupSuccessful)) {
+      log.error(
+          String.format("User [%s] couldn't be assigned account admin role in stipulated time", oAuthUser.getEmail()));
+      throw new SignupException(
+          String.format("User [%s] couldn't be assigned account admin role in stipulated time", oAuthUser.getEmail()));
+    }
+
     sendSucceedTelemetryEvent(
         dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser, SignupType.OAUTH_FLOW);
 

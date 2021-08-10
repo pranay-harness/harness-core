@@ -197,6 +197,9 @@ public class SignupServiceImplTest extends CategoryTest {
     Call<RestResponse<Optional<UserInfo>>> getUserByIdCall = mock(Call.class);
     when(createUserCall.execute()).thenReturn(Response.success(new RestResponse<>(newUser)));
     when(userClient.getUserById(any())).thenReturn(getUserByIdCall);
+    when(accessControlClient.hasAccess(
+             ResourceScope.of(ACCOUNT_ID, null, null), Resource.of("USER", null), "core_organization_create"))
+        .thenReturn(true);
 
     UserInfo returnedUser = signupServiceImpl.oAuthSignup(oAuthSignupDTO);
 
