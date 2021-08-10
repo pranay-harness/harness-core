@@ -1,0 +1,7 @@
+features:
+  - name: test
+    status: ACTIVE
+    enabledPlan:
+      - enterprise
+    restrictions:
+      - project
