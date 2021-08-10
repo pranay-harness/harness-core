@@ -44,7 +44,6 @@ mkdir -p dist/delegate-service-app ;
 cd dist/delegate-service-app
 
 cp ${HOME}/.bazel-dirs/bin/270-delegate-service-app/module_deploy.jar delegate-service-capsule.jar
-cp ../../270-delegate-service-app/main/resources/hazelcast.xml .
 cp ../../270-delegate-service-app/keystore.jks .
 cp ../../270-delegate-service-app/key.pem .
 cp ../../270-delegate-service-app/cert.pem .
