@@ -22,8 +22,8 @@ import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.FindPRResponse;
+import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
-import io.harness.product.ci.scm.proto.ListCommitsResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.Reference;
 import io.harness.product.ci.scm.proto.Signature;
@@ -65,7 +65,7 @@ public class CodeBaseTaskStepTest extends CategoryTest {
     assertThat(taskParams).isNotNull();
     assertThat(taskParams.getBranch()).isEqualTo("main");
     assertThat(taskParams.getScmConnector().getUrl()).isEqualTo("http://github.com/octocat/hello-world");
-    assertThat(taskParams.getGitRefType()).isEqualTo(GitRefType.COMMIT);
+    assertThat(taskParams.getGitRefType()).isEqualTo(GitRefType.LATEST_COMMIT_ID);
   }
 
   @Test
@@ -93,7 +93,7 @@ public class CodeBaseTaskStepTest extends CategoryTest {
         ScmGitRefTaskResponseData.builder()
             .branch("main")
             .repoUrl("http://github.com/octocat/hello-world")
-            .listCommitsResponse(ListCommitsResponse.newBuilder().addCommitIds("commitId").build().toByteArray())
+            .getLatestCommitResponse(GetLatestCommitResponse.newBuilder().setCommitId("commitId").build().toByteArray())
             .build();
     CodebaseSweepingOutput codebaseSweepingOutput =
         codeBaseTaskStep.buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData);
