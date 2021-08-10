@@ -1,4 +1,4 @@
-package io.harness.repositories.instancesyncperpetualtask;
+package io.harness.repositories.instancesyncperpetualtaskinfo;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
@@ -10,8 +10,8 @@ import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
 @OwnedBy(HarnessTeam.DX)
-public interface InstanceSyncPerpetualTaskRepository
-    extends CrudRepository<InstanceSyncPerpetualTaskInfo, String>, InstanceSyncPerpetualTaskRepositoryCustom {
+public interface InstanceSyncPerpetualTaskInfoInfoRepository
+    extends CrudRepository<InstanceSyncPerpetualTaskInfo, String>, InstanceSyncPerpetualTaskInfoRepositoryCustom {
   Optional<InstanceSyncPerpetualTaskInfo> findByInfrastructureMappingId(String infrastructureMappingId);
 
   Optional<InstanceSyncPerpetualTaskInfo> findByAccountIdentifierAndPerpetualTaskId(

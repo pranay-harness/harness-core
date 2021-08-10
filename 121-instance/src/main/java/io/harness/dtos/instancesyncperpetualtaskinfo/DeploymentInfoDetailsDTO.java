@@ -12,7 +12,6 @@ import lombok.Getter;
 @Builder
 public class DeploymentInfoDetailsDTO {
   DeploymentInfoDTO deploymentInfoDTO;
-  String deploymentSummaryId;
   long lastUsedAt;
 
   public void setLastUsedAt(long lastUsedAt) {

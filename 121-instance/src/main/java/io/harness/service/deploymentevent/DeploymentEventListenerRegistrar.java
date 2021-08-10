@@ -1,4 +1,4 @@
-package io.harness.service;
+package io.harness.service.deploymentevent;
 
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
 
