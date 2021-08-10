@@ -242,13 +242,9 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                     .setProvider(provider)
                                                     .setPagination(PageRequest.newBuilder().setPage(pageNumber).build())
                                                     .build();
-      try {
-        branchListResponse = scmBlockingStub.listBranches(listBranchesRequest);
-      } catch (Exception ex) {
-        // todo : When scm provides the status and error messages for all the cases, change this code and message
-        log.error("Error encountered while fetching branch list for the slug {}", slug, ex);
-        throw ex;
-      }
+      branchListResponse = scmBlockingStub.listBranches(listBranchesRequest);
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+          branchListResponse.getStatus(), branchListResponse.getError());
       branchesList.addAll(branchListResponse.getBranchesList());
       pageNumber = branchListResponse.getPagination().getNext();
     } while (hasMoreBranches(branchListResponse));
