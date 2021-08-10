@@ -112,7 +112,6 @@ import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
-import io.harness.grpc.DelegateServiceClassicGrpcClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.instancesync.InstanceSyncResourceClientModule;
 import io.harness.invites.NgInviteClientModule;
