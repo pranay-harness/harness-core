@@ -100,7 +100,7 @@ public class EntityChangeHandler {
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
     boolean isPTEnabled = isPerpetualTaskEnabled(accountIdentifier);
-    log.info("accountIdentifier,ceK8sConnectorIdentifier,isPTEnabled ", accountIdentifier, ceK8sConnectorIdentifier,
+    log.info("accountIdentifier {},ceK8sConnectorIdentifier {}, isPTEnabled {}", accountIdentifier, ceK8sConnectorIdentifier,
         isPTEnabled);
 
     if (isPTEnabled) {
