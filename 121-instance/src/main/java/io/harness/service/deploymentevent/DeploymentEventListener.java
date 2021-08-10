@@ -5,8 +5,6 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.ROLLBACK_STEPS;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
-import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.service.steps.ServiceStepOutcome;
@@ -55,9 +53,6 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
   private final InstanceSyncService instanceSyncService;
   private final InstanceInfoService instanceInfoService;
   private final DeploymentSummaryService deploymentSummaryService;
-  private final CDFeatureFlagHelper cdFeatureFlagHelper;
-
-  private static boolean isInstanceSyncEnabled;
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
@@ -67,12 +62,6 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
          AutoLogContext ignore2 = InstanceSyncLogContext.builder()
                                       .instanceSyncFlow(InstanceSyncFlow.NEW_DEPLOYMENT.name())
                                       .build(OVERRIDE_ERROR)) {
-      if (!isInstanceSyncEnabled && !cdFeatureFlagHelper.isEnabled(accountIdentifier, FeatureName.INSTANCE_SYNC_NG)) {
-        return;
-      } else {
-        isInstanceSyncEnabled = true;
-      }
-
       if (!StatusUtils.isFinalStatus(event.getStatus())) {
         return;
       }
@@ -145,8 +134,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
             .infrastructureMappingId(infrastructureMappingDTO.getId())
             .instanceSyncKey(deploymentInfoDTO.prepareInstanceSyncHandlerKey())
             .deploymentInfoDTO(deploymentInfoDTO)
-            // TODO check if this is correct value for deployedAt
-            .deployedAt(System.currentTimeMillis())
+            .deployedAt(AmbianceUtils.getCurrentLevelStartTs(ambiance))
             .build();
     setArtifactDetails(ambiance, deploymentSummaryDTO);
     deploymentSummaryDTO = deploymentSummaryService.save(deploymentSummaryDTO);
