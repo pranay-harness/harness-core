@@ -96,7 +96,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Inject private DelegateService delegateService;
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject protected FeatureFlagService featureFlagService;
-  @Getter @Setter private String provisionerId;
+  @FieldNameConstants.Include @Getter @Setter private String provisionerId;
   @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
