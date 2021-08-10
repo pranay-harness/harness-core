@@ -11,7 +11,7 @@ import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
 import software.wings.beans.instance.dashboard.InstanceSummaryStatsByService;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
-import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo;
+import software.wings.service.impl.instance.CompareEnvironmentAggregationResponseInfo;
 
 import java.util.List;
 import java.util.Set;
@@ -95,6 +95,6 @@ public interface DashboardStatisticsService {
 
   Set<String> getDeletedAppIds(String accountId, long fromTimestamp, long toTimestamp);
 
-  PageResponse<CompareEnvironmentAggregationInfo> getCompareServicesByEnvironment(
+  PageResponse<CompareEnvironmentAggregationResponseInfo> getCompareServicesByEnvironment(
       String accountId, String appId, String envId1, String envId2, int offset, int limit);
 }

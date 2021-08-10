@@ -1235,7 +1235,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public PageResponse<CompareEnvironmentAggregationInfo> getCompareServicesByEnvironment(
+  public PageResponse<CompareEnvironmentAggregationResponseInfo> getCompareServicesByEnvironment(
       String accountId, String appId, String envId1, String envId2, int offset, int limit) {
     Query<Instance> query;
     try {
