@@ -1,7 +1,9 @@
 package io.harness.grpc;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.DelegateClassicTaskRequest;
 import io.harness.delegate.DelegateTaskGrpc;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceClassicGrpcClient {
   private final DelegateTaskGrpc.DelegateTaskBlockingStub delegateTaskBlockingStub;
