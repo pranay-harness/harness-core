@@ -1612,4 +1612,69 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(expectedWorkflowIds).isEqualTo(Arrays.asList(new String[] {"wid1"}));
   }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testFormQueryWithNonHStoreGroupByRollbackCount() {
+    QLDeploymentFilter beforeTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter afterTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    List<QLDeploymentFilter> filters = new ArrayList<>();
+    filters.add(beforeTimeFilter);
+    filters.add(afterTimeFilter);
+
+    DeploymentStatsQueryMetaData queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(
+        DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+        QLDeploymentAggregationFunction.builder().rollbackCount(QLCountAggregateOperation.SUM).build(), filters, null,
+        QLTimeSeriesAggregation.builder()
+            .timeAggregationType(QLTimeAggregationType.HOUR)
+            .timeAggregationValue(1)
+            .build(),
+        null, false);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS ROLLBACK_COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ROLLBACK_DURATION > 0) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+  }
+
+  @Test
+  @Owner(developers = ALEXANDRU_CIOFU)
+  @Category(UnitTests.class)
+  public void testFormQueryWithHStoreGroupByRollbackCount() {
+    QLDeploymentFilter beforeTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(1564612564000L).build())
+            .build();
+
+    QLDeploymentFilter afterTimeFilter =
+        QLDeploymentFilter.builder()
+            .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(1564612869000L).build())
+            .build();
+
+    List<QLDeploymentFilter> filters = new ArrayList<>();
+    filters.add(beforeTimeFilter);
+    filters.add(afterTimeFilter);
+
+    DeploymentStatsQueryMetaData queryMetaData =
+        dataFetcher.formQueryWithHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
+            QLDeploymentAggregationFunction.builder().rollbackCount(QLCountAggregateOperation.SUM).build(), filters,
+            null, null,
+            QLTimeSeriesAggregation.builder()
+                .timeAggregationType(QLTimeAggregationType.DAY)
+                .timeAggregationValue(1)
+                .build(),
+            null, false);
+
+    assertThat(queryMetaData.getQuery())
+        .isEqualTo(
+            "SELECT COUNT(*) AS ROLLBACK_COUNT,TIME_BUCKET FROM (SELECT  FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.) as x(tagname) WHERE ((x.tagname='') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ROLLBACK_DURATION > 0) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+  }
 }

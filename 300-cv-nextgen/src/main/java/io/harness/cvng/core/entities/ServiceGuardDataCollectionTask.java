@@ -17,7 +17,7 @@ public class ServiceGuardDataCollectionTask extends DataCollectionTask {
   public static final Duration SERVICE_GUARD_MAX_DATA_COLLECTION_DURATION = Duration.ofHours(2);
   private static final List<Duration> RETRY_WAIT_DURATIONS =
       Lists.newArrayList(Duration.ofSeconds(5), Duration.ofSeconds(10), Duration.ofSeconds(60), Duration.ofMinutes(5),
-          Duration.ofMinutes(10), Duration.ofMinutes(30), Duration.ofHours(1));
+          Duration.ofMinutes(15), Duration.ofHours(1), Duration.ofHours(10), Duration.ofDays(1));
   @Override
   public boolean shouldCreateNextTask() {
     return true;

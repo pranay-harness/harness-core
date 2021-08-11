@@ -20,6 +20,9 @@ public class CloudFormationStepYamlBuilder extends InfraProvisionStepYamlBuilder
       String appId, Map<String, Object> inputProperties) {
     if (CloudFormationStateKeys.variables.equals(name)) {
       convertPropertyIdsToNames(name, appId, objectValue);
+    } else if (CloudFormationStateKeys.provisionerId.equals(name)) {
+      objectValue = convertProvisionerIdToName(appId, objectValue);
+      name = PROVISIONER_NAME;
     }
 
     outputProperties.put(name, objectValue);
@@ -30,6 +33,9 @@ public class CloudFormationStepYamlBuilder extends InfraProvisionStepYamlBuilder
       String appId, String accountId, Map<String, Object> inputProperties) {
     if (CloudFormationStateKeys.variables.equals(name)) {
       convertPropertyNamesToIds(name, accountId, objectValue);
+    } else if (PROVISIONER_NAME.equals(name)) {
+      objectValue = convertProvisionerNameToId(appId, objectValue);
+      name = CloudFormationStateKeys.provisionerId;
     }
 
     outputProperties.put(name, objectValue);

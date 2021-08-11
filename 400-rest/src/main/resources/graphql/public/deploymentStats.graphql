@@ -46,6 +46,7 @@ input DeploymentAggregationFunction {
   duration: DurationAggregateOperation
   rollbackDuration: DurationAggregateOperation
   instancesDeployed: CountAggregateOperation
+  rollbackCount: CountAggregateOperation
 }
 
 enum DurationAggregateOperation {

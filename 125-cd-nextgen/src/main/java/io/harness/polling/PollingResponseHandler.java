@@ -13,6 +13,7 @@ import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingResponseInfc;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
@@ -28,8 +29,6 @@ import io.harness.polling.contracts.PollingResponse;
 import io.harness.polling.service.PolledItemPublisher;
 import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingService;
-
-import software.wings.service.impl.PollingDelegateResponse;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -47,10 +46,11 @@ public class PollingResponseHandler {
   private PolledItemPublisher polledItemPublisher;
 
   @Inject
-  public PollingResponseHandler(
-      PollingService pollingService, PollingPerpetualTaskService pollingPerpetualTaskService) {
+  public PollingResponseHandler(PollingService pollingService, PollingPerpetualTaskService pollingPerpetualTaskService,
+      PolledItemPublisher polledItemPublisher) {
     this.pollingService = pollingService;
     this.pollingPerpetualTaskService = pollingPerpetualTaskService;
+    this.polledItemPublisher = polledItemPublisher;
   }
 
   public void handlePollingResponse(
@@ -61,7 +61,7 @@ public class PollingResponseHandler {
       pollingPerpetualTaskService.deletePerpetualTask(perpetualTaskId, accountId);
       return;
     }
-    if (EmptyPredicate.isEmpty(pollingDocument.getSignature())) {
+    if (EmptyPredicate.isEmpty(pollingDocument.getSignatures())) {
       pollingService.delete(pollingDocument);
       return;
     }
@@ -75,7 +75,10 @@ public class PollingResponseHandler {
   private void handleSuccessResponse(PollingDocument pollingDocument, PollingResponseInfc pollingResponseInfc) {
     String accountId = pollingDocument.getAccountId();
     String pollDocId = pollingDocument.getUuid();
-    pollingService.updateFailedAttempts(accountId, pollDocId, 0);
+
+    if (pollingDocument.getFailedAttempts() > 0) {
+      pollingService.updateFailedAttempts(accountId, pollDocId, 0);
+    }
 
     List<String> newVersions = new ArrayList<>();
 
@@ -111,7 +114,7 @@ public class PollingResponseHandler {
             .setBuildInfo(
                 BuildInfo.newBuilder().setName(polledResponseResult.getName()).addAllVersions(newVersions).build())
             .setType(polledResponseResult.getType())
-            .addAllSignatures(pollingDocument.getSignature())
+            .addAllSignatures(pollingDocument.getSignatures())
             .build());
   }
 

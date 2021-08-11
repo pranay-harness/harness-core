@@ -12,9 +12,12 @@ service FullSyncService {
 }
 
 message FileChanges {
-  string yaml = 1;
-  string file_path = 2;
-  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 3;
+  repeated FileChange file_changes = 1;
+}
+
+message FileChange {
+  string file_path = 1;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 2;
 }
 
 message ScopeDetails {

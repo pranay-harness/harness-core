@@ -56,7 +56,7 @@ public class PermissionCheckDTOMapper {
       return Optional.of(ResourceScope.builder()
                              .accountIdentifier(harnessScopeParams.getAccountIdentifier())
                              .orgIdentifier(harnessScopeParams.getOrgIdentifier())
-                             .projectIdentifier(harnessScopeParams.getOrgIdentifier())
+                             .projectIdentifier(harnessScopeParams.getProjectIdentifier())
                              .build());
     }
     return Optional.empty();

@@ -1,6 +1,8 @@
 package io.harness.grpc;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder;
+import static io.harness.beans.SearchFilter.Operator.CONTAINS;
+import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import static io.harness.manage.GlobalContextManager.initGlobalContextGuard;
@@ -16,6 +18,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.beans.SearchFilter.SearchFilterBuilder;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
@@ -24,6 +27,7 @@ import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
+import io.harness.delegateprofile.DelegateProfileFilterGrpc;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceImplBase;
@@ -35,6 +39,7 @@ import io.harness.delegateprofile.GetProfileRequest;
 import io.harness.delegateprofile.GetProfileResponse;
 import io.harness.delegateprofile.GetProfileV2Request;
 import io.harness.delegateprofile.ListProfilesRequest;
+import io.harness.delegateprofile.ListProfilesRequestV2;
 import io.harness.delegateprofile.ListProfilesResponse;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
@@ -48,6 +53,7 @@ import io.harness.delegateprofile.UpdateProfileScopingRulesV2Request;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
 import io.harness.delegateprofile.UpdateProfileSelectorsV2Request;
+import io.harness.filter.FilterUtils;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.owner.OrgIdentifier;
 import io.harness.owner.ProjectIdentifier;
@@ -126,6 +132,72 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing list profiles request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void listProfilesV2(ListProfilesRequestV2 request, StreamObserver<ListProfilesResponse> responseObserver) {
+    try {
+      PageRequest<DelegateProfile> pageRequest = convertGrpcPageRequest(request.getPageRequest());
+      DelegateProfileFilterGrpc filterProperties = request.getFilterProperties();
+      String accountId = filterProperties.getAccountId().getId();
+      pageRequest.addFilter(DelegateProfileKeys.accountId, SearchFilter.Operator.EQ, accountId);
+      pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.EQ, true);
+      pageRequest.addFilter(getOwnerSearchFilter(filterProperties));
+
+      if (isNotEmpty(request.getSearchTerm())) {
+        Object[] filtersForSearchTerm =
+            FilterUtils.getFiltersForSearchTerm(request.getSearchTerm(), CONTAINS, DelegateProfileKeys.name,
+                DelegateProfileKeys.description, DelegateProfileKeys.identifier, DelegateProfileKeys.selectors);
+        pageRequest.addFilter(DelegateProfileKeys.searchTermFilter, OR, filtersForSearchTerm);
+      }
+
+      populatePageRequestWithFilterProperties(pageRequest, filterProperties);
+
+      PageResponse<DelegateProfile> pageResponse = delegateProfileService.list(pageRequest);
+      if (pageResponse != null) {
+        DelegateProfilePageResponseGrpc response = convertPageResponse(pageResponse);
+        responseObserver.onNext(ListProfilesResponse.newBuilder().setResponse(response).build());
+      } else {
+        responseObserver.onNext(ListProfilesResponse.newBuilder().build());
+      }
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while processing list profiles request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  private SearchFilter getOwnerSearchFilter(DelegateProfileFilterGrpc filterProperties) {
+    String orgId = filterProperties.getOrgIdentifier() != null ? filterProperties.getOrgIdentifier().getId() : null;
+    String projectId =
+        filterProperties.getOrgIdentifier() != null ? filterProperties.getProjectIdentifier().getId() : null;
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
+
+    SearchFilterBuilder searchFilterBuilder = SearchFilter.builder().fieldName(DelegateProfileKeys.owner);
+    if (owner != null) {
+      searchFilterBuilder.op(SearchFilter.Operator.EQ).fieldValues(new Object[] {owner}).build();
+    } else {
+      searchFilterBuilder.op(SearchFilter.Operator.NOT_EXISTS).build();
+    }
+
+    return searchFilterBuilder.build();
+  }
+
+  private void populatePageRequestWithFilterProperties(
+      PageRequest<DelegateProfile> pageRequest, DelegateProfileFilterGrpc filterProperties) {
+    if (isNotEmpty(filterProperties.getIdentifier())) {
+      pageRequest.addFilter(DelegateProfileKeys.identifier, SearchFilter.Operator.EQ, filterProperties.getIdentifier());
+    }
+    if (isNotEmpty(filterProperties.getName())) {
+      pageRequest.addFilter(DelegateProfileKeys.name, CONTAINS, filterProperties.getName());
+    }
+    if (isNotEmpty(filterProperties.getDescription())) {
+      pageRequest.addFilter(DelegateProfileKeys.description, CONTAINS, filterProperties.getDescription());
+    }
+    if (isNotEmpty(filterProperties.getSelectorsList())) {
+      pageRequest.addFilter(
+          DelegateProfileKeys.selectors, SearchFilter.Operator.IN, filterProperties.getSelectorsList());
     }
   }
 

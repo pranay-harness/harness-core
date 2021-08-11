@@ -306,7 +306,7 @@ pub fn analyze(opts: Analyze) {
     let mut explanations: EnumSet<Explanation> = EnumSet::empty();
     let mut total_count = 0;
 
-    let filtered : Vec<&Report> = results
+    let filtered: Vec<&Report> = results
         .iter()
         .filter(|&report| {
             filter_report(&opts, report, &class_locations) || indirect_classes.contains(&report.for_class)

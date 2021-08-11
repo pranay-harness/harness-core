@@ -18,9 +18,11 @@ import io.harness.mongo.iterator.provider.SpringPersistenceRequiredProvider;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.timeout.TimeoutInstance.TimeoutInstanceKeys;
+import io.harness.timeout.contracts.Dimension;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -44,8 +46,20 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
 
   private PersistenceIterator<TimeoutInstance> iterator;
 
-  public TimeoutInstance registerTimeout(
-      @NotNull TimeoutTracker timeoutTracker, @NotNull TimeoutCallback timeoutCallback) {
+  public TimeoutInstance registerTimeout(@NotNull Dimension dimension, @NotNull TimeoutParameters timeoutParameters,
+      @NotNull TimeoutCallback timeoutCallback) {
+    TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(dimension);
+    TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(timeoutParameters);
+    return registerTimeout(timeoutTracker, timeoutCallback);
+  }
+
+  public TimeoutInstance registerAbsoluteTimeout(Duration timeoutDuration, TimeoutCallback timeoutCallback) {
+    return registerTimeout(AbsoluteTimeoutTrackerFactory.DIMENSION,
+        AbsoluteTimeoutParameters.builder().timeoutMillis(timeoutDuration.toMillis()).build(), timeoutCallback);
+  }
+
+  @VisibleForTesting
+  TimeoutInstance registerTimeout(@NotNull TimeoutTracker timeoutTracker, @NotNull TimeoutCallback timeoutCallback) {
     TimeoutInstance timeoutInstance =
         TimeoutInstance.builder().uuid(generateUuid()).tracker(timeoutTracker).callback(timeoutCallback).build();
     timeoutInstance.resetNextIteration();
@@ -57,13 +71,6 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
       iterator.wakeup();
     }
     return savedTimeoutInstance;
-  }
-
-  public TimeoutInstance registerAbsoluteTimeout(Duration timeoutDuration, TimeoutCallback timeoutCallback) {
-    TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(AbsoluteTimeoutTrackerFactory.DIMENSION);
-    TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
-        AbsoluteTimeoutParameters.builder().timeoutMillis(timeoutDuration.toMillis()).build());
-    return registerTimeout(timeoutTracker, timeoutCallback);
   }
 
   public void deleteTimeouts(List<String> timeoutInstanceIds) {

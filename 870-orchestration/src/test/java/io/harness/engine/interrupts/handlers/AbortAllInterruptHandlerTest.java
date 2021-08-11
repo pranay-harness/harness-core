@@ -69,7 +69,7 @@ public class AbortAllInterruptHandlerTest extends OrchestrationTestBase {
                               .build();
 
     mongoTemplate.save(interrupt);
-    when(nodeExecutionService.markAllLeavesDiscontinuing(planExecutionId, StatusUtils.finalizableStatuses()))
+    when(nodeExecutionService.markAllLeavesDiscontinuing(planExecutionId, StatusUtils.abortAndExpireStatuses()))
         .thenReturn(-1L);
     Interrupt handledInterrupt = abortAllInterruptHandler.handleInterrupt(interrupt);
     assertThat(handledInterrupt).isNotNull();

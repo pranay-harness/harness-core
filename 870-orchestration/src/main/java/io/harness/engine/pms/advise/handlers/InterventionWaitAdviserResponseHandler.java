@@ -22,8 +22,6 @@ import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.TimeoutInstance;
 import io.harness.timeout.TimeoutParameters;
-import io.harness.timeout.TimeoutTracker;
-import io.harness.timeout.TimeoutTrackerFactory;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
@@ -49,14 +47,11 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
     timeoutEngine.deleteTimeouts(nodeExecution.getTimeoutInstanceIds());
     TimeoutCallback timeoutCallback =
         new InterventionWaitTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
-    TimeoutTrackerFactory<AbsoluteTimeoutParameters> timeoutTrackerFactory =
-        (TimeoutTrackerFactory<AbsoluteTimeoutParameters>) timeoutRegistry.obtain(
-            AbsoluteTimeoutTrackerFactory.DIMENSION);
-    TimeoutTracker timeoutTracker =
-        timeoutTrackerFactory.create(AbsoluteTimeoutParameters.builder()
-                                         .timeoutMillis(getTimeoutInMillis(interventionWaitAdvise.getTimeout()))
-                                         .build());
-    TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
+    TimeoutParameters parameters = AbsoluteTimeoutParameters.builder()
+                                       .timeoutMillis(getTimeoutInMillis(interventionWaitAdvise.getTimeout()))
+                                       .build();
+    TimeoutInstance instance =
+        timeoutEngine.registerTimeout(AbsoluteTimeoutTrackerFactory.DIMENSION, parameters, timeoutCallback);
 
     nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), INTERVENTION_WAITING,
         ops

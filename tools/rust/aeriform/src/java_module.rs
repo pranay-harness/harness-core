@@ -80,6 +80,7 @@ pub fn model_names() -> HashMap<String, String> {
                 target.split_whitespace().nth(0).unwrap().to_string(),
             )
         })
+        .filter(|(name, _)| name.rfind("/").unwrap_or(0) == 1)
         .collect::<HashMap<String, String>>()
 }
 
@@ -92,7 +93,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         "https/harness.jfrog.io/harness/harness-public",
         "io/harness/cv",
         "data-collection-dsl",
-        "0.26-RELEASE",
+        "0.27-RELEASE",
         Some("CV".to_string()),
     );
 

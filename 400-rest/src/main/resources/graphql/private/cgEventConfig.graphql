@@ -13,19 +13,26 @@ type EventsConfig {
   id: String
   name: String
   appId: String
+  # Details of the HTTP endpoint along with any custom headers
   webhookConfig: WebhookConfig
+  # The event rule containing the configuration of pipelines and events
   rule: EventRule
+  # The delegate Selectors
   delegateSelectors: [String]
   enabled: Boolean
 }
 
 type WebhookConfig {
+  # HTTP Endpoint
   url: String!
+  # Custom headers
   headers: [WebhookHeader]
 }
 
 input WebhookConfigInput {
+  # HTTP Endpoint
   url: String!
+  # Custom headers
   headers: [WebhookHeaderInput]
 }
 
@@ -42,19 +49,21 @@ type WebhookHeader {
 input EventRuleInput {
   #Allowed values are ALL, PIPELINE
   type: RuleType!
+  #The pipeline and event details. Only applicable when the type is PIPELINE
   pipelineRule: PipelineRuleInput
-  workflowRule: WorkflowRuleInput
 }
 
 type EventRule {
   #Allowed values are ALL, PIPELINE
   type: RuleType!
+  #The pipeline and event details
   pipelineRule: PipelineRule
-  workflowRule: WorkflowRule
 }
 
 enum RuleType {
+  #Receive all current and future events that get added
   ALL
+  #Send for specific Pipelines
   PIPELINE
 }
 
@@ -64,9 +73,13 @@ enum EventType {
 }
 
 type PipelineRule {
+  #Receive all current and future pipeline events
   allEvents: Boolean!
+  #Receive the events for all the pipelines in the application
   allPipelines: Boolean!
+  #Pipeline IDs to receive the events for. Only applicable when allPipelines is false
   pipelineIds: [String]
+  #The specific events which are configured. Only applicable if allEvents is false
   events: [EventType]
 }
 
@@ -78,9 +91,13 @@ type WorkflowRule {
 }
 
 input PipelineRuleInput {
+  #Receive all current and future pipeline events
   allEvents: Boolean!
+  #Receive the events for all the pipelines in the application
   allPipelines: Boolean!
+  #Pipeline IDs to receive the events for. Only applicable when allPipelines is false
   pipelineIds: [String]
+  #The specific events which are configured. Only applicable if allEvents is false
   events: [EventType]
 }
 
@@ -106,7 +123,9 @@ input CreateEventsConfigInput {
   clientMutationId: String
   appId: String!
   name: String!
+  #Details of the HTTP endpoint along with any custom headers
   webhookConfig: WebhookConfigInput!
+  # The event rule containing the configuration of pipelines and events
   rule: EventRuleInput!
   delegateSelectors: [String]
   enabled: Boolean!
@@ -116,7 +135,9 @@ input UpdateEventsConfigInput {
   clientMutationId: String
   appId: String!
   name: String!
+  #Details of the HTTP endpoint along with any custom headers
   webhookConfig: WebhookConfigInput!
+  # The event rule containing the configuration of pipelines and events
   rule: EventRuleInput!
   delegateSelectors: [String]
   enabled: Boolean!

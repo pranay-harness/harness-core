@@ -6,6 +6,7 @@ import static io.harness.network.SafeHttpCall.executeWithExceptions;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
@@ -16,8 +17,6 @@ import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
 import io.harness.serializer.KryoSerializer;
-
-import software.wings.service.impl.PollingDelegateResponse;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

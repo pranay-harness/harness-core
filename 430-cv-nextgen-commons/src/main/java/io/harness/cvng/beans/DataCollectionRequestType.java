@@ -7,6 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(CV)
 public enum DataCollectionRequestType {
   SPLUNK_SAVED_SEARCHES,
+  SPLUNK_SAMPLE_DATA,
+  SPLUNK_LATEST_HISTOGRAM,
   STACKDRIVER_DASHBOARD_LIST,
   STACKDRIVER_DASHBOARD_GET,
   STACKDRIVER_SAMPLE_DATA,

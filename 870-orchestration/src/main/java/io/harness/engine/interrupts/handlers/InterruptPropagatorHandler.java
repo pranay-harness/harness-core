@@ -37,7 +37,7 @@ public abstract class InterruptPropagatorHandler {
     Interrupt updatedInterrupt = interruptService.markProcessing(interrupt.getUuid());
     // Marking all finalizable leaf nodes as DISCONTINUING
     long updatedCount = nodeExecutionService.markAllLeavesDiscontinuing(
-        interrupt.getPlanExecutionId(), StatusUtils.finalizableStatuses());
+        interrupt.getPlanExecutionId(), StatusUtils.abortAndExpireStatuses());
     return handleDiscontinuingNodes(updatedInterrupt, updatedCount);
   }
 
@@ -45,7 +45,7 @@ public abstract class InterruptPropagatorHandler {
     Interrupt updatedInterrupt = interruptService.markProcessing(interrupt.getUuid());
     // Fetching all the children leaf nodes for this particular parent node
     List<NodeExecution> allNodeExecutions = nodeExecutionService.findAllChildrenWithStatusIn(
-        interrupt.getPlanExecutionId(), nodeExecutionId, StatusUtils.finalizableStatuses(), true);
+        interrupt.getPlanExecutionId(), nodeExecutionId, StatusUtils.abortAndExpireStatuses(), true);
 
     List<String> targetIds = allNodeExecutions.stream()
                                  .filter(ne -> ExecutionModeUtils.isLeafMode(ne.getMode()))

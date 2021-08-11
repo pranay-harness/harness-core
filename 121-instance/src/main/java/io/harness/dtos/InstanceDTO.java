@@ -19,10 +19,10 @@ public class InstanceDTO {
   String projectIdentifier;
   String instanceKey;
   InstanceType instanceType;
-  String envId;
+  String envIdentifier;
   String envName;
   EnvironmentType envType;
-  String serviceId;
+  String serviceIdentifier;
   String serviceName;
   String infrastructureMappingId;
   String infrastructureKind;

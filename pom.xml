@@ -1071,7 +1071,7 @@
             <dependency>
                 <groupId>io.harness.cv</groupId>
                 <artifactId>data-collection-dsl</artifactId>
-                <version>0.26-RELEASE</version>
+                <version>0.27-RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>

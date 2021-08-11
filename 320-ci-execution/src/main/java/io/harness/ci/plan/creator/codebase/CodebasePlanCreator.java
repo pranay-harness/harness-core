@@ -38,8 +38,8 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class CodebasePlanCreator {
-  public List<PlanNode> createPlanForCodeBase(
-      PlanCreationContext ctx, YamlField ciCodeBaseField, String childNodeId, KryoSerializer kryoSerializer) {
+  public List<PlanNode> createPlanForCodeBase(PlanCreationContext ctx, YamlField ciCodeBaseField, String childNodeId,
+      KryoSerializer kryoSerializer, String codeBaseNodeUUID) {
     PlanCreationContextValue planCreationContextValue = ctx.getGlobalContext().get("metadata");
     ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
 
@@ -50,8 +50,7 @@ public class CodebasePlanCreator {
     ExecutionSource executionSource =
         IntegrationStageUtils.buildExecutionSource(triggerInfo, triggerPayload, "codebase", ciCodeBase.getBuild());
 
-    return buildCodebasePlanNodes(
-        ciCodeBaseField.getNode().getUuid(), childNodeId, kryoSerializer, ciCodeBase, executionSource);
+    return buildCodebasePlanNodes(codeBaseNodeUUID, childNodeId, kryoSerializer, ciCodeBase, executionSource);
   }
 
   @NotNull

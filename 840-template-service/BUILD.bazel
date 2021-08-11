@@ -7,6 +7,8 @@ shared_dependencies = [
     "@maven//:io_netty_netty_all",
 ] + [
     "//940-primary-version-manager:module",
+    "//948-access-control-sdk:module",
+    "//955-filters-sdk:module",
     "//958-migration-sdk:module",
     "//960-ng-core-beans:module",
     "//960-persistence:module",
