@@ -13,8 +13,8 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
+import io.harness.pms.sdk.core.DummyExecutionStrategy;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
-import io.harness.pms.sdk.core.steps.Step;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -41,7 +41,7 @@ public class AsyncSdkProgressCallbackTest extends PmsSdkCoreTestBase {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     Mockito.when(executableProcessorFactory.obtainProcessor(ExecutionMode.CHILD))
-        .thenReturn(new ExecutableProcessor(new DummyStrategy()));
+        .thenReturn(new ExecutableProcessor(new DummyExecutionStrategy()));
     asyncSdkProgressCallback =
         AsyncSdkProgressCallback.builder().executableProcessorFactory(executableProcessorFactory).build();
     ambiance = AmbianceTestUtils.buildAmbiance();
@@ -67,24 +67,5 @@ public class AsyncSdkProgressCallbackTest extends PmsSdkCoreTestBase {
                                                     .build();
     progressCallback.notify(generateUuid(), CommandUnitsProgress.builder().build());
     Mockito.verify(executableProcessorFactory).obtainProcessor(ExecutionMode.CHILD);
-  }
-
-  private class DummyStrategy implements ExecuteStrategy {
-    DummyStrategy() {}
-
-    @Override
-    public void start(InvokerPackage invokerPackage) {
-      // do Nothing
-    }
-
-    @Override
-    public <T extends Step> T extractStep(Ambiance ambiance) {
-      return null;
-    }
-
-    @Override
-    public void progress(ProgressPackage progressPackage) {
-      // do Nothing
-    }
   }
 }
