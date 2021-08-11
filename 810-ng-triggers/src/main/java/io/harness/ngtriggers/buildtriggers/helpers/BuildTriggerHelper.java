@@ -19,7 +19,9 @@ import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.polling.contracts.BuildInfo;
 import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.contracts.PollingResponse;
 import io.harness.remote.client.NGRestUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -164,6 +166,12 @@ public class BuildTriggerHelper {
       if (isNotBlank(error)) {
         throw new InvalidRequestException(error);
       }
+
+      error = checkFiledValueError(
+          "helmVersion", pollingItem.getPayloadType().getHttpHelmPayload().getHelmVersion().name());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
     } else {
       throw new InvalidRequestException("Store Type is not supported for HelmChart Trigger");
     }
@@ -177,5 +185,32 @@ public class BuildTriggerHelper {
     } else {
       return EMPTY;
     }
+  }
+
+  public String generatePollingDescriptor(PollingResponse pollingResponse) {
+    StringBuilder builder = new StringBuilder(1024);
+
+    builder.append("AccountId: ").append(pollingResponse.getAccountId());
+
+    if (pollingResponse.getSignaturesCount() > 0) {
+      builder.append(", Signatures: [");
+      for (int i = 0; i < pollingResponse.getSignaturesCount(); i++) {
+        builder.append(pollingResponse.getSignatures(i)).append("  ");
+      }
+      builder.append("], ");
+    }
+
+    if (pollingResponse.hasBuildInfo()) {
+      BuildInfo buildInfo = pollingResponse.getBuildInfo();
+
+      builder.append(", BuildInfo Name: ").append(buildInfo.getName());
+      builder.append(", Version: [");
+      for (int i = 0; i < buildInfo.getVersionsCount(); i++) {
+        builder.append(buildInfo.getVersions(i)).append("  ");
+      }
+      builder.append(']');
+    }
+
+    return builder.toString();
   }
 }

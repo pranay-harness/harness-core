@@ -43,8 +43,7 @@ public class PollingSubscriptionHelper {
         throw new InvalidRequestException("Failed to retrieve pipeline");
       }
 
-      TriggerDetails triggerDetails = ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity.getAccountId(),
-          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getYaml());
+      TriggerDetails triggerDetails = ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity);
 
       BuildTriggerOpsData buildTriggerOpsData = null;
       PollingItemGenerator pollingItemGenerator = null;
