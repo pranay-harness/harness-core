@@ -4564,7 +4564,7 @@ plain_artifacts = [
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
-    "io.harness.cv:data-collection-dsl:0.26-RELEASE",
+    "io.harness.cv:data-collection-dsl:0.27-RELEASE",
     "io.harness:ff-java-server-sdk:1.0.0",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
