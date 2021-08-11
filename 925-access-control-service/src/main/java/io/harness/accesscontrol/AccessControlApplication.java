@@ -26,7 +26,6 @@ import io.harness.accesscontrol.commons.migration.AccessControlMigrationProvider
 import io.harness.accesscontrol.principals.serviceaccounts.iterators.ServiceAccountReconciliationIterator;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.principals.users.iterators.UserReconciliationIterator;
-import io.harness.accesscontrol.principals.users.migration.UserBootstrapMigrationService;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.accesscontrol.scopes.harness.iterators.ScopeReconciliationIterator;
 import io.harness.accesscontrol.support.reconciliation.SupportPreferenceReconciliationIterator;
@@ -213,7 +212,6 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       environment.lifecycle().manage(injector.getInstance(UserMembershipEventListenerService.class));
     }
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserBootstrapMigrationService.class));
     environment.lifecycle().manage(injector.getInstance(SupportRoleAssignmentsReconciliationService.class));
   }
 
