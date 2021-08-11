@@ -36,6 +36,7 @@ import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.helpers.TriggerHelper;
+import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
@@ -66,6 +67,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -87,6 +90,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   private final ExecutorService executorService;
   private final KryoSerializer kryoSerializer;
   private final PollingResourceClient pollingResourceClient;
+  private final NGTriggerElementMapper ngTriggerElementMapper;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -119,10 +123,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
     executorService.submit(() -> {
       PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
-      byte[] pollingItemBytes = kryoSerializer.asDeflatedBytes(pollingItem);
       ResponseDTO<byte[]> responseDTO;
       try {
-        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(pollingItemBytes));
+        byte[] pollingItemBytes = kryoSerializer.asBytes(pollingItem);
+        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
+            RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
       } catch (Exception exception) {
         log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
                       TriggerHelper.getTriggerRef(ngTriggerEntity)),
@@ -130,7 +135,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
         throw new InvalidRequestException(exception.getMessage());
       }
       byte[] pollingDocumentBytes = responseDTO.getData();
-      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asInflatedObject(pollingDocumentBytes);
+      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asObject(pollingDocumentBytes);
       updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
     });
   }
@@ -341,6 +346,14 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public List<NGTriggerEntity> findBuildTriggersByAccountIdAndSignature(String accountId, List<String> signatures) {
+    Page<NGTriggerEntity> triggersPage =
+        list(TriggerFilterHelper.createCriteriaFormBuildTriggerUsingAccIdAndSignature(accountId, signatures),
+            Pageable.unpaged());
+    return triggersPage.get().collect(Collectors.toList());
+  }
+
+  @Override
   public List<NGTriggerEntity> listEnabledTriggersForCurrentProject(
       String accountId, String orgIdentifier, String projectIdentifier) {
     Optional<List<NGTriggerEntity>> enabledTriggerForProject;
@@ -468,7 +481,9 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
 
     try {
-      ValidationResult validationResult = triggerValidationHandler.applyValidations(ngTriggerEntity);
+      ValidationResult validationResult = triggerValidationHandler.applyValidations(
+          ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
+              ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getYaml()));
       updateTriggerWithValidationStatus(ngTriggerEntity, validationResult);
       return validationResult.isSuccess();
     } catch (Exception e) {
@@ -477,17 +492,13 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
   }
 
-  public PollingItem generatePollingItem(NGTriggerEntity ngTriggerEntity) {
-    return pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
-  }
-
-  private void updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult) {
+  public void updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
 
     if (validationResult.isSuccess() && ngTriggerEntity.getValidationStatus() != null
         && ngTriggerEntity.getValidationStatus().isValidationFailure()) {
       ngTriggerEntity.setValidationStatus(ValidationStatus.builder().validationFailure(false).build());
-    } else {
+    } else if (!validationResult.isSuccess()) {
       ngTriggerEntity.setValidationStatus(ValidationStatus.builder()
                                               .status(INVALID_TRIGGER_YAML)
                                               .validationFailure(true)

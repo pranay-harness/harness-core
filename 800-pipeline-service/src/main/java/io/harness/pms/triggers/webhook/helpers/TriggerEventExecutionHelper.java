@@ -2,8 +2,10 @@ package io.harness.pms.triggers.webhook.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
+import static io.harness.ngtriggers.Constants.ARTIFACT_VERSION;
+import static io.harness.ngtriggers.Constants.MANIFEST_VERSION;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.CUSTOM;
@@ -21,15 +23,18 @@ import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse;
+import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
+import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.ngtriggers.helpers.WebhookEventMapperHelper;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload.Builder;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.triggers.TriggerExecutionHelper;
+import io.harness.polling.contracts.PollingResponse;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -42,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(PIPELINE)
-public class TriggerWebhookExecutionHelper {
+public class TriggerEventExecutionHelper {
   private final WebhookEventMapperHelper webhookEventMapperHelper;
   private final TriggerExecutionHelper triggerExecutionHelper;
 
@@ -52,7 +57,7 @@ public class TriggerWebhookExecutionHelper {
 
     TriggerWebhookEvent triggerWebhookEvent = mappingRequestData.getTriggerWebhookEvent();
     WebhookEventProcessingResultBuilder resultBuilder = WebhookEventProcessingResult.builder();
-    List<WebhookEventResponse> eventResponses = new ArrayList<>();
+    List<TriggerEventResponse> eventResponses = new ArrayList<>();
     if (!webhookEventMappingResponse.isFailedToFindTrigger()) {
       log.info("Preparing for pipeline execution request");
       resultBuilder.mappedToTriggers(true);
@@ -100,7 +105,7 @@ public class TriggerWebhookExecutionHelper {
     return builder.setType(WEBHOOK).build();
   }
 
-  private WebhookEventResponse triggerPipelineExecution(TriggerWebhookEvent triggerWebhookEvent,
+  private TriggerEventResponse triggerPipelineExecution(TriggerWebhookEvent triggerWebhookEvent,
       TriggerDetails triggerDetails, TriggerPayload triggerPayload, String payload) {
     String runtimeInputYaml = null;
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
@@ -109,24 +114,79 @@ public class TriggerWebhookExecutionHelper {
 
       PlanExecution response = triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionRequest(
           triggerDetails, triggerPayload, triggerWebhookEvent, payload);
-      TargetExecutionSummary targetExecutionSummary =
-          WebhookEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
-
-      log.info(ngTriggerEntity.getTargetType() + " execution was requested successfully for Pipeline: "
-          + ngTriggerEntity.getTargetIdentifier() + ", using trigger: " + ngTriggerEntity.getIdentifier());
-
-      return WebhookEventResponseHelper.toResponse(TARGET_EXECUTION_REQUESTED, triggerWebhookEvent, ngTriggerEntity,
-          "Pipeline execution was requested successfully", targetExecutionSummary);
+      return generateEventHistoryForSuccess(
+          triggerDetails, runtimeInputYaml, ngTriggerEntity, triggerWebhookEvent, response);
     } catch (Exception e) {
-      log.error(" Exception occurred while requesting " + ngTriggerEntity.getTargetType()
-              + " execution. Identifier: " + ngTriggerEntity.getTargetIdentifier()
-              + ", using trigger: " + ngTriggerEntity.getIdentifier() + ". Exception Message: " + e.getMessage(),
-          e);
-
-      TargetExecutionSummary targetExecutionSummary = WebhookEventResponseHelper.prepareTargetExecutionSummary(
-          (PlanExecution) null, triggerDetails, runtimeInputYaml);
-      return WebhookEventResponseHelper.toResponse(INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null,
-          ngTriggerEntity, e.getMessage(), targetExecutionSummary);
+      return generateEventHistoryForError(triggerWebhookEvent, triggerDetails, runtimeInputYaml, ngTriggerEntity, e);
     }
+  }
+
+  public TriggerEventResponse generateEventHistoryForError(TriggerWebhookEvent triggerWebhookEvent,
+      TriggerDetails triggerDetails, String runtimeInputYaml, NGTriggerEntity ngTriggerEntity, Exception e) {
+    log.error(new StringBuilder(512)
+                  .append("Exception occurred while requesting pipeline execution using Trigger ")
+                  .append(TriggerHelper.getTriggerRef(ngTriggerEntity))
+                  .append(". Exception Message: ")
+                  .append(e.getMessage())
+                  .toString(),
+        e);
+
+    TargetExecutionSummary targetExecutionSummary = TriggerEventResponseHelper.prepareTargetExecutionSummary(
+        (PlanExecution) null, triggerDetails, runtimeInputYaml);
+    return TriggerEventResponseHelper.toResponse(
+        INVALID_RUNTIME_INPUT_YAML, triggerWebhookEvent, null, ngTriggerEntity, e.getMessage(), targetExecutionSummary);
+  }
+
+  public List<TriggerEventResponse> processTriggersForActivation(
+      List<TriggerDetails> mappedTriggers, PollingResponse pollingResponse) {
+    List<TriggerEventResponse> responses = new ArrayList<>();
+    for (TriggerDetails triggerDetails : mappedTriggers) {
+      try {
+        replaceBuildFromEvent(triggerDetails.getNgTriggerEntity(), pollingResponse.getBuildInfo().getVersions(0));
+        responses.add(triggerEventPipelineExecution(triggerDetails));
+      } catch (Exception e) {
+        log.error("Error while requesting pipeline execution for Build Trigger: "
+            + TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()));
+      }
+    }
+
+    return responses;
+  }
+
+  private void replaceBuildFromEvent(NGTriggerEntity trigger, String version) {
+    trigger.setYaml(trigger.getYaml().replace(MANIFEST_VERSION, version).replace(ARTIFACT_VERSION, version));
+  }
+
+  public TriggerEventResponse triggerEventPipelineExecution(TriggerDetails triggerDetails) {
+    String runtimeInputYaml = null;
+    NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
+    TriggerWebhookEvent pseudoEvent = TriggerWebhookEvent.builder()
+                                          .accountId(ngTriggerEntity.getAccountId())
+                                          .createdAt(System.currentTimeMillis())
+                                          .build();
+    try {
+      runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
+      TriggerPayload triggerPayload =
+          TriggerPayload.newBuilder()
+              .setType(ngTriggerEntity.getType() == NGTriggerType.ARTIFACT ? Type.ARTIFACT : Type.MANIFEST)
+              .build();
+      PlanExecution response =
+          triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionReques(triggerDetails, triggerPayload);
+      return generateEventHistoryForSuccess(triggerDetails, runtimeInputYaml, ngTriggerEntity, pseudoEvent, response);
+    } catch (Exception e) {
+      return generateEventHistoryForError(pseudoEvent, triggerDetails, runtimeInputYaml, ngTriggerEntity, e);
+    }
+  }
+
+  private TriggerEventResponse generateEventHistoryForSuccess(TriggerDetails triggerDetails, String runtimeInputYaml,
+      NGTriggerEntity ngTriggerEntity, TriggerWebhookEvent pseudoEvent, PlanExecution response) {
+    TargetExecutionSummary targetExecutionSummary =
+        TriggerEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
+
+    log.info(ngTriggerEntity.getTargetType() + " execution was requested successfully for Pipeline: "
+        + ngTriggerEntity.getTargetIdentifier() + ", using trigger: " + ngTriggerEntity.getIdentifier());
+
+    return TriggerEventResponseHelper.toResponse(TARGET_EXECUTION_REQUESTED, pseudoEvent, ngTriggerEntity,
+        "Pipeline execution was requested successfully", targetExecutionSummary);
   }
 }

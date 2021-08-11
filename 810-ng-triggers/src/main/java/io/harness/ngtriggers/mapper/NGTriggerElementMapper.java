@@ -170,6 +170,32 @@ public class NGTriggerElementMapper {
     return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(ngTriggerEntity).build();
   }
 
+  public TriggerDetails toTriggerDetails(NGTriggerEntity ngTriggerEntity) {
+    NGTriggerConfigV2 config = toTriggerConfigV2(ngTriggerEntity.getYaml());
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(ngTriggerEntity).build();
+  }
+
+  public TriggerDetails mergeTriggerEntity(NGTriggerEntity existingEntity, String newYaml) {
+    NGTriggerConfigV2 config = toTriggerConfigV2(newYaml);
+    NGTriggerEntity entity = toTriggerEntity(existingEntity.getAccountId(), existingEntity.getOrgIdentifier(),
+        existingEntity.getProjectIdentifier(), existingEntity.getIdentifier(), newYaml);
+
+    copyEntityFieldsOutsideOfYml(existingEntity, entity);
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
+  }
+
+  private void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
+    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
+      if (isNotEmpty(existingEntity.getSignature())) {
+        newEntity.setSignature(existingEntity.getSignature());
+      }
+      if (isNotEmpty(existingEntity.getMetadata().getBuildMetadata().getPollingDocId())) {
+        newEntity.getMetadata().getBuildMetadata().setPollingDocId(
+            existingEntity.getMetadata().getBuildMetadata().getPollingDocId());
+      }
+    }
+  }
+
   public NGTriggerEntity toTriggerEntity(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String yaml) {
     NGTriggerConfigV2 config = toTriggerConfigV2(yaml);
@@ -194,6 +220,7 @@ public class NGTriggerElementMapper {
                                                .targetType(TargetType.PIPELINE)
                                                .metadata(toMetadata(config.getSource()))
                                                .enabled(config.getEnabled())
+                                               .signature(generateUuid())
                                                .tags(TagMapper.convertToList(config.getTags()));
     if (config.getSource().getType() == NGTriggerType.SCHEDULED) {
       entityBuilder.nextIterations(new ArrayList<>());
@@ -232,13 +259,9 @@ public class NGTriggerElementMapper {
             .cron(CronMetadata.builder().expression(cronTriggerSpec.getExpression()).build())
             .build();
       case ARTIFACT:
-        return NGTriggerMetadata.builder()
-            .buildMetadata(BuildMetadata.builder().type(ARTIFACT).signature(generateUuid()).build())
-            .build();
+        return NGTriggerMetadata.builder().buildMetadata(BuildMetadata.builder().type(ARTIFACT).build()).build();
       case MANIFEST:
-        return NGTriggerMetadata.builder()
-            .buildMetadata(BuildMetadata.builder().type(MANIFEST).signature(generateUuid()).build())
-            .build();
+        return NGTriggerMetadata.builder().buildMetadata(BuildMetadata.builder().type(MANIFEST).build()).build();
       default:
         throw new InvalidRequestException("Type " + triggerSource.getType().toString() + " is invalid");
     }

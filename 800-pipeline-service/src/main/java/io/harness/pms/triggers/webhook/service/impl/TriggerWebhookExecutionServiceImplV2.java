@@ -12,11 +12,11 @@ import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
 import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
+import io.harness.pms.triggers.webhook.helpers.TriggerEventExecutionHelper;
 import io.harness.pms.triggers.webhook.helpers.TriggerWebhookConfirmationHelper;
-import io.harness.pms.triggers.webhook.helpers.TriggerWebhookExecutionHelper;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionServiceV2;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class TriggerWebhookExecutionServiceImplV2 implements TriggerWebhookExecutionServiceV2 {
   @Inject private NGTriggerElementMapper ngTriggerElementMapper;
-  @Inject private TriggerWebhookExecutionHelper ngTriggerWebhookExecutionHelper;
+  @Inject private TriggerEventExecutionHelper ngTriggerWebhookExecutionHelper;
   @Inject private TriggerWebhookConfirmationHelper ngTriggerWebhookConfirmationHelper;
   @Inject TriggerEventHistoryRepository triggerEventHistoryRepository;
 
@@ -54,7 +54,7 @@ public class TriggerWebhookExecutionServiceImplV2 implements TriggerWebhookExecu
             TriggerMappingRequestData.builder().triggerWebhookEvent(event).webhookDTO(webhookDTO).build());
       }
 
-      List<WebhookEventResponse> responseList = result.getResponses();
+      List<TriggerEventResponse> responseList = result.getResponses();
 
       // Remove any null values if present in list
       if (isNotEmpty(responseList)) {
@@ -67,10 +67,10 @@ public class TriggerWebhookExecutionServiceImplV2 implements TriggerWebhookExecu
     }
   }
 
-  private void saveTriggerExecutionHistoryRecords(List<WebhookEventResponse> responseList) {
+  private void saveTriggerExecutionHistoryRecords(List<TriggerEventResponse> responseList) {
     responseList.forEach(response -> {
       try {
-        triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response));
+        triggerEventHistoryRepository.save(TriggerEventResponseHelper.toEntity(response));
       } catch (Exception e) {
         log.error("Failed to generate and save TriggerExecutionHistoryRecord: " + response);
       }
