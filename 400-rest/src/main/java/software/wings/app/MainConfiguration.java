@@ -186,6 +186,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
+  @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
+  private boolean disableDelegateMgmtInManager;
 
   private int applicationPort;
   private boolean sslEnabled;
