@@ -2,6 +2,7 @@ package io.harness.ci.plan.creator.stage;
 
 import static io.harness.common.CICommonPodConstants.POD_NAME_PREFIX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI_CODE_BASE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
@@ -84,14 +85,15 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
 
     YamlField ciCodeBaseField = getCodebaseYamlField(ctx);
     if (ciCodeBaseField != null) {
+      String codeBaseNodeUUID = generateUuid();
       List<PlanNode> codeBasePlanNodeList = CodebasePlanCreator.createPlanForCodeBase(
-          ctx, ciCodeBaseField, executionField.getNode().getUuid(), kryoSerializer);
+          ctx, ciCodeBaseField, executionField.getNode().getUuid(), kryoSerializer, codeBaseNodeUUID);
       if (isNotEmpty(codeBasePlanNodeList)) {
         for (PlanNode planNode : codeBasePlanNodeList) {
           planCreationResponseMap.put(
               planNode.getUuid(), PlanCreationResponse.builder().node(planNode.getUuid(), planNode).build());
         }
-        childNodeId = ciCodeBaseField.getNode().getUuid();
+        childNodeId = codeBaseNodeUUID;
       }
     }
 
