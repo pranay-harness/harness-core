@@ -2,7 +2,7 @@
 FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1338-apm
 
 # Add the capsule JAR and config.yml
-COPY delegate-service-capsule.jar keystore.jks delegate-service-config.yml hazelcast.xml redisson-jcache.yaml alpn-boot-8.1.13.v20181017.jar protocol.info /opt/harness/
+COPY delegate-service-capsule.jar keystore.jks delegate-service-config.yml redisson-jcache.yaml alpn-boot-8.1.13.v20181017.jar protocol.info /opt/harness/
 
 COPY scripts /opt/harness
 
