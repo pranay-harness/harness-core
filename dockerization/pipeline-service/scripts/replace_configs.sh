@@ -85,6 +85,14 @@ if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceSecret $NG_MANAGER_SERVICE_SECRET
 fi
 
+if [[ "" != "$PIPELINE_SERVICE_ENDPOINT" ]]; then
+  yq write -i $CONFIG_FILE pipelineServiceClientConfig.baseUrl $PIPELINE_SERVICE_ENDPOINT
+fi
+
+if [[ "" != "$PIPELINE_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE pipelineServiceSecret $PIPELINE_SERVICE_SECRET
+fi
+
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
 fi
