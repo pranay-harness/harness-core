@@ -212,6 +212,7 @@ public class NGSecretResourceV2 {
 
     return ResponseDTO.newResponse(secret);
   }
+    
 
   @DELETE
   @Path("{identifier}")
