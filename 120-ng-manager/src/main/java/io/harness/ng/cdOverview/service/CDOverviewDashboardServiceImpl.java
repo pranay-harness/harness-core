@@ -112,6 +112,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(),
       ExecutionStatus.APPROVALWAITING.name(), ExecutionStatus.WAITING.name(), ExecutionStatus.RESOURCEWAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
+  public static final double INVALID_CHANGE_RATE = -10000;
 
   public String executionStatusCdTimeScaleColumns() {
     return "id,"
@@ -981,11 +982,13 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return failureRate;
   }
   private double calculateChangeRate(double prevValue, double curValue) {
-    double rate = 0.0;
-    if (prevValue != 0) {
-      rate = (curValue - prevValue) / prevValue;
+    if (prevValue == curValue) {
+      return 0;
     }
-    return rate * 100;
+    if (prevValue == 0) {
+      return INVALID_CHANGE_RATE;
+    }
+    return ((curValue - prevValue) * 100) / prevValue;
   }
 
   private long getTotalDeployments(List<ServiceDeployment> executionDeploymentList) {
@@ -1193,7 +1196,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .totalDeployments(totalDeployment)
         .totalDeploymentChangeRate(totalDeploymentChangeRate)
         .percentSuccess(percentSuccess)
-        .rateSuccess(getRate(success, previousSuccess))
+        .rateSuccess(calculateChangeRate(previousSuccess, success))
         .failureRate(failureRate)
         .failureRateChangeRate(failureRateChangeRate)
         .frequency(frequency)
