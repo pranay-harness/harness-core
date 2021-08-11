@@ -12,7 +12,5 @@ import lombok.Data;
 @OwnedBy(HarnessTeam.DX)
 public class DeploymentInfoDetails {
   DeploymentInfo deploymentInfo;
-  // It can be any one of the deployment summary ids corresponding to the deployment info
-  String deploymentSummaryId;
   long lastUsedAt;
 }

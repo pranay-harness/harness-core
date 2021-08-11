@@ -1,8 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.SettingAttribute;
@@ -27,6 +29,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by anubhaw on 8/18/16.
  */
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public interface BuildSourceService {
   /**
    * Gets jobs.

@@ -27,6 +27,7 @@ shared_dependencies = [
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:io_dropwizard_dropwizard_core",
+    "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:org_freemarker_freemarker",
     "@maven//:org_springframework_data_spring_data_mongodb",
     "@maven//:org_springframework_guice_spring_guice",

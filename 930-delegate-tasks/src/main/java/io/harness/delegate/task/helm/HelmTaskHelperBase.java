@@ -655,7 +655,11 @@ public class HelmTaskHelperBase {
                            storeDelegateConfig.getRepoName(), destinationDirectory),
             destinationDirectory, "Helm chart fetch versions command failed ", timeoutInMillis,
             HelmCliCommandType.FETCH_ALL_VERSIONS);
-    String commandOutput = processResult.toString();
+
+    String commandOutput = "";
+    if (processResult != null && processResult.getOutput() != null) {
+      commandOutput = processResult.getOutput().getString();
+    }
 
     return parseHelmVersionsFromOutput(commandOutput, manifest);
   }

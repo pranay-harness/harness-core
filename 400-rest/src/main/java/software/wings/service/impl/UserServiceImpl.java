@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.FeatureName.GTM_CCM_ENABLED;
 import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -457,9 +456,7 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    if (!featureFlagService.isGlobalEnabled(GTM_CCM_ENABLED) && "CE".equalsIgnoreCase(userInvite.getIntent())) {
-      account.setDefaultExperience(DefaultExperience.CG);
-    } else if (!featureFlagService.isGlobalEnabled(GTM_CD_ENABLED) && "CD".equalsIgnoreCase(userInvite.getIntent())) {
+    if (!featureFlagService.isGlobalEnabled(GTM_CD_ENABLED) && "CD".equalsIgnoreCase(userInvite.getIntent())) {
       account.setDefaultExperience(DefaultExperience.CG);
     }
 

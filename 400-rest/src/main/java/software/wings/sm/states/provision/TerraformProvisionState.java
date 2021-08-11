@@ -186,7 +186,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject protected TerraformPlanHelper terraformPlanHelper;
   @Inject protected transient MainConfiguration configuration;
 
-  @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
+  @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
   @Attributes(title = "Variables") @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
   @Attributes(title = "Backend Configs")

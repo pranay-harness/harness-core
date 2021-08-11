@@ -35,7 +35,7 @@ shared_dependencies = [
     "//948-access-control-sdk:module",
     "//948-access-control-admin-client:module",
     "//950-command-library-common:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//950-delegate-tasks-beans:module",
     "//953-events-api:module",
     "//950-events-framework:module",

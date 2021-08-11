@@ -55,8 +55,8 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       data.put(TimescaleConstants.ACCOUNT_ID.getKey(), instance.getAccountIdentifier());
       data.put(TimescaleConstants.ORG_ID.getKey(), instance.getOrgIdentifier());
       data.put(TimescaleConstants.PROJECT_ID.getKey(), instance.getProjectIdentifier());
-      data.put(TimescaleConstants.SERVICE_ID.getKey(), instance.getServiceId());
-      data.put(TimescaleConstants.ENV_ID.getKey(), instance.getEnvId());
+      data.put(TimescaleConstants.SERVICE_ID.getKey(), instance.getServiceIdentifier());
+      data.put(TimescaleConstants.ENV_ID.getKey(), instance.getEnvIdentifier());
       data.put(TimescaleConstants.INFRAMAPPING_ID.getKey(), instance.getInfrastructureMappingId());
       data.put(TimescaleConstants.CLOUDPROVIDER_ID.getKey(), instance.getConnectorRef());
       data.put(TimescaleConstants.INSTANCE_TYPE.getKey(), instance.getInstanceType().name());

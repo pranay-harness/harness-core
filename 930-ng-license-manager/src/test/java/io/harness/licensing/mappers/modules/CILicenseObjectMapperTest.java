@@ -22,8 +22,6 @@ public class CILicenseObjectMapperTest extends CategoryTest {
   private CIModuleLicense moduleLicense;
   private CIModuleLicenseDTO moduleLicenseDTO;
   private static final int DEFAULT_NUMBER_OF_COMMITTERS = 10;
-  private static final int START_TIME = 10;
-  private static final int EXPIRY_TIME = 11;
 
   @Before
   public void setUp() {

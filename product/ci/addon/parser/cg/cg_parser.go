@@ -131,7 +131,7 @@ func removeDup(s []int) []int {
 	for i := range s {
 		tmp[s[i]] = true
 	}
-	for k, _ := range tmp {
+	for k := range tmp {
 		c = append(c, k)
 	}
 	return c

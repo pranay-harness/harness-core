@@ -525,7 +525,6 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
-import software.wings.service.impl.PollingDelegateResponse;
 import software.wings.service.impl.SlackMessageSenderImpl;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -1737,6 +1736,5 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EventsDeliveryCallback.class, 40014);
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
     kryo.register(ShellScriptProvisionOutputVariables.class, 40021);
-    kryo.register(PollingDelegateResponse.class, 40022);
   }
 }

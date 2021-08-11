@@ -57,7 +57,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-common-entities</artifactId>
+            <artifactId>959-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 		<dependency>
@@ -92,11 +92,6 @@
             <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>999-annotations</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>

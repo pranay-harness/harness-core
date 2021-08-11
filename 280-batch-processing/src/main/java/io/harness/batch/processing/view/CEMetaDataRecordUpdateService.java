@@ -1,6 +1,5 @@
 package io.harness.batch.processing.view;
 
-import static io.harness.beans.FeatureName.CE_AWS_BILLING_CONNECTOR_DETAIL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
@@ -64,33 +63,31 @@ public class CEMetaDataRecordUpdateService {
       boolean isAzureConnectorPresent = ceConnectors.stream().anyMatch(
           connector -> connector.getValue().getType().equals(SettingVariableTypes.CE_AZURE.toString()));
 
-      if (featureFlagService.isEnabled(CE_AWS_BILLING_CONNECTOR_DETAIL, accountId)) {
-        List<ConnectorResponseDTO> nextGenConnectorResponses = new ArrayList<>();
-        PageResponse<ConnectorResponseDTO> response = null;
-        int page = 0;
-        int size = 100;
-        ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
-            ConnectorFilterPropertiesDTO.builder()
-                .ccmConnectorFilter(
-                    CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-                .build();
-        connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
-        do {
-          response = execute(connectorResourceClient.listConnectors(
-              accountId, null, null, page, size, connectorFilterPropertiesDTO, false));
-          if (response != null && isNotEmpty(response.getContent())) {
-            nextGenConnectorResponses.addAll(response.getContent());
-          }
-          page++;
-        } while (response != null && isNotEmpty(response.getContent()));
+      List<ConnectorResponseDTO> nextGenConnectorResponses = new ArrayList<>();
+      PageResponse<ConnectorResponseDTO> response = null;
+      int page = 0;
+      int size = 100;
+      ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
+          ConnectorFilterPropertiesDTO.builder()
+              .ccmConnectorFilter(
+                  CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
+              .build();
+      connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
+      do {
+        response = execute(connectorResourceClient.listConnectors(
+            accountId, null, null, page, size, connectorFilterPropertiesDTO, false));
+        if (response != null && isNotEmpty(response.getContent())) {
+          nextGenConnectorResponses.addAll(response.getContent());
+        }
+        page++;
+      } while (response != null && isNotEmpty(response.getContent()));
 
-        isAwsConnectorPresent =
-            updateConnectorPresent(isAwsConnectorPresent, ConnectorType.CE_AWS, nextGenConnectorResponses);
-        isGCPConnectorPresent =
-            updateConnectorPresent(isGCPConnectorPresent, ConnectorType.GCP_CLOUD_COST, nextGenConnectorResponses);
-        isAzureConnectorPresent =
-            updateConnectorPresent(isAzureConnectorPresent, ConnectorType.CE_AZURE, nextGenConnectorResponses);
-      }
+      isAwsConnectorPresent =
+          updateConnectorPresent(isAwsConnectorPresent, ConnectorType.CE_AWS, nextGenConnectorResponses);
+      isGCPConnectorPresent =
+          updateConnectorPresent(isGCPConnectorPresent, ConnectorType.GCP_CLOUD_COST, nextGenConnectorResponses);
+      isAzureConnectorPresent =
+          updateConnectorPresent(isAzureConnectorPresent, ConnectorType.CE_AZURE, nextGenConnectorResponses);
 
       DefaultViewIdDto defaultViewIds = ceViewService.getDefaultViewIds(accountId);
       if (isAwsConnectorPresent && defaultViewIds.getAwsViewId() == null) {

@@ -6,7 +6,7 @@ import static io.harness.gitsync.sdk.GitSyncGrpcConstants.GitSyncSdkInternalServ
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.GitSyncSdkConfiguration;
-import io.harness.gitsync.gittoharness.FullSyncGrpcService;
+import io.harness.gitsync.fullsync.FullSyncGrpcService;
 import io.harness.gitsync.gittoharness.GitToHarnessGrpcService;
 import io.harness.grpc.server.GrpcInProcessServer;
 import io.harness.grpc.server.GrpcServer;

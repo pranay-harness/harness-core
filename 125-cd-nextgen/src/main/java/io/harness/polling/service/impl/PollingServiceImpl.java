@@ -35,7 +35,7 @@ public class PollingServiceImpl implements PollingService {
 
     PollingDocument savedPollingDoc = pollingRepository.addSubscribersToExistingPollingDoc(
         pollingDocument.getAccountId(), pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(),
-        pollingDocument.getPollingInfo(), pollingDocument.getSignature());
+        pollingDocument.getPollingType(), pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
     // savedPollingDoc will be null if we couldn't find polling doc with the same entries as pollingDocument.
     if (savedPollingDoc == null) {
       savedPollingDoc = pollingRepository.save(pollingDocument);
@@ -48,7 +48,7 @@ public class PollingServiceImpl implements PollingService {
     if (EmptyPredicate.isEmpty(pollingDocument.getAccountId())) {
       throw new InvalidRequestException("AccountId should not be empty");
     }
-    if (EmptyPredicate.isEmpty(pollingDocument.getSignature())) {
+    if (EmptyPredicate.isEmpty(pollingDocument.getSignatures())) {
       throw new InvalidRequestException("Signature should not be empty");
     }
   }
@@ -67,13 +67,14 @@ public class PollingServiceImpl implements PollingService {
   @Override
   public void delete(PollingDocument pollingDocument) {
     PollingDocument savedPollDoc = pollingRepository.deleteDocumentIfOnlySubscriber(pollingDocument.getAccountId(),
-        pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingInfo(),
-        pollingDocument.getSignature());
+        pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
+        pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
 
+    // if savedPollDoc is null that means either it was not the only subscriber or this poll doc doesn't exist in db.
     if (savedPollDoc == null) {
       pollingRepository.deleteSubscribersFromExistingPollingDoc(pollingDocument.getAccountId(),
-          pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingInfo(),
-          pollingDocument.getSignature());
+          pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
+          pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
     } else {
       deletePerpetualTask(savedPollDoc);
     }

@@ -1,6 +1,5 @@
 package io.harness.batch.processing.writer;
 
-import static io.harness.beans.FeatureName.CE_AWS_BILLING_CONNECTOR_DETAIL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
@@ -65,9 +64,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     boolean areAllSyncSuccessful = true;
     areAllSyncSuccessful = areAllSyncSuccessful && syncCurrentGenAwsContainers(accountId);
-    if (featureFlagService.isEnabled(CE_AWS_BILLING_CONNECTOR_DETAIL, accountId)) {
-      areAllSyncSuccessful = areAllSyncSuccessful && syncNextGenContainers(accountId);
-    }
+    areAllSyncSuccessful = areAllSyncSuccessful && syncNextGenContainers(accountId);
     if (!areAllSyncSuccessful) {
       throw new BatchProcessingException("AWS S3 sync failed", null);
     }
@@ -132,8 +129,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
     int page = 0;
     int size = 100;
     do {
-      response = execute(connectorResourceClient.listConnectors(
-          accountId, null, null, page, size, connectorFilterPropertiesDTO, false));
+      response = getConnectors(accountId, page, size, connectorFilterPropertiesDTO);
       if (response != null && isNotEmpty(response.getContent())) {
         nextGenConnectorResponses.addAll(response.getContent());
       }
@@ -141,6 +137,12 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
     } while (response != null && isNotEmpty(response.getContent()));
     log.info("Processing batch size of {} in S3SyncEventWriter (From NG)", nextGenConnectorResponses.size());
     return syncAwsContainers(nextGenConnectorResponses, accountId, true);
+  }
+
+  PageResponse getConnectors(
+      String accountId, int page, int size, ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO) {
+    return execute(
+        connectorResourceClient.listConnectors(accountId, null, null, page, size, connectorFilterPropertiesDTO, false));
   }
 
   public boolean syncAwsContainers(List<ConnectorResponseDTO> connectorResponses, String accountId, boolean isNextGen) {

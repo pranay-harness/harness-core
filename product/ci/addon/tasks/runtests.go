@@ -25,8 +25,8 @@ const (
 	defaultRunTestsRetries int32 = 1
 	mvnCmd                       = "mvn"
 	bazelCmd                     = "bazel"
-	outDir                       = "%s/ti/callgraph/"     // path passed as outDir in the config.ini file
-	cgDir                        = "%s/ti/callgraph/cg/"  // path where callgraph files will be generated
+	outDir                       = "%s/ti/callgraph/"    // path passed as outDir in the config.ini file
+	cgDir                        = "%s/ti/callgraph/cg/" // path where callgraph files will be generated
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
 	javaAgentArg = "-javaagent:/addon/bin/java-agent.jar=%s"

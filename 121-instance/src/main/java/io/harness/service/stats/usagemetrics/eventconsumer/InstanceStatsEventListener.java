@@ -6,14 +6,12 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.instancestatstimeseriesevent.DataPoint;
 import io.harness.eventsframework.schemas.instancestatstimeseriesevent.TimeseriesBatchEventInfo;
 import io.harness.exception.InstanceAggregationException;
 import io.harness.exception.InstanceProcessorException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.models.constants.TimescaleConstants;
 import io.harness.ng.core.event.MessageListener;
@@ -43,7 +41,6 @@ public class InstanceStatsEventListener implements MessageListener {
 
   private TimeScaleDBService timeScaleDBService;
   private InstanceEventAggregator instanceEventAggregator;
-  private FeatureFlagService featureFlagService;
   private DataFetcherUtils utils;
 
   @Override
@@ -75,11 +72,6 @@ public class InstanceStatsEventListener implements MessageListener {
 
                 // Trigger further aggregation of data points
                 try {
-                  // If instance aggregation is not enabled for given account, skip the aggregation and return
-                  if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_ENABLE_REALTIME_INSTANCE_AGGREGATION,
-                          eventInfo.getAccountId())) {
-                    return true;
-                  }
                   instanceEventAggregator.doHourlyAggregation(eventInfo);
                 } catch (InstanceAggregationException exception) {
                   log.error("Instance Aggregation Failure", exception);
