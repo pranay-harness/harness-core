@@ -162,6 +162,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("grpcDelegateServiceClientConfig") private GrpcClientConfig grpcDelegateServiceClientConfig;
   @JsonProperty("grpcOnpremDelegateClientConfig") private GrpcClientConfig grpcOnpremDelegateClientConfig;
   @JsonProperty("grpcClientConfig") private GrpcClientConfig grpcClientConfig;
+  @JsonProperty("grpcClientClassicConfig") private GrpcClientConfig grpcClientClassicConfig;
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();
