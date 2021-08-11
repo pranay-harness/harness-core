@@ -1,5 +1,6 @@
 package io.harness.ng.cdoverview;
 
+import static io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl.INVALID_CHANGE_RATE;
 import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
@@ -403,9 +404,9 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service3")
                                     .serviceId("ServiceId3")
-                                    .totalDeploymentChangeRate(0.0)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(50.0)
-                                    .failureRateChangeRate(0.0)
+                                    .failureRateChangeRate(INVALID_CHANGE_RATE)
                                     .frequency(0.0)
                                     .frequencyChangeRate(0.0)
                                     .lastExecuted(LastWorkloadInfo.builder()
@@ -415,7 +416,7 @@ public class CDDashboardApisTest {
                                                       .deploymentType("kuber1")
                                                       .build())
                                     .deploymentTypeList(deploymentTypeList.stream().collect(Collectors.toSet()))
-                                    .rateSuccess(((-1) / (double) 3) * 100)
+                                    .rateSuccess(-100 / (double) 3)
                                     .percentSuccess((2 / (double) 4) * 100)
                                     .totalDeployments(4)
                                     .lastPipelineExecutionId("ServiceId3")
@@ -425,7 +426,7 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service2")
                                     .serviceId("ServiceId2")
-                                    .totalDeploymentChangeRate(0.0)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(0.0)
                                     .failureRateChangeRate(-100.00)
                                     .frequency(0.0)
@@ -447,7 +448,7 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service1")
                                     .serviceId("ServiceId1")
-                                    .totalDeploymentChangeRate(0.0)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(50.0)
                                     .failureRateChangeRate(100)
                                     .frequencyChangeRate(0.00)
