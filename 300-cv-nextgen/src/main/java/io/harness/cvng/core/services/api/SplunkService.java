@@ -1,14 +1,17 @@
 package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.beans.SplunkSavedSearch;
-import io.harness.cvng.beans.SplunkValidationResponse;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public interface SplunkService extends MonitoringSourceImportStatusCreator, DataSourceConnectivityChecker {
   List<SplunkSavedSearch> getSavedSearches(
-      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String requestGuid);
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String requestGuid);
 
-  SplunkValidationResponse getValidationResponse(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, String query, String requestGuid);
+  List<LinkedHashMap> getSampleData(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String query, String requestGuid);
+
+  List<LinkedHashMap> getLatestHistogram(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String query, String requestGuid);
 }

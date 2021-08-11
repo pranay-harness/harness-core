@@ -1,56 +1,93 @@
 package io.harness.cvng.core.services.impl;
 
-import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.SplunkSavedSearch;
-import io.harness.cvng.beans.SplunkValidationResponse;
+import io.harness.cvng.beans.splunk.SplunkLatestHistogramDataCollectionRequest;
+import io.harness.cvng.beans.splunk.SplunkSampleDataCollectionRequest;
+import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
+import io.harness.cvng.core.beans.OnboardingRequestDTO;
+import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
-import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.serializer.JsonUtils;
 
-import com.google.common.base.Preconditions;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
+import java.lang.reflect.Type;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
 
 public class SplunkServiceImpl implements SplunkService {
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private RequestExecutor requestExecutor;
   @Inject private NextGenService nextGenService;
 
+  @Inject private OnboardingService onboardingService;
+
   @Override
-  public List<SplunkSavedSearch> getSavedSearches(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, String requestGuid) {
-    SplunkConnectorDTO splunkConnectorDTO =
-        retrieveSplunkConnectorDTO(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
-    return requestExecutor
-        .execute(verificationManagerClient.getSavedSearches(
-            accountId, connectorIdentifier, orgIdentifier, projectIdentifier, requestGuid, splunkConnectorDTO))
-        .getResource();
+  public List<SplunkSavedSearch> getSavedSearches(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String requestGuid) {
+    DataCollectionRequest request = SplunkSavedSearchRequest.builder().build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .tracingId(requestGuid)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<SplunkSavedSearch>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 
   @Override
-  public SplunkValidationResponse getValidationResponse(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, String query, String requestGuid) {
-    SplunkConnectorDTO splunkConnectorDTO =
-        retrieveSplunkConnectorDTO(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
-    return requestExecutor
-        .execute(verificationManagerClient.getSamples(
-            accountId, connectorIdentifier, orgIdentifier, projectIdentifier, query, requestGuid, splunkConnectorDTO))
-        .getResource();
+  public List<LinkedHashMap> getSampleData(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String query, String requestGuid) {
+    DataCollectionRequest request = SplunkSampleDataCollectionRequest.builder().query(query).build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .tracingId(requestGuid)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 
-  private SplunkConnectorDTO retrieveSplunkConnectorDTO(
-      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier) {
-    Optional<ConnectorInfoDTO> connectorDTO =
-        nextGenService.get(accountId, connectorIdentifier, orgIdentifier, projectIdentifier);
-    Preconditions.checkState(connectorDTO.isPresent(), "ConnectorDTO should not be null");
-    Preconditions.checkState(connectorDTO.get().getConnectorConfig() instanceof SplunkConnectorDTO,
-        "ConnectorConfig should be of type Splunk");
-    return (SplunkConnectorDTO) connectorDTO.get().getConnectorConfig();
+  @Override
+  public List<LinkedHashMap> getLatestHistogram(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String query, String requestGuid) {
+    DataCollectionRequest request = SplunkLatestHistogramDataCollectionRequest.builder().query(query).build();
+
+    OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                    .dataCollectionRequest(request)
+                                                    .connectorIdentifier(connectorIdentifier)
+                                                    .accountId(accountId)
+                                                    .tracingId(requestGuid)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .build();
+
+    OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+    final Gson gson = new Gson();
+    Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
