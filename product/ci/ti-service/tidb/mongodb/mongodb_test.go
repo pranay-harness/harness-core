@@ -20,7 +20,7 @@ var err error
 
 func TestMain(m *testing.M) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	mongoUri := os.Getenv("TEST_MONGO_URI")
+	mongoUri := os.Getenv("TEST_MONGO_URI_TI")
 	if mongoUri == "" {
 		os.Exit(0)
 	}
@@ -748,7 +748,7 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	// If nothing was found in source branch, it should use the target branch
 	resp, err := db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
-		Class: "pkg.cls20", Limit: 500})
+		Class: "pkg.cls20", Limit: 500, DiffFiles: []types.File{{Name: "src/main/java/pkg/cls20.java", Status: types.FileModified}}})
 	assert.Nil(t, err)
 	setImportance(expNodes, []int{20}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
@@ -758,7 +758,7 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	// If elements are found in the source branch, we should use that
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: getVCSInfo().Branch, TargetBranch: "test",
-		Class: "pkg.cls20", Limit: 500})
+		Class: "pkg.cls20", Limit: 500, DiffFiles: []types.File{{Name: "src/main/java/pkg/cls20.java", Status: types.FileModified}}})
 	assert.Nil(t, err)
 	setImportance(expNodes, []int{20}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
@@ -768,7 +768,7 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	// If Limit is set to x, response should only contain information about x nodes
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: getVCSInfo().Branch, TargetBranch: "test",
-		Class: "pkg.cls20", Limit: 15})
+		Class: "pkg.cls20", Limit: 15, DiffFiles: []types.File{{Name: "src/main/java/pkg/cls20.java", Status: types.FileModified}}})
 	assert.Nil(t, err)
 	setImportance(expNodes, []int{20}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes[:15])
@@ -780,7 +780,10 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	var expNodesFull []types.VisNode
 	var expEdgesFull []types.VisMapping
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
-		SourceBranch: "test", TargetBranch: getVCSInfo().Branch, Limit: 10000})
+		SourceBranch: "test", TargetBranch: getVCSInfo().Branch, Limit: 10000,
+		DiffFiles: []types.File{{Name: "src/main/java/pkg/cls20.java", Status: types.FileModified},
+			{Name: "src/main/java/pkg/cls1.java", Status: types.FileAdded},
+			{Name: "src/main/java/pkg/cls40.java", Status: types.FileDeleted}}})
 	for i := 1; i <= 100; i++ {
 		vn := types.VisNode{Id: i, Package: pkg, Method: method, Class: fmt.Sprintf("cls%d", i), Type: "source"}
 		expNodesFull = append(expNodesFull, vn)
@@ -790,8 +793,10 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 		}
 	}
 	assert.Nil(t, err)
+	setImportance(expNodesFull, []int{20, 1, 40}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodesFull)
 	assert.ElementsMatch(t, resp.Edges, expEdgesFull)
+	setImportance(expNodesFull, []int{20, 1, 40}, false)
 
 	// Full search with a limit
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
@@ -811,7 +816,7 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 
 /*
 	Get the visualisation graph for a fully connected graph with x nodes
-*/
+//*/
 func Test_VgSearch_FullyConnected(t *testing.T) {
 	ctx := context.Background()
 	dropNodes(ctx)
@@ -862,7 +867,8 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 	// Any source node should return the full callgraph
 	resp, err := db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
-		Class: "pkg.cls1", Limit: 500})
+		Class: "pkg.cls1", Limit: 500,
+		DiffFiles: []types.File{{Name: "src/main/java/pkg/cls1.java", Status: types.FileModified}}})
 	assert.Nil(t, err)
 	setImportance(expNodes, []int{1}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
@@ -871,7 +877,8 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
-		Class: fmt.Sprintf("pkg.cls%d", x), Limit: 10000})
+		Class: fmt.Sprintf("pkg.cls%d", x), Limit: 10000,
+		DiffFiles: []types.File{{Name: fmt.Sprintf("src/main/java/pkg/cls%d.java", x), Status: types.FileModified}}})
 	assert.Nil(t, err)
 	setImportance(expNodes, []int{x}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
@@ -883,10 +890,8 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
 		Class: fmt.Sprintf("pkg.cls%d", x), Limit: 20})
 	assert.Nil(t, err)
-	setImportance(expNodes, []int{x}, true)
 	assert.Equal(t, len(resp.Nodes), 20)
 	assert.Equal(t, len(resp.Edges), 20)
-	setImportance(expNodes, []int{x}, false)
 
 	// Graph search with a class that doesn't exist
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
@@ -902,10 +907,10 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 	assert.ElementsMatch(t, resp.Edges, expEdges)
 }
 
-/*
-	Get the visualisation graph for a graph that looks like:
-	1 -> 2  3 -> 4 5 -> 6 ...... 99 -> 100
-*/
+///*
+//	Get the visualisation graph for a graph that looks like:
+//	1 -> 2  3 -> 4 5 -> 6 ...... 99 -> 100
+//*/
 func Test_VgSearch_DisconnectedGraph(t *testing.T) {
 	ctx := context.Background()
 	dropNodes(ctx)
@@ -952,7 +957,8 @@ func Test_VgSearch_DisconnectedGraph(t *testing.T) {
 	// Search on class that exists
 	resp, err := db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
-		Class: "pkg.cls5", Limit: 500})
+		Class: "pkg.cls5", Limit: 500,
+		DiffFiles: []types.File{{Name: "src/main/java/pkg/cls6.java", Status: types.FileModified}}})
 	assert.Nil(t, err)
 	assert.Equal(t, len(resp.Nodes), 2)
 	assert.Equal(t, resp.Nodes[0].Id, 5)
@@ -960,6 +966,8 @@ func Test_VgSearch_DisconnectedGraph(t *testing.T) {
 	assert.Equal(t, len(resp.Edges), 1)
 	assert.Equal(t, resp.Edges[0].From, 5)
 	assert.Equal(t, resp.Edges[0].To, []int{6})
+	assert.Equal(t, resp.Nodes[0].Important, false)
+	assert.Equal(t, resp.Nodes[1].Important, true)
 
 	// Search without a class
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
