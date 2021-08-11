@@ -190,8 +190,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("delegateServiceSecret") private String delegateServiceSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
-  @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
-  private boolean disableDelegateMgmtInManager;
 
   private int applicationPort;
   private boolean sslEnabled;
