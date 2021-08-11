@@ -14,15 +14,12 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
-import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
-import io.harness.exception.UnavailableFeatureException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
@@ -78,7 +75,6 @@ public class SignupServiceImpl implements SignupService {
   private ReCaptchaVerifier reCaptchaVerifier;
   private final TelemetryReporter telemetryReporter;
   private final SignupNotificationHelper signupNotificationHelper;
-  private FeatureFlagService featureFlagService;
   private final SignupVerificationTokenRepository verificationTokenRepository;
   private final ExecutorService executorService;
   private final AccessControlClient accessControlClient;
@@ -95,8 +91,7 @@ public class SignupServiceImpl implements SignupService {
   @Inject
   public SignupServiceImpl(AccountService accountService, UserClient userClient, SignupValidator signupValidator,
       ReCaptchaVerifier reCaptchaVerifier, TelemetryReporter telemetryReporter,
-      SignupNotificationHelper signupNotificationHelper, FeatureFlagService featureFlagService,
-      SignupVerificationTokenRepository verificationTokenRepository,
+      SignupNotificationHelper signupNotificationHelper, SignupVerificationTokenRepository verificationTokenRepository,
       @Named("NGSignupNotification") ExecutorService executorService,
       @Named("PRIVILEGED") AccessControlClient accessControlClient) {
     this.accountService = accountService;
@@ -105,7 +100,6 @@ public class SignupServiceImpl implements SignupService {
     this.reCaptchaVerifier = reCaptchaVerifier;
     this.telemetryReporter = telemetryReporter;
     this.signupNotificationHelper = signupNotificationHelper;
-    this.featureFlagService = featureFlagService;
     this.verificationTokenRepository = verificationTokenRepository;
     this.executorService = executorService;
     this.accessControlClient = accessControlClient;
@@ -116,8 +110,6 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException {
-    validateSignupFeatureFlag();
-
     verifyReCaptcha(dto, captchaToken);
     verifySignupDTO(dto);
 
@@ -145,7 +137,6 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public boolean createSignupInvite(SignupDTO dto, String captchaToken) {
-    validateSignupFeatureFlag();
     verifyReCaptcha(dto, captchaToken);
     verifySignupDTO(dto);
 
@@ -185,7 +176,6 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo completeSignupInvite(String token) {
-    validateSignupFeatureFlag();
     Optional<SignupVerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
 
     if (!verificationTokenOptional.isPresent()) {
@@ -316,8 +306,6 @@ public class SignupServiceImpl implements SignupService {
 
   @Override
   public UserInfo oAuthSignup(OAuthSignupDTO dto) {
-    validateSignupFeatureFlag();
-
     try {
       signupValidator.validateEmail(dto.getEmail());
     } catch (SignupException | UserAlreadyPresentException e) {
@@ -376,8 +364,6 @@ public class SignupServiceImpl implements SignupService {
 
   @Override
   public void resendVerificationEmail(String email) {
-    validateSignupFeatureFlag();
-
     SignupInviteDTO response = getResponse(userClient.getSignupInvite(email));
     if (response == null) {
       throw new InvalidRequestException(String.format("Email [%s] has not been signed up", email));
@@ -527,12 +513,6 @@ public class SignupServiceImpl implements SignupService {
       sendFailedTelemetryEvent(
           oAuthSignupDTO.getEmail(), oAuthSignupDTO.getUtmInfo(), e, account, "OAuth user creation");
       throw e;
-    }
-  }
-
-  private void validateSignupFeatureFlag() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)) {
-      throw new UnavailableFeatureException("NG signup is not available.");
     }
   }
 }
