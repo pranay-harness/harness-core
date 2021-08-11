@@ -38,10 +38,9 @@ type Db interface {
 	WriteDiffFiles(ctx context.Context, accountID, orgId, projectId, pipelineId,
 		buildId, stageId, stepId string, diff types.DiffInfo) error
 
-	// GetDiffFiles gets the list of modified files corresponding to a list of commits
-	// accountID. This is required while merging a partial call graph corresponding to a
-	// push request to remove deleted files from the master call graph.
-	GetDiffFiles(ctx context.Context, accountID string, sha []string) (types.DiffInfo, error)
+	// GetDiffFiles gets the list of modified files corresponding to a build.
+	GetDiffFiles(ctx context.Context, accountID, orgId, projectId, pipelineId,
+		buildId, stageId, stepId string) (types.DiffInfo, error)
 
 	// GetReportsInfo returns steps/stages which have reports to show
 	GetReportsInfo(ctx context.Context, accountID, orgId, projectId, pipelineId,

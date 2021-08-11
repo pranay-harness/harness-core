@@ -43,6 +43,18 @@ const (
 	FileDeleted = "deleted"
 )
 
+func ConvertToFileStatus(s string) FileStatus {
+	switch s {
+	case FileModified:
+		return FileModified
+	case FileAdded:
+		return FileAdded
+	case FileDeleted:
+		return FileDeleted
+	}
+	return FileModified
+}
+
 type Result struct {
 	Status  Status `json:"status"`
 	Message string `json:"message"`
@@ -210,6 +222,7 @@ type GetVgReq struct {
 	TargetBranch string
 	Limit        int64
 	Class        string
+	DiffFiles    []File
 }
 
 type GetVgResp struct {

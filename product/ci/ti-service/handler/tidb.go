@@ -79,6 +79,14 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 			return
 		}
 
+		// Write changed file information
+		err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
+			stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
+		if err != nil {
+			log.Errorw("api: could not write changed file information", "account_id", accountId, "build_id", buildId,
+				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
+		}
+
 		// Write the selected tests back
 		WriteJSON(w, selected, 200)
 		log.Infow("completed test selection", "account_id", accountId,
@@ -137,6 +145,12 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			return
 		}
 
+		resp, err := db.GetDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId)
+		if err != nil {
+			log.Errorw("api: could not get changed files for VG search", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId, zap.Error(err))
+		}
+
 		req := types.GetVgReq{
 			AccountId:    accountId,
 			Repo:         overview.Repo,
@@ -144,7 +158,11 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			TargetBranch: overview.TargetBranch,
 			Class:        class,
 			Limit:        limit,
+			DiffFiles:    resp.Files,
 		}
+
+		log.Infow("api: making call to GetVg", "arg", req, accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+			pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId)
 
 		// Make call to Mongo DB to get the visualization call graph
 		// Set timeout of 15 seconds to avoid choking the DB
