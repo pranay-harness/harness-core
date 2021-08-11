@@ -139,7 +139,7 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
     return builder.build();
   }
 
-  private boolean calculateIsEnd(NodeResumeEvent event, Map<String, ResponseData> response) {
+  public boolean calculateIsEnd(NodeResumeEvent event, Map<String, ResponseData> response) {
     if (event.getExecutionMode() != ExecutionMode.CHILD_CHAIN) {
       return event.getChainDetails().getIsEnd();
     }

@@ -580,75 +580,38 @@ func (tdb *TimeScaleDb) WriteDiffFiles(ctx context.Context, accountID, orgId, pr
 }
 
 // GetDiffFiles returns the modified files in a PR corresponding to a list of commits in a
-// pull request. It returns information about the latest commit corresponding to the commits
-// present in sha.
-// TODO (Vistaar): Get unique files, since we don't have build context when the PR is merged
-// and if multiple jobs are triggered, they will write multiple information.
-func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, accountID string, sha []string) (types.DiffInfo, error) {
-	if len(sha) == 0 {
-		return types.DiffInfo{}, nil
-	}
+// pull request.
+func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, accountID, orgId, projectId, pipelineId,
+	buildId, stageId, stepId string) (types.DiffInfo, error) {
 	res := types.DiffInfo{}
-	files := []types.File{}
-	var shaIn string
-	// Construct 'IN' clause list from string list
-	for idx, s := range sha {
-		shaIn += fmt.Sprintf("'%s'", s)
-		if idx != len(sha)-1 {
-			shaIn = shaIn + ","
-		}
-	}
-	// First query to get the latest commit out of the commits in []sha
+	var sha, path, status zero.String
 	query := fmt.Sprintf(
 		`
-		SELECT sha, MAX(created_at) AS ct
+		SELECT sha, file_path, status
 		FROM %s
-		WHERE account_id = $1 AND sha IN (%s)
-		GROUP BY sha
-		ORDER BY ct desc`, tdb.CoverageTable, shaIn)
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountID)
-	if err != nil {
-		tdb.Log.Errorw("could not get latest commit ID in list", zap.Error(err))
-		return res, err
-	}
-	var lastSha string
-	for rows.Next() {
-		var t time.Time
-		err = rows.Scan(&lastSha, &t)
-		if err != nil {
-			tdb.Log.Errorw("could not get last commit ID", zap.Error(err))
-			return res, err
-		}
-		break
-	}
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, tdb.CoverageTable)
+
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
 	defer rows.Close()
-	if rows.Err() != nil {
-		return res, rows.Err()
-	}
-	query = fmt.Sprintf(
-		`
-		SELECT file_path, status
-		FROM %s
-		WHERE account_id = $1 AND sha = $2`, tdb.CoverageTable)
-	rows, err = tdb.Conn.QueryContext(ctx, query, accountID, lastSha)
+
 	if err != nil {
-		tdb.Log.Errorw("could not query database for diff files", zap.Error(err))
+		tdb.Log.Errorw("could not query database for changed files", zap.Error(err))
 		return res, err
 	}
 	for rows.Next() {
-		f := types.File{}
-		err = rows.Scan(&f.Name, &f.Status)
+		err = rows.Scan(&sha, &path, &status)
 		if err != nil {
-			tdb.Log.Errorw("could not read diff files from db", zap.Error(err))
+			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
 			return res, err
 		}
-		files = append(files, f)
+		if path.ValueOrZero() != "" {
+			res.Sha = sha.ValueOrZero()
+			res.Files = append(res.Files, types.File{Name: path.ValueOrZero(), Status: types.ConvertToFileStatus(status.ValueOrZero())})
+		}
 	}
-	defer rows.Close()
 	if rows.Err() != nil {
 		return res, rows.Err()
 	}
-	res.Sha = lastSha
-	res.Files = files
+
 	return res, nil
 }

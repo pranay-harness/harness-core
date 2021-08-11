@@ -1397,7 +1397,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
 
     envBuildInstanceCounts.forEach(envBuildInstanceCount -> {
-      final String envId = envBuildInstanceCount.getEnvId();
+      final String envId = envBuildInstanceCount.getEnvIdentifier();
       final String envName = envBuildInstanceCount.getEnvName();
       final String buildId = envBuildInstanceCount.getTag();
       final int count = envBuildInstanceCount.getCount();
@@ -1575,6 +1575,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public DeploymentsInfo getDeploymentsByServiceId(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
+    startTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
+    endTimeInMs = getStartTimeOfNextDay(endTimeInMs);
     String query = queryBuilderDeployments(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startTimeInMs, endTimeInMs);
     String queryServiceNameTagId = queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId);

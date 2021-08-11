@@ -52,10 +52,11 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
 
     Map<String, Map<EnvironmentType, Integer>> serviceVsInstanceCountMap = new HashMap<>();
     instances.forEach(instance -> {
-      if (!serviceVsInstanceCountMap.containsKey(instance.getServiceId())) {
-        serviceVsInstanceCountMap.put(instance.getServiceId(), new HashMap<>());
+      if (!serviceVsInstanceCountMap.containsKey(instance.getServiceIdentifier())) {
+        serviceVsInstanceCountMap.put(instance.getServiceIdentifier(), new HashMap<>());
       }
-      incrementValueForGivenEnvType(serviceVsInstanceCountMap.get(instance.getServiceId()), instance.getEnvType(), 1);
+      incrementValueForGivenEnvType(
+          serviceVsInstanceCountMap.get(instance.getServiceIdentifier()), instance.getEnvType(), 1);
     });
 
     return prepareInstanceCountDetailsResponse(serviceVsInstanceCountMap);
@@ -79,7 +80,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
     // used to map a list of instances to build and map it further to environment
     Map<String, Map<String, List<InstanceDTO>>> instanceGroupMap = new HashMap<>();
     instances.forEach(instance -> {
-      String envId = instance.getEnvId();
+      String envId = instance.getEnvIdentifier();
       String buildId = instance.getPrimaryArtifact().getTag();
       if (!instanceGroupMap.containsKey(envId)) {
         instanceGroupMap.put(envId, new HashMap<>());
@@ -111,7 +112,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
     List<EnvBuildInstanceCount> envBuildInstanceCounts = new ArrayList<>();
 
     envBuildInstanceCountAggregationResults.getMappedResults().forEach(envBuildInstanceCount -> {
-      final String envId = envBuildInstanceCount.getEnvId();
+      final String envId = envBuildInstanceCount.getEnvIdentifier();
       final String envName = envBuildInstanceCount.getEnvName();
       final String buildId = envBuildInstanceCount.getTag();
       final Integer count = envBuildInstanceCount.getCount();
@@ -164,7 +165,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
             accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs)
         .getMappedResults()
         .forEach(countByEnvType -> {
-          final String currentServiceId = countByEnvType.getServiceId();
+          final String currentServiceId = countByEnvType.getServiceIdentifier();
           serviceIdToEnvTypeVsInstanceCountMap.putIfAbsent(currentServiceId, new HashMap<>());
           serviceIdToEnvTypeVsInstanceCountMap.get(currentServiceId)
               .put(countByEnvType.getEnvType(), countByEnvType.getCount());

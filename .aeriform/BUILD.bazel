@@ -150,12 +150,6 @@ aeriform("//490-ce-commons:module")
 
 aeriform("//490-ce-commons:tests")
 
-aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cd:module")
-
-aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cv:module")
-
-aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/steps:module")
-
 aeriform("//800-pipeline-service:module")
 
 aeriform("//800-pipeline-service:tests")

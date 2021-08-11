@@ -6,8 +6,12 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 
+/**
+ * Deprecated in CVNG
+ */
 @Value
 @Builder
+@Deprecated
 public class SplunkValidationResponse {
   Histogram histogram;
   SplunkSampleResponse samples;

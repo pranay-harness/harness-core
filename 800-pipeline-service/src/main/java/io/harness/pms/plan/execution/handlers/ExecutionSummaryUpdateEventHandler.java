@@ -1,5 +1,7 @@
 package io.harness.pms.plan.execution.handlers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.engine.utils.OrchestrationUtils;
@@ -22,6 +24,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ExecutionSummaryUpdateEventHandler implements NodeUpdateObserver, AsyncInformObserver {
   @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
   @Inject @Named("PipelineExecutorService") private ExecutorService executorService;

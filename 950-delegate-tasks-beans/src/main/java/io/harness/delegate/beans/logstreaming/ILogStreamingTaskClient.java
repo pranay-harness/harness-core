@@ -1,12 +1,16 @@
 package io.harness.delegate.beans.logstreaming;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.logstreaming.LogLine;
 
 import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
 
+@OwnedBy(HarnessTeam.DEL)
 public interface ILogStreamingTaskClient {
   /**
    * Open new log stream on log streaming service.
@@ -46,4 +50,6 @@ public interface ILogStreamingTaskClient {
    *     delegateCallbackToken
    */
   ITaskProgressClient obtainTaskProgressClient();
+
+  ExecutorService obtainTaskProgressExecutor();
 }

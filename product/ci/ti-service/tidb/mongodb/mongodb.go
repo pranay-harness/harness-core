@@ -344,17 +344,14 @@ func (mdb *MongoDb) bfsWithSource(ctx context.Context, branch, pkg, cls string, 
 		return ret, fmt.Errorf("could not find an entry corresponding to: %s.%s", pkg, cls)
 	}
 
-	imp := make(map[int]bool) // List of 'important' nodes which can be shown by UI
-
 	// Perform the BFS
 	src := []int{}
 	// Initialize the starting nodes
 	for _, s := range all {
 		src = append(src, s.Id)
-		imp[s.Id] = true
 	}
 
-	return mdb.bfsHelper(ctx, src, []int{}, branch, imp, req)
+	return mdb.bfsHelper(ctx, src, []int{}, branch, req)
 
 }
 
@@ -381,12 +378,12 @@ func (mdb *MongoDb) bfsRandom(ctx context.Context, branch string, req types.GetV
 		}
 	}
 
-	return mdb.bfsHelper(ctx, src, add, branch, make(map[int]bool), req)
+	return mdb.bfsHelper(ctx, src, add, branch, req)
 }
 
 // bfsHelper takes in a list of source nodes to start the BFS from and a list of additional nodes which can be used to
 // add in more nodes to the BFS if required. It returns all the nodes and edges for this graph.
-func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branch string, imp map[int]bool, req types.GetVgReq) (types.GetVgResp, error) {
+func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branch string, req types.GetVgReq) (types.GetVgResp, error) {
 	Q := list.New()
 	vis := make(map[int]struct{})
 	ret := types.GetVgResp{}
@@ -443,13 +440,27 @@ func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branc
 	}
 	for _, n := range all {
 		v := types.VisNode{Id: n.Id, Class: n.Class, Package: n.Package, Method: n.Method, Params: n.Params, Type: n.Type, File: n.File}
-		if _, ok := imp[n.Id]; ok {
+		if isImportant(v, req.DiffFiles) {
 			v.Important = true
 		}
 		ret.Nodes = append(ret.Nodes, v)
 	}
 
 	return ret, nil
+}
+
+// TODO: (Vistaar) Improve this to be a map so that we don't have to iterate
+// over all the files each time.
+func isImportant(vn types.VisNode, diffFiles []types.File) bool {
+	for _, f := range diffFiles {
+		n, _ := utils.ParseJavaNode(f.Name)
+		if vn.File != "" && n.File == vn.File { // For resource type
+			return true
+		} else if vn.Package == n.Pkg && vn.Class == n.Class { // For source or test types
+			return true
+		}
+	}
+	return false
 }
 
 func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string, enableReflection bool) (types.SelectTestsResp, error) {
