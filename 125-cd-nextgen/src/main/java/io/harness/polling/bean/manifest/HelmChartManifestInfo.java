@@ -33,7 +33,6 @@ public class HelmChartManifestInfo implements ManifestInfo {
   public ManifestOutcome toManifestOutcome() {
     return HelmChartManifestOutcome.builder()
         .store(store)
-        .type(ManifestType.HelmChart)
         .chartName(ParameterField.<String>builder().value(chartName).build())
         .helmVersion(helmVersion)
         .build();
