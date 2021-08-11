@@ -186,9 +186,8 @@ public class NGTriggerElementMapper {
 
   private void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
     if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
-      if (isNotEmpty(existingEntity.getMetadata().getBuildMetadata().getSignature())) {
-        newEntity.getMetadata().getBuildMetadata().setSignature(
-            existingEntity.getMetadata().getBuildMetadata().getSignature());
+      if (isNotEmpty(existingEntity.getSignature())) {
+        newEntity.setSignature(existingEntity.getSignature());
       }
       if (isNotEmpty(existingEntity.getMetadata().getBuildMetadata().getPollingDocId())) {
         newEntity.getMetadata().getBuildMetadata().setPollingDocId(
@@ -221,6 +220,7 @@ public class NGTriggerElementMapper {
                                                .targetType(TargetType.PIPELINE)
                                                .metadata(toMetadata(config.getSource()))
                                                .enabled(config.getEnabled())
+                                               .signature(generateUuid())
                                                .tags(TagMapper.convertToList(config.getTags()));
     if (config.getSource().getType() == NGTriggerType.SCHEDULED) {
       entityBuilder.nextIterations(new ArrayList<>());
@@ -259,13 +259,9 @@ public class NGTriggerElementMapper {
             .cron(CronMetadata.builder().expression(cronTriggerSpec.getExpression()).build())
             .build();
       case ARTIFACT:
-        return NGTriggerMetadata.builder()
-            .buildMetadata(BuildMetadata.builder().type(ARTIFACT).signature(generateUuid()).build())
-            .build();
+        return NGTriggerMetadata.builder().buildMetadata(BuildMetadata.builder().type(ARTIFACT).build()).build();
       case MANIFEST:
-        return NGTriggerMetadata.builder()
-            .buildMetadata(BuildMetadata.builder().type(MANIFEST).signature(generateUuid()).build())
-            .build();
+        return NGTriggerMetadata.builder().buildMetadata(BuildMetadata.builder().type(MANIFEST).build()).build();
       default:
         throw new InvalidRequestException("Type " + triggerSource.getType().toString() + " is invalid");
     }

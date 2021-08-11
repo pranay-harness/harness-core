@@ -68,7 +68,8 @@ public interface TriggerFilter {
 
   default void addDetails(WebhookEventMappingResponseBuilder webhookEventMappingResponseBuilder,
       FilterRequestData filterRequestData, List<TriggerDetails> detailsList) {
-    if (filterRequestData.getWebhookPayloadData() != null) {
+    if (filterRequestData.getWebhookPayloadData() != null
+        && filterRequestData.getWebhookPayloadData().getParseWebhookResponse() != null) {
       webhookEventMappingResponseBuilder.parseWebhookResponse(
           filterRequestData.getWebhookPayloadData().getParseWebhookResponse());
     }

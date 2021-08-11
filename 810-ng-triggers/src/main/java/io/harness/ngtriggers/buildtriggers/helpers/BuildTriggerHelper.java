@@ -208,7 +208,7 @@ public class BuildTriggerHelper {
       for (int i = 0; i < buildInfo.getVersionsCount(); i++) {
         builder.append(buildInfo.getVersions(i)).append("  ");
       }
-      builder.append("]");
+      builder.append(']');
     }
 
     return builder.toString();

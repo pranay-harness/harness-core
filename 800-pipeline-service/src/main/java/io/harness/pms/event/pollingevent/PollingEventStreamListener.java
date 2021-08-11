@@ -28,8 +28,12 @@ public class PollingEventStreamListener implements MessageListener {
   private TriggerEventHistoryRepository triggerEventHistoryRepository;
 
   @Inject
-  public PollingEventStreamListener(BuildTriggerEventMapper mapper) {
+  public PollingEventStreamListener(BuildTriggerEventMapper mapper,
+      TriggerEventExecutionHelper triggerEventExecutionHelper,
+      TriggerEventHistoryRepository triggerEventHistoryRepository) {
     this.mapper = mapper;
+    this.triggerEventExecutionHelper = triggerEventExecutionHelper;
+    this.triggerEventHistoryRepository = triggerEventHistoryRepository;
   }
 
   @Override

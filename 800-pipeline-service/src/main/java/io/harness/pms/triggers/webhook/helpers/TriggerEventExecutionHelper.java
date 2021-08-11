@@ -154,7 +154,7 @@ public class TriggerEventExecutionHelper {
   }
 
   private void replaceBuildFromEvent(NGTriggerEntity trigger, String version) {
-    trigger.setYaml(trigger.getYaml().replaceAll(MANIFEST_VERSION, version).replaceAll(ARTIFACT_VERSION, version));
+    trigger.setYaml(trigger.getYaml().replace(MANIFEST_VERSION, version).replace(ARTIFACT_VERSION, version));
   }
 
   public TriggerEventResponse triggerEventPipelineExecution(TriggerDetails triggerDetails) {
