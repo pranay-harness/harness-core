@@ -739,6 +739,16 @@ public class DelegateModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("taskProgressExecutor")
+  public ExecutorService taskProgressExecutor() {
+    ExecutorService taskProgressExecutor = Executors.newFixedThreadPool(
+        10, new ThreadFactoryBuilder().setNameFormat("taskProgress-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskProgressExecutor.shutdownNow(); }));
+    return taskProgressExecutor;
+  }
+
+  @Provides
+  @Singleton
   @Named("asyncExecutor")
   public ExecutorService asyncExecutor() {
     ExecutorService asyncExecutor = ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,

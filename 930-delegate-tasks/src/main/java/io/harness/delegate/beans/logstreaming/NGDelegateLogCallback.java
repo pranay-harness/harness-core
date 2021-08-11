@@ -12,6 +12,7 @@ import io.harness.logstreaming.LogLine;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -60,21 +61,38 @@ public class NGDelegateLogCallback implements LogCallback {
     LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
         commandUnitsProgress.getCommandUnitProgressMap();
 
+    boolean change = updateCommandUnitProgressMap(commandExecutionStatus, now, commandUnitProgressMap);
+
+    if (change) {
+      ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
+
+      ExecutorService taskProgressExecutor = iLogStreamingTaskClient.obtainTaskProgressExecutor();
+      taskProgressExecutor.submit(() -> sendTaskProgressUpdate(taskProgressClient));
+    }
+  }
+
+  boolean updateCommandUnitProgressMap(CommandExecutionStatus commandExecutionStatus, Instant now,
+      LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap) {
     CommandUnitProgressBuilder commandUnitProgressBuilder =
         CommandUnitProgress.builder().status(commandExecutionStatus);
+    boolean change = false;
+
     if (!commandUnitProgressMap.containsKey(commandUnitName)) {
       commandUnitProgressBuilder.startTime(now.toEpochMilli());
+      change = true;
     } else {
       CommandUnitProgress commandUnitProgress = commandUnitProgressMap.get(commandUnitName);
       commandUnitProgressBuilder.startTime(commandUnitProgress.getStartTime());
+      if (commandUnitProgress.getStatus() != commandExecutionStatus) {
+        change = true;
+      }
     }
-    if (terminalStatus) {
+    if (CommandExecutionStatus.isTerminalStatus(commandExecutionStatus)) {
       commandUnitProgressBuilder.endTime(now.toEpochMilli());
+      change = true;
     }
     commandUnitProgressMap.put(commandUnitName, commandUnitProgressBuilder.build());
-
-    ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
-    sendTaskProgressUpdate(taskProgressClient);
+    return change;
   }
 
   void sendTaskProgressUpdate(ITaskProgressClient taskProgressClient) {
