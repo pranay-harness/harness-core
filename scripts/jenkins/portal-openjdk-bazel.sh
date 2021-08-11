@@ -44,7 +44,6 @@ mkdir -p dist/delegate-service-app ;
 cd dist/delegate-service-app
 
 cp ${HOME}/.bazel-dirs/bin/270-delegate-service-app/module_deploy.jar delegate-service-capsule.jar
-cp ../../270-delegate-service-app/main/resources/hazelcast.xml .
 cp ../../270-delegate-service-app/keystore.jks .
 cp ../../270-delegate-service-app/key.pem .
 cp ../../270-delegate-service-app/cert.pem .
@@ -55,7 +54,6 @@ cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/delegate-service-app/Dockerfile-delegate-service-app-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/delegate-service-app/Dockerfile-delegate-service-app-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/delegate-service-app/scripts/ .
-mv scripts/start_process_bazel.sh scripts/start_process.sh
 
 cp ../../protocol.info .
 echo ${JDK} > jdk.txt
