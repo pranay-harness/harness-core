@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,6 +12,7 @@ import lombok.Data;
 @Builder
 @OwnedBy(HarnessTeam.CDC)
 public class ManifestPollingResponseInfc implements PollingResponseInfc {
-  private List<String> unpublishedVersions;
-  private List<String> allVersions;
+  private List<String> unpublishedManifests;
+  private Set<String> toBeDeletedKeys;
+  boolean firstCollectionOnDelegate;
 }

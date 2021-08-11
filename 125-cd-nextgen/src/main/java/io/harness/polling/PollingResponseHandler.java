@@ -1,5 +1,6 @@
 package io.harness.polling;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.polling.contracts.Type.GCS_HELM;
 import static io.harness.polling.contracts.Type.HTTP_HELM;
@@ -17,7 +18,6 @@ import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingResponseInfc;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.polling.bean.PolledResponse;
 import io.harness.polling.bean.PolledResponseResult;
 import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.bean.artifact.ArtifactInfo;
@@ -84,13 +84,7 @@ public class PollingResponseHandler {
 
     switch (pollingDocument.getPollingType()) {
       case MANIFEST:
-        PolledResponse polledResponse = pollingDocument.getPolledResponse();
-        newVersions = handleManifestResponse(accountId, pollDocId, polledResponse, pollingResponseInfc);
-        if (isNotEmpty(newVersions)) {
-          PolledResponseResult polledResponseResult =
-              getPolledResponseResultForManifest((ManifestInfo) pollingDocument.getPollingInfo());
-          publishPolledItemToQueue(pollingDocument, newVersions, polledResponseResult);
-        }
+        handleManifestResponse(pollingDocument, pollingResponseInfc);
         break;
       case ARTIFACT:
         // TODO: Handle ArtifactReseponse
@@ -133,30 +127,49 @@ public class PollingResponseHandler {
     }
   }
 
-  public List<String> handleManifestResponse(
-      String accountId, String pollDocId, PolledResponse polledResponse, PollingResponseInfc pollingResponseInfc) {
+  public void handleManifestResponse(PollingDocument pollingDocument, PollingResponseInfc pollingResponseInfc) {
     ManifestPollingResponseInfc response = (ManifestPollingResponseInfc) pollingResponseInfc;
-    ManifestPolledResponse savedResponse = (ManifestPolledResponse) polledResponse;
-    List<String> allVersions = response.getAllVersions();
-    List<String> newVersions = response.getUnpublishedVersions();
+    ManifestPolledResponse savedResponse = (ManifestPolledResponse) pollingDocument.getPolledResponse();
+    String accountId = pollingDocument.getAccountId();
+    String pollDocId = pollingDocument.getUuid();
+    List<String> unpublishedManifests = response.getUnpublishedManifests();
 
     // If polled response is null, it means it was first time collecting output from perpetual task
     // There is no need to publish collected new versions in this case.
     if (savedResponse == null) {
-      pollingService.updatePolledResponse(
-          accountId, pollDocId, ManifestPolledResponse.builder().allPolledKeys(new HashSet<>(newVersions)).build());
-      return null;
+      pollingService.updatePolledResponse(accountId, pollDocId,
+          ManifestPolledResponse.builder().allPolledKeys(new HashSet<>(unpublishedManifests)).build());
+      return;
     }
 
     // find if there are any new versions which are not in db. This is required because of delegate rebalancing,
-    // delegate might have lose context of latest versions.
-    Set<String> savedVersions = savedResponse.getAllPolledKeys();
-    newVersions = newVersions.stream().filter(version -> !savedVersions.contains(version)).collect(Collectors.toList());
+    // delegate can loose context of latest versions.
+    Set<String> savedManifests = savedResponse.getAllPolledKeys();
+    List<String> newVersions = unpublishedManifests.stream()
+                                   .filter(manifest -> !savedManifests.contains(manifest))
+                                   .collect(Collectors.toList());
 
+    if (isNotEmpty(newVersions)) {
+      PolledResponseResult polledResponseResult =
+          getPolledResponseResultForManifest((ManifestInfo) pollingDocument.getPollingInfo());
+      publishPolledItemToQueue(pollingDocument, unpublishedManifests, polledResponseResult);
+    }
+
+    // after publishing event, update database as well.
+    // if delegate rebalancing happened, unpublishedManifests are now the new versions. We might have to delete few keys
+    // from db.
+    Set<String> toBeDeletedKeys = response.getToBeDeletedKeys();
+    Set<String> unpublishedManifestSet = new HashSet<>(unpublishedManifests);
+    if (response.isFirstCollectionOnDelegate() && isEmpty(toBeDeletedKeys)) {
+      toBeDeletedKeys = savedManifests.stream()
+                            .filter(savedManifest -> !unpublishedManifestSet.contains(savedManifest))
+                            .collect(Collectors.toSet());
+    }
+    savedManifests.removeAll(toBeDeletedKeys);
+    savedManifests.addAll(unpublishedManifestSet);
     ManifestPolledResponse manifestPolledResponse =
-        ManifestPolledResponse.builder().allPolledKeys(new HashSet<>(allVersions)).build();
+        ManifestPolledResponse.builder().allPolledKeys(savedManifests).build();
     pollingService.updatePolledResponse(accountId, pollDocId, manifestPolledResponse);
-    return newVersions;
   }
 
   private PolledResponseResult getPolledResponseResultForManifest(ManifestInfo manifestInfo) {
