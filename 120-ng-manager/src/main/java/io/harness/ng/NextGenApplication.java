@@ -50,6 +50,7 @@ import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
+import io.harness.licensing.migrations.LicenseManagerMigrationProvider;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -109,7 +110,7 @@ import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
-import io.harness.service.DeploymentEventListenerRegistrar;
+import io.harness.service.deploymentevent.DeploymentEventListenerRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -349,6 +350,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(NGBeanMigrationProvider.class); }
           { add(InstanceMigrationProvider.class); }
           { add(UserMetadataMigrationProvider.class); }
+          { add(LicenseManagerMigrationProvider.class); }
         })
         .build();
   }

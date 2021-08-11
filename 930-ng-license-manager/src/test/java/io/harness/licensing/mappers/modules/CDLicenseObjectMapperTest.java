@@ -9,6 +9,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
+import io.harness.licensing.beans.modules.types.CDLicenseType;
 import io.harness.licensing.entities.modules.CDModuleLicense;
 import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.rule.Owner;
@@ -20,39 +21,69 @@ import org.mockito.InjectMocks;
 
 public class CDLicenseObjectMapperTest extends CategoryTest {
   @InjectMocks CDLicenseObjectMapper objectMapper;
-  private CDModuleLicense moduleLicense;
-  private CDModuleLicenseDTO moduleLicenseDTO;
+  private CDModuleLicense servicesModuleLicense;
+  private CDModuleLicense serviceInstancesModuleLicense;
+  private CDModuleLicenseDTO servicesModuleLicenseDTO;
+  private CDModuleLicenseDTO serviceInstancesModuleLicenseDTO;
   private static final int DEFAULT_MAX_WORK_LOAD = 5;
-  private static final int DEFAULT_DEPLOYMENT_PER_DAY = 10;
-  private static final long START_TIME = 10;
-  private static final long EXPIRY_TIME = 10;
+  private static final int DEFAULT_SERVICE_INSTANCE_LOAD = 8;
 
   @Before
   public void setUp() {
     initMocks(this);
-    moduleLicense = CDModuleLicense.builder()
-                        .workloads(DEFAULT_MAX_WORK_LOAD)
-                        .deploymentsPerDay(DEFAULT_DEPLOYMENT_PER_DAY)
-                        .build();
-    moduleLicenseDTO = CDModuleLicenseDTO.builder()
-                           .workloads(DEFAULT_MAX_WORK_LOAD)
-                           .deploymentsPerDay(DEFAULT_DEPLOYMENT_PER_DAY)
-                           .build();
+    servicesModuleLicense =
+        CDModuleLicense.builder().cdLicenseType(CDLicenseType.SERVICES).workloads(DEFAULT_MAX_WORK_LOAD).build();
+    servicesModuleLicenseDTO =
+        CDModuleLicenseDTO.builder().workloads(DEFAULT_MAX_WORK_LOAD).cdLicenseType(CDLicenseType.SERVICES).build();
+
+    serviceInstancesModuleLicense = CDModuleLicense.builder()
+                                        .cdLicenseType(CDLicenseType.SERVICE_INSTANCES)
+                                        .serviceInstances(DEFAULT_SERVICE_INSTANCE_LOAD)
+                                        .build();
+    serviceInstancesModuleLicenseDTO = CDModuleLicenseDTO.builder()
+                                           .serviceInstances(DEFAULT_SERVICE_INSTANCE_LOAD)
+                                           .cdLicenseType(CDLicenseType.SERVICE_INSTANCES)
+                                           .build();
   }
 
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
-  public void testToDTO() {
-    ModuleLicenseDTO result = objectMapper.toDTO(moduleLicense);
-    assertThat(result).isEqualTo(moduleLicenseDTO);
+  public void testToServicesDTO() {
+    ModuleLicenseDTO result = objectMapper.toDTO(servicesModuleLicense);
+    assertThat(result).isEqualTo(servicesModuleLicenseDTO);
   }
 
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
-  public void testToEntity() {
-    ModuleLicense result = objectMapper.toEntity(moduleLicenseDTO);
-    assertThat(result).isEqualTo(moduleLicense);
+  public void testToServicesEntity() {
+    ModuleLicense result = objectMapper.toEntity(servicesModuleLicenseDTO);
+    assertThat(result).isEqualTo(servicesModuleLicense);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testToServiceInstancesDTO() {
+    ModuleLicenseDTO result = objectMapper.toDTO(serviceInstancesModuleLicense);
+    assertThat(result).isEqualTo(serviceInstancesModuleLicenseDTO);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testToServiceInstancesEntity() {
+    ModuleLicense result = objectMapper.toEntity(serviceInstancesModuleLicenseDTO);
+    assertThat(result).isEqualTo(serviceInstancesModuleLicense);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testEntityToDTOWithNullCDLicenseType() {
+    CDModuleLicense nullTypeLicense = CDModuleLicense.builder().workloads(DEFAULT_MAX_WORK_LOAD).build();
+    ModuleLicenseDTO result = objectMapper.toDTO(nullTypeLicense);
+    assertThat(result).isEqualTo(servicesModuleLicenseDTO);
   }
 }

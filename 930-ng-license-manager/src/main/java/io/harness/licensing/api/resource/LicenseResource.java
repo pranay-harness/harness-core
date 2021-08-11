@@ -2,10 +2,12 @@ package io.harness.licensing.api.resource;
 
 import static io.harness.licensing.accesscontrol.LicenseAccessControlPermissions.VIEW_LICENSE_PERMISSION;
 
+import io.harness.ModuleType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
-import io.harness.licensing.ModuleType;
+import io.harness.exception.IllegalArgumentException;
+import io.harness.exception.WingsException;
 import io.harness.licensing.accesscontrol.ResourceTypes;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
@@ -65,6 +67,7 @@ public class LicenseResource {
   getModuleLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+    validateModuleType(moduleType);
     return ResponseDTO.newResponse(licenseService.getModuleLicense(accountIdentifier, moduleType));
   }
 
@@ -77,6 +80,7 @@ public class LicenseResource {
   getModuleLicenses(
       @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+    validateModuleType(moduleType);
     return ResponseDTO.newResponse(licenseService.getModuleLicenses(accountIdentifier, moduleType));
   }
 
@@ -89,6 +93,8 @@ public class LicenseResource {
   getLicensesWithSummary(
       @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
+    validateModuleType(moduleType);
+
     List<ModuleLicenseDTO> moduleLicenses = licenseService.getModuleLicenses(accountIdentifier, moduleType);
     if (moduleLicenses.isEmpty()) {
       return ResponseDTO.newResponse(null);
@@ -155,5 +161,11 @@ public class LicenseResource {
   public ResponseDTO<Boolean> softDelete(@PathParam("accountId") String accountId) {
     licenseService.softDelete(accountId);
     return ResponseDTO.newResponse(Boolean.TRUE);
+  }
+
+  private void validateModuleType(ModuleType moduleType) {
+    if (moduleType.isInternal()) {
+      throw new IllegalArgumentException("ModuleType is invalid", WingsException.USER);
+    }
   }
 }

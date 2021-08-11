@@ -2,7 +2,7 @@ package io.harness.ngtriggers.eventmapper.filters.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
@@ -13,7 +13,7 @@ import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
 
@@ -58,7 +58,7 @@ public class JexlConditionsTriggerFilter implements TriggerFilter {
     if (isEmpty(matchedTriggers)) {
       log.info("No trigger matched payload after jexl condition evaluation:");
       mappingResponseBuilder.failedToFindTrigger(true)
-          .webhookEventResponse(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS,
+          .webhookEventResponse(TriggerEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_JEXL_CONDITIONS,
               filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
               "No Trigger matched jexl conditions for payload event for Project: " + filterRequestData.getAccountId(),
               null))

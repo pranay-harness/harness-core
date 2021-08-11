@@ -25,6 +25,9 @@ public class TerraformProvisionStepYamlBuilder extends InfraProvisionStepYamlBui
       String appId, Map<String, Object> inputProperties) {
     if (ENCRYPTED_PROPERTIES.contains(name)) {
       convertPropertyIdsToNames(name, appId, objectValue);
+    } else if (TerraformProvisionStateKeys.provisionerId.equals(name)) {
+      objectValue = convertProvisionerIdToName(appId, objectValue);
+      name = PROVISIONER_NAME;
     }
 
     outputProperties.put(name, objectValue);
@@ -35,6 +38,9 @@ public class TerraformProvisionStepYamlBuilder extends InfraProvisionStepYamlBui
       String appId, String accountId, Map<String, Object> inputProperties) {
     if (ENCRYPTED_PROPERTIES.contains(name)) {
       convertPropertyNamesToIds(name, accountId, objectValue);
+    } else if (PROVISIONER_NAME.equals(name)) {
+      objectValue = convertProvisionerNameToId(appId, objectValue);
+      name = TerraformProvisionStateKeys.provisionerId;
     }
 
     outputProperties.put(name, objectValue);

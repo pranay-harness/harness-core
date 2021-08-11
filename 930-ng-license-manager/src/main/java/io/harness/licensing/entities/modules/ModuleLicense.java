@@ -1,5 +1,6 @@
 package io.harness.licensing.entities.modules;
 
+import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -8,7 +9,6 @@ import io.harness.data.validator.Trimmed;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
-import io.harness.licensing.ModuleType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;

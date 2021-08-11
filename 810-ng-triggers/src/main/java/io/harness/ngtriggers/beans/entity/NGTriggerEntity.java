@@ -82,7 +82,7 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
             CompoundMongoIndex.builder()
                 .name("accId_signature_index")
                 .field(NGTriggerEntityKeys.accountId)
-                .field("metadata.buildMetadata.signature")
+                .field(NGTriggerEntityKeys.signature)
                 .build())
         .build();
   }

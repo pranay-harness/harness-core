@@ -6,6 +6,7 @@ import static io.harness.network.SafeHttpCall.executeWithExceptions;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
@@ -17,15 +18,12 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.service.impl.PollingDelegateResponse;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.inject.Inject;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -130,27 +128,30 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
       return;
     }
 
-    List<String> unpublishedKeys = new ArrayList<>(manifestsCollectionCache.getUnpublishedManifestKeys());
-    if (isEmpty(unpublishedKeys)) {
+    List<String> unpublishedManifests = manifestsCollectionCache.getUnpublishedManifests();
+    Set<String> toBeDeletedKeys = manifestsCollectionCache.getToBeDeletedManifestKeys();
+    if (isEmpty(unpublishedManifests) && isEmpty(toBeDeletedKeys)) {
       return;
     }
-
-    // TODO: check if need to do reverse sort as doing reverse sort can be incorrect in case of strings.
-    unpublishedKeys.sort(Collections.reverseOrder());
 
     PollingDelegateResponse response =
         PollingDelegateResponse.builder()
             .accountId(taskParams.getAccountId())
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .pollingDocId(taskParams.getPollingDocId())
-            .pollingResponseInfc(ManifestPollingResponseInfc.builder()
-                                     .unpublishedVersions(unpublishedKeys)
-                                     .allVersions(new ArrayList<>(manifestsCollectionCache.getAllManifestKeys()))
-                                     .build())
+            .pollingResponseInfc(
+                ManifestPollingResponseInfc.builder()
+                    .unpublishedManifests(unpublishedManifests)
+                    .toBeDeletedKeys(toBeDeletedKeys)
+                    .firstCollectionOnDelegate(
+                        manifestsCollectionCache.getFirstCollectionOnDelegate().isFirstCollectionOnDelegate())
+                    .build())
             .build();
 
     if (publishToManger(taskId, response)) {
-      manifestsCollectionCache.clearUnpublishedVersions(unpublishedKeys);
+      manifestsCollectionCache.setFirstCollectionOnDelegateFalse();
+      manifestsCollectionCache.clearUnpublishedVersions(unpublishedManifests);
+      manifestsCollectionCache.removeDeletedArtifactKeys(toBeDeletedKeys);
     }
   }
 }

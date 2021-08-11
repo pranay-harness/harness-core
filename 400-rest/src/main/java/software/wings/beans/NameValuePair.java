@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.expression.Expression;
 import io.harness.yaml.BaseYaml;
+import io.harness.yaml.YamlKeepEmptyAsIs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,7 @@ public class NameValuePair {
   /*
     Value can only be of type String or in encrypted format
   */
-  @NotNull @Expression(ALLOW_SECRETS) private String value;
+  @YamlKeepEmptyAsIs @NotNull @Expression(ALLOW_SECRETS) private String value;
 
   /*
    Could be TEXT / ENCRYPTED_TEXT

@@ -95,8 +95,6 @@ import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
-import io.harness.polling.contracts.PollingItem;
-import io.harness.polling.contracts.service.PollingDocument;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -206,8 +204,5 @@ public class NGKryoRegistrar implements KryoRegistrar {
 
     kryo.register(K8sExecutionPassThroughData.class, 12546);
     kryo.register(DeploymentInfoOutcome.class, 12547);
-
-    kryo.register(PollingDocument.class, 12548);
-    kryo.register(PollingItem.class, 12549);
   }
 }

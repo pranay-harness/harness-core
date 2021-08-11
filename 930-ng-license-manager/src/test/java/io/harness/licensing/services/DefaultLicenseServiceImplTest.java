@@ -1,10 +1,10 @@
 package io.harness.licensing.services;
 
+import static io.harness.ModuleType.CD;
 import static io.harness.licensing.LicenseTestConstant.ACCOUNT_IDENTIFIER;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE_DTO;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_MODULE_TYPE;
-import static io.harness.licensing.ModuleType.CD;
 import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_EXTEND_TRIAL_OPERATION;
 import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_START_TRIAL_OPERATION;
 import static io.harness.rule.OwnerRule.ZHUO;
@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
@@ -25,7 +26,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
-import io.harness.licensing.ModuleType;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;

@@ -6,6 +6,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
 import io.harness.delegate.beans.ScopingRuleDetailsNg;
+import io.harness.delegate.filter.DelegateProfileFilterPropertiesDTO;
 
 import java.util.List;
 
@@ -13,6 +14,10 @@ import java.util.List;
 public interface DelegateProfileManagerNgService {
   PageResponse<DelegateProfileDetailsNg> list(
       String accountId, PageRequest<DelegateProfileDetailsNg> pageRequest, String orgId, String projectId);
+
+  PageResponse<DelegateProfileDetailsNg> listV2(String accountId, String orgId, String projectId,
+      String filterIdentifier, String searchTerm, DelegateProfileFilterPropertiesDTO filterProperties,
+      PageRequest<DelegateProfileDetailsNg> pageRequest);
 
   DelegateProfileDetailsNg get(String accountId, String delegateProfileId);
 

@@ -7,21 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.artifact.ArtifactStreamType.ACR;
-import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
-import static software.wings.beans.artifact.ArtifactStreamType.AMI;
-import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
-import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCS;
-import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
-import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
-import static software.wings.beans.artifact.ArtifactStreamType.SMB;
-
-import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
@@ -58,7 +44,6 @@ import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -85,10 +70,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
   // Default timeout of 1 minutes.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
-
-  static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
-      asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), AMAZON_S3.name(), GCS.name(),
-          SMB.name(), SFTP.name(), AZURE_ARTIFACTS.name(), AZURE_MACHINE_IMAGE.name(), CUSTOM.name()));
 
   @Override
   public Artifact collectArtifact(String artifactStreamId, BuildDetails buildDetails) {

@@ -562,7 +562,6 @@ public class NextGenModule extends AbstractModule {
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(TokenService.class).to(TokenServiceImpl.class);
     bind(FeedbackService.class).to(FeedbackServiceImpl.class);
-
     bind(PollingService.class).to(PollingServiceImpl.class);
     bind(PollingPerpetualTaskService.class).to(PollingPerpetualTaskServiceImpl.class);
 

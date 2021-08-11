@@ -8,7 +8,9 @@ import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.polling.bean.PollingDocument;
+import io.harness.polling.bean.PollingDocument.PollingDocumentBuilder;
 import io.harness.polling.bean.PollingInfo;
+import io.harness.polling.bean.PollingType;
 import io.harness.polling.bean.manifest.HelmChartManifestInfo;
 import io.harness.polling.contracts.GcsHelmPayload;
 import io.harness.polling.contracts.HelmVersion;
@@ -24,21 +26,24 @@ import java.util.Collections;
 public class PollingRequestToPollingDocumentMapper {
   public PollingDocument toPollingDocument(PollingItem pollingItem) {
     Qualifier qualifier = pollingItem.getQualifier();
-    PollingInfo pollingInfo;
+    PollingInfo pollingInfo = null;
+    PollingDocumentBuilder pollingDocumentBuilder = PollingDocument.builder();
     switch (pollingItem.getCategory()) {
       case MANIFEST:
+        pollingDocumentBuilder.pollingType(PollingType.MANIFEST);
         pollingInfo = getManifestPollingInfo(pollingItem.getPayloadType(), pollingItem.getConnectorRef());
         break;
       case ARTIFACT:
+        pollingDocumentBuilder.pollingType(PollingType.ARTIFACT);
+        break;
       default:
         throw new InvalidRequestException("Unsupported category type " + pollingItem.getCategory());
     }
 
-    return PollingDocument.builder()
-        .accountId(qualifier.getAccountId())
+    return pollingDocumentBuilder.accountId(qualifier.getAccountId())
         .orgIdentifier(qualifier.getOrganizationId())
         .projectIdentifier(qualifier.getProjectId())
-        .signature(Collections.singletonList(qualifier.getSignature()))
+        .signatures(Collections.singletonList(qualifier.getSignature()))
         .pollingInfo(pollingInfo)
         .failedAttempts(0)
         .build();

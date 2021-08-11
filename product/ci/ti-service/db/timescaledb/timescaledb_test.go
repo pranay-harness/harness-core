@@ -441,3 +441,49 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, repo, source, target, arg, 30, true)
 	assert.Nil(t, err, nil)
 }
+
+func Test_GetDiffFiles(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	table := "coverage"
+	account := "account"
+	org := "org"
+	project := "project"
+	pipeline := "pipeline"
+	build := "build"
+	stage := "stage"
+	step := "step"
+	sha := "sha"
+	path1 := "path/to/1.java"
+	path2 := "path/to/2.java"
+	path3 := "path/to/3.java"
+
+	log := zap.NewExample().Sugar()
+	db, mock, err := db.NewMockDB(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	query := fmt.Sprintf(
+		`
+		SELECT sha, file_path, status
+		FROM %s
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, table)
+	query = regexp.QuoteMeta(query)
+	col := []string{"sha", "file_path", "status"}
+	rows := sqlmock.NewRows(col).
+		AddRow(sha, path1, types.FileModified).
+		AddRow(sha, path2, types.FileAdded).
+		AddRow(sha, path3, types.FileDeleted)
+	mock.ExpectQuery(query).WithArgs(account, org, project, pipeline, build, stage, step).WillReturnRows(rows)
+
+	tdb := &TimeScaleDb{Conn: db, Log: log, CoverageTable: table}
+	resp, err := tdb.GetDiffFiles(ctx, account, org, project, pipeline, build, step, stage)
+	assert.Nil(t, err, nil)
+	assert.Equal(t, resp.Sha, sha)
+	assert.Equal(t, len(resp.Files), 3)
+	assert.Contains(t, resp.Files, types.File{Name: path1, Status: types.FileModified})
+	assert.Contains(t, resp.Files, types.File{Name: path2, Status: types.FileAdded})
+	assert.Contains(t, resp.Files, types.File{Name: path3, Status: types.FileDeleted})
+}

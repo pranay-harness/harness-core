@@ -49,8 +49,8 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
         .accountIdentifier(ACCOUNT_IDENTIFIER)
         .orgIdentifier(ORG_IDENTIFIER)
         .projectIdentifier(PROJECT_IDENTIFIER)
-        .serviceId(SERVICE_IDENTIFIER)
-        .envId(envId)
+        .serviceIdentifier(SERVICE_IDENTIFIER)
+        .envIdentifier(envId)
         .envName("envName")
         .envType(envType)
         .infrastructureKind(KUBERNETES_DIRECT)
@@ -113,7 +113,7 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
             ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
     assertThat(uniqueEnvIdBuildIdCombinationsWithInstanceCounts.size()).isGreaterThan(0);
     uniqueEnvIdBuildIdCombinationsWithInstanceCounts.forEach(uniqueEnvIdBuildIdCombinationsWithInstanceCount -> {
-      final String envId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getEnvId();
+      final String envId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getEnvIdentifier();
       final String buildId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getTag();
       final int count = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getCount();
       final int expectedCount = mock.getOrDefault(envId, new HashMap<>()).getOrDefault(buildId, 0);

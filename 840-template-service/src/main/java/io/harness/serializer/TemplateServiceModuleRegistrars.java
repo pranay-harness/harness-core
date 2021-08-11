@@ -3,6 +3,7 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
@@ -20,6 +21,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.kryoRegistrars)
+          .addAll(FiltersRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -27,11 +29,12 @@ public class TemplateServiceModuleRegistrars {
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .addAll(FiltersRegistrars.morphiaRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder().build();
 
   public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder().addAll(FiltersRegistrars.springConverters).build();
 }

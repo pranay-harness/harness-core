@@ -7,6 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.InputSetReference;
 import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.FileChange;
+import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
@@ -17,6 +19,7 @@ import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -104,6 +107,11 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
   @Override
   public String getBranchKey() {
     return InputSetEntityKeys.branch;
+  }
+
+  @Override
+  public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
+    return null;
   }
 
   @Override

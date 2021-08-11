@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_SERVICE;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -90,7 +90,7 @@ import org.springframework.util.Assert;
 
 @ValidateOnExecution
 @Singleton
-@TargetModule(_420_DELEGATE_SERVICE)
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDC)
 @Slf4j
 public class BuildSourceServiceImpl implements BuildSourceService {

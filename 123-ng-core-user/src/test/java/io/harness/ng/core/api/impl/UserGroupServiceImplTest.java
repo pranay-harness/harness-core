@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ARVIND;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -17,6 +18,7 @@ import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
@@ -111,7 +113,7 @@ public class UserGroupServiceImplTest extends CategoryTest {
     users.add("u1");
     assertThatThrownBy(() -> userGroupService.create(userGroupDTO))
         .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessageContaining("Duplicate users provided");
+        .hasMessageContaining("Duplicate users");
   }
 
   @Test
@@ -174,7 +176,11 @@ public class UserGroupServiceImplTest extends CategoryTest {
     assertThat(users.size()).isEqualTo(2);
 
     userInfos.add(UserInfo.builder().uuid("u2").build());
-    userGroupService.addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupIdentifier, "u2");
-    assertThat(users.size()).isEqualTo(2);
+    try {
+      userGroupService.addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupIdentifier, "u2");
+      fail("Expected failure as user already present.");
+    } catch (InvalidRequestException exception) {
+      // all good here
+    }
   }
 }

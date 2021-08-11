@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.beans.dto.eventmapping;
 
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WebhookEventMappingResponse {
-  WebhookEventResponse webhookEventResponse;
+  TriggerEventResponse webhookEventResponse;
   ParseWebhookResponse parseWebhookResponse;
   @Default boolean failedToFindTrigger = true;
   boolean isCustomTrigger;
