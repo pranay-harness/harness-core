@@ -25,8 +25,6 @@ import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -109,16 +107,14 @@ public abstract class DataCollectionTask
   public abstract Instant getNextValidAfter(Instant currentTime);
 
   public enum Type { SERVICE_GUARD, DEPLOYMENT }
-
   public Duration totalTime(Instant currentTime) {
-    return Duration.between(
-        Collections.max(Arrays.asList(validAfter, Instant.ofEpochMilli(getCreatedAt()))), currentTime);
+    return Duration.between(validAfter, currentTime);
   }
   public Duration runningTime(Instant currentTime) {
     return Duration.between(lastPickedAt, currentTime);
   }
 
   public Duration waitTime() {
-    return Duration.between(Instant.ofEpochMilli(getCreatedAt()), lastPickedAt);
+    return Duration.between(validAfter, lastPickedAt);
   }
 }
