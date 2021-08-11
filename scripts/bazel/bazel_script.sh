@@ -11,7 +11,7 @@ if [ "${PLATFORM}" == "jenkins" ]; then
   fi
 fi
 
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --announce_rc"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --show_timestamps --announce_rc"
 
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
