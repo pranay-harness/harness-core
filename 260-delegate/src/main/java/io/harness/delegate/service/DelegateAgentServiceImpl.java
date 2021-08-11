@@ -326,6 +326,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
   @Inject @Named("grpcServiceExecutor") private ExecutorService grpcServiceExecutor;
+  @Inject @Named("taskProgressExecutor") private ExecutorService taskProgressExecutor;
   @Inject private ExecutorService syncExecutor;
 
   @Inject private SignalService signalService;
@@ -2078,6 +2079,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
             .baseLogKey(logBaseKey)
             .logService(delegateLogService)
+            .taskProgressExecutor(taskProgressExecutor)
             .appId(appId)
             .activityId(activityId);
 

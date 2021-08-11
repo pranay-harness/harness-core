@@ -24,6 +24,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import java.io.OutputStream;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -35,6 +36,7 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   private final DelegateLogService logService;
   private final LogStreamingClient logStreamingClient;
   private final LogStreamingSanitizer logStreamingSanitizer;
+  private final ExecutorService taskProgressExecutor;
   private final String token;
   private final String accountId;
   private final String baseLogKey;
@@ -125,5 +127,10 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   @Override
   public ITaskProgressClient obtainTaskProgressClient() {
     return taskProgressClient;
+  }
+
+  @Override
+  public ExecutorService obtainTaskProgressExecutor() {
+    return taskProgressExecutor;
   }
 }
