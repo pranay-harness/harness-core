@@ -53,7 +53,7 @@ public class TriggerEventResponseHelper {
             .finalStatus(status)
             .triggerIdentifier(ngTriggerEntity == null ? null : ngTriggerEntity.getIdentifier())
             .message(message)
-            .ngTriggerType(ngTriggerEntity.getType())
+            .ngTriggerType(ngTriggerEntity == null ? null : ngTriggerEntity.getType())
             .targetExecutionSummary(targetExecutionSummary)
             .build();
     if (pipelineExecutionResponseDTO == null) {
