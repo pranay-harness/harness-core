@@ -11,11 +11,11 @@ import io.harness.pms.yaml.ParameterField;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.TypeAlias;
 
-@Data
+@Value
 @Builder
 @OwnedBy(CDP)
 @JsonTypeName(ManifestType.HelmChart)

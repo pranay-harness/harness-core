@@ -60,7 +60,6 @@ public class ManifestOutcomeValidatorTest extends CategoryTest {
                        .branch(ParameterField.createValueField("master"))
                        .folderPath(ParameterField.createValueField("test"))
                        .build())
-            .type(ManifestType.HelmChart)
             .build();
 
     assertThatCode(() -> ManifestOutcomeValidator.validate(helmChartManifest, false)).doesNotThrowAnyException();
@@ -77,7 +76,6 @@ public class ManifestOutcomeValidatorTest extends CategoryTest {
                        .bucketName(ParameterField.createValueField("bucket"))
                        .build())
             .chartName(ParameterField.createExpressionField(true, "<+expression>", null, true))
-            .type(ManifestType.HelmChart)
             .build();
 
     assertThatCode(() -> ManifestOutcomeValidator.validate(helmChartManifest, true)).doesNotThrowAnyException();
@@ -94,7 +92,6 @@ public class ManifestOutcomeValidatorTest extends CategoryTest {
                        .bucketName(ParameterField.createValueField("bucket"))
                        .build())
             .chartName(ParameterField.createExpressionField(true, "<+expression>", null, true))
-            .type(ManifestType.HelmChart)
             .build();
 
     assertInvalidParamsArgsMessage(
@@ -112,17 +109,13 @@ public class ManifestOutcomeValidatorTest extends CategoryTest {
                          .branch(ParameterField.createValueField("master"))
                          .folderPath(ParameterField.createValueField("test"))
                          .build();
-    HelmChartManifestOutcome helmChartManifestChartName = HelmChartManifestOutcome.builder()
-                                                              .store(store)
-                                                              .chartName(ParameterField.createValueField("chartName"))
-                                                              .type(ManifestType.HelmChart)
-                                                              .build();
+    HelmChartManifestOutcome helmChartManifestChartName =
+        HelmChartManifestOutcome.builder().store(store).chartName(ParameterField.createValueField("chartName")).build();
 
     HelmChartManifestOutcome helmChartManifestChartVersion =
         HelmChartManifestOutcome.builder()
             .store(store)
             .chartVersion(ParameterField.createValueField("chartVersion"))
-            .type(ManifestType.HelmChart)
             .build();
 
     assertInvalidParamsArgsMessage(()
