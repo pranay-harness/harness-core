@@ -980,7 +980,6 @@ public class WingsApplication extends Application<MainConfiguration> {
    * @param delegateServiceImpl
    */
   private void registerDelegateServiceObervers(Injector injector, DelegateServiceImpl delegateServiceImpl) {
-    KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
     DelegateServiceImpl delegateService = (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
     delegateService.getSubject().register(kubernetesClusterHandler);
     delegateService.getDelegateTaskStatusObserverSubject().register(
@@ -1025,6 +1024,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     settingsService.getSubject().register(clusterRecordHandler);
     settingsService.getArtifactStreamSubject().register(
         injector.getInstance(Key.get(ArtifactStreamSettingAttributePTaskManager.class)));
+
+    KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
 
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) injector.getInstance(Key.get(InfrastructureDefinitionService.class));
