@@ -30,6 +30,7 @@ public class AccessControlMongoBackgroundMigrationDetails implements MigrationDe
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
         .add(Pair.of(1, RoleAssignmentScopeAdditionMigration.class))
         .add(Pair.of(2, ScopeMigration.class))
+        .add(Pair.of(3, RoleAssignmentScopeAdditionMigration.class))
         .build();
   }
 }
