@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -38,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import lombok.NonNull;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
@@ -62,9 +65,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
           monitoredServiceDTO.getSources().getHealthSources(), getMonitoredServiceEnableStatus());
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      serviceDependencyService.createOrDelete(accountId, monitoredServiceDTO.getOrgIdentifier(),
-          monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getEnvironmentRef(),
-          monitoredServiceDTO.getDependencies(), monitoredServiceDTO.getServiceRef());
+      serviceDependencyService.updateDependencies(accountId, monitoredServiceDTO.getOrgIdentifier(),
+          monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getServiceRef(),
+          monitoredServiceDTO.getEnvironmentRef(), monitoredServiceDTO.getDependencies());
     }
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
     return get(accountId, monitoredServiceDTO.getOrgIdentifier(), monitoredServiceDTO.getProjectIdentifier(),
@@ -115,9 +118,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       updateOperations.set(MonitoredServiceKeys.healthSourceIdentifiers, updatedIdentifiers);
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      serviceDependencyService.createOrDelete(monitoredService.getAccountId(), monitoredService.getOrgIdentifier(),
-          monitoredService.getProjectIdentifier(), monitoredService.getEnvironmentIdentifier(),
-          monitoredServiceDTO.getDependencies(), monitoredService.getServiceIdentifier());
+      serviceDependencyService.updateDependencies(monitoredService.getAccountId(), monitoredService.getOrgIdentifier(),
+          monitoredService.getProjectIdentifier(), monitoredService.getServiceIdentifier(),
+          monitoredService.getEnvironmentIdentifier(), monitoredServiceDTO.getDependencies());
     }
     hPersistence.update(monitoredService, updateOperations);
   }
@@ -164,7 +167,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     healthSourceService.delete(accountId, orgIdentifier, projectIdentifier, monitoredService.getIdentifier(),
         monitoredService.getHealthSourceIdentifiers());
     serviceDependencyService.deleteDependenciesForService(accountId, orgIdentifier, projectIdentifier,
-        monitoredService.getEnvironmentIdentifier(), monitoredService.getServiceIdentifier());
+        monitoredService.getServiceIdentifier(), monitoredService.getEnvironmentIdentifier());
     return hPersistence.delete(monitoredService);
   }
 
@@ -197,7 +200,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
             .dependencies(
                 serviceDependencyService.getDependentServicesForMonitoredService(monitoredServiceEntity.getAccountId(),
                     monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
-                    monitoredServiceEntity.getEnvironmentIdentifier(), monitoredServiceEntity.getServiceIdentifier()))
+                    monitoredServiceEntity.getServiceIdentifier(), monitoredServiceEntity.getEnvironmentIdentifier()))
             .build();
     return MonitoredServiceResponse.builder()
         .monitoredService(monitoredServiceDTO)
@@ -310,6 +313,23 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                             .collect(Collectors.toList()));
     }
     hPersistence.save(monitoredServiceEntity);
+  }
+
+  @Override
+  public List<MonitoredService> list(@NonNull ProjectParams projectParams, @Nullable String serviceIdentifier,
+      @Nullable String environmentIdentifier) {
+    Query<MonitoredService> query =
+        hPersistence.createQuery(MonitoredService.class)
+            .filter(MonitoredServiceKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(MonitoredServiceKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(MonitoredServiceKeys.projectIdentifier, projectParams.getProjectIdentifier());
+    if (environmentIdentifier != null) {
+      query.filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier);
+    }
+    if (serviceIdentifier != null) {
+      query.filter(MonitoredServiceKeys.serviceIdentifier, serviceIdentifier);
+    }
+    return query.asList();
   }
 
   @Override

@@ -11,6 +11,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
@@ -433,9 +434,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
     Preconditions.checkNotNull(cvConfig, "CVConfig can not be null");
     double risk = getOverallRisk(analysis);
+    long anomalousMetricCount = analysis.getTxnMetricAnalysisData()
+                                    .values()
+                                    .stream()
+                                    .flatMap(x -> x.values().stream().filter(y -> y.getRisk() == Risk.HIGH))
+                                    .count();
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
         cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
-        cvConfig.getCategory(), startTime, risk);
+        cvConfig.getCategory(), startTime, risk, anomalousMetricCount, 0);
     timeSeriesRecordService.updateRiskScores(cvConfigId, riskSummary);
   }
 

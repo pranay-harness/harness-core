@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
@@ -232,7 +233,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     Set<ServiceRef> serviceRefs = serviceDependencyService.getDependentServicesForMonitoredService(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier);
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier);
     assertThat(serviceRefs).isEqualTo(monitoredServiceDTO.getDependencies());
   }
 
@@ -636,6 +637,34 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(environmentResponses.size()).isEqualTo(1);
     assertThat(environmentResponses.get(0).getEnvironment().getName()).isEqualTo("environmentName");
     assertThat(environmentResponses.get(0).getEnvironment().getIdentifier()).isEqualTo(environmentIdentifier);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testListMonitoredServices() {
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceService.create(accountId, monitoredServiceDTO);
+
+    List<MonitoredService> monitoredServices =
+        monitoredServiceService.list(builderFactory.getContext().getProjectParams(),
+            monitoredServiceDTO.getServiceRef(), monitoredServiceDTO.getEnvironmentRef());
+    assertThat(monitoredServices.size()).isEqualTo(1);
+
+    monitoredServices = monitoredServiceService.list(
+        builderFactory.getContext().getProjectParams(), monitoredServiceDTO.getServiceRef(), null);
+    assertThat(monitoredServices.size()).isEqualTo(1);
+
+    monitoredServices = monitoredServiceService.list(
+        builderFactory.getContext().getProjectParams(), null, monitoredServiceDTO.getEnvironmentRef());
+    assertThat(monitoredServices.size()).isEqualTo(1);
+
+    monitoredServices = monitoredServiceService.list(builderFactory.getContext().getProjectParams(), null, null);
+    assertThat(monitoredServices.size()).isEqualTo(1);
+
+    assertThatThrownBy(() -> monitoredServiceService.list(null, null, null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("projectParams is marked @NonNull but is null");
   }
 
   MonitoredServiceDTO createMonitoredServiceDTO() {

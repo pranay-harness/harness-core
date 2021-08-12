@@ -108,6 +108,12 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
     private Instant endTime;
     private double riskScore;
 
+    /**
+     * Additional metadata to summarize anomalous data
+     */
+    private long anomalousMetricsCount;
+    private long anomalousLogsCount;
+
     @Override
     public int compareTo(HeatMapRisk o) {
       return this.startTime.compareTo(o.startTime);
