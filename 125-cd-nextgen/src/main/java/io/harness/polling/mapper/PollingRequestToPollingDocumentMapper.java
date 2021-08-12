@@ -12,10 +12,10 @@ import io.harness.polling.bean.PollingDocument.PollingDocumentBuilder;
 import io.harness.polling.bean.PollingInfo;
 import io.harness.polling.bean.PollingType;
 import io.harness.polling.bean.manifest.HelmChartManifestInfo;
+import io.harness.polling.contracts.Category;
 import io.harness.polling.contracts.GcsHelmPayload;
 import io.harness.polling.contracts.HelmVersion;
 import io.harness.polling.contracts.HttpHelmPayload;
-import io.harness.polling.contracts.PollingItem;
 import io.harness.polling.contracts.PollingPayloadData;
 import io.harness.polling.contracts.Qualifier;
 import io.harness.polling.contracts.S3HelmPayload;
@@ -24,21 +24,20 @@ import java.util.Collections;
 
 @OwnedBy(HarnessTeam.CDC)
 public class PollingRequestToPollingDocumentMapper {
-  public PollingDocument toPollingDocument(PollingItem pollingItem) {
-    Qualifier qualifier = pollingItem.getQualifier();
+  public PollingDocument toPollingDocument(
+      Qualifier qualifier, Category category, PollingPayloadData pollingPayloadData) {
     PollingInfo pollingInfo = null;
     PollingDocumentBuilder pollingDocumentBuilder = PollingDocument.builder();
-    switch (pollingItem.getCategory()) {
+    switch (category) {
       case MANIFEST:
         pollingDocumentBuilder.pollingType(PollingType.MANIFEST);
-        pollingInfo = getManifestPollingInfo(
-            pollingItem.getPollingPayloadData(), pollingItem.getPollingPayloadData().getConnectorRef());
+        pollingInfo = getManifestPollingInfo(pollingPayloadData, pollingPayloadData.getConnectorRef());
         break;
       case ARTIFACT:
         pollingDocumentBuilder.pollingType(PollingType.ARTIFACT);
         break;
       default:
-        throw new InvalidRequestException("Unsupported category type " + pollingItem.getCategory());
+        throw new InvalidRequestException("Unsupported category type " + category);
     }
 
     return pollingDocumentBuilder.accountId(qualifier.getAccountId())

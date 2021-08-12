@@ -101,13 +101,18 @@ public class PollingServiceImpl implements PollingService {
 
   @Override
   public String subscribe(PollingItem pollingItem) {
-    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
-    return save(pollingDocument);
+    if (pollingItem.getOldPollingPayloadData() != null) {
+      delete(pollingDocumentMapper.toPollingDocument(
+          pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getOldPollingPayloadData()));
+    }
+    return save(pollingDocumentMapper.toPollingDocument(
+        pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getPollingPayloadData()));
   }
 
   @Override
   public boolean unsubscribe(PollingItem pollingItem) {
-    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(
+        pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getPollingPayloadData());
     delete(pollingDocument);
     return true;
   }
