@@ -10,7 +10,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
 import io.harness.exception.UnknownEnumTypeException;
-import io.harness.expression.ExpressionEvaluator;
 import io.harness.git.GitClientHelper;
 import io.harness.helper.ScmGitCapabilityHelper;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
