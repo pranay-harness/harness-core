@@ -31,11 +31,15 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.HarnessModule;
+
 /**
  *
  * @author rktummala on 10/11/17
  */
 @Slf4j
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class Utils {
   private static final String MULTIPLE_FILES_DELIMITER = ",";
   private static final String UNDERSCORE = "_";

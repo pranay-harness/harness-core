@@ -60,6 +60,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.HarnessModule;
+
 /**
  *
  * @author rktummala on 11/10/18
@@ -67,6 +70,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(GTM)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._820_PLATFORM_SERVICE)
 public class LicenseServiceImpl implements LicenseService {
   private static final String EMAIL_SUBJECT_ACCOUNT_EXPIRED = "Harness License Expired!";
   private static final String EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE = "Harness License about to Expire!";

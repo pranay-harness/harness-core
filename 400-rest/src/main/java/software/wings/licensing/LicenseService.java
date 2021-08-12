@@ -7,7 +7,10 @@ import software.wings.beans.LicenseInfo;
 
 import java.util.List;
 import org.hibernate.validator.constraints.NotEmpty;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.HarnessModule;
 
+@TargetModule(HarnessModule._820_PLATFORM_SERVICE)
 public interface LicenseService {
   String LICENSE_INFO = "LICENSE_INFO";
 

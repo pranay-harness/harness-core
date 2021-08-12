@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "emailQueue2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@TargetModule(HarnessModule._980_COMMONS)
+@TargetModule(HarnessModule._959_COMMON_ENTITIES)
 @OwnedBy(DEL)
 public class EmailData extends Queuable {
   private String accountId;

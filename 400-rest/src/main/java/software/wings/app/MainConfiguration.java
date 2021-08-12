@@ -162,7 +162,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("grpcDelegateServiceClientConfig") private GrpcClientConfig grpcDelegateServiceClientConfig;
   @JsonProperty("grpcOnpremDelegateClientConfig") private GrpcClientConfig grpcOnpremDelegateClientConfig;
   @JsonProperty("grpcClientConfig") private GrpcClientConfig grpcClientConfig;
-  @JsonProperty("grpcDMSClientClassicConfig") private GrpcClientConfig grpcDMSClientClassicConfig;
+  @JsonProperty("grpcDMSClientConfig") private GrpcClientConfig grpcDMSClientConfig;
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();
@@ -187,7 +187,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
-  @JsonProperty("delegateServiceSecret") private String delegateServiceSecret;
+  @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
 
