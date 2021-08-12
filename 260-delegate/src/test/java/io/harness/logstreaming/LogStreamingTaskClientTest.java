@@ -7,7 +7,6 @@ import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -22,13 +21,10 @@ import io.harness.rule.Owner;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.zeroturnaround.exec.stream.LogOutputStream;
 
 public class LogStreamingTaskClientTest extends CategoryTest {
   private final DelegateLogService logServiceMock = mock(DelegateLogService.class);
@@ -73,6 +69,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldInvokeCloseLogStreamWithoutKeySuffix() {
+    completeLogStreamingTaskClient.openStream(null);
     completeLogStreamingTaskClient.closeStream(null);
     verify(logStreamingClientMock).closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY, true);
   }
@@ -81,6 +78,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldInvokeCloseLogStreamWithKeySuffix() {
+    completeLogStreamingTaskClient.openStream("keySuffix");
     completeLogStreamingTaskClient.closeStream("keySuffix");
     verify(logStreamingClientMock)
         .closeLogStream(TOKEN, ACCOUNT_ID, BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix"), true);
@@ -102,6 +100,7 @@ public class LogStreamingTaskClientTest extends CategoryTest {
     LogLine logLine = LogLine.builder().level(LogLevel.INFO).message("msg").build();
 
     completeLogStreamingTaskClient.writeLogLine(logLine, null);
+    completeLogStreamingTaskClient.dispatchLogs();
 
     verify(logStreamingSanitizerMock).sanitizeLogMessage(logLine);
 
@@ -116,8 +115,8 @@ public class LogStreamingTaskClientTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldInvokePushMessageWithKeySuffix() {
     LogLine logLine = LogLine.builder().level(LogLevel.INFO).message("msg").build();
-
     completeLogStreamingTaskClient.writeLogLine(logLine, "keySuffix");
+    completeLogStreamingTaskClient.dispatchLogs();
 
     verify(logStreamingSanitizerMock).sanitizeLogMessage(logLine);
 
@@ -127,31 +126,6 @@ public class LogStreamingTaskClientTest extends CategoryTest {
             captor.capture());
     List logLines = captor.getValue();
     assertThat(logLines).containsExactly(logLine);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldReturnOutputStreamInstance() {
-    try (OutputStream outputStream = completeLogStreamingTaskClient.obtainLogOutputStream(LogLevel.INFO, "keySuffix")) {
-      assertThat(outputStream).isInstanceOf(LogOutputStream.class);
-
-      String logMessage = "test message";
-      outputStream.write(logMessage.getBytes());
-      outputStream.flush();
-
-      ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-      verify(logStreamingClientMock)
-          .pushMessage(eq(TOKEN), eq(ACCOUNT_ID),
-              eq(BASE_LOG_KEY + String.format(COMMAND_UNIT_PLACEHOLDER, "keySuffix")), captor.capture());
-
-      List<LogLine> logLines = (List<LogLine>) captor.getValue();
-      assertThat(logLines).hasSize(1);
-      assertThat(logLines.get(0).getMessage()).isEqualTo(logMessage);
-      assertThat(logLines.get(0).getLevel()).isEqualTo(LogLevel.INFO);
-    } catch (IOException e) {
-      fail("Unexpected failure during test execution");
-    }
   }
 
   @Test
