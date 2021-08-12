@@ -70,7 +70,6 @@ public abstract class CVConfig
   }
 
   @Id private String uuid;
-  @FdIndex private Long dataCollectionTaskIteration;
   private long createdAt;
   private long lastUpdatedAt;
   @NotNull private VerificationType verificationType;
@@ -84,7 +83,6 @@ public abstract class CVConfig
   @NotNull private String orgIdentifier;
   @NotNull private CVMonitoringCategory category;
   private boolean enabled;
-  private String perpetualTaskId;
   private String productName;
   @NotNull private String identifier;
   @NotNull private String monitoringSourceName;
@@ -93,11 +91,6 @@ public abstract class CVConfig
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
-      this.dataCollectionTaskIteration = nextIteration;
-      return;
-    }
-
     if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
       this.createNextTaskIteration = nextIteration;
       return;
@@ -108,10 +101,6 @@ public abstract class CVConfig
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
-      return this.dataCollectionTaskIteration;
-    }
-
     if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
       return createNextTaskIteration;
     }
