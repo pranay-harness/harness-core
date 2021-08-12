@@ -313,6 +313,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
     configuration.setGrpcDMSClientConfig(
         GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
 
     configuration.setGrpcClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
