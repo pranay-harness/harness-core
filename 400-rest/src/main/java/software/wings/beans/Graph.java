@@ -33,7 +33,7 @@ import org.mongodb.morphia.annotations.Transient;
  * @author Rishi
  */
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Graph {
   private static final String DEFAULT_WORKFLOW_NAME = "MAIN";
 

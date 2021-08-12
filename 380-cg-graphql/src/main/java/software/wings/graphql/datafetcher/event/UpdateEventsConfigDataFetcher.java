@@ -13,6 +13,7 @@ import io.harness.service.EventConfigService;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.mutation.event.EventsConfigValidationHelper;
 import software.wings.graphql.schema.mutation.event.input.QLUpdateEventsConfigInput;
 import software.wings.graphql.schema.mutation.event.payload.QLUpdateEventsConfigPayload;
 import software.wings.graphql.schema.type.event.QLEventsConfig;
@@ -30,6 +31,7 @@ public class UpdateEventsConfigDataFetcher
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EventConfigService eventConfigService;
   @Inject private AppService appService;
+  @Inject private EventsConfigValidationHelper eventsConfigValidationHelper;
 
   public UpdateEventsConfigDataFetcher() {
     super(QLUpdateEventsConfigInput.class, QLUpdateEventsConfigPayload.class);
@@ -56,6 +58,7 @@ public class UpdateEventsConfigDataFetcher
                                     .enabled(parameter.isEnabled())
                                     .build();
     eventConfig.setUuid(parameter.getEventsConfigId());
+    eventsConfigValidationHelper.validatePipelineIds(eventConfig, accountId, parameter.getAppId());
     CgEventConfig updatedEventsConfig =
         eventConfigService.updateEventsConfig(accountId, parameter.getAppId(), eventConfig);
     return QLUpdateEventsConfigPayload.builder()

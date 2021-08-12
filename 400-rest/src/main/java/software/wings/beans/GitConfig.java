@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._970_API_SERVICES_BEANS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.shell.AuthenticationScheme.HTTP_PASSWORD;
 
@@ -7,7 +8,6 @@ import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -52,7 +52,7 @@ import org.mongodb.morphia.annotations.Transient;
 @EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(_970_API_SERVICES_BEANS)
 public class GitConfig extends SettingValue implements EncryptableSetting {
   public static final String HARNESS_IO_KEY_ = "Harness.io";
   public static final String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";

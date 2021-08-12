@@ -14,7 +14,7 @@ import java.util.List;
  * Created by rishi on 8/20/16.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class StatusInstanceBreakdown {
   private ExecutionStatus status;
   private int instanceCount;

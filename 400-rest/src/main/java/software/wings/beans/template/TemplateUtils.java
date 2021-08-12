@@ -1,9 +1,11 @@
 package software.wings.beans.template;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.beans.VariableType.ARTIFACT;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.serializer.KryoSerializer;
 
@@ -19,6 +21,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@TargetModule(_870_CG_ORCHESTRATION)
 public class TemplateUtils {
   private static final Pattern p = Pattern.compile("\\$\\{(.*?)\\}");
 

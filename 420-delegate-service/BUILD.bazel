@@ -90,7 +90,7 @@ java_library(
         "//955-delegate-beans:module",
         "//955-filters-sdk:module",
         "//955-outbox-sdk:module",
-        "//959-cg-beans:module",
+        "//957-cg-beans:module",
         "//959-file-service-commons:module",
         "//960-persistence:module",
         "//960-persistence:supporter-test",

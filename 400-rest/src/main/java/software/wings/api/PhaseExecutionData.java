@@ -23,7 +23,7 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 @JsonTypeName("phaseExecutionData")
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PhaseExecutionData extends ElementStateExecutionData implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "phaseExecutionData";
 

@@ -40,7 +40,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
     PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(
         AccountId.newBuilder().setId(infrastructureMappingDTO.getAccountIdentifier()).build(),
         abstractInstanceSyncHandler.getPerpetualTaskType(), preparePerpetualTaskSchedule(),
-        PerpetualTaskClientContextDetails.newBuilder().setExecutionBundle(perpetualTaskExecutionBundle).build(), false,
+        PerpetualTaskClientContextDetails.newBuilder().setExecutionBundle(perpetualTaskExecutionBundle).build(), true,
         getPerpetualTaskDescription(infrastructureMappingDTO));
 
     return perpetualTaskId.getId();

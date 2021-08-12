@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.api.monitoredService;
 
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
@@ -10,6 +11,8 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 
 import java.util.List;
+import javax.annotation.Nullable;
+import lombok.NonNull;
 
 public interface MonitoredServiceService extends DeleteEntityByHandler<MonitoredService> {
   MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO);
@@ -22,6 +25,10 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   MonitoredServiceDTO getMonitoredServiceDTO(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
+
+  List<MonitoredService> list(
+      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String environmentIdentifier);
+
   PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, Integer offset, Integer pageSize, String filter);
   List<EnvironmentResponse> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);

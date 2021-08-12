@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._959_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
@@ -67,7 +67,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @OwnedBy(CDC)
-@TargetModule(_959_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataRetentionEntity, UuidAware,
                             CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

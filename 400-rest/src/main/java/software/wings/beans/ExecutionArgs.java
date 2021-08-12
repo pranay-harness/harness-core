@@ -36,7 +36,7 @@ import org.mongodb.morphia.annotations.Transient;
 @NoArgsConstructor
 @AllArgsConstructor
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ExecutionArgs {
   private WorkflowType workflowType;
   private String serviceId;

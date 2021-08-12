@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public interface KeywordsAware {
   Set<String> getKeywords();
 

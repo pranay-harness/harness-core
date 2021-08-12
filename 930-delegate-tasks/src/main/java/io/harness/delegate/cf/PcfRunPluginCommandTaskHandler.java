@@ -9,6 +9,8 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
+import static com.google.common.base.Charsets.UTF_8;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileData;
@@ -45,6 +47,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -76,7 +79,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
 
       // save the files in the directory
       if (EmptyPredicate.isNotEmpty(pluginCommandRequest.getFileDataList())) {
-        saveFilesInWorkingDirectory(pluginCommandRequest.getFileDataList(), workingDirCanonicalPath);
+        saveFilesInWorkingDirectoryStringContent(pluginCommandRequest.getFileDataList(), workingDirCanonicalPath);
       }
 
       CfCliVersion cfCliVersion = cfCommandRequest.getCfCliVersion();
@@ -174,6 +177,22 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               "Error while writing file :" + file.getFilePath() + "in directory :" + workingDirectoryCanonicalPath);
         }
       });
+    }
+  }
+
+  @VisibleForTesting
+  void saveFilesInWorkingDirectoryStringContent(
+      final List<FileData> fileDataList, final String workingDirectoryCanonicalPath) throws IOException {
+    if (EmptyPredicate.isEmpty(fileDataList)) {
+      return;
+    }
+    for (FileData file : fileDataList) {
+      final Path filePath = Paths.get(workingDirectoryCanonicalPath, canonicalise(file.getFilePath()));
+      FileIo.createDirectoryIfDoesNotExist(filePath.getParent());
+      Files.deleteIfExists(filePath);
+      final Path createdFile = Files.createFile(filePath);
+      String fileContent = file.getFileContent();
+      FileUtils.writeStringToFile(createdFile.toFile(), fileContent, UTF_8);
     }
   }
 

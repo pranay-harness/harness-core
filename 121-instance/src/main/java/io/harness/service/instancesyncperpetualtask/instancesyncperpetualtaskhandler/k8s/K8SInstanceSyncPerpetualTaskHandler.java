@@ -43,6 +43,7 @@ import lombok.AllArgsConstructor;
 public class K8SInstanceSyncPerpetualTaskHandler extends InstanceSyncPerpetualTaskHandler {
   private static final String K8S_INSTANCE_SYNC_COMMAND_NAME = "Instance Sync";
   private static final int DEFAULT_TIMEOUT_IN_MIN = 10;
+  private static final String DEFAULT_NAMESPACE = "default";
 
   private final K8sStepHelper k8sStepHelper;
 
@@ -104,13 +105,13 @@ public class K8SInstanceSyncPerpetualTaskHandler extends InstanceSyncPerpetualTa
         return K8sDirectInfrastructureOutcome.builder()
             .releaseName(releaseName)
             .connectorRef(connectorRef)
-            .namespace("default")
+            .namespace(DEFAULT_NAMESPACE)
             .build();
       case KUBERNETES_GCP:
         return K8sGcpInfrastructureOutcome.builder()
             .releaseName(releaseName)
             .connectorRef(connectorRef)
-            .namespace("default")
+            .namespace(DEFAULT_NAMESPACE)
             .build();
       default:
         throw new UnsupportedOperationException(

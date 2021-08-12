@@ -16,7 +16,7 @@ import io.harness.annotations.dev.TargetModule;
  * @author Rishi
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum EntityType {
 
   /**

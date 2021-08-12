@@ -11,11 +11,6 @@ import com.google.common.collect.ImmutableMap;
 
 @OwnedBy(HarnessTeam.DX)
 public class InstanceSyncLogContext extends AutoLogContext {
-  private String instanceSyncFlow;
-  private String perpetualTaskId;
-  private String infrastructureMappingId;
-  private String eventId;
-
   public InstanceSyncLogContext(ImmutableMap<String, String> context, OverrideBehavior behavior) {
     super(context, behavior);
   }
@@ -48,6 +43,7 @@ public class InstanceSyncLogContext extends AutoLogContext {
     }
 
     public InstanceSyncLogContext build(OverrideBehavior behavior) {
+      nullSafeBuilder.put("TAG", InstanceSyncConstants.INSTANCE_SYNC_FLOW_KEY);
       return new InstanceSyncLogContext(nullSafeBuilder.build(), behavior);
     }
   }

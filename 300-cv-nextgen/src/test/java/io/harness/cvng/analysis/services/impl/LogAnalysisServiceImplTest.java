@@ -7,11 +7,14 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
@@ -38,10 +41,12 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -50,6 +55,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -83,13 +89,16 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
-  @Mock private HeatMapService heatMapService;
+  @Inject private HeatMapService heatMapService;
+  @Mock private NextGenService nextGenService;
   private String verificationJobIdentifier;
   private Instant instant;
   private String accountId;
+  BuilderFactory builderFactory;
 
   @Before
   public void setUp() throws Exception {
+    builderFactory = BuilderFactory.getDefault();
     MockitoAnnotations.initMocks(this);
     CVConfig cvConfig = createCVConfig();
     cvConfigService.save(cvConfig);
@@ -97,6 +106,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     accountId = generateUuid();
     instant = Instant.parse("2020-07-27T10:44:11.000Z");
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
+    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(logAnalysisService, "heatMapService", heatMapService, true);
   }
 
@@ -172,7 +183,10 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testSaveAnalysis_serviceGuard() throws Exception {
+  public void testSaveAnalysis_serviceGuard() {
+    doReturn(builderFactory.environmentResponseDTOBuilder().type(EnvironmentType.Production).build())
+        .when(nextGenService)
+        .getEnvironment(any(), any(), any(), any());
     ServiceGuardLogAnalysisTask task = ServiceGuardLogAnalysisTask.builder().build();
     task.setTestDataUrl("testData");
     fillCommon(task, LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
@@ -204,6 +218,9 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
                  .get();
     assertThat(result).isNotNull();
     assertThat(result.getLogAnalysisResults().size()).isEqualTo(2);
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    heatMaps.forEach(
+        heatMap -> assertThat(heatMap.getHeatMapRisks().iterator().next().getAnomalousLogsCount()).isEqualTo(1));
   }
 
   @Test
@@ -222,6 +239,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
         deploymentLogAnalysisService.getAnalysisResults(verificationTaskId);
     assertThat(deploymentLogAnalyses).hasSize(1);
     assertThat(deploymentLogAnalyses.get(0).getClusters()).isEqualTo(deploymentLogAnalysisDTO.getClusters());
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    assertThat(heatMaps.size()).isEqualTo(0);
   }
 
   @Test
@@ -383,6 +402,9 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetTopLogAnalysisResults_validResults() {
+    doReturn(builderFactory.environmentResponseDTOBuilder().type(EnvironmentType.Production).build())
+        .when(nextGenService)
+        .getEnvironment(any(), any(), any(), any());
     ServiceGuardLogAnalysisTask task = ServiceGuardLogAnalysisTask.builder().build();
     task.setTestDataUrl("testData");
     fillCommon(task, LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS);
@@ -491,7 +513,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     cvConfig.setAccountId(generateUuid());
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier(generateUuid());
-    cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier("prod" + generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
     cvConfig.setOrgIdentifier(generateUuid());
     cvConfig.setIdentifier(generateUuid());
@@ -518,7 +540,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     testVerificationJob.setServiceIdentifier(generateUuid());
     testVerificationJob.setOrgIdentifier(generateUuid());
     testVerificationJob.setProjectIdentifier(generateUuid());
-    testVerificationJob.setEnvIdentifier(generateUuid());
+    testVerificationJob.setEnvIdentifier("prod" + generateUuid());
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJob.setBaselineVerificationJobInstanceId("LAST");
     testVerificationJob.setDuration("15m");

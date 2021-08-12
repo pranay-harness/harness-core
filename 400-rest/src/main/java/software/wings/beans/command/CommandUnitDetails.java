@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING_ROUTES;
@@ -38,6 +39,7 @@ import static software.wings.sm.states.spotinst.SpotInstListenerUpdateState.SPOT
 import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SERVICE_SETUP_COMMAND;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.Variable;
@@ -57,6 +59,7 @@ import lombok.NoArgsConstructor;
 @OwnedBy(CDP)
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(_870_CG_ORCHESTRATION)
 public class CommandUnitDetails {
   private String name;
   private CommandExecutionStatus commandExecutionStatus;

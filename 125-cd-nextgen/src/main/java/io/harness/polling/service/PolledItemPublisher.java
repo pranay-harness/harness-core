@@ -21,12 +21,9 @@ public class PolledItemPublisher {
   @Inject @Named(POLLING_EVENTS_STREAM) private Producer eventProducer;
 
   public void publishPolledItems(PollingResponse pollingResponse) {
-    for (String signature : pollingResponse.getSignaturesList()) {
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", pollingResponse.getAccountId(), "payloadType",
-                                 pollingResponse.getType().name(), "signature", signature))
-                             .setData(pollingResponse.getBuildInfo().toByteString())
-                             .build());
-    }
+    eventProducer.send(Message.newBuilder()
+                           .putAllMetadata(ImmutableMap.of("accountId", pollingResponse.getAccountId()))
+                           .setData(pollingResponse.toByteString())
+                           .build());
   }
 }

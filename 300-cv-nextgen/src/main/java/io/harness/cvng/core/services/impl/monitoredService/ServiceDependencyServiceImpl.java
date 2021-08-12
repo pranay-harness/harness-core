@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.ng.core.utils.NGUtils.validate;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceDependency.Key;
@@ -18,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
@@ -27,8 +30,8 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   @Inject private HPersistence hPersistence;
 
   @Override
-  public void createOrDelete(String accountId, String orgIdentifier, String projectIdentifier, String envIdentifier,
-      Set<ServiceRef> fromServiceIdentifiers, String toServiceIdentifier) {
+  public void updateDependencies(String accountId, String orgIdentifier, String projectIdentifier,
+      String toServiceIdentifier, String envIdentifier, Set<ServiceRef> fromServiceIdentifiers) {
     List<ServiceDependency> dependencies = new ArrayList<>();
     fromServiceIdentifiers.forEach(fromServiceIdentifier -> {
       dependencies.add(ServiceDependency.builder()
@@ -70,7 +73,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
 
   @Override
   public void deleteDependenciesForService(String accountId, String orgIdentifier, String projectIdentifier,
-      String envIdentifier, String serviceIdentifier) {
+      String serviceIdentifier, String envIdentifier) {
     Query<ServiceDependency> toServiceQuery = hPersistence.createQuery(ServiceDependency.class)
                                                   .filter(ServiceDependencyKeys.accountId, accountId)
                                                   .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
@@ -82,17 +85,34 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
 
   @Override
   public Set<ServiceRef> getDependentServicesForMonitoredService(String accountId, String orgIdentifier,
-      String projectIdentifier, String envIdentifier, String serviceIdentifier) {
-    List<ServiceDependency> dependencies = hPersistence.createQuery(ServiceDependency.class)
-                                               .filter(ServiceDependencyKeys.accountId, accountId)
-                                               .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
-                                               .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier)
-                                               .filter(ServiceDependencyKeys.environmentIdentifier, envIdentifier)
-                                               .filter(ServiceDependencyKeys.toServiceIdentifier, serviceIdentifier)
-                                               .asList();
+      String projectIdentifier, String serviceIdentifier, String envIdentifier) {
+    List<ServiceDependency> dependencies = getServiceDependencies(ProjectParams.builder()
+                                                                      .accountIdentifier(accountId)
+                                                                      .orgIdentifier(orgIdentifier)
+                                                                      .projectIdentifier(projectIdentifier)
+                                                                      .build(),
+        serviceIdentifier, envIdentifier);
     return dependencies.stream()
         .map(d -> ServiceRef.builder().serviceRef(d.getFromServiceIdentifier()).build())
         .collect(Collectors.toSet());
+  }
+
+  @Override
+  public List<ServiceDependency> getServiceDependencies(
+      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
+    Query<ServiceDependency> query =
+        hPersistence.createQuery(ServiceDependency.class)
+            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier());
+    if (envIdentifier != null) {
+      query.filter(ServiceDependencyKeys.environmentIdentifier, envIdentifier);
+    }
+    if (serviceIdentifier != null) {
+      query.filter(ServiceDependencyKeys.toServiceIdentifier, serviceIdentifier);
+    }
+
+    return query.asList();
   }
 
   @Override

@@ -152,8 +152,8 @@ BAZEL_MODULES="\
   //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
   //956-feature-flag-beans:module \
+  //957-cg-beans:module \
   //958-migration-sdk:module \
-  //959-cg-beans:module \
   //959-file-service-commons:module \
   //959-psql-database-models:module \
   //959-timeout-engine:module \
@@ -408,8 +408,8 @@ build_bazel_module 955-filters-sdk
 build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 956-feature-flag-beans
+build_bazel_module 957-cg-beans
 build_bazel_module 958-migration-sdk
-build_bazel_module 959-cg-beans
 build_bazel_module 959-file-service-commons
 build_bazel_module 959-psql-database-models
 build_bazel_module 959-timeout-engine

@@ -82,7 +82,7 @@ public class CgEventConfig
   public String getSummary() {
     StringBuilder builder = new StringBuilder();
     if (CgEventRule.CgRuleType.ALL.equals(rule.getType())) {
-      return builder.append("Send Everything!").toString();
+      return builder.append("Send everything").toString();
     }
 
     if (CgEventRule.CgRuleType.PIPELINE.equals(rule.getType())) {
@@ -158,16 +158,16 @@ public class CgEventConfig
   private static String getPipelineSummary(CgEventRule.PipelineRule pipelineRule) {
     StringBuilder builder = new StringBuilder();
     if (pipelineRule.isAllEvents() && pipelineRule.isAllPipelines()) {
-      return builder.append("All events for all pipelines").toString();
+      return builder.append("All events for all Pipelines").toString();
     }
     if (!pipelineRule.isAllEvents() && pipelineRule.isAllPipelines()) {
       String events = StringUtils.join(pipelineRule.getEvents(), ", ");
-      return builder.append("Events ").append(events).append(" for all pipelines").toString();
+      return builder.append("Events ").append(events).append(" for all Pipelines").toString();
     }
     if (pipelineRule.isAllEvents() && !pipelineRule.isAllPipelines()) {
-      return builder.append("All events for select")
+      return builder.append("All events for select ")
           .append(pipelineRule.getPipelineIds().size())
-          .append(" pipeline(s)")
+          .append(" Pipeline(s)")
           .toString();
     }
     String events = StringUtils.join(pipelineRule.getEvents(), ", ");
@@ -175,23 +175,23 @@ public class CgEventConfig
         .append(events)
         .append(" ")
         .append(pipelineRule.getPipelineIds().size())
-        .append(" pipeline(s)")
+        .append(" Pipeline(s)")
         .toString();
   }
 
   private static String getWorkflowSummary(CgEventRule.WorkflowRule workflowRule) {
     StringBuilder builder = new StringBuilder();
     if (workflowRule.isAllEvents() && workflowRule.isAllWorkflows()) {
-      return builder.append("All events for all workflows").toString();
+      return builder.append("All events for all Workflows").toString();
     }
     if (!workflowRule.isAllEvents() && workflowRule.isAllWorkflows()) {
       String events = StringUtils.join(workflowRule.getEvents(), ", ");
-      return builder.append("Events ").append(events).append(" for all workflows").toString();
+      return builder.append("Events ").append(events).append(" for all Workflows").toString();
     }
     if (workflowRule.isAllEvents() && !workflowRule.isAllWorkflows()) {
-      return builder.append("All events for select")
+      return builder.append("All events for select ")
           .append(workflowRule.getWorkflowIds().size())
-          .append(" workflow(s)")
+          .append(" Workflow(s)")
           .toString();
     }
     String events = StringUtils.join(workflowRule.getEvents(), ", ");
@@ -199,7 +199,7 @@ public class CgEventConfig
         .append(events)
         .append(" ")
         .append(workflowRule.getWorkflowIds().size())
-        .append(" workflow(s)")
+        .append(" Workflow(s)")
         .toString();
   }
 }
