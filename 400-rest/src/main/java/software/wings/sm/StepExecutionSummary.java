@@ -8,7 +8,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class StepExecutionSummary {
   private String stepName;
   private ExecutionStatus status;

@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "containerDeploymentInfo", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ContainerDeploymentInfo extends Base {
   private String accountId;
   private String serviceId;

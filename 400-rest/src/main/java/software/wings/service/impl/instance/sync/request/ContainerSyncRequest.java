@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @OwnedBy(PL)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ContainerSyncRequest {
   private ContainerFilter filter;
 }

@@ -29,7 +29,7 @@ import lombok.ToString;
  * @author Rishi
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @ToString(exclude = {"delegateMetaInfo", "templateVariable", "stateParams", "element"})
 public class StateExecutionData {
   public static final int SUMMARY_PAYLOAD_LIMIT = 1024;

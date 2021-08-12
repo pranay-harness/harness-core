@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class HelmSetupExecutionSummary extends StepExecutionSummary {
   private String releaseName;
   private Integer prevVersion;

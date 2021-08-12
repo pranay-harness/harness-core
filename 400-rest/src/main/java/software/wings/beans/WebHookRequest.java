@@ -15,7 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * The type Web hook request.
  */
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @Data
 @Builder

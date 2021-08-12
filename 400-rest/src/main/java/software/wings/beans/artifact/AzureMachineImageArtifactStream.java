@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("AZURE_MACHINE_IMAGE")
 @Data
 @EqualsAndHashCode(callSuper = true)

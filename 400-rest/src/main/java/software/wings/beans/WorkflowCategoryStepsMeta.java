@@ -10,7 +10,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @Value
 @Builder(toBuilder = true)

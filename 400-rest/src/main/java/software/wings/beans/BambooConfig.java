@@ -42,7 +42,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class BambooConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Bamboo URL", required = true) @NotEmpty private String bambooUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;

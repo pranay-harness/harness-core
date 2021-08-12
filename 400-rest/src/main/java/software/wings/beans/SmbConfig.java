@@ -37,7 +37,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class SmbConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "SMB URL", required = true) @NotEmpty private String smbUrl;
   @Attributes(title = "Domain") private String domain;

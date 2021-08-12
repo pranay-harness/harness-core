@@ -2,7 +2,6 @@ package io.harness.cvng.migration.list;
 
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.RUNNING;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -11,7 +10,6 @@ import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.migration.CVNGMigration;
 import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HPersistence;
@@ -35,7 +33,6 @@ import org.mongodb.morphia.query.UpdateResults;
 @Slf4j
 public class AddDeploymentMonitoringSourcePerpetualTask implements CVNGMigration {
   @Inject private HPersistence hPersistence;
-  @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Override
   public void migrate() {
     try {
@@ -59,10 +56,6 @@ public class AddDeploymentMonitoringSourcePerpetualTask implements CVNGMigration
                     Instant.now().plus(5, ChronoUnit.MINUTES).toEpochMilli()));
         oldToNewWorkerIdmap.put(
             monitoringSourcePerpetualTask.getDataCollectionWorkerId(), getNewWorkerId(monitoringSourcePerpetualTask));
-        if (isNotEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
-          dataCollectionTaskService.deletePerpetualTasks(
-              monitoringSourcePerpetualTask.getAccountId(), monitoringSourcePerpetualTask.getPerpetualTaskId());
-        }
         createTask(monitoringSourcePerpetualTask.getAccountId(), monitoringSourcePerpetualTask.getOrgIdentifier(),
             monitoringSourcePerpetualTask.getProjectIdentifier(),
             monitoringSourcePerpetualTask.getConnectorIdentifier(),

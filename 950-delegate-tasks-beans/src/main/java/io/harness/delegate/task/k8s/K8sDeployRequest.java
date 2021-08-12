@@ -73,7 +73,8 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
         GitStoreDelegateConfig gitStoreDelegateConfig =
             (GitStoreDelegateConfig) getManifestDelegateConfig().getStoreDelegateConfig();
         capabilities.addAll(GitCapabilityHelper.fetchRequiredExecutionCapabilities(
-            maskingEvaluator, ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO())));
+            ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO()),
+            gitStoreDelegateConfig.getEncryptedDataDetails(), gitStoreDelegateConfig.getSshKeySpecDTO()));
         capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
             gitStoreDelegateConfig.getEncryptedDataDetails(), maskingEvaluator));
       }

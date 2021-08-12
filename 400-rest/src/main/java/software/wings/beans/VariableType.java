@@ -10,7 +10,7 @@ import io.harness.annotations.dev.TargetModule;
  * Created by rishi on 8/3/17.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum VariableType {
   TEXT,
   NUMBER,

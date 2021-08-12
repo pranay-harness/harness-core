@@ -1,14 +1,20 @@
 package software.wings.service.impl.instance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.DX)
 public class InstanceSyncTestConstants {
   public static final String ACCOUNT_1_ID = "account1_id";
   public static final String ACCOUNT_2_ID = "account2_id";
+  public static final String ACCOUNT_3_ID = "account3_id";
   public static final String APP_ID = "app_id";
   public static final String APP_1_ID = "app1_id";
   public static final String APP_2_ID = "app2_id";
   public static final String APP_3_ID = "app3_id";
   public static final String APP_4_ID = "app4_id";
   public static final String APP_5_ID = "app5_id";
+  public static final String APP_6_ID = "app6_id";
   public static final String ORGANIZATION = "ORG";
   public static final String SPACE = "SPACE";
   public static final String ROUTE1 = "R1";
@@ -34,6 +40,10 @@ public class InstanceSyncTestConstants {
   public static final String ENV_4_ID = "env4_Id";
   public static final String ENV_5_ID = "env5_Id";
   public static final String ENV_6_ID = "env6_Id";
+  public static final String ENV_7_ID = "env7_Id";
+  public static final String ENV_8_ID = "env8_Id";
+  public static final String ENV_9_ID = "env9_Id";
+  public static final String ENV_10_ID = "env10_Id";
   public static final String ENV_NAME = "envName";
   public static final String INFRA_MAPPING_ID = "infraMapping_Id";
   public static final String INFRA_MAPPING_NAME = "infraMapping_Name";
@@ -78,7 +88,28 @@ public class InstanceSyncTestConstants {
   public static final String INSTANCE_10_ID = "instance10_Id";
   public static final String INSTANCE_11_ID = "instance11_Id";
   public static final String INSTANCE_12_ID = "instance12_Id";
+  public static final String INSTANCE_13_ID = "instance13_Id";
+  public static final String INSTANCE_14_ID = "instance14_Id";
+  public static final String INSTANCE_15_ID = "instance15_Id";
+  public static final String INSTANCE_16_ID = "instance16_Id";
+  public static final String INSTANCE_17_ID = "instance17_Id";
+  public static final String INSTANCE_18_ID = "instance18_Id";
+  public static final String INSTANCE_19_ID = "instance19_Id";
+  public static final String INSTANCE_20_ID = "instance20_Id";
   public static final String SERVICE_NAME = "serviceName";
+  public static final String SERVICE_1_NAME = "service1_Name";
+  public static final String SERVICE_2_NAME = "service2_Name";
+  public static final String SERVICE_3_NAME = "service3_Name";
+  public static final String SERVICE_4_NAME = "service4_Name";
+  public static final String SERVICE_5_NAME = "service5_Name";
+  public static final String SERVICE_6_NAME = "service6_Name";
+  public static final String SERVICE_9_NAME = "service9_Name";
+  public static final String SERVICE_10_NAME = "service10_Name";
+  public static final String SERVICE_11_NAME = "service11_Name";
+  public static final String SERVICE_12_NAME = "service12_Name";
+  public static final String SERVICE_13_NAME = "service13_Name";
+  public static final String SERVICE_14_NAME = "service14_Name";
+  public static final String SERVICE_15_NAME = "service15_Name";
   public static final String SERVICE_ID = "serviceId";
   public static final String SERVICE_1_ID = "service1_id";
   public static final String SERVICE_2_ID = "service2_id";
@@ -88,6 +119,13 @@ public class InstanceSyncTestConstants {
   public static final String SERVICE_6_ID = "service6_id";
   public static final String SERVICE_7_ID = "service7_id";
   public static final String SERVICE_8_ID = "service8_id";
+  public static final String SERVICE_9_ID = "service9_id";
+  public static final String SERVICE_10_ID = "service10_id";
+  public static final String SERVICE_11_ID = "service11_id";
+  public static final String SERVICE_12_ID = "service12_id";
+  public static final String SERVICE_13_ID = "service13_id";
+  public static final String SERVICE_14_ID = "service14_id";
+  public static final String SERVICE_15_ID = "service15_id";
   public static final String EC2_INSTANCE_1_ID = "ec2_instance1_Id";
   public static final String EC2_INSTANCE_2_ID = "ec2_instance2_Id";
   public static final String EC2_INSTANCE_E_ID = "ec2_instance3_Id";
@@ -113,4 +151,12 @@ public class InstanceSyncTestConstants {
 
   public static final String PERPETUAL_TASK_ID = "perp-task_id";
   public static final String SPOTINST_CLOUD_PROVIDER = "spotinstCloudProiver";
+
+  public static final String LAST_ARTIFACT_BUILD_1_NUM = "lastArtifactBuild1_Num";
+  public static final String LAST_ARTIFACT_BUILD_2_NUM = "lastArtifactBuild2_Num";
+  public static final String LAST_ARTIFACT_BUILD_3_NUM = "lastArtifactBuild3_Num";
+  public static final String LAST_WORKFLOW_EXECUTION_1_ID = "lastWorkflowExecution1_Id";
+  public static final String LAST_WORKFLOW_EXECUTION_2_ID = "lastWorkflowExecution2_Id";
+  public static final String LAST_WORKFLOW_EXECUTION_1_NAME = "lastWorkflowExecution1_Name";
+  public static final String LAST_WORKFLOW_EXECUTION_2_NAME = "lastWorkflowExecution2_Name";
 }

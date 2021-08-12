@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class AwsLambdaExecutionSummary {
   private FunctionMeta functionMeta;
   private boolean success;

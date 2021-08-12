@@ -45,7 +45,7 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @Data
 @Builder

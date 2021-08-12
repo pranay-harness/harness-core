@@ -4,13 +4,13 @@ package io.harness.polling.contracts;
 
 option java_multiple_files = true;
 
-import "io/harness/polling/contracts/payload_type.proto";
+import "io/harness/polling/contracts/polling_payload_data.proto";
 
 message PollingItem {
   Category category = 1;
   Qualifier qualifier = 2;
-  string connectorRef = 3;
-  io.harness.polling.contracts.PayloadType payloadType = 4;
+  io.harness.polling.contracts.PollingPayloadData pollingPayloadData = 3;
+  io.harness.polling.contracts.PollingPayloadData oldPollingPayloadData = 4;
 }
 
 message Qualifier {

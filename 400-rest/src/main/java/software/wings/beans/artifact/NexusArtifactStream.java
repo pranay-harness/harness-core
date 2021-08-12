@@ -37,7 +37,7 @@ import lombok.NoArgsConstructor;
  * Created by srinivas on 3/31/17.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("NEXUS")
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -6,7 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -67,6 +69,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(GTM)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._820_PLATFORM_SERVICE)
 public class LicenseServiceImpl implements LicenseService {
   private static final String EMAIL_SUBJECT_ACCOUNT_EXPIRED = "Harness License Expired!";
   private static final String EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE = "Harness License about to Expire!";

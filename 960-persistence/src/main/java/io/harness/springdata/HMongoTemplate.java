@@ -52,23 +52,16 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   @Nullable
   @Override
   public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
-    return retry(() -> {
-      if (traceMode == TraceMode.ENABLED) {
-        traceQuery(query, entityClass);
-      }
-      return findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass));
-    });
+    traceQuery(query, entityClass);
+    return retry(
+        () -> findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass)));
   }
 
   @Nullable
   @Override
   public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
-    return retry(() -> {
-      if (traceMode == TraceMode.ENABLED) {
-        traceQuery(query, entityClass);
-      }
-      return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
-    });
+    traceQuery(query, entityClass);
+    return retry(() -> findAndModify(query, update, options, entityClass, getCollectionName(entityClass)));
   }
 
   @Override
@@ -88,22 +81,20 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
 
   @Override
   public <T> List<T> find(Query query, Class<T> entityClass, String collectionName) {
-    if (traceMode == TraceMode.ENABLED) {
-      traceQuery(query, entityClass);
-    }
+    traceQuery(query, entityClass);
     return super.find(query, entityClass, collectionName);
   }
 
   @Override
   public <T> T findOne(Query query, Class<T> entityClass, String collectionName) {
-    if (traceMode == TraceMode.ENABLED) {
-      traceQuery(query, entityClass);
-    }
+    traceQuery(query, entityClass);
     return super.findOne(query, entityClass, collectionName);
   }
 
   private <T> void traceQuery(Query query, Class<T> entityClass) {
-    tracerSubject.fireInform(Tracer::trace, query, entityClass, this);
+    if (traceMode == TraceMode.ENABLED) {
+      tracerSubject.fireInform(Tracer::trace, query, entityClass, this);
+    }
   }
 
   public interface Executor<R> {

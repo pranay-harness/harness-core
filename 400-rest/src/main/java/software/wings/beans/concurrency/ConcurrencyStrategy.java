@@ -22,7 +22,7 @@ import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ConcurrencyStrategyKeys")
