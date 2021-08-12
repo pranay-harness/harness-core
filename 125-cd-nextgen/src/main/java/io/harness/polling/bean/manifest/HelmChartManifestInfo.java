@@ -24,7 +24,6 @@ import lombok.Data;
 @Builder
 @JsonTypeName(ManifestType.HelmChart)
 public class HelmChartManifestInfo implements ManifestInfo {
-  String type = ManifestType.HelmChart;
   @JsonProperty("storeType") StoreConfigType storeType;
   @JsonTypeInfo(use = NAME, property = "storeType", include = EXTERNAL_PROPERTY, visible = true) StoreConfig store;
   String chartName;
@@ -37,5 +36,10 @@ public class HelmChartManifestInfo implements ManifestInfo {
         .chartName(ParameterField.<String>builder().value(chartName).build())
         .helmVersion(helmVersion)
         .build();
+  }
+
+  @Override
+  public String getType() {
+    return ManifestType.HelmChart;
   }
 }

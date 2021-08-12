@@ -186,7 +186,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       setHarnessSecretManagerAsDefault(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
           connector.getConnectorInfo().getProjectIdentifier());
     }
-    return defaultConnectorService.update(connector, accountIdentifier, gitChangeType);
+    return defaultConnectorService.update(connector, accountIdentifier, NONE);
   }
 
   private void setHarnessSecretManagerAsDefault(

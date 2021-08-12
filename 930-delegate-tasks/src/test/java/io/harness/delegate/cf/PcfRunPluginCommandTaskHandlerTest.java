@@ -37,6 +37,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,7 +80,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
-  public void test_executeTaskInternal() throws PivotalClientApiException {
+  public void test_executeTaskInternal() throws PivotalClientApiException, IOException {
     doNothing()
         .when(pcfDeploymentManager)
         .runPcfPluginScript(any(CfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
@@ -97,7 +98,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
         .isEqualTo("cf create-service " + pcfRunPluginScriptRequestData.getWorkingDirectory() + "/manifest.yml");
 
     verify(pcfRunPluginCommandTaskHandler, times(1))
-        .saveFilesInWorkingDirectory(
+        .saveFilesInWorkingDirectoryStringContent(
             anyListOf(FileData.class), eq(pcfRunPluginScriptRequestData.getWorkingDirectory()));
   }
 

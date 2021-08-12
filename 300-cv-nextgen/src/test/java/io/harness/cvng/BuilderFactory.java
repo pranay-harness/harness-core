@@ -15,10 +15,12 @@ import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
@@ -49,6 +51,7 @@ import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO.ServiceResponseDTOBuilder;
 import io.harness.pms.yaml.ParameterField;
 
+import com.google.common.collect.Sets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -133,6 +136,8 @@ public class BuilderFactory {
         .description(generateUuid())
         .serviceRef(context.getServiceIdentifier())
         .environmentRef(context.getEnvIdentifier())
+        .dependencies(Sets.newHashSet(
+            ServiceRef.builder().serviceRef("service1").build(), ServiceRef.builder().serviceRef("service2").build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
                      .build());
@@ -144,13 +149,17 @@ public class BuilderFactory {
     Instant bucketStartTime = bucketEndTime.minus(24, ChronoUnit.HOURS);
     List<HeatMapRisk> heatMapRisks = new ArrayList<>();
 
+    int index = 0;
     for (Instant startTime = bucketStartTime; startTime.isBefore(bucketEndTime);
          startTime = startTime.plus(30, ChronoUnit.MINUTES)) {
       heatMapRisks.add(HeatMapRisk.builder()
                            .riskScore(-1)
                            .startTime(startTime)
                            .endTime(startTime.plus(30, ChronoUnit.MINUTES))
+                           .anomalousLogsCount(index)
+                           .anomalousMetricsCount(index + 1)
                            .build());
+      index++;
     }
 
     return HeatMap.builder()
@@ -301,22 +310,36 @@ public class BuilderFactory {
   public static BuilderFactory getDefault() {
     return BuilderFactory.builder().build();
   }
+
   @Value
   @Builder
   public static class Context {
-    String accountId;
-    String orgIdentifier;
-    String projectIdentifier;
+    ProjectParams projectParams;
     String serviceIdentifier;
     String envIdentifier;
+
     public static Context defaultContext() {
       return Context.builder()
-          .accountId(generateUuid())
-          .orgIdentifier(generateUuid())
-          .projectIdentifier(generateUuid())
-          .envIdentifier(generateUuid())
-          .serviceIdentifier(generateUuid())
+          .projectParams(ProjectParams.builder()
+                             .accountIdentifier(randomAlphabetic(20))
+                             .orgIdentifier(randomAlphabetic(20))
+                             .projectIdentifier(randomAlphabetic(20))
+                             .build())
+          .envIdentifier(randomAlphabetic(20))
+          .serviceIdentifier(randomAlphabetic(20))
           .build();
+    }
+
+    public String getAccountId() {
+      return projectParams.getAccountIdentifier();
+    }
+
+    public String getOrgIdentifier() {
+      return projectParams.getOrgIdentifier();
+    }
+
+    public String getProjectIdentifier() {
+      return projectParams.getProjectIdentifier();
     }
   }
 }

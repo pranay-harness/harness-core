@@ -25,6 +25,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -73,10 +74,12 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     envIdentifier = generateUuid();
     builderFactory = BuilderFactory.builder()
                          .context(BuilderFactory.Context.builder()
-                                      .accountId(accountId)
+                                      .projectParams(ProjectParams.builder()
+                                                         .accountIdentifier(accountId)
+                                                         .orgIdentifier(orgIdentifier)
+                                                         .projectIdentifier(projectIdentifier)
+                                                         .build())
                                       .envIdentifier(envIdentifier)
-                                      .orgIdentifier(orgIdentifier)
-                                      .projectIdentifier(projectIdentifier)
                                       .serviceIdentifier(serviceIdentifier)
                                       .build())
                          .build();

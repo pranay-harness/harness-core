@@ -275,19 +275,21 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
                                            .filter(LogAnalysisResultKeys.analysisEndTime, endTime)
                                            .get();
     if (isNotEmpty(unexpectedClusters)) {
+      long anomalousCount = 0;
       double score = Math.max(analysis.getOverallMetricScores().values().stream().mapToDouble(s -> s).max().orElse(0.0),
           analysisResult.getOverallRisk());
       analysisResult.setOverallRisk(score);
-      analysisResult.getLogAnalysisResults().forEach(logAnalysisCluster -> {
+      for (LogAnalysisResult.AnalysisResult logAnalysisCluster : analysisResult.getLogAnalysisResults()) {
         if (unexpectedClusters.contains(logAnalysisCluster.getLabel())
             && logAnalysisCluster.getTag() == LogAnalysisTag.KNOWN && !isBaselineRun) {
           logAnalysisCluster.setTag(LogAnalysisTag.UNEXPECTED);
+          anomalousCount++;
         }
-      });
+      }
       hPersistence.save(analysisResult);
       heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
           cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
-          cvConfig.getCategory(), startTime, score);
+          cvConfig.getCategory(), startTime, score, 0, anomalousCount);
     }
   }
 

@@ -68,4 +68,7 @@ public interface Constants {
   String DOT_GIT = ".git";
   String MANIFEST = "Manifest";
   String ARTIFACT = "Artifact";
+
+  String MANIFEST_VERSION = "<+trigger.manifest.version>";
+  String ARTIFACT_VERSION = "<+trigger.artifact.build>";
 }
