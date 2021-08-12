@@ -174,9 +174,8 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   @Override
   public List<Account> getCeEnabledAccounts() {
     List<Account> accounts = new ArrayList<>();
-    Query<Account> query = persistence.createQuery(Account.class, excludeAuthority);
-    query.or(query.criteria(AccountKeys.cloudCostEnabled).equal(Boolean.TRUE),
-        query.criteria(AccountKeys.ceAutoCollectK8sEvents).equal(Boolean.TRUE));
+    Query<Account> query =
+        persistence.createQuery(Account.class, excludeAuthority).filter(AccountKeys.cloudCostEnabled, Boolean.TRUE);
     try (HIterator<Account> accountItr = new HIterator<>(query.fetch())) {
       for (Account account : accountItr) {
         accounts.add(account);
