@@ -7,6 +7,7 @@ import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -33,6 +34,7 @@ import io.harness.utils.PageUtils;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -568,5 +570,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .identifier(identifier)
         .healthMonitoringEnabled(enable)
         .build();
+  }
+
+  @Override
+  public HistoricalTrend getOverAllHealthScore(String accountId, String orgIdentifier, String projectIdentifier,
+      String identifier, DurationDTO duration, Instant endTime) {
+    MonitoredService monitoredService = getMonitoredService(accountId, orgIdentifier, projectIdentifier, identifier);
+    Preconditions.checkNotNull(monitoredService, "Monitored service with identifier %s does not exists", identifier);
+    return heatMapService.getOverAllHealthScore(accountId, orgIdentifier, projectIdentifier,
+        monitoredService.getServiceIdentifier(), monitoredService.getEnvironmentIdentifier(), duration, endTime);
   }
 }
