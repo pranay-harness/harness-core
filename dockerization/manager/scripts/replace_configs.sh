@@ -786,15 +786,15 @@ if [[ "" != "$DELEGATE_SERVICE_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcDMSClientConfig.authority "$DELEGATE_SERVICE_CLASSIC_AUTHORITY"
+  yq write -i $CONFIG_FILE grpcDMSClientConfig.authority "$DELEGATE_SERVICE_MANAGEMENT_AUTHORITY"
 fi
 
 if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcDMSClientConfig.target "$DELEGATE_SERVICE_CLASSIC_TARGET"
+  yq write -i $CONFIG_FILE grpcDMSClientConfig.target "$DELEGATE_SERVICE_MANAGEMENT_TARGET"
 fi
 
 if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_SECRET" ]]; then
-  yq write -i $CONFIG_FILE dmsSecret "$DELEGATE_SERVICE_CLASSIC_SECRET"
+  yq write -i $CONFIG_FILE dmsSecret "$DELEGATE_SERVICE_MANAGEMENT_SECRET"
 fi
 
 
