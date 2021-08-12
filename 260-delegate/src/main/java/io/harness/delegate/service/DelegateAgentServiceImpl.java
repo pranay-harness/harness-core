@@ -698,7 +698,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private RequestBuilder prepareRequestBuilder() {
     try {
       URIBuilder uriBuilder =
-          new URIBuilder(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
+          new URIBuilder(delegateConfiguration.getDelegateSvcUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
               .addParameter("delegateId", delegateId)
               .addParameter("delegateConnectionId", delegateConnectionId)
               .addParameter("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
