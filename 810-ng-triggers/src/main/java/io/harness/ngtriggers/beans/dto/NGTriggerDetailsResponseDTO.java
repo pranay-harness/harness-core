@@ -30,6 +30,7 @@ public class NGTriggerDetailsResponseDTO {
   NGTriggerType type;
   LastTriggerExecutionDetails lastTriggerExecutionDetails;
   WebhookDetails webhookDetails;
+  BuildDetails buildDetails;
   Map<String, String> tags;
   List<Integer> executions;
   String yaml;
