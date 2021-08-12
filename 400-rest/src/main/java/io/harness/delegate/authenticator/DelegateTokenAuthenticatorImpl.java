@@ -68,12 +68,12 @@ public class DelegateTokenAuthenticatorImpl implements DelegateTokenAuthenticato
 
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
-    String accountKey = "kmpySmUISimoRrJL6NL73w";
-   /* try {
+    String accountKey = null;
+    try {
       accountKey = keyCache.get(accountId);
     } catch (Exception ex) {
       // noop
-    }*/
+    }
 
     if (accountKey == null || GLOBAL_ACCOUNT_ID.equals(accountId)) {
       throw new InvalidRequestException("Access denied", USER_ADMIN);
