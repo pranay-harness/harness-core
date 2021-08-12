@@ -415,24 +415,23 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Access all caches before coming out of maintenance
     injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
 
-    initializeFeatureFlags(configuration, injector);
-
-    if (isDelegateServiceApp(injector)) {
+    boolean isDelegateServiceApp = shouldEnableDelegateMgmt(configuration);
+    if (isDelegateServiceApp) {
       registerAtmosphereStreams(environment, injector);
     }
+
+    initializeFeatureFlags(configuration, injector);
 
     if (isManager()) {
       registerHealthChecksManager(environment, injector);
     }
+    if (isDelegateServiceApp) {
+      registerHealthChecksDelegateService(environment, injector);
+    }
 
     registerStores(configuration, injector);
 
-    if (isManager()) {
-      registerResourcesManager(environment, injector);
-    }
-    if (isDelegateServiceApp(injector)) {
-      registerResourcesDelegateService(environment, injector);
-    }
+    registerResources(environment, injector);
 
     // Managed beans
     registerManagedBeansCommon(configuration, environment, injector);
@@ -466,7 +465,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerInprocPerpetualTaskServiceClients(injector);
 
-    registerCronJobs(injector);
+    if (isManager()) {
+      registerCronJobs(injector);
+    }
 
     // common for both manager and dms
     registerCorsFilter(configuration, environment);
@@ -821,6 +822,16 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (timeScaleDBService.getTimeScaleDBConfig().isHealthCheckNeeded()) {
         healthService.registerMonitor(injector.getInstance(TimeScaleDBService.class));
       }
+    }
+  }
+
+  private void registerHealthChecksDelegateService(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("WingsApp", healthService);
+
+    if (!injector.getInstance(FeatureFlagService.class).isGlobalEnabled(GLOBAL_DISABLE_HEALTH_CHECK)) {
+      healthService.registerMonitor(injector.getInstance(HPersistence.class));
+      healthService.registerMonitor((HealthMonitor) injector.getInstance(PersistentLocker.class));
     }
   }
 
