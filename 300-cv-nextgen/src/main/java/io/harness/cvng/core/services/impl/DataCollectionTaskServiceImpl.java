@@ -136,11 +136,6 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
-  public void deletePerpetualTasks(String accountId, String perpetualTaskId) {
-    verificationManagerService.deletePerpetualTask(accountId, perpetualTaskId);
-  }
-
-  @Override
   public void updateTaskStatus(DataCollectionTaskResult result) {
     log.info("Updating status {}", result);
     UpdateOperations<DataCollectionTask> updateOperations =
