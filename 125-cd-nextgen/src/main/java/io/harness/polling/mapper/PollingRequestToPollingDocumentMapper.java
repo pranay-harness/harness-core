@@ -15,8 +15,8 @@ import io.harness.polling.bean.manifest.HelmChartManifestInfo;
 import io.harness.polling.contracts.GcsHelmPayload;
 import io.harness.polling.contracts.HelmVersion;
 import io.harness.polling.contracts.HttpHelmPayload;
-import io.harness.polling.contracts.PayloadType;
 import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.contracts.PollingPayloadData;
 import io.harness.polling.contracts.Qualifier;
 import io.harness.polling.contracts.S3HelmPayload;
 
@@ -31,7 +31,8 @@ public class PollingRequestToPollingDocumentMapper {
     switch (pollingItem.getCategory()) {
       case MANIFEST:
         pollingDocumentBuilder.pollingType(PollingType.MANIFEST);
-        pollingInfo = getManifestPollingInfo(pollingItem.getPayloadType(), pollingItem.getConnectorRef());
+        pollingInfo = getManifestPollingInfo(
+            pollingItem.getPollingPayloadData(), pollingItem.getPollingPayloadData().getConnectorRef());
         break;
       case ARTIFACT:
         pollingDocumentBuilder.pollingType(PollingType.ARTIFACT);
@@ -49,10 +50,10 @@ public class PollingRequestToPollingDocumentMapper {
         .build();
   }
 
-  private PollingInfo getManifestPollingInfo(PayloadType payloadType, String connectorRef) {
-    switch (payloadType.getType()) {
+  private PollingInfo getManifestPollingInfo(PollingPayloadData pollingPayloadData, String connectorRef) {
+    switch (pollingPayloadData.getType()) {
       case HTTP_HELM:
-        HttpHelmPayload httpHelmPayload = payloadType.getHttpHelmPayload();
+        HttpHelmPayload httpHelmPayload = pollingPayloadData.getHttpHelmPayload();
         return HelmChartManifestInfo.builder()
             .store(HttpStoreConfig.builder()
                        .connectorRef(ParameterField.<String>builder().value(connectorRef).build())
@@ -62,7 +63,7 @@ public class PollingRequestToPollingDocumentMapper {
                                                                             : io.harness.k8s.model.HelmVersion.V3)
             .build();
       case S3_HELM:
-        S3HelmPayload s3HelmPayload = payloadType.getS3HelmPayload();
+        S3HelmPayload s3HelmPayload = pollingPayloadData.getS3HelmPayload();
         return HelmChartManifestInfo.builder()
             .store(S3StoreConfig.builder()
                        .connectorRef(ParameterField.<String>builder().value(connectorRef).build())
@@ -75,7 +76,7 @@ public class PollingRequestToPollingDocumentMapper {
                                                                           : io.harness.k8s.model.HelmVersion.V3)
             .build();
       case GCS_HELM:
-        GcsHelmPayload gcsHelmPayload = payloadType.getGcsHelmPayload();
+        GcsHelmPayload gcsHelmPayload = pollingPayloadData.getGcsHelmPayload();
         return HelmChartManifestInfo.builder()
             .store(GcsStoreConfig.builder()
                        .connectorRef(ParameterField.<String>builder().value(connectorRef).build())
@@ -87,7 +88,7 @@ public class PollingRequestToPollingDocumentMapper {
                                                                            : io.harness.k8s.model.HelmVersion.V3)
             .build();
       default:
-        throw new InvalidRequestException("Unsupported manifest type " + payloadType.getType());
+        throw new InvalidRequestException("Unsupported manifest type " + pollingPayloadData.getType());
     }
   }
 }
