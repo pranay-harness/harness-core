@@ -17,6 +17,7 @@ import software.wings.graphql.schema.query.QLEventsConfigQueryParameters;
 import software.wings.graphql.schema.type.event.QLEventsConfig;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -27,12 +28,16 @@ import org.apache.commons.lang3.StringUtils;
 public class EventsConfigDataFetcher extends AbstractObjectDataFetcher<QLEventsConfig, QLEventsConfigQueryParameters> {
   @Inject EventConfigService eventConfigService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private AppService appService;
 
   @Override
   @AuthRule(permissionType = LOGGED_IN, action = PermissionAttribute.Action.READ)
   protected QLEventsConfig fetch(QLEventsConfigQueryParameters qlQuery, String accountId) {
     if (!featureFlagService.isEnabled(APP_TELEMETRY, accountId)) {
       throw new InvalidRequestException("Please enable feature flag to configure events");
+    }
+    if (!appService.exist(qlQuery.getAppId())) {
+      throw new InvalidRequestException("Application does not exist");
     }
     CgEventConfig cgEventConfig = null;
     if (StringUtils.isNotBlank(qlQuery.getEventsConfigId())) {
