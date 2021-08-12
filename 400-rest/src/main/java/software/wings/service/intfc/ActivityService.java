@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -20,6 +22,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
+@TargetModule(HarnessModule._959_CG_BEANS)
 public interface ActivityService {
   /**
    * List.

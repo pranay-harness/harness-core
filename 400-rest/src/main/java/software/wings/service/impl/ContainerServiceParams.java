@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @Builder
 @Slf4j
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class ContainerServiceParams implements ExecutionCapabilityDemander {
   private SettingAttribute settingAttribute;
   private List<EncryptedDataDetail> encryptionDetails;

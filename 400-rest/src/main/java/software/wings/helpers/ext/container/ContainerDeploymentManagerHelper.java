@@ -61,7 +61,7 @@ import org.mongodb.morphia.Key;
  */
 @Singleton
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ContainerDeploymentManagerHelper {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;

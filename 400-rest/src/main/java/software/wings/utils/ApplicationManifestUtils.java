@@ -25,8 +25,10 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -103,6 +105,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 @OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ApplicationManifestUtils {
   @Inject private AppService appService;
   @Inject private ApplicationManifestService applicationManifestService;
