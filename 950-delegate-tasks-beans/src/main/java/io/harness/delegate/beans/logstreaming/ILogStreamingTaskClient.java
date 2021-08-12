@@ -4,13 +4,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
 import io.harness.logstreaming.LogLine;
 
-import java.io.OutputStream;
 import java.util.concurrent.ExecutorService;
 
-@OwnedBy(HarnessTeam.DEL)
+@OwnedBy(HarnessTeam.CDP)
 public interface ILogStreamingTaskClient {
   /**
    * Open new log stream on log streaming service.
@@ -26,11 +24,6 @@ public interface ILogStreamingTaskClient {
    * Push log message to the existing log stream
    */
   void writeLogLine(LogLine logLine, String baseLogKeySuffix);
-
-  /**
-   * Provides an output stream for writing log messages (e.g. to be given to the ProcessExecutor)
-   */
-  OutputStream obtainLogOutputStream(LogLevel logLevel, String baseLogKeySuffix);
 
   /**
    * Provides an instance of LogCallback interface implementation for backward compatibility reasons, to be used in
