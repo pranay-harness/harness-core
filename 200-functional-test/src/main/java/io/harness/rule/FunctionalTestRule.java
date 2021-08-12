@@ -354,6 +354,10 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
 
+    configuration.setGrpcDMSClientConfig(
+        GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
+
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
 

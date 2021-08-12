@@ -129,6 +129,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.DelegateTokenGlobalContextData;
+import io.harness.grpc.DelegateServiceClassicGrpcClient;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -272,6 +273,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
+@BreakDependencyOn("software.wings.app.MainConfiguration")
+@BreakDependencyOn("software.wings.beans.User")
 @OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
   /**
@@ -369,6 +372,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
   @Inject private OutboxService outboxService;
+  @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -3586,6 +3590,9 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueTask(DelegateTask task) {
+    if (mainConfiguration.isDisableDelegateMgmtInManager()) {
+      return delegateServiceClassicGrpcClient.queueTask(task);
+    }
     return delegateTaskServiceClassic.queueTask(task);
   }
 
@@ -3596,6 +3603,9 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+    if (mainConfiguration.isDisableDelegateMgmtInManager()) {
+      return delegateServiceClassicGrpcClient.executeTask(task);
+    }
     return delegateTaskServiceClassic.executeTask(task);
   }
 }
