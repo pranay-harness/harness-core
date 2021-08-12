@@ -8,6 +8,7 @@ import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.impl.CIYamlSchemaServiceImpl;
+import io.harness.app.impl.DummyUsageImpl;
 import io.harness.app.intfc.CIYamlSchemaService;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -22,6 +23,7 @@ import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
+import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoPersistence;
@@ -128,6 +130,7 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(CIOverviewDashboardService.class).to(CIOverviewDashboardServiceImpl.class);
+    bind(LicenseUsageInterface.class).to(DummyUsageImpl.class);
     try {
       bind(TimeScaleDBService.class)
           .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
