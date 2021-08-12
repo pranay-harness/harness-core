@@ -1,6 +1,5 @@
 package io.harness.tracing;
 
-import static io.harness.mongo.tracing.TracerConstants.ANALYZER_CACHE_NAME;
 import static io.harness.mongo.tracing.TracerConstants.QUERY_HASH;
 import static io.harness.mongo.tracing.TracerConstants.SERVICE_ID;
 import static io.harness.version.VersionConstants.VERSION_KEY;
@@ -16,8 +15,8 @@ import io.harness.version.VersionInfoManager;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -29,67 +28,77 @@ import org.springframework.data.mongodb.core.query.Query;
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class MongoRedisTracer implements Tracer {
-  private static final int SAMPLE_SIZE = 120; // For per seconds poller sample every 2 min
+  private static final int SAMPLE_SIZE = 120; // Consider only 1 sample out of 120 invocations
 
   @Inject @Named(PersistenceTracerConstants.TRACING_THREAD_POOL) private ExecutorService executorService;
   @Inject @Named(PersistenceTracerConstants.QUERY_ANALYSIS_PRODUCER) private Producer producer;
   @Inject @Named(SERVICE_ID) private String serviceId;
   @Inject private VersionInfoManager versionInfoManager;
 
-  @Inject @Named(ANALYZER_CACHE_NAME) Cache<String, Long> queryStatsCache;
+  private final ConcurrentHashMap<String, Long> queryStatsCache = new ConcurrentHashMap<>();
 
   @Override
   public void trace(Query query, Class<?> entityClass, MongoTemplate mongoTemplate) {
     try {
-      traceInternal(query, entityClass, mongoTemplate);
+      executorService.execute(() -> {
+        try {
+          traceInternal(query, entityClass, mongoTemplate);
+        } catch (Exception ex) {
+          log.error(String.format("Unable to trace spring query: %s", query.getQueryObject().toJson()), ex);
+        }
+      });
     } catch (Exception ex) {
-      log.error("Unable to trace query: {}", query.getQueryObject());
+      log.error("Unable to submit spring trace query task", ex);
     }
   }
 
   private void traceInternal(Query query, Class<?> entityClass, MongoTemplate mongoTemplate) {
     String collectionName = mongoTemplate.getCollectionName(entityClass);
-    Document queryDoc = query.getQueryObject();
-    Document sortDoc = query.getSortObject();
+    MongoConverter mongoConverter = mongoTemplate.getConverter();
+    MongoPersistentEntity<?> entity = mongoConverter.getMappingContext().getPersistentEntity(entityClass);
+    QueryMapper queryMapper = new QueryMapper(mongoConverter);
+    Document queryDoc = queryMapper.getMappedObject(nonNullDocument(query.getQueryObject()), entity);
+    Document sortDoc = queryMapper.getMappedSort(nonNullDocument(query.getSortObject()), entity);
     String qHash = QueryShapeDetector.getQueryHash(collectionName, queryDoc, sortDoc);
-    if (queryStatsCache.containsKey(qHash)) {
-      Long count = queryStatsCache.get(qHash);
-      count = count + 1;
-      queryStatsCache.put(qHash, count);
-      if (count % SAMPLE_SIZE != 0) {
-        return;
-      }
-      log.info("Sampling the query....");
+    if (skipSample(qHash)) {
+      return;
     }
 
-    executorService.submit(() -> {
-      // Recalculate hash based on properly mapped queries
-      MongoConverter mongoConverter = mongoTemplate.getConverter();
-      MongoPersistentEntity<?> entity = mongoConverter.getMappingContext().getPersistentEntity(entityClass);
-      QueryMapper queryMapper = new QueryMapper(mongoConverter);
-      Document finalQueryDoc = queryMapper.getMappedObject(query.getQueryObject(), entity);
-      Document finalSortDoc = queryMapper.getMappedSort(query.getSortObject(), entity);
-      String finalQHash = QueryShapeDetector.getQueryHash(collectionName, finalQueryDoc, finalSortDoc);
+    log.info("Sampling spring query for collection {}...", collectionName);
 
-      Document explainDocument = new Document();
-      explainDocument.put("find", collectionName);
-      explainDocument.put("filter", finalQueryDoc);
-      explainDocument.put("sort", finalSortDoc);
+    Document explainDocument = new Document();
+    explainDocument.put("find", collectionName);
+    explainDocument.put("filter", queryDoc);
+    explainDocument.put("sort", sortDoc);
 
-      Document command = new Document();
-      command.put("explain", explainDocument);
+    Document command = new Document();
+    command.put("explain", explainDocument);
 
-      Document explainResult = mongoTemplate.getDb().runCommand(command);
+    Document explainResult = mongoTemplate.getDb().runCommand(command);
+    processExplainResult(qHash, explainResult);
+  }
 
-      log.debug("Explain Results");
-      log.debug(explainResult.toJson());
-      producer.send(Message.newBuilder()
-                        .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
-                        .putMetadata(SERVICE_ID, serviceId)
-                        .putMetadata(QUERY_HASH, finalQHash)
-                        .setData(ByteString.copyFromUtf8(explainResult.toJson()))
-                        .build());
-      queryStatsCache.put(finalQHash, 1L);
-    });
+  private boolean skipSample(String qHash) {
+    // Here we first increment the counter corresponding to a qHash by 1 and the  check is it should be sampled.
+    //
+    // Value of a qHash in queryStatsCache is in the range [0, SAMPLE_SIZE-1] inclusive. We only consider a sample for
+    // processing when the new value after incrementing the counter is 1. So if we see a new qHash, the initial value
+    // after the increment is 1, hence we process the sample. Then we skip the next (SAMPLE_SIZE-1) samples.
+    long newCount = queryStatsCache.compute(qHash, (k, v) -> v == null ? 1 : ((v + 1) % SAMPLE_SIZE));
+    return newCount != 1;
+  }
+
+  private void processExplainResult(String qHash, Document explainResult) {
+    log.debug(String.format("Explain Results: %s", explainResult.toJson()));
+    producer.send(Message.newBuilder()
+                      .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
+                      .putMetadata(SERVICE_ID, serviceId)
+                      .putMetadata(QUERY_HASH, qHash)
+                      .setData(ByteString.copyFromUtf8(explainResult.toJson()))
+                      .build());
+  }
+
+  private static Document nonNullDocument(Document doc) {
+    return doc == null ? new Document() : doc;
   }
 }
