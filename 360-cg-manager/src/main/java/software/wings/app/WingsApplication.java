@@ -445,7 +445,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (isManager()) {
       registerQueueListenersManger(injector, queueListenerController);
     }
-    if (shouldEnableDelegateMgmt(configuration)) {
+    if (isDelegateServiceApp) {
       registerQueueListenersDelegateService(injector, queueListenerController);
     }
 
@@ -455,7 +455,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (isManager()) {
       scheduleJobsManager(injector, configuration, delegateExecutor);
     }
-    if (shouldEnableDelegateMgmt(configuration)) {
+    if (isDelegateServiceApp) {
       scheduleJobsDelegateService(injector, configuration, delegateExecutor);
     }
 
@@ -484,7 +484,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (isManager()) {
         registerIteratorsManager(injector);
       }
-      if (shouldEnableDelegateMgmt(configuration)) {
+      if (isDelegateServiceApp) {
         registerIteratorsDelegateService(injector);
       }
     }
