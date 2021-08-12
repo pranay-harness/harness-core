@@ -26,7 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by anubhaw on 1/5/17.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("DOCKER")
 @Data
 @EqualsAndHashCode(callSuper = false)

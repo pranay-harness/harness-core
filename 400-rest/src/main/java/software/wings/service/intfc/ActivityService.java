@@ -22,7 +22,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public interface ActivityService {
   /**
    * List.

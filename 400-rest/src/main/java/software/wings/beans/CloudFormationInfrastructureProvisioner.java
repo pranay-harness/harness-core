@@ -28,7 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("CLOUD_FORMATION")
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class CloudFormationInfrastructureProvisioner extends InfrastructureProvisioner {
   private static String VARIABLE_KEY = "cloudformation";
   @NotEmpty @Trimmed(message = "Source type should not contain leading and trailing spaces") private String sourceType;

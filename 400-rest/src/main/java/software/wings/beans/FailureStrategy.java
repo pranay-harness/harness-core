@@ -20,7 +20,7 @@ import lombok.Value;
 
 @Value
 @Builder(toBuilder = true)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class FailureStrategy {
   @NotNull @Size(min = 1, message = "should not be empty") private List<FailureType> failureTypes;
   private ExecutionScope executionScope;

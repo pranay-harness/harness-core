@@ -38,7 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "key")
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class AzureConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AZURE_URL = "https://azure.microsoft.com/";
   @Attributes(title = "Client ID [Application ID]", required = true) @NotEmpty private String clientId;

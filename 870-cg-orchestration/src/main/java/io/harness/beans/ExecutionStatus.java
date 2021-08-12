@@ -14,7 +14,7 @@ import java.util.Set;
  * Describes possible execution statuses for a state.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum ExecutionStatus {
   ABORTED,
   DISCONTINUING,

@@ -45,7 +45,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @ToString(exclude = {"password", "token"})
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class JenkinsConfig extends SettingValue
     implements EncryptableSetting, ArtifactSourceable, TaskParameters, ExecutionCapabilityDemander {
   public static final String USERNAME_DEFAULT_TEXT = "UserName/Password";

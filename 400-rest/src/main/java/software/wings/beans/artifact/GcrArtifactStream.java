@@ -30,7 +30,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("GCR")
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class GcrArtifactStream extends ArtifactStream {
   @NotEmpty private String registryHostName;
   @NotEmpty private String dockerImageName;

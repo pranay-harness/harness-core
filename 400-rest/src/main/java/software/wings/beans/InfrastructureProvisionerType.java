@@ -10,7 +10,7 @@ import io.harness.annotations.dev.TargetModule;
  * The enum Infrastructure provisioner type.
  */
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum InfrastructureProvisionerType {
   TERRAFORM,
   CLOUD_FORMATION,

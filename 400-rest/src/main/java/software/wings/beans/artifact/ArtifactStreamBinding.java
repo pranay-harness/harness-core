@@ -11,7 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Builder
 public class ArtifactStreamBinding {

@@ -53,7 +53,7 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by rishi on 12/21/16.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PhaseStep {
   private String uuid = generateUuid();
   private String name;

@@ -20,7 +20,7 @@ import java.util.Set;
  * Created by rishi on 8/15/16.
  */
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ElementExecutionSummary {
   private ContextElement contextElement;
   private List<InstanceStatusSummary> instanceStatusSummaries;

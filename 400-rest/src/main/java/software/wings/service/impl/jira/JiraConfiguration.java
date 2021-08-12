@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
  * Created by Pranjal on 05/13/2019
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
