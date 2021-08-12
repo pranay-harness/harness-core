@@ -1,5 +1,7 @@
 package software.wings.beans.yaml;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.eraro.ErrorCode;
@@ -12,6 +14,7 @@ import lombok.Data;
  */
 @Data
 @Builder
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class GitCommandExecutionResponse implements DelegateTaskNotifyResponseData {
   private GitCommandResult gitCommandResult;
   private GitCommandRequest gitCommandRequest;

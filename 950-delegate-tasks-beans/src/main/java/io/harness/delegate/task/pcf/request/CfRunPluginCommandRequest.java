@@ -35,9 +35,9 @@ public class CfRunPluginCommandRequest extends CfCommandRequest
     implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess, Cd1ApplicationAccess {
   @Expression(ALLOW_SECRETS) private String renderedScriptString;
   private List<String> filePathsInScript;
-  private List<FileData> fileDataList;
+  @Expression(ALLOW_SECRETS) private List<FileData> fileDataList;
   private List<EncryptedDataDetail> encryptedDataDetails;
-  private String repoRoot;
+  @Expression(ALLOW_SECRETS) private String repoRoot;
   @NotNull private CfCliVersion cfCliVersion;
 
   @Builder
