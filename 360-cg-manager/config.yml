@@ -624,4 +624,4 @@ auditClientConfig:
 
 enableAudit: false
 
-disableDelegateMgmtInManager: false
+disableDelegateMgmtInManager: true

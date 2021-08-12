@@ -355,19 +355,17 @@ public class AuthenticationManager {
 
       User user;
       if (isPasswordHash) {
-        if (authHandler instanceof PasswordBasedAuthHandler) {
-          PasswordBasedAuthHandler passwordBasedAuthHandler = (PasswordBasedAuthHandler) authHandler;
-          user = passwordBasedAuthHandler.authenticateWithPasswordHash(userName, password).getUser();
-        } else {
-          log.error("isPasswordHash should not be true if the auth mechanism {} is not username / password",
-              authenticationMechanism);
-          throw new WingsException(INVALID_CREDENTIAL);
-        }
+        user = authHandler.authenticate(userName, password).getUser();
+
       } else {
         user = authHandler.authenticate(userName, password).getUser();
       }
+      List<String> accountIds = user.getAccountIds();
+      User loggedInUser = authService.generateBearerTokenForUser(user);
+      authService.auditLogin(accountIds, loggedInUser);
+      return loggedInUser;
 
-      if (user.isTwoFactorAuthenticationEnabled()) {
+     /* if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {
         List<String> accountIds = user.getAccountIds();
@@ -375,7 +373,7 @@ public class AuthenticationManager {
         authService.auditLogin(accountIds, loggedInUser);
         return loggedInUser;
       }
-
+*/
     } catch (WingsException we) {
       log.error("Failed to login via default mechanism with raised exception", we);
       User user = userService.getUserByEmail(userName);
