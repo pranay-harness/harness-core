@@ -789,8 +789,8 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
     activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
     List<ActivityDashboardDTO> dashboardDTOList =
-        activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier, envIdentifier,
-            serviceIdentifier, Instant.now().minus(15, ChronoUnit.MINUTES), Instant.now().plus(15, ChronoUnit.MINUTES));
+        activityService.listActivitiesInTimeRange(builderFactory.getContext().getProjectParams(), serviceIdentifier,
+            envIdentifier, Instant.now().minus(15, ChronoUnit.MINUTES), Instant.now().plus(15, ChronoUnit.MINUTES));
 
     assertThat(dashboardDTOList.size()).isEqualTo(2);
     List<Activity> activity = hPersistence.createQuery(Activity.class, excludeAuthority)

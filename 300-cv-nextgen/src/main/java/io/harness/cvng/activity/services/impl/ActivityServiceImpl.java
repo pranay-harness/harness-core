@@ -40,6 +40,7 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -67,8 +68,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
@@ -404,13 +408,13 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier,
-      String projectIdentifier, String environmentIdentifier, String serviceIdentifier, Instant startTime,
-      Instant endTime) {
+  public List<ActivityDashboardDTO> listActivitiesInTimeRange(@NotNull @NonNull ProjectParams projectParams,
+      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier, @NotNull Instant startTime,
+      @NotNull Instant endTime) {
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
-                                        .filter(ActivityKeys.accountId, accountId)
-                                        .filter(ActivityKeys.orgIdentifier, orgIdentifier)
-                                        .filter(ActivityKeys.projectIdentifier, projectIdentifier)
+                                        .filter(ActivityKeys.accountId, projectParams.getAccountIdentifier())
+                                        .filter(ActivityKeys.orgIdentifier, projectParams.getOrgIdentifier())
+                                        .filter(ActivityKeys.projectIdentifier, projectParams.getProjectIdentifier())
                                         .field(ActivityKeys.activityStartTime)
                                         .greaterThanOrEq(startTime)
                                         .field(ActivityKeys.activityStartTime)

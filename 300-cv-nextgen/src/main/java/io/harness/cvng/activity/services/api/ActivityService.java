@@ -16,11 +16,15 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import lombok.NonNull;
 
 @OwnedBy(HarnessTeam.CV)
 public interface ActivityService {
@@ -46,8 +50,9 @@ public interface ActivityService {
 
   String createActivity(Activity activity);
 
-  List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, String serviceIdentifier, Instant startTime, Instant endTime);
+  List<ActivityDashboardDTO> listActivitiesInTimeRange(@NotNull @NonNull ProjectParams projectParams,
+      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier, @NotNull Instant startTime,
+      @NotNull Instant endTime);
 
   List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
       String accountId, String orgIdentifier, String projectIdentifier, int size);
