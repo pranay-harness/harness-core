@@ -69,7 +69,7 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * The Class WorkflowExecution.
  */
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @BreakDependencyOn("software.wings.service.impl.WorkflowExecutionServiceHelper")
 @Data

@@ -12,7 +12,7 @@ import lombok.Data;
 @OwnedBy(CDC)
 @Data
 @Builder
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class WorkflowNotificationDetails {
   @Builder.Default private String url = "";
   @Builder.Default private String name = "";

@@ -20,7 +20,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ContainerDeploymentInfoWithNames extends BaseContainerDeploymentInfo {
   /**
    * In case of ECS, this would be a list of taskDefinitionArns.

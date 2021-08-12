@@ -11,7 +11,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//959-cg-beans:module",
+        "//957-cg-beans:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",

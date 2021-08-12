@@ -11,7 +11,7 @@ import lombok.Data;
 
 @Data
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Label {
   @Attributes(title = "Name") private String name;
   @Attributes(title = "Value") private String value;

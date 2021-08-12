@@ -11,7 +11,7 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 7/8/16.
  */
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class CountsByStatuses {
   private int success;
   private int failed;
