@@ -847,8 +847,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
     install(new DelegateServiceClassicGrpcClientModule(configuration.getDmsSecret(),
-         configuration.getGrpcDMSClientConfig().getTarget(),
-         configuration.getGrpcDMSClientConfig().getAuthority()));
+        configuration.getGrpcDMSClientConfig().getTarget(), configuration.getGrpcDMSClientConfig().getAuthority()));
 
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
