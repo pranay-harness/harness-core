@@ -251,7 +251,6 @@ import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
@@ -322,8 +321,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
-  @Inject private FeatureFlagService featureFlagService;
-
   private StartupMode startupMode;
 
   public WingsApplication(StartupMode startupMode) {
@@ -433,7 +430,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerEventConsumers(injector);
 
-    registerObservers(injector);
+    registerObservers(configuration, injector);
 
     registerInprocPerpetualTaskServiceClients(injector);
 
@@ -685,6 +682,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerInprocPerpetualTaskServiceClients(Injector injector) {
+    // will move to dms in the future, keep it in manager for now
     PerpetualTaskServiceClientRegistry clientRegistry =
         injector.getInstance(Key.get(PerpetualTaskServiceClientRegistry.class));
 
@@ -962,8 +960,56 @@ public class WingsApplication extends Application<MainConfiguration> {
         0L, 10L, TimeUnit.MINUTES);
   }
 
-  public static void registerObservers(Injector injector) {
+  public void registerObservers(MainConfiguration configuration, Injector injector) {
     // Register Audit observer
+    DelegateServiceImpl delegateServiceImpl =
+        (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
+
+    if (isManager()) {
+      registerManagerObservers(injector, delegateServiceImpl);
+    }
+
+    if (shouldEnableDelegateMgmt(configuration)) {
+      registerDelegateServiceObservers(injector, delegateServiceImpl);
+    }
+  }
+
+  /**
+   * All the observers that belong to Delegate service app
+   * @param injector
+   * @param delegateServiceImpl
+   */
+  private void registerDelegateServiceObservers(Injector injector, DelegateServiceImpl delegateServiceImpl) {
+    delegateServiceImpl.getDelegateTaskStatusObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
+
+    DelegateTaskServiceImpl delegateTaskService =
+        (DelegateTaskServiceImpl) injector.getInstance(Key.get(DelegateTaskService.class));
+    delegateTaskService.getDelegateTaskStatusObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
+
+    delegateServiceImpl.getSubject().register(
+        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
+
+    DelegateProfileServiceImpl delegateProfileService =
+        (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class));
+    DelegateProfileEventHandler delegateProfileEventHandler =
+        injector.getInstance(Key.get(DelegateProfileEventHandler.class));
+    delegateServiceImpl.getDelegateProfileSubject().register(delegateProfileEventHandler);
+    delegateProfileService.getDelegateProfileSubject().register(delegateProfileEventHandler);
+
+    CapabilityServiceImpl capabilityService =
+        (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
+    capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
+        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
+  }
+
+  /**
+   * All the observers that belong to manager
+   * @param injector
+   * @param delegateServiceImpl
+   */
+  private void registerManagerObservers(Injector injector, DelegateServiceImpl delegateServiceImpl) {
     YamlPushServiceImpl yamlPushService = (YamlPushServiceImpl) injector.getInstance(Key.get(YamlPushService.class));
     AuditServiceImpl auditService = (AuditServiceImpl) injector.getInstance(Key.get(AuditService.class));
     yamlPushService.getEntityCrudSubject().register(auditService);
@@ -978,15 +1024,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(Key.get(ArtifactStreamSettingAttributePTaskManager.class)));
 
     KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
-    DelegateServiceImpl delegateService = (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
-    delegateService.getSubject().register(kubernetesClusterHandler);
-    delegateService.getDelegateTaskStatusObserverSubject().register(
-        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
-
-    DelegateTaskServiceImpl delegateTaskService =
-        (DelegateTaskServiceImpl) injector.getInstance(Key.get(DelegateTaskService.class));
-    delegateTaskService.getDelegateTaskStatusObserverSubject().register(
-        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
+    delegateServiceImpl.getSubject().register(kubernetesClusterHandler);
 
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) injector.getInstance(Key.get(InfrastructureDefinitionService.class));
@@ -996,6 +1034,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         (InfrastructureMappingServiceImpl) injector.getInstance(Key.get(InfrastructureMappingService.class));
     infrastructureMappingService.getSubject().register(clusterRecordHandler);
 
+    // Eventually will be moved to dms
     CEPerpetualTaskHandler cePerpetualTaskHandler = injector.getInstance(Key.get(CEPerpetualTaskHandler.class));
     ClusterRecordServiceImpl clusterRecordService =
         (ClusterRecordServiceImpl) injector.getInstance(Key.get(ClusterRecordService.class));
@@ -1012,34 +1051,18 @@ public class WingsApplication extends Application<MainConfiguration> {
     accountService.getAccountCrudSubject().register(
         (DelegateTokenServiceImpl) injector.getInstance(Key.get(DelegateTokenService.class)));
 
+    // Eventually will be moved to dms
     PerpetualTaskServiceImpl perpetualTaskService =
         (PerpetualTaskServiceImpl) injector.getInstance(Key.get(PerpetualTaskService.class));
     perpetualTaskService.getPerpetualTaskCrudSubject().register(
         injector.getInstance(Key.get(PerpetualTaskRecordHandler.class)));
     perpetualTaskService.getPerpetualTaskStateObserverSubject().register(
         injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
-
-    DelegateServiceImpl delegateServiceImpl =
-        (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
     delegateServiceImpl.getSubject().register(perpetualTaskService);
-    delegateServiceImpl.getSubject().register(
-        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
 
     ApplicationManifestServiceImpl applicationManifestService =
         (ApplicationManifestServiceImpl) injector.getInstance(Key.get(ApplicationManifestService.class));
     applicationManifestService.getSubject().register(injector.getInstance(Key.get(ManifestPerpetualTaskManger.class)));
-
-    DelegateProfileServiceImpl delegateProfileService =
-        (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class));
-    DelegateProfileEventHandler delegateProfileEventHandler =
-        injector.getInstance(Key.get(DelegateProfileEventHandler.class));
-    delegateService.getDelegateProfileSubject().register(delegateProfileEventHandler);
-    delegateProfileService.getDelegateProfileSubject().register(delegateProfileEventHandler);
-
-    CapabilityServiceImpl capabilityService =
-        (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
-    capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
-        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
 
     ObserversHelper.registerSharedObservers(injector);
   }
