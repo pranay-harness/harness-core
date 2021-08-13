@@ -174,6 +174,28 @@ public class BuildTriggerHelper {
       if (isNotBlank(error)) {
         throw new InvalidRequestException(error);
       }
+    } else if (pollingItem.getPollingPayloadData().hasS3HelmPayload()) {
+      error = checkFiledValueError("ChartName", pollingItem.getPollingPayloadData().getS3HelmPayload().getChartName());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+
+      error = checkFiledValueError(
+          "helmVersion", pollingItem.getPollingPayloadData().getS3HelmPayload().getHelmVersion().name());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+    } else if (pollingItem.getPollingPayloadData().hasGcsHelmPayload()) {
+      error = checkFiledValueError("ChartName", pollingItem.getPollingPayloadData().getGcsHelmPayload().getChartName());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+
+      error = checkFiledValueError(
+          "helmVersion", pollingItem.getPollingPayloadData().getGcsHelmPayload().getHelmVersion().name());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
     } else {
       throw new InvalidRequestException("Store Type is not supported for HelmChart Trigger");
     }
