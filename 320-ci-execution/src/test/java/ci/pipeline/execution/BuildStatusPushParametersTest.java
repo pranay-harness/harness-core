@@ -72,7 +72,7 @@ public class BuildStatusPushParametersTest extends CIExecutionTestBase {
         Status.SUCCEEDED);
 
     assertThat(pushParameters.getDesc())
-        .isEqualTo("Execution status of Pipeline - shortPipelineId (executionuuid) Stage - shortname was SUCCEEDED");
+        .isEqualTo("Execution status of Pipeline - shortPipelineId (executionuuid) Stage - shortname was SUCCEEDED.");
 
     assertThat(pushParameters.getIdentifier()).isEqualTo("shortPipelineId-shortIdentifier");
   }
