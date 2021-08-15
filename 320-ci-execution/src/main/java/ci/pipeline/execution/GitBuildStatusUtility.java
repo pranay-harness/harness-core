@@ -188,7 +188,7 @@ public class GitBuildStatusUtility {
       GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
       return gitConfigDTO.getUrl();
     } else {
-      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported.");
     }
   }
 
