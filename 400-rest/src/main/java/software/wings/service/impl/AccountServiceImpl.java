@@ -156,6 +156,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -242,6 +243,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject protected AuthService authService;
   @Inject protected HarnessCacheManager harnessCacheManager;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private RoleService roleService;
   @Inject private AuthHandler authHandler;
   @Inject private LicenseService licenseService;
@@ -531,7 +533,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public AccountDetails getDetails(String accountId) {
+  public AccountDetails getAccountDetails(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     if (account == null) {
       throw new AccountNotFoundException(
@@ -547,6 +549,7 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
     accountDetails.setDefaultExperience(account.getDefaultExperience());
     accountDetails.setCreatedFromNG(account.isCreatedFromNG());
+    accountDetails.setActiveServiceCount(workflowExecutionService.getActiveServiceCount(accountId));
     return accountDetails;
   }
 

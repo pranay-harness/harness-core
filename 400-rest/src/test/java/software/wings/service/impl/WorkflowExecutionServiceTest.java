@@ -41,6 +41,7 @@ import static software.wings.beans.deployment.DeploymentMetadata.Include.ENVIRON
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
+import static software.wings.utils.WingsTestConstants.ACCOUNT1_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -50,6 +51,12 @@ import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE1_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE2_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE3_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE4_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE5_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE6_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
@@ -164,6 +171,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import com.mongodb.WriteResult;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -171,6 +179,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -196,7 +205,8 @@ import org.mongodb.morphia.query.UpdateResults;
 public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
   @InjectMocks
-  private WorkflowExecutionServiceImpl workflowExecutionServiceSpy = spy(WorkflowExecutionServiceImpl.class);
+  private software.wings.service.impl.WorkflowExecutionServiceImpl workflowExecutionServiceSpy =
+      spy(software.wings.service.impl.WorkflowExecutionServiceImpl.class);
 
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
@@ -211,7 +221,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private FeatureFlagService featureFlagService;
-  @Mock WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
+  @Mock software.wings.service.impl.WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
   @Mock AuthService authService;
   @Mock private AccountExpirationChecker accountExpirationChecker;
   @Mock private HelmChartService helmChartService;
@@ -279,6 +289,26 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         workflowExecutionService.listExecutions(pageRequest, false, true, false, true, false);
     assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
     verify(wingsPersistence).query(WorkflowExecution.class, pageRequest);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void shouldGetActiveServiceCount() throws IllegalAccessException {
+    //    when(wingsPersistence.createQuery(eq(WorkflowExecution.class), any())).thenReturn(query);
+    WorkflowExecutionServiceImpl workflowExecutionServiceImpl = new WorkflowExecutionServiceImpl();
+    FieldUtils.writeField(workflowExecutionServiceImpl, "wingsPersistence", wingsPersistence1, true);
+    saveWorkflowExecution(ACCOUNT_ID, Arrays.asList(SERVICE1_ID, SERVICE2_ID));
+    saveWorkflowExecution(ACCOUNT_ID, Arrays.asList(SERVICE3_ID));
+    saveWorkflowExecution(ACCOUNT_ID, Arrays.asList(SERVICE2_ID));
+    saveWorkflowExecution(ACCOUNT1_ID, Arrays.asList(SERVICE4_ID, SERVICE5_ID));
+    saveWorkflowExecution(ACCOUNT1_ID, Arrays.asList(SERVICE6_ID));
+    int activeServiceCount = workflowExecutionServiceImpl.getActiveServiceCount(ACCOUNT_ID);
+    assertThat(activeServiceCount).isEqualTo(3);
+  }
+
+  private void saveWorkflowExecution(String accountId, List<String> serviceIds) {
+    wingsPersistence1.save(createNewWorkflowExecution(accountId, serviceIds));
   }
 
   /**
@@ -1242,6 +1272,20 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                    InstanceElement.Builder.anInstanceElement().uuid("id1").podName("pod").build())
                                .build()))
                        .build()))
+        .build();
+  }
+
+  private WorkflowExecution createNewWorkflowExecution(String accountId, List<String> serviceIds) {
+    return builder()
+        .accountId(accountId)
+        .appId(APP_ID)
+        .appName(APP_NAME)
+        .envType(NON_PROD)
+        .startTs(System.currentTimeMillis() - 10000)
+        .status(ExecutionStatus.PAUSED)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .uuid(generateUuid())
+        .serviceIds(serviceIds)
         .build();
   }
 
