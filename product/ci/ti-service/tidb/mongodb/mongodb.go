@@ -72,12 +72,13 @@ type Node struct {
 type VisEdge struct {
 	mgm.DefaultModel `bson:",inline"`
 
-	Caller  int     `json:"caller" bson:"caller"`
-	Callee  []int   `json:"callee" bson:"callee"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+	Caller   int       `json:"caller" bson:"caller"`
+	Callee   []int     `json:"callee" bson:"callee"`
+	Acct     string    `json:"account" bson:"account"`
+	Proj     string    `json:"project" bson:"project"`
+	Org      string    `json:"organization" bson:"organization"`
+	VCSInfo  VCSInfo   `json:"vcs_info" bson:"vcs_info"`
+	ExpireAt time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
 }
 
 const (
@@ -542,7 +543,7 @@ func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branc
 
 	// Get detailed node information
 	all := []Node{}
-	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "classId" : bson.M{"$in": nIds}}
+	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "classId": bson.M{"$in": nIds}}
 	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, f)
 	if err != nil {
 		return ret, err
@@ -788,7 +789,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
+		nodes[i] = *NewNode(node.ID, node.ClassId, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}
