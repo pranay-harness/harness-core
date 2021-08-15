@@ -75,6 +75,7 @@ import static software.wings.sm.StateType.PHASE_STEP;
 
 import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
@@ -326,6 +327,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
 import com.sun.istack.internal.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -431,6 +433,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject @AccountExpiryCheck private PreDeploymentChecker accountExpirationChecker;
   @Inject private WorkflowStatusPropagatorFactory workflowStatusPropagatorFactory;
   @Inject private WorkflowExecutionUpdate executionUpdate;
+  private static final long SIXTY_DAYS_IN_MILLIS = 60 * 24 * 60 * 60 * 1000L;
 
   @Inject private EventService eventService;
 
@@ -1481,6 +1484,29 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationExecution(
       String appId, String envId, String workflowId, ExecutionArgs executionArgs, Trigger trigger) {
     return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, null, executionArgs, null, trigger);
+  }
+
+  @Override
+  public int getActiveServiceCount(String accountId) {
+    long sixtyDays = currentTimeMillis() - SIXTY_DAYS_IN_MILLIS;
+    Query query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority);
+    query.filter(WorkflowExecutionKeys.accountId, accountId);
+    query.field(WorkflowExecutionKeys.startTs).greaterThanOrEq(sixtyDays);
+    query.project("serviceIds", true);
+    FindOptions findOptions = new FindOptions();
+    findOptions.modifier("$hint", "accountId_startTs_serviceIds");
+    findOptions.readPreference(ReadPreference.secondaryPreferred());
+    List<WorkflowExecution> workflowExecutions = query.asList(findOptions);
+    Set<String> flattenedSvcSet = new HashSet<>();
+    if (isNotEmpty(workflowExecutions)) {
+      workflowExecutions.forEach(workflowExecution -> {
+        List<String> serviceIdList = workflowExecution.getServiceIds();
+        if (isNotEmpty(serviceIdList)) {
+          serviceIdList.forEach(serviceId -> flattenedSvcSet.add(serviceId));
+        }
+      });
+    }
+    return flattenedSvcSet.size();
   }
 
   /**
