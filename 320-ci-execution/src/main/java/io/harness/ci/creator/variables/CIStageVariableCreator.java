@@ -71,7 +71,7 @@ public class CIStageVariableCreator extends ChildrenVariableCreator {
   }
 
   private String getStageLocalName(String fqn) {
-    String[] split = fqn.split("\\.");
+    String[] split = fqn.split("\\."); //dummy
     return fqn.replaceFirst(split[0], YAMLFieldNameConstants.STAGE);
   }
 
