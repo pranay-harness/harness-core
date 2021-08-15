@@ -99,7 +99,7 @@ public class ConnectorUtils {
   private final SecretUtils secretUtils;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
-  private final int MAX_ATTEMPTS = 3;
+  private final int MAX_ATTEMPTS = 6;
 
   @Inject
   public ConnectorUtils(ConnectorResourceClient connectorResourceClient, SecretUtils secretUtils,
