@@ -91,8 +91,8 @@ jwtIdentityServiceSecret: "HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
+  connectTimeOutSeconds: 40
+  readTimeOutSeconds: 40
 
 managerClientConfig:
   baseUrl: http://localhost:3457/api/
