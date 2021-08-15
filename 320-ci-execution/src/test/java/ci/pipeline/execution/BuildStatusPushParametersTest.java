@@ -33,7 +33,7 @@ import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CI)
 public class BuildStatusPushParametersTest extends CIExecutionTestBase {
-  private static final String SOME_URL = "https://url.com/owner/repo.git";
+  private static final String SOME_URL = "https://url.com/owner2/repo.git";
 
   @Mock private ConnectorUtils connectorUtils;
   @Mock GithubConnectorDTO gitConfigDTO;
