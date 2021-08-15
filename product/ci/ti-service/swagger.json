@@ -1114,6 +1114,10 @@
         "important": {
           "type": "boolean",
           "description": "Whether the node should be specially marked in the UI or not"
+        },
+        "root": {
+          "type": "boolean",
+          "description": "Whether to use this node as the root node in the UI or not"
         }
       }
     },
