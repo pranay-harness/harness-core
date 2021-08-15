@@ -56,6 +56,7 @@ type Node struct {
 	Package         string    `json:"package" bson:"package"`
 	Method          string    `json:"method" bson:"method"`
 	Id              int       `json:"id" bson:"id"`
+	ClassId         int       `json:"classId" bson:"classId"`
 	Params          string    `json:"params" bson:"params"`
 	File            string    `json:"file" bson:"file"` // Only populated if the type is resource
 	Class           string    `json:"class" bson:"class"`
@@ -95,9 +96,10 @@ type VCSInfo struct {
 }
 
 // NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
+func NewNode(id, classId int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
 		Id:              id,
+		ClassId:         classId,
 		Package:         pkg,
 		Method:          method,
 		Params:          params,
@@ -276,6 +278,80 @@ func (mdb *MongoDb) queryHelper(ctx context.Context, targetBranch, repo string, 
 	return result, false, nil
 }
 
+func toVis(n Node, imp bool) types.VisNode {
+	return types.VisNode{Id: n.ClassId, Package: n.Package, Class: n.Class, File: n.File, Type: n.Type, Important: imp}
+}
+
+// Helper function to check whether the file caused the test to be run
+// <pkg, cls>: package and class of a test file
+// It also returns the corresponding vis nodes for the changed file
+func check(ctx context.Context, branch, repo, file, pkg, cls, account string) (bool, []types.VisNode, error) {
+	fn, _ := utils.ParseJavaNode(file)
+	resp := []types.VisNode{}
+	var q interface{}
+	if fn.Type == utils.NodeType_SOURCE || fn.Type == utils.NodeType_TEST {
+		q = bson.M{"package": fn.Pkg, "class": fn.Class,
+			"vcs_info.repo":   repo,
+			"vcs_info.branch": branch,
+			"account":         account}
+	} else if fn.Type == utils.NodeType_RESOURCE {
+		q = bson.M{"type": "resource", "file": fn.File,
+			"vcs_info.repo":   repo,
+			"vcs_info.branch": branch,
+			"account":         account}
+	} else {
+		return false, resp, nil
+	}
+	// Check the node IDs corresponding to this query
+	nodes := []Node{}
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
+	if err != nil {
+		return false, resp, err
+	}
+	if len(nodes) == 0 { // No nodes were found for the file
+		return false, resp, nil
+	}
+
+	nids := []int{}
+	m := make(map[int]struct{})
+	for _, n := range nodes {
+		nids = append(nids, n.Id)
+		// Check whether it needs to be added in visualisation or not
+		if _, ok := m[n.ClassId]; ok {
+			continue
+		}
+		m[n.ClassId] = struct{}{}
+		resp = append(resp, toVis(n, true))
+	}
+
+	// Get test ID nodes
+	q = bson.M{"vcs_info.repo": repo,
+		"vcs_info.branch": branch,
+		"account":         account, "package": pkg, "class": cls}
+	nodes = []Node{}
+	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
+	if err != nil {
+		return false, resp, err
+	}
+	tids := []int{}
+	for _, n := range nodes {
+		tids = append(tids, n.Id)
+	}
+
+	// Check if the test nodes are present in any of these source id mappings
+	q = bson.M{"account": account, "vcs_info.repo": repo, "vcs_info.branch": branch, "source": bson.M{"$in": nids}, "tests": bson.M{"$in": tids}}
+	relns := []Relation{}
+	err = mgm.Coll(&Relation{}).SimpleFindWithCtx(ctx, &relns, q)
+	if err != nil {
+		return false, resp, err
+	}
+	if len(relns) == 0 {
+		return false, resp, nil
+	}
+
+	return true, resp, nil
+}
+
 // isValid checks whether the test is valid or not
 func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
@@ -321,12 +397,45 @@ func (mdb *MongoDb) GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgR
 			}
 		}
 
-		return mdb.bfsWithSource(ctx, branch, pkg, cls, req)
+		resp, err := mdb.bfsWithSource(ctx, branch, pkg, cls, req)
+		if err != nil {
+			return resp, err
+		}
+
+		// Check which changed files led to this test being run and add that in the nodes collection.
+		for _, f := range req.DiffFiles {
+			ok, vnodes, err := check(ctx, branch, req.Repo, f.Name, pkg, cls, req.AccountId)
+			if !ok || err != nil {
+				continue
+			}
+			for _, vn := range vnodes {
+				resp.Nodes = append(resp.Nodes, vn)
+			}
+		}
+		return formatVis(resp), nil
 	} else {
 		// Get a partial BFS corresponding to any random nodes
 		branch = req.TargetBranch
-		return mdb.bfsRandom(ctx, branch, req)
+		resp, err := mdb.bfsRandom(ctx, branch, req)
+		if err != nil {
+			return resp, err
+		}
+		return formatVis(resp), nil
 	}
+}
+
+// formatVis removes duplicate class ID nodes from the visualisation response
+func formatVis(inp types.GetVgResp) types.GetVgResp {
+	out := types.GetVgResp{Edges: inp.Edges}
+	m := make(map[int]struct{})
+	for _, vn := range inp.Nodes {
+		if _, ok := m[vn.Id]; ok {
+			continue
+		}
+		m[vn.Id] = struct{}{}
+		out.Nodes = append(out.Nodes, vn)
+	}
+	return out
 }
 
 // Perform a BFS starting for given branch and repo with the source nodes as <pkg, class>
@@ -348,7 +457,7 @@ func (mdb *MongoDb) bfsWithSource(ctx context.Context, branch, pkg, cls string, 
 	src := []int{}
 	// Initialize the starting nodes
 	for _, s := range all {
-		src = append(src, s.Id)
+		src = append(src, s.ClassId)
 	}
 
 	return mdb.bfsHelper(ctx, src, []int{}, branch, req)
@@ -372,9 +481,9 @@ func (mdb *MongoDb) bfsRandom(ctx context.Context, branch string, req types.GetV
 	add := []int{}
 	for idx, s := range all {
 		if idx == 0 {
-			src = append(src, s.Id)
+			src = append(src, s.ClassId)
 		} else {
-			add = append(add, s.Id)
+			add = append(add, s.ClassId)
 		}
 	}
 
@@ -433,20 +542,34 @@ func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branc
 
 	// Get detailed node information
 	all := []Node{}
-	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "id": bson.M{"$in": nIds}}
+	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "classId" : bson.M{"$in": nIds}}
 	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, f)
 	if err != nil {
 		return ret, err
 	}
+
 	for _, n := range all {
-		v := types.VisNode{Id: n.Id, Class: n.Class, Package: n.Package, Method: n.Method, Params: n.Params, Type: n.Type, File: n.File}
+		v := toVis(n, false)
 		if isImportant(v, req.DiffFiles) {
 			v.Important = true
+		}
+		// If the id is in the source from where we performed the BFS, mark it as a root node
+		if contains(srcList, n.ClassId) {
+			v.Root = true
 		}
 		ret.Nodes = append(ret.Nodes, v)
 	}
 
 	return ret, nil
+}
+
+func contains(s []int, check int) bool {
+	for _, k := range s {
+		if k == check {
+			return true
+		}
+	}
+	return false
 }
 
 // TODO: (Vistaar) Improve this to be a map so that we don't have to iterate
@@ -665,7 +788,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
+		nodes[i] = *NewNode(node.ID, node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}
