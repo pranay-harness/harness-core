@@ -539,6 +539,7 @@ shared_dependencies = [
     "@maven//:org_elasticsearch_elasticsearch_geo",
     "@maven//:org_elasticsearch_elasticsearch_secure_sm",
     "@maven//:org_elasticsearch_elasticsearch_x_content",
+    "@maven//:org_elasticsearch_elasticsearch_plugin_classloader",
     "@maven//:org_elasticsearch_jna",
     "@maven//:org_elasticsearch_plugin_aggs_matrix_stats_client",
     "@maven//:org_elasticsearch_plugin_lang_mustache_client",
