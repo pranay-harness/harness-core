@@ -612,8 +612,8 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   @Override
-  public HistoricalTrend getOverAllHealthScore(String accountId, String orgIdentifier, String projectIdentifier,
-      String serviceIdentifier, String environmentIdentifier, DurationDTO duration, Instant endTime) {
+  public HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
+      String environmentIdentifier, DurationDTO duration, Instant endTime) {
     HistoricalTrend historicalTrend = HistoricalTrend.builder().size(48).build();
 
     HeatMapResolution heatMapResolution = getHeatMapResolution(endTime.minus(duration.getDuration()), endTime);
@@ -622,9 +622,9 @@ public class HeatMapServiceImpl implements HeatMapService {
     Instant trendStartTime = trendEndTime.minus(duration.getDuration());
 
     Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
-                                      .filter(HeatMapKeys.accountId, accountId)
-                                      .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
-                                      .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                      .filter(HeatMapKeys.accountId, projectParams.getAccountIdentifier())
+                                      .filter(HeatMapKeys.orgIdentifier, projectParams.getOrgIdentifier())
+                                      .filter(HeatMapKeys.projectIdentifier, projectParams.getProjectIdentifier())
                                       .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
                                       .filter(HeatMapKeys.envIdentifier, environmentIdentifier)
                                       .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
@@ -652,7 +652,6 @@ public class HeatMapServiceImpl implements HeatMapService {
     });
     return historicalTrend;
   }
-
 
   private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier, CVMonitoringCategory category, Instant startTime, Instant endTime,

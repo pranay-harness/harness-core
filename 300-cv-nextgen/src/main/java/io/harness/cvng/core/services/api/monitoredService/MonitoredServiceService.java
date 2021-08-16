@@ -40,6 +40,6 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   HealthMonitoringFlagResponse setHealthMonitoringFlag(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean enable);
 
-  HistoricalTrend getOverAllHealthScore(String accountId, String orgIdentifier, String projectIdentifier,
-      String identifier, DurationDTO duration, Instant endTime);
+  HistoricalTrend getOverAllHealthScore(
+      ProjectParams projectParams, String identifier, DurationDTO duration, Instant endTime);
 }

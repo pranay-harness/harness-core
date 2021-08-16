@@ -573,11 +573,12 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
-  public HistoricalTrend getOverAllHealthScore(String accountId, String orgIdentifier, String projectIdentifier,
-      String identifier, DurationDTO duration, Instant endTime) {
-    MonitoredService monitoredService = getMonitoredService(accountId, orgIdentifier, projectIdentifier, identifier);
+  public HistoricalTrend getOverAllHealthScore(
+      ProjectParams projectParams, String identifier, DurationDTO duration, Instant endTime) {
+    MonitoredService monitoredService = getMonitoredService(projectParams.getAccountIdentifier(),
+        projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier(), identifier);
     Preconditions.checkNotNull(monitoredService, "Monitored service with identifier %s does not exists", identifier);
-    return heatMapService.getOverAllHealthScore(accountId, orgIdentifier, projectIdentifier,
-        monitoredService.getServiceIdentifier(), monitoredService.getEnvironmentIdentifier(), duration, endTime);
+    return heatMapService.getOverAllHealthScore(projectParams, monitoredService.getServiceIdentifier(),
+        monitoredService.getEnvironmentIdentifier(), duration, endTime);
   }
 }
