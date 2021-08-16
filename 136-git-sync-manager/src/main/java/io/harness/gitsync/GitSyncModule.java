@@ -11,6 +11,7 @@ import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
 import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
+import io.harness.gitsync.common.events.FullSyncMessageListener;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchSyncServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
@@ -129,8 +130,7 @@ public class GitSyncModule extends AbstractModule {
   private void bindGitSyncConfigMessageListeners() {
     Multibinder<MessageListener> gitSyncConfigStreamMessageListeners =
         Multibinder.newSetBinder(binder(), MessageListener.class, Names.named(GIT_CONFIG_STREAM));
-    // todo(abhinav): uncomment when tested
-    //    gitSyncConfigStreamMessageListeners.addBinding().to(FullSyncMessageListener.class);
+    gitSyncConfigStreamMessageListeners.addBinding().to(FullSyncMessageListener.class);
   }
 
   private void registerRequiredBindings() {
