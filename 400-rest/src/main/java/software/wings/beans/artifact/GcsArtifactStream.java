@@ -61,6 +61,21 @@ public class GcsArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .jobname(jobname)
+        .artifactPaths(artifactPaths)
+        .projectId(projectId)
+        .build();
+  }
+
+  @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())

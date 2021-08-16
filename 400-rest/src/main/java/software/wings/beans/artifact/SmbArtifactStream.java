@@ -57,6 +57,19 @@ public class SmbArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .artifactPaths(artifactPaths)
+        .build();
+  }
+
+  @Override
   public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())

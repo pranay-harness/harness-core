@@ -86,6 +86,20 @@ public class CustomArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .scripts(scripts)
+        .tags(tags)
+        .build();
+  }
+
+  @Override
   public boolean shouldValidate() {
     return true;
   }
