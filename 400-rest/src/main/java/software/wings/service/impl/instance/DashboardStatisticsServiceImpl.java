@@ -96,6 +96,7 @@ import software.wings.features.api.RestrictedFeature;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys;
+import software.wings.service.impl.instance.ServiceInfoResponseSummary.ServiceInfoResponseSummaryBuilder;
 import software.wings.service.impl.instance.ServiceInfoSummary.ServiceInfoSummaryKeys;
 import software.wings.service.impl.instance.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AccountService;
@@ -1289,15 +1290,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                            .envInfo(emptyIfNull(instanceInfo.getServiceInfoSummaries())
                                         .stream()
                                         .collect(Collectors.groupingBy(ServiceInfoSummary::getEnvId,
-                                            Collectors.mapping(item
-                                                -> ServiceInfoResponseSummary.builder()
-                                                       .lastArtifactBuildNum(item.getLastArtifactBuildNum())
-                                                       .lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
-                                                       .lastWorkflowExecutionName(item.getLastWorkflowExecutionName())
-                                                       .infraMappingName(item.getInfraMappingName())
-                                                       .infraMappingId(item.getInfraMappingId())
-                                                       .build(),
-                                                toList()))))
+                                            Collectors.mapping(item -> createServiceSummary(item), toList()))))
                            .build());
     }
 
@@ -1325,6 +1318,30 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .withLimit(Integer.toString(limit))
         .withTotal(serviceList.size())
         .build();
+  }
+
+  private ServiceInfoResponseSummary createServiceSummary(ServiceInfoSummary item) {
+    String lastWorkflowExecutionId = item.getLastWorkflowExecutionId();
+    // To fetch last execution
+    WorkflowExecution lastWorkflowExecution = null;
+
+    if (isNotEmpty(lastWorkflowExecutionId)) {
+      lastWorkflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                  .filter(WorkflowExecutionKeys.uuid, lastWorkflowExecutionId)
+                                  .get();
+    }
+
+    ServiceInfoResponseSummaryBuilder serviceInfoResponseSummaryBuilder =
+        ServiceInfoResponseSummary.builder()
+            .lastArtifactBuildNum(item.getLastArtifactBuildNum())
+            .infraMappingName(item.getInfraMappingName())
+            .infraMappingId(item.getInfraMappingId());
+
+    if (lastWorkflowExecution != null) {
+      serviceInfoResponseSummaryBuilder.lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
+          .lastWorkflowExecutionName(item.getLastWorkflowExecutionName());
+    }
+    return serviceInfoResponseSummaryBuilder.build();
   }
 
   private Query<Instance> getQueryForCompareServicesByEnvironment(
