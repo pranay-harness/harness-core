@@ -4,6 +4,7 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
@@ -64,8 +65,13 @@ public class MonitoredServiceResource {
       @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @ApiParam(required = true) @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
       @ApiParam(required = true) @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier) {
-    return new RestResponse<>(monitoredServiceService.createDefault(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(
+        monitoredServiceService.createDefault(projectParams, serviceIdentifier, environmentIdentifier));
   }
 
   @PUT
@@ -147,7 +153,12 @@ public class MonitoredServiceResource {
       @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
-    return new RestResponse<>(monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, identifier));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(monitoredServiceService.delete(projectParams, identifier));
   }
 
   @GET
