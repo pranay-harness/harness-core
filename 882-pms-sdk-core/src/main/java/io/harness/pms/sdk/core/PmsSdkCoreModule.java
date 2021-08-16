@@ -27,7 +27,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkCoreModule extends AbstractModule {
@@ -77,9 +76,17 @@ public class PmsSdkCoreModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME)
-  public ExecutorService sdkExecutorService() {
-    return ThreadPool.create(5, 20, 120L, TimeUnit.SECONDS,
+  @Named(PmsSdkModuleUtils.CORE_EXECUTOR_NAME)
+  public ExecutorService coreExecutorService() {
+    return ThreadPool.create(config.getExecutionPoolConfig(),
+        new ThreadFactoryBuilder().setNameFormat("PmsSdkCoreEventListener-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named(PmsSdkModuleUtils.ORCHESTRATION_EVENT_EXECUTOR_NAME)
+  public ExecutorService orchestrationEventExecutorService() {
+    return ThreadPool.create(config.getOrchestrationEventPoolConfig(),
         new ThreadFactoryBuilder().setNameFormat("PmsSdkOrchestrationEventListener-%d").build());
   }
 }

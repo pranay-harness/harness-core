@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.execution.events.orchestrationevent;
 
-import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_EXECUTOR_NAME;
+import static io.harness.pms.sdk.PmsSdkModuleUtils.ORCHESTRATION_EVENT_EXECUTOR_NAME;
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -23,7 +23,7 @@ public class OrchestrationEventMessageListener
   @Inject
   public OrchestrationEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
       SdkOrchestrationEventHandler sdkOrchestrationEventHandler,
-      @Named(SDK_EXECUTOR_NAME) ExecutorService executorService) {
+      @Named(ORCHESTRATION_EVENT_EXECUTOR_NAME) ExecutorService executorService) {
     super(serviceName, OrchestrationEvent.class, sdkOrchestrationEventHandler, executorService);
   }
 }

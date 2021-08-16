@@ -23,25 +23,19 @@ import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_CONSUMER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants;
 import io.harness.redis.RedisConfig;
-import io.harness.threading.ThreadPool;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkEventsFrameworkModule extends AbstractModule {
   private static PmsSdkEventsFrameworkModule instance;
 
@@ -135,13 +129,5 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(PIPELINE_NODE_RESUME_EVENT_TOPIC, serviceName, redisConfig,
               Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_NODE_RESUME_BATCH_SIZE));
     }
-  }
-
-  @Provides
-  @Singleton
-  @Named(PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE)
-  public ExecutorService sdkExecutorService() {
-    return ThreadPool.create(
-        20, 60, 30L, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PmsSdkEventProcessor-%d").build());
   }
 }
