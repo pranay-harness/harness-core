@@ -35,6 +35,8 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.gitsync.core.fullsync.FullSyncAccumulatorService;
 import io.harness.gitsync.core.fullsync.FullSyncAccumulatorServiceImpl;
+import io.harness.gitsync.core.fullsync.GitFullSyncEntityService;
+import io.harness.gitsync.core.fullsync.GitFullSyncEntityServiceImpl;
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
 import io.harness.gitsync.core.impl.GitSyncTriggerServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetLifeCycleManagerServiceImpl;
@@ -122,6 +124,7 @@ public class GitSyncModule extends AbstractModule {
     bind(YamlChangeSetLifeCycleManagerService.class).to(YamlChangeSetLifeCycleManagerServiceImpl.class);
     bind(FullSyncAccumulatorService.class).to(FullSyncAccumulatorServiceImpl.class);
     bind(GithubService.class).to(GithubServiceImpl.class);
+    bind(GitFullSyncEntityService.class).to(GitFullSyncEntityServiceImpl.class);
     registerRequiredBindings();
 
     bindGitSyncConfigMessageListeners();
