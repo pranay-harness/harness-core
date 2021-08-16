@@ -6,6 +6,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -21,7 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class NGEntityNameValidatorTest {
+public class NGEntityNameValidatorTest extends CategoryTest {
   private Validator validator;
 
   private static final String ALLOWED_CHARS_STRING =

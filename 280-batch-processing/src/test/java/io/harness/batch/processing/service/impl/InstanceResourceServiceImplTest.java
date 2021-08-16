@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
 import io.harness.category.element.UnitTests;
@@ -20,7 +21,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InstanceResourceServiceImplTest {
+public class InstanceResourceServiceImplTest extends CategoryTest {
   @InjectMocks InstanceResourceServiceImpl instanceResourceService;
   @Mock private VMPricingServiceImpl vmPricingService;
 

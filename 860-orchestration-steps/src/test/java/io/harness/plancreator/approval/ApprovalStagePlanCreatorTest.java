@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.plancreator.stages.stage.StageElementConfig;
@@ -28,7 +29,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(PIPELINE)
-public class ApprovalStagePlanCreatorTest {
+public class ApprovalStagePlanCreatorTest extends CategoryTest {
   YamlField approvalStageYamlField;
   PlanCreationContext approvalStageContext;
   StageElementConfig approvalStageConfig;

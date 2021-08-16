@@ -8,6 +8,7 @@ import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.Servi
 
 import static org.junit.runners.Parameterized.Parameters;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -37,7 +38,7 @@ import org.junit.runners.Parameterized;
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @RunWith(Parameterized.class)
 @OwnedBy(HarnessTeam.CDC)
-public class ServiceNowStepYamlBuilderValidateTest {
+public class ServiceNowStepYamlBuilderValidateTest extends CategoryTest {
   private static final String CONNECTOR_NAME = "connectorName";
   private final ChangeContext<StepYaml> changeContext;
 

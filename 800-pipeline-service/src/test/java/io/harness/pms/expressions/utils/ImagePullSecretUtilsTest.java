@@ -10,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
@@ -58,7 +59,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @OwnedBy(PIPELINE)
 @PrepareForTest({SafeHttpCall.class})
-public class ImagePullSecretUtilsTest {
+public class ImagePullSecretUtilsTest extends CategoryTest {
   @Mock private EcrImagePullSecretHelper ecrImagePullSecretHelper;
   @Mock private ConnectorResourceClient connectorResourceClient;
   @InjectMocks private ImagePullSecretUtils imagePullSecretUtils;

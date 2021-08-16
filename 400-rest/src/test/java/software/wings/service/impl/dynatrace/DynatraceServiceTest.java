@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -31,7 +32,7 @@ import org.mockito.MockitoAnnotations;
 /**
  * @author Praveen
  */
-public class DynatraceServiceTest {
+public class DynatraceServiceTest extends CategoryTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private DelegateProxyFactory mockDelegateProxyFactory;
   @Mock private DynaTraceDelegateService dynatraceDelegateService;

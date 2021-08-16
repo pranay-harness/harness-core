@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -93,7 +94,7 @@ import org.mockito.ArgumentCaptor;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-public class DelegateSetupResourceTest {
+public class DelegateSetupResourceTest extends CategoryTest {
   private static String accountId = "ACCOUNT_ID";
   private static DelegateService delegateService = mock(DelegateService.class);
   private static DelegateSetupService delegateSetupService = mock(DelegateSetupService.class);

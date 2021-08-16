@@ -15,6 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
@@ -43,7 +44,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(GcpServiceAccountServiceImpl.class)
-public class BillingDataPipelineServiceImplTest {
+public class BillingDataPipelineServiceImplTest extends CategoryTest {
   private static final String settingId = "settingId";
   private static final String accountId = "accountId";
   private static final String accountName = "accountName";
