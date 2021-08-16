@@ -8,17 +8,17 @@ import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.migration.CVNGMigration;
 import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+
 @Slf4j
 public class CleanupDeprecatedDocuments implements CVNGMigration {
   @Inject private HPersistence hPersistence;
   @Inject private ActivitySourceService activitySourceService;
-  @Inject private VerificationJobService verificationJobService;
   @Inject private CVConfigService cvConfigService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Override
@@ -31,13 +31,10 @@ public class CleanupDeprecatedDocuments implements CVNGMigration {
       log.info("Deleted activity source: {}", activitySource);
     }
 
-    List<VerificationJob> verificationJobs = hPersistence.createQuery(VerificationJob.class).asList();
-    for (VerificationJob verificationJob : verificationJobs) {
-      log.info("Deleting VerificationJob source: {}", verificationJob);
-      verificationJobService.delete(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
-          verificationJob.getProjectIdentifier(), verificationJob.getIdentifier());
-      log.info("Deleted Verification job source: {}", verificationJob);
-    }
+    Query<VerificationJob> verificationJobs = hPersistence.createQuery(VerificationJob.class);
+    log.info("Deleting VerificationJob source: {}", verificationJobs.count());
+    hPersistence.delete(verificationJobs);
+    log.info("Deleted Verification job source: {}");
 
     List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class).asList();
     for (CVConfig cvConfig : cvConfigs) {
