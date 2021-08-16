@@ -10,4 +10,4 @@ import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
 @OwnedBy(DX)
-public interface FullSyncRepository extends CrudRepository<GitFullSyncEntityInfo, String> {}
+public interface FullSyncRepository extends CrudRepository<GitFullSyncEntityInfo, String>, FullSyncRepositoryCustom {}
