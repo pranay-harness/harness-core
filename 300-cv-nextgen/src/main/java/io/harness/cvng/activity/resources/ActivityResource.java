@@ -39,6 +39,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
 @Api(ACTIVITY_RESOURCE)
@@ -154,7 +155,7 @@ public class ActivityResource {
   @ExceptionMetered
   @ApiOperation(value = "get metrics for given activity", nickname = "getDeploymentMetrics")
   public RestResponse<TransactionMetricInfoSummaryPageDTO> getMetrics(
-      @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
+      @NotEmpty @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @DefaultValue("false") @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
       @QueryParam("hostName") String hostName, @QueryParam("filter") String filter,
       @QueryParam("pageNumber") @DefaultValue("0") int pageNumber,
@@ -169,7 +170,8 @@ public class ActivityResource {
   @ExceptionMetered
   @ApiOperation(value = "get datasource types for an activity", nickname = "getDatasourceTypes")
   public RestResponse<Set<DatasourceTypeDTO>> getDatasourceTypes(
-      @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId) {
+      @NotNull @NotEmpty @PathParam("activityId") String activityId,
+      @NotNull @QueryParam("accountId") String accountId) {
     return new RestResponse(activityService.getDataSourcetypes(accountId, activityId));
   }
 
@@ -179,7 +181,7 @@ public class ActivityResource {
   @ExceptionMetered
   @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisClusters")
   public RestResponse<List<LogAnalysisClusterChartDTO>> getDeploymentLogAnalysisClusters(
-      @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("hostName") String hostName) {
     return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(accountId, activityId, hostName));
   }
