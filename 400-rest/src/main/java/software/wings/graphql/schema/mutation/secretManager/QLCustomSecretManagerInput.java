@@ -6,22 +6,27 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.graphql.schema.mutation.QLMutationInput;
-import software.wings.graphql.schema.type.secretManagers.QLSecretManagerType;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import java.util.Set;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @OwnedBy(PL)
 @Value
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public class QLUpdateSecretManagerInput implements QLMutationInput {
-  String clientMutationId;
-  String secretManagerId;
-  QLSecretManagerType secretManagerType;
-  QLUpdateHashicorpVaultInput hashicorpVaultConfigInput;
-  QLUpdateCustomSecretManagerInput customSecretManagerInput;
+public class QLCustomSecretManagerInput extends QLSecretManagerInput {
+  String name;
+  String templateId;
+  List<String> delegateSelectors;
+  Set<QLEncryptedDataParams> testVariables;
+  boolean executeOnDelegate;
+  boolean isConnectorTemplatized;
+  String host;
+  String commandPath;
+  String connectorId;
 }
