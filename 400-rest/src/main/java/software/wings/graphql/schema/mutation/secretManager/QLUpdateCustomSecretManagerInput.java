@@ -9,7 +9,6 @@ import io.harness.annotations.dev.TargetModule;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
@@ -23,7 +22,7 @@ public class QLUpdateCustomSecretManagerInput {
   String uuid;
   String name;
   String templateId;
-  List<String> delegateSelectors;
+  Set<String> delegateSelectors;
   Set<QLEncryptedDataParams> testVariables;
   boolean executeOnDelegate;
   boolean isConnectorTemplatized;

@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -22,7 +21,7 @@ import lombok.Value;
 public class QLCustomSecretManagerInput extends QLSecretManagerInput {
   String name;
   String templateId;
-  List<String> delegateSelectors;
+  Set<String> delegateSelectors;
   Set<QLEncryptedDataParams> testVariables;
   boolean executeOnDelegate;
   boolean isConnectorTemplatized;
