@@ -1,0 +1,43 @@
+{
+  "artifactStreamType": "GCS",
+  "uuid": null,
+  "appId": "enNqyqWOTqqoHBYiVgvjcw",
+  "createdBy": null,
+  "createdAt": 0,
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": 0,
+  "artifactStreamId": null,
+  "sourceName": "yogesh-test/k8s.zip",
+  "settingId": "-VFrQw-dSOyxXWkSmQu34Q",
+  "artifactServerName": null,
+  "name": "yogesh-test_k8s-zip",
+  "autoPopulate": false,
+  "serviceId": null,
+  "service": null,
+  "autoDownload": false,
+  "autoApproveForProduction": false,
+  "metadataOnly": true,
+  "failedCronAttempts": 0,
+  "nextIteration": 0,
+  "nextCleanupIteration": 0,
+  "templateUuid": null,
+  "templateVersion": null,
+  "templateVariables": [],
+  "accountId": "px7xd_BFRCi-pfWPYXVjvw",
+  "keywords": [
+    "gcs",
+    "yogesh-test/k8s.zip",
+    "yogesh-test_k8s-zip"
+  ],
+  "artifactCount": 0,
+  "artifacts": null,
+  "sample": false,
+  "perpetualTaskId": null,
+  "collectionStatus": null,
+  "artifactStreamParameterized": false,
+  "jobname": "yogesh-test",
+  "artifactPaths": [
+    "k8s.zip"
+  ],
+  "projectId": "playground-243019"
+}
