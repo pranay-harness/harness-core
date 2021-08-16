@@ -330,8 +330,6 @@ aeriform("//949-access-control-commons:module")
 
 aeriform("//950-command-library-common:module")
 
-aeriform("//959-common-entities:module")
-
 aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
@@ -415,6 +413,8 @@ aeriform("//958-migration-sdk:module")
 aeriform("//958-migration-sdk:tests")
 
 aeriform("//958-ng-file-service-sdk:module")
+
+aeriform("//959-common-entities:module")
 
 aeriform("//959-file-service-commons:module")
 
