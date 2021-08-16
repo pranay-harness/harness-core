@@ -57,6 +57,13 @@
           "vcs_info.repo":1.0
         },
         "name":"account_1_vcs_info.branch_1_vcs_info.commit_id_1_vcs_info.repo_1"
+      },
+      {
+        "key": {
+          "expireAt": 1
+        },
+        "name": "nodes_expireAt_ttl",
+        "expireAfterSeconds": 60
       }
     ]
   }
