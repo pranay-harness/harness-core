@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.execution.events.progress;
 
-import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_EXECUTOR_NAME;
+import static io.harness.pms.sdk.PmsSdkModuleUtils.ORCHESTRATION_EVENT_EXECUTOR_NAME;
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -19,7 +19,8 @@ import java.util.concurrent.ExecutorService;
 public class ProgressEventMessageListener extends PmsAbstractMessageListener<ProgressEvent, ProgressEventHandler> {
   @Inject
   public ProgressEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      ProgressEventHandler progressEventHandler, @Named(SDK_EXECUTOR_NAME) ExecutorService executorService) {
+      ProgressEventHandler progressEventHandler,
+      @Named(ORCHESTRATION_EVENT_EXECUTOR_NAME) ExecutorService executorService) {
     super(serviceName, ProgressEvent.class, progressEventHandler, executorService);
   }
 }
