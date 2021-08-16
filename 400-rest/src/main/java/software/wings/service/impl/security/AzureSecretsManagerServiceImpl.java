@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,6 +12,7 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.settings.SettingVariableTypes.AZURE_VAULT;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 @Singleton
 @Slf4j
 public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl implements AzureSecretsManagerService {
@@ -48,40 +51,39 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
 
   @Override
-  public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig azureVautConfig) {
+  public String saveAzureSecretsManagerConfig(String accountId, AzureVaultConfig azureVaultConfig) {
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
-    validateConfig(azureVautConfig);
-    azureVautConfig.setAccountId(accountId);
+    validateConfig(azureVaultConfig);
+    azureVaultConfig.setAccountId(accountId);
     AzureVaultConfig oldConfigForAudit = null;
     AzureVaultConfig savedAzureVaultConfig = null;
 
     boolean updateCallWithMaskedSecretKey = false;
 
-    if (isNotEmpty(azureVautConfig.getUuid())) {
-      savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVautConfig.getUuid());
+    if (isNotEmpty(azureVaultConfig.getUuid())) {
+      savedAzureVaultConfig = wingsPersistence.get(AzureVaultConfig.class, azureVaultConfig.getUuid());
       oldConfigForAudit = kryoSerializer.clone(savedAzureVaultConfig);
 
-      updateCallWithMaskedSecretKey = SECRET_MASK.equals(azureVautConfig.getSecretKey())
-          || (isEmpty(azureVautConfig.getSecretKey()) && azureVautConfig.getNgMetadata() != null);
+      updateCallWithMaskedSecretKey = SECRET_MASK.equals(azureVaultConfig.getSecretKey())
+          || (isEmpty(azureVaultConfig.getSecretKey()) && azureVaultConfig.getNgMetadata() != null);
     }
 
     if (updateCallWithMaskedSecretKey) {
-      azureVautConfig.setSecretKey(savedAzureVaultConfig.getSecretKey());
-      azureVautConfig.setUuid(savedAzureVaultConfig.getUuid());
-
+      azureVaultConfig.setSecretKey(savedAzureVaultConfig.getSecretKey());
+      azureVaultConfig.setUuid(savedAzureVaultConfig.getUuid());
       // PL-3237: Audit secret manager config changes.
-      generateAuditForSecretManager(accountId, oldConfigForAudit, azureVautConfig);
+      generateAuditForSecretManager(accountId, oldConfigForAudit, azureVaultConfig);
 
-      return secretManagerConfigService.save(azureVautConfig);
+      return secretManagerConfigService.save(azureVaultConfig);
     }
 
     EncryptedData secretKeyEncryptedData = getEncryptedDataForSecretField(
-        azureVautConfig, azureVautConfig, azureVautConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);
-    azureVautConfig.setSecretKey(null);
+        azureVaultConfig, azureVaultConfig, azureVaultConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);
+    azureVaultConfig.setSecretKey(null);
     String secretsManagerConfigId;
 
     try {
-      secretsManagerConfigId = secretManagerConfigService.save(azureVautConfig);
+      secretsManagerConfigId = secretManagerConfigService.save(azureVaultConfig);
     } catch (DuplicateKeyException e) {
       throw new AzureKeyVaultOperationException(
           "Another Azure vault secret configuration with the same name or URL exists", AZURE_KEY_VAULT_OPERATION_ERROR,
@@ -89,14 +91,14 @@ public class AzureSecretsManagerServiceImpl extends AbstractSecretServiceImpl im
     }
 
     // Create a LOCAL encrypted record for Azure secret key
-    String secretKeyEncryptedDataId = saveSecretField(azureVautConfig, secretsManagerConfigId, secretKeyEncryptedData,
+    String secretKeyEncryptedDataId = saveSecretField(azureVaultConfig, secretsManagerConfigId, secretKeyEncryptedData,
         SECRET_KEY_NAME_SUFFIX, AzureVaultConfigKeys.secretKey);
-    azureVautConfig.setSecretKey(secretKeyEncryptedDataId);
+    azureVaultConfig.setSecretKey(secretKeyEncryptedDataId);
 
     // PL-3237: Audit secret manager config changes.
-    generateAuditForSecretManager(accountId, oldConfigForAudit, azureVautConfig);
+    generateAuditForSecretManager(accountId, oldConfigForAudit, azureVaultConfig);
 
-    return secretManagerConfigService.save(azureVautConfig);
+    return secretManagerConfigService.save(azureVaultConfig);
   }
 
   private void validateConfig(AzureVaultConfig azureVautConfig) {

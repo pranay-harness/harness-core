@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -67,13 +68,14 @@ public class GcpSecretsManagerResourceV2 {
   public RestResponse<String> saveGcpSecretsManagerConfig(@QueryParam("accountId") final String accountId,
       @FormDataParam("name") String name, @FormDataParam("encryptionType") EncryptionType encryptionType,
       @FormDataParam("isDefault") boolean isDefault, @FormDataParam("usageRestrictions") String usageRestrictionsString,
-      @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
+      @FormDataParam("credentials") InputStream uploadedInputStream,
+      @FormDataParam("delegateSelectors") Set<String> delegateSelectors) throws IOException {
     UsageRestrictions usageRestrictions =
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
     BoundedInputStream boundedInputStream =
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
     char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-    GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials);
+    GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials, delegateSelectors);
     gcpSecretsManagerConfig.setDefault(isDefault);
     gcpSecretsManagerConfig.setEncryptionType(encryptionType);
     gcpSecretsManagerConfig.setUsageRestrictions(usageRestrictions);
@@ -89,13 +91,14 @@ public class GcpSecretsManagerResourceV2 {
       @PathParam("secretManagerId") final String secretManagerId, @FormDataParam("name") String name,
       @FormDataParam("encryptionType") EncryptionType encryptionType, @FormDataParam("isDefault") boolean isDefault,
       @FormDataParam("usageRestrictions") String usageRestrictionsString,
-      @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
+      @FormDataParam("credentials") InputStream uploadedInputStream,
+      @FormDataParam("delegateSelectors") Set<String> delegateSelectors) throws IOException {
     UsageRestrictions usageRestrictions =
         usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
     BoundedInputStream boundedInputStream =
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
     char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-    GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials);
+    GcpSecretsManagerConfig gcpSecretsManagerConfig = new GcpSecretsManagerConfig(name, credentials, delegateSelectors);
     gcpSecretsManagerConfig.setUuid(secretManagerId);
     gcpSecretsManagerConfig.setDefault(isDefault);
     gcpSecretsManagerConfig.setEncryptionType(encryptionType);
