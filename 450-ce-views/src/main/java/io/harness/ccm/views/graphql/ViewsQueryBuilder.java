@@ -88,7 +88,8 @@ public class ViewsQueryBuilder {
       " LEFT JOIN UNNEST(labels) as labelsUnnested ON labelsUnnested.key IN (%s)";
   private static final ImmutableSet<String> podInfoImmutableSet =
       ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId");
-  private static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
+  private static final ImmutableSet<String> clusterFilterImmutableSet =
+      ImmutableSet.of("product", "region", "PROVIDERS");
   private static final ImmutableList<String> applicationGroupBys =
       ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT, GROUP_BY_CLOUD_PROVIDER);
   private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING = "PROVIDERS";
@@ -178,9 +179,18 @@ public class ViewsQueryBuilder {
     SelectQuery selectQuery = new SelectQuery();
     selectQuery.addCustomFromTable(cloudProviderTableName);
     QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
+    List<QLCEViewFieldInput> groupByEntity = Collections.singletonList(QLCEViewFieldInput.builder()
+                                                                           .fieldId(CLOUD_PROVIDERS_CUSTOM_GROUPING)
+                                                                           .fieldName(CLOUD_PROVIDERS_CUSTOM_GROUPING)
+                                                                           .identifier(ViewFieldIdentifier.COMMON)
+                                                                           .build());
 
     selectQuery.addAliasedColumn(new CustomSql(CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY), CLOUD_PROVIDERS_CUSTOM_GROUPING);
     selectQuery.addCustomGroupings(CLOUD_PROVIDERS_CUSTOM_GROUPING);
+
+    // Adding instance type filters
+    modifyQueryWithInstanceTypeFilter(
+        Collections.emptyList(), Collections.emptyList(), groupByEntity, Collections.emptyList(), selectQuery);
 
     if (!aggregations.isEmpty()) {
       decorateQueryWithAggregations(selectQuery, aggregations);

@@ -147,10 +147,11 @@ public class ViewsQueryHelper {
     if (endTimeFilter != null && startTimeFilter != null) {
       long endTimeFromFilters = endTimeFilter.getValue().longValue();
       long startTimeFromFilters = startTimeFilter.getValue().longValue();
-      if (endTimeFromFilters == currentDay - 1000) {
+      if (endTimeFromFilters == currentDay - 1000 || endTimeFromFilters == currentDay) {
         days = (currentDay - startTimeFromFilters) / ONE_DAY_MILLIS;
       }
-      if (endTimeFromFilters == currentDay + ONE_DAY_MILLIS - 1000) {
+      if (endTimeFromFilters == currentDay + ONE_DAY_MILLIS - 1000
+          || endTimeFromFilters == currentDay + ONE_DAY_MILLIS) {
         days = (currentDay + ONE_DAY_MILLIS - startTimeFromFilters) / ONE_DAY_MILLIS;
       }
     }
