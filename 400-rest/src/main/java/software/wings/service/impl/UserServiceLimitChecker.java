@@ -1,9 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
@@ -25,6 +27,7 @@ import org.slf4j.helpers.MessageFormatter;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserServiceLimitChecker {
   @Inject private AccountService accountService;
   @Inject private LimitConfigurationService limits;

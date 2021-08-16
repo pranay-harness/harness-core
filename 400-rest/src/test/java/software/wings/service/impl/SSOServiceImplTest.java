@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.ng.core.account.AuthenticationMechanism.LDAP;
 import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
 import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
@@ -16,6 +17,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -43,6 +47,8 @@ import org.mockito.Mock;
  * @author Vaibhav Tulsyan
  * 14/Jun/2019
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SSOServiceImplTest extends WingsBaseTest {
   private static final String APP_ID = "app_id";
 
