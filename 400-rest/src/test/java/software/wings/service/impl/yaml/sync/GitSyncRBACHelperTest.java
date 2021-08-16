@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -31,7 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class GitSyncRBACHelperTest {
+public class GitSyncRBACHelperTest extends CategoryTest {
   @Mock SettingsService settingService;
   @Mock YamlHelper yamlHelper;
   @InjectMocks GitSyncRBACHelper gitSyncRBACHelper;

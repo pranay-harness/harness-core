@@ -7,6 +7,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -25,7 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(CDP)
-public class HelmValuesFetchTaskParametersTest {
+public class HelmValuesFetchTaskParametersTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)

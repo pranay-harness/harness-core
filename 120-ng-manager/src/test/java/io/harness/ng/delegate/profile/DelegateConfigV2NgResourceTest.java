@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -35,7 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
-public class DelegateConfigV2NgResourceTest {
+public class DelegateConfigV2NgResourceTest extends CategoryTest {
   private static final String TEST_ACCOUNT_ID = generateUuid();
   private static final String TEST_PROJECT_ID = generateUuid();
   private static final String TEST_ORG_ID = generateUuid();

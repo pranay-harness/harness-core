@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.Offset.offset;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.JiraClientException;
@@ -29,7 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(CDC)
-public class JiraIssueUtilsNGTest {
+public class JiraIssueUtilsNGTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
