@@ -76,6 +76,6 @@ public abstract class ConnectorConfigDTO implements DecryptableEntity {
   @JsonIgnore public abstract List<DecryptableEntity> getDecryptableEntities();
 
   public void validate() {
-    // no op implementation which base classes can override
+    // no op implementation which base classes can override. TODO: validate
   }
 }
