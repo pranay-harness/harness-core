@@ -17,7 +17,7 @@ import lombok.NonNull;
 public interface MonitoredServiceService extends DeleteEntityByHandler<MonitoredService> {
   MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO);
   MonitoredServiceResponse update(String accountId, MonitoredServiceDTO monitoredServiceDTO);
-  boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
+  boolean delete(ProjectParams projectParams, String identifier);
   MonitoredServiceResponse get(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   MonitoredServiceResponse get(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
@@ -32,8 +32,8 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, Integer offset, Integer pageSize, String filter);
   List<EnvironmentResponse> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);
-  MonitoredServiceResponse createDefault(String accountId, String orgIdentifier, String projectIdentifier,
-      String serviceIdentifier, String environmentIdentifier);
+  MonitoredServiceResponse createDefault(
+      ProjectParams projectParams, String serviceIdentifier, String environmentIdentifier);
   HealthMonitoringFlagResponse setHealthMonitoringFlag(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean enable);
 }
