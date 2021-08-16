@@ -667,6 +667,7 @@ public class ActivityServiceImpl implements ActivityService {
   private List<String> getVerificationJobInstanceId(String activityId) {
     Preconditions.checkNotNull(activityId);
     Activity activity = get(activityId);
+    Preconditions.checkNotNull(activity, String.format("Activity does not exists with activityID %s", activityId));
     return activity.getVerificationJobInstanceIds();
   }
 

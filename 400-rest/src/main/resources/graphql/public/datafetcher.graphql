@@ -159,6 +159,7 @@ enum DataFetcherEnum {
   eventsConfig
   eventsConfigConnection
   eventsConfigByName
+  verificationStats
   approvalDetails
   approveOrRejectApprovals
 }

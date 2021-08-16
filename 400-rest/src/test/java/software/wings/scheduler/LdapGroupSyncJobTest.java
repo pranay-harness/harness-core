@@ -18,6 +18,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -55,7 +56,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @OwnedBy(PL)
 @TargetModule(HarnessModule._360_CG_MANAGER)
 @RunWith(MockitoJUnitRunner.class)
-public class LdapGroupSyncJobTest {
+public class LdapGroupSyncJobTest extends CategoryTest {
   @Inject WingsPersistence wingsPersistence;
   @InjectMocks private LdapGroupSyncJob ldapGroupSyncJob;
   @Mock private SSOSettingService ssoSettingService;

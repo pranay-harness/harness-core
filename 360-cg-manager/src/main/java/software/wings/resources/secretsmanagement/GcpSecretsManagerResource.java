@@ -28,6 +28,7 @@ import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
@@ -70,14 +71,16 @@ public class GcpSecretsManagerResource {
       @FormDataParam("keyRing") String keyRing, @FormDataParam("projectId") String projectId,
       @FormDataParam("region") String region, @FormDataParam("encryptionType") EncryptionType encryptionType,
       @FormDataParam("isDefault") boolean isDefault, @FormDataParam("usageRestrictions") String usageRestrictionsString,
-      @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
+      @FormDataParam("credentials") InputStream uploadedInputStream,
+      @FormDataParam("delegateSelectors") Set<String> delegateSelectors) throws IOException {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       UsageRestrictions usageRestrictions =
           usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, null);
+      GcpKmsConfig gcpKmsConfig =
+          new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, delegateSelectors);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
       gcpKmsConfig.setUsageRestrictions(usageRestrictions);
@@ -97,14 +100,16 @@ public class GcpSecretsManagerResource {
       @FormDataParam("projectId") String projectId, @FormDataParam("region") String region,
       @FormDataParam("encryptionType") EncryptionType encryptionType, @FormDataParam("isDefault") boolean isDefault,
       @FormDataParam("usageRestrictions") String usageRestrictionsString,
-      @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
+      @FormDataParam("credentials") InputStream uploadedInputStream,
+      @FormDataParam("delegateSelectors") Set<String> delegateSelectors) throws IOException {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       UsageRestrictions usageRestrictions =
           usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, null);
+      GcpKmsConfig gcpKmsConfig =
+          new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, delegateSelectors);
       gcpKmsConfig.setUuid(secretMangerId);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
@@ -119,14 +124,16 @@ public class GcpSecretsManagerResource {
       @FormDataParam("keyRing") String keyRing, @FormDataParam("projectId") String projectId,
       @FormDataParam("region") String region, @FormDataParam("encryptionType") EncryptionType encryptionType,
       @FormDataParam("isDefault") boolean isDefault, @FormDataParam("usageRestrictions") String usageRestrictionsString,
-      @FormDataParam("credentials") InputStream uploadedInputStream) throws IOException {
+      @FormDataParam("credentials") InputStream uploadedInputStream,
+      @FormDataParam("delegateSelectors") Set<String> delegateSelectors) throws IOException {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       UsageRestrictions usageRestrictions =
           usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, null);
+      GcpKmsConfig gcpKmsConfig =
+          new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, delegateSelectors);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
       gcpKmsConfig.setUsageRestrictions(usageRestrictions);

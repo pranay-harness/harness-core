@@ -160,6 +160,8 @@ public abstract class ArtifactStream
 
   public void validateRequiredFields() {}
 
+  public abstract ArtifactStream cloneInternal();
+
   public boolean artifactSourceChanged(ArtifactStream artifactStream) {
     return !this.sourceName.equals(artifactStream.getSourceName());
   }

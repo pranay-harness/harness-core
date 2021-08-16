@@ -13,7 +13,7 @@ import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceServic
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO.Edge;
-import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO.ServiceSummary;
+import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO.ServiceSummaryDetails;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.ServiceDependencyGraphService;
@@ -64,7 +64,7 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
     Map<GraphKey, List<ActivityDashboardDTO>> changeMap = changes.stream().collect(
         Collectors.groupingBy(x -> new GraphKey(x.getServiceIdentifier(), x.getEnvironmentIdentifier())));
 
-    List<ServiceSummary> nodes = new ArrayList<>();
+    List<ServiceSummaryDetails> nodes = new ArrayList<>();
     monitoredServiceMap.forEach((key, value) -> {
       double riskScore = -1;
       long anomalousMetricsCount = 0;
@@ -87,7 +87,7 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
         changeCount = changeMap.get(key).size();
       }
       Risk risk = Risk.getRiskFromRiskScore(riskScore);
-      nodes.add(ServiceSummary.builder()
+      nodes.add(ServiceSummaryDetails.builder()
                     .serviceRef(value.getServiceIdentifier())
                     .environmentRef(value.getEnvironmentIdentifier())
                     .riskScore(riskScore)

@@ -6,15 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
-import static io.harness.pms.contracts.execution.Status.APPROVAL_WAITING;
-import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
-import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
-import static io.harness.pms.contracts.execution.Status.PAUSING;
-import static io.harness.pms.contracts.execution.Status.QUEUED;
-import static io.harness.pms.contracts.execution.Status.RESOURCE_WAITING;
-import static io.harness.pms.contracts.execution.Status.RUNNING;
-import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
-import static io.harness.pms.contracts.execution.Status.TIMED_WAITING;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -57,10 +48,8 @@ public class AbortInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt handleInterruptForNodeExecution(@NotNull Interrupt interrupt, @NotNull String nodeExecutionId) {
     try (AutoLogContext ignore = interrupt.autoLogContext()) {
-      NodeExecution nodeExecution =
-          nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.DISCONTINUING, null,
-              EnumSet.of(QUEUED, RUNNING, INTERVENTION_WAITING, TIMED_WAITING, ASYNC_WAITING, TASK_WAITING, PAUSING,
-                  RESOURCE_WAITING, APPROVAL_WAITING));
+      NodeExecution nodeExecution = nodeExecutionService.updateStatusWithOps(
+          nodeExecutionId, Status.DISCONTINUING, null, EnumSet.noneOf(Status.class));
 
       if (nodeExecution == null) {
         log.error("Failed to abort node with nodeExecutionId: {}", nodeExecutionId);

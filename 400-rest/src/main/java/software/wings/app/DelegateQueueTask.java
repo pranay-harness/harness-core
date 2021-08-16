@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.beans.DelegateTask.Status.PARKED;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
@@ -12,6 +13,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -120,7 +122,8 @@ public class DelegateQueueTask implements Runnable {
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long
     Query<DelegateTask> query = persistence.createQuery(DelegateTask.class, excludeAuthority)
-                                    .filter(DelegateTaskKeys.status, QUEUED)
+                                    .field(DelegateTaskKeys.status)
+                                    .in(asList(QUEUED, PARKED))
                                     .field(DelegateTaskKeys.expiry)
                                     .lessThan(currentTimeMillis());
 

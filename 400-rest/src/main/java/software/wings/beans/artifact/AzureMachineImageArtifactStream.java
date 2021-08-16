@@ -105,6 +105,22 @@ public class AzureMachineImageArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .osType(osType)
+        .imageType(imageType)
+        .subscriptionId(subscriptionId)
+        .imageDefinition(imageDefinition)
+        .build();
+  }
+
+  @Override
   public void inferProperties(ArtifactStreamAttributes attributes) {
     this.osType = OSType.valueOf(attributes.getOsType());
   }

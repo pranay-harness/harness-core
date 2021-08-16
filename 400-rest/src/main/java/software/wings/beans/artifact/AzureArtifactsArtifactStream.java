@@ -128,6 +128,23 @@ public class AzureArtifactsArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .protocolType(protocolType)
+        .project(project)
+        .feed(feed)
+        .packageName(packageName)
+        .packageId(packageId)
+        .build();
+  }
+
+  @Override
   public boolean shouldValidate() {
     return true;
   }

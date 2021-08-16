@@ -88,6 +88,20 @@ public class JenkinsArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .jobname(jobname)
+        .artifactPaths(artifactPaths)
+        .build();
+  }
+
+  @Override
   public boolean checkIfStreamParameterized() {
     if (isNotEmpty(artifactPaths)) {
       return validateParameters(jobname, artifactPaths.get(0));

@@ -18,6 +18,8 @@ import static io.harness.ccm.views.graphql.ViewsQueryBuilder.K8S_POD;
 import static io.harness.ccm.views.graphql.ViewsQueryBuilder.K8S_POD_FARGATE;
 import static io.harness.ccm.views.graphql.ViewsQueryBuilder.K8S_PV;
 import static io.harness.ccm.views.utils.ClusterTableKeys.ACTUAL_IDLE_COST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.AVG_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.AVG_MEMORY_UTILIZATION_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.BILLING_AMOUNT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLOUD_PROVIDER;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLOUD_SERVICE_NAME;
@@ -28,6 +30,8 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.CLUSTER_TABLE_AGGREGRA
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLUSTER_TABLE_HOURLY;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLUSTER_TABLE_HOURLY_AGGREGRATED;
 import static io.harness.ccm.views.utils.ClusterTableKeys.COST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.CPU_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.CPU_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_STRING_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_LIMIT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_CPU_REQUEST;
@@ -61,6 +65,8 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.INSTANCE_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.INSTANCE_NAME;
 import static io.harness.ccm.views.utils.ClusterTableKeys.INSTANCE_TYPE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.LAUNCH_TYPE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.NAMESPACE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.PARENT_INSTANCE_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TASK_ID;
@@ -357,6 +363,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     Instant endInstantForForecastCost = viewsQueryHelper.getEndInstantForForecastCost(filters);
     ViewCostData currentCostData = getCostData(bigQuery, viewsQueryHelper.getFiltersForForecastCost(filters),
         aggregateFunction, cloudProviderTableName, accountId, isClusterQuery);
+    log.info("Current cost data: {}", currentCostData);
     Double forecastCost = getForecastCost(currentCostData, endInstantForForecastCost);
     return getForecastCostBillingStats(forecastCost, currentCostData.getCost(), getStartInstantForForecastCost(),
         endInstantForForecastCost.plus(1, ChronoUnit.SECONDS));
@@ -1293,7 +1300,13 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
             || aggregationFunction.getColumnName().equalsIgnoreCase(EFFECTIVE_MEMORY_LIMIT)
             || aggregationFunction.getColumnName().equalsIgnoreCase(EFFECTIVE_MEMORY_REQUEST)
             || aggregationFunction.getColumnName().equalsIgnoreCase(EFFECTIVE_CPU_UTILIZATION_VALUE)
-            || aggregationFunction.getColumnName().equalsIgnoreCase(EFFECTIVE_MEMORY_UTILIZATION_VALUE));
+            || aggregationFunction.getColumnName().equalsIgnoreCase(EFFECTIVE_MEMORY_UTILIZATION_VALUE)
+            || aggregationFunction.getColumnName().equalsIgnoreCase(AVG_CPU_UTILIZATION_VALUE)
+            || aggregationFunction.getColumnName().equalsIgnoreCase(AVG_MEMORY_UTILIZATION_VALUE)
+            || aggregationFunction.getColumnName().equalsIgnoreCase(CPU_REQUEST)
+            || aggregationFunction.getColumnName().equalsIgnoreCase(CPU_LIMIT)
+            || aggregationFunction.getColumnName().equalsIgnoreCase(MEMORY_REQUEST)
+            || aggregationFunction.getColumnName().equalsIgnoreCase(MEMORY_LIMIT));
   }
 
   private boolean isMetricsQuery(List<QLCEViewAggregation> aggregateFunctions) {

@@ -43,7 +43,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import graphql.schema.DataFetchingEnvironment;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -186,8 +185,7 @@ public class VerificationResultConnectionDataFetcher extends AbstractConnectionV
       for (QLVerificationResultFilter resultFilter : resultFilters) {
         boolean rollbackFilter =
             resultFilter.getRollback() == null || resultFilter.getRollback().equals(verificationResult.isRollback());
-        boolean analyzedFilter =
-            resultFilter.getAnalyzed() == null || resultFilter.getAnalyzed().equals(verificationResult.isAnalyzed());
+        boolean analyzedFilter = false;
 
         boolean appFilter = resultFilter.getApplication() == null
             || shouldInclude(resultFilter.getApplication().getOperator(), resultFilter.getApplication().getValues(),
@@ -201,12 +199,7 @@ public class VerificationResultConnectionDataFetcher extends AbstractConnectionV
             || shouldInclude(resultFilter.getEnvironment().getOperator(), resultFilter.getEnvironment().getValues(),
                 environment.getName().toLowerCase());
 
-        boolean statusFilter = resultFilter.getExecutionStatus() == null
-            || shouldInclude(QLIdOperator.valueOf(resultFilter.getExecutionStatus().getOperator().name()),
-                Arrays.stream(resultFilter.getExecutionStatus().getValues())
-                    .map(qlExecutionStatusType -> qlExecutionStatusType.name().toLowerCase())
-                    .toArray(String[] ::new),
-                verificationResult.getExecutionStatus().name().toLowerCase());
+        boolean statusFilter = false;
 
         return rollbackFilter && analyzedFilter && appFilter && serviceFilter && envFilter && statusFilter;
       }

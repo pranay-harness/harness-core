@@ -152,6 +152,25 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .repositoryType(repositoryType)
+        .jobname(jobname)
+        .imageName(imageName)
+        .artifactPaths(artifactPaths)
+        .artifactPattern(artifactPattern)
+        .dockerRepositoryServer(dockerRepositoryServer)
+        .useDockerFormat(useDockerFormat)
+        .build();
+  }
+
+  @Override
   public boolean shouldValidate() {
     return true;
   }

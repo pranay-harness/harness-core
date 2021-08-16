@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -58,7 +59,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @OwnedBy(HarnessTeam.CDC)
-public class CDDashboardApisTest {
+public class CDDashboardApisTest extends CategoryTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @InjectMocks @Spy private CDOverviewDashboardServiceImpl cdOverviewDashboardServiceImpl;
 

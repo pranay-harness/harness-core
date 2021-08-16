@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -14,6 +15,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.data.structure.EmptyPredicate;
@@ -78,6 +82,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SSOServiceImpl implements SSOService {
   @Inject AccountService accountService;
   @Inject SSOSettingService ssoSettingService;

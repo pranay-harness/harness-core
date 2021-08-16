@@ -15,6 +15,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -43,7 +44,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runners.Parameterized;
 import org.springframework.http.HttpStatus;
 
-public class DelegateTaskSelectorMapResourceTest {
+public class DelegateTaskSelectorMapResourceTest extends CategoryTest {
   private static DelegateTaskSelectorMapService taskSelectorMapService = mock(DelegateTaskSelectorMapService.class);
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 

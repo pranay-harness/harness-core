@@ -98,6 +98,7 @@ import software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher;
 import software.wings.graphql.datafetcher.connector.DeleteConnectorDataFetcher;
 import software.wings.graphql.datafetcher.connector.UpdateConnectorDataFetcher;
 import software.wings.graphql.datafetcher.cv.VerificationResultConnectionDataFetcher;
+import software.wings.graphql.datafetcher.cv.VerificationStatsDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentStatsDataFetcher;
@@ -136,10 +137,7 @@ import software.wings.graphql.datafetcher.pipeline.batch.PipelineBatchDataFetche
 import software.wings.graphql.datafetcher.pipeline.batch.PipelineBatchDataLoader;
 import software.wings.graphql.datafetcher.secretManager.CreateSecretManagerDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.DeleteSecretManagerDataFetcher;
-import software.wings.graphql.datafetcher.secretManager.HashicorpVaultDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetcher;
-import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetchers;
-import software.wings.graphql.datafetcher.secretManager.SecretManagerMutationDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.SecretManagersDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.UpdateSecretManagerDataFetcher;
 import software.wings.graphql.datafetcher.secrets.CreateSecretDataFetcher;
@@ -192,13 +190,13 @@ import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
+import com.sun.istack.internal.NotNull;
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
 import java.util.Collections;
 import java.util.Set;
 import org.dataloader.MappedBatchLoader;
 import org.hibernate.validator.constraints.NotBlank;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Created a new module as part of code review comment
@@ -367,6 +365,7 @@ public class WingsGraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(WorkflowBatchDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowVariableConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(WorkflowStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(VerificationStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ChangeSetConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ChangeContentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(CreateApplicationDataFetcher.class);
@@ -426,11 +425,6 @@ public class WingsGraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(VerificationResultConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(ApprovalDetailsDataFetcher.class);
     bindDataFetcherWithAnnotation(ApproveOrRejectApprovalsDataFetcher.class);
-
-    binder()
-        .bind(SecretManagerMutationDataFetcher.class)
-        .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))
-        .to(HashicorpVaultDataFetcher.class);
   }
 
   @NotNull

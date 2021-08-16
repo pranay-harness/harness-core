@@ -4,6 +4,9 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
+import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.monitoredService.DurationDTO;
+import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
@@ -21,6 +24,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -32,6 +36,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
 @Api("monitored-service")
@@ -64,8 +69,13 @@ public class MonitoredServiceResource {
       @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @ApiParam(required = true) @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
       @ApiParam(required = true) @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier) {
-    return new RestResponse<>(monitoredServiceService.createDefault(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(
+        monitoredServiceService.createDefault(projectParams, serviceIdentifier, environmentIdentifier));
   }
 
   @PUT
@@ -95,6 +105,26 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("enable") Boolean enable) {
     return new RestResponse<>(monitoredServiceService.setHealthMonitoringFlag(
         accountId, orgIdentifier, projectIdentifier, identifier, enable));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("{identifier}/overall-health-score")
+  @ApiOperation(
+      value = "get monitored service overall health score data ", nickname = "getMonitoredServiceOverAllHealthScore")
+  public ResponseDTO<HistoricalTrend>
+  getOverAllHealthScore(@NotNull @NotEmpty @PathParam("identifier") String identifier,
+      @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("duration") DurationDTO durationDTO, @NotNull @QueryParam("endTime") Long endTime) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getOverAllHealthScore(
+        projectParams, identifier, durationDTO, Instant.ofEpochMilli(endTime)));
   }
 
   @GET
@@ -147,7 +177,12 @@ public class MonitoredServiceResource {
       @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
-    return new RestResponse<>(monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, identifier));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(monitoredServiceService.delete(projectParams, identifier));
   }
 
   @GET

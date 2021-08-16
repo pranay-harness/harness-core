@@ -1,4 +1,6 @@
-package io.harness.ngpipeline.pipeline.executions.beans;
+package io.harness.cdng.pipeline.executions.beans;
+
+import io.harness.ngpipeline.pipeline.executions.beans.ArtifactSummary;
 
 import java.util.List;
 import lombok.Builder;

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -53,7 +54,6 @@ import static software.wings.security.UserRequestContext.EntityInfo;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
@@ -147,7 +147,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * @author rktummala on 3/7/18
  */
 @OwnedBy(PL)
-@TargetModule(HarnessModule.UNDEFINED)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class AuthHandler {

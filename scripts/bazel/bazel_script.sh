@@ -110,6 +110,8 @@ BAZEL_MODULES="\
   //925-access-control-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
+  //935-analyser-service:module \
+  //937-persistence-tracer:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \

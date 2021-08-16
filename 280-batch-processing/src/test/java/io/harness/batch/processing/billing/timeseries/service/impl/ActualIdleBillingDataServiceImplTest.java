@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.ActualIdleCostData;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
@@ -32,7 +33,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ActualIdleBillingDataServiceImplTest {
+public class ActualIdleBillingDataServiceImplTest extends CategoryTest {
   @InjectMocks private ActualIdleBillingDataServiceImpl actualIdleBillingDataService;
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;

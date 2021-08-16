@@ -88,3 +88,33 @@ CREATE TABLE tests(
 );
 SELECT create_distributed_hypertable('tests', 'time');
 ```
+
+# Rules for migrations and running migrations on environments:
+
+## Issues with using migrate tool as opposed to creating tickets for migrations:
+
+i) Can’t move to a 0 version in the tool.
+ii) A failed migration will mark the DB state as dirty and the version will need to be forced after that. This means that during deployment, if migration fails - we will have to perform this operation.
+
+## How to run migrations on prod:
+
+i) As long as migrations are successful, version will get updated after each deployment and we will continue from there.
+ii) In case migration X fails on prod, we need to force the migration to (X-1), fix the migration and redeploy.
+
+## Migration rules:
+
+i) Always add indexes / schema updates in the migrations files whenever any code change is done in a PR.
+ii) We will use these migrations for all environments. Make sure it is tested properly on QA and locally. Local test would be to create a new collection (in mongo) or to use a new table in timescale and run all the migrations. It should succeed.
+                 Example: migrate -source file://product/ci/ti-service/migrations/mongodb -database mongodb://localhost/anyNewDB --verbose up
+ii) All mongo index creations should have keys in alphabetical order followed by 1.0. Eg:
+	keys: {
+		“a”: 1.0,
+		“b”: 1.0,
+		“c”: 1.0
+	}
+The names should be underscore separated on the keys. Key for the above example would look like a_1_b_1_c_1. This will prevent any future clashes of indexes and if so, should be caught locally.
+iii) Timescale migrations which add rows should also add in any new indexes needed. Each row should have a comment as to why it’s needed.
+iv) Always run JSON lint on mongo migration files so that they are easy to read.
+
+
+

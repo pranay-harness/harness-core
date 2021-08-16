@@ -52,6 +52,7 @@ import software.wings.api.RouteUpdateRollbackElement;
 import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
@@ -705,7 +706,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private boolean isProvisionerElement(ContextElement element) {
     return element instanceof TerraformProvisionInheritPlanElement || element instanceof TerraformOutputInfoElement
-        || element instanceof CloudFormationRollbackInfoElement || element instanceof CloudFormationOutputInfoElement;
+        || element instanceof CloudFormationRollbackInfoElement || element instanceof CloudFormationOutputInfoElement
+        || element instanceof ShellScriptProvisionerOutputElement;
   }
 
   private ContextElement fetchNotifiedContextElement(

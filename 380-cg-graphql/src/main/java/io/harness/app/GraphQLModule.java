@@ -19,6 +19,10 @@ import software.wings.graphql.datafetcher.event.EventsConfigConnectionDataFetche
 import software.wings.graphql.datafetcher.event.EventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.UpdateEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
+import software.wings.graphql.datafetcher.secretManager.HashicorpVaultDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetchers;
+import software.wings.graphql.datafetcher.secretManager.SecretManagerMutationDataFetcher;
+import software.wings.graphql.datafetcher.secretmanager.CustomSecretManagerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.CreateTriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.DeleteTriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerConnectionDataFetcher;
@@ -106,6 +110,14 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EventsConfigConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateEventsConfigDataFetcher.class);
+    binder()
+        .bind(SecretManagerMutationDataFetcher.class)
+        .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))
+        .to(HashicorpVaultDataFetcher.class);
+    binder()
+        .bind(SecretManagerMutationDataFetcher.class)
+        .annotatedWith(Names.named(SecretManagerDataFetchers.CUSTOM_SECRET_MANAGER_DATA_FETCHER.getName()))
+        .to(CustomSecretManagerDataFetcher.class);
   }
 
   @NotNull

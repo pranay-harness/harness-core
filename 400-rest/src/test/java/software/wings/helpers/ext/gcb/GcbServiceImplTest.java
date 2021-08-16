@@ -12,6 +12,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.artifacts.gcr.exceptions.GcbClientException;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
@@ -46,7 +47,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @RunWith(MockitoJUnitRunner.class)
-public class GcbServiceImplTest {
+public class GcbServiceImplTest extends CategoryTest {
   private static final String VALID_AUTH_TOKEN = "validToken";
   private static final String PROJECT_ID = "projectId";
   private static final String BUILD_ID = "buildId";

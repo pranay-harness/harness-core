@@ -10,6 +10,7 @@ import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
@@ -18,7 +19,7 @@ import java.util.UUID;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class UUIDGeneratorTest {
+public class UUIDGeneratorTest extends CategoryTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
