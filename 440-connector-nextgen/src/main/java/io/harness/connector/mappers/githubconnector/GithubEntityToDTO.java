@@ -68,7 +68,7 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         githubCredentialsDTO =
             GithubHttpCredentialsDTO.builder().type(type).httpCredentialsSpec(githubHttpCredentialsSpecDTO).build();
         break;
-      default:
+      default: //TODO: add more authTypes
         Switch.unhandled(authType);
     }
     return GithubAuthenticationDTO.builder().authType(authType).credentials(githubCredentialsDTO).build();
