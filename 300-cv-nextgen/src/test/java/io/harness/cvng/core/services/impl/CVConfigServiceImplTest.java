@@ -200,24 +200,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
-  public void testUpdate_SplunkCVConfig() {
-    CVConfig cvConfig = createCVConfig();
-    String perpetualTaskId = "perpetual-task-id";
-    cvConfig.setPerpetualTaskId(perpetualTaskId);
-    save(cvConfig);
-    CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    updated.setPerpetualTaskId(null);
-    updated.setEnvIdentifier("new-env-id");
-    cvConfigService.update(updated);
-    CVConfig updateStored = cvConfigService.get(updated.getUuid());
-    assertCommons(updateStored, updated);
-    assertThat(updateStored.getEnvIdentifier()).isEqualTo("new-env-id");
-    assertThat(updateStored.getPerpetualTaskId()).isEqualTo(perpetualTaskId);
-  }
-
-  @Test
-  @Owner(developers = KANHAIYA)
-  @Category(UnitTests.class)
   public void testUpdate_AppDCVConfig() {
     AppDynamicsCVConfig appDynamicsCVConfig = createAppDCVConfig();
     save(appDynamicsCVConfig);
@@ -761,22 +743,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
         dsTypes.stream().map(DatasourceTypeDTO::getVerificationType).collect(Collectors.toList());
     assertThat(types).containsExactlyInAnyOrder(DataSourceType.SPLUNK, DataSourceType.APP_DYNAMICS);
     assertThat(verificationTypes).containsExactlyInAnyOrder(VerificationType.TIME_SERIES, VerificationType.LOG);
-  }
-
-  @Test
-  @Owner(developers = PRAVEEN)
-  @Category(UnitTests.class)
-  public void testCleanupPerpetualTasks() {
-    List<CVConfig> cvConfigs = createCVConfigs(5);
-    List<String> cvConfigIds = new ArrayList<>();
-    for (int i = 0; i < 5; i++) {
-      cvConfigs.get(i).setPerpetualTaskId("perpetualTask" + i);
-    }
-    List<CVConfig> configList = save(cvConfigs);
-    cvConfigIds = configList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
-    cvConfigService.cleanupPerpetualTasks(accountId, cvConfigIds);
-
-    cvConfigIds.forEach(cvConfigId -> { assertThat(cvConfigService.get(cvConfigId).getPerpetualTaskId()).isNull(); });
   }
 
   @Test

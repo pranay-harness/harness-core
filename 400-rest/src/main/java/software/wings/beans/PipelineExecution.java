@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)

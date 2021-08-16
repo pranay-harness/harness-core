@@ -10,7 +10,7 @@ java_library(
         "//:lombok",
         "//940-feature-flag:module",
         "//950-delegate-tasks-beans:module",
-        "//959-cg-beans:module",
+        "//957-cg-beans:module",
         "//960-persistence:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",

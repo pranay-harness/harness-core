@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -156,19 +157,20 @@ public class BuildTriggerHelper {
   }
 
   public void validatePollingItemForHelmChart(PollingItem pollingItem) {
-    String error = checkFiledValueError("ConnectorRef", pollingItem.getConnectorRef());
+    String error = checkFiledValueError("ConnectorRef", pollingItem.getPollingPayloadData().getConnectorRef());
     if (isNotBlank(error)) {
       throw new InvalidRequestException(error);
     }
 
-    if (pollingItem.getPayloadType().hasHttpHelmPayload()) {
-      error = checkFiledValueError("ChartName", pollingItem.getPayloadType().getHttpHelmPayload().getChartName());
+    if (pollingItem.getPollingPayloadData().hasHttpHelmPayload()) {
+      error =
+          checkFiledValueError("ChartName", pollingItem.getPollingPayloadData().getHttpHelmPayload().getChartName());
       if (isNotBlank(error)) {
         throw new InvalidRequestException(error);
       }
 
       error = checkFiledValueError(
-          "helmVersion", pollingItem.getPayloadType().getHttpHelmPayload().getHelmVersion().name());
+          "helmVersion", pollingItem.getPollingPayloadData().getHttpHelmPayload().getHelmVersion().name());
       if (isNotBlank(error)) {
         throw new InvalidRequestException(error);
       }
@@ -212,5 +214,15 @@ public class BuildTriggerHelper {
     }
 
     return builder.toString();
+  }
+
+  public String validateAndFetchFromJsonNode(BuildTriggerOpsData buildTriggerOpsData, String key) {
+    String fieldName = buildTriggerOpsData.getPipelineBuildSpecMap().containsKey(key)
+        ? ((JsonNode) buildTriggerOpsData.getPipelineBuildSpecMap().get(key)).asText()
+        : Strings.EMPTY;
+    if (isBlank(fieldName) || "<+input>".equals(fieldName)) {
+      fieldName = fetchValueFromJsonNode(key, buildTriggerOpsData.getTriggerSpecMap());
+    }
+    return fieldName;
   }
 }

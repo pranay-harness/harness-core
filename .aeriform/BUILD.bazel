@@ -408,13 +408,13 @@ aeriform("//955-setup-usage-sdk:tests")
 
 aeriform("//956-feature-flag-beans:module")
 
+aeriform("//957-cg-beans:module")
+
 aeriform("//958-migration-sdk:module")
 
 aeriform("//958-migration-sdk:tests")
 
 aeriform("//958-ng-file-service-sdk:module")
-
-aeriform("//959-cg-beans:module")
 
 aeriform("//959-file-service-commons:module")
 

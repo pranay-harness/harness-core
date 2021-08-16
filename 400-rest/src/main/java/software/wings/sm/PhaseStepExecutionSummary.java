@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PhaseStepExecutionSummary extends StepExecutionSummary {
   private List<StepExecutionSummary> stepExecutionSummaryList = new ArrayList<>();
 

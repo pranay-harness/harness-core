@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Value
 @Builder
 public class ArtifactSummary {

@@ -57,7 +57,7 @@ import org.simpleframework.xml.Transient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class StateExecutionInstance implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
                                                UpdatedAtAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

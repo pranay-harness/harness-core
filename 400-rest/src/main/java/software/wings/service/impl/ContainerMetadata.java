@@ -12,7 +12,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ContainerMetadata {
   private ContainerMetadataType type;
   private String containerServiceName;

@@ -14,7 +14,7 @@ import software.wings.beans.BaseFile;
  * The Class ArtifactFile.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ArtifactFile extends BaseFile {
   /**
    * The type Builder.

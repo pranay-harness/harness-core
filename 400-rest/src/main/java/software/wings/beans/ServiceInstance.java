@@ -25,7 +25,7 @@ import org.mongodb.morphia.annotations.Property;
 /**
  * The Class ServiceInstance.
  */
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDP)
 @Entity(value = "serviceInstance", noClassnameStored = true)
 @HarnessEntity(exportable = false)

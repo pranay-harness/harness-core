@@ -38,7 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class SftpConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "SFTP URL", required = true) @NotEmpty private String sftpUrl;
   @Attributes(title = "Domain") private String domain;

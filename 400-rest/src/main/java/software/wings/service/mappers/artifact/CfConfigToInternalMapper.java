@@ -13,7 +13,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class CfConfigToInternalMapper {
   public CfInternalConfig toCfInternalConfig(PcfConfig pcfConfig) {
     return CfInternalConfig.builder()

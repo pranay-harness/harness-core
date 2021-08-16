@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.NotSaved;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PipelineStage {
   private String name;
   private boolean parallel;

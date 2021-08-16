@@ -82,7 +82,7 @@ import org.mongodb.morphia.annotations.Transient;
  * @author Rishi
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Entity(value = "stateMachines", noClassnameStored = true)
 @HarnessEntity(exportable = true)

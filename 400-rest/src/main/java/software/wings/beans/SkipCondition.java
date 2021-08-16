@@ -14,7 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Builder
 public class SkipCondition {
   @VisibleForTesting enum SkipConditionType { ALWAYS_SKIP, DO_NOT_SKIP, CONDITIONAL_SKIP }

@@ -21,7 +21,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder(toBuilder = true)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ExecutionResponse {
   private boolean async;
   @Singular private List<String> correlationIds;

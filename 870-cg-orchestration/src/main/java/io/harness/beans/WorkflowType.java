@@ -9,4 +9,4 @@ import io.harness.annotations.dev.TargetModule;
 /**
  * The enum Workflow type.
  */
-@OwnedBy(CDC) @TargetModule(HarnessModule._959_CG_BEANS) public enum WorkflowType { PIPELINE, ORCHESTRATION }
+@OwnedBy(CDC) @TargetModule(HarnessModule._957_CG_BEANS) public enum WorkflowType { PIPELINE, ORCHESTRATION }

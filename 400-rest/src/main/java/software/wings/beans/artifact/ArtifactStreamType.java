@@ -16,7 +16,7 @@ import java.util.Set;
  * The Enum ArtifactStreamType.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum ArtifactStreamType {
   JENKINS,
   BAMBOO,

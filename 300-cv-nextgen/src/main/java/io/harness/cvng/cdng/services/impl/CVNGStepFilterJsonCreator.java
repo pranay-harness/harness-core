@@ -29,6 +29,8 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
   private static final String SERVICE_CONFIG_KEY = "serviceConfig";
   private static final String SERVICE_REF_KEY = "serviceRef";
   private static final String ENVIRONMENT_REF_KEY = "environmentRef";
+  private static final String SPEC_KEY = "spec";
+  private static final String STAGE_KEY = "stage";
   @Inject private MonitoredServiceService monitoredServiceService;
   @Override
   public Set<String> getSupportedStepTypes() {
@@ -46,7 +48,7 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     List<EntityDetailProtoDTO> result = new ArrayList<>();
     // This is handling the case when the monitoring service is defined. Runtime case needs to be handled separately
     // https://harness.atlassian.net/browse/CDNG-10512
-    YamlNode stageLevelYamlNode = getStageSpecYamlNode(filterCreationContext.getCurrentField().getNode(), 4);
+    YamlNode stageLevelYamlNode = getStageSpecYamlNode(filterCreationContext.getCurrentField().getNode());
     String serviceIdentifier = getServiceRefNode(stageLevelYamlNode).asText();
     String envIdentifier = getEnvRefNode(stageLevelYamlNode).asText();
 
@@ -72,18 +74,28 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
   }
 
   private YamlNode getServiceRefNode(YamlNode stageYaml) {
-    return stageYaml.getField(SERVICE_CONFIG_KEY).getNode().getField(SERVICE_REF_KEY).getNode();
+    return stageYaml.getField(SPEC_KEY)
+        .getNode()
+        .getField(SERVICE_CONFIG_KEY)
+        .getNode()
+        .getField(SERVICE_REF_KEY)
+        .getNode();
   }
   private YamlNode getEnvRefNode(YamlNode stageYaml) {
-    return stageYaml.getField(INFRASTRUCTURE_KEY).getNode().getField(ENVIRONMENT_REF_KEY).getNode();
+    return stageYaml.getField(SPEC_KEY)
+        .getNode()
+        .getField(INFRASTRUCTURE_KEY)
+        .getNode()
+        .getField(ENVIRONMENT_REF_KEY)
+        .getNode();
   }
 
-  private YamlNode getStageSpecYamlNode(YamlNode yamlNode, int parentNo) {
+  private YamlNode getStageSpecYamlNode(YamlNode yamlNode) {
     Preconditions.checkNotNull(yamlNode, "Invalid yaml. Can't find stage spec.");
-    if (parentNo == 0) {
-      return yamlNode;
+    if (yamlNode.getField(STAGE_KEY) != null) {
+      return yamlNode.getField(STAGE_KEY).getNode();
     } else {
-      return getStageSpecYamlNode(yamlNode.getParentNode(), parentNo - 1);
+      return getStageSpecYamlNode(yamlNode.getParentNode());
     }
   }
 }

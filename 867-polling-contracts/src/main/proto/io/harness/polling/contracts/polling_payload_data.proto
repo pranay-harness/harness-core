@@ -4,13 +4,14 @@ package io.harness.polling.contracts;
 
 option java_multiple_files = true;
 
-message PayloadType {
+message PollingPayloadData {
   Type type = 1;
+  string connectorRef = 2;
   oneof Payload {
-    HttpHelmPayload httpHelmPayload = 2;
-    DockerEcrPayload dockerEcrPayload = 3;
-    GcsHelmPayload gcsHelmPayload = 4;
-    S3HelmPayload s3HelmPayload = 5;
+    HttpHelmPayload httpHelmPayload = 3;
+    DockerEcrPayload dockerEcrPayload = 4;
+    GcsHelmPayload gcsHelmPayload = 5;
+    S3HelmPayload s3HelmPayload = 6;
   }
 }
 

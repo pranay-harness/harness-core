@@ -21,6 +21,8 @@ import lombok.AllArgsConstructor;
 public class GeneratorFactory {
   private final BuildTriggerHelper buildTriggerHelper;
   private final HttpHelmPollingItemGenerator httpHelmPollingItemGenerator;
+  private final S3HelmPollingItemGenerator s3HelmPollingItemGenerator;
+  private final GCSHelmPollingItemGenerator gcsHelmPollingItemGenerator;
 
   public PollingItemGenerator retrievePollingItemGenerator(BuildTriggerOpsData buildTriggerOpsData) {
     NGTriggerEntity ngTriggerEntity = buildTriggerOpsData.getTriggerDetails().getNgTriggerEntity();
@@ -50,6 +52,10 @@ public class GeneratorFactory {
     String storeTypeFromTrigger = buildTriggerHelper.fetchStoreTypeForHelm(buildTriggerOpsData);
     if (BuildStoreType.HTTP.getValue().equals(storeTypeFromTrigger)) {
       return httpHelmPollingItemGenerator;
+    } else if (BuildStoreType.S3.getValue().equals(storeTypeFromTrigger)) {
+      return s3HelmPollingItemGenerator;
+    } else if (BuildStoreType.GCS.getValue().equals(storeTypeFromTrigger)) {
+      return gcsHelmPollingItemGenerator;
     }
 
     return null;
