@@ -22,6 +22,7 @@ import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.StatusRuntimeException;
@@ -50,35 +51,41 @@ public class PlanCreatorMergeService {
     this.pmsSdkHelper = pmsSdkHelper;
   }
 
-  public PlanCreationBlobResponse createPlan(ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata)
-      throws IOException {
+  public PlanCreationBlobResponse createPlan(String accountId, String orgIdentifier, String projectIdentifier,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
     log.info("Starting plan creation");
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     YamlField pipelineField = YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml());
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse =
-        createPlanForDependenciesRecursive(services, dependencies, metadata, planExecutionMetadata.getTriggerPayload());
+    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(accountId, orgIdentifier,
+        projectIdentifier, services, dependencies, metadata, planExecutionMetadata.getTriggerPayload());
     validatePlanCreationBlobResponse(finalResponse);
     log.info("Done with plan creation");
     return finalResponse;
   }
 
-  private Map<String, PlanCreationContextValue> createInitialPlanCreationContext(
-      ExecutionMetadata metadata, TriggerPayload triggerPayload) {
-    Map<String, PlanCreationContextValue> planCreationContextBuilder = new HashMap<>();
+  @VisibleForTesting
+  Map<String, PlanCreationContextValue> createInitialPlanCreationContext(String accountId, String orgIdentifier,
+      String projectIdentifier, ExecutionMetadata metadata, TriggerPayload triggerPayload) {
+    Map<String, PlanCreationContextValue> planCreationContextMap = new HashMap<>();
+    PlanCreationContextValue.Builder builder = PlanCreationContextValue.newBuilder()
+                                                   .setAccountIdentifier(accountId)
+                                                   .setOrgIdentifier(orgIdentifier)
+                                                   .setProjectIdentifier(projectIdentifier);
     if (metadata != null) {
-      PlanCreationContextValue.Builder builder = PlanCreationContextValue.newBuilder().setMetadata(metadata);
-      if (triggerPayload != null) {
-        builder.setTriggerPayload(triggerPayload);
-      }
-      planCreationContextBuilder.put("metadata", builder.build());
+      builder.setMetadata(metadata);
     }
-    return planCreationContextBuilder;
+    if (triggerPayload != null) {
+      builder.setTriggerPayload(triggerPayload);
+    }
+    planCreationContextMap.put("metadata", builder.build());
+    return planCreationContextMap;
   }
 
-  private PlanCreationBlobResponse createPlanForDependenciesRecursive(Map<String, PlanCreatorServiceInfo> services,
+  private PlanCreationBlobResponse createPlanForDependenciesRecursive(String accountId, String orgIdentifier,
+      String projectIdentifier, Map<String, PlanCreatorServiceInfo> services,
       Map<String, YamlFieldBlob> initialDependencies, ExecutionMetadata metadata, TriggerPayload triggerPayload)
       throws IOException {
     PlanCreationBlobResponse.Builder finalResponseBuilder =
@@ -86,7 +93,8 @@ public class PlanCreatorMergeService {
     if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponseBuilder.build();
     }
-    finalResponseBuilder.putAllContext(createInitialPlanCreationContext(metadata, triggerPayload));
+    finalResponseBuilder.putAllContext(
+        createInitialPlanCreationContext(accountId, orgIdentifier, projectIdentifier, metadata, triggerPayload));
     for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
       PlanCreationBlobResponse currIterationResponse = createPlanForDependencies(services, finalResponseBuilder);
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
