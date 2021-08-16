@@ -2,6 +2,7 @@ package io.harness.delegate.app;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.grpc.DelegateProfileServiceGrpcImpl;
 import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
@@ -27,6 +28,8 @@ import io.grpc.health.v1.HealthGrpc;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.services.HealthStatusManager;
+import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
+
 import java.util.List;
 import java.util.Set;
 
@@ -47,9 +50,13 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
     //    bindableServiceMultibinder.addBinding().toProvider(() ->
     //    healthStatusManagerProvider.get().getHealthService());
-    // bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
+     //bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
 
     bindableServiceMultibinder.addBinding().to(DelegateServiceClassicGrpcImpl.class);
+
+    bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
+    //bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);
+
 
     // Service Interceptors
     Provider<Set<ServerInterceptor>> serverInterceptorsProvider =
