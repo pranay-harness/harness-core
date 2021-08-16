@@ -383,6 +383,15 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
         ENV_10_ID, SERVICE_14_ID, SERVICE_14_NAME, LAST_ARTIFACT_BUILD_1_NUM, LAST_WORKFLOW_EXECUTION_1_ID,
         LAST_WORKFLOW_EXECUTION_1_NAME, INFRA_MAPPING_1_ID, INFRA_MAPPING_1_NAME, false);
     persistence.save(instance25);
+
+    WorkflowExecution workflowExecution1 = buildWorkflowExecution(LAST_WORKFLOW_EXECUTION_1_ID);
+    persistence.save(workflowExecution1);
+    WorkflowExecution workflowExecution2 = buildWorkflowExecution(LAST_WORKFLOW_EXECUTION_2_ID);
+    persistence.save(workflowExecution2);
+  }
+
+  private WorkflowExecution buildWorkflowExecution(String workflowId) {
+    return WorkflowExecution.builder().uuid(workflowId).workflowId(workflowId).build();
   }
 
   private Instance buildInstance(String instanceId, String accountId, String appId, String serviceId, String envId,
