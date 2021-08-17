@@ -143,7 +143,7 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
     List<Map<String, String>> labelsMapList = Arrays.asList(labelMap, anotherLabelMap);
 
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
-    doReturn(labelsMapList).when(dockerRegistryUtils).getLabels(any(), any(), any(), any(), any());
+    doReturn(labelsMapList).when(dockerRegistryUtils).getLabels(any(), any(), any(), any(), any(), any());
 
     List<Map<String, String>> resultLabelsMap =
         dockerPublicRegistryProcessor.getLabels(dockerConfig, "image", asList("abc", "latest"));
