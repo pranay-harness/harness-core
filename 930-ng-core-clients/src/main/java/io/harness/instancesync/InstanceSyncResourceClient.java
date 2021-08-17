@@ -3,7 +3,7 @@ package io.harness.instancesync;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import javax.validation.constraints.NotNull;
@@ -15,11 +15,11 @@ import retrofit2.http.Query;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceSyncResourceClient {
-  String INSTANCE_SYNC = "instancesync/";
+  String INSTANCE_SYNC = "instancesync";
 
   @POST(INSTANCE_SYNC + "/response")
   Call<ResponseDTO<Boolean>> sendPerpetualTaskResponse(
       @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotEmpty @Query(NGCommonEntityConstants.PERPETUAL_TASK_ID) String perpetualTaskId,
-      @NotNull @Body InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse);
+      @NotNull @Body DelegateResponseData instanceSyncPerpetualTaskResponse);
 }

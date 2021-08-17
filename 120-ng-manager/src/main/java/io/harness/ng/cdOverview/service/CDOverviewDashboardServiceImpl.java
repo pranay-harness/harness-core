@@ -26,6 +26,7 @@ import io.harness.ng.cdOverview.dto.ActiveServiceInstanceSummary;
 import io.harness.ng.cdOverview.dto.BuildIdAndInstanceCount;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.Deployment;
+import io.harness.ng.cdOverview.dto.DeploymentChangeRates;
 import io.harness.ng.cdOverview.dto.DeploymentCount;
 import io.harness.ng.cdOverview.dto.DeploymentDateAndCount;
 import io.harness.ng.cdOverview.dto.DeploymentInfo;
@@ -81,6 +82,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -110,6 +112,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(),
       ExecutionStatus.APPROVALWAITING.name(), ExecutionStatus.WAITING.name(), ExecutionStatus.RESOURCEWAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
+  public static final double INVALID_CHANGE_RATE = -10000;
 
   public String executionStatusCdTimeScaleColumns() {
     return "id,"
@@ -796,6 +799,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           ServiceDeployment.builder()
               .time(startTime)
               .deployments(DeploymentCount.builder().total(0).failure(0).success(0).build())
+              .rate(DeploymentChangeRates.builder()
+                        .frequency(0)
+                        .frequencyChangeRate(0)
+                        .failureRate(0)
+                        .failureRateChangeRate(0)
+                        .build())
               .build());
       startTime = startTime + bucketSizeInMS;
     }
@@ -823,23 +832,24 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     String selectPipelineIdQuery = "(select id from " + tableNameCD + " where ";
     totalBuildSqlBuilder.append(selectPipelineIdQuery);
     if (accountIdentifier != null) {
-      totalBuildSqlBuilder.append(String.format("accountid='%s' and ", accountIdentifier));
+      totalBuildSqlBuilder.append(String.format("accountid='%s'", accountIdentifier));
     }
 
     if (orgIdentifier != null) {
-      totalBuildSqlBuilder.append(String.format("orgidentifier='%s' and ", orgIdentifier));
+      totalBuildSqlBuilder.append(String.format(" and orgidentifier='%s'", orgIdentifier));
     }
 
     if (projectIdentifier != null) {
-      totalBuildSqlBuilder.append(String.format("projectidentifier='%s') and ", projectIdentifier));
+      totalBuildSqlBuilder.append(String.format(" and projectidentifier='%s'", projectIdentifier));
     }
 
     if (serviceIdentifier != null) {
-      totalBuildSqlBuilder.append(String.format("service_id='%s') and ", serviceIdentifier));
+      totalBuildSqlBuilder.append(String.format(" and service_id='%s'", serviceIdentifier));
     }
 
-    totalBuildSqlBuilder.append(String.format(
-        "service_startts>=%s and service_startts<%s) as innertable group by status, time_entity;", startTime, endTime));
+    totalBuildSqlBuilder.append(
+        String.format(") and service_startts>=%s and service_startts<%s) as innertable group by status, time_entity;",
+            startTime, endTime));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -847,6 +857,29 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   private static void validateBucketSize(long numberOfDays, long bucketSizeInDays) throws Exception {
     if (numberOfDays < bucketSizeInDays) {
       throw new Exception("Bucket size should be less than the number of days in the selected time range");
+    }
+  }
+
+  private void calculateRates(List<ServiceDeployment> serviceDeployments) {
+    serviceDeployments.sort(Comparator.comparingLong(ServiceDeployment::getTime));
+
+    double prevFrequency = 0, prevFailureRate = 0;
+    for (int i = 0; i < serviceDeployments.size(); i++) {
+      DeploymentCount deployments = serviceDeployments.get(i).getDeployments();
+      DeploymentChangeRates rates = serviceDeployments.get(i).getRate();
+
+      double currFrequency = deployments.getTotal();
+      rates.setFrequency(currFrequency);
+      rates.setFrequencyChangeRate(calculateChangeRate(prevFrequency, currFrequency));
+      prevFrequency = currFrequency;
+
+      double failureRate = deployments.getFailure() * 100;
+      if (deployments.getTotal() != 0) {
+        failureRate = failureRate / deployments.getTotal();
+      }
+      rates.setFailureRate(failureRate);
+      rates.setFailureRateChangeRate(calculateChangeRate(prevFailureRate, failureRate));
+      prevFailureRate = failureRate;
     }
   }
 
@@ -873,12 +906,11 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     double frequency = totalDeployments / numberOfDays;
     double prevFrequency = prevTotalDeployments / numberOfDays;
 
-    double totalDeloymentChangeRate = (totalDeployments - prevTotalDeployments) * 100;
-    if (prevTotalDeployments != 0) {
-      totalDeloymentChangeRate = totalDeloymentChangeRate / prevTotalDeployments;
-    }
+    double totalDeploymentChangeRate = calculateChangeRate(prevTotalDeployments, totalDeployments);
     double failureRateChangeRate = getFailureRateChangeRate(serviceDeploymentList, prevServiceDeploymentList);
     double frequencyChangeRate = calculateChangeRate(prevFrequency, frequency);
+
+    calculateRates(serviceDeploymentList);
 
     return ServiceDeploymentListInfo.builder()
         .startTime(startTime)
@@ -886,7 +918,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .totalDeployments(totalDeployments)
         .failureRate(failureRate)
         .frequency(frequency)
-        .totalDeploymentsChangeRate(totalDeloymentChangeRate)
+        .totalDeploymentsChangeRate(totalDeploymentChangeRate)
         .failureRateChangeRate(failureRateChangeRate)
         .frequencyChangeRate(frequencyChangeRate)
         .serviceDeploymentList(serviceDeploymentList)
@@ -914,9 +946,14 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     // Create List<EntityStatusDetails> out of service entity list to create growth trend out of it
     List<EntityStatusDetails> entities = new ArrayList<>();
-    serviceEntities.forEach(serviceEntity
-        -> entities.add(new EntityStatusDetails(
-            serviceEntity.getCreatedAt(), serviceEntity.getDeleted(), serviceEntity.getDeletedAt())));
+    serviceEntities.forEach(serviceEntity -> {
+      if (Boolean.FALSE.equals(serviceEntity.getDeleted())) {
+        entities.add(new EntityStatusDetails(serviceEntity.getCreatedAt()));
+      } else {
+        entities.add(new EntityStatusDetails(
+            serviceEntity.getCreatedAt(), serviceEntity.getDeleted(), serviceEntity.getDeletedAt()));
+      }
+    });
 
     return new TimeValuePairListDTO<>(
         GrowthTrendEvaluator.getGrowthTrend(entities, startTimeInMs, endTimeInMs, timeGroupType));
@@ -945,11 +982,13 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return failureRate;
   }
   private double calculateChangeRate(double prevValue, double curValue) {
-    double rate = (curValue - prevValue) * 100;
-    if (prevValue != 0) {
-      rate = rate / prevValue;
+    if (prevValue == curValue) {
+      return 0;
     }
-    return rate;
+    if (prevValue == 0) {
+      return INVALID_CHANGE_RATE;
+    }
+    return ((curValue - prevValue) * 100) / prevValue;
   }
 
   private long getTotalDeployments(List<ServiceDeployment> executionDeploymentList) {
@@ -1157,7 +1196,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .totalDeployments(totalDeployment)
         .totalDeploymentChangeRate(totalDeploymentChangeRate)
         .percentSuccess(percentSuccess)
-        .rateSuccess(getRate(success, previousSuccess))
+        .rateSuccess(calculateChangeRate(previousSuccess, success))
         .failureRate(failureRate)
         .failureRateChangeRate(failureRateChangeRate)
         .frequency(frequency)
@@ -1361,7 +1400,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
 
     envBuildInstanceCounts.forEach(envBuildInstanceCount -> {
-      final String envId = envBuildInstanceCount.getEnvId();
+      final String envId = envBuildInstanceCount.getEnvIdentifier();
       final String envName = envBuildInstanceCount.getEnvName();
       final String buildId = envBuildInstanceCount.getTag();
       final int count = envBuildInstanceCount.getCount();
@@ -1539,6 +1578,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public DeploymentsInfo getDeploymentsByServiceId(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
+    startTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
+    endTimeInMs = getStartTimeOfNextDay(endTimeInMs);
     String query = queryBuilderDeployments(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startTimeInMs, endTimeInMs);
     String queryServiceNameTagId = queryToGetId(accountIdentifier, orgIdentifier, projectIdentifier, serviceId);

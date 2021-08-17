@@ -19,6 +19,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -30,6 +31,7 @@ import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutUndoCommand;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.model.K8sDelegateTaskParams;
+import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
@@ -50,6 +52,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessResult;
@@ -197,6 +201,34 @@ public class K8sRollingRollbackBaseHandler {
 
     logCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
     return true;
+  }
+
+  public List<K8sPod> getPods(int timeoutMins, List<KubernetesResourceIdRevision> managedWorkloadIds,
+      List<KubernetesResource> customWorkloads, KubernetesConfig kubernetesConfig, String releaseName)
+      throws Exception {
+    if (isEmpty(managedWorkloadIds) && isEmpty(customWorkloads)) {
+      return new ArrayList<>();
+    }
+    final Stream<KubernetesResourceId> managedWorkloadStream =
+        managedWorkloadIds.stream().map(KubernetesResourceIdRevision::getWorkload);
+    final Stream<KubernetesResourceId> customWorkloadStream =
+        customWorkloads.stream().map(KubernetesResource::getResourceId);
+
+    List<K8sPod> k8sPods = new ArrayList<>();
+    final List<String> namespaces = Stream.concat(managedWorkloadStream, customWorkloadStream)
+                                        .map(KubernetesResourceId::getNamespace)
+                                        .distinct()
+                                        .collect(Collectors.toList());
+    for (String namespace : namespaces) {
+      List<K8sPod> podDetails =
+          k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, ofMinutes(timeoutMins).toMillis());
+
+      if (isNotEmpty(podDetails)) {
+        k8sPods.addAll(podDetails);
+      }
+    }
+
+    return k8sPods;
   }
 
   private boolean rollback(K8sRollingRollbackHandlerConfig rollbackHandlerConfig,

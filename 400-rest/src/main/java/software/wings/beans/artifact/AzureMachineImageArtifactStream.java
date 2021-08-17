@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("AZURE_MACHINE_IMAGE")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -102,6 +102,22 @@ public class AzureMachineImageArtifactStream extends ArtifactStream {
       }
       imageDefinition.validate();
     }
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .osType(osType)
+        .imageType(imageType)
+        .subscriptionId(subscriptionId)
+        .imageDefinition(imageDefinition)
+        .build();
   }
 
   @Override

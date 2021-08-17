@@ -33,7 +33,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("ARTIFACTORY")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -149,6 +149,25 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         throw new InvalidRequestException("Repository Type cannot be empty", USER);
       }
     }
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .repositoryType(repositoryType)
+        .jobname(jobname)
+        .imageName(imageName)
+        .artifactPaths(artifactPaths)
+        .artifactPattern(artifactPattern)
+        .dockerRepositoryServer(dockerRepositoryServer)
+        .useDockerFormat(useDockerFormat)
+        .build();
   }
 
   @Override

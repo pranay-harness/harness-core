@@ -2,6 +2,7 @@ package io.harness.licensing.beans.summary;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.Edition;
@@ -37,5 +38,6 @@ import lombok.experimental.SuperBuilder;
 public abstract class LicensesWithSummaryDTO {
   Edition edition;
   LicenseType licenseType;
+  ModuleType moduleType;
   long maxExpiryTime;
 }

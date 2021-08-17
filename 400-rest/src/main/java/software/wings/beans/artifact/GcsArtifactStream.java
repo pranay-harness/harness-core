@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("GCS")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -58,6 +58,21 @@ public class GcsArtifactStream extends ArtifactStream {
     return isBlank(getSourceName())
         ? format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()))
         : format("%s_%s_%s", getJobname(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .jobname(jobname)
+        .artifactPaths(artifactPaths)
+        .projectId(projectId)
+        .build();
   }
 
   @Override

@@ -27,7 +27,7 @@ public interface PollingItemGenerator {
                           .setAccountId(ngTriggerEntity.getAccountId())
                           .setOrganizationId(ngTriggerEntity.getOrgIdentifier())
                           .setProjectId(ngTriggerEntity.getProjectIdentifier())
-                          .setSignature(ngTriggerEntity.getMetadata().getBuildMetadata().getSignature())
+                          .setSignature(ngTriggerEntity.getSignature())
                           .build());
   }
 }

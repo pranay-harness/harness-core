@@ -43,12 +43,14 @@ import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
+import io.harness.gitsync.core.fullsync.GitFullSyncEntityIterator;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.gitsync.core.webhook.GitSyncEventConsumerService;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
+import io.harness.licensing.migrations.LicenseManagerMigrationProvider;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -94,6 +96,9 @@ import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsume
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.polling.service.impl.PollingServiceImpl;
+import io.harness.polling.service.impl.PollingServiceObserverImpl;
+import io.harness.polling.service.intfc.PollingService;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
@@ -105,13 +110,14 @@ import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
-import io.harness.service.DeploymentEventListenerRegistrar;
+import io.harness.service.deploymentevent.DeploymentEventListenerRegistrar;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.token.remote.TokenClient;
 import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -310,6 +316,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
     initializeMonitoring(appConfig, injector);
+    registerObservers(injector);
 
     registerManagedBeans(environment, injector);
 
@@ -321,6 +328,12 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
+  }
+
+  private static void registerObservers(Injector injector) {
+    // register Polling Framework Observer
+    PollingServiceImpl pollingService = (PollingServiceImpl) injector.getInstance(Key.get(PollingService.class));
+    pollingService.getSubject().register(injector.getInstance(Key.get(PollingServiceObserverImpl.class)));
   }
 
   private void registerMigrations(Injector injector) {
@@ -338,6 +351,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(NGBeanMigrationProvider.class); }
           { add(InstanceMigrationProvider.class); }
           { add(UserMetadataMigrationProvider.class); }
+          { add(LicenseManagerMigrationProvider.class); }
         })
         .build();
   }
@@ -396,6 +410,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
     injector.getInstance(InstanceStatsIteratorHandler.class).registerIterators();
+    injector.getInstance(GitFullSyncEntityIterator.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -466,6 +481,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
         .engineEventHandlersMap(getOrchestrationEventHandlers())
+        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
+        .orchestrationEventPoolConfig(
+            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
   }
 

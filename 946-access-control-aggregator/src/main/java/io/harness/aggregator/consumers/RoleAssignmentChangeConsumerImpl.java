@@ -8,15 +8,12 @@ import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
 import io.harness.annotations.dev.OwnedBy;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(PL)
 @Singleton
 @Slf4j
@@ -24,6 +21,16 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   private final ACLRepository aclRepository;
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final ChangeConsumerService changeConsumerService;
+  private final RoleAssignmentCRUDEventHandler roleAssignmentCRUDEventHandler;
+
+  public RoleAssignmentChangeConsumerImpl(ACLRepository aclRepository,
+      RoleAssignmentRepository roleAssignmentRepository, ChangeConsumerService changeConsumerService,
+      RoleAssignmentCRUDEventHandler roleAssignmentCRUDEventHandler) {
+    this.aclRepository = aclRepository;
+    this.roleAssignmentRepository = roleAssignmentRepository;
+    this.changeConsumerService = changeConsumerService;
+    this.roleAssignmentCRUDEventHandler = roleAssignmentCRUDEventHandler;
+  }
 
   @Override
   public void consumeUpdateEvent(String id, RoleAssignmentDBO updatedRoleAssignmentDBO) {
@@ -42,6 +49,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
 
   @Override
   public void consumeDeleteEvent(String id) {
+    roleAssignmentCRUDEventHandler.handleRoleAssignmentDelete(id);
     log.info("Number of ACLs deleted: {}", deleteACLs(id));
   }
 
@@ -62,6 +70,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
       log.info("Role assignment has been deleted, not processing role assignment create event for id: {}", id);
       return;
     }
+    roleAssignmentCRUDEventHandler.handleRoleAssignmentCreate(newRoleAssignmentDBO);
     log.info("Number of ACLs created: {}", createACLs(newRoleAssignmentDBO));
   }
 }

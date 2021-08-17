@@ -7,7 +7,6 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//product/ci/common/avro/schema/callgraph:go_default_library",
-        "//product/ci/common/avro/schema/visgraph:go_default_library",
         "@com_github_linkedin_goavro_v2//:go_default_library",
         "@com_github_pkg_errors//:go_default_library",
     ],

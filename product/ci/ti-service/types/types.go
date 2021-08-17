@@ -43,6 +43,18 @@ const (
 	FileDeleted = "deleted"
 )
 
+func ConvertToFileStatus(s string) FileStatus {
+	switch s {
+	case FileModified:
+		return FileModified
+	case FileAdded:
+		return FileAdded
+	case FileDeleted:
+		return FileDeleted
+	}
+	return FileModified
+}
+
 type Result struct {
 	Status  Status `json:"status"`
 	Message string `json:"message"`
@@ -189,11 +201,10 @@ type VisNode struct {
 	Id int `json:"id"`
 
 	Package string `json:"package"`
-	Method  string `json:"method"`
-	Params  string `json:"params"`
 	Class   string `json:"class"`
 	File    string `json:"file"`
 	Type    string `json:"type"`
+	Root    bool   `json:"root,omitempty"`
 	// Gives information about useful nodes which might be used by UI on which nodes to center
 	Important bool `json:"important"`
 }
@@ -210,6 +221,7 @@ type GetVgReq struct {
 	TargetBranch string
 	Limit        int64
 	Class        string
+	DiffFiles    []File
 }
 
 type GetVgResp struct {

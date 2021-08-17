@@ -13,8 +13,10 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -76,6 +78,10 @@ public final class LogAnalysisResult implements PersistentEntity, UuidAware, Cre
 
     public boolean isMoreSevereThan(LogAnalysisTag other) {
       return this.severity > other.severity;
+    }
+
+    public static Set<LogAnalysisTag> getAnomalousTags() {
+      return Sets.newHashSet(UNKNOWN, UNEXPECTED);
     }
   }
 }

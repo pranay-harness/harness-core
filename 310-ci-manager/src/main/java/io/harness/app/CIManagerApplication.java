@@ -65,6 +65,7 @@ import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.token.remote.TokenClient;
 import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -333,6 +334,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
+        .orchestrationEventPoolConfig(
+            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
   }
 

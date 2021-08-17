@@ -37,6 +37,7 @@ public class ResourceConstraintUtility {
     return resourceConstraintYamlField.getNode().getCurrJsonNode();
   }
 
+  // Todo: Move to cd-service i.e 125-cd-nextgen
   public boolean isSimultaneousDeploymentsAllowed(ParameterField<Boolean> allowSimultaneousDeploymentsField) {
     if (!ParameterField.isNull(allowSimultaneousDeploymentsField) && allowSimultaneousDeploymentsField.isExpression()) {
       throw new InvalidRequestException(

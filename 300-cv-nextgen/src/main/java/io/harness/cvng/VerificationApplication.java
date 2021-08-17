@@ -481,8 +481,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   private void registerVerificationTaskOrchestrationIterator(Injector injector) {
     // TODO: Reevaluate the thread count here. 20 might be enough now but as we scale, we need to reconsider.
-    ScheduledThreadPoolExecutor workflowVerificationExecutor =
-        new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
+    int poolSize = 20;
+    ScheduledThreadPoolExecutor workflowVerificationExecutor = new ScheduledThreadPoolExecutor(
+        poolSize, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
     Handler<AnalysisOrchestrator> handler = injector.getInstance(AnalysisOrchestrationJob.class);
 
     PersistenceIterator analysisOrchestrationIterator =
@@ -493,7 +494,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofSeconds(30))
             .executorService(workflowVerificationExecutor)
-            .semaphore(new Semaphore(3))
+            .semaphore(new Semaphore(poolSize - 1))
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query

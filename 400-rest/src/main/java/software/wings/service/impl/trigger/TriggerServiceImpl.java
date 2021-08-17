@@ -2100,6 +2100,10 @@ public class TriggerServiceImpl implements TriggerService {
       if (EmptyPredicate.isNotEmpty(nextIterations)) {
         trigger.setNextIterations(nextIterations.subList(1, nextIterations.size()));
       }
+      if (!trigger.isDisabled() && EmptyPredicate.isEmpty(trigger.getNextIterations())) {
+        throw new InvalidRequestException(
+            "Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
+      }
     }
   }
 

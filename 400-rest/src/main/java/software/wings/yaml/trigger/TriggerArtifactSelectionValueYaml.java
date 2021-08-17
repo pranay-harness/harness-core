@@ -2,7 +2,9 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.yaml.BaseYamlWithType;
 
@@ -27,6 +29,7 @@ import lombok.NoArgsConstructor;
       @Type(value = TriggerArtifactSelectionLastDeployedYaml.class, name = "LAST_DEPLOYED"),
       @Type(value = TriggerArtifactSelectionWebhookYaml.class, name = "WEBHOOK_VARIABLE")
 })
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerArtifactSelectionValueYaml extends BaseYamlWithType {
   public TriggerArtifactSelectionValueYaml(String type) {
     super(type);

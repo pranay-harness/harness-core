@@ -11,7 +11,7 @@ if [ "${PLATFORM}" == "jenkins" ]; then
   fi
 fi
 
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --announce_rc"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --show_timestamps --announce_rc"
 
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
@@ -68,6 +68,7 @@ BAZEL_MODULES="\
   //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
+  //441-cg-instance-sync:module \
   //445-cg-connectors:module \
   //450-ce-views:module \
   //460-capability:module \
@@ -109,6 +110,8 @@ BAZEL_MODULES="\
   //925-access-control-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
+  //935-analyser-service:module \
+  //937-persistence-tracer:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
@@ -125,7 +128,7 @@ BAZEL_MODULES="\
   //948-access-control-sdk:module \
   //949-access-control-commons:module \
   //950-command-library-common:module \
-  //950-common-entities:module \
+  //959-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
   //950-events-framework:module \
@@ -151,8 +154,8 @@ BAZEL_MODULES="\
   //955-outbox-sdk:module \
   //955-setup-usage-sdk:module \
   //956-feature-flag-beans:module \
+  //957-cg-beans:module \
   //958-migration-sdk:module \
-  //959-cg-beans:module \
   //959-file-service-commons:module \
   //959-psql-database-models:module \
   //959-timeout-engine:module \
@@ -388,7 +391,7 @@ build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk
 build_bazel_module 949-access-control-commons
 build_bazel_module 950-command-library-common
-build_bazel_module 950-common-entities
+build_bazel_module 959-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-framework
 build_bazel_module 950-log-client
@@ -407,8 +410,8 @@ build_bazel_module 955-filters-sdk
 build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 956-feature-flag-beans
+build_bazel_module 957-cg-beans
 build_bazel_module 958-migration-sdk
-build_bazel_module 959-cg-beans
 build_bazel_module 959-file-service-commons
 build_bazel_module 959-psql-database-models
 build_bazel_module 959-timeout-engine

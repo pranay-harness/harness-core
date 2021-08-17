@@ -1,5 +1,6 @@
 package io.harness.delegate.app;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -570,6 +571,17 @@ import java.util.concurrent.TimeUnit;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @OwnedBy(HarnessTeam.DEL)
+@BreakDependencyOn("io.harness.delegate.beans.connector.ConnectorType")
+@BreakDependencyOn("io.harness.encryptors.clients.CustomSecretsManagerEncryptor")
+@BreakDependencyOn("io.harness.exception.DelegateServiceDriverExceptionHandler")
+@BreakDependencyOn("io.harness.impl.scm.ScmServiceClientImpl")
+@BreakDependencyOn("io.harness.perpetualtask.internal.AssignmentTask")
+@BreakDependencyOn("io.harness.perpetualtask.polling.manifest.HelmChartCollectionService")
+@BreakDependencyOn("io.harness.perpetualtask.polling.manifest.ManifestCollectionService")
+@BreakDependencyOn("io.harness.service.ScmServiceClient")
+@BreakDependencyOn("software.wings.api.DeploymentType")
+@BreakDependencyOn("software.wings.beans.AwsConfig")
+@BreakDependencyOn("software.wings.beans.AzureConfig")
 public class DelegateModule extends AbstractModule {
   private static volatile DelegateModule instance;
 
@@ -598,6 +610,16 @@ public class DelegateModule extends AbstractModule {
         1, new ThreadFactoryBuilder().setNameFormat("localHeartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { localHeartbeatExecutor.shutdownNow(); }));
     return localHeartbeatExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("watcherUpgradeExecutor")
+  public ScheduledExecutorService watcherUpgradeExecutor() {
+    ScheduledExecutorService watcherUpgradeExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("watcherUpgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { watcherUpgradeExecutor.shutdownNow(); }));
+    return watcherUpgradeExecutor;
   }
 
   @Provides
@@ -712,6 +734,16 @@ public class DelegateModule extends AbstractModule {
         1, new ThreadFactoryBuilder().setNameFormat("grpc-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { grpcServiceExecutor.shutdownNow(); }));
     return grpcServiceExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("taskProgressExecutor")
+  public ExecutorService taskProgressExecutor() {
+    ExecutorService taskProgressExecutor = Executors.newFixedThreadPool(
+        10, new ThreadFactoryBuilder().setNameFormat("taskProgress-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskProgressExecutor.shutdownNow(); }));
+    return taskProgressExecutor;
   }
 
   @Provides

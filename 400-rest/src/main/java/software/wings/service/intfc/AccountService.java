@@ -59,7 +59,7 @@ public interface AccountService {
 
   Boolean updateNextGenEnabled(String accountId, boolean enabled);
 
-  AccountDetails getDetails(String accountId);
+  AccountDetails getAccountDetails(String accountId);
 
   List<Account> getAccounts(List<String> identifiers);
 

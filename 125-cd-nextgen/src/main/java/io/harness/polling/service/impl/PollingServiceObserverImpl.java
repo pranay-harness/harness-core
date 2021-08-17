@@ -7,8 +7,10 @@ import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingServiceObserver;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @OwnedBy(HarnessTeam.CDC)
+@Singleton
 public class PollingServiceObserverImpl implements PollingServiceObserver {
   private PollingPerpetualTaskService pollingPerpetualTaskService;
 

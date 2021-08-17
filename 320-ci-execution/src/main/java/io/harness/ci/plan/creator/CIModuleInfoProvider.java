@@ -48,6 +48,7 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -150,8 +151,13 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
   }
 
   private CIWebhookInfoDTO getCiExecutionInfoDTO(CodebaseSweepingOutput codebaseSweepingOutput) {
+    if (codebaseSweepingOutput == null) {
+      return null;
+    }
+
     List<CIBuildCommit> ciBuildCommits = new ArrayList<>();
     if (isNotEmpty(codebaseSweepingOutput.getCommits())) {
+      Collections.reverse(codebaseSweepingOutput.getCommits());
       for (CodebaseSweepingOutput.CodeBaseCommit commit : codebaseSweepingOutput.getCommits()) {
         ciBuildCommits.add(CIBuildCommit.builder()
                                .id(commit.getId())

@@ -6,9 +6,13 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -37,6 +41,7 @@ import static software.wings.beans.deployment.DeploymentMetadata.Include.ENVIRON
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
+import static software.wings.utils.WingsTestConstants.ACCOUNT1_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -46,6 +51,12 @@ import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE1_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE2_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE3_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE4_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE5_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE6_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
@@ -105,6 +116,7 @@ import software.wings.api.InstanceElement;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
+import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactVariable;
@@ -145,6 +157,7 @@ import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.WorkflowStandardParams;
@@ -158,6 +171,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBCursor;
 import com.mongodb.WriteResult;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -165,6 +179,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -190,7 +205,8 @@ import org.mongodb.morphia.query.UpdateResults;
 public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
   @InjectMocks
-  private WorkflowExecutionServiceImpl workflowExecutionServiceSpy = spy(WorkflowExecutionServiceImpl.class);
+  private software.wings.service.impl.WorkflowExecutionServiceImpl workflowExecutionServiceSpy =
+      spy(software.wings.service.impl.WorkflowExecutionServiceImpl.class);
 
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
@@ -205,7 +221,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private FeatureFlagService featureFlagService;
-  @Mock WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
+  @Mock software.wings.service.impl.WorkflowExecutionServiceHelper workflowExecutionServiceHelper;
   @Mock AuthService authService;
   @Mock private AccountExpirationChecker accountExpirationChecker;
   @Mock private HelmChartService helmChartService;
@@ -233,7 +249,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Mock private UpdateResults updateResults;
   @Mock WriteResult writeResult;
   @Mock Query<StateExecutionInstance> statequery;
+  @Mock PageResponse<StateExecutionInstance> pageResponseQuery;
   @Mock StateExecutionInstance stateExecutionInstance;
+  @Mock PipelineExecution pipeleineExecution;
 
   /**
    * test setup.
@@ -271,6 +289,26 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
         workflowExecutionService.listExecutions(pageRequest, false, true, false, true, false);
     assertThat(pageResponse2).isNotNull().isEqualTo(pageResponse);
     verify(wingsPersistence).query(WorkflowExecution.class, pageRequest);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void shouldGetActiveServiceCount() throws IllegalAccessException {
+    //    when(wingsPersistence.createQuery(eq(WorkflowExecution.class), any())).thenReturn(query);
+    WorkflowExecutionServiceImpl workflowExecutionServiceImpl = new WorkflowExecutionServiceImpl();
+    FieldUtils.writeField(workflowExecutionServiceImpl, "wingsPersistence", wingsPersistence1, true);
+    saveWorkflowExecution(ACCOUNT_ID, Arrays.asList(SERVICE1_ID, SERVICE2_ID));
+    saveWorkflowExecution(ACCOUNT_ID, Arrays.asList(SERVICE3_ID));
+    saveWorkflowExecution(ACCOUNT_ID, Arrays.asList(SERVICE2_ID));
+    saveWorkflowExecution(ACCOUNT1_ID, Arrays.asList(SERVICE4_ID, SERVICE5_ID));
+    saveWorkflowExecution(ACCOUNT1_ID, Arrays.asList(SERVICE6_ID));
+    int activeServiceCount = workflowExecutionServiceImpl.getActiveServiceCount(ACCOUNT_ID);
+    assertThat(activeServiceCount).isEqualTo(3);
+  }
+
+  private void saveWorkflowExecution(String accountId, List<String> serviceIds) {
+    wingsPersistence1.save(createNewWorkflowExecution(accountId, serviceIds));
   }
 
   /**
@@ -423,6 +461,58 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     boolean success =
         workflowExecutionService.approveOrRejectExecution(APP_ID, asList(userGroup.getUuid()), approvalDetails);
+    assertThat(success).isEqualTo(false);
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testRejectWithUserGroupWithApiKeyEntry() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.REJECT);
+
+    User user = createUser(USER_ID);
+    saveUserToPersistence(user);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    ApiKeyEntry apiKeyEntry =
+        ApiKeyEntry.builder().accountId(ACCOUNT_ID).name("API_KEY").userGroupIds(asList(userGroup.getUuid())).build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyApiKeyAuthorizedToAcceptOrRejectApproval(anyList(), anyList())).thenReturn(true);
+
+    boolean success = workflowExecutionService.approveOrRejectExecution(
+        APP_ID, asList(userGroup.getUuid()), approvalDetails, apiKeyEntry);
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testRejectWithUserGroupNegativeWithApiKeyEntry() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.REJECT);
+
+    User user = createUser(USER_ID);
+    saveUserToPersistence(user);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    ApiKeyEntry apiKeyEntry =
+        ApiKeyEntry.builder().accountId(ACCOUNT_ID).name("API_KEY").userGroupIds(asList(userGroup.getUuid())).build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyApiKeyAuthorizedToAcceptOrRejectApproval(anyList(), anyList())).thenReturn(false);
+
+    boolean success = workflowExecutionService.approveOrRejectExecution(
+        APP_ID, asList(userGroup.getUuid()), approvalDetails, apiKeyEntry);
     assertThat(success).isEqualTo(false);
     UserThreadLocal.unset();
   }
@@ -628,6 +718,108 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testApproveWithUserGroupWithApiKeyEntry() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.APPROVE);
+
+    User user = createUser(USER_ID);
+    saveUserToPersistence(user);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    ApiKeyEntry apiKeyEntry =
+        ApiKeyEntry.builder().accountId(ACCOUNT_ID).name("API_KEY").userGroupIds(asList(userGroup.getUuid())).build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyApiKeyAuthorizedToAcceptOrRejectApproval(anyList(), anyList())).thenReturn(true);
+
+    boolean success = workflowExecutionService.approveOrRejectExecution(
+        APP_ID, asList(userGroup.getUuid()), approvalDetails, apiKeyEntry);
+    assertThat(success).isEqualTo(true);
+    UserThreadLocal.unset();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testApproveWithUserGroupNegativeWithApiKeyEntry() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.APPROVE);
+
+    User user = createUser(USER_ID);
+    saveUserToPersistence(user);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    ApiKeyEntry apiKeyEntry =
+        ApiKeyEntry.builder().accountId(ACCOUNT_ID).name("API_KEY").userGroupIds(asList(userGroup.getUuid())).build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(userGroupService.verifyApiKeyAuthorizedToAcceptOrRejectApproval(anyList(), anyList())).thenReturn(false);
+
+    boolean success = workflowExecutionService.approveOrRejectExecution(
+        APP_ID, asList(userGroup.getUuid()), approvalDetails, apiKeyEntry);
+    assertThat(success).isEqualTo(false);
+    UserThreadLocal.unset();
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testRejectWithUserGroupExceptionWithApiKeyEntry() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.REJECT);
+
+    User user = createUser(USER_ID);
+    User user1 = createUser(USER_ID + "1");
+    saveUserToPersistence(user);
+    saveUserToPersistence(user1);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    ApiKeyEntry apiKeyEntry =
+        ApiKeyEntry.builder().accountId(ACCOUNT_ID).name("API_KEY").userGroupIds(asList(userGroup.getUuid())).build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    workflowExecutionService.approveOrRejectExecution(
+        APP_ID, asList(userGroup.getUuid()), approvalDetails, apiKeyEntry);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testApproveWithUserGroupExceptionWithApiKeyEntry() {
+    String approvalId = generateUuid();
+    ApprovalDetails approvalDetails = new ApprovalDetails();
+    approvalDetails.setApprovalId(approvalId);
+    approvalDetails.setAction(Action.APPROVE);
+
+    User user = createUser(USER_ID);
+    User user1 = createUser(USER_ID + "1");
+    saveUserToPersistence(user);
+    saveUserToPersistence(user1);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+    saveUserGroupToPersistence(userGroup);
+
+    ApiKeyEntry apiKeyEntry =
+        ApiKeyEntry.builder().accountId(ACCOUNT_ID).name("API_KEY").userGroupIds(asList(userGroup.getUuid())).build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    workflowExecutionService.approveOrRejectExecution(
+        APP_ID, asList(userGroup.getUuid()), approvalDetails, apiKeyEntry);
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFetchApprovalStateExecutionDataForPipeline() {
@@ -800,6 +992,127 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testFetchApprovalStateExecutionsDataForPipeline() {
+    String approvalId = generateUuid();
+
+    User user = createUser(USER_ID);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId(approvalId).userGroups(asList(userGroup.getUuid())).build();
+    approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
+    workflowExecution.setPipelineExecution(createPipelineExecution(approvalStateExecutionData));
+
+    when(workflowExecutionServiceSpy.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+        .thenReturn(workflowExecution);
+    doNothing().when(workflowExecutionServiceSpy).refreshPipelineExecution(any());
+    doReturn(null).when(workflowExecutionServiceSpy).getStageNameForApprovalStateExecutionData(any(), any());
+
+    List<ApprovalStateExecutionData> returnedExecutionData =
+        workflowExecutionServiceSpy.fetchApprovalStateExecutionsDataFromWorkflowExecution(
+            APP_ID, workflowExecution.getUuid());
+    assertThat(returnedExecutionData.get(0).getApprovalId()).isEqualTo(approvalId);
+    assertThat(returnedExecutionData.get(0).getUserGroups()).isEqualTo(asList(userGroup.getUuid()));
+    verify(workflowExecutionServiceSpy).refreshPipelineExecution(workflowExecution);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testFetchApprovalStateExecutionsDataWithEmptyStateExecution() {
+    String approvalId = generateUuid();
+
+    User user = createUser(USER_ID);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId(approvalId).userGroups(asList(userGroup.getUuid())).build();
+    approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+
+    Map<String, StateExecutionData> hashMap = new HashMap();
+    hashMap.put("Approval", approvalStateExecutionData);
+    final StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance().displayName("Approval").stateExecutionMap(hashMap).build();
+
+    PageResponse<StateExecutionInstance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(stateExecutionInstance));
+    pageResponse.setTotal(1l);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(statequery.get()).thenReturn(stateExecutionInstance);
+    when(statequery.filter(any(), any())).thenReturn(statequery);
+    when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(statequery);
+    when(wingsPersistence.query(eq(StateExecutionInstance.class), any(PageRequest.class))).thenReturn(pageResponse);
+    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+        .thenReturn(workflowExecution);
+
+    List<ApprovalStateExecutionData> returnedExecutionData =
+        workflowExecutionService.fetchApprovalStateExecutionsDataFromWorkflowExecution(
+            APP_ID, workflowExecution.getUuid());
+    assertThat(returnedExecutionData.get(0).getApprovalId()).isEqualTo(approvalId);
+    assertThat(returnedExecutionData.get(0).getUserGroups()).isEqualTo(asList(userGroup.getUuid()));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testFetchApprovalStateExecutionsDataForPipelineWithException() {
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+    workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
+    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+        .thenReturn(workflowExecution);
+
+    workflowExecutionService.fetchApprovalStateExecutionsDataFromWorkflowExecution(APP_ID, workflowExecution.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testFetchApprovalStateExecutionsDataForWorkflow() {
+    String approvalId = generateUuid();
+
+    User user = createUser(USER_ID);
+    UserGroup userGroup = createUserGroup(asList(user.getUuid()));
+
+    ApprovalStateExecutionData approvalStateExecutionData =
+        ApprovalStateExecutionData.builder().approvalId(approvalId).userGroups(asList(userGroup.getUuid())).build();
+    approvalStateExecutionData.setStatus(ExecutionStatus.PAUSED);
+    WorkflowExecution workflowExecution = createNewWorkflowExecution();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(statequery.get()).thenReturn(stateExecutionInstance);
+    when(statequery.filter(any(), any())).thenReturn(statequery);
+
+    PageRequest<StateExecutionInstance> req =
+        aPageRequest()
+            .withLimit(UNLIMITED)
+            .addFilter("appId", EQ, workflowExecution.getAppId())
+            .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+            .addFilter(StateExecutionInstanceKeys.createdAt, GE, workflowExecution.getCreatedAt())
+            .build();
+
+    when(wingsPersistence.query(StateExecutionInstance.class, req)).thenReturn(pageResponseQuery);
+    when(pageResponseQuery.getResponse()).thenReturn(asList(stateExecutionInstance));
+    when(stateExecutionInstance.fetchStateExecutionData()).thenReturn(approvalStateExecutionData);
+    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+        .thenReturn(workflowExecution);
+
+    List<ApprovalStateExecutionData> returnedExecutionData =
+        workflowExecutionService.fetchApprovalStateExecutionsDataFromWorkflowExecution(
+            APP_ID, workflowExecution.getUuid());
+    assertThat(returnedExecutionData.get(0).getApprovalId()).isEqualTo(approvalId);
+    assertThat(returnedExecutionData.get(0).getUserGroups()).isEqualTo(asList(userGroup.getUuid()));
+  }
+
+  @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testInstancesDeployedFromExecution() {
@@ -959,6 +1272,20 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                    InstanceElement.Builder.anInstanceElement().uuid("id1").podName("pod").build())
                                .build()))
                        .build()))
+        .build();
+  }
+
+  private WorkflowExecution createNewWorkflowExecution(String accountId, List<String> serviceIds) {
+    return builder()
+        .accountId(accountId)
+        .appId(APP_ID)
+        .appName(APP_NAME)
+        .envType(NON_PROD)
+        .startTs(System.currentTimeMillis() - 10000)
+        .status(ExecutionStatus.PAUSED)
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .uuid(generateUuid())
+        .serviceIds(serviceIds)
         .build();
   }
 

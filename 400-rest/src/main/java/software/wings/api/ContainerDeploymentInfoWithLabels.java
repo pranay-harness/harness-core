@@ -2,7 +2,9 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
 
@@ -14,15 +16,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-/**
- * This holds deploymentInfo of helm based deployments.
- * @author rktummala on 08/24/17
- *
- */
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-@OwnedBy(CDP)
 public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentInfo {
   private List<Label> labels;
   private String newVersion;

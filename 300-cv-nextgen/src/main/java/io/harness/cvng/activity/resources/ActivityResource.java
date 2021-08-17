@@ -16,6 +16,7 @@ import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -38,6 +39,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
 @Api(ACTIVITY_RESOURCE)
@@ -118,8 +120,13 @@ public class ActivityResource {
       @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("serviceIdentifier") String serviceIdentifier, @NotNull @QueryParam("startTime") Long startTime,
       @NotNull @QueryParam("endTime") Long endTime) {
-    return new RestResponse(activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier,
-        environmentIdentifier, serviceIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse(activityService.listActivitiesInTimeRange(projectParams, serviceIdentifier,
+        environmentIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET
@@ -148,7 +155,7 @@ public class ActivityResource {
   @ExceptionMetered
   @ApiOperation(value = "get metrics for given activity", nickname = "getDeploymentMetrics")
   public RestResponse<TransactionMetricInfoSummaryPageDTO> getMetrics(
-      @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
+      @NotEmpty @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @DefaultValue("false") @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
       @QueryParam("hostName") String hostName, @QueryParam("filter") String filter,
       @QueryParam("pageNumber") @DefaultValue("0") int pageNumber,
@@ -163,7 +170,8 @@ public class ActivityResource {
   @ExceptionMetered
   @ApiOperation(value = "get datasource types for an activity", nickname = "getDatasourceTypes")
   public RestResponse<Set<DatasourceTypeDTO>> getDatasourceTypes(
-      @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId) {
+      @NotNull @NotEmpty @PathParam("activityId") String activityId,
+      @NotNull @QueryParam("accountId") String accountId) {
     return new RestResponse(activityService.getDataSourcetypes(accountId, activityId));
   }
 
@@ -173,7 +181,7 @@ public class ActivityResource {
   @ExceptionMetered
   @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisClusters")
   public RestResponse<List<LogAnalysisClusterChartDTO>> getDeploymentLogAnalysisClusters(
-      @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("hostName") String hostName) {
     return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(accountId, activityId, hostName));
   }

@@ -1,7 +1,9 @@
 package io.harness.waiter.persistence;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.waiter.WaitInstanceService.MAX_CALLBACK_PROCESSING_TIME;
+import static io.harness.waiter.WaitNotifyEngine.MIN_WAIT_INSTANCE_TIMEOUT;
 
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -10,9 +12,11 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.serializer.KryoSerializer;
 import io.harness.springdata.SpringDataMongoUtils;
 import io.harness.tasks.ResponseData;
+import io.harness.timeout.TimeoutEngine;
 import io.harness.waiter.NotifyResponse;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
 import io.harness.waiter.ProcessedMessageResponse;
@@ -21,27 +25,33 @@ import io.harness.waiter.ProgressUpdate.ProgressUpdateKeys;
 import io.harness.waiter.WaitEngineEntity;
 import io.harness.waiter.WaitInstance;
 import io.harness.waiter.WaitInstance.WaitInstanceKeys;
+import io.harness.waiter.WaitInstanceTimeoutCallback;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.DeleteResult;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class SpringPersistenceWrapper implements PersistenceWrapper {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private TimeoutEngine timeoutEngine;
+  @Inject private TransactionTemplate transactionTemplate;
 
   private FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().returnNew(false).upsert(false);
 
@@ -154,5 +164,20 @@ public class SpringPersistenceWrapper implements PersistenceWrapper {
     if (!deleteResult.wasAcknowledged()) {
       log.warn("Not Able to delete Notify Responses");
     }
+  }
+
+  @Override
+  public String saveWithTimeout(WaitInstance waitInstance, Duration timeout) {
+    if (timeout != null && !timeout.isZero() && timeout.compareTo(Duration.ofSeconds(MIN_WAIT_INSTANCE_TIMEOUT)) < 0) {
+      throw new InvalidArgumentsException("Timeout should be greater than " + MIN_WAIT_INSTANCE_TIMEOUT + "sec");
+    }
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(transactionStatus -> {
+      String waitInstanceId = save(waitInstance);
+      if (timeout != null && !timeout.isZero()) {
+        timeoutEngine.registerAbsoluteTimeout(
+            timeout, WaitInstanceTimeoutCallback.builder().waitInstanceId(waitInstanceId).build());
+      }
+      return waitInstanceId;
+    }));
   }
 }

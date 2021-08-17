@@ -1,5 +1,6 @@
 package io.harness.ng.cdoverview;
 
+import static io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl.INVALID_CHANGE_RATE;
 import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
@@ -7,11 +8,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.Deployment;
+import io.harness.ng.cdOverview.dto.DeploymentChangeRates;
 import io.harness.ng.cdOverview.dto.DeploymentCount;
 import io.harness.ng.cdOverview.dto.DeploymentDateAndCount;
 import io.harness.ng.cdOverview.dto.DeploymentInfo;
@@ -44,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -55,7 +59,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @OwnedBy(HarnessTeam.CDC)
-public class CDDashboardApisTest {
+public class CDDashboardApisTest extends CategoryTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @InjectMocks @Spy private CDOverviewDashboardServiceImpl cdOverviewDashboardServiceImpl;
 
@@ -401,9 +405,9 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service3")
                                     .serviceId("ServiceId3")
-                                    .totalDeploymentChangeRate(400.00)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(50.0)
-                                    .failureRateChangeRate(200.00)
+                                    .failureRateChangeRate(INVALID_CHANGE_RATE)
                                     .frequency(0.0)
                                     .frequencyChangeRate(0.0)
                                     .lastExecuted(LastWorkloadInfo.builder()
@@ -413,7 +417,7 @@ public class CDDashboardApisTest {
                                                       .deploymentType("kuber1")
                                                       .build())
                                     .deploymentTypeList(deploymentTypeList.stream().collect(Collectors.toSet()))
-                                    .rateSuccess(((-1) / (double) 3) * 100)
+                                    .rateSuccess(-100 / (double) 3)
                                     .percentSuccess((2 / (double) 4) * 100)
                                     .totalDeployments(4)
                                     .lastPipelineExecutionId("ServiceId3")
@@ -423,7 +427,7 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service2")
                                     .serviceId("ServiceId2")
-                                    .totalDeploymentChangeRate(200.00)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(0.0)
                                     .failureRateChangeRate(-100.00)
                                     .frequency(0.0)
@@ -445,7 +449,7 @@ public class CDDashboardApisTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service1")
                                     .serviceId("ServiceId1")
-                                    .totalDeploymentChangeRate(400.00)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(50.0)
                                     .failureRateChangeRate(100)
                                     .frequencyChangeRate(0.00)
@@ -479,48 +483,66 @@ public class CDDashboardApisTest {
     long startInterval = 1619568000000L;
     long endInterval = 1619913600000L;
 
+    Callable<DeploymentChangeRates> getDeploymentChangeRates = ()
+        -> DeploymentChangeRates.builder()
+               .frequency(0)
+               .frequencyChangeRate(0)
+               .failureRate(0)
+               .failureRateChangeRate(0)
+               .build();
+
     List<ServiceDeployment> executionDeploymentList = new ArrayList<>();
     List<ServiceDeployment> prevExecutionDeploymentList = new ArrayList<>();
     prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619136000000L)
                                         .deployments(DeploymentCount.builder().total(1).success(1).failure(0).build())
+                                        .rate(getDeploymentChangeRates.call())
                                         .build());
     prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619222400000L)
                                         .deployments(DeploymentCount.builder().total(4).success(3).failure(0).build())
+                                        .rate(getDeploymentChangeRates.call())
                                         .build());
     prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619308800000L)
                                         .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
+                                        .rate(getDeploymentChangeRates.call())
                                         .build());
     prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619395200000L)
                                         .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
+                                        .rate(getDeploymentChangeRates.call())
                                         .build());
     prevExecutionDeploymentList.add(ServiceDeployment.builder()
                                         .time(1619481600000L)
                                         .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
+                                        .rate(getDeploymentChangeRates.call())
                                         .build());
 
     executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619568000000L)
                                     .deployments(DeploymentCount.builder().total(2).success(1).failure(0).build())
+                                    .rate(getDeploymentChangeRates.call())
                                     .build());
     executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619654400000L)
                                     .deployments(DeploymentCount.builder().total(0).success(0).failure(0).build())
+                                    .rate(getDeploymentChangeRates.call())
                                     .build());
     executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619740800000L)
                                     .deployments(DeploymentCount.builder().total(3).success(1).failure(2).build())
+                                    .rate(getDeploymentChangeRates.call())
                                     .build());
     executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619827200000L)
                                     .deployments(DeploymentCount.builder().total(4).success(2).failure(1).build())
+                                    .rate(getDeploymentChangeRates.call())
                                     .build());
     executionDeploymentList.add(ServiceDeployment.builder()
                                     .time(1619913600000L)
                                     .deployments(DeploymentCount.builder().total(1).success(0).failure(1).build())
+                                    .rate(getDeploymentChangeRates.call())
                                     .build());
 
     ServiceDeploymentInfoDTO serviceDeploymentListWrap =

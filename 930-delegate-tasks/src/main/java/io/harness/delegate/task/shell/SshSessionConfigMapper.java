@@ -1,9 +1,11 @@
 package io.harness.delegate.task.shell;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
 import io.harness.ng.core.dto.secrets.SSHAuthDTO;
 import io.harness.ng.core.dto.secrets.SSHConfigDTO;
@@ -24,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 
+@OwnedBy(CDP)
 @Singleton
 public class SshSessionConfigMapper {
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -71,6 +74,9 @@ public class SshSessionConfigMapper {
             .withKeyName("Key")
             .withKey(keyReferenceCredentialDTO.getKey().getDecryptedValue())
             .withUserName(keyReferenceCredentialDTO.getUserName());
+        if (null != keyReferenceCredentialDTO.getEncryptedPassphrase()) {
+          builder.withKeyPassphrase(keyReferenceCredentialDTO.getEncryptedPassphrase().getDecryptedValue());
+        }
         break;
       case KeyPath:
         SSHKeyPathCredentialDTO sshKeyPathCredentialDTO = (SSHKeyPathCredentialDTO) sshConfigDTO.getSpec();

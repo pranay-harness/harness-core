@@ -1,19 +1,25 @@
 package io.harness.pms.ngpipeline.inputset.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.rule.OwnerRule.BRIJESH;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.SAMARTH;
 
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
@@ -59,6 +65,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
 
   String INPUT_SET_IDENTIFIER = "identifier";
   String NAME = "identifier";
+  String YAML_GIT_CONFIG_REF = "git_config_ref";
   String YAML;
 
   InputSetEntity inputSetEntity;
@@ -101,6 +108,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                          .orgIdentifier(ORG_IDENTIFIER)
                          .projectIdentifier(PROJ_IDENTIFIER)
                          .pipelineIdentifier(PIPELINE_IDENTIFIER)
+                         .yamlGitConfigRef(YAML_GIT_CONFIG_REF)
                          .build();
 
     OVERLAY_YAML = "overlayInputSet:\n"
@@ -179,7 +187,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                                                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                                 .inputSetReferences(entity.getInputSetReferences())
                                                 .build();
-      InputSetEntity updatedInputSet = pmsInputSetService.update(updateInputSetEntity);
+      InputSetEntity updatedInputSet = pmsInputSetService.update(updateInputSetEntity, ChangeType.MODIFY);
       assertThat(updatedInputSet.getAccountId()).isEqualTo(updateInputSetEntity.getAccountId());
       assertThat(updatedInputSet.getOrgIdentifier()).isEqualTo(updateInputSetEntity.getOrgIdentifier());
       assertThat(updatedInputSet.getProjectIdentifier()).isEqualTo(updateInputSetEntity.getProjectIdentifier());
@@ -201,7 +209,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
                                                    .pipelineIdentifier(PIPELINE_IDENTIFIER)
                                                    .inputSetReferences(entity.getInputSetReferences())
                                                    .build();
-      assertThatThrownBy(() -> pmsInputSetService.update(incorrectInputSetEntity))
+      assertThatThrownBy(() -> pmsInputSetService.update(incorrectInputSetEntity, ChangeType.MODIFY))
           .isInstanceOf(InvalidRequestException.class);
 
       boolean delete = pmsInputSetService.delete(
@@ -305,5 +313,14 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
         .hasMessage(
             String.format("InputSets for Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.",
                 PIPELINE_IDENTIFIER, PROJ_IDENTIFIER, ORG_IDENTIFIER));
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testSwitchValidationFlag() {
+    on(pmsInputSetService).set("inputSetRepository", inputSetRepository);
+    when(inputSetRepository.switchValidationFlag(any(), any())).thenReturn(InputSetEntity.builder().build());
+    assertTrue(pmsInputSetService.switchValidationFlag(inputSetEntity, true));
   }
 }

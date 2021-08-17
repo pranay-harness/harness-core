@@ -8,7 +8,9 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 @OwnedBy(PIPELINE)
 public enum BuildStoreType {
-  @JsonProperty("Http") HTTP("Http");
+  @JsonProperty("Http") HTTP("Http"),
+  @JsonProperty("S3") S3("S3"),
+  @JsonProperty("Gcs") GCS("Gcs");
 
   private String value;
 

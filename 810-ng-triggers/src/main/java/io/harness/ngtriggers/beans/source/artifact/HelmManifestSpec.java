@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(PIPELINE)
 public class HelmManifestSpec implements ManifestTypeSpec {
-  List<TriggerEventDataCondition> eventDataConditions;
+  List<TriggerEventDataCondition> eventConditions;
   String chartName;
   String chartVersion;
 
@@ -36,6 +36,6 @@ public class HelmManifestSpec implements ManifestTypeSpec {
 
   @Override
   public List<TriggerEventDataCondition> fetchEventDataConditions() {
-    return eventDataConditions;
+    return eventConditions;
   }
 }

@@ -56,6 +56,7 @@ type Node struct {
 	Package         string    `json:"package" bson:"package"`
 	Method          string    `json:"method" bson:"method"`
 	Id              int       `json:"id" bson:"id"`
+	ClassId         int       `json:"classId" bson:"classId"`
 	Params          string    `json:"params" bson:"params"`
 	File            string    `json:"file" bson:"file"` // Only populated if the type is resource
 	Class           string    `json:"class" bson:"class"`
@@ -71,12 +72,13 @@ type Node struct {
 type VisEdge struct {
 	mgm.DefaultModel `bson:",inline"`
 
-	Caller  int     `json:"caller" bson:"caller"`
-	Callee  []int   `json:"callee" bson:"callee"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+	Caller   int       `json:"caller" bson:"caller"`
+	Callee   []int     `json:"callee" bson:"callee"`
+	Acct     string    `json:"account" bson:"account"`
+	Proj     string    `json:"project" bson:"project"`
+	Org      string    `json:"organization" bson:"organization"`
+	VCSInfo  VCSInfo   `json:"vcs_info" bson:"vcs_info"`
+	ExpireAt time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
 }
 
 const (
@@ -95,9 +97,10 @@ type VCSInfo struct {
 }
 
 // NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
+func NewNode(id, classId int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
 		Id:              id,
+		ClassId:         classId,
 		Package:         pkg,
 		Method:          method,
 		Params:          params,
@@ -173,7 +176,7 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 
 // queryHelper gets the tests that need to be run corresponding to the parsed file nodes
 // We return true if all the tests need to be selected
-func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, account string) ([]types.RunnableTest, bool, error) {
+func (mdb *MongoDb) queryHelper(ctx context.Context, targetBranch, repo string, fn []utils.Node, account string) ([]types.RunnableTest, bool, error) {
 	result := []types.RunnableTest{}
 	// Query 1
 	// Get node IDs corresponding to the packages, classes and resources by iterating over the parsed file nodes
@@ -204,7 +207,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, acco
 		// Nothing to query in DB
 		return result, false, nil
 	}
-	err := mgm.Coll(&Node{}).SimpleFind(&nodes, bson.M{"$or": allowedPairs})
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, bson.M{"$or": allowedPairs})
 	if err != nil {
 		return nil, false, err
 	}
@@ -233,7 +236,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, acco
 	// Query 2
 	// Get unique test IDs corresponding to these nodes
 	relations := []Relation{}
-	err = mgm.Coll(&Relation{}).SimpleFind(&relations,
+	err = mgm.Coll(&Relation{}).SimpleFindWithCtx(ctx, &relations,
 		bson.M{"source": bson.M{"$in": nids},
 			"vcs_info.branch": targetBranch,
 			"vcs_info.repo":   repo,
@@ -255,7 +258,7 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, acco
 	// Query 3
 	// Get test information corresponding to test IDs
 	tnodes := []Node{}
-	err = mgm.Coll(&Node{}).SimpleFind(&tnodes,
+	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &tnodes,
 		bson.M{"id": bson.M{"$in": tids},
 			"type":            "test",
 			"vcs_info.branch": targetBranch,
@@ -274,6 +277,80 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, fn []utils.Node, acco
 	}
 
 	return result, false, nil
+}
+
+func toVis(n Node, imp bool) types.VisNode {
+	return types.VisNode{Id: n.ClassId, Package: n.Package, Class: n.Class, File: n.File, Type: n.Type, Important: imp}
+}
+
+// Helper function to check whether the file caused the test to be run
+// <pkg, cls>: package and class of a test file
+// It also returns the corresponding vis nodes for the changed file
+func check(ctx context.Context, branch, repo, file, pkg, cls, account string) (bool, []types.VisNode, error) {
+	fn, _ := utils.ParseJavaNode(file)
+	resp := []types.VisNode{}
+	var q interface{}
+	if fn.Type == utils.NodeType_SOURCE || fn.Type == utils.NodeType_TEST {
+		q = bson.M{"package": fn.Pkg, "class": fn.Class,
+			"vcs_info.repo":   repo,
+			"vcs_info.branch": branch,
+			"account":         account}
+	} else if fn.Type == utils.NodeType_RESOURCE {
+		q = bson.M{"type": "resource", "file": fn.File,
+			"vcs_info.repo":   repo,
+			"vcs_info.branch": branch,
+			"account":         account}
+	} else {
+		return false, resp, nil
+	}
+	// Check the node IDs corresponding to this query
+	nodes := []Node{}
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
+	if err != nil {
+		return false, resp, err
+	}
+	if len(nodes) == 0 { // No nodes were found for the file
+		return false, resp, nil
+	}
+
+	nids := []int{}
+	m := make(map[int]struct{})
+	for _, n := range nodes {
+		nids = append(nids, n.Id)
+		// Check whether it needs to be added in visualisation or not
+		if _, ok := m[n.ClassId]; ok {
+			continue
+		}
+		m[n.ClassId] = struct{}{}
+		resp = append(resp, toVis(n, true))
+	}
+
+	// Get test ID nodes
+	q = bson.M{"vcs_info.repo": repo,
+		"vcs_info.branch": branch,
+		"account":         account, "package": pkg, "class": cls}
+	nodes = []Node{}
+	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
+	if err != nil {
+		return false, resp, err
+	}
+	tids := []int{}
+	for _, n := range nodes {
+		tids = append(tids, n.Id)
+	}
+
+	// Check if the test nodes are present in any of these source id mappings
+	q = bson.M{"account": account, "vcs_info.repo": repo, "vcs_info.branch": branch, "source": bson.M{"$in": nids}, "tests": bson.M{"$in": tids}}
+	relns := []Relation{}
+	err = mgm.Coll(&Relation{}).SimpleFindWithCtx(ctx, &relns, q)
+	if err != nil {
+		return false, resp, err
+	}
+	if len(relns) == 0 {
+		return false, resp, nil
+	}
+
+	return true, resp, nil
 }
 
 // isValid checks whether the test is valid or not
@@ -321,12 +398,45 @@ func (mdb *MongoDb) GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgR
 			}
 		}
 
-		return mdb.bfsWithSource(ctx, branch, pkg, cls, req)
+		resp, err := mdb.bfsWithSource(ctx, branch, pkg, cls, req)
+		if err != nil {
+			return resp, err
+		}
+
+		// Check which changed files led to this test being run and add that in the nodes collection.
+		for _, f := range req.DiffFiles {
+			ok, vnodes, err := check(ctx, branch, req.Repo, f.Name, pkg, cls, req.AccountId)
+			if !ok || err != nil {
+				continue
+			}
+			for _, vn := range vnodes {
+				resp.Nodes = append(resp.Nodes, vn)
+			}
+		}
+		return formatVis(resp), nil
 	} else {
 		// Get a partial BFS corresponding to any random nodes
 		branch = req.TargetBranch
-		return mdb.bfsRandom(ctx, branch, req)
+		resp, err := mdb.bfsRandom(ctx, branch, req)
+		if err != nil {
+			return resp, err
+		}
+		return formatVis(resp), nil
 	}
+}
+
+// formatVis removes duplicate class ID nodes from the visualisation response
+func formatVis(inp types.GetVgResp) types.GetVgResp {
+	out := types.GetVgResp{Edges: inp.Edges}
+	m := make(map[int]struct{})
+	for _, vn := range inp.Nodes {
+		if _, ok := m[vn.Id]; ok {
+			continue
+		}
+		m[vn.Id] = struct{}{}
+		out.Nodes = append(out.Nodes, vn)
+	}
+	return out
 }
 
 // Perform a BFS starting for given branch and repo with the source nodes as <pkg, class>
@@ -335,7 +445,7 @@ func (mdb *MongoDb) bfsWithSource(ctx context.Context, branch, pkg, cls string, 
 	ret := types.GetVgResp{}
 	all := []Node{}
 	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "package": pkg, "class": cls}
-	err := mgm.Coll(&Node{}).SimpleFind(&all, fi)
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, fi)
 	if err != nil {
 		return ret, err
 	}
@@ -344,17 +454,14 @@ func (mdb *MongoDb) bfsWithSource(ctx context.Context, branch, pkg, cls string, 
 		return ret, fmt.Errorf("could not find an entry corresponding to: %s.%s", pkg, cls)
 	}
 
-	imp := make(map[int]bool) // List of 'important' nodes which can be shown by UI
-
 	// Perform the BFS
 	src := []int{}
 	// Initialize the starting nodes
 	for _, s := range all {
-		src = append(src, s.Id)
-		imp[s.Id] = true
+		src = append(src, s.ClassId)
 	}
 
-	return mdb.bfsHelper(ctx, src, []int{}, branch, imp, req)
+	return mdb.bfsHelper(ctx, src, []int{}, branch, req)
 
 }
 
@@ -364,7 +471,7 @@ func (mdb *MongoDb) bfsRandom(ctx context.Context, branch string, req types.GetV
 	ret := types.GetVgResp{}
 	opt := options.FindOptions{Limit: &req.Limit}
 	fi := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId}
-	err := mgm.Coll(&Node{}).SimpleFind(&all, fi, &opt)
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, fi, &opt)
 	if err != nil {
 		return ret, err
 	}
@@ -375,18 +482,18 @@ func (mdb *MongoDb) bfsRandom(ctx context.Context, branch string, req types.GetV
 	add := []int{}
 	for idx, s := range all {
 		if idx == 0 {
-			src = append(src, s.Id)
+			src = append(src, s.ClassId)
 		} else {
-			add = append(add, s.Id)
+			add = append(add, s.ClassId)
 		}
 	}
 
-	return mdb.bfsHelper(ctx, src, add, branch, make(map[int]bool), req)
+	return mdb.bfsHelper(ctx, src, add, branch, req)
 }
 
 // bfsHelper takes in a list of source nodes to start the BFS from and a list of additional nodes which can be used to
 // add in more nodes to the BFS if required. It returns all the nodes and edges for this graph.
-func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branch string, imp map[int]bool, req types.GetVgReq) (types.GetVgResp, error) {
+func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branch string, req types.GetVgReq) (types.GetVgResp, error) {
 	Q := list.New()
 	vis := make(map[int]struct{})
 	ret := types.GetVgResp{}
@@ -436,20 +543,48 @@ func (mdb *MongoDb) bfsHelper(ctx context.Context, srcList, addList []int, branc
 
 	// Get detailed node information
 	all := []Node{}
-	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "id": bson.M{"$in": nIds}}
-	err := mgm.Coll(&Node{}).SimpleFind(&all, f)
+	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": req.Repo, "account": req.AccountId, "classId": bson.M{"$in": nIds}}
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, f)
 	if err != nil {
 		return ret, err
 	}
+
 	for _, n := range all {
-		v := types.VisNode{Id: n.Id, Class: n.Class, Package: n.Package, Method: n.Method, Params: n.Params, Type: n.Type, File: n.File}
-		if _, ok := imp[n.Id]; ok {
+		v := toVis(n, false)
+		if isImportant(v, req.DiffFiles) {
 			v.Important = true
+		}
+		// If the id is in the source from where we performed the BFS, mark it as a root node
+		if contains(srcList, n.ClassId) {
+			v.Root = true
 		}
 		ret.Nodes = append(ret.Nodes, v)
 	}
 
 	return ret, nil
+}
+
+func contains(s []int, check int) bool {
+	for _, k := range s {
+		if k == check {
+			return true
+		}
+	}
+	return false
+}
+
+// TODO: (Vistaar) Improve this to be a map so that we don't have to iterate
+// over all the files each time.
+func isImportant(vn types.VisNode, diffFiles []types.File) bool {
+	for _, f := range diffFiles {
+		n, _ := utils.ParseJavaNode(f.Name)
+		if vn.File != "" && n.File == vn.File { // For resource type
+			return true
+		} else if vn.Package == n.Pkg && vn.Class == n.Class { // For source or test types
+			return true
+		}
+	}
+	return false
 }
 
 func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string, enableReflection bool) (types.SelectTestsResp, error) {
@@ -492,7 +627,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 
 	// Get list of all tests with unique pkg/class information
 	all := []Node{}
-	err = mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": req.TargetBranch, "vcs_info.repo": req.Repo, "account": account})
+	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, bson.M{"type": "test", "vcs_info.branch": req.TargetBranch, "vcs_info.repo": req.Repo, "account": account})
 	if err != nil {
 		return res, err
 	}
@@ -575,7 +710,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 
 	// Get tests corresponding to parsed source and resource file nodes
-	tests, runAll, err := mdb.queryHelper(req.TargetBranch, req.Repo, fnodes, account)
+	tests, runAll, err := mdb.queryHelper(ctx, req.TargetBranch, req.Repo, fnodes, account)
 	if err != nil {
 		return res, err
 	}
@@ -633,12 +768,13 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
 func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
 	resp := types.SelectTestsResp{}
-	if len(cg.Nodes) == 0 && len(cg.Relations) == 0 {
+	if len(cg.Nodes) == 0 && len(cg.TestRelations) == 0 {
 		// Don't delete the existing callgraph, this might happen in case of some issues with the setup
 		return resp, nil
 	}
 	nodes := make([]Node, len(cg.Nodes))
-	rels := make([]Relation, len(cg.Relations))
+	rels := make([]Relation, len(cg.TestRelations))
+	visEdges := make([]VisEdge, len(cg.VisRelations))
 
 	// Create method map to calculate how many tests have been added
 	all := []Node{}
@@ -653,7 +789,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
+		nodes[i] = *NewNode(node.ID, node.ClassId, node.Package, node.Method, node.Params, node.Class, node.Type, node.File, node.CallsReflection, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}
@@ -663,8 +799,11 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 			resp.TotalTests += 1
 		}
 	}
-	for i, rel := range cg.Relations {
+	for i, rel := range cg.TestRelations {
 		rels[i] = *NewRelation(rel.Source, rel.Tests, info, account, org, proj)
+	}
+	for i, vis := range cg.VisRelations {
+		visEdges[i] = *NewVisEdge(vis.Source, vis.Tests, account, org, proj, info)
 	}
 	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
@@ -685,17 +824,30 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 			fmt.Sprintf("failed to make records from relations collection expired while uploading partial callgraph "+
 				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
 	}
+	// this will delete all the vis_relations created by older commits for current pull request
+	f = bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
+	r3, err := mdb.Database.Collection(visColl).UpdateMany(ctx, f, expireQuery)
+	if err != nil {
+		return resp, errors.Wrap(
+			err,
+			fmt.Sprintf("failed to expire records from vis_edges collection "+
+				"repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
+	}
 	mdb.Log.Infow(
-		fmt.Sprintf("marked %d records expired  from nodes and %d records from relns collection",
-			r1.ModifiedCount, r2.ModifiedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
+		fmt.Sprintf("expired records in nodes: %d, relations:  %d, vis_edges: %d collection",
+			r1.ModifiedCount, r2.ModifiedCount, r3.ModifiedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
 
 	err = mdb.upsertNodes(ctx, nodes, info, account)
 	if err != nil {
 		return resp, err
 	}
-	err = mdb.upsertRelations(ctx, rels, info, account)
+	err = mdb.upsertTestRelations(ctx, rels, info, account)
 	if err != nil {
-		return resp, err
+		return resp, errors.Wrap(err, fmt.Sprintf("failed to write in %s", relnsColl))
+	}
+	err = mdb.upsertVisRelations(ctx, visEdges, info, account)
+	if err != nil {
+		return resp, errors.Wrap(err, fmt.Sprintf("failed to write in %s", visColl))
 	}
 	return resp, nil
 }
@@ -711,13 +863,13 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 
 	// merging nodes
 	// get all the nids which are from the dest branch
-	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo, "account": req.AccountId}
+	f := bson.M{"account": req.AccountId, "vcs_info.branch": branch, "vcs_info.repo": repo}
 	dNids, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
 	// get all the nids from the source branch which need to be merged
-	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": req.AccountId}
+	f = bson.M{"account": req.AccountId, "vcs_info.commit_id": commit, "vcs_info.repo": repo}
 	srcNids, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
@@ -733,13 +885,13 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	// merge relations
 	// get all the nids which are from the dest branch
 	f = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo, "account": req.AccountId}
-	dRelIDs, err := mdb.getRelIds(ctx, commit, branch, repo, f)
+	dRelIDs, err := mdb.getTestRelIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
 	// get all the nids from the source branch which need to be merged
 	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": req.AccountId}
-	sRelIDs, err := mdb.getRelIds(ctx, commit, branch, repo, f)
+	sRelIDs, err := mdb.getTestRelIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
@@ -754,6 +906,24 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		if f.Status == types.FileDeleted {
 			deletedF = append(deletedF, f.Name)
 		}
+	}
+
+	// merge vis_edges
+	// get all the nids which are from the dest branch
+	f = bson.M{"account": req.AccountId, "vcs_info.repo": repo, "vcs_info.branch": branch}
+	dVisIDs, err := mdb.getVgRelIds(ctx, commit, branch, repo, f)
+	if err != nil {
+		return err
+	}
+	// get all the nids from the source branch which need to be merged
+	f = bson.M{"account": req.AccountId, "vcs_info.repo": repo, "vcs_info.commit_id": commit}
+	sVisIDs, err := mdb.getVgRelIds(ctx, commit, branch, repo, f)
+	if err != nil {
+		return err
+	}
+	err = mdb.mergeVisEdges(ctx, commit, branch, repo, req.AccountId, sVisIDs, dVisIDs)
+	if err != nil {
+		return err
 	}
 
 	// if deleted files are empty, there are no nodes and relations to update
@@ -814,6 +984,26 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		}
 		mdb.Log.Infow(fmt.Sprintf("matched %d, updated %d records from relations collection for deleted files",
 			res.MatchedCount, res.ModifiedCount), "branch", branch, "repo", repo)
+
+		// delete edges with caller in delIDs
+		f = bson.M{"account": req.AccountId, "vcs_info.repo": repo, "vcs_info.branch": branch, "caller": bson.M{"$in": delIDs}}
+		r, err = mdb.Database.Collection(visColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+		if err != nil {
+			return formatError(err, fmt.Sprintf("failed to delete records from vis_edge coll delIDs: %v", delIDs), repo, branch, commit)
+		}
+		mdb.Log.Infow(fmt.Sprintf("deleted %d records from vis_edge collection for deleted files",
+			r.DeletedCount), "branch", branch, "repo", repo)
+
+		// update callee fields which contains delIDs in vis_edge collection
+		f = bson.M{"account": req.AccountId, "vcs_info.repo": repo, "vcs_info.branch": branch, "callee": bson.M{"$in": delIDs}}
+		update = bson.M{"$pull": bson.M{"callee": bson.M{"$in": delIDs}}}
+		res, err = mdb.Database.Collection(visColl).UpdateMany(ctx, f, update)
+		if err != nil {
+			return formatError(err, "failed to get records in vis_edge collection", repo, branch, commit)
+		}
+		mdb.Log.Infow(fmt.Sprintf("matched %d, updated %d records in vis_edge collection for deleted files",
+			res.MatchedCount, res.ModifiedCount), "branch", branch, "repo", repo)
+
 	}
 	return nil
 }
@@ -861,9 +1051,9 @@ func (mdb *MongoDb) getNodeIds(ctx context.Context, commit, branch, repo string,
 }
 
 // getRelIds queries mongo and returns list of relation ID's for the given filter
-func (mdb *MongoDb) getRelIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
-	var relations []Relation
+func (mdb *MongoDb) getTestRelIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
 	var relIDS []int
+	var relations []Relation
 	cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
 	if err != nil {
 		return []int{}, formatError(err, "failed in find query in rel collection", repo, branch, commit)
@@ -873,6 +1063,23 @@ func (mdb *MongoDb) getRelIds(ctx context.Context, commit, branch, repo string, 
 	}
 	for _, v := range relations {
 		relIDS = append(relIDS, v.Source)
+	}
+	return relIDS, nil
+}
+
+// getRelIds queries mongo and returns list of vis_relation ID's for the given filter
+func (mdb *MongoDb) getVgRelIds(ctx context.Context, commit, branch, repo string, f interface{}) ([]int, error) {
+	var relIDS []int
+	var visRelns []VisEdge
+	cur, err := mdb.Database.Collection(visColl).Find(ctx, f)
+	if err != nil {
+		return []int{}, formatError(err, "failed in find query in visEdge collection", repo, branch, commit)
+	}
+	if err = cur.All(ctx, &visRelns); err != nil {
+		return []int{}, formatError(err, "failed to iterate on records using cursor in visEdge collection", repo, branch, commit)
+	}
+	for _, v := range visRelns {
+		relIDS = append(relIDS, v.Caller)
 	}
 	return relIDS, nil
 }
@@ -996,7 +1203,97 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 	if err != nil {
 		return formatError(err, "failed to delete records in relations collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("markde %d records as deleted from relation collection", res.ModifiedCount),
+	mdb.Log.Infow(fmt.Sprintf("marked %d records as deleted from relation collection", res.ModifiedCount),
+		"account", account,
+		"repo", repo,
+		"branch", branch,
+		"commit", commit,
+	)
+	return nil
+}
+
+// mergeVisEdges merges records in vis_edges collection in case of a pr merge from source branch to destination branch
+// #1: Move unique vis_edge records in src branch to destination branch
+// #2: for source which exists in both src and destination branch, merge tests form both and update edges of dest branch
+// #3; delete all entries in src branch as the merging is complete.
+func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, account string, sIDs []int, dIDs []int) error {
+	// list of new edges in src branch
+	edgesToMove := utils.GetSliceDiff(sIDs, dIDs)
+	// moving edge records
+	// update `branch` field of the edgeToMove from source to dest
+	if len(edgesToMove) > 0 {
+		f := bson.M{"account": account, "vcs_info.repo": repo, "vcs_info.commit_id": commit, "caller": bson.M{"$in": edgesToMove}}
+		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
+		res, err := mdb.Database.Collection(visColl).UpdateMany(ctx, f, u)
+		if err != nil {
+			return formatError(err, "failed to merge vis_edge collection for", repo, branch, commit)
+		}
+		mdb.Log.Infow(
+			fmt.Sprintf("moving vis_edge records: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
+			"repo", repo,
+			"branch", branch,
+			"commit", commit,
+		)
+	}
+
+	// updating commons records in vis_edge collection in source and destination branches
+	var srcEdges, destEdges []VisEdge
+	edgeIDsToUpdate := utils.GetSliceDiff(sIDs, edgesToMove)
+	mdb.Log.Infow("updating vis_edges",
+		"relIDToUpdate", edgeIDsToUpdate,
+		"len(sIDs)", len(sIDs),
+		"len(relToMove)", len(edgesToMove),
+		"repo", repo,
+		"branch", branch,
+		"commit", commit)
+	if len(edgeIDsToUpdate) > 0 {
+		f := bson.M{"account": account, "vcs_info.repo": repo, "vcs_info.branch": branch, "caller": bson.M{"$in": edgeIDsToUpdate}}
+		// filter for getting edges from destination branch
+		cur, err := mdb.Database.Collection(visColl).Find(ctx, f)
+		if err != nil {
+			return formatError(err, "failed in find query in vis_edge collection", repo, branch, commit)
+		}
+		if err = cur.All(ctx, &destEdges); err != nil {
+			return formatError(err, "failed to iterate on records using cursor in vis_edges collection", repo, branch, commit)
+		}
+		// filter for getting edges from source branch
+		f = bson.M{"vcs_info.commit_id": commit, "caller": bson.M{"$in": edgeIDsToUpdate}, "vcs_info.repo": repo, "account": account}
+		cur, err = mdb.Database.Collection(visColl).Find(ctx, f)
+		if err != nil {
+			return formatError(err, "failed in find query in vis_edges collection", repo, branch, commit)
+		}
+		if err = cur.All(ctx, &srcEdges); err != nil {
+			return formatError(err, "failed to iterate on records using cursor in vis_edges collection", repo, branch, commit)
+		}
+		destMap := getVisMap(srcEdges, destEdges)
+		var operations []mongo.WriteModel
+		for src, dest := range destMap {
+			operation := mongo.NewUpdateOneModel()
+			operation.SetFilter(bson.M{"account": account, "vcs_info.repo": repo, "vcs_info.branch": branch, "caller": src})
+			operation.SetUpdate(bson.M{"$set": bson.M{"callee": dest}})
+			operations = append(operations, operation)
+		}
+		res, err := mdb.Database.Collection(visColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+		if err != nil {
+			return formatError(err, "failed to merge vis_edges collection", repo, branch, commit)
+		}
+		mdb.Log.Infow(
+			fmt.Sprintf("edges merged: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
+			"repo", repo,
+			"branch", branch,
+			"commit", commit,
+		)
+	}
+
+	// delete remaining records of src branch from vis_edges collection
+	f := bson.M{"account": account, "vcs_info.repo": repo, "vcs_info.commit_id": commit, "vcs_info.branch": bson.M{"$ne": branch}}
+	res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, expireQuery)
+	if err != nil {
+		return formatError(err, "failed to delete records in vis_edges collection", repo, branch, commit)
+	}
+	mdb.Log.Infow(fmt.Sprintf("marked %d records as deleted from vis_edges collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,
@@ -1044,17 +1341,17 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo,
 	return nil
 }
 
-// upsertRelations is used to upload partial callagraph to db. If there is already a cg present with
+// upsertTestRelations is used to upload partial callagraph to db. If there is already a cg present with
 // the same commit, it udpdates that callgraph otherwise creates a new entry The algo for that is:
 // 1. get all the existing relations for `repo` + `branch` + `commit_id`.
 // 2. Relations received in cg which are new will be inserted in relations collection.
 // relations which are already present in the db needs to be merged.
-func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info VCSInfo, account string) error {
+func (mdb *MongoDb) upsertTestRelations(ctx context.Context, relns []Relation, info VCSInfo, account string) error {
 	mdb.Log.Infow("uploading partialcg in relations collection",
 		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
 	// fetch existing records for branch
 	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
-	Ids, err := mdb.getRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
+	Ids, err := mdb.getTestRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
 	if err != nil {
 		return err
 	}
@@ -1087,13 +1384,13 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 		for _, rel := range relToUpdate {
 			idToUpdate = append(idToUpdate, rel.Source)
 		}
-		f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "account": account, "source": bson.M{"$in": idToUpdate}}
+		f = bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "account": account, "source": bson.M{"$in": idToUpdate}}
 		cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
 		if err != nil {
 			return formatError(err, "failed in find query in rel collection", info.Repo, info.Repo, info.CommitId)
 		}
 		if err = cur.All(ctx, &existingRelns); err != nil {
-			return formatError(err, "failed to iterate on records using cursor in existing relations collection", info.Repo, info.Branch, info.CommitId)
+			return formatError(err, "failed to iterate on records using cursor", info.Repo, info.Branch, info.CommitId)
 		}
 		finalRelations := getRelMap(relToUpdate, existingRelns)
 		var operations []mongo.WriteModel
@@ -1104,6 +1401,80 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 			operations = append(operations, operation)
 		}
 		res, err := mdb.Database.Collection(relnsColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
+		if err != nil {
+			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
+		}
+		mdb.Log.Infow(
+			fmt.Sprintf("relations updated: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
+			"repo", info.Repo,
+			"branch", info.Branch,
+			"commit", info.CommitId,
+		)
+	}
+	return nil
+}
+
+// upsertVisRelations is used to upload partial visgraph to db. If there is already a cg present with
+// the same commit, it updates that visgraph otherwise creates a new entry The algo for that is:
+// 1. get all the existing relations for `repo` + `branch` + `commit_id`.
+// 2. Relations received in vg which are new will be inserted in relations collection.
+// relations which are already present in the db needs to be merged.
+func (mdb *MongoDb) upsertVisRelations(ctx context.Context, relns []VisEdge, info VCSInfo, account string) error {
+	mdb.Log.Infow("uploading partialcg in vis_edge collection",
+		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
+	// fetch existing records for branch
+	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
+	Ids, err := mdb.getVgRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
+	if err != nil {
+		return err
+	}
+	existingRel := getMap(Ids)
+	relToAdd := make([]interface{}, 0)
+	relToUpdate := make([]VisEdge, 0)
+	for _, rel := range relns {
+		if existingRel[rel.Caller] {
+			relToUpdate = append(relToUpdate, rel)
+		} else {
+			relToAdd = append(relToAdd, rel)
+		}
+	}
+	if len(relToAdd) > 0 {
+		res, err := mdb.Database.Collection(visColl).InsertMany(ctx, relToAdd)
+		if err != nil {
+			return errors.Wrap(
+				err,
+				fmt.Sprintf("failed to add relns while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
+		}
+		mdb.Log.Infow(fmt.Sprintf("inserted %d records in vis_edge collection", len(res.InsertedIDs)),
+			"account", account,
+			"repo", info.Repo,
+			"branch", info.Branch,
+		)
+	}
+	if len(relToUpdate) > 0 {
+		var idToUpdate []int
+		var existingRelns []VisEdge
+		for _, rel := range relToUpdate {
+			idToUpdate = append(idToUpdate, rel.Caller)
+		}
+		f = bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "account": account, "caller": bson.M{"$in": idToUpdate}}
+		cur, err := mdb.Database.Collection(visColl).Find(ctx, f)
+		if err != nil {
+			return formatError(err, "failed in find query in rel collection", info.Repo, info.Repo, info.CommitId)
+		}
+		if err = cur.All(ctx, &existingRelns); err != nil {
+			return formatError(err, "failed to iterate on records using cursor", info.Repo, info.Branch, info.CommitId)
+		}
+		finalRelations := getVisMap(relToUpdate, existingRelns)
+		var operations []mongo.WriteModel
+		for src, tests := range finalRelations {
+			operation := mongo.NewUpdateOneModel()
+			operation.SetFilter(bson.M{"caller": src, "vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch})
+			operation.SetUpdate(bson.M{"$set": bson.M{"callee": tests}})
+			operations = append(operations, operation)
+		}
+		res, err := mdb.Database.Collection(visColl).BulkWrite(ctx, operations, &options.BulkWriteOptions{})
 		if err != nil {
 			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
 		}
@@ -1137,6 +1508,23 @@ func getRelMap(src []Relation, dest []Relation) map[int][]int {
 	}
 	for _, v := range dest {
 		destMap[v.Source] = v.Tests
+	}
+	for k, v := range destMap {
+		destMap[k] = merge(v, srcMap[k])
+	}
+	return destMap
+}
+
+// getRelMap takes two VisEdge records A and B and returns a map[source]dest object
+// where dest is the union of tests of A and B for each entry of A
+func getVisMap(src []VisEdge, dest []VisEdge) map[int][]int {
+	srcMap := make(map[int][]int)
+	destMap := make(map[int][]int)
+	for _, relation := range src {
+		srcMap[relation.Caller] = relation.Callee
+	}
+	for _, v := range dest {
+		destMap[v.Caller] = v.Callee
 	}
 	for k, v := range destMap {
 		destMap[k] = merge(v, srcMap[k])

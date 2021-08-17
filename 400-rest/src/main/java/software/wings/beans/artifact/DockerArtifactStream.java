@@ -26,7 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by anubhaw on 1/5/17.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("DOCKER")
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -51,6 +51,19 @@ public class DockerArtifactStream extends ArtifactStream {
   @Override
   public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s_%s", getImageName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .imageName(imageName)
+        .build();
   }
 
   @Override

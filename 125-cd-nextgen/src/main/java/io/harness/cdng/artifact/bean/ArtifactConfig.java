@@ -7,7 +7,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WithIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
-import io.harness.polling.bean.PollingInfo;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 @OwnedBy(HarnessTeam.PIPELINE)
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
-public interface ArtifactConfig extends WithIdentifier, OverridesApplier<ArtifactConfig>, PollingInfo {
+public interface ArtifactConfig extends WithIdentifier, OverridesApplier<ArtifactConfig> {
   @JsonIgnore ArtifactSourceType getSourceType();
   @JsonIgnore String getUniqueHash();
   @JsonIgnore boolean isPrimaryArtifact();

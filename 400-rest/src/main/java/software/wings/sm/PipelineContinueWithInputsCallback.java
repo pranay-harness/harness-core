@@ -7,7 +7,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.tasks.ResponseData;
@@ -33,6 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Data
 @NoArgsConstructor
 public class PipelineContinueWithInputsCallback implements OldNotifyCallback {

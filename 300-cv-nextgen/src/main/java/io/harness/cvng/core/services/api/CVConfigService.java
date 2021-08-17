@@ -56,7 +56,6 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
       String identifier, DataSourceType dataSourceType);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,
       String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory);
-  List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds);
 
   void setHealthMonitoringFlag(
       String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers, boolean isEnabled);

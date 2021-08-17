@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ServiceNowException;
 import io.harness.rule.Owner;
@@ -20,7 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ServiceNowDelegateServiceImplTest {
+public class ServiceNowDelegateServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)

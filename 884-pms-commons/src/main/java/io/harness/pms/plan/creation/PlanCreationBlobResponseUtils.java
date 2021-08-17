@@ -1,5 +1,7 @@
 package io.harness.pms.plan.creation;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
@@ -13,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PlanCreationBlobResponseUtils {
   public void merge(PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse other) {

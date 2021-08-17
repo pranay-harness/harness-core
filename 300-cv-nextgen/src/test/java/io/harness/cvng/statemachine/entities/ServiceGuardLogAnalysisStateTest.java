@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
@@ -26,7 +27,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ServiceGuardLogAnalysisStateTest {
+public class ServiceGuardLogAnalysisStateTest extends CategoryTest {
   private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;

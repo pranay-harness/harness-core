@@ -12,6 +12,8 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.entities.CVConfig;
@@ -61,6 +63,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+import lombok.Value;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Criteria;
@@ -83,26 +88,27 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Override
   public void updateRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier, CVConfig cvConfig, CVMonitoringCategory category,
-      Instant timeStamp, double riskScore) {
+      Instant timeStamp, double riskScore, long anomalousMetricsCount, long anomalousLogsCount) {
     List<Callable<Void>> callables = new ArrayList<>();
     // update for service/env
     callables.add(() -> {
       updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier,
-          timeStamp, riskScore);
+          timeStamp, riskScore, anomalousMetricsCount, anomalousLogsCount);
       return null;
     });
 
     if (cvConfigService.isProductionConfig(cvConfig)) {
       // update for env
       callables.add(() -> {
-        updateRiskScore(
-            category, accountId, orgIdentifier, projectIdentifier, null, envIdentifier, timeStamp, riskScore);
+        updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, envIdentifier, timeStamp,
+            riskScore, anomalousMetricsCount, anomalousLogsCount);
         return null;
       });
 
       // update for project
       callables.add(() -> {
-        updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, null, timeStamp, riskScore);
+        updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, null, timeStamp, riskScore,
+            anomalousMetricsCount, anomalousLogsCount);
         return null;
       });
     }
@@ -114,7 +120,8 @@ public class HeatMapServiceImpl implements HeatMapService {
   }
 
   private void updateRiskScore(CVMonitoringCategory category, String accountId, String orgIdentifier,
-      String projectIdentifier, String serviceIdentifier, String envIdentifier, Instant timeStamp, double riskScore) {
+      String projectIdentifier, String serviceIdentifier, String envIdentifier, Instant timeStamp, double riskScore,
+      long anomalousMetricsCount, long anomalousLogsCount) {
     UpdateOptions options = new UpdateOptions();
     options.upsert(true);
     for (HeatMapResolution heatMapResolution : HeatMapResolution.values()) {
@@ -161,6 +168,21 @@ public class HeatMapServiceImpl implements HeatMapService {
               new BasicDBObject("$set",
                   new BasicDBObject(HeatMapKeys.heatMapRisks + ".$[elem]." + HeatMapRiskKeys.riskScore, riskScore)),
               arrayFilterOptions);
+
+      /**
+       * Update anomalous metrics and logs count in all heatmap risk objects
+       * */
+
+      filterMap = new HashMap<>();
+      filterMap.put("elem." + HeatMapRiskKeys.startTime, heatMapStartTime);
+      filterMap.put("elem." + HeatMapRiskKeys.endTime, heatMapEndTime);
+      arrayFilterOptions.arrayFilters(Lists.newArrayList(new BasicDBObject(filterMap)));
+
+      BasicDBObject updateObject = new BasicDBObject("$inc",
+          new BasicDBObject(
+              HeatMapKeys.heatMapRisks + ".$[elem]." + HeatMapRiskKeys.anomalousMetricsCount, anomalousMetricsCount)
+              .append(HeatMapKeys.heatMapRisks + ".$[elem]." + HeatMapRiskKeys.anomalousLogsCount, anomalousLogsCount));
+      hPersistence.getCollection(HeatMap.class).update(heatMapQuery.getQueryObject(), updateObject, arrayFilterOptions);
     }
   }
 
@@ -385,7 +407,8 @@ public class HeatMapServiceImpl implements HeatMapService {
       if (latestHeatMap != null) {
         SortedSet<HeatMapRisk> risks = new TreeSet<>(latestHeatMap.getHeatMapRisks());
         if (risks.last().getEndTime().isAfter(roundedDownTime.minus(RISK_TIME_BUFFER_MINS, ChronoUnit.MINUTES))) {
-          Double risk = risks.last().getRiskScore() * 100;
+          HeatMapRisk last = risks.last();
+          Double risk = last.getRiskScore() * 100;
           categoryRiskList.add(CategoryRisk.builder().category(category).risk(risk.intValue()).build());
           categoryScoreMap.put(category, risk.intValue());
           if (risks.last().getEndTime().isAfter(latestAnalysisTime)) {
@@ -408,6 +431,56 @@ public class HeatMapServiceImpl implements HeatMapService {
                 ? roundedDownTime.minus(HeatMapResolution.FIFTEEN_MINUTES.getResolution()).toEpochMilli()
                 : latestAnalysisTime.minus(heatMapResolution.getResolution()).toEpochMilli())
         .build();
+  }
+
+  @Override
+  public List<HeatMap> getLatestHeatMaps(
+      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
+    HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
+    Instant bucketEndTime = roundDownTo5MinBoundary(clock.instant()).minus(RISK_TIME_BUFFER_MINS, ChronoUnit.MINUTES);
+    Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                      .filter(HeatMapKeys.accountId, projectParams.getAccountIdentifier())
+                                      .filter(HeatMapKeys.orgIdentifier, projectParams.getOrgIdentifier())
+                                      .filter(HeatMapKeys.projectIdentifier, projectParams.getProjectIdentifier())
+                                      .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                      .field(HeatMapKeys.heatMapBucketEndTime)
+                                      .greaterThanOrEq(bucketEndTime);
+    if (envIdentifier != null) {
+      heatMapQuery.filter(HeatMapKeys.envIdentifier, envIdentifier);
+    }
+    if (serviceIdentifier != null) {
+      heatMapQuery.filter(HeatMapKeys.serviceIdentifier, serviceIdentifier);
+    }
+    List<HeatMap> heatMapList = heatMapQuery.asList();
+    Map<HeatMapKey, HeatMap> heatMapMap = new HashMap<>();
+    heatMapList.forEach(heatMap -> {
+      HeatMapKey key =
+          new HeatMapKey(heatMap.getServiceIdentifier(), heatMap.getEnvIdentifier(), heatMap.getCategory());
+      if (!heatMapMap.containsKey(key)) {
+        heatMapMap.put(key, heatMap);
+      }
+      if (heatMapMap.get(key).getHeatMapBucketEndTime().isBefore(heatMap.getHeatMapBucketEndTime())) {
+        heatMapMap.put(key, heatMap);
+      }
+    });
+    List<HeatMap> uniqueHeatMaps = new ArrayList<>();
+    heatMapMap.forEach((key, value) -> {
+      SortedSet<HeatMapRisk> risks = new TreeSet<>(value.getHeatMapRisks());
+      HeatMapRisk last = risks.last();
+      if (last.getEndTime().isAfter(bucketEndTime)) {
+        value.setHeatMapRisks(Lists.newArrayList(last));
+        uniqueHeatMaps.add(value);
+      }
+    });
+    return uniqueHeatMaps;
+  }
+
+  @Value
+  @AllArgsConstructor
+  private static class HeatMapKey {
+    String serviceIdentifier;
+    String envIdentifier;
+    CVMonitoringCategory category;
   }
 
   @Override
@@ -454,7 +527,7 @@ public class HeatMapServiceImpl implements HeatMapService {
     heatMaps.forEach(heatMap -> {
       SortedSet<HeatMapRisk> risks = new TreeSet<>(heatMap.getHeatMapRisks());
       risks.forEach(heatMapRisk -> {
-        int index = getIndex(bucketsBasedOn30MinFrame, heatMapRisk.getEndTime(), endTime);
+        int index = getIndex(bucketsBasedOn30MinFrame, heatMapRisk.getEndTime(), endTime, heatMapResolution);
         if (index >= 0 && index < bucketsBasedOn30MinFrame) {
           int indexPosition =
               serviceEnvironmentIndex.get(Pair.of(heatMap.getServiceIdentifier(), heatMap.getEnvIdentifier()));
@@ -471,8 +544,9 @@ public class HeatMapServiceImpl implements HeatMapService {
     return historicalTrendList;
   }
 
-  private int getIndex(int bucketsBasedOn30MinFrame, Instant timeFrame, Instant endTime) {
-    return bucketsBasedOn30MinFrame - 1 - (int) ChronoUnit.MINUTES.between(timeFrame, endTime) / 30;
+  private int getIndex(int totalSize, Instant timeFrame, Instant endTime, HeatMapResolution heatMapResolution) {
+    return totalSize - 1
+        - (int) ChronoUnit.MINUTES.between(timeFrame, endTime) / (int) heatMapResolution.getResolution().toMinutes();
   }
 
   @Override
@@ -535,6 +609,48 @@ public class HeatMapServiceImpl implements HeatMapService {
     });
 
     return latestRiskScoreList;
+  }
+
+  @Override
+  public HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
+      String environmentIdentifier, DurationDTO duration, Instant endTime) {
+    HistoricalTrend historicalTrend = HistoricalTrend.builder().size(48).build();
+
+    HeatMapResolution heatMapResolution = getHeatMapResolution(endTime.minus(duration.getDuration()), endTime);
+    Instant trendEndTime = getBoundaryOfResolution(endTime, heatMapResolution.getResolution())
+                               .plusMillis(heatMapResolution.getResolution().toMillis());
+    Instant trendStartTime = trendEndTime.minus(duration.getDuration());
+
+    Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                      .filter(HeatMapKeys.accountId, projectParams.getAccountIdentifier())
+                                      .filter(HeatMapKeys.orgIdentifier, projectParams.getOrgIdentifier())
+                                      .filter(HeatMapKeys.projectIdentifier, projectParams.getProjectIdentifier())
+                                      .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+                                      .filter(HeatMapKeys.envIdentifier, environmentIdentifier)
+                                      .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
+                                      .field(HeatMapKeys.heatMapBucketEndTime)
+                                      .greaterThan(trendStartTime)
+                                      .field(HeatMapKeys.heatMapBucketStartTime)
+                                      .lessThanOrEq(trendEndTime);
+
+    List<HeatMap> heatMaps = heatMapQuery.asList();
+
+    heatMaps.forEach(heatMap -> {
+      SortedSet<HeatMapRisk> risks = new TreeSet<>(heatMap.getHeatMapRisks());
+      risks.forEach(heatMapRisk -> {
+        int index = getIndex(48, heatMapRisk.getEndTime(), trendEndTime, heatMapResolution);
+        if (index >= 0 && index < 48) {
+          RiskData riskData = historicalTrend.getHealthScores().get(index);
+          if (heatMapRisk.getHealthScore() != null
+              && (riskData.getHealthScore() == null
+                  || riskData.getHealthScore().compareTo(heatMapRisk.getHealthScore()) == 1)) {
+            riskData.setHealthScore(heatMapRisk.getHealthScore());
+            riskData.setRiskStatus(heatMapRisk.getRiskStatus());
+          }
+        }
+      });
+    });
+    return historicalTrend;
   }
 
   private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String accountId, String orgIdentifier, String projectIdentifier,

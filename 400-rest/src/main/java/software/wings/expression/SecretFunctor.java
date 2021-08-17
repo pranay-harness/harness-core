@@ -6,7 +6,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.expression.SecretManagerFunctorInterface.obtainExpression;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.FunctorException;
 import io.harness.expression.LateBindingMap;
@@ -21,6 +23,7 @@ import java.util.List;
 import lombok.Builder;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Builder
 public class SecretFunctor extends LateBindingMap {
   public enum Mode {

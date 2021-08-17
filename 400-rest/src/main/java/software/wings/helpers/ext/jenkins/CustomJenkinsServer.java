@@ -1,10 +1,12 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.helpers.ext.jenkins.JenkinsJobPathBuilder.getJenkinsJobPath;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.JenkinsConfig;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
@@ -20,6 +22,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpResponseException;
 
 @OwnedBy(CDC)
+@TargetModule(_960_API_SERVICES)
 public class CustomJenkinsServer extends JenkinsServer {
   private JenkinsHttpClient client;
 

@@ -473,7 +473,7 @@ org.apache.lucene:lucene-suggest:jar:8.5.1
 org.apache.maven:maven-artifact:jar:3.3.3
 org.apache.maven:maven-model:jar:3.0.5
 org.apache.neethi:neethi:jar:3.1.1
-org.apache.santuario:xmlsec:jar:2.0.10
+org.apache.santuario:xmlsec:jar:2.1.4
 org.apache.sshd:sshd-core:jar:1.7.0
 org.apache.velocity:velocity:jar:1.7
 org.apache.ws.xmlschema:xmlschema-core:jar:2.2.5
@@ -496,7 +496,7 @@ org.cloudfoundry:cloudfoundry-client-reactor:jar:4.8.0.RELEASE
 org.cloudfoundry:cloudfoundry-client:jar:4.8.0.RELEASE
 org.cloudfoundry:cloudfoundry-operations:jar:4.8.0.RELEASE
 org.cloudfoundry:cloudfoundry-util:jar:4.8.0.RELEASE
-org.codehaus.groovy:groovy:jar:3.0.5
+org.codehaus.groovy:groovy:jar:3.0.7
 org.codehaus.jackson:jackson-core-asl:jar:1.9.11
 org.codehaus.janino:commons-compiler:jar:3.0.6
 org.codehaus.janino:janino:jar:3.0.6

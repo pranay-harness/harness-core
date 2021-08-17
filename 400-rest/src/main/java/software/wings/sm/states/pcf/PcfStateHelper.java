@@ -33,7 +33,9 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -149,6 +151,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Singleton
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfStateHelper {
   public static final String WORKFLOW_STANDARD_PARAMS = "workflowStandardParams";
   public static final String CURRENT_USER = "currentUser";

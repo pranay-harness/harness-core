@@ -1,3 +1,10 @@
+variable "deployment" {
+  type = string
+}
+
+variable "projectId" {
+  type = string
+}
 locals {
 
   name_prefix = join("_", ["x", var.deployment])

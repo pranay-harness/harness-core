@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.DataGenerator;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
@@ -30,6 +31,8 @@ import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.ActivityVerificationState;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
+import io.harness.cvng.statemachine.entities.DeploymentLogClusterState;
+import io.harness.cvng.statemachine.entities.PreDeploymentLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
@@ -64,9 +67,11 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
   private String cvConfigId;
   private String verificationTaskId;
   private TimeSeriesAnalysisState timeSeriesAnalysisState;
+  private BuilderFactory builderFactory;
 
   @Before
   public void setup() throws IllegalAccessException {
+    builderFactory = BuilderFactory.getDefault();
     AppDynamicsCVConfig appDConfig = dataGenerator.getAppDynamicsCVConfig();
     CVConfig cvConfig = cvConfigService.save(appDConfig);
     cvConfigId = cvConfig.getUuid();
@@ -123,6 +128,70 @@ public class AnalysisStateMachineServiceTest extends CvNextGenTestBase {
 
     AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
     assertThat(stateMachine).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateStateMachine_logWorkflow_preDeployment() {
+    CVConfig cvConfig = cvConfigService.save(builderFactory.splunkCVConfigBuilder().build());
+    String verificationTaskId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    VerificationTask verificationTask = VerificationTask.builder()
+                                            .verificationJobInstanceId(verificationJobInstanceId)
+                                            .cvConfigId(cvConfig.getUuid())
+                                            .build();
+    verificationTask.setUuid(verificationTaskId);
+    hPersistence.save(verificationTask);
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
+            .deploymentStartTime(Instant.now())
+            .startTime(Instant.now().plus(Duration.ofMinutes(2)))
+            .resolvedJob(verificationJobService.fromDto(newCanaryVerificationJobDTO()))
+            .build();
+    verificationJobInstance.setUuid(verificationJobInstanceId);
+    hPersistence.save(verificationJobInstance);
+    AnalysisInput inputs = AnalysisInput.builder()
+                               .verificationTaskId(verificationTaskId)
+                               .startTime(verificationJobInstance.getStartTime().minus(17, ChronoUnit.MINUTES))
+                               .endTime(verificationJobInstance.getStartTime().minus(2, ChronoUnit.MINUTES))
+                               .build();
+
+    AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
+    assertThat(stateMachine).isNotNull();
+    assertThat(stateMachine.getCurrentState()).isInstanceOf(PreDeploymentLogClusterState.class);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateStateMachine_logWorkflow_postDeploymentCluster() {
+    CVConfig cvConfig = cvConfigService.save(builderFactory.splunkCVConfigBuilder().build());
+    String verificationTaskId = generateUuid();
+    String verificationJobInstanceId = generateUuid();
+    VerificationTask verificationTask = VerificationTask.builder()
+                                            .verificationJobInstanceId(verificationJobInstanceId)
+                                            .cvConfigId(cvConfig.getUuid())
+                                            .build();
+    verificationTask.setUuid(verificationTaskId);
+    hPersistence.save(verificationTask);
+    VerificationJobInstance verificationJobInstance =
+        VerificationJobInstance.builder()
+            .deploymentStartTime(Instant.now())
+            .startTime(Instant.now().plus(Duration.ofMinutes(2)))
+            .resolvedJob(verificationJobService.fromDto(newCanaryVerificationJobDTO()))
+            .build();
+    verificationJobInstance.setUuid(verificationJobInstanceId);
+    hPersistence.save(verificationJobInstance);
+    AnalysisInput inputs = AnalysisInput.builder()
+                               .verificationTaskId(verificationTaskId)
+                               .startTime(verificationJobInstance.getStartTime().plus(1, ChronoUnit.MINUTES))
+                               .endTime(verificationJobInstance.getStartTime().plus(2, ChronoUnit.MINUTES))
+                               .build();
+
+    AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputs);
+    assertThat(stateMachine).isNotNull();
+    assertThat(stateMachine.getCurrentState()).isInstanceOf(DeploymentLogClusterState.class);
   }
 
   @Test

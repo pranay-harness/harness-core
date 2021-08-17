@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -80,6 +79,14 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 			return
 		}
 
+		// Write changed file information
+		err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
+			stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
+		if err != nil {
+			log.Errorw("api: could not write changed file information", "account_id", accountId, "build_id", buildId,
+				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
+		}
+
 		// Write the selected tests back
 		WriteJSON(w, selected, 200)
 		log.Infow("completed test selection", "account_id", accountId,
@@ -131,12 +138,17 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		}
 
 		overview, err := db.GetSelectionOverview(ctx, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId)
-
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not get selection overview for VG search", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
 				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId, zap.Error(err))
 			return
+		}
+
+		resp, err := db.GetDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId)
+		if err != nil {
+			log.Errorw("api: could not get changed files for VG search", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId, zap.Error(err))
 		}
 
 		req := types.GetVgReq{
@@ -146,9 +158,16 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			TargetBranch: overview.TargetBranch,
 			Class:        class,
 			Limit:        limit,
+			DiffFiles:    resp.Files,
 		}
 
-		// Make call to Mongo DB to get the visualization call graph of
+		log.Infow("api: making call to GetVg", "arg", req, accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+			pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId)
+
+		// Make call to Mongo DB to get the visualization call graph
+		// Set timeout of 15 seconds to avoid choking the DB
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
 		graph, err := tidb.GetVg(ctx, req)
 		if err != nil {
 			WriteInternalError(w, err)
@@ -333,8 +352,9 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteBadRequest(w, err)
 			return
 		}
-		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)),
-			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
+		log.Infow("received callgraph", "len(nodes)", len(cg.Nodes), "len(relations)", len(cg.TestRelations),
+			"len(vis_relations)", len(cg.VisRelations), accountIDParam, acc, repoParam,
+			info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
 
 		st := time.Now()
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)

@@ -100,6 +100,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidationParams;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsValidationParams;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerValidationParams;
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultValidationParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
@@ -171,6 +172,8 @@ import io.harness.delegate.beans.pcf.CfInternalInstanceElement;
 import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.delegate.beans.pcf.CfServiceData;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
+import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -303,6 +306,7 @@ import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
+import io.harness.delegate.task.k8s.K8sRollingDeployRollbackResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
@@ -685,6 +689,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpKmsValidationParams.class, 19535);
     kryo.register(AwsKmsValidationParams.class, 643285);
     kryo.register(AzureKeyVaultValidationParams.class, 643286);
+    kryo.register(AwsSecretManagerValidationParams.class, 643287);
     kryo.register(NoOpConnectorValidationParams.class, 19536);
     kryo.register(ConnectorValidationParams.class, 19537);
     kryo.register(NexusValidationParams.class, 19538);
@@ -879,5 +884,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CommandUnitsProgress.class, 543427);
     kryo.register(CommandUnitProgress.class, 543428);
     kryo.register(K8sCanaryDeleteRequest.class, 543429);
+    kryo.register(K8sRollingDeployRollbackResponse.class, 543430);
+    kryo.register(PollingDelegateResponse.class, 543431);
+    kryo.register(ManifestPollingResponseInfc.class, 543432);
   }
 }

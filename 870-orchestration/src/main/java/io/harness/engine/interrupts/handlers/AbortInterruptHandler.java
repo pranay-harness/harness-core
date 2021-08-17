@@ -50,6 +50,7 @@ public class AbortInterruptHandler implements InterruptHandler {
     try (AutoLogContext ignore = interrupt.autoLogContext()) {
       NodeExecution nodeExecution = nodeExecutionService.updateStatusWithOps(
           nodeExecutionId, Status.DISCONTINUING, null, EnumSet.noneOf(Status.class));
+
       if (nodeExecution == null) {
         log.error("Failed to abort node with nodeExecutionId: {}", nodeExecutionId);
         throw new InterruptProcessingFailedException(

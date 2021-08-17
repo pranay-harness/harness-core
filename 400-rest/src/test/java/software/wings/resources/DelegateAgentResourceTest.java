@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -62,6 +63,7 @@ import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
+import io.harness.perpetualtask.instancesync.InstanceSyncResponsePublisher;
 import io.harness.polling.client.PollingResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -112,7 +114,7 @@ import org.mockito.ArgumentCaptor;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-public class DelegateAgentResourceTest {
+public class DelegateAgentResourceTest extends CategoryTest {
   private static final DelegateService delegateService = mock(DelegateService.class);
   private static final software.wings.service.intfc.DelegateTaskServiceClassic delegateTaskServiceClassic =
       mock(software.wings.service.intfc.DelegateTaskServiceClassic.class);
@@ -127,6 +129,8 @@ public class DelegateAgentResourceTest {
   private static final InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static final ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
   private static final DelegateTaskService delegateTaskService = mock(DelegateTaskService.class);
+  private static final InstanceSyncResponsePublisher instanceSyncResponsePublisher =
+      mock(InstanceSyncResponsePublisher.class);
 
   static {
     artifactCollectionResponseHandler = mock(ArtifactCollectionResponseHandler.class);
@@ -148,11 +152,11 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(
-              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
-                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler,
-                  manifestCollectionResponseHandler, connectorHearbeatPublisher, kryoSerializer,
-                  configurationController, featureFlagService, delegateTaskServiceClassic, pollResourceClient))
+          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
+              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
+              instanceSyncResponseHandler, manifestCollectionResponseHandler, connectorHearbeatPublisher,
+              kryoSerializer, configurationController, featureFlagService, delegateTaskServiceClassic,
+              pollResourceClient, instanceSyncResponsePublisher))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {

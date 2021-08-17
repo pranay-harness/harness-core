@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class AlphanumComparator implements Comparator<String>, Serializable {
   @Override
   public int compare(String s1, String s2) {

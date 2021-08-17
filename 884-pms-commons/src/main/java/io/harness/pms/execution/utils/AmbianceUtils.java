@@ -11,6 +11,7 @@ import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 
@@ -19,6 +20,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -136,5 +138,15 @@ public class AmbianceUtils {
         .orgIdentifier(getOrgIdentifier(ambiance))
         .projectIdentifier(getProjectIdentifier(ambiance))
         .build();
+  }
+
+  public Optional<Level> getStageLevelFromAmbiance(Ambiance ambiance) {
+    Optional<Level> stageLevel = Optional.empty();
+    for (Level level : ambiance.getLevelsList()) {
+      if (level.getStepType().getStepCategory() == StepCategory.STAGE) {
+        stageLevel = Optional.of(level);
+      }
+    }
+    return stageLevel;
   }
 }

@@ -13,6 +13,6 @@ import lombok.Data;
 @OwnedBy(PIPELINE)
 public class BuildMetadata {
   NGTriggerType type;
-  String signature;
   String pollingDocId;
+  String buildSourceType;
 }

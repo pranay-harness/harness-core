@@ -314,6 +314,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
+  @Inject @Named("watcherUpgradeExecutor") private ScheduledExecutorService watcherUpgradeExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("rescheduleExecutor") private ScheduledExecutorService rescheduleExecutor;
@@ -325,6 +326,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
   @Inject @Named("grpcServiceExecutor") private ExecutorService grpcServiceExecutor;
+  @Inject @Named("taskProgressExecutor") private ExecutorService taskProgressExecutor;
   @Inject private ExecutorService syncExecutor;
 
   @Inject private SignalService signalService;
@@ -439,6 +441,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                  : "[New] Timed out waiting for go-ahead. Proceeding anyway");
         messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
         startLocalHeartbeat();
+        watcherUpgradeExecutor.scheduleWithFixedDelay(() -> {
+          try {
+            watcherUpgrade(false);
+          } catch (Exception e) {
+            log.error("Error while upgrading watcher", e);
+          }
+        }, 0, 60, TimeUnit.MINUTES);
       } else {
         log.info("Delegate process started");
         if (delegateConfiguration.isGrpcServiceEnabled()) {
@@ -1447,49 +1456,55 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }, 0, KEEP_ALIVE_INTERVAL, TimeUnit.MILLISECONDS);
   }
 
-  private void startLocalHeartbeat() {
-    localHeartbeatExecutor.scheduleAtFixedRate(() -> {
-      try {
-        systemExecutor.submit(() -> {
-          Map<String, Object> statusData = new HashMap<>();
-          if (selfDestruct.get()) {
-            statusData.put(DELEGATE_SELF_DESTRUCT, true);
-          } else {
-            statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-            statusData.put(DELEGATE_VERSION, getVersionWithPatch());
-            statusData.put(DELEGATE_IS_NEW, false);
-            statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
-            statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
-            statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
-            statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
-            if (switchStorage.get() && !switchStorageMsgSent) {
-              statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
-              switchStorageMsgSent = true;
-            }
-            if (sendJreInformationToWatcher) {
-              log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
-                  migrateToJreVersion);
-              statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
-              statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
-            }
-            if (upgradePending.get()) {
-              statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
-            }
-            if (!acquireTasks.get()) {
-              statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
-            }
-            if (isNotBlank(migrateTo)) {
-              statusData.put(DELEGATE_MIGRATE, migrateTo);
-            }
-          }
-          messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-          watchWatcher();
-        });
-      } catch (Exception e) {
-        log.error("Exception while scheduling local heartbeat", e);
+  private void startLocalHeartbeat() 
+    localHeartbeatExecutor.scheduleAtFixedRate(this::submit, 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void submit() {
+    try {
+      log.info("Starting local heartbeat.");
+      systemExecutor.submit(this::fillStatusData);
+    } catch (Exception e) {
+      log.error("Exception while scheduling local heartbeat", e);
+    }
+    logCurrentTasks();
+  }
+
+  private void fillStatusData() {
+    log.info("Filling status data.");
+    Map<String, Object> statusData = new HashMap<>();
+    if (selfDestruct.get()) {
+      statusData.put(DELEGATE_SELF_DESTRUCT, true);
+    } else {
+      statusData.put(DELEGATE_HEARTBEAT, clock.millis());
+      statusData.put(DELEGATE_VERSION, getVersion());
+      statusData.put(DELEGATE_IS_NEW, false);
+      statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
+      statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
+      statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
+      statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+      if (switchStorage.get() && !switchStorageMsgSent) {
+        statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+        switchStorageMsgSent = true;
       }
-      logCurrentTasks();
-    }, 0, 10, TimeUnit.SECONDS);
+      if (sendJreInformationToWatcher) {
+        log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
+            migrateToJreVersion);
+        statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
+        statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
+      }
+      if (upgradePending.get()) {
+        statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
+      }
+      if (!acquireTasks.get()) {
+        statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+      }
+      if (isNotBlank(migrateTo)) {
+        statusData.put(DELEGATE_MIGRATE, migrateTo);
+      }
+    }
+    messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
+    watchWatcher();
   }
 
   private void watchWatcher() {
@@ -1498,7 +1513,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
     if (heartbeatTimedOut) {
       log.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
+      watcherUpgrade(true);
     }
+  }
+
+  private void watcherUpgrade(boolean heartbeatTimedOut) {
     String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
     String expectedVersion = findExpectedWatcherVersion();
     if (StringUtils.equals(expectedVersion, watcherVersion)) {
@@ -2067,6 +2086,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
             .baseLogKey(logBaseKey)
             .logService(delegateLogService)
+            .taskProgressExecutor(taskProgressExecutor)
             .appId(appId)
             .activityId(activityId);
 

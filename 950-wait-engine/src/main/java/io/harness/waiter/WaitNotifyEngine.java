@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class WaitNotifyEngine {
+  public static final int MIN_WAIT_INSTANCE_TIMEOUT = 3;
+
   @Inject private PersistenceWrapper persistenceWrapper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private NotifyQueuePublisherRegister publisherRegister;
@@ -64,24 +67,30 @@ public class WaitNotifyEngine {
       list = new ArrayList<>(set);
     }
 
-    return waitForAllOn(publisherName, callback, progressCallback, list);
+    return waitForAllOn(publisherName, callback, progressCallback, list, Duration.ofSeconds(0));
   }
 
   public String waitForAllOnInList(String publisherName, OldNotifyCallback callback, List<String> list) {
-    return waitForAllOn(publisherName, callback, null, list);
+    return waitForAllOn(publisherName, callback, null, list, Duration.ofSeconds(0));
   }
 
-  public String waitForAllOn(
-      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, List<String> list) {
+  public String waitForAllOnInList(
+      String publisherName, OldNotifyCallback callback, List<String> list, Duration timeout) {
+    return waitForAllOn(publisherName, callback, null, list, timeout);
+  }
+
+  private String waitForAllOn(String publisherName, NotifyCallback callback, ProgressCallback progressCallback,
+      List<String> list, Duration timeout) {
     final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder()
                                                         .uuid(generateUuid())
                                                         .callback(callback)
                                                         .progressCallback(progressCallback)
-                                                        .publisher(publisherName);
+                                                        .publisher(publisherName)
+                                                        .timeout(timeout);
 
     waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
 
-    final String waitInstanceId = persistenceWrapper.save(waitInstanceBuilder.build());
+    final String waitInstanceId = persistenceWrapper.saveWithTimeout(waitInstanceBuilder.build(), timeout);
 
     WaitInstance waitInstance;
     if ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstanceForExistingResponse(waitInstanceId, list))

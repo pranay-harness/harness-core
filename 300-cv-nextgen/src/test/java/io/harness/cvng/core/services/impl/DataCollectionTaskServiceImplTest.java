@@ -16,10 +16,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CvNextGenTestBase;
@@ -35,7 +32,6 @@ import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
-import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -708,17 +704,6 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = NEMANJA)
-  @Category(UnitTests.class)
-  public void testDeleteDataCollectionTask() throws IllegalAccessException {
-    String taskId = generateUuid();
-    VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
-    FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
-    dataCollectionTaskService.deletePerpetualTasks(accountId, taskId);
-    verify(verificationManagerService, times(1)).deletePerpetualTask(accountId, taskId);
-  }
-
-  @Test
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
   public void testAbortDataCollectionTasks() {
@@ -877,6 +862,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
           .endTime(fakeNow.minus(Duration.ofMinutes(2)))
           .status(executionStatus)
           .dataCollectionInfo(createDataCollectionInfo())
+          .lastPickedAt(executionStatus == RUNNING ? fakeNow.minus(Duration.ofMinutes(5)) : null)
           .build();
     } else {
       return DeploymentDataCollectionTask.builder()
@@ -888,6 +874,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
           .endTime(fakeNow.minus(Duration.ofMinutes(2)))
           .status(executionStatus)
           .dataCollectionInfo(createDataCollectionInfo())
+          .lastPickedAt(executionStatus == RUNNING ? fakeNow.minus(Duration.ofMinutes(5)) : null)
           .build();
     }
   }

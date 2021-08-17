@@ -48,6 +48,9 @@ message PlanCreationContextValue {
     ExecutionMetadata metadata = 2;
   }
   triggers.TriggerPayload triggerPayload = 3;
+  string accountIdentifier = 4;
+  string orgIdentifier = 5;
+  string projectIdentifier = 6;
 }
 
 message YamlFieldBlob {

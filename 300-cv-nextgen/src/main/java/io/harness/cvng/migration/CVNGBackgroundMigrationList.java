@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.migration.list.AddDeploymentMonitoringSourcePerpetualTask;
 import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigration;
 import io.harness.cvng.migration.list.CVNGBaseMigration;
+import io.harness.cvng.migration.list.CleanUpOldDocuments;
+import io.harness.cvng.migration.list.CleanupDeprecatedDocuments;
 import io.harness.cvng.migration.list.CreateDefaultVerificationJobsMigration;
 import io.harness.cvng.migration.list.DeleteInvalidOrchestratorsMigration;
 import io.harness.cvng.migration.list.EnableExistingCVConfigs;
@@ -52,6 +54,8 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(16, CVNGBaseMigration.class))
         .add(Pair.of(17, DeleteInvalidOrchestratorsMigration.class))
         .add(Pair.of(18, EnableExistingCVConfigs.class))
+        .add(Pair.of(19, CleanupDeprecatedDocuments.class))
+        .add(Pair.of(20, CleanUpOldDocuments.class))
         .build();
   }
 }

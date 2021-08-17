@@ -88,6 +88,7 @@ import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.PrometheusService;
+import io.harness.cvng.core.services.api.SetupUsageEventService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.services.api.SumoLogicService;
@@ -121,6 +122,7 @@ import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
 import io.harness.cvng.core.services.impl.PrometheusDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
+import io.harness.cvng.core.services.impl.SetupUsageEventServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
@@ -146,10 +148,12 @@ import io.harness.cvng.core.utils.monitoredService.StackdriverMetricHealthSource
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
+import io.harness.cvng.dashboard.services.api.ServiceDependencyGraphService;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.cvng.dashboard.services.impl.HealthVerificationHeatMapServiceImpl;
 import io.harness.cvng.dashboard.services.impl.HeatMapServiceImpl;
 import io.harness.cvng.dashboard.services.impl.LogDashboardServiceImpl;
+import io.harness.cvng.dashboard.services.impl.ServiceDependencyGraphServiceImpl;
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
 import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
 import io.harness.cvng.migration.service.CVNGMigrationService;
@@ -437,6 +441,8 @@ public class CVServiceModule extends AbstractModule {
     bind(HealthSourceService.class).to(HealthSourceServiceImpl.class);
     bind(MonitoredServiceService.class).to(MonitoredServiceServiceImpl.class);
     bind(ServiceDependencyService.class).to(ServiceDependencyServiceImpl.class);
+    bind(ServiceDependencyGraphService.class).to(ServiceDependencyGraphServiceImpl.class);
+    bind(SetupUsageEventService.class).to(SetupUsageEventServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

@@ -2,7 +2,9 @@ package io.harness.delegate.task.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.PRABU;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -14,8 +16,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,5 +58,18 @@ public class JiraTaskNGTest extends CategoryTest {
     when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenReturn(taskResponse);
     assertThatCode(() -> jiraTaskNG.run(JiraTaskNGParameters.builder().build())).doesNotThrowAnyException();
     verify(jiraTaskNGHelper).getJiraTaskResponse(JiraTaskNGParameters.builder().build());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testGetJiraTaskNGDelegateSelectors() {
+    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
+                                                    .delegateSelectors(Arrays.asList("selector1"))
+                                                    .jiraConnectorDTO(JiraConnectorDTO.builder().build())
+                                                    .build();
+    assertThat(jiraTaskNGParameters.getDelegateSelectors()).containsExactlyInAnyOrder("selector1");
+    jiraTaskNGParameters.getJiraConnectorDTO().setDelegateSelectors(ImmutableSet.of("selector2"));
+    assertThat(jiraTaskNGParameters.getDelegateSelectors()).containsExactlyInAnyOrder("selector1", "selector2");
   }
 }

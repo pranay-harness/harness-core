@@ -160,11 +160,13 @@ public class EventConfigServiceImpl implements EventConfigService {
       throw new InvalidRequestException(
           "For Event rule type Pipeline choose all pipelines or specify at least one pipeline");
     }
-
-    Optional<String> invalidEvent =
-        pipelineRule.getEvents().stream().filter(e -> !EventType.getPipelineEvents().contains(e)).findFirst();
-    if (invalidEvent.isPresent()) {
-      throw new InvalidRequestException("For Event rule type Pipeline we found invalid event - " + invalidEvent.get());
+    if (!pipelineRule.isAllEvents()) {
+      Optional<String> invalidEvent =
+          pipelineRule.getEvents().stream().filter(e -> !EventType.getPipelineEvents().contains(e)).findFirst();
+      if (invalidEvent.isPresent()) {
+        throw new InvalidRequestException(
+            "For Event rule type Pipeline we found invalid event - " + invalidEvent.get());
+      }
     }
   }
 
@@ -181,11 +183,13 @@ public class EventConfigServiceImpl implements EventConfigService {
       throw new InvalidRequestException(
           "For Event rule type workflow choose all workflows or specify at least one workflow");
     }
-
-    Optional<String> invalidEvent =
-        workflowRule.getEvents().stream().filter(e -> !EventType.getWorkflowEvents().contains(e)).findFirst();
-    if (invalidEvent.isPresent()) {
-      throw new InvalidRequestException("For Event rule type Workflow we found invalid event - " + invalidEvent.get());
+    if (!workflowRule.isAllEvents()) {
+      Optional<String> invalidEvent =
+          workflowRule.getEvents().stream().filter(e -> !EventType.getWorkflowEvents().contains(e)).findFirst();
+      if (invalidEvent.isPresent()) {
+        throw new InvalidRequestException(
+            "For Event rule type Workflow we found invalid event - " + invalidEvent.get());
+      }
     }
   }
 }

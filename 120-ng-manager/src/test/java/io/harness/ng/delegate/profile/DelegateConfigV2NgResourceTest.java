@@ -1,6 +1,7 @@
 package io.harness.ng.delegate.profile;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.VLAD;
 
 import static java.util.Arrays.asList;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -34,7 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
-public class DelegateConfigV2NgResourceTest {
+public class DelegateConfigV2NgResourceTest extends CategoryTest {
   private static final String TEST_ACCOUNT_ID = generateUuid();
   private static final String TEST_PROJECT_ID = generateUuid();
   private static final String TEST_ORG_ID = generateUuid();
@@ -62,15 +64,39 @@ public class DelegateConfigV2NgResourceTest {
     pageResponse.setResponse(Collections.singletonList(DelegateProfileDetailsNg.builder().build()));
     pageResponse.setTotal(1L);
 
-    when(delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest, TEST_ACCOUNT_ID, TEST_PROJECT_ID))
+    when(delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest, TEST_ORG_ID, TEST_PROJECT_ID))
         .thenReturn(pageResponse);
 
     RestResponse<PageResponse<DelegateProfileDetailsNg>> restResponse =
         delegateConfigNgV2Resource.list(pageRequest, TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID);
 
     verify(delegateProfileManagerNgService, times(1)).list(TEST_ACCOUNT_ID, pageRequest, TEST_ORG_ID, TEST_PROJECT_ID);
-    // assertThat(restResponse.getResource().size()).isEqualTo(1);
-    // assertThat(restResponse.getResource().get(0)).isNotNull();
+    assertThat(restResponse.getResource().size()).isEqualTo(1);
+    assertThat(restResponse.getResource().get(0)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldListDelegateProfilesWithFilters() {
+    PageRequest<DelegateProfileDetailsNg> pageRequest = new PageRequest<>();
+    pageRequest.setOffset("0");
+
+    PageResponse<DelegateProfileDetailsNg> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Collections.singletonList(DelegateProfileDetailsNg.builder().build()));
+    pageResponse.setTotal(1L);
+
+    when(delegateProfileManagerNgService.listV2(
+             TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, "filterId", "", null, pageRequest))
+        .thenReturn(pageResponse);
+
+    RestResponse<PageResponse<DelegateProfileDetailsNg>> restResponse = delegateConfigNgV2Resource.listV2(
+        TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, "filterId", "", null, pageRequest);
+
+    verify(delegateProfileManagerNgService, times(1))
+        .listV2(TEST_ACCOUNT_ID, TEST_ORG_ID, TEST_PROJECT_ID, "filterId", "", null, pageRequest);
+    assertThat(restResponse.getResource().size()).isEqualTo(1);
+    assertThat(restResponse.getResource().get(0)).isNotNull();
   }
 
   @Test

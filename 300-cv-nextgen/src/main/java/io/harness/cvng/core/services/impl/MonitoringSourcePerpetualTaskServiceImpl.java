@@ -10,7 +10,6 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.VerificationType;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.encryption.Scope;
@@ -29,7 +28,6 @@ public class MonitoringSourcePerpetualTaskServiceImpl
     implements MonitoringSourcePerpetualTaskService, DeleteEntityByHandler<MonitoringSourcePerpetualTask> {
   private static final String WORKER_ID_SEPARATOR = ":";
   @Inject private HPersistence hPersistence;
-  @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private VerificationManagerService verificationManagerService;
 
   @Override
@@ -82,7 +80,7 @@ public class MonitoringSourcePerpetualTaskServiceImpl
 
     monitoringSourcePerpetualTasks.forEach(monitoringSourcePerpetualTask -> {
       if (isNotEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
-        dataCollectionTaskService.deletePerpetualTasks(accountId, monitoringSourcePerpetualTask.getPerpetualTaskId());
+        deletePerpetualTasks(accountId, monitoringSourcePerpetualTask.getPerpetualTaskId());
       }
       hPersistence.delete(monitoringSourcePerpetualTask);
     });
@@ -200,5 +198,9 @@ public class MonitoringSourcePerpetualTaskServiceImpl
   @Override
   public void deleteByAccountIdentifier(Class<MonitoringSourcePerpetualTask> clazz, String accountId) {
     deleteByProjectIdentifier(clazz, accountId, null, null);
+  }
+
+  private void deletePerpetualTasks(String accountId, String perpetualTaskId) {
+    verificationManagerService.deletePerpetualTask(accountId, perpetualTaskId);
   }
 }

@@ -19,7 +19,9 @@ import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.polling.contracts.BuildInfo;
 import io.harness.polling.contracts.PollingItem;
+import io.harness.polling.contracts.PollingResponse;
 import io.harness.remote.client.NGRestUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -154,13 +157,42 @@ public class BuildTriggerHelper {
   }
 
   public void validatePollingItemForHelmChart(PollingItem pollingItem) {
-    String error = checkFiledValueError("ConnectorRef", pollingItem.getConnectorRef());
+    String error = checkFiledValueError("ConnectorRef", pollingItem.getPollingPayloadData().getConnectorRef());
     if (isNotBlank(error)) {
       throw new InvalidRequestException(error);
     }
 
-    if (pollingItem.getPayloadType().hasHttpHelmPayload()) {
-      error = checkFiledValueError("ChartName", pollingItem.getPayloadType().getHttpHelmPayload().getChartName());
+    if (pollingItem.getPollingPayloadData().hasHttpHelmPayload()) {
+      error =
+          checkFiledValueError("ChartName", pollingItem.getPollingPayloadData().getHttpHelmPayload().getChartName());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+
+      error = checkFiledValueError(
+          "helmVersion", pollingItem.getPollingPayloadData().getHttpHelmPayload().getHelmVersion().name());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+    } else if (pollingItem.getPollingPayloadData().hasS3HelmPayload()) {
+      error = checkFiledValueError("ChartName", pollingItem.getPollingPayloadData().getS3HelmPayload().getChartName());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+
+      error = checkFiledValueError(
+          "helmVersion", pollingItem.getPollingPayloadData().getS3HelmPayload().getHelmVersion().name());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+    } else if (pollingItem.getPollingPayloadData().hasGcsHelmPayload()) {
+      error = checkFiledValueError("ChartName", pollingItem.getPollingPayloadData().getGcsHelmPayload().getChartName());
+      if (isNotBlank(error)) {
+        throw new InvalidRequestException(error);
+      }
+
+      error = checkFiledValueError(
+          "helmVersion", pollingItem.getPollingPayloadData().getGcsHelmPayload().getHelmVersion().name());
       if (isNotBlank(error)) {
         throw new InvalidRequestException(error);
       }
@@ -177,5 +209,42 @@ public class BuildTriggerHelper {
     } else {
       return EMPTY;
     }
+  }
+
+  public String generatePollingDescriptor(PollingResponse pollingResponse) {
+    StringBuilder builder = new StringBuilder(1024);
+
+    builder.append("AccountId: ").append(pollingResponse.getAccountId());
+
+    if (pollingResponse.getSignaturesCount() > 0) {
+      builder.append(", Signatures: [");
+      for (int i = 0; i < pollingResponse.getSignaturesCount(); i++) {
+        builder.append(pollingResponse.getSignatures(i)).append("  ");
+      }
+      builder.append("], ");
+    }
+
+    if (pollingResponse.hasBuildInfo()) {
+      BuildInfo buildInfo = pollingResponse.getBuildInfo();
+
+      builder.append(", BuildInfo Name: ").append(buildInfo.getName());
+      builder.append(", Version: [");
+      for (int i = 0; i < buildInfo.getVersionsCount(); i++) {
+        builder.append(buildInfo.getVersions(i)).append("  ");
+      }
+      builder.append(']');
+    }
+
+    return builder.toString();
+  }
+
+  public String validateAndFetchFromJsonNode(BuildTriggerOpsData buildTriggerOpsData, String key) {
+    String fieldName = buildTriggerOpsData.getPipelineBuildSpecMap().containsKey(key)
+        ? ((JsonNode) buildTriggerOpsData.getPipelineBuildSpecMap().get(key)).asText()
+        : Strings.EMPTY;
+    if (isBlank(fieldName) || "<+input>".equals(fieldName)) {
+      fieldName = fetchValueFromJsonNode(key, buildTriggerOpsData.getTriggerSpecMap());
+    }
+    return fieldName;
   }
 }

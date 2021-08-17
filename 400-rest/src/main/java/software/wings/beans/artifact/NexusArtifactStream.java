@@ -37,7 +37,7 @@ import lombok.NoArgsConstructor;
  * Created by srinivas on 3/31/17.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("NEXUS")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -200,6 +200,29 @@ public class NexusArtifactStream extends ArtifactStream {
         throw new InvalidRequestException("Repository Format cannot be empty", USER);
       }
     }
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .repositoryType(repositoryType)
+        .jobname(jobname)
+        .groupId(groupId)
+        .artifactPaths(artifactPaths)
+        .imageName(imageName)
+        .dockerPort(dockerPort)
+        .dockerRegistryUrl(dockerRegistryUrl)
+        .packageName(packageName)
+        .repositoryFormat(repositoryFormat)
+        .extension(extension)
+        .classifier(classifier)
+        .build();
   }
 
   @Override

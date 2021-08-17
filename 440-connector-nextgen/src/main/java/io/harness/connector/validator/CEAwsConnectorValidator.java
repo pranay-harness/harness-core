@@ -1,5 +1,7 @@
 package io.harness.connector.validator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -23,7 +25,6 @@ import com.amazonaws.services.costandusagereport.model.ReportDefinition;
 import com.amazonaws.services.identitymanagement.model.AmazonIdentityManagementException;
 import com.amazonaws.services.identitymanagement.model.EvaluationResult;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.securitytoken.model.AWSSecurityTokenServiceException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -38,12 +39,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @Singleton
+@OwnedBy(HarnessTeam.CE)
 public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   private static final String COMPRESSION = "GZIP";
   private static final String TIME_GRANULARITY = "HOURLY";
@@ -260,15 +261,7 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   private Collection<ErrorDetail> validateIfBucketIsPresent(
       AWSCredentialsProvider credentialsProvider, S3BucketDetails s3BucketDetails) {
     try {
-      ObjectListing s3BucketObject =
-          awsClient.getBucket(credentialsProvider, s3BucketDetails.getS3BucketName(), s3BucketDetails.getS3Prefix());
-      if (CollectionUtils.isEmpty(s3BucketObject.getObjectSummaries())) {
-        return ImmutableList.of(ErrorDetail.builder()
-                                    .message(String.format("Can't access bucket: '%s', can you check if it exists?",
-                                        s3BucketDetails.getS3BucketName()))
-                                    .reason("The bucket might not be existing.")
-                                    .build());
-      }
+      awsClient.getBucket(credentialsProvider, s3BucketDetails.getS3BucketName(), s3BucketDetails.getS3Prefix());
     } catch (AmazonS3Exception ex) {
       lastErrorSummary = String.format(
           "Either bucket '%s' doesn't exist or, %nthere is a mismatch between bucketName entered in connector and the name present in the role policy.",

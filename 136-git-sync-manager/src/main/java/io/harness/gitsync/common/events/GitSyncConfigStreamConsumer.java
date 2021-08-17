@@ -16,8 +16,8 @@ import io.harness.security.dto.ServicePrincipal;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
@@ -27,15 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 public class GitSyncConfigStreamConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
-  private final List<MessageListener> messageListenersList;
+  private final Set<MessageListener> messageListeners;
   private final QueueController queueController;
 
   @Inject
-  public GitSyncConfigStreamConsumer(
-      @Named(GIT_CONFIG_STREAM) Consumer redisConsumer, QueueController queueController) {
+  public GitSyncConfigStreamConsumer(@Named(GIT_CONFIG_STREAM) Consumer redisConsumer, QueueController queueController,
+      @Named(GIT_CONFIG_STREAM) Set<MessageListener> messageListeners) {
     this.redisConsumer = redisConsumer;
     this.queueController = queueController;
-    messageListenersList = new ArrayList<>();
+    this.messageListeners = messageListeners;
   }
 
   @Override
@@ -97,7 +97,7 @@ public class GitSyncConfigStreamConsumer implements Runnable {
 
   private boolean processMessage(Message message) {
     AtomicBoolean success = new AtomicBoolean(true);
-    messageListenersList.forEach(messageListener -> {
+    messageListeners.forEach(messageListener -> {
       if (!messageListener.handleMessage(message)) {
         success.set(false);
       }

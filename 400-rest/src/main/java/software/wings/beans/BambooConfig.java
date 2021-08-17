@@ -2,7 +2,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -40,6 +42,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class BambooConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Bamboo URL", required = true) @NotEmpty private String bambooUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;

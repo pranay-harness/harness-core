@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.NGDateUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,7 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.DX)
-public class GrowthTrendEvaluatorTest {
+public class GrowthTrendEvaluatorTest extends CategoryTest {
   @Test
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)

@@ -3,6 +3,7 @@ package io.harness.ng.instancesync;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -17,17 +18,17 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.http.Body;
-import retrofit2.http.POST;
 
 @OwnedBy(HarnessTeam.DX)
 @Api("instancesync")
-@Path("/instancesync")
+@Path("instancesync")
 @NextGenManagerAuth
 @Produces({"application/json"})
 @Consumes({"application/json"})
@@ -47,9 +48,13 @@ public class InstanceSyncResource {
   public ResponseDTO<Boolean> processInstanceSyncPerpetualTaskResponse(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PERPETUAL_TASK_ID) String perpetualTaskId,
-      @Body InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse) {
+      @Body DelegateResponseData delegateResponseData) {
+    InstanceSyncPerpetualTaskResponse instanceSyncPerpetualTaskResponse =
+        (InstanceSyncPerpetualTaskResponse) delegateResponseData;
+    log.info("Received instance sync perpetual task response for accountId : {} and perpetualTaskId : {} : {}",
+        accountIdentifier, perpetualTaskId, instanceSyncPerpetualTaskResponse.toString());
     instanceSyncService.processInstanceSyncByPerpetualTask(
         accountIdentifier, perpetualTaskId, instanceSyncPerpetualTaskResponse);
-    return ResponseDTO.newResponse(true);
+    return ResponseDTO.newResponse(Boolean.TRUE);
   }
 }

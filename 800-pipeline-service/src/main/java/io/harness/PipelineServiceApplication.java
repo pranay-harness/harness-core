@@ -123,6 +123,7 @@ import io.harness.steps.resourcerestraint.ResourceRestraintInitializer;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.token.remote.TokenClient;
 import io.harness.tracing.MongoRedisTracer;
@@ -139,7 +140,6 @@ import io.harness.yaml.YamlSdkInitHelper;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -455,9 +455,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
-        .engineEventHandlersMap(ImmutableMap.of())
+        .engineEventHandlersMap(of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
+        .orchestrationEventPoolConfig(
+            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
   }
 

@@ -26,6 +26,7 @@ java_library(
         "//953-git-sync-commons:module",
         "//970-ng-commons:module",
         "//980-commons:module",
+        "//960-api-services:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:io_fabric8_fabric8_utils",
         "@maven//:io_grpc_grpc_alts",

@@ -45,6 +45,7 @@ public class AccountMapper {
         .companyName(account.getCompanyName())
         .createdFromNG(account.isCreatedFromNG())
         .isNextGenEnabled(account.isNextGenEnabled())
+        .defaultExperience(account.getDefaultExperience())
         .build();
   }
 }

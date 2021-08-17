@@ -2,10 +2,14 @@ package io.harness.threading;
 
 import static io.harness.threading.Morpheus.quietSleep;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +18,7 @@ import lombok.experimental.UtilityClass;
 /**
  * This is a common threadpool for the entire application.
  */
+@OwnedBy(HarnessTeam.PL)
 @UtilityClass
 public class ThreadPool {
   private static final int CORE_POOL_SIZE = 20;
@@ -35,12 +40,22 @@ public class ThreadPool {
     return create(corePoolSize, maxPoolSize, idleTime, unit, Executors.defaultThreadFactory());
   }
 
+  public static ThreadPoolExecutor create(ThreadPoolConfig poolConfig, ThreadFactory threadFactory) {
+    return create(poolConfig.getCorePoolSize(), poolConfig.getMaxPoolSize(), poolConfig.getIdleTime(),
+        poolConfig.getTimeUnit(), threadFactory, -1, new ForceQueuePolicy());
+  }
+
   public static ThreadPoolExecutor create(
       int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit, ThreadFactory threadFactory) {
-    ScalingQueue queue = new ScalingQueue();
+    return create(corePoolSize, maxPoolSize, idleTime, unit, threadFactory, -1, new ForceQueuePolicy());
+  }
+
+  public static ThreadPoolExecutor create(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit,
+      ThreadFactory threadFactory, int queueSize, RejectedExecutionHandler rejectedExecutionHandler) {
+    ScalingQueue<Runnable> queue = queueSize < 0 ? new ScalingQueue<>() : new ScalingQueue<>(queueSize);
     ThreadPoolExecutor executor =
         new ScalingThreadPoolExecutor(corePoolSize, maxPoolSize, idleTime, unit, queue, threadFactory);
-    executor.setRejectedExecutionHandler(new ForceQueuePolicy());
+    executor.setRejectedExecutionHandler(rejectedExecutionHandler);
     queue.setThreadPoolExecutor(executor);
     return executor;
   }

@@ -30,6 +30,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -136,6 +137,7 @@ import org.eclipse.jgit.util.HttpSupport;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._960_API_SERVICES)
+@BreakDependencyOn("software.wings.beans.GitConfig")
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
 

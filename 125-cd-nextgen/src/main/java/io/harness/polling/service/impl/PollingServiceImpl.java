@@ -15,23 +15,19 @@ import io.harness.polling.service.intfc.PollingServiceObserver;
 import io.harness.repositories.polling.PollingRepository;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
 import javax.validation.constraints.NotNull;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
+@Singleton
 public class PollingServiceImpl implements PollingService {
-  private PollingRepository pollingRepository;
-  private PollingRequestToPollingDocumentMapper pollingDocumentMapper;
-  private Subject<PollingServiceObserver> subject = new Subject<>();
-
-  @Inject
-  public PollingServiceImpl(
-      PollingRepository pollingRepository, PollingRequestToPollingDocumentMapper pollingDocumentMapper) {
-    this.pollingRepository = pollingRepository;
-    this.pollingDocumentMapper = pollingDocumentMapper;
-  }
+  @Inject private PollingRepository pollingRepository;
+  @Inject private PollingRequestToPollingDocumentMapper pollingDocumentMapper;
+  @Inject @Getter private final Subject<PollingServiceObserver> subject = new Subject<>();
 
   @Override
   public String save(PollingDocument pollingDocument) {
@@ -39,7 +35,7 @@ public class PollingServiceImpl implements PollingService {
 
     PollingDocument savedPollingDoc = pollingRepository.addSubscribersToExistingPollingDoc(
         pollingDocument.getAccountId(), pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(),
-        pollingDocument.getPollingInfo(), pollingDocument.getSignature());
+        pollingDocument.getPollingType(), pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
     // savedPollingDoc will be null if we couldn't find polling doc with the same entries as pollingDocument.
     if (savedPollingDoc == null) {
       savedPollingDoc = pollingRepository.save(pollingDocument);
@@ -52,7 +48,7 @@ public class PollingServiceImpl implements PollingService {
     if (EmptyPredicate.isEmpty(pollingDocument.getAccountId())) {
       throw new InvalidRequestException("AccountId should not be empty");
     }
-    if (EmptyPredicate.isEmpty(pollingDocument.getSignature())) {
+    if (EmptyPredicate.isEmpty(pollingDocument.getSignatures())) {
       throw new InvalidRequestException("Signature should not be empty");
     }
   }
@@ -71,13 +67,14 @@ public class PollingServiceImpl implements PollingService {
   @Override
   public void delete(PollingDocument pollingDocument) {
     PollingDocument savedPollDoc = pollingRepository.deleteDocumentIfOnlySubscriber(pollingDocument.getAccountId(),
-        pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingInfo(),
-        pollingDocument.getSignature());
+        pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
+        pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
 
+    // if savedPollDoc is null that means either it was not the only subscriber or this poll doc doesn't exist in db.
     if (savedPollDoc == null) {
       pollingRepository.deleteSubscribersFromExistingPollingDoc(pollingDocument.getAccountId(),
-          pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingInfo(),
-          pollingDocument.getSignature());
+          pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
+          pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
     } else {
       deletePerpetualTask(savedPollDoc);
     }
@@ -104,13 +101,18 @@ public class PollingServiceImpl implements PollingService {
 
   @Override
   public String subscribe(PollingItem pollingItem) {
-    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
-    return save(pollingDocument);
+    if (pollingItem.hasOldPollingPayloadData()) {
+      delete(pollingDocumentMapper.toPollingDocument(
+          pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getOldPollingPayloadData()));
+    }
+    return save(pollingDocumentMapper.toPollingDocument(
+        pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getPollingPayloadData()));
   }
 
   @Override
   public boolean unsubscribe(PollingItem pollingItem) {
-    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(
+        pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getPollingPayloadData());
     delete(pollingDocument);
     return true;
   }

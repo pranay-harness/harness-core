@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("AZURE_ARTIFACTS")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
@@ -125,6 +125,23 @@ public class AzureArtifactsArtifactStream extends ArtifactStream {
         throw new InvalidRequestException("Invalid protocol type", USER);
       }
     }
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .protocolType(protocolType)
+        .project(project)
+        .feed(feed)
+        .packageName(packageName)
+        .packageId(packageId)
+        .build();
   }
 
   @Override

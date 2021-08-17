@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -27,7 +28,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class FacilitateResponseRequestProcessorTest {
+public class FacilitateResponseRequestProcessorTest extends CategoryTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private io.harness.engine.OrchestrationEngine orchestrationEngine;
   @InjectMocks private FacilitateResponseRequestProcessor facilitateResponseRequestHandler;
