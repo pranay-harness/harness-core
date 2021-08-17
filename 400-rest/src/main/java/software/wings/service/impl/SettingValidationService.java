@@ -22,6 +22,7 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -122,7 +123,9 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
@@ -369,8 +372,12 @@ public class SettingValidationService {
   }
 
   private void validateDelegateSelectorsProvided(SettingValue settingValue) {
-    if (isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+    Set<String> delegateSelectors = ((KubernetesClusterConfig) settingValue).getDelegateSelectors();
+    if (isEmpty(delegateSelectors)) {
       throw new InvalidRequestException("No Delegate Selector Provided.", USER);
+    }
+    if (isEmpty(delegateSelectors.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet()))) {
+      throw new InvalidRequestException("No or Empty Delegate Selector Provided.", USER);
     }
   }
 
