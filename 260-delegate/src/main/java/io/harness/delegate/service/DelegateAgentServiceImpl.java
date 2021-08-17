@@ -1456,7 +1456,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }, 0, KEEP_ALIVE_INTERVAL, TimeUnit.MILLISECONDS);
   }
 
-  private void startLocalHeartbeat() 
+  private void startLocalHeartbeat() {
     localHeartbeatExecutor.scheduleAtFixedRate(this::submit, 0, 10, TimeUnit.SECONDS);
   }
 
