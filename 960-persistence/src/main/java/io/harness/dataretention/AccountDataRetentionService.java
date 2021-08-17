@@ -2,6 +2,8 @@ package io.harness.dataretention;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 
@@ -17,14 +19,18 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(HarnessTeam.PL)
 @Singleton
 @Slf4j
 public class AccountDataRetentionService {
   public static final int BATCH = 1024;
+  private static final long ACCEPTABLE_DIFFERENCE_IN_TIMESTAMP = 60000;
+
   @Inject private HPersistence persistence;
 
   public <T extends AccountDataRetentionEntity> int corectValidUntilAccount(
       Class<? extends AccountDataRetentionEntity> clz, Map<String, Long> accounts, long now, long assureTo) {
+    log.info("Account data Retention for {} from {} assuredTo {}", clz.getName(), now, assureTo);
     Query<T> query = persistence.createQuery((Class<T>) clz, excludeAuthority);
     query.order(Sort.ascending(AccountDataRetentionEntity.VALID_UNTIL_KEY));
 
@@ -51,8 +57,9 @@ public class AccountDataRetentionService {
           if (entity.getValidUntil().getTime() > assureTo) {
             break;
           }
-          // Already correct, don't bother
-          if (entity.getValidUntil().getTime() == validUntil) {
+          // If the calculated valid until and the set valid until have an acceptable difference it is fine. Already
+          // correct, don't bother.
+          if (Math.abs(entity.getValidUntil().getTime() - validUntil) <= ACCEPTABLE_DIFFERENCE_IN_TIMESTAMP) {
             continue;
           }
         }
