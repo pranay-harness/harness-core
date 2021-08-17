@@ -5,6 +5,7 @@ import static io.harness.ng.core.account.AuthenticationMechanism.LDAP;
 import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
 import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
 import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
+import static io.harness.rule.OwnerRule.RAJ;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
@@ -12,8 +13,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -31,13 +35,18 @@ import software.wings.beans.Event;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
+import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 
+import com.coveo.saml.SamlClient;
+import com.coveo.saml.SamlException;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.io.ByteArrayInputStream;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -54,6 +63,7 @@ public class SSOServiceImplTest extends WingsBaseTest {
 
   @Mock private AuthHandler authHandler;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private SamlClientService samlClientService;
   @InjectMocks @Inject private SSOService ssoService;
   @InjectMocks @Inject private AccountService accountService;
   @InjectMocks @Inject private SSOSettingService ssoSettingService;
@@ -97,6 +107,80 @@ public class SSOServiceImplTest extends WingsBaseTest {
 
     // UP + OA -> UP - disable oauth
     ssoService.setAuthenticationMechanism(account.getUuid(), USER_PASSWORD);
+    account = accountService.get(account.getUuid());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
+    assertThat(account.isOauthEnabled()).isFalse();
+
+    accountService.delete(account.getUuid());
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void test_deleteSamlConfiguration() throws SamlException {
+    String accountId = "test";
+    Account account = Account.Builder.anAccount()
+                          .withUuid(accountId)
+                          .withOauthEnabled(true)
+                          .withAccountName("Account 2")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withAppId(APP_ID)
+                          .withCompanyName("Account 2")
+                          .withAuthenticationMechanism(USER_PASSWORD)
+                          .build();
+
+    accountService.save(account, false);
+    ssoService.uploadOauthConfiguration(
+        accountId, "", ImmutableSet.of(OauthProviderType.GOOGLE, OauthProviderType.BITBUCKET));
+    SamlClient samlClient = mock(SamlClient.class);
+    doReturn(samlClient).when(samlClientService).getSamlClient(anyString());
+    doReturn("https://harness.onelogin.com").when(samlClient).getIdentityProviderUrl();
+
+    // Upload SAML config and enable
+    ssoService.uploadSamlConfiguration(
+        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "");
+    ssoService.setAuthenticationMechanism(accountId, SAML);
+    account = accountService.get(account.getUuid());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
+    assertThat(account.isOauthEnabled()).isFalse();
+
+    ssoService.deleteSamlConfiguration(accountId);
+    account = accountService.get(account.getUuid());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
+    assertThat(account.isOauthEnabled()).isTrue();
+
+    accountService.delete(account.getUuid());
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void test_deleteSamlConfigurationWithJustUsernamePassword() throws SamlException {
+    String accountId = "test";
+    Account account = Account.Builder.anAccount()
+                          .withUuid(accountId)
+                          .withOauthEnabled(false)
+                          .withAccountName("Account 2")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withAppId(APP_ID)
+                          .withCompanyName("Account 2")
+                          .withAuthenticationMechanism(USER_PASSWORD)
+                          .build();
+
+    accountService.save(account, false);
+    SamlClient samlClient = mock(SamlClient.class);
+    doReturn(samlClient).when(samlClientService).getSamlClient(anyString());
+    doReturn("https://harness.onelogin.com").when(samlClient).getIdentityProviderUrl();
+
+    // Upload SAML config and enable
+    ssoService.uploadSamlConfiguration(
+        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "");
+    ssoService.setAuthenticationMechanism(accountId, SAML);
+    account = accountService.get(account.getUuid());
+    assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
+    assertThat(account.isOauthEnabled()).isFalse();
+
+    ssoService.deleteSamlConfiguration(accountId);
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(USER_PASSWORD);
     assertThat(account.isOauthEnabled()).isFalse();
