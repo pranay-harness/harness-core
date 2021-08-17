@@ -28,6 +28,7 @@ import io.harness.ng.core.api.impl.SecretPermissionValidator;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.dto.SecretResourceFilterDTO;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.secretmanagerclient.SecretType;
@@ -69,6 +70,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
 @OwnedBy(PL)
 @Path("/v2/secrets")
@@ -172,6 +174,7 @@ public class NGSecretResourceV2 {
 
   @GET
   @ApiOperation(value = "Get secrets", nickname = "listSecretsV2")
+  @Deprecated
   public ResponseDTO<PageResponse<SecretResponseWrapper>> list(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -193,6 +196,25 @@ public class NGSecretResourceV2 {
     }
     return ResponseDTO.newResponse(ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier,
         identifiers, secretTypes, includeSecretsFromEverySubScope, searchTerm, page, size, sourceCategory));
+  }
+
+  @POST
+  @Path("/list")
+  @ApiOperation(value = "List secrets", nickname = "listSecretsV3")
+  public ResponseDTO<PageResponse<SecretResponseWrapper>> listSecrets(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Body SecretResourceFilterDTO secretResourceFilterDTO,
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(SECRET_RESOURCE_TYPE, null),
+        SECRET_VIEW_PERMISSION, null);
+    return ResponseDTO.newResponse(ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier,
+        secretResourceFilterDTO.getIdentifiers(), secretResourceFilterDTO.getSecretTypes(),
+        secretResourceFilterDTO.isIncludeSecretsFromEverySubScope(), secretResourceFilterDTO.getSearchTerm(), page,
+        size, secretResourceFilterDTO.getSourceCategory()));
   }
 
   @GET

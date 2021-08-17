@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.roleassignments.privileged;
 
-import io.harness.accesscontrol.clients.PermissionCheckDTO;
+import io.harness.accesscontrol.acl.PermissionCheck;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,5 +17,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class PrivilegedAccessCheck {
   @NotEmpty String accountIdentifier;
   @NotNull Principal principal;
-  @NotNull List<PermissionCheckDTO> permissions;
+  @NotNull List<PermissionCheck> permissionChecks;
 }

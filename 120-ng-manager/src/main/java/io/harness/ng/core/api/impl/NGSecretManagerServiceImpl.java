@@ -4,6 +4,7 @@ import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
@@ -71,8 +72,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       try {
         switch (encryptionConfig.getType()) {
           case VAULT:
-            if (AZURE_VAULT == encryptionConfig.getEncryptionType()) {
-              validationResult = vaultEncryptorsRegistry.getVaultEncryptor(AZURE_VAULT)
+            if (AZURE_VAULT == encryptionConfig.getEncryptionType()
+                || AWS_SECRETS_MANAGER == encryptionConfig.getEncryptionType()) {
+              validationResult = vaultEncryptorsRegistry.getVaultEncryptor(encryptionConfig.getEncryptionType())
                                      .validateSecretManagerConfiguration(accountIdentifier, encryptionConfig);
             } else {
               VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
@@ -92,7 +94,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
             log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName() + errorMessage);
         }
       } catch (Exception exception) {
-        log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName());
+        log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName(), exception);
         validationResult = false;
       }
     }

@@ -153,6 +153,9 @@ public class QueryStatsServiceImpl implements QueryStatsService {
     if (winningPlan.getStage().equals("COLLSCAN")) {
       return false;
     }
+    if (winningPlan.getStage().equals("IDHACK")) {
+      return true;
+    }
     boolean isIXSCAN = false;
     InputStage inputStage = winningPlan.getInputStage();
     while (inputStage != null) {
@@ -161,6 +164,9 @@ public class QueryStatsServiceImpl implements QueryStatsService {
       }
       if (inputStage.getStage().equals("IXSCAN")) {
         isIXSCAN = true;
+      }
+      if (inputStage.getStage().equals("IDHACK")) {
+        return true;
       }
       inputStage = inputStage.getInputStage();
     }

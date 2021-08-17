@@ -582,6 +582,10 @@ public class NextGenModule extends AbstractModule {
         .bind(VaultEncryptor.class)
         .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
         .to(NGManagerVaultEncryptor.class);
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AWS_VAULT_ENCRYPTOR.getName()))
+        .to(NGManagerVaultEncryptor.class);
 
     binder()
         .bind(VaultEncryptor.class)

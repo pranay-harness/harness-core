@@ -44,6 +44,7 @@ import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupSer
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
+import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentHandler;
 import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentService;
 import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentServiceImpl;
 import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentDao;
@@ -60,6 +61,8 @@ import io.harness.accesscontrol.support.persistence.SupportPreferenceDaoImpl;
 import io.harness.account.AccountClientModule;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
+import io.harness.aggregator.consumers.RoleAssignmentCRUDEventHandler;
+import io.harness.aggregator.consumers.UserGroupCRUDEventHandler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
@@ -250,6 +253,9 @@ public class AccessControlModule extends AbstractModule {
     bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
     bind(HarnessUserService.class).to(HarnessUserServiceImpl.class);
     bind(HarnessServiceAccountService.class).to(HarnessServiceAccountServiceImpl.class);
+
+    bind(UserGroupCRUDEventHandler.class).to(PrivilegedRoleAssignmentHandler.class);
+    bind(RoleAssignmentCRUDEventHandler.class).to(PrivilegedRoleAssignmentHandler.class);
 
     MapBinder<PrincipalType, PrincipalValidator> validatorByPrincipalType =
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);

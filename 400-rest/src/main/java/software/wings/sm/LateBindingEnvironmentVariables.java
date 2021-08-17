@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.ENVIRONMENT_VARIABLE;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.LateBindingValue;
 
 import software.wings.beans.Environment;
@@ -20,6 +22,7 @@ import java.util.Map;
 import lombok.Builder;
 
 @Builder
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 class LateBindingEnvironmentVariables implements LateBindingValue {
   private ExecutionContextImpl executionContext;
   private ServiceVariableService serviceVariableService;

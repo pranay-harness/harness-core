@@ -73,7 +73,10 @@ public enum EntityType {
   FEATURE_FLAG_STAGE(ModuleType.CF, EntityTypeConstants.FEATURE_FLAG_STAGE, IdentifierRef.class,
       EntityYamlRootNames.FEATURE_FLAG_STAGE),
   @JsonProperty(EntityTypeConstants.TRIGGERS)
-  TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, TriggerReference.class, EntityYamlRootNames.TRIGGERS);
+  TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, TriggerReference.class, EntityYamlRootNames.TRIGGERS),
+  @JsonProperty(EntityTypeConstants.MONITORED_SERVICE)
+  MONITORED_SERVICE(
+      ModuleType.CV, EntityTypeConstants.MONITORED_SERVICE, IdentifierRef.class, EntityYamlRootNames.MONITORED_SERVICE);
 
   private final ModuleType moduleType;
   String yamlName;

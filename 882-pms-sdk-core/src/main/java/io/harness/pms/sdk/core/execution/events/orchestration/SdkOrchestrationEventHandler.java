@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<OrchestrationEvent> {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
-  @Inject @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME) private ExecutorService executorService;
+  @Inject @Named(PmsSdkModuleUtils.ORCHESTRATION_EVENT_EXECUTOR_NAME) private ExecutorService executorService;
 
   @Override
   protected Map<String, String> extraLogProperties(OrchestrationEvent event) {

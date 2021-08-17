@@ -7,7 +7,6 @@ import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.PermissionCheck;
 import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
@@ -29,14 +28,11 @@ import org.apache.commons.lang3.StringUtils;
 public class ACLDAOImpl implements ACLDAO {
   private static final String PATH_DELIMITER = "/";
   private final ACLRepository aclRepository;
-  private final ScopeService scopeService;
   private final Set<String> scopeResourceTypes;
 
   @Inject
-  public ACLDAOImpl(@Named(ACL.PRIMARY_COLLECTION) ACLRepository aclRepository, ScopeService scopeService,
-      Map<String, ScopeLevel> scopeLevels) {
+  public ACLDAOImpl(@Named(ACL.PRIMARY_COLLECTION) ACLRepository aclRepository, Map<String, ScopeLevel> scopeLevels) {
     this.aclRepository = aclRepository;
-    this.scopeService = scopeService;
     this.scopeResourceTypes =
         scopeLevels.values().stream().map(ScopeLevel::getResourceType).collect(Collectors.toSet());
   }

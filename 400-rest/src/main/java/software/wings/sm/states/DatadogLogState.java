@@ -5,6 +5,9 @@ import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static software.wings.common.VerificationConstants.DATA_DOG_DEFAULT_HOSTNAME;
 import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.DatadogConfig;
 import software.wings.sm.ExecutionContext;
@@ -24,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class DatadogLogState extends AbstractLogAnalysisState {
   public static final String HOST_NAME_SEPARATOR = " OR ";
   public static final String HOST_NAME_RESERVED_FIELD = "host";

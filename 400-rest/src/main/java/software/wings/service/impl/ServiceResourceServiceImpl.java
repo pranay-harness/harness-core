@@ -60,6 +60,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -135,6 +136,7 @@ import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
@@ -258,6 +260,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.TriggerService")
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
   private static final String IISWEBSITE_KEYWORD = "iiswebsite";
   private static final String IISAPP_KEYWORD = "iisapp";
@@ -648,6 +651,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         ServiceCommand clonedServiceCommand = serviceCommand.cloneInternal();
         addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, shouldPushToYaml);
       });
+
+      List<ArtifactStream> artifactStreams = artifactStreamServiceBindingService.listArtifactStreams(originalService);
+      if (isNotEmpty(artifactStreams)) {
+        artifactStreams.forEach(artifactStream -> {
+          ArtifactStream clonedArtifactStream = artifactStream.cloneInternal();
+          clonedArtifactStream.setServiceId(clonedService.getUuid());
+          clonedArtifactStream.setMetadataOnly(true);
+          artifactStreamService.createWithBinding(originalService.getAppId(), clonedArtifactStream, false);
+        });
+      }
 
       // Copy ContainerTask, HelmChartSpecification, PcfSpecification
       cloneServiceSpecifications(appId, originalService, savedCloneService.getUuid());

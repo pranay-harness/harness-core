@@ -30,6 +30,14 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecA
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialSpecManualConfigDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSMCredentialSpecAssumeIAMDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSMCredentialSpecAssumeSTSDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSMCredentialSpecManualConfigDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerConstants;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerCredentialDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerCredentialSpecDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerCredentialType;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerDTO;
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
@@ -241,6 +249,15 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsKmsCredentialSpecAssumeIAMDTO.class, 543293);
     kryo.register(AwsKmsCredentialSpecAssumeSTSDTO.class, 543294);
 
+    kryo.register(AwsSecretManagerDTO.class, 643295);
+    kryo.register(AwsSecretManagerCredentialDTO.class, 643296);
+    kryo.register(AwsSecretManagerCredentialType.class, 643297);
+    kryo.register(AwsSecretManagerCredentialSpecDTO.class, 643298);
+    kryo.register(AwsSecretManagerConstants.class, 643299);
+    kryo.register(AwsSMCredentialSpecManualConfigDTO.class, 643308);
+    kryo.register(AwsSMCredentialSpecAssumeIAMDTO.class, 643310);
+    kryo.register(AwsSMCredentialSpecAssumeSTSDTO.class, 643311);
+
     kryo.register(CEAzureConnectorDTO.class, 19540);
     kryo.register(BillingExportSpecDTO.class, 19542);
     kryo.register(LinkedHashSet.class, 100030);
@@ -250,6 +267,7 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GitlabApiAccessDTO.class, 19645);
     kryo.register(GitlabApiAccessType.class, 19646);
     kryo.register(GitlabApiAccessSpecDTO.class, 19647);
+
     kryo.register(AwsCodeCommitConnectorDTO.class, 19648);
     kryo.register(AwsCodeCommitAuthenticationDTO.class, 19649);
     kryo.register(AwsCodeCommitHttpsCredentialsDTO.class, 19650);
@@ -257,6 +275,7 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsCodeCommitUrlType.class, 19652);
     kryo.register(AwsCodeCommitHttpsAuthType.class, 19653);
     kryo.register(AwsCodeCommitAuthType.class, 19654);
+
     kryo.register(HttpHelmAuthCredentialsDTO.class, 19655);
     kryo.register(HttpHelmAuthenticationDTO.class, 19656);
     kryo.register(HttpHelmAuthType.class, 19657);

@@ -8,9 +8,11 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//959-common-entities:module",
         "//960-persistence:module",
         "//970-api-services-beans:module",
         "//980-commons:module",
+        "//999-annotations:module",
     ],
 )
 

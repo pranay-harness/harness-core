@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
@@ -14,7 +15,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ArtifactStreamAttributesTest {
+public class ArtifactStreamAttributesTest extends CategoryTest {
   private static final String IMAGE_NAME = "projectName/imageName";
 
   @Test

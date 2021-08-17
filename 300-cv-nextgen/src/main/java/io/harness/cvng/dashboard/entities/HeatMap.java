@@ -123,7 +123,7 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
       if (riskScore < 0) {
         return null;
       }
-      return Integer.valueOf(100 - (int) (100 * riskScore));
+      return Integer.valueOf(100 - (int) Math.round(100 * riskScore));
     }
 
     public Risk getRiskStatus() {
@@ -135,6 +135,7 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
     FIVE_MIN(Duration.ofMinutes(5), Duration.ofHours(4)),
     FIFTEEN_MINUTES(Duration.ofMinutes(15), Duration.ofHours(12)),
     THIRTY_MINUTES(Duration.ofMinutes(30), Duration.ofDays(1)),
+    ONE_HOUR_THIRTY_MINUTES(Duration.ofMinutes(90), Duration.ofDays(3)),
     THREE_HOURS_THIRTY_MINUTES(Duration.ofMinutes(210), Duration.ofDays(7)),
     FIFTEEN_HOURS(Duration.ofHours(15), Duration.ofDays(30));
 

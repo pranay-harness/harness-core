@@ -7,6 +7,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.jira.JiraActionNG;
@@ -21,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDC)
-public class JiraTaskNGHelperTest {
+public class JiraTaskNGHelperTest extends CategoryTest {
   @Mock private JiraTaskNGHandler jiraTaskNGHandler;
   @Mock private SecretDecryptionService secretDecryptionService;
 

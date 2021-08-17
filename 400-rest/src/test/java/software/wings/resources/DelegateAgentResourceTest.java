@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -113,7 +114,7 @@ import org.mockito.ArgumentCaptor;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-public class DelegateAgentResourceTest {
+public class DelegateAgentResourceTest extends CategoryTest {
   private static final DelegateService delegateService = mock(DelegateService.class);
   private static final software.wings.service.intfc.DelegateTaskServiceClassic delegateTaskServiceClassic =
       mock(software.wings.service.intfc.DelegateTaskServiceClassic.class);

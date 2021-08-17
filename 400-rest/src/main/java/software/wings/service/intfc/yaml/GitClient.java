@@ -1,5 +1,7 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.yaml.GitDiffResult;
@@ -15,6 +17,7 @@ import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
  * The interface Git client.
  */
 // Use git client V2 instead of this.
+@BreakDependencyOn("software.wings.beans.GitConfig")
 public interface GitClient {
   void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 

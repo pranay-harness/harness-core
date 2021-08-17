@@ -27,13 +27,9 @@ manyEntriesAlertFactor: 3
 # in minutes
 aggregateScheduleInterval: 1
 
+# Will add the origin list here in future.
 allowedOrigins:
-  - "https://localhost:8181"
-  - "https://127.0.0.1:8181"
-  - "http://localhost:8000"
-  - "http://127.0.0.1:8000"
-  - "https://localhost:8000"
-  - "https://127.0.0.1:8000"
+  - "*"
 
 mongo:
   uri: mongodb://localhost:27017/analyserserver

@@ -2,7 +2,9 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 import io.harness.exception.InvalidRequestException;
 
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class RepeatStateHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowExecutionService workflowExecutionService;

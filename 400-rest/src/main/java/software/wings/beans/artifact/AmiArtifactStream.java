@@ -66,6 +66,22 @@ public class AmiArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .region(region)
+        .platform(platform)
+        .tags(tags)
+        .filters(filters)
+        .build();
+  }
+
+  @Override
   public String generateSourceName() {
     if (isEmpty(tags) && isEmpty(filters)) {
       return region;

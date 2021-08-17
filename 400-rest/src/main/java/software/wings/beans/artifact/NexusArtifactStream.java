@@ -203,6 +203,29 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .repositoryType(repositoryType)
+        .jobname(jobname)
+        .groupId(groupId)
+        .artifactPaths(artifactPaths)
+        .imageName(imageName)
+        .dockerPort(dockerPort)
+        .dockerRegistryUrl(dockerRegistryUrl)
+        .packageName(packageName)
+        .repositoryFormat(repositoryFormat)
+        .extension(extension)
+        .classifier(classifier)
+        .build();
+  }
+
+  @Override
   public boolean shouldValidate() {
     return isNotEmpty(extension) || isNotEmpty(classifier);
   }

@@ -4,6 +4,7 @@ import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 
+@Deprecated
 public interface CVEventService {
   void sendConnectorCreateEvent(CVConfig cvConfig);
 

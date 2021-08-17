@@ -1457,48 +1457,54 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void startLocalHeartbeat() {
-    localHeartbeatExecutor.scheduleAtFixedRate(() -> {
-      try {
-        systemExecutor.submit(() -> {
-          Map<String, Object> statusData = new HashMap<>();
-          if (selfDestruct.get()) {
-            statusData.put(DELEGATE_SELF_DESTRUCT, true);
-          } else {
-            statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-            statusData.put(DELEGATE_VERSION, getVersion());
-            statusData.put(DELEGATE_IS_NEW, false);
-            statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
-            statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
-            statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
-            statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
-            if (switchStorage.get() && !switchStorageMsgSent) {
-              statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
-              switchStorageMsgSent = true;
-            }
-            if (sendJreInformationToWatcher) {
-              log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
-                  migrateToJreVersion);
-              statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
-              statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
-            }
-            if (upgradePending.get()) {
-              statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
-            }
-            if (!acquireTasks.get()) {
-              statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
-            }
-            if (isNotBlank(migrateTo)) {
-              statusData.put(DELEGATE_MIGRATE, migrateTo);
-            }
-          }
-          messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-          watchWatcher();
-        });
-      } catch (Exception e) {
-        log.error("Exception while scheduling local heartbeat", e);
+    localHeartbeatExecutor.scheduleAtFixedRate(this::submit, 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void submit() {
+    try {
+      log.info("Starting local heartbeat.");
+      systemExecutor.submit(this::fillStatusData);
+    } catch (Exception e) {
+      log.error("Exception while scheduling local heartbeat", e);
+    }
+    logCurrentTasks();
+  }
+
+  private void fillStatusData() {
+    log.info("Filling status data.");
+    Map<String, Object> statusData = new HashMap<>();
+    if (selfDestruct.get()) {
+      statusData.put(DELEGATE_SELF_DESTRUCT, true);
+    } else {
+      statusData.put(DELEGATE_HEARTBEAT, clock.millis());
+      statusData.put(DELEGATE_VERSION, getVersion());
+      statusData.put(DELEGATE_IS_NEW, false);
+      statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
+      statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
+      statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
+      statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+      if (switchStorage.get() && !switchStorageMsgSent) {
+        statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+        switchStorageMsgSent = true;
       }
-      logCurrentTasks();
-    }, 0, 10, TimeUnit.SECONDS);
+      if (sendJreInformationToWatcher) {
+        log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
+            migrateToJreVersion);
+        statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
+        statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
+      }
+      if (upgradePending.get()) {
+        statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
+      }
+      if (!acquireTasks.get()) {
+        statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+      }
+      if (isNotBlank(migrateTo)) {
+        statusData.put(DELEGATE_MIGRATE, migrateTo);
+      }
+    }
+    messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
+    watchWatcher();
   }
 
   private void watchWatcher() {

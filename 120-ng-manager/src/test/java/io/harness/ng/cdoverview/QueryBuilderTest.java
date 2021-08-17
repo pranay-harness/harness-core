@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -18,7 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.CDC)
-public class QueryBuilderTest {
+public class QueryBuilderTest extends CategoryTest {
   private static final long HOUR_IN_MS = 60 * 60 * 1000;
   private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
 
