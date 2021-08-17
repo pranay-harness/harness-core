@@ -18,6 +18,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
@@ -28,6 +29,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @ValidateOnExecution
+@Singleton
 public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   private final RoleAssignmentRepository roleAssignmentRepository;
 

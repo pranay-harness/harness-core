@@ -2,15 +2,12 @@ package io.harness.aggregator.controllers;
 
 import io.harness.accesscontrol.AccessControlEntity;
 import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
-import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupDBO;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupRepository;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupRepository;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
-import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.aggregator.AggregatorConfiguration;
@@ -21,8 +18,10 @@ import io.harness.aggregator.consumers.ChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.aggregator.consumers.ResourceGroupChangeConsumerImpl;
+import io.harness.aggregator.consumers.RoleAssignmentCRUDEventHandler;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
 import io.harness.aggregator.consumers.RoleChangeConsumerImpl;
+import io.harness.aggregator.consumers.UserGroupCRUDEventHandler;
 import io.harness.aggregator.consumers.UserGroupChangeConsumerImpl;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -94,18 +93,20 @@ public abstract class AggregatorBaseSyncController implements Runnable {
 
   public AggregatorBaseSyncController(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
       RoleRepository roleRepository, ResourceGroupRepository resourceGroupRepository,
-      UserGroupRepository userGroupRepository, RoleService roleService, UserGroupService userGroupService,
-      ResourceGroupService resourceGroupService, AggregatorConfiguration aggregatorConfiguration,
+      UserGroupRepository userGroupRepository, AggregatorConfiguration aggregatorConfiguration,
       PersistentLocker persistentLocker, ChangeEventFailureHandler changeEventFailureHandler,
-      AggregatorJobType aggregatorJobType, ChangeConsumerService changeConsumerService) {
-    ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer =
-        new RoleAssignmentChangeConsumerImpl(aclRepository, roleAssignmentRepository, changeConsumerService);
+      AggregatorJobType aggregatorJobType, ChangeConsumerService changeConsumerService,
+      RoleAssignmentCRUDEventHandler roleAssignmentCRUDEventHandler,
+      UserGroupCRUDEventHandler userGroupCRUDEventHandler) {
+    ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
+        aclRepository, roleAssignmentRepository, changeConsumerService, roleAssignmentCRUDEventHandler);
     ChangeConsumer<RoleDBO> roleChangeConsumer = new RoleChangeConsumerImpl(
         aclRepository, roleAssignmentRepository, roleRepository, aggregatorJobType.name(), changeConsumerService);
     ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer = new ResourceGroupChangeConsumerImpl(aclRepository,
         roleAssignmentRepository, resourceGroupRepository, aggregatorJobType.name(), changeConsumerService);
-    ChangeConsumer<UserGroupDBO> userGroupChangeConsumer = new UserGroupChangeConsumerImpl(
-        aclRepository, roleAssignmentRepository, userGroupRepository, aggregatorJobType.name(), changeConsumerService);
+    ChangeConsumer<UserGroupDBO> userGroupChangeConsumer =
+        new UserGroupChangeConsumerImpl(aclRepository, roleAssignmentRepository, userGroupRepository,
+            aggregatorJobType.name(), changeConsumerService, userGroupCRUDEventHandler);
     collectionToConsumerMap = new HashMap<>();
     collectionToConsumerMap.put(ROLE_ASSIGNMENTS, roleAssignmentChangeConsumer);
     collectionToConsumerMap.put(ROLES, roleChangeConsumer);

@@ -43,13 +43,15 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
   private final UserGroupRepository userGroupRepository;
   private final ExecutorService executorService;
   private final ChangeConsumerService changeConsumerService;
+  private final UserGroupCRUDEventHandler userGroupCRUDEventHandler;
 
   public UserGroupChangeConsumerImpl(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
       UserGroupRepository userGroupRepository, String executorServiceSuffix,
-      ChangeConsumerService changeConsumerService) {
+      ChangeConsumerService changeConsumerService, UserGroupCRUDEventHandler userGroupCRUDEventHandler) {
     this.aclRepository = aclRepository;
     this.roleAssignmentRepository = roleAssignmentRepository;
     this.userGroupRepository = userGroupRepository;
+    this.userGroupCRUDEventHandler = userGroupCRUDEventHandler;
     String changeConsumerThreadFactory = String.format("%s-user-group-change-consumer", executorServiceSuffix) + "-%d";
     // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
     this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2,
@@ -97,6 +99,8 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
       Thread.currentThread().interrupt();
       throw new GeneralException("", ex);
     }
+
+    userGroupCRUDEventHandler.handleUserGroupUpdate(userGroup.get());
 
     log.info("Number of ACLs created: {}", numberOfACLsCreated);
     log.info("Number of ACLs deleted: {}", numberOfACLsDeleted);
