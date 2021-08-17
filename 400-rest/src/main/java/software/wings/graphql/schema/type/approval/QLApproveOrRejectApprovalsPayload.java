@@ -23,4 +23,5 @@ import lombok.experimental.FieldNameConstants;
 @OwnedBy(CDC)
 public class QLApproveOrRejectApprovalsPayload {
   Boolean success;
+  String clientMutationId;
 }

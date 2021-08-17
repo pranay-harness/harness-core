@@ -83,7 +83,10 @@ public class ApproveOrRejectApprovalsDataFetcher
         workflowExecutionService.approveOrRejectExecution(approveOrRejectApprovalsInput.getApplicationId(),
             approvalStateExecutionData.getUserGroups(), approvalDetails, apiKeyEntry);
 
-    return QLApproveOrRejectApprovalsPayload.builder().success(success).build();
+    return QLApproveOrRejectApprovalsPayload.builder()
+        .success(success)
+        .clientMutationId(approveOrRejectApprovalsInput.getClientMutationId())
+        .build();
   }
 
   private void verifyApproveOrRejectApprovalsInput(QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput,

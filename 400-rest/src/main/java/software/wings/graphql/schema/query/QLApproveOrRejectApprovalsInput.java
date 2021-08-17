@@ -22,4 +22,5 @@ public class QLApproveOrRejectApprovalsInput {
   List<NameValuePair> variableInputs;
   String applicationId;
   String comments;
+  String clientMutationId;
 }
