@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.JAMIE;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -220,6 +221,22 @@ public class GitClientHelperTest extends CategoryTest {
   public void testGetREPOFromSSHURL() {
     final String repoName = GitClientHelper.getGitRepo("git@github.com:wings-software/portal.git");
     assertThat(repoName).isEqualTo("portal");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithoutRepo() {
+    final String scmName = GitClientHelper.getGitSCM("ghttps://github.com/");
+    assertThat(scmName).isEqualTo("github.com");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithRepo() {
+    final String scmName = GitClientHelper.getGitSCM("ghttps://github.com/repo.git");
+    assertThat(scmName).isEqualTo("github.com");
   }
 
   @Test
