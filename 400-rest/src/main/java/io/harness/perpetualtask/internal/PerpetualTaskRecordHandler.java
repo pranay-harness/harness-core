@@ -138,6 +138,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceRequiredProvider)
             .redistribute(true));
+    log.info("perpetualtask record handler iterators");
   }
 
   public void assign(PerpetualTaskRecord taskRecord) {
@@ -218,6 +219,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
           taskRecord.getClientContext().getLastContextUpdated());
       return;
     }
+    log.info("Rebalance perpetual task record " + taskRecord.getUuid());
     assign(taskRecord);
   }
 

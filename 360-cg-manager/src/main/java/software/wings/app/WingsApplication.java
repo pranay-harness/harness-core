@@ -459,8 +459,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerObservers(configuration, injector);
 
+    registerInprocPerpetualTaskServiceClients(injector);
+
     if (shouldEnableDelegateMgmt) {
-      registerInprocPerpetualTaskServiceClients(injector);
+
     }
 
     if (isManager()) {
@@ -879,6 +881,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
     environment.lifecycle().manage((Managed) injector.getInstance(PersistentLocker.class));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
+    environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));
     environment.lifecycle().manage(injector.getInstance(TimerScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
@@ -887,13 +890,11 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerManagedBeansManager(
       MainConfiguration configuration, Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
-    environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));
     environment.lifecycle().manage(injector.getInstance(GcpMarketplaceSubscriberService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
   }
   private void registerManagedBeansDelegateService(
       MainConfiguration configuration, Environment environment, Injector injector) {
-    // Perpetual task
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
   }
@@ -1009,8 +1010,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     DelegateServiceImpl delegateServiceImpl =
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
 
+    ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));
+    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
+    settingsService.getSubject().register(clusterRecordHandler);
+    settingsService.getArtifactStreamSubject().register(
+            injector.getInstance(Key.get(ArtifactStreamSettingAttributePTaskManager.class)));
+    registerManagerObservers(injector, delegateServiceImpl,clusterRecordHandler);
+
     if (isManager()) {
-      registerManagerObservers(injector, delegateServiceImpl);
+
     }
 
     if (shouldEnableDelegateMgmt(configuration)) {
@@ -1069,7 +1077,7 @@ public class WingsApplication extends Application<MainConfiguration> {
    * @param injector
    * @param delegateServiceImpl
    */
-  private void registerManagerObservers(Injector injector, DelegateServiceImpl delegateServiceImpl) {
+  private void registerManagerObservers(Injector injector, DelegateServiceImpl delegateServiceImpl,ClusterRecordHandler clusterRecordHandler) {
     YamlPushServiceImpl yamlPushService = (YamlPushServiceImpl) injector.getInstance(Key.get(YamlPushService.class));
     AuditServiceImpl auditService = (AuditServiceImpl) injector.getInstance(Key.get(AuditService.class));
     yamlPushService.getEntityCrudSubject().register(auditService);
@@ -1077,11 +1085,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     AuditServiceHelper auditServiceHelper = injector.getInstance(Key.get(AuditServiceHelper.class));
     auditServiceHelper.getEntityCrudSubject().register(auditService);
 
-    ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));
-    SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
-    settingsService.getSubject().register(clusterRecordHandler);
-    settingsService.getArtifactStreamSubject().register(
-        injector.getInstance(Key.get(ArtifactStreamSettingAttributePTaskManager.class)));
 
     KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
     delegateServiceImpl.getSubject().register(kubernetesClusterHandler);

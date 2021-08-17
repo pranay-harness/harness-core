@@ -38,6 +38,7 @@ public class PerpetualTaskRecordDao {
   }
 
   public void appointDelegate(String taskId, String delegateId, long lastContextUpdated) {
+    log.info("Start PerpetualTaskRecordDao:Appoint perpetual task: " + taskId);
     try (DelegateLogContext ignore = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       log.info("Appoint perpetual task: {}");
       Query<PerpetualTaskRecord> query =

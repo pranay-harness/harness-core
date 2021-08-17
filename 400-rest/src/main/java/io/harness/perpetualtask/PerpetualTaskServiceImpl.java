@@ -61,6 +61,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public void appointDelegate(String accountId, String taskId, String delegateId, long lastContextUpdated) {
+    log.info("Perpetual task start appoint to delegate " + taskId);
     perpetualTaskRecordDao.appointDelegate(taskId, delegateId, lastContextUpdated);
 
     broadcastAggregateSet.add(Pair.of(accountId, delegateId));
@@ -70,6 +71,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   }
 
   public void broadcastToDelegate() {
+    log.info("Perpetual task start broadcast to delegate ");
     Set<Pair<String, String>> sendingHashSet;
     synchronized (broadcastAggregateSet) {
       sendingHashSet = new HashSet<>(broadcastAggregateSet);
