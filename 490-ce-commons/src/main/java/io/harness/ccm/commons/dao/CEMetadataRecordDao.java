@@ -29,6 +29,11 @@ public class CEMetadataRecordDao {
       updateOperations.set(CEMetadataRecordKeys.clusterDataConfigured, ceMetadataRecord.getClusterDataConfigured());
     }
 
+    if (null != ceMetadataRecord.getClusterConnectorConfigured()) {
+      updateOperations.set(
+          CEMetadataRecordKeys.clusterConnectorConfigured, ceMetadataRecord.getClusterConnectorConfigured());
+    }
+
     if (null != ceMetadataRecord.getAwsConnectorConfigured()) {
       updateOperations.set(CEMetadataRecordKeys.awsConnectorConfigured, ceMetadataRecord.getAwsConnectorConfigured());
     }
