@@ -2,16 +2,12 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.connector.scm.GitConnectionType.REPO;
-import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.TOKEN;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
-import static software.wings.beans.GitConfig.ProviderType.GITHUB;
-import static software.wings.beans.GitConfig.ProviderType.GITLAB;
 import static software.wings.beans.LogHelper.color;
 
 import static java.lang.String.format;
@@ -20,28 +16,19 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileContentBatchResponse;
-import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitFetchFilesTaskHelper;
 import io.harness.delegate.task.scm.ScmDelegateClient;
-import io.harness.encryption.SecretRefData;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.service.ScmServiceClient;
 
 import software.wings.beans.GitConfig;
@@ -64,7 +51,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import com.google.inject.Inject;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -85,7 +71,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
   @Inject private GitFetchFilesTaskHelper gitFetchFilesTaskHelper;
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
-  @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private ScmFetchFilesHelper scmFetchFilesHelper;
 
   public static final int GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT = 10;
 
@@ -186,11 +172,10 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     }
 
     GitFetchFilesResult gitFetchFilesResult;
-    if (optimizedFilesFetch && gitConfig.getSshSettingAttribute() == null
-        && Arrays.asList(GITHUB, GITLAB).contains(gitConfig.getProviderType())) {
-      gitFetchFilesResult = fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, encryptedDataDetails, filePathsToFetch);
+    encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
+    if (scmFetchFilesHelper.shouldUseScm(optimizedFilesFetch, gitConfig)) {
+      gitFetchFilesResult = fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, filePathsToFetch);
     } else {
-      encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
       gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
           gitFileConfig.getCommitId(), gitFileConfig.getBranch(), filePathsToFetch, gitFileConfig.isUseBranch());
     }
@@ -201,18 +186,20 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     return gitFetchFilesResult;
   }
 
-  private GitFetchFilesResult fetchFilesFromRepoWithScm(GitFileConfig gitFileConfig, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, List<String> filePathList) {
-    encryptedDataDetails.get(0).setFieldName("tokenRef");
-   // TO Do decrypt gitconfig anf copy decrypted value
-    ScmConnector scmConnector = getScmConnector(gitConfig);
+  private GitFetchFilesResult fetchFilesFromRepoWithScm(
+      GitFileConfig gitFileConfig, GitConfig gitConfig, List<String> filePathList) {
+    ScmConnector scmConnector = scmFetchFilesHelper.getScmConnector(gitConfig);
+    FileContentBatchResponse fileBatchContentResponse;
 
-    secretDecryptionService.decrypt(
-        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector), encryptedDataDetails);
-
-    FileContentBatchResponse fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-        -> scmServiceClient.listFilesByFilePaths(
-            scmConnector, filePathList, gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
+    if (gitFileConfig.isUseBranch()) {
+      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+          -> scmServiceClient.listFilesByFilePaths(
+              scmConnector, filePathList, gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
+    } else {
+      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+          -> scmServiceClient.listFilesByCommitId(
+              scmConnector, filePathList, gitFileConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
+    }
 
     List<GitFile> gitFiles =
         fileBatchContentResponse.getFileBatchContentResponse()
@@ -230,42 +217,6 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
         .gitCommitResult(GitCommitResult.builder()
                              .commitId(gitFileConfig.isUseBranch() ? "latest" : fileBatchContentResponse.getCommitId())
                              .build())
-        .build();
-  }
-
-  public ScmConnector getScmConnector(GitConfig gitConfig) {
-    switch (gitConfig.getProviderType()) {
-      case GITHUB:
-        return getGitHubConnector(gitConfig);
-      case GITLAB:
-        return getGitLabConnector(gitConfig);
-      default:
-        return null;
-    }
-  }
-
-  private GithubConnectorDTO getGitHubConnector(GitConfig gitConfig) {
-    return GithubConnectorDTO.builder()
-        .url(gitConfig.getRepoUrl())
-        .connectionType(REPO)
-        .apiAccess(GithubApiAccessDTO.builder()
-                       .type(TOKEN)
-                       .spec(GithubTokenSpecDTO.builder()
-                                 .tokenRef(SecretRefData.builder().identifier(gitConfig.getEncryptedPassword()).build())
-                                 .build())
-                       .build())
-        .build();
-  }
-
-  private GitlabConnectorDTO getGitLabConnector(GitConfig gitConfig) {
-    return GitlabConnectorDTO.builder()
-        .url(gitConfig.getRepoUrl())
-        .connectionType(REPO)
-        .apiAccess(GitlabApiAccessDTO.builder()
-                       .spec(GitlabTokenSpecDTO.builder()
-                                 .tokenRef(SecretRefData.builder().identifier(gitConfig.getEncryptedPassword()).build())
-                                 .build())
-                       .build())
         .build();
   }
 

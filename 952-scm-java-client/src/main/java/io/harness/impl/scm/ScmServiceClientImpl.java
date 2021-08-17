@@ -413,6 +413,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     }
   }
 
+  @Override
+  public FileContentBatchResponse listFoldersFilesByCommitId(
+      ScmConnector connector, Set<String> foldersList, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
+    String slug = scmGitProviderHelper.getSlug(connector);
+
+    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, null, commitId, OVERRIDE_ERROR)) {
+      List<String> getFilesWhichArePartOfHarness =
+          getFileNames(foldersList, slug, gitProvider, null, commitId, scmBlockingStub);
+      final FileBatchContentResponse contentOfFiles =
+          getContentOfFiles(getFilesWhichArePartOfHarness, slug, gitProvider, commitId, scmBlockingStub);
+      return FileContentBatchResponse.builder().fileBatchContentResponse(contentOfFiles).commitId(commitId).build();
+    }
+  }
+
   private List<String> getFileNames(Set<String> foldersList, String slug, Provider gitProvider, String branch,
       String ref, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     GetFilesInFolderForkTask getFilesInFolderTask = GetFilesInFolderForkTask.builder()
