@@ -213,6 +213,8 @@ import software.wings.beans.SmbConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.infrastructure.instance.InstanceSyncConfigService;
+import software.wings.beans.infrastructure.instance.InstanceSyncConfigServiceImpl;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.LoginSettingsServiceImpl;
 import software.wings.beans.security.UserGroup;
@@ -1042,6 +1044,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
     bind(AccessRequestService.class).to(AccessRequestServiceImpl.class);
     bind(DelegateTaskServiceClassic.class).to(DelegateTaskServiceClassicImpl.class);
+    bind(InstanceSyncConfigService.class).to(InstanceSyncConfigServiceImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
 
