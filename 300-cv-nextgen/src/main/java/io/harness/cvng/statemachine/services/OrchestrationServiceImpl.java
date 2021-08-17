@@ -203,7 +203,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
       if (analysisStateMachine == null) {
         log.info("There is currently nothing to analyze for verificationTaskId {}", verificationTaskId);
-        return;
+        break;
       }
 
       Optional<AnalysisStateMachine> ignoredStateMachine =
