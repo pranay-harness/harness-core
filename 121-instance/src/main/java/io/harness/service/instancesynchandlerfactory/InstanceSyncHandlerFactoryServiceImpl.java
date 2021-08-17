@@ -1,6 +1,7 @@
 package io.harness.service.instancesynchandlerfactory;
 
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
+import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,6 +23,7 @@ public class InstanceSyncHandlerFactoryServiceImpl implements InstanceSyncHandle
   public AbstractInstanceSyncHandler getInstanceSyncHandler(final String infrastructureKind) {
     switch (infrastructureKind) {
       case KUBERNETES_DIRECT:
+      case KUBERNETES_GCP:
         return k8sInstanceSyncHandler;
       default:
         throw new UnexpectedException(
