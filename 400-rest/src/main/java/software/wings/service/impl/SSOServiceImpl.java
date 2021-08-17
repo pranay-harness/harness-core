@@ -165,7 +165,9 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public SSOConfig deleteSamlConfiguration(String accountId) {
     ssoSettingService.deleteSamlSettings(accountId);
-    return setAuthenticationMechanism(accountId, USER_PASSWORD);
+    SSOConfig ssoConfig = setAuthenticationMechanism(accountId, USER_PASSWORD);
+    setOauthIfSetAfterSSODelete(accountId);
+    return ssoConfig;
   }
 
   private void auditSSOActivity(
@@ -318,6 +320,7 @@ public class SSOServiceImpl implements SSOService {
     LdapSettings settings = ssoSettingService.deleteLdapSettings(accountId);
     if (accountService.get(accountId).getAuthenticationMechanism() == AuthenticationMechanism.LDAP) {
       setAuthenticationMechanism(accountId, USER_PASSWORD);
+      setOauthIfSetAfterSSODelete(accountId);
     }
     return settings;
   }
@@ -497,6 +500,16 @@ public class SSOServiceImpl implements SSOService {
       ldapSettingsDeleted = ssoSettingService.deleteLdapSettings(accountId) != null;
     }
     return ldapSettingsDeleted;
+  }
+
+  private void setOauthIfSetAfterSSODelete(String accountId) {
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+    if (oauthSettings != null) {
+      log.info("Setting Oauth enabled to true for account {} after SSO settings delete", accountId);
+      Account account = accountService.get(accountId);
+      account.setOauthEnabled(true);
+      accountService.update(account);
+    }
   }
 
   private void checkIfOperationIsAllowed(String accountId, AuthenticationMechanism authenticationMechanism) {
