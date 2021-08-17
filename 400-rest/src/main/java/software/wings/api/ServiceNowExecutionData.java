@@ -2,7 +2,10 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -20,6 +23,8 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
+@BreakDependencyOn("software.wings.service.impl.servicenow.ServiceNowServiceImpl")
 public class ServiceNowExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private ExecutionStatus executionStatus;

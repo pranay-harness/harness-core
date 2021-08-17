@@ -11,7 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ExecutionDataValue {
   private String displayName;
   private Object value;
