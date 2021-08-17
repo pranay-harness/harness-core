@@ -444,13 +444,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     // Schedule jobs
-    ScheduledExecutorService delegateExecutor =
-        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegatePool")));
+    injector.getInstance(NotifierScheduledExecutorService.class)
+            .scheduleWithFixedDelay(
+                    injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
+
     if (isManager()) {
       scheduleJobsManager(injector, configuration);
     }
     if (shouldEnableDelegateMgmt) {
-      scheduleJobsDelegateService(injector, configuration, delegateExecutor);
+      scheduleJobsDelegateService(injector, configuration);
     }
 
     registerEventConsumers(injector);
@@ -932,10 +934,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void scheduleJobsManager(Injector injector, MainConfiguration configuration) {
     log.info("Initializing scheduled jobs...");
-    injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(
-            injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
+       injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
 
@@ -974,11 +973,15 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void scheduleJobsDelegateService(
-      Injector injector, MainConfiguration configuration, ScheduledExecutorService delegateExecutor) {
+      Injector injector, MainConfiguration configuration) {
     log.info("Initializing delegate service scheduled jobs ...");
+
     // delegate task broadcasting schedule job
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
+
+    ScheduledExecutorService delegateExecutor =
+            injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegatePool")));
 
     delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
                                                 injector.getInstance(ProgressUpdateService.class)),

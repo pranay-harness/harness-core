@@ -50,6 +50,7 @@ import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
 import software.wings.beans.TaskType;
 import software.wings.service.InstanceSyncConstants;
+import software.wings.service.impl.DelegateTaskServiceClassicImpl;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -85,7 +86,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private DelegateService delegateService;
+  @Inject private DelegateTaskServiceClassicImpl delegateService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
@@ -115,8 +116,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .handler(this::assign)
             .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
-            .schedulingType(IRREGULAR_SKIP_MISSED)
-            .persistenceProvider(persistenceProvider)
+            .schedulingType(REGULAR)
+            .persistenceProvider(persistenceRequiredProvider)
             .redistribute(true));
     rebalanceIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
@@ -140,6 +141,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   }
 
   public void assign(PerpetualTaskRecord taskRecord) {
+    log.info("Start assign perpetual task " + taskRecord.getUuid());
     try (AutoLogContext ignore0 = new AccountLogContext(taskRecord.getAccountId(), OVERRIDE_ERROR)) {
       String taskId = taskRecord.getUuid();
       log.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskRecord.getPerpetualTaskType(),
