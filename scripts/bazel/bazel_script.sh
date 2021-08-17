@@ -190,7 +190,7 @@ bazel ${bazelrc} build $BAZEL_MODULES `bazel query "//...:*" | grep "module_depl
 
 build_bazel_module() {
   module=$1
-  BAZEL_MODULE="//${module}:module"
+  BAZEL_MODULE="//${module}/..."
 
   if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"

@@ -95,9 +95,4 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   public SampleBean1 fullSyncEntity(String accountIdentifier, String yaml) {
     return null;
   }
-
-  @Override
-  public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
-    return null;
-  }
 }
