@@ -30,6 +30,7 @@ public enum SnippetTag implements YamlSnippetTags {
   gcp,
   aws,
   awskms,
+  awssecretmanager,
   artifactory,
   jira,
   nexus,

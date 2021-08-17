@@ -23,7 +23,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Local") LOCAL("Local"),
   @JsonProperty("AwsKms") AWS_KMS("AwsKms"),
   @JsonProperty("GcpKms") GCP_KMS("GcpKms"),
-  //  @JsonProperty("Awssecretsmanager") AWS_SECRETS_MANAGER("Awssecretsmanager"),
+  @JsonProperty("AwsSecretManager") AWS_SECRET_MANAGER("AwsSecretManager"),
   //  @JsonProperty("Cyberark") CYBERARK("Cyberark"),
   //  @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
   @JsonProperty("Gcp") GCP("Gcp"),
