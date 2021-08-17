@@ -10,6 +10,9 @@ import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLAC
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -50,6 +53,8 @@ import org.slf4j.Logger;
  */
 @Slf4j
 @FieldNameConstants(innerTypeName = "CustomLogVerificationStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CustomLogVerificationState extends AbstractLogAnalysisState {
   public CustomLogVerificationState(String name) {
     super(name, StateType.LOG_VERIFICATION.getType());

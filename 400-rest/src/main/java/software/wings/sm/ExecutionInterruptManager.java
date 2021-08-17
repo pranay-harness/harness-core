@@ -50,7 +50,9 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -94,6 +96,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ExecutionInterruptManager {
   @Inject private AlertService alertService;
   @Inject private Injector injector;

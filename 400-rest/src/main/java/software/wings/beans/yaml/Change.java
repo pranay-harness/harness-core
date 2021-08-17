@@ -1,5 +1,10 @@
 package software.wings.beans.yaml;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.git.model.ChangeType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -12,6 +17,8 @@ import lombok.ToString;
  */
 @Data
 @ToString(exclude = "fileContent")
+@TargetModule(_870_CG_YAML)
+@OwnedBy(DX)
 public class Change {
   private String filePath;
   private String fileContent;

@@ -2,7 +2,9 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.yaml.BaseYamlWithType;
 
@@ -26,6 +28,7 @@ import lombok.NoArgsConstructor;
       @Type(value = GithubPayloadSourceYaml.class, name = "GITHUB"),
       @Type(value = CustomPayloadSourceYaml.class, name = "CUSTOM")
 })
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class PayloadSourceYaml extends BaseYamlWithType {
   public PayloadSourceYaml(String type) {
     super(type);

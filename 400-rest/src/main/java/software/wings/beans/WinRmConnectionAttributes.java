@@ -1,10 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -37,7 +37,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class WinRmConnectionAttributes extends SettingValue implements EncryptableSetting {
   @Attributes(required = true) @NotNull private AuthenticationScheme authenticationScheme;
   private String domain;

@@ -11,7 +11,6 @@ import static io.harness.utils.PageUtils.getPageRequest;
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
-import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
@@ -55,18 +54,15 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   ResourceGroupValidatorServiceImpl resourceGroupValidatorService;
   ResourceGroupRepository resourceGroupRepository;
   OutboxService outboxService;
-  AccessControlAdminClient accessControlAdminClient;
   TransactionTemplate transactionTemplate;
 
   @Inject
   public ResourceGroupServiceImpl(ResourceGroupValidatorServiceImpl resourceGroupValidatorService,
       ResourceGroupRepository resourceGroupRepository, OutboxService outboxService,
-      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
     this.resourceGroupValidatorService = resourceGroupValidatorService;
     this.resourceGroupRepository = resourceGroupRepository;
     this.outboxService = outboxService;
-    this.accessControlAdminClient = accessControlAdminClient;
     this.transactionTemplate = transactionTemplate;
   }
 

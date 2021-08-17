@@ -638,6 +638,173 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsSMCredentialSpecAssumeIAM": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSMCredentialSpecAssumeSTS": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "roleArn"
+          ],
+          "properties": {
+            "assumeStsRoleDuration": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "externalId": {
+              "type": "string"
+            },
+            "roleArn": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSMCredentialSpecManualConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessKey",
+            "secretKey"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSecretManagerCredential": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "AssumeIAMRole",
+            "AssumeSTSRole",
+            "ManualConfig"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeIAMRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecAssumeIAM"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeSTSRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecAssumeSTS"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManualConfig"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecManualConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsSecretManagerCredentialSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSecretManagerDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "credential",
+            "region"
+          ],
+          "properties": {
+            "credential": {
+              "$ref": "#/definitions/AwsSecretManagerCredential"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "region": {
+              "type": "string"
+            },
+            "secretNamePrefix": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AzureKeyVaultConnectorDTO": {
       "allOf": [
         {
@@ -1159,6 +1326,7 @@
             "Local",
             "AwsKms",
             "GcpKms",
+            "AwsSecretManager",
             "Gcp",
             "Aws",
             "Artifactory",
@@ -1241,6 +1409,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AwsKmsConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AwsSecretManager"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSecretManagerDTO"
               }
             }
           }

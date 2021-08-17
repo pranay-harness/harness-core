@@ -1,5 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.validation.Create;
 
 import software.wings.beans.sso.LdapSettings;
@@ -18,6 +23,8 @@ import org.hibernate.validator.constraints.NotBlank;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 // TODO: Create settings helper classes such as LdapHelper, SamlHelper, etc.
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
+@OwnedBy(HarnessTeam.PL)
 public interface SSOSettingService extends OwnedByAccount {
   SamlSettings getSamlSettingsByIdpUrl(@NotNull String idpUrl);
 
