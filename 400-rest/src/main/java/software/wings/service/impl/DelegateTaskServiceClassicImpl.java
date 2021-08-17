@@ -207,6 +207,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.app.MainConfiguration")
 @BreakDependencyOn("software.wings.app.PortalConfig")
 @BreakDependencyOn("software.wings.beans.Application")
+@BreakDependencyOn("io.harness.event.handler.impl.EventPublishHelper")
+@BreakDependencyOn("software.wings.beans.ExecutionCredential")
+@BreakDependencyOn("software.wings.beans.GitConfig")
+@BreakDependencyOn("software.wings.expression.NgSecretManagerFunctor")
+@BreakDependencyOn("software.wings.beans.GitValidationParameters")
 @OwnedBy(DEL)
 public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassic {
   private static final String ASYNC = "async";
@@ -1337,8 +1342,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       boolean isTaskNg = !isEmpty(delegateTask.getSetupAbstractions())
           && Boolean.parseBoolean(delegateTask.getSetupAbstractions().get(NG));
 
-      if (isTaskNg
-          && featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
+      if (isTaskNg) {
         try {
           String logStreamingAccountToken = logStreamingAccountTokenCache.get(delegateTask.getAccountId());
 
