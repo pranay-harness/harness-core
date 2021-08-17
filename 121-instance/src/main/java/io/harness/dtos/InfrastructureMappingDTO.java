@@ -21,5 +21,4 @@ public class InfrastructureMappingDTO {
   @NonNull private String envIdentifier;
   @NonNull private String serviceIdentifier;
   @NonNull private String infrastructureKey;
-  private String cluster;
 }
