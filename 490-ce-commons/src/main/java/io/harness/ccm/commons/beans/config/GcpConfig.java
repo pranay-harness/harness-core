@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class GcpConfig {
   private String gcpProjectId;
+  private String gcpAwsConnectorCrudPubSubTopic;
 }
