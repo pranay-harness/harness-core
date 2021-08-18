@@ -1,5 +1,8 @@
 package software.wings.common;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
 import software.wings.sm.ContextElement;
@@ -10,6 +13,7 @@ import java.util.Map;
 /**
  * The type Sample element.
  */
+@TargetModule(_957_CG_BEANS)
 public class SampleElement implements ContextElement {
   private String uuid;
 

@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 
@@ -19,6 +22,7 @@ import lombok.Data;
 @Data
 @Builder
 @JsonTypeName("containerRollbackRequestElement")
+@TargetModule(_957_CG_BEANS)
 public class ContainerRollbackRequestElement implements ContextElement, SweepingOutput {
   public static final String CONTAINER_ROLLBACK_REQUEST_PARAM = "CONTAINER_ROLLBACK_REQUEST_PARAM";
 
