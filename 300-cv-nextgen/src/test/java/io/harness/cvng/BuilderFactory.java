@@ -1,10 +1,12 @@
 package io.harness.cvng;
 
-import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
-
+import com.google.common.collect.Sets;
+import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
+import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO.ChangeSourceDTOBuilder;
+import io.harness.cvng.core.entities.changeSource.HarnessCDNGChangeSource;
+import io.harness.cvng.core.entities.changeSource.HarnessCDNGChangeSource.HarnessCDNGChangeSourceBuilder;
+import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
@@ -15,6 +17,7 @@ import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
+import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -22,7 +25,6 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Monitored
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
-import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.core.entities.CVConfig;
@@ -50,8 +52,13 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO.EnvironmentResp
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO.ServiceResponseDTOBuilder;
 import io.harness.pms.yaml.ParameterField;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Value;
 
-import com.google.common.collect.Sets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -64,12 +71,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.Value;
+
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 @Data
 @Builder(buildMethodName = "unsafeBuild")
@@ -289,6 +294,29 @@ public class BuilderFactory {
         .connectorIdentifier("Splunk Connector")
         .category(CVMonitoringCategory.ERRORS)
         .productName(generateUuid());
+  }
+
+  public HarnessCDNGChangeSourceBuilder getHarnessCDNGChangeSourceBuilder() {
+    return HarnessCDNGChangeSource.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .enabled(true)
+        .type(ChangeSourceType.HARNESS_CDNG);
+  }
+
+  public ChangeSourceDTOBuilder getHarnessCDNGChangeSourceDTOBuilder() {
+    return getChangeSourceDTOBuilder(ChangeSourceType.HARNESS_CDNG);
+  }
+
+  private ChangeSourceDTOBuilder getChangeSourceDTOBuilder(ChangeSourceType changeSourceType) {
+    return ChangeSourceDTO.builder()
+        .description(generateUuid())
+        .identifier(generateUuid())
+        .enabled(true)
+        .type(changeSourceType);
   }
 
   private VerificationJob getVerificationJob() {

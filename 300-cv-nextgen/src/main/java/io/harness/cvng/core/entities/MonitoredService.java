@@ -77,6 +77,7 @@ public final class MonitoredService
   String environmentIdentifier;
   MonitoredServiceType type;
   List<String> healthSourceIdentifiers;
+  List<String> changeSourceIdentifiers;
   private long lastUpdatedAt;
   private long createdAt;
   private boolean enabled;
