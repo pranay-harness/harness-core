@@ -141,6 +141,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
       assertThat(filterCreationResponse.getReferredEntities()).isEmpty();
     }
   }
+  
 
   @Test
   @Owner(developers = KAMAL)
