@@ -113,4 +113,17 @@ public class PollingRepositoryCustomImpl implements PollingRepositoryCustom {
     Update update = new Update().set(key, value);
     return mongoTemplate.updateFirst(query, update, PollingDocument.class);
   }
+
+  @Override
+  public PollingDocument findByUuidAndAccountIdAndSignature(
+      String pollingDocId, String accountId, List<String> signatures) {
+    Query query = new Query().addCriteria(new Criteria()
+                                              .and(PollingDocumentKeys.accountId)
+                                              .is(accountId)
+                                              .and(PollingDocumentKeys.uuid)
+                                              .is(pollingDocId)
+                                              .and(PollingDocumentKeys.signatures)
+                                              .in(signatures));
+    return mongoTemplate.findOne(query, PollingDocument.class);
+  }
 }

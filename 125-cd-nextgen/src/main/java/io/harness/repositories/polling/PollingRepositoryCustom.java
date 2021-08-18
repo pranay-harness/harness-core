@@ -22,4 +22,5 @@ public interface PollingRepositoryCustom {
   PollingDocument removeSubscribersFromExistingPollingDoc(
       String accountId, String pollingDocId, List<String> signatures);
   UpdateResult updateSelectiveEntity(String accountId, String pollDocId, String key, Object value);
+  PollingDocument findByUuidAndAccountIdAndSignature(String pollingDocId, String accountId, List<String> signature);
 }

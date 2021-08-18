@@ -95,8 +95,8 @@ public class PollingServiceImpl implements PollingService {
     PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
     PollingDocument existingPollingDoc = null;
     if (pollingDocument.getUuid() != null) {
-      existingPollingDoc =
-          pollingRepository.findByUuidAndAccountId(pollingDocument.getAccountId(), pollingDocument.getUuid());
+      existingPollingDoc = pollingRepository.findByUuidAndAccountIdAndSignature(
+          pollingDocument.getUuid(), pollingDocument.getAccountId(), pollingDocument.getSignatures());
     }
 
     // Determine if update request
