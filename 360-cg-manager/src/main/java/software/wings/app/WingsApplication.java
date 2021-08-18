@@ -480,12 +480,23 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     // Register collection iterators
     if (configuration.isEnableIterators()) {
+
+
       if (isManager()) {
         registerIteratorsManager(injector);
       }
       if (shouldEnableDelegateMgmt) {
         registerIteratorsDelegateService(injector);
       }
+
+
+
+
+
+      ApplicationManifestServiceImpl applicationManifestService =
+              (ApplicationManifestServiceImpl) injector.getInstance(Key.get(ApplicationManifestService.class));
+      applicationManifestService.getSubject().register(injector.getInstance(Key.get(ManifestPerpetualTaskManger.class)));
+
     }
 
     environment.lifecycle().addServerLifecycleListener(server -> {
@@ -502,8 +513,9 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
 
+    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     if (isManager()) {
-      harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+
       initMetrics();
       initializeServiceSecretKeys(injector);
       runMigrations(injector);
@@ -1117,10 +1129,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     accountService.getAccountCrudSubject().register(
             (DelegateTokenServiceImpl) injector.getInstance(Key.get(DelegateTokenService.class)));
 
-
-    ApplicationManifestServiceImpl applicationManifestService =
-            (ApplicationManifestServiceImpl) injector.getInstance(Key.get(ApplicationManifestService.class));
-    applicationManifestService.getSubject().register(injector.getInstance(Key.get(ManifestPerpetualTaskManger.class)));
 
   }
 
