@@ -64,6 +64,7 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
           executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
       return ShellScriptTaskResponseNG.builder()
           .executeCommandResponse(executeCommandResponse)
+          .status(executeCommandResponse.getStatus())
           .errorMessage(getErrorMessage(executeCommandResponse.getStatus()))
           .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
           .build();
@@ -76,6 +77,7 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
             executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
         return ShellScriptTaskResponseNG.builder()
             .executeCommandResponse(executeCommandResponse)
+            .status(executeCommandResponse.getStatus())
             .errorMessage(getErrorMessage(executeCommandResponse.getStatus()))
             .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
             .build();

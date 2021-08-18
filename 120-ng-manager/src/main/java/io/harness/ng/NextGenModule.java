@@ -190,6 +190,8 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.service.InstanceModule;
 import io.harness.service.stats.usagemetrics.eventconsumer.InstanceStatsEventListener;
 import io.harness.signup.SignupModule;
+import io.harness.steps.shellscript.ShellScriptHelperService;
+import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.time.TimeModule;
@@ -536,6 +538,7 @@ public class NextGenModule extends AbstractModule {
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);
     bind(NGSecretServiceV2.class).to(NGSecretServiceV2Impl.class);
+    bind(ShellScriptHelperService.class).to(ShellScriptHelperServiceImpl.class);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));

@@ -2,7 +2,6 @@ package io.harness.steps.shellscript;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
 
@@ -24,15 +23,13 @@ import org.springframework.data.annotation.TypeAlias;
 public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements SpecParameters {
   Map<String, Object> outputVariables;
   Map<String, Object> environmentVariables;
-  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 
   @Builder(builderMethodName = "infoBuilder")
   public ShellScriptStepParameters(ShellType shellType, ShellScriptSourceWrapper source,
       ExecutionTarget executionTarget, ParameterField<Boolean> onDelegate, Map<String, Object> outputVariables,
-      Map<String, Object> environmentVariables, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
-    super(shellType, source, executionTarget, onDelegate);
+      Map<String, Object> environmentVariables, ParameterField<List<String>> delegateSelectors) {
+    super(shellType, source, executionTarget, onDelegate, delegateSelectors);
     this.outputVariables = outputVariables;
     this.environmentVariables = environmentVariables;
-    this.delegateSelectors = delegateSelectors;
   }
 }
