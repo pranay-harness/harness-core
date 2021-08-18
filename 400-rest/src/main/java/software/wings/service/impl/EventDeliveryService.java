@@ -6,7 +6,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.CgEventConfig;
 import io.harness.beans.DelegateTask;
@@ -40,15 +43,15 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 @Singleton
 @Slf4j
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EventDeliveryService {
-  private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
   @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
