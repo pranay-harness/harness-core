@@ -2,6 +2,7 @@ package io.harness.event.client.impl.appender;
 
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,7 +110,7 @@ public class ChronicleEventAppenderTest extends CategoryTest {
     server.awaitTermination();
     channel.shutdownNow().awaitTermination(10, TimeUnit.SECONDS);
     FileUtils.cleanDirectory(new File(QUEUE_FILE_PATH));
-    FileUtils.deleteDirectory(new File(QUEUE_FILE_PATH));
+    deleteDirectoryAndItsContentIfExists(QUEUE_FILE_PATH);
   }
 
   @Test

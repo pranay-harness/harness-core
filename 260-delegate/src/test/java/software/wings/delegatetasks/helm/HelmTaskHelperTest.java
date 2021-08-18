@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.helm.CustomManifestFetchTaskHelper.zipManifestDirectory;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -261,7 +262,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doReturn(successfulResult).when(processExecutor).execute();
     helmTaskHelper.downloadChartFiles(gcsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verifyFetchChartFilesProcessExecutor(outputTemporaryDir.toString());
-    FileUtils.deleteDirectory(outputTemporaryDir.toFile());
+    deleteDirectoryAndItsContentIfExists(outputTemporaryDir.toString());
   }
 
   @Test
@@ -283,7 +284,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doReturn(successfulResult).when(processExecutor).execute();
     helmTaskHelper.downloadChartFiles(awsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verifyFetchChartFilesProcessExecutor(outputTemporaryDir.toString());
-    FileUtils.deleteDirectory(outputTemporaryDir.toFile());
+    deleteDirectoryAndItsContentIfExists(outputTemporaryDir.toString());
   }
 
   private void verifyFetchChartFilesProcessExecutor(String outputDirectory) throws Exception {
@@ -322,7 +323,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .createProcessExecutor(
             "v3/helm pull repoName/chartName  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
     verify(processExecutor, times(2)).execute();
-    FileUtils.deleteDirectory(outputTemporaryDir.toFile());
+    deleteDirectoryAndItsContentIfExists(outputTemporaryDir.toString());
   }
 
   @Test
@@ -352,7 +353,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
             "v3/helm pull repoName/chartName  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelperBase, times(1))
         .createProcessExecutor("v3/helm repo remove repoName", null, LONG_TIMEOUT_INTERVAL);
-    FileUtils.deleteDirectory(outputTemporaryDir.toFile());
+    deleteDirectoryAndItsContentIfExists(outputTemporaryDir.toString());
   }
 
   @Test
@@ -404,7 +405,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .createProcessExecutor(
             "v3/helm pull repoName/chartName4  --untar ", outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL);
 
-    FileUtils.deleteDirectory(outputTemporaryDir.toFile());
+    deleteDirectoryAndItsContentIfExists(outputTemporaryDir.toString());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -592,7 +593,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
       assertThat(result.get(k8sValuesLocation.name()).get(0)).isEqualTo(valuesFileContent);
       assertThat(result.get(k8sValuesLocation.name()).size()).isEqualTo(1);
     } finally {
-      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+      deleteDirectoryAndItsContentIfExists(workingDirectory);
     }
   }
 
@@ -625,7 +626,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
       assertThat(ex.getMessage()).isEqualTo("Required values yaml file with path values2.yaml not found");
       assertThat(ex).isInstanceOf(InvalidArgumentsException.class);
     } finally {
-      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+      deleteDirectoryAndItsContentIfExists(workingDirectory);
     }
   }
 
@@ -668,7 +669,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
       assertThat(result.get(k8sValuesLocationEnvOverride.name()).get(0)).isEqualTo(valuesFileContent1EnvOverride);
       assertThat(result.get(k8sValuesLocationEnvOverride.name()).get(1)).isEqualTo(valuesFileContent2EnvOverride);
     } finally {
-      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+      deleteDirectoryAndItsContentIfExists(workingDirectory);
     }
   }
 
@@ -708,7 +709,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
       assertThat(result.get(k8sValuesLocation.name()).get(0)).isEqualTo(valuesFileContent);
       assertThat(result.get(k8sValuesLocationEnvOverride.name()).get(0)).isEqualTo(valuesFileContentEnvOverride);
     } finally {
-      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+      deleteDirectoryAndItsContentIfExists(workingDirectory);
     }
   }
 
@@ -739,7 +740,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
       assertThat(ex.getMessage()).isEqualTo("Required values yaml file with path values1.yaml not found");
       assertThat(ex).isInstanceOf(InvalidArgumentsException.class);
     } finally {
-      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+      deleteDirectoryAndItsContentIfExists(workingDirectory);
     }
   }
 
@@ -1207,8 +1208,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     Path path = Paths.get(workingDirPath, unzippedFiles[0]);
     File file = new File(path.toString());
     assertThat(file.list()).contains("test1.yaml", "test2.yaml");
-    FileIo.deleteDirectoryAndItsContentIfExists(workingDirPath);
-    FileIo.deleteDirectoryAndItsContentIfExists(sourceDirPath);
-    FileIo.deleteDirectoryAndItsContentIfExists(zipDirPath);
+    deleteDirectoryAndItsContentIfExists(workingDirPath);
+    deleteDirectoryAndItsContentIfExists(sourceDirPath);
+    deleteDirectoryAndItsContentIfExists(zipDirPath);
   }
 }
