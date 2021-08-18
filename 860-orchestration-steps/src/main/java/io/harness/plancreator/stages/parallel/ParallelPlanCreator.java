@@ -23,8 +23,8 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.common.NGForkStep;
 import io.harness.steps.fork.ForkStepParameters;
+import io.harness.steps.fork.NGForkStep;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
