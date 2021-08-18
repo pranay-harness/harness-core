@@ -150,7 +150,8 @@ public class NGTriggerResource {
     }
 
     try {
-      TriggerDetails triggerDetails = ngTriggerElementMapper.mergeTriggerEntity(ngTriggerEntity.get(), yaml);
+      TriggerDetails triggerDetails = ngTriggerService.fetchTriggerEntity(
+          accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier, yaml);
 
       ngTriggerService.validateTriggerConfig(triggerDetails);
       triggerDetails.getNgTriggerEntity().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);

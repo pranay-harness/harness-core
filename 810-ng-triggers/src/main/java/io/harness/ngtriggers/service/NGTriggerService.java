@@ -53,4 +53,7 @@ public interface NGTriggerService {
 
   WebhookEventProcessingDetails fetchTriggerEventHistory(String accountId, String eventId);
   void updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult);
+
+  TriggerDetails fetchTriggerEntity(
+      String accountId, String orgId, String projectId, String pipelineId, String triggerId, String newYaml);
 }

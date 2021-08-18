@@ -22,6 +22,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails;
 import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails.WebhookEventProcessingDetailsBuilder;
@@ -142,7 +143,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   private void updatePollingRegistrationStatus(NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
-    ngTriggerEntity.getMetadata().getBuildMetadata().setPollingDocId(pollingDocument.getPollingDocId());
+    //    ngTriggerEntity.getMetadata().getBuildMetadata().setPollingDocId(pollingDocument.getPollingDocId());
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
     if (updatedEntity == null) {
       throw new InvalidRequestException(
@@ -512,5 +513,18 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       throw new InvalidRequestException(
           String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
     }
+  }
+
+  @Override
+  public TriggerDetails fetchTriggerEntity(
+      String accountId, String orgId, String projectId, String pipelineId, String triggerId, String newYaml) {
+    NGTriggerConfigV2 config = ngTriggerElementMapper.toTriggerConfigV2(newYaml);
+    Optional<NGTriggerEntity> existingEntity = get(accountId, orgId, projectId, pipelineId, triggerId, false);
+    NGTriggerEntity entity = ngTriggerElementMapper.toTriggerEntity(accountId, orgId, projectId, triggerId, newYaml);
+    if (existingEntity.isPresent()) {
+      ngTriggerElementMapper.copyEntityFieldsOutsideOfYml(existingEntity.get(), entity);
+    }
+
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
   }
 }

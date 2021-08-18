@@ -43,7 +43,7 @@ public class PollingRequestToPollingDocumentMapper {
     return pollingDocumentBuilder.accountId(qualifier.getAccountId())
         .orgIdentifier(qualifier.getOrganizationId())
         .projectIdentifier(qualifier.getProjectId())
-        .signatures(Collections.singletonList(qualifier.getSignature()))
+        //.signature(Collections.singletonList(qualifier.getSignature()))
         .pollingInfo(pollingInfo)
         .failedAttempts(0)
         .build();
