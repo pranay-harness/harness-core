@@ -51,6 +51,8 @@ billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
   gcpPipelinePubSubTopic: "ce-gcpdata"
+  gcpSyncPubSubTopic: "ce-gcp-billing-cf"
+  isGcpSyncEnabled: false
   gcpUseNewPipeline: false
   awsUseNewPipeline: false
   clusterDataGcsBucketName: "clusterdata-qa"
