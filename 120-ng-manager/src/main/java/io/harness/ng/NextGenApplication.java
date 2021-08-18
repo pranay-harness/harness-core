@@ -117,6 +117,7 @@ import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.token.remote.TokenClient;
 import io.harness.utils.NGObjectMapperHelper;
 import io.harness.waiter.NotifierScheduledExecutorService;
@@ -480,6 +481,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
         .engineEventHandlersMap(getOrchestrationEventHandlers())
+        .executionPoolConfig(ThreadPoolConfig.builder().corePoolSize(20).maxPoolSize(100).idleTime(120L).build())
+        .orchestrationEventPoolConfig(
+            ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
   }
 

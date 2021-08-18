@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateHeartbeatDetails;
@@ -24,7 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class DelegateVerificationNgResourceTest {
+public class DelegateVerificationNgResourceTest extends CategoryTest {
   private static final String TEST_ACCOUNT_ID = "testAccountId";
   private static final String TEST_ORG_ID = generateUuid();
   private static final String TEST_PROJECT_ID = generateUuid();

@@ -524,9 +524,7 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 		tdb.Log.Errorw("could not query database for selection overview", zap.Error(err))
 		return res, err
 	}
-	len := 0
 	for rows.Next() {
-		len++
 		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd, &ztt, &zts, &repo, &source, &target)
 		if err != nil {
 			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
@@ -546,9 +544,6 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 	}
 	if rows.Err() != nil {
 		return res, rows.Err()
-	}
-	if len == 0 {
-		return res, errors.New("could not find a row for selection overview")
 	}
 
 	return res, nil

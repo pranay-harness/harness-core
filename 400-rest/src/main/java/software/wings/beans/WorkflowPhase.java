@@ -40,7 +40,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 public class WorkflowPhase implements UuidAccess {
   private String uuid = generateUuid();

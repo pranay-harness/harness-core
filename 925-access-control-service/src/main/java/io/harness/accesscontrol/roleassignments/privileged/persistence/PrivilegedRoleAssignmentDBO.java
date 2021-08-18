@@ -14,7 +14,6 @@ import io.harness.persistence.PersistentEntity;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -53,8 +52,10 @@ public class PrivilegedRoleAssignmentDBO implements PersistentEntity, AccessCont
   @NotNull final PrincipalType principalType;
   @NotEmpty final String principalIdentifier;
   @NotEmpty final String roleIdentifier;
+  final String linkedRoleAssignment;
+  final String userGroupIdentifier;
   final boolean global;
-  final Set<String> accounts;
+  final String scopeIdentifier;
   final boolean managed;
 
   @Setter @CreatedDate Long createdAt;
@@ -72,6 +73,8 @@ public class PrivilegedRoleAssignmentDBO implements PersistentEntity, AccessCont
                  .field(PrivilegedRoleAssignmentDBOKeys.principalIdentifier)
                  .field(PrivilegedRoleAssignmentDBOKeys.roleIdentifier)
                  .field(PrivilegedRoleAssignmentDBOKeys.managed)
+                 .field(PrivilegedRoleAssignmentDBOKeys.scopeIdentifier)
+                 .field(PrivilegedRoleAssignmentDBOKeys.linkedRoleAssignment)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("queryIndex")

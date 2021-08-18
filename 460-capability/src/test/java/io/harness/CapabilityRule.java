@@ -9,6 +9,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.DelegateTasksBeansRegistrars;
+import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -51,6 +52,7 @@ public class CapabilityRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(DelegateTasksBeansRegistrars.morphiaRegistrars)
+            .add(CommonEntitiesMorphiaRegister.class)
             .build();
       }
 

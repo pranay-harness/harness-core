@@ -2,7 +2,9 @@ package software.wings.beans.settings.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
@@ -31,6 +33,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
+
 public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConfig {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @SchemaIgnore @NotEmpty private String accountId;

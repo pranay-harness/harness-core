@@ -93,7 +93,7 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
 
   private <T> void traceQuery(Query query, Class<T> entityClass) {
     if (traceMode == TraceMode.ENABLED) {
-      tracerSubject.fireInform(Tracer::trace, query, entityClass, this);
+      tracerSubject.fireInform(Tracer::traceSpringQuery, query, entityClass, this);
     }
   }
 

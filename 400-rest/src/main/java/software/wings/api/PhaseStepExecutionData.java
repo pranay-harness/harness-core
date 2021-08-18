@@ -23,7 +23,7 @@ import java.util.Map;
  * Created by rishi on 1/19/17.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PhaseStepExecutionData extends ElementStateExecutionData implements DelegateTaskNotifyResponseData {
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;

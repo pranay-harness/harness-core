@@ -69,7 +69,7 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * The Class WorkflowExecution.
  */
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @BreakDependencyOn("software.wings.service.impl.WorkflowExecutionServiceHelper")
 @Data
@@ -226,6 +226,12 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
                  .field(WorkflowExecutionKeys.pipelineExecutionId)
                  .field(WorkflowExecutionKeys.appId)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_startTs_serviceIds")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.startTs)
+                 .field(WorkflowExecutionKeys.serviceIds)
+                 .build())
         .build();
   }
 
@@ -333,7 +339,8 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private String message;
   @Transient private String failureDetails;
 
-  @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  // Making this consistent with data retention default of 183 days instead of "6 months"
+  @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(183).toInstant());
 
   public String normalizedName() {
     if (isBlank(name)) {

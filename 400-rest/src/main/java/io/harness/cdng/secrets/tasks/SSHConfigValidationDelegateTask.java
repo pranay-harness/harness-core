@@ -1,10 +1,12 @@
 package io.harness.cdng.secrets.tasks;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -40,6 +42,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(PL)
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTask {
@@ -95,6 +98,9 @@ public class SSHConfigValidationDelegateTask extends AbstractDelegateRunnableTas
             .withKeyName("Key")
             .withKey(keyReferenceCredentialDTO.getKey().getDecryptedValue())
             .withUserName(keyReferenceCredentialDTO.getUserName());
+        if (null != keyReferenceCredentialDTO.getEncryptedPassphrase()) {
+          builder.withKeyPassphrase(keyReferenceCredentialDTO.getEncryptedPassphrase().getDecryptedValue());
+        }
         break;
       case KeyPath:
         SSHKeyPathCredentialDTO sshKeyPathCredentialDTO = (SSHKeyPathCredentialDTO) sshConfigDTO.getSpec();

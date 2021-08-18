@@ -665,7 +665,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   private boolean isIdenticalTarget(WebhookResponse webhookResponse, GitWebhookDetails gitWebhookDetails) {
-    return webhookResponse.getTarget().equals(gitWebhookDetails.getTarget());
+    // Currently we don't add secret however we receive it in response with empty value
+    return webhookResponse.getTarget().replace("&secret=", "").equals(gitWebhookDetails.getTarget());
   }
 
   private boolean isIdentical(

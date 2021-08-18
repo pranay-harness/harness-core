@@ -262,7 +262,8 @@ public class PipelineExecuteHelper {
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
       ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(executionMetadata, planExecutionMetadata);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(
+        accountId, orgIdentifier, projectIdentifier, executionMetadata, planExecutionMetadata);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap<String, String> abstractions = ImmutableMap.<String, String>builder()
                                                     .put(SetupAbstractionKeys.accountId, accountId)

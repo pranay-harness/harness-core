@@ -18,7 +18,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "DeploymentMetadataKeys")
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class DeploymentMetadata {
   private List<Service> artifactRequiredServices = new ArrayList<>();
   private transient List<String> artifactRequiredServiceIds = new ArrayList<>();

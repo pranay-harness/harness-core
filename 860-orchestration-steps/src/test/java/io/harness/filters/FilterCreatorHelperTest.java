@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -23,7 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class FilterCreatorHelperTest {
+public class FilterCreatorHelperTest extends CategoryTest {
   private static final String ACCOUNT_IDENTIFIER = "accountId";
   private static final String ORG_IDENTIFIER = "orgIdentifier";
   private static final String PROJECT_IDENTIFIER = "projectId";

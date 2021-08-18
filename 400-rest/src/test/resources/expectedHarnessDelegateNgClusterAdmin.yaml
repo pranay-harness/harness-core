@@ -60,16 +60,16 @@ spec:
         harness.io/name: harness-delegate
     spec:
       containers:
-      - image: harness/delegate:ng
+      - image: harness/delegate:latest
         imagePullPolicy: Always
         name: harness-delegate-instance
         resources:
           limits:
             cpu: "0.5"
-            memory: "1650Mi"
+            memory: "2560Mi"
           requests:
-            cpu: "0.45"
-            memory: "1550Mi"
+            cpu: "0.5"
+            memory: "2560Mi"
         readinessProbe:
           exec:
             command:

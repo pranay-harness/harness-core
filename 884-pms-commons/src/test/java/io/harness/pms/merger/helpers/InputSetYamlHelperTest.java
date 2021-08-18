@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -16,7 +17,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
-public class InputSetYamlHelperTest {
+public class InputSetYamlHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)

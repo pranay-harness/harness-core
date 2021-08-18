@@ -3,6 +3,7 @@ package io.harness.cvng.dashboard.entities;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIFTEEN_HOURS;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIFTEEN_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_MIN;
+import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.ONE_HOUR_THIRTY_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THIRTY_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THREE_HOURS_THIRTY_MINUTES;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -37,8 +38,10 @@ public class HeatMapResolutionTest extends CvNextGenTestBase {
     assertThat(HeatMapResolution.getHeatMapResolution(endTime.minus(24, ChronoUnit.HOURS), endTime))
         .isEqualTo(THIRTY_MINUTES);
     assertThat(HeatMapResolution.getHeatMapResolution(endTime.minus(26, ChronoUnit.HOURS), endTime))
-        .isEqualTo(THREE_HOURS_THIRTY_MINUTES);
+        .isEqualTo(ONE_HOUR_THIRTY_MINUTES);
     assertThat(HeatMapResolution.getHeatMapResolution(endTime.minus(7, ChronoUnit.DAYS), endTime))
+        .isEqualTo(THREE_HOURS_THIRTY_MINUTES);
+    assertThat(HeatMapResolution.getHeatMapResolution(endTime.minus(4, ChronoUnit.DAYS), endTime))
         .isEqualTo(THREE_HOURS_THIRTY_MINUTES);
     assertThat(HeatMapResolution.getHeatMapResolution(endTime.minus(8, ChronoUnit.DAYS), endTime))
         .isEqualTo(FIFTEEN_HOURS);

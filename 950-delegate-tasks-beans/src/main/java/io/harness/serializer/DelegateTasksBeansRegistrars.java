@@ -5,8 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateTasksBeansKryoRegister;
 import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
+import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateTasksBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.CapabilityParametersMorphiaConverter;
 import io.harness.serializer.morphia.converters.TestingCapabilityMorphiaConverter;
@@ -29,6 +31,7 @@ public class DelegateTasksBeansRegistrars {
           .add(RbacCoreKryoRegistrar.class)
           .add(DelegateTasksBeansKryoRegister.class)
           .add(CgOrchestrationBeansKryoRegistrar.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -38,6 +41,7 @@ public class DelegateTasksBeansRegistrars {
           .add(DelegateTasksBeansMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(FileServiceCommonsRegistrars.morphiaRegistrars)
+          .add(CommonEntitiesMorphiaRegister.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

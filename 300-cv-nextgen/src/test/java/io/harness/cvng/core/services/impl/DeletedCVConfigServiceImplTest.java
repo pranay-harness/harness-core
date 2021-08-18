@@ -20,7 +20,6 @@ import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -45,7 +44,6 @@ import org.reflections.Reflections;
 
 public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
-  @Mock private DataCollectionTaskService dataCollectionTaskService;
   @Inject private DeletedCVConfigService deletedCVConfigServiceWithMocks;
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
@@ -66,8 +64,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     this.productName = generateUuid();
     this.groupId = generateUuid();
     this.serviceInstanceIdentifier = generateUuid();
-    FieldUtils.writeField(
-        deletedCVConfigServiceWithMocks, "dataCollectionTaskService", dataCollectionTaskService, true);
     FieldUtils.writeField(deletedCVConfigServiceWithMocks, "eventService", eventService, true);
   }
 
@@ -82,7 +78,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     CVConfig cvConfig = createCVConfig();
     DeletedCVConfig saved = save(createDeletedCVConfig(cvConfig));
     assertThat(saved.getAccountId()).isEqualTo(cvConfig.getAccountId());
-    assertThat(saved.getPerpetualTaskId()).isEqualTo(cvConfig.getPerpetualTaskId());
     assertThat(saved.getCvConfig()).isNotNull();
   }
 
@@ -94,7 +89,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     DeletedCVConfig saved = save(createDeletedCVConfig(cvConfig));
     deletedCVConfigServiceWithMocks.triggerCleanup(saved);
     assertThat(hPersistence.get(DeletedCVConfig.class, saved.getUuid())).isNull();
-    verify(dataCollectionTaskService, times(1)).deletePerpetualTasks(saved.getAccountId(), saved.getPerpetualTaskId());
     assertThatThrownBy(() -> verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfig.getUuid()))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("VerificationTask mapping does not exist for cvConfigId " + cvConfig.getUuid()
@@ -170,7 +164,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     DeletedCVConfig updated = save(createDeletedCVConfig(cvConfig));
     DeletedCVConfig saved = deletedCVConfigService.get(updated.getUuid());
     assertThat(saved.getAccountId()).isEqualTo(updated.getCvConfig().getAccountId());
-    assertThat(saved.getPerpetualTaskId()).isEqualTo(updated.getCvConfig().getPerpetualTaskId());
     assertThat(saved.getCvConfig()).isNotNull();
   }
 
@@ -184,11 +177,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   }
 
   private DeletedCVConfig createDeletedCVConfig(CVConfig cvConfig) {
-    return DeletedCVConfig.builder()
-        .accountId(cvConfig.getAccountId())
-        .cvConfig(cvConfig)
-        .perpetualTaskId(cvConfig.getPerpetualTaskId())
-        .build();
+    return DeletedCVConfig.builder().accountId(cvConfig.getAccountId()).cvConfig(cvConfig).build();
   }
 
   private void fillCommon(CVConfig cvConfig) {
@@ -203,6 +192,5 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
-    cvConfig.setPerpetualTaskId(generateUuid());
   }
 }

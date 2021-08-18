@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by sgurubelli on 8/7/17.
  */
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 public class WorkflowDetails {
   String workflowId;

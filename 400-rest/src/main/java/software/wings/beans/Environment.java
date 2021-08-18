@@ -53,7 +53,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
 @Entity(value = "environments", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Environment extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

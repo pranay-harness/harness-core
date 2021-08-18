@@ -41,7 +41,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Instance extends Base implements AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -113,6 +113,12 @@ public class Instance extends Base implements AccountAccess, ApplicationAccess {
                  .field(InstanceKeys.accountId)
                  .field(InstanceKeys.createdAt)
                  .field(InstanceKeys.isDeleted)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index13")
+                 .field(InstanceKeys.appId)
+                 .field(InstanceKeys.isDeleted)
+                 .field(InstanceKeys.envId)
                  .build())
         .build();
   }

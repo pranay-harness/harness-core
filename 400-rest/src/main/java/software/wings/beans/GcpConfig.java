@@ -42,7 +42,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"serviceAccountKeyFileContent", "encryptedServiceAccountKeyFileContent"})
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class GcpConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   @Encrypted(fieldName = "service_account_key_file") private char[] serviceAccountKeyFileContent;
 

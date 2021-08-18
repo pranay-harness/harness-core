@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ManualExecutionSource;
@@ -27,7 +28,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.CI)
-public class CodeBaseStepTest {
+public class CodeBaseStepTest extends CategoryTest {
   @Mock private ConnectorUtils connectorUtils;
   @InjectMocks private CodeBaseStep codeBaseStep;
   private Ambiance ambiance;

@@ -102,6 +102,20 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.helpers.ext.gcb.models.BuildOptions;
+import software.wings.helpers.ext.gcb.models.BuiltImage;
+import software.wings.helpers.ext.gcb.models.GcbArtifactObjects;
+import software.wings.helpers.ext.gcb.models.GcbArtifacts;
+import software.wings.helpers.ext.gcb.models.GcbBuildSource;
+import software.wings.helpers.ext.gcb.models.GcbResult;
+import software.wings.helpers.ext.gcb.models.LogStreamingOption;
+import software.wings.helpers.ext.gcb.models.LoggingMode;
+import software.wings.helpers.ext.gcb.models.MachineType;
+import software.wings.helpers.ext.gcb.models.SourceProvenance;
+import software.wings.helpers.ext.gcb.models.StorageSource;
+import software.wings.helpers.ext.gcb.models.SubstitutionOption;
+import software.wings.helpers.ext.gcb.models.TimeSpan;
+import software.wings.helpers.ext.gcb.models.VerifyOption;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.RepositoryFormat;
 
@@ -321,5 +335,20 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesResourceId.class, 97031);
     kryo.register(HelmClientException.class, 97032);
     kryo.register(HelmCliCommandType.class, 97033);
+
+    kryo.register(BuildOptions.class, 7414);
+    kryo.register(BuiltImage.class, 7426);
+    kryo.register(GcbArtifactObjects.class, 7464);
+    kryo.register(GcbArtifacts.class, 7413);
+    kryo.register(GcbBuildSource.class, 7420);
+    kryo.register(GcbResult.class, 7424);
+    kryo.register(LoggingMode.class, 7416);
+    kryo.register(MachineType.class, 7417);
+    kryo.register(LogStreamingOption.class, 7415);
+    kryo.register(VerifyOption.class, 7418);
+    kryo.register(SubstitutionOption.class, 7419);
+    kryo.register(StorageSource.class, 7421);
+    kryo.register(SourceProvenance.class, 7422);
+    kryo.register(TimeSpan.class, 7425);
   }
 }

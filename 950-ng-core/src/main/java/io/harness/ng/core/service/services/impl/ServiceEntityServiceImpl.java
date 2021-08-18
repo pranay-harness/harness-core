@@ -314,9 +314,9 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
 
     Criteria criteria = Criteria.where(ServiceEntityKeys.accountId)
                             .is(accountIdentifier)
-                            .where(ServiceEntityKeys.orgIdentifier)
+                            .and(ServiceEntityKeys.orgIdentifier)
                             .is(orgIdentifier)
-                            .where(ServiceEntityKeys.projectIdentifier)
+                            .and(ServiceEntityKeys.projectIdentifier)
                             .is(projectIdentifier);
 
     int pageNum = 0;

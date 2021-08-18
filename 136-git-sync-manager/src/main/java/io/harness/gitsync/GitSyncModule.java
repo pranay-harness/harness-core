@@ -11,6 +11,7 @@ import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
 import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
+import io.harness.gitsync.common.events.FullSyncMessageListener;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchSyncServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
@@ -34,6 +35,8 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.gitsync.core.fullsync.FullSyncAccumulatorService;
 import io.harness.gitsync.core.fullsync.FullSyncAccumulatorServiceImpl;
+import io.harness.gitsync.core.fullsync.GitFullSyncEntityService;
+import io.harness.gitsync.core.fullsync.GitFullSyncEntityServiceImpl;
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
 import io.harness.gitsync.core.impl.GitSyncTriggerServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetLifeCycleManagerServiceImpl;
@@ -121,6 +124,7 @@ public class GitSyncModule extends AbstractModule {
     bind(YamlChangeSetLifeCycleManagerService.class).to(YamlChangeSetLifeCycleManagerServiceImpl.class);
     bind(FullSyncAccumulatorService.class).to(FullSyncAccumulatorServiceImpl.class);
     bind(GithubService.class).to(GithubServiceImpl.class);
+    bind(GitFullSyncEntityService.class).to(GitFullSyncEntityServiceImpl.class);
     registerRequiredBindings();
 
     bindGitSyncConfigMessageListeners();
@@ -129,8 +133,7 @@ public class GitSyncModule extends AbstractModule {
   private void bindGitSyncConfigMessageListeners() {
     Multibinder<MessageListener> gitSyncConfigStreamMessageListeners =
         Multibinder.newSetBinder(binder(), MessageListener.class, Names.named(GIT_CONFIG_STREAM));
-    // todo(abhinav): uncomment when tested
-    //    gitSyncConfigStreamMessageListeners.addBinding().to(FullSyncMessageListener.class);
+    gitSyncConfigStreamMessageListeners.addBinding().to(FullSyncMessageListener.class);
   }
 
   private void registerRequiredBindings() {

@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = K8sPodInfo.class, name = "K8S_POD_INFO")
 })
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public abstract class ContainerInfo extends InstanceInfo {
   private String clusterName;
 

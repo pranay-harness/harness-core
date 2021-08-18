@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class K8sDeploymentKey extends DeploymentKey {
   private String releaseName;
   private Integer releaseNumber;

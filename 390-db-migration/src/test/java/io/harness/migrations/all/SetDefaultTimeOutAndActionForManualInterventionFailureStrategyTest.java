@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -29,7 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategyTest {
+public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategyTest extends CategoryTest {
   private static final long DEFAULT_TIMEOUT = 1209600000L;
   private final io.harness.migrations.all.SetDefaultTimeOutAndActionForManualInterventionFailureStrategy migration =
       new SetDefaultTimeOutAndActionForManualInterventionFailureStrategy();

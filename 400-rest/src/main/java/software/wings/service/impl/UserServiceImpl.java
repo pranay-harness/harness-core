@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -266,7 +266,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
-@TargetModule(_970_RBAC_CORE)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserServiceImpl implements UserService {
   static final String ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   static final String USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME = "password_changed";
@@ -1184,8 +1184,9 @@ public class UserServiceImpl implements UserService {
       user = anUser().build();
     }
 
+    List<UserGroup> userGroups = userGroupService.getUserGroupsFromUserInvite(userInvite);
     if (isUserAssignedToAccount(user, accountId)) {
-      updateUserGroupsOfUser(user.getUuid(), userGroupService.getUserGroupsFromUserInvite(userInvite), accountId, true);
+      updateUserGroupsOfUser(user.getUuid(), userGroups, accountId, true);
       return USER_ALREADY_ADDED;
     } else if (isUserInvitedToAccount(user, accountId)) {
       if (isInviteAcceptanceRequired) {
@@ -1218,7 +1219,7 @@ public class UserServiceImpl implements UserService {
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
 
     if (!isInviteAcceptanceRequired) {
-      addUserToUserGroups(accountId, user, userInvite.getUserGroups(), false, true);
+      addUserToUserGroups(accountId, user, userGroups, false, true);
     }
     if (!isInviteAcceptanceRequired && accountService.isSSOEnabled(account)) {
       sendUserInvitationToOnlySsoAccountMail(account, user);

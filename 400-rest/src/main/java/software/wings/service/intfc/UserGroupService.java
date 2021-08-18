@@ -1,8 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -28,6 +30,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by rishi
  */
 @OwnedBy(PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   /**
    * Save.

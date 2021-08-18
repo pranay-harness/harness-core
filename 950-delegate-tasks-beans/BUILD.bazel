@@ -8,7 +8,7 @@ shared_dependencies = [
     "//954-connector-beans:module",
     "//955-cg-yaml:module",
     "//955-delegate-beans:module",
-    "//959-cg-beans:module",
+    "//957-cg-beans:module",
     "//959-file-service-commons:module",
     "//960-api-services:module",
     "//960-persistence:module",

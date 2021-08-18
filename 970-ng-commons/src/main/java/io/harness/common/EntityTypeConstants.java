@@ -26,4 +26,5 @@ public interface EntityTypeConstants {
   String APPROVAL_STAGE = "ApprovalStage";
   String FEATURE_FLAG_STAGE = "FeatureFlagStage";
   String TRIGGERS = "Triggers";
+  String MONITORED_SERVICE = "MonitoredService";
 }

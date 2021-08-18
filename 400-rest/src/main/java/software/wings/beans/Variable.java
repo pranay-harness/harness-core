@@ -21,7 +21,7 @@ import java.util.Map;
 import lombok.Data;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @JsonInclude(NON_NULL)
 public class Variable {

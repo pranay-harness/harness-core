@@ -2,7 +2,9 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
@@ -16,6 +18,7 @@ import java.util.Optional;
  * Created by peeyushaggarwal on 6/6/16.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class OverridingStateTypeDescriptor implements StateTypeDescriptor, OverridingStencil<State> {
   private final StateTypeDescriptor stateTypeDescriptor;
   @JsonIgnore private Optional<String> overridingName = Optional.empty();

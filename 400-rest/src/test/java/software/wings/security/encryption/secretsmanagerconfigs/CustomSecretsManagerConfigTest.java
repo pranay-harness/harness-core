@@ -1,5 +1,6 @@
 package software.wings.security.encryption.secretsmanagerconfigs;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.BASH;
@@ -12,6 +13,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -29,7 +33,8 @@ import java.util.HashSet;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(_360_CG_MANAGER)
 public class CustomSecretsManagerConfigTest extends CategoryTest {
   private static CustomSecretsManagerConfigBuilder getBaseBuilder(ScriptType scriptType) {
     CustomSecretsManagerShellScript shellScript = CustomSecretsManagerShellScript.builder()
@@ -40,7 +45,7 @@ public class CustomSecretsManagerConfigTest extends CategoryTest {
     return CustomSecretsManagerConfig.builder()
         .name("CustomSecretsManager")
         .templateId(UUIDGenerator.generateUuid())
-        .delegateSelectors(new ArrayList<>())
+        .delegateSelectors(new HashSet<>())
         .isConnectorTemplatized(false)
         .customSecretsManagerShellScript(shellScript)
         .testVariables(new HashSet<>());

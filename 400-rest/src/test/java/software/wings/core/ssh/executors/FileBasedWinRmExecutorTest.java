@@ -40,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.Arrays;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -49,6 +50,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.modules.junit4.PowerMockRunnerDelegate;
@@ -87,6 +89,9 @@ public class FileBasedWinRmExecutorTest extends CategoryTest {
   private void testCopyConfigFilesForExecutor(int size, FileBasedWinRmExecutor executor) throws IOException {
     mockStatic(SshHelperUtils.class);
     mockRemoteCommandStatus(executor, SUCCESS);
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     doReturn(buildByteInputStream(size))
         .when(delegateFileManager)
         .downloadByConfigFileId(anyString(), anyString(), anyString(), anyString());

@@ -15,7 +15,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(PL)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ContainerFilter {
   private Collection<ContainerDeploymentInfo> containerDeploymentInfoCollection;
 }

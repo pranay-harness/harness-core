@@ -404,6 +404,7 @@ instance {"name": "instance_index1", "background": true} {"appId": 1, "isDeleted
 instance {"name": "instance_index10", "background": true} {"accountId": 1, "infraMappingId": 1}
 instance {"name": "instance_index11", "background": true} {"infraMappingId": 1, "appId": 1, "createdAt": 1, "isDeleted": 1}
 instance {"name": "instance_index12", "background": true} {"accountId": 1, "createdAt": 1, "isDeleted": 1}
+instance {"name": "instance_index13", "background": true} {"appId": 1, "isDeleted": 1, "envId": 1}
 instance {"name": "instance_index2", "background": true} {"appId": 1, "infraMappingId": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "instance_index3", "background": true} {"accountId": 1, "createdAt": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "instance_index5", "background": true} {"appId": 1, "serviceId": 1, "createdAt": 1, "isDeleted": 1, "deletedAt": 1}
@@ -834,6 +835,7 @@ workflowExecutions {"name": "accountId_createdAt2", "background": true} {"accoun
 workflowExecutions {"name": "accountId_endTs", "background": true} {"accountId": 1, "endTs": -1}
 workflowExecutions {"name": "accountId_pipExecutionId_createdAt", "background": true} {"accountId": 1, "pipelineExecutionId": 1, "createdAt": -1}
 workflowExecutions {"name": "accountId_pipelineExecutionId_appId", "background": true} {"accountId": 1, "pipelineExecutionId": 1, "appId": 1}
+workflowExecutions {"name": "accountId_startTs_serviceIds", "background": true} {"accountId": 1, "startTs": 1, "serviceIds": 1}
 workflowExecutions {"name": "accountId_status_pipelineExecutionId_endTs", "background": true} {"accountId": 1, "status": 1, "pipelineExecutionId": 1, "endTs": 1}
 workflowExecutions {"name": "accountId_status_pipelineExecutionId_startTs", "background": true} {"accountId": 1, "status": 1, "pipelineExecutionId": 1, "startTs": 1}
 workflowExecutions {"name": "accountId_tags_createdAt", "background": true} {"accountId": 1, "tags.name": 1, "createdAt": -1}

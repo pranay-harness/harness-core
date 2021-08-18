@@ -5,7 +5,7 @@ CMD ["/bin/sh"]
 #add new package postgresql-client [OPS-2813]
 #RUN apk add postgresql-client
 
-#upgrade packages except openjdk8
+#upgrade package except openjdk8
 RUN apk upgrade --available --no-cache --ignore openjdk8 openjdk8-jre openjdk8-jre-lib openjdk8-jre-base && sync
 RUN rm -rf /var/cache/apk/*
 

@@ -10,7 +10,7 @@ import io.harness.annotations.dev.TargetModule;
  * @author rktummala on 09/07/17
  */
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum InstanceType {
   PHYSICAL_HOST_INSTANCE,
   EC2_CLOUD_INSTANCE,

@@ -47,13 +47,13 @@ public class CodeBaseStep implements ChildExecutable<CodeBaseStepParameters> {
   // to expose data that we have
   private String getChildNodeId(Ambiance ambiance, CodeBaseStepParameters stepParameters) {
     String childNodeId = stepParameters.getCodeBaseSyncTaskId();
-    ConnectorDetails connectorDetails =
-        connectorUtils.getConnectorDetails(AmbianceUtils.getNgAccess(ambiance), stepParameters.getConnectorRef());
 
     ExecutionSource executionSource = stepParameters.getExecutionSource();
     if (executionSource != null && executionSource.getType() == ExecutionSource.Type.MANUAL) {
       ManualExecutionSource manualExecutionSource = (ManualExecutionSource) executionSource;
       if (isNotEmpty(manualExecutionSource.getPrNumber()) || isNotEmpty(manualExecutionSource.getBranch())) {
+        ConnectorDetails connectorDetails =
+            connectorUtils.getConnectorDetails(AmbianceUtils.getNgAccess(ambiance), stepParameters.getConnectorRef());
         if (connectorUtils.hasApiAccess(connectorDetails)) {
           childNodeId = stepParameters.getCodeBaseDelegateTaskId();
         }

@@ -50,7 +50,7 @@ public class SecretUtils {
   private final SecretManagerClientService secretManagerClientService;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
-  private final int MAX_ATTEMPTS = 3;
+  private final int MAX_ATTEMPTS = 6;
 
   @Inject
   public SecretUtils(@Named("PRIVILEGED") SecretNGManagerClient secretNGManagerClient,

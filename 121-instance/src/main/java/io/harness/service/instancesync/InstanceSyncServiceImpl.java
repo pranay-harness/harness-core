@@ -94,7 +94,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
             // no existing perpetual task info record found for given infrastructure mapping id
             // so create a new perpetual task and instance sync perpetual task info record
             String perpetualTaskId = instanceSyncPerpetualTaskService.createPerpetualTask(infrastructureMappingDTO,
-                abstractInstanceSyncHandler, Collections.singletonList(deploymentSummaryDTO.getDeploymentInfoDTO()));
+                abstractInstanceSyncHandler, Collections.singletonList(deploymentSummaryDTO.getDeploymentInfoDTO()),
+                deploymentEvent.getInfrastructureOutcome());
             instanceSyncPerpetualTaskInfoDTO = instanceSyncPerpetualTaskInfoService.save(
                 prepareInstanceSyncPerpetualTaskInfoDTO(deploymentSummaryDTO, perpetualTaskId));
           } else {
@@ -110,7 +111,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
               instanceSyncPerpetualTaskService.resetPerpetualTask(infrastructureMappingDTO.getAccountIdentifier(),
                   instanceSyncPerpetualTaskInfoDTO.getPerpetualTaskId(), infrastructureMappingDTO,
                   abstractInstanceSyncHandler,
-                  getDeploymentInfoDTOListFromInstanceSyncPerpetualTaskInfo(instanceSyncPerpetualTaskInfoDTO));
+                  getDeploymentInfoDTOListFromInstanceSyncPerpetualTaskInfo(instanceSyncPerpetualTaskInfoDTO),
+                  deploymentEvent.getInfrastructureOutcome());
             }
           }
 

@@ -45,9 +45,9 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 	// Setup nodes
-	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-	oldNode := NewNode(10, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithCommit("oldCommit"), "acct", "org", "proj")
+	n1 := NewNode(1, 1, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, 2, "pkg", "m", "p", "c", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	oldNode := NewNode(10, 10, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithCommit("oldCommit"), "acct", "org", "proj")
 	n := []interface{}{n1, n2, oldNode}
 	db.Database.Collection(nodeColl).InsertMany(ctx, n)
 
@@ -100,10 +100,10 @@ func TestMongoDb_MergeCgForNodes(t *testing.T) {
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 	// Setup nodes
-	n1 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
-	n4 := NewNode(1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n1 := NewNode(1, 1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n2 := NewNode(2, 2, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n3 := NewNode(3, 3, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n4 := NewNode(1, 1, "pkg", "m", "p", "c", "source", "", false, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4}
 	db.Database.Collection(nodeColl).InsertMany(ctx, n)
 
@@ -392,15 +392,15 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", "", false,
+	n1 := NewNode(1, 1, "pkg1", "m1", "param", "cls1", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", "", false,
+	n2 := NewNode(2, 2, "pkg1", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", "", false,
+	n3 := NewNode(3, 3, "pkg2", "m1", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", "", false,
+	n4 := NewNode(4, 4, "pkg2", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", "", false,
+	n5 := NewNode(5, 5, "pkg2", "m1", "param", "cls2", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -425,15 +425,15 @@ func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", "", false,
+	n1 := NewNode(1, 1, "pkg1", "m1", "param", "cls1", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", "", false,
+	n2 := NewNode(2, 2, "pkg1", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m1", "param", "cls1", "test", "", false,
+	n3 := NewNode(3, 3, "pkg2", "m1", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m2", "param", "cls1", "test", "", false,
+	n4 := NewNode(4, 4, "pkg2", "m2", "param", "cls1", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "pkg2", "m1", "param", "cls2", "test", "", false,
+	n5 := NewNode(5, 5, "pkg2", "m1", "param", "cls2", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -479,16 +479,16 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m2", "param", "cls1", "test", "", false, getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m1", "param", "cls2", "test", "", false, getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "path.to.pkg2", "m1", "param", "Xyz", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-	n6 := NewNode(6, "path.to.test2", "m1", "param", "XyzTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
-	n7 := NewNode(7, "path.to.test3", "m1", "param", "DefTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
-	n8 := NewNode(8, "path.to.src4", "m1", "param", "Ghi", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-	n9 := NewNode(9, "path.to.test4", "m1", "param", "GhiTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
-	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n1 := NewNode(1, 1, "path.to.pkg", "m1", "param", "Abc", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, 2, "path.to.test", "m2", "param", "AbcTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n3 := NewNode(3, 3, "pkg2", "m2", "param", "cls1", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n4 := NewNode(4, 4, "pkg2", "m1", "param", "cls2", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n5 := NewNode(5, 5, "path.to.pkg2", "m1", "param", "Xyz", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n6 := NewNode(6, 6, "path.to.test2", "m1", "param", "XyzTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n7 := NewNode(7, 7, "path.to.test3", "m1", "param", "DefTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n8 := NewNode(8, 8, "path.to.src4", "m1", "param", "Ghi", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n9 := NewNode(9, 9, "path.to.test4", "m1", "param", "GhiTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n10 := NewNode(10, 10, "path.to.test4", "m2", "param", "GhiTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}
 	db.Database.Collection(nodeColl).InsertMany(ctx, n)
 
@@ -530,8 +530,8 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false, getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
+	n1 := NewNode(1, 1, "path.to.pkg", "m1", "param", "Abc", "source", "", false, getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, 2, "path.to.test", "m2", "param", "AbcTest", "test", "", false, getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2}
 	db.Database.Collection(nodeColl).InsertMany(ctx, n)
 
@@ -567,14 +567,14 @@ func Test_GetTestsToRun_WithNewTests_SameIds(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
+	n1 := NewNode(1, 1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
+	n2 := NewNode(2, 3, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 	// n3 and n4 have same IDs as n2. They should be ignored
-	n3 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
+	n3 := NewNode(2, 2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
+	n4 := NewNode(2, 2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4}
 	db.Database.Collection(nodeColl).InsertMany(ctx, n)
@@ -611,14 +611,14 @@ func Test_GetTestsToRun_WithResources_PartialSelection(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
+	n1 := NewNode(1, 1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
+	n2 := NewNode(2, 2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "path.to.test2", "m3", "param", "XyzTest", "test", "", false,
+	n3 := NewNode(3, 3, "path.to.test2", "m3", "param", "XyzTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 	// n3 and n4 have same IDs as n2. They should be ignored
-	n4 := NewNode(4, "", "", "", "", "resource", "abc.json", false,
+	n4 := NewNode(4, 4, "", "", "", "", "resource", "abc.json", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4}
 	db.Database.Collection(nodeColl).InsertMany(ctx, n)
@@ -652,16 +652,16 @@ func Test_GetTestsToRun_WithResources_FullSelection(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
+	n1 := NewNode(1, 1, "path.to.pkg", "m1", "param", "Abc", "source", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
+	n2 := NewNode(2, 2, "path.to.test", "m2", "param", "AbcTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "path.to.test2", "m3", "param", "XyzTest", "test", "", false,
+	n3 := NewNode(3, 3, "path.to.test2", "m3", "param", "XyzTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 	// n3 and n4 have same IDs as n2. They should be ignored
-	n4 := NewNode(4, "", "", "", "", "resource", "abc.json", false,
+	n4 := NewNode(4, 4, "", "", "", "", "resource", "abc.json", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "path.to.another.test", "m2", "param", "XyzTest", "test", "", false,
+	n5 := NewNode(5, 5, "path.to.another.test", "m2", "param", "XyzTest", "test", "", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4, n5}
 	db.Database.Collection(nodeColl).InsertMany(ctx, n)
@@ -713,7 +713,8 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 
 	// Create a graph 1 -> 2 -> 3 -> 4 -> .... 50      51 -> 52 ..... -> 100
 	for i := 1; i <= 50; i++ {
-		n := NewNode(i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
+		// Graph should be constructed on basis of class ID and not ID
+		n := NewNode(0, i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
 		nodes = append(nodes, n)
 		// Create an edge from i -> (i+1) if i != 50
 		if i != 50 {
@@ -723,7 +724,8 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	}
 
 	for i := 51; i <= 100; i++ {
-		n := NewNode(i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
+		// Graph should be constructed on basis of class ID and not ID
+		n := NewNode(0, i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
 		nodes = append(nodes, n)
 		if i != 100 {
 			e := NewVisEdge(i, []int{i + 1}, account, org, project, getVCSInfo())
@@ -737,7 +739,7 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 
 	// Consruct expected response:
 	for i := 20; i <= 50; i++ {
-		vn := types.VisNode{Id: i, Package: pkg, Method: method, Class: fmt.Sprintf("cls%d", i), Type: "source"}
+		vn := types.VisNode{Id: i, Package: pkg, Class: fmt.Sprintf("cls%d", i), Type: "source"}
 		expNodes = append(expNodes, vn)
 		if i != 50 { // There is no edge b/w 50 -> 51
 			vm := types.VisMapping{From: i, To: []int{i + 1}}
@@ -748,12 +750,14 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	// If nothing was found in source branch, it should use the target branch
 	resp, err := db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
-		Class: "pkg.cls20", Limit: 500, DiffFiles: []types.File{{Name: "src/main/java/pkg/cls20.java", Status: types.FileModified}}})
+		Class: "pkg.cls20", Limit: 500, DiffFiles: []types.File{{Name: "src/main/java/pkg/cls40.java", Status: types.FileModified}}})
 	assert.Nil(t, err)
-	setImportance(expNodes, []int{20}, true)
+	setImportance(expNodes, []int{40}, true)
+	setRoot(expNodes, []int{20}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
 	assert.ElementsMatch(t, resp.Edges, expEdges)
-	setImportance(expNodes, []int{20}, false)
+	setImportance(expNodes, []int{40}, false)
+	setRoot(expNodes, []int{40}, false)
 
 	// If elements are found in the source branch, we should use that
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
@@ -785,7 +789,7 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 			{Name: "src/main/java/pkg/cls1.java", Status: types.FileAdded},
 			{Name: "src/main/java/pkg/cls40.java", Status: types.FileDeleted}}})
 	for i := 1; i <= 100; i++ {
-		vn := types.VisNode{Id: i, Package: pkg, Method: method, Class: fmt.Sprintf("cls%d", i), Type: "source"}
+		vn := types.VisNode{Id: i, Package: pkg, Class: fmt.Sprintf("cls%d", i), Type: "source"}
 		expNodesFull = append(expNodesFull, vn)
 		if i != 50 && i != 100 { // There is no edge b/w 50 -> 51 and 100 -> 101
 			vm := types.VisMapping{From: i, To: []int{i + 1}}
@@ -794,15 +798,17 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 	}
 	assert.Nil(t, err)
 	setImportance(expNodesFull, []int{20, 1, 40}, true)
+	setRoot(expNodesFull, []int{1}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodesFull)
 	assert.ElementsMatch(t, resp.Edges, expEdgesFull)
 	setImportance(expNodesFull, []int{20, 1, 40}, false)
+	setRoot(expNodesFull, []int{1}, false)
 
 	// Full search with a limit
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch, Limit: 76})
 	for i := 1; i <= 100; i++ {
-		vn := types.VisNode{Id: i, Package: pkg, Method: method, Class: fmt.Sprintf("cls%d", i), Type: "source"}
+		vn := types.VisNode{Id: i, Package: pkg, Class: fmt.Sprintf("cls%d", i), Type: "source"}
 		expNodesFull = append(expNodesFull, vn)
 		if i != 50 && i != 100 { // There is no edge b/w 50 -> 51 and 100 -> 101
 			vm := types.VisMapping{From: i, To: []int{i + 1}}
@@ -810,8 +816,10 @@ func Test_VgSearch_LinearGraph(t *testing.T) {
 		}
 	}
 	assert.Nil(t, err)
+	setRoot(expNodesFull, []int{1}, true)
 	assert.Equal(t, resp.Nodes, expNodesFull[:76])
 	assert.Equal(t, resp.Edges, expEdgesFull[:75]) // Edge b/w 50 -> 51 does not exist
+	setRoot(expNodesFull, []int{1}, false)
 }
 
 /*
@@ -843,9 +851,9 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 
 	// Create a fully connected graph with x nodes
 	for i := 1; i <= x; i++ {
-		n := NewNode(i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
+		n := NewNode(i, i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
 		nodes = append(nodes, n)
-		vn := types.VisNode{Id: i, Package: pkg, Method: method, Class: fmt.Sprintf("cls%d", i), Type: "source"}
+		vn := types.VisNode{Id: i, Package: pkg, Class: fmt.Sprintf("cls%d", i), Type: "source"}
 		expNodes = append(expNodes, vn)
 		// Create an edge from i -> (j != i)
 		var callee []int
@@ -868,12 +876,15 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 	resp, err := db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
 		Class: "pkg.cls1", Limit: 500,
-		DiffFiles: []types.File{{Name: "src/main/java/pkg/cls1.java", Status: types.FileModified}}})
+		DiffFiles: []types.File{{Name: "src/main/java/pkg/cls5.java", Status: types.FileModified},
+			{Name: "src/main/java/pkg/cls7.java", Status: types.FileModified}}})
 	assert.Nil(t, err)
-	setImportance(expNodes, []int{1}, true)
+	setImportance(expNodes, []int{5, 7}, true)
+	setRoot(expNodes, []int{1}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
 	assert.ElementsMatch(t, resp.Edges, expEdges)
-	setImportance(expNodes, []int{1}, false)
+	setImportance(expNodes, []int{5, 7}, false)
+	setRoot(expNodes, []int{1}, false)
 
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
@@ -881,8 +892,10 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 		DiffFiles: []types.File{{Name: fmt.Sprintf("src/main/java/pkg/cls%d.java", x), Status: types.FileModified}}})
 	assert.Nil(t, err)
 	setImportance(expNodes, []int{x}, true)
+	setRoot(expNodes, []int{x}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
 	assert.ElementsMatch(t, resp.Edges, expEdges)
+	setImportance(expNodes, []int{x}, false)
 	setImportance(expNodes, []int{x}, false)
 
 	// Graph search with a limit
@@ -890,8 +903,10 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch,
 		Class: fmt.Sprintf("pkg.cls%d", x), Limit: 20})
 	assert.Nil(t, err)
+	setRoot(expNodes, []int{x}, true)
 	assert.Equal(t, len(resp.Nodes), 20)
 	assert.Equal(t, len(resp.Edges), 20)
+	setRoot(expNodes, []int{x}, false)
 
 	// Graph search with a class that doesn't exist
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
@@ -903,8 +918,10 @@ func Test_VgSearch_FullyConnected(t *testing.T) {
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch, Limit: 1000})
 	assert.Nil(t, err)
+	setRoot(expNodes, []int{1}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
 	assert.ElementsMatch(t, resp.Edges, expEdges)
+	setRoot(expNodes, []int{1}, true)
 }
 
 ///*
@@ -937,9 +954,9 @@ func Test_VgSearch_DisconnectedGraph(t *testing.T) {
 
 	// Create the graph
 	for i := 1; i <= x; i++ {
-		n := NewNode(i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
+		n := NewNode(i, i, pkg, method, "", fmt.Sprintf("cls%d", i), "source", "", false, getVCSInfo(), account, org, project)
 		nodes = append(nodes, n)
-		vn := types.VisNode{Id: i, Package: pkg, Method: method, Class: fmt.Sprintf("cls%d", i), Type: "source"}
+		vn := types.VisNode{Id: i, Package: pkg, Class: fmt.Sprintf("cls%d", i), Type: "source"}
 		expNodes = append(expNodes, vn)
 		// Create an edge from i -> i + 1 if i is odd
 		if i&1 == 1 {
@@ -973,14 +990,24 @@ func Test_VgSearch_DisconnectedGraph(t *testing.T) {
 	resp, err = db.GetVg(ctx, types.GetVgReq{AccountId: account, Repo: getVCSInfo().Repo,
 		SourceBranch: "test", TargetBranch: getVCSInfo().Branch, Limit: 500})
 	assert.Nil(t, err)
+	setRoot(expNodes, []int{1}, true)
 	assert.ElementsMatch(t, resp.Nodes, expNodes)
 	assert.ElementsMatch(t, resp.Edges, expEdges)
+	setRoot(expNodes, []int{1}, false)
 }
 
 func setImportance(n []types.VisNode, imp []int, val bool) {
 	for idx := range n {
 		if contains(imp, n[idx].Id) {
 			n[idx].Important = val
+		}
+	}
+}
+
+func setRoot(n []types.VisNode, roots []int, val bool) {
+	for idx := range n {
+		if contains(roots, n[idx].Id) {
+			n[idx].Root = val
 		}
 	}
 }
@@ -1008,15 +1035,6 @@ func getRelation(src int, tests []int) cgp.Relation {
 		Source: src,
 		Tests:  tests,
 	}
-}
-
-func contains(s []int, searchTerm int) bool {
-	for _, n := range s {
-		if n == searchTerm {
-			return true
-		}
-	}
-	return false
 }
 
 func dropNodes(ctx context.Context) {

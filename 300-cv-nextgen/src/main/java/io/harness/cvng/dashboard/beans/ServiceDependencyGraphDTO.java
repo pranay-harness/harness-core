@@ -17,13 +17,13 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ServiceDependencyGraphDTO {
-  List<ServiceSummary> nodes;
+  List<ServiceSummaryDetails> nodes;
   List<Edge> edges;
 
   @Data
   @Builder
   @FieldDefaults(level = AccessLevel.PRIVATE)
-  public static class ServiceSummary {
+  public static class ServiceSummaryDetails {
     String serviceRef;
     String environmentRef;
     double riskScore;

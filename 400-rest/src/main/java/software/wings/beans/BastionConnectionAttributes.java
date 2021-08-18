@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
 import static software.wings.settings.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.shell.AccessType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -15,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("BASTION_HOST_CONNECTION_ATTRIBUTES")
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(_957_CG_BEANS)
 public class BastionConnectionAttributes extends HostConnectionAttributes {
   @NotEmpty private String hostName;
 
