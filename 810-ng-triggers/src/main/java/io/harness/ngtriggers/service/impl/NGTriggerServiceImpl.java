@@ -143,7 +143,8 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   private void updatePollingRegistrationStatus(NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
-    //    ngTriggerEntity.getMetadata().getBuildMetadata().setPollingDocId(pollingDocument.getPollingDocId());
+    ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
+        pollingDocument.getPollingDocId());
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
     if (updatedEntity == null) {
       throw new InvalidRequestException(
