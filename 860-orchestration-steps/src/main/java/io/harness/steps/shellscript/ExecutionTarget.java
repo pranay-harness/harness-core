@@ -8,9 +8,9 @@ import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 @OwnedBy(CDC)
 public class ExecutionTarget {

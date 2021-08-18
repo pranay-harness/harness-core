@@ -8,9 +8,11 @@ import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 @JsonTypeName("Inline")
 @OwnedBy(CDC)
 public class ShellScriptInlineSource implements ShellScriptBaseSource {
