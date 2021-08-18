@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.git.Constants.COMMIT_MESSAGE;
 import static io.harness.git.Constants.EXCEPTION_STRING;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
@@ -191,7 +192,7 @@ public class GitClientV2Impl implements GitClientV2 {
   synchronized void clone(GitBaseRequest request, String gitRepoDirectory, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
-        FileUtils.deleteDirectory(new File(gitRepoDirectory));
+        deleteDirectoryAndItsContentIfExists(gitRepoDirectory);
       }
     } catch (IOException ioex) {
       log.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", getMessage(ioex));
