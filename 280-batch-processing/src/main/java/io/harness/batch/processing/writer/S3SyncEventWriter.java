@@ -176,7 +176,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
         areAllSyncSuccessful = areAllSyncSuccessful && awsS3SyncService.syncBuckets(s3SyncRecord);
       }
     }
-    log.info("syncAwsContainers  areAllSyncSuccessful: {}", areAllSyncSuccessful);
+    log.info("syncAwsContainers  areAllSyncSuccessful: {}, isNextGen: {}", areAllSyncSuccessful, isNextGen);
     return areAllSyncSuccessful;
   }
 }
