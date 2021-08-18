@@ -39,7 +39,8 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       if (batchJobType.getBatchJobBucket() == BatchJobBucket.OUT_OF_CLUSTER) {
         Instant connectorCreationTime =
             Instant.ofEpochMilli(Instant.now().toEpochMilli()).truncatedTo(ChronoUnit.DAYS).minus(1, ChronoUnit.DAYS);
-        if (BatchJobType.AWS_ECS_CLUSTER_SYNC == batchJobType) {
+        if (ImmutableSet.of(BatchJobType.AWS_ECS_CLUSTER_SYNC, BatchJobType.SYNC_BILLING_REPORT_GCP)
+                .contains(batchJobType)) {
           Instant startInstant = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
           connectorCreationTime = startInstant.isAfter(connectorCreationTime) ? startInstant : connectorCreationTime;
         } else {
@@ -86,13 +87,16 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
     }
 
     if (null != instant
-        && ImmutableSet.of(BatchJobType.RERUN_JOB, BatchJobType.AWS_ECS_CLUSTER_SYNC).contains(batchJobType)) {
+        && ImmutableSet
+               .of(BatchJobType.RERUN_JOB, BatchJobType.AWS_ECS_CLUSTER_SYNC, BatchJobType.SYNC_BILLING_REPORT_GCP)
+               .contains(batchJobType)) {
       Instant startInstant = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
     if (null != instant && batchJobType.getBatchJobBucket() == BatchJobBucket.OUT_OF_CLUSTER
-        && BatchJobType.AWS_ECS_CLUSTER_SYNC != batchJobType) {
+        && !ImmutableSet.of(BatchJobType.AWS_ECS_CLUSTER_SYNC, BatchJobType.SYNC_BILLING_REPORT_GCP)
+                .contains(batchJobType)) {
       Instant startInstant = Instant.now().minus(2, ChronoUnit.HOURS).truncatedTo(ChronoUnit.HOURS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
