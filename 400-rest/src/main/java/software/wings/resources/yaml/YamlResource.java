@@ -180,6 +180,7 @@ public class YamlResource {
   @Path("/templates/{templateId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized
   public RestResponse<YamlPayload> getTemplateLibrary(@QueryParam("accountId") String accountId,
       @PathParam("templateId") String templateId, @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId) {
     return yamlResourceService.getTemplateLibrary(accountId, appId, templateId);
@@ -240,6 +241,7 @@ public class YamlResource {
   @Path("/artifactTriggers/{artifactStreamId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized
   public RestResponse<YamlPayload> getArtifactTrigger(
       @QueryParam("appId") String appId, @PathParam("artifactStreamId") String artifactStreamId) {
     return yamlResourceService.getArtifactTrigger(appId, artifactStreamId);
@@ -275,6 +277,7 @@ public class YamlResource {
   @Path("/triggers/{triggerId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized
   public RestResponse<YamlPayload> getTrigger(
       @QueryParam("appId") String appId, @PathParam("triggerId") String triggerId) {
     return yamlResourceService.getTrigger(appId, triggerId);
@@ -354,6 +357,7 @@ public class YamlResource {
   @Path("/manifest-files/{manifestFileId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<ManifestFile> updateManifestFile(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @QueryParam("appId") String appId, YamlPayload yamlPayload,
@@ -400,6 +404,7 @@ public class YamlResource {
   @GET
   @Path("/notification-groups/{notificationGroupId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getNotificationGroup(
       @QueryParam("accountId") String accountId, @PathParam("notificationGroupId") String notificationGroupId) {
@@ -416,6 +421,7 @@ public class YamlResource {
   @GET
   @Path("/service-commands/{serviceCommandId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getServiceCommand(
       @QueryParam("appId") String appId, @PathParam("serviceCommandId") String serviceCommandId) {
@@ -466,6 +472,7 @@ public class YamlResource {
   @GET
   @Path("/settings/{uuid}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getSettingAttribute(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
@@ -482,6 +489,7 @@ public class YamlResource {
   @GET
   @Path("/defaults/{uuid}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getDefaults(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
@@ -549,6 +557,7 @@ public class YamlResource {
   @GET
   @Path("/configs/{configId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getConfigFile(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @PathParam("configId") String configId) {
@@ -624,6 +633,7 @@ public class YamlResource {
   @Path("/configs/{configId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<ConfigFile> updateConfigFile(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @PathParam("configId") String configId, YamlPayload yamlPayload,
@@ -640,6 +650,7 @@ public class YamlResource {
   @GET
   @Path("/applications/{appId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getApp(@PathParam("appId") String appId) {
     return appYamlResourceService.getApp(appId);
@@ -700,6 +711,7 @@ public class YamlResource {
   @GET
   @Path("/application")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<DirectoryNode> getApplication(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
@@ -734,6 +746,7 @@ public class YamlResource {
   @GET
   @Path("/artifact-streams/{artifactStreamId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getArtifactStream(
       @QueryParam("appId") String appId, @PathParam("artifactStreamId") String artifactStreamId) {
@@ -752,6 +765,7 @@ public class YamlResource {
   @PUT
   @Path("/artifact-streams/{artifactStreamId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateArtifactStream(@QueryParam("appId") String appId,
@@ -763,6 +777,7 @@ public class YamlResource {
   @GET
   @Path("/infrastructuremappings/{infraMappingId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getInfraMapping(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("infraMappingId") String infraMappingId) {
@@ -785,6 +800,7 @@ public class YamlResource {
   @GET
   @Path("infrastructuredefinitions/{infraDefinitionId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getInfraDefintion(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("infraDefinitionId") String infraDefinitionId) {
@@ -794,6 +810,7 @@ public class YamlResource {
   @PUT
   @Path("infrastructuredefinitions/{infraDefinitionId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = Action.UPDATE, skipAuth = true)
   public RestResponse<InfrastructureDefinition> updateInfraDefinition(@QueryParam("appId") String appId,
@@ -806,6 +823,7 @@ public class YamlResource {
   @GET
   @Path("/container-tasks/{containerTaskId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getContainerTask(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("containerTaskId") String containerTaskId) {
@@ -815,6 +833,7 @@ public class YamlResource {
   @GET
   @Path("/ecs-service-spec/{ecsServiceSpecificationId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getEcsSErviceSpecification(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId,
@@ -825,6 +844,7 @@ public class YamlResource {
   @PUT
   @Path("/ecs-service-spec/{ecsServiceSpecificationId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateEcsServiceSpecification(@QueryParam("appId") String appId,
@@ -837,6 +857,7 @@ public class YamlResource {
   @PUT
   @Path("/container-tasks/{containerTaskId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateContainerTask(@QueryParam("appId") String appId,
@@ -849,6 +870,7 @@ public class YamlResource {
   @GET
   @Path("/pcfservicespecifications/{pcfservicespecificationId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getPcfservicespecificationId(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId,
@@ -859,6 +881,7 @@ public class YamlResource {
   @PUT
   @Path("/pcfservicespecifications/{pcfservicespecificationId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updatePcfServiceSpecification(@QueryParam("appId") String appId,
@@ -871,6 +894,7 @@ public class YamlResource {
   @GET
   @Path("/helm-charts/{helmChartSpecificationId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getHelmChartSpecification(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId,
@@ -881,6 +905,7 @@ public class YamlResource {
   @PUT
   @Path("/helm-charts/{helmChartSpecificationId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateHelmChartSpecification(@QueryParam("appId") String appId,
@@ -893,6 +918,7 @@ public class YamlResource {
   @GET
   @Path("/lambda-specs/{lambdaSpecId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getLamdbaSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("lambdaSpecId") String lambdaSpecId) {
@@ -915,6 +941,7 @@ public class YamlResource {
   @GET
   @Path("/user-data-specs/{userDataSpecId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getUserDataSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @PathParam("userDataSpecId") String userDataSpecId) {
@@ -924,6 +951,7 @@ public class YamlResource {
   @PUT
   @Path("/lambda-specs/{lambdaSpecId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateLambdaSpec(@QueryParam("appId") String appId,
@@ -942,6 +970,7 @@ public class YamlResource {
    */
   @PUT
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<Base> updateYaml(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId, null);
@@ -976,6 +1005,7 @@ public class YamlResource {
   @GET
   @Path("git-config/{entityId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlGitConfig> get(@PathParam("entityId") String entityId,
       @QueryParam("accountId") String accountId, @QueryParam("entityType") EntityType entityType) {
@@ -1025,6 +1055,7 @@ public class YamlResource {
   @Path("webhook/{entityToken}")
   @Consumes(APPLICATION_JSON)
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   @PublicApiWithWhitelist
   public RestResponse webhookCatcher(@QueryParam("accountId") String accountId,
@@ -1044,6 +1075,7 @@ public class YamlResource {
   @GET
   @Path("webhook/{entityId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<GitSyncWebhook> getWebhook(
       @PathParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
@@ -1064,6 +1096,7 @@ public class YamlResource {
   @GET
   @Path("full-sync-dry-run")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse fullSyncDryRun(@QueryParam("accountId") String accountId, @QueryParam("token") String token,
       @QueryParam("queryAllAccounts") @DefaultValue("false") boolean queryAllAccounts) {
@@ -1090,6 +1123,7 @@ public class YamlResource {
   @GET
   @Path("get-all-yaml-errors")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<List<String>> getAllYamlErrors(@QueryParam("accountId") String accountId,
       @QueryParam("token") String token,
@@ -1104,6 +1138,7 @@ public class YamlResource {
   @GET
   @Path("git-sync-errors")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<List<GitSyncError>> listGitSyncErrors(@QueryParam("accountId") String accountId) {
     return yamlGitService.listGitSyncErrors(accountId);
@@ -1149,6 +1184,7 @@ public class YamlResource {
   @POST
   @Path("clone")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse clone(@QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
       @QueryParam("entityType") String entityType, @QueryParam("entityId") String entityId,
@@ -1213,6 +1249,7 @@ public class YamlResource {
   @GET
   @Path("/internal/full-sync-account")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse fullSyncAccountInternal(@QueryParam("accountId") String accountId) {
     if (!harnessUserGroupService.isHarnessSupportUser(UserThreadLocal.get().getUuid())) {
@@ -1226,6 +1263,7 @@ public class YamlResource {
   @POST
   @Path("/internal/template-yaml-sync")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse templateYamlSync(@QueryParam("accountId") String accountId) {
     if (!harnessUserGroupService.isHarnessSupportUser(UserThreadLocal.get().getUuid())) {
@@ -1299,6 +1337,7 @@ public class YamlResource {
   @GET
   @Path("/compliance-config/{accountId}")
   @Timed
+  @ApiKeyAuthorized
   @ExceptionMetered
   public RestResponse<YamlPayload> getGovernanceConfig(@QueryParam("accountId") String accountId) {
     return yamlResourceService.getGovernanceConfig(accountId);
