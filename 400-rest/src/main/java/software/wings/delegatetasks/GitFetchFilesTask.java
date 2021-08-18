@@ -174,7 +174,7 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     GitFetchFilesResult gitFetchFilesResult;
     encryptionService.decrypt(gitConfig, encryptedDataDetails, false);
     if (scmFetchFilesHelper.shouldUseScm(optimizedFilesFetch, gitConfig)) {
-      gitFetchFilesResult = fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, filePathsToFetch);
+      gitFetchFilesResult = fetchFilesFromRepoWithScm(gitFileConfig, gitConfig, filePathsToFetch, executionLogCallback);
     } else {
       gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
           gitFileConfig.getCommitId(), gitFileConfig.getBranch(), filePathsToFetch, gitFileConfig.isUseBranch());
@@ -186,8 +186,8 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
     return gitFetchFilesResult;
   }
 
-  private GitFetchFilesResult fetchFilesFromRepoWithScm(
-      GitFileConfig gitFileConfig, GitConfig gitConfig, List<String> filePathList) {
+  private GitFetchFilesResult fetchFilesFromRepoWithScm(GitFileConfig gitFileConfig, GitConfig gitConfig,
+      List<String> filePathList, ExecutionLogCallback executionLogCallback) {
     ScmConnector scmConnector = scmFetchFilesHelper.getScmConnector(gitConfig);
     FileContentBatchResponse fileBatchContentResponse;
 
@@ -201,10 +201,25 @@ public class GitFetchFilesTask extends AbstractDelegateRunnableTask {
               scmConnector, filePathList, gitFileConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
     }
 
+    fileBatchContentResponse.getFileBatchContentResponse()
+        .getFileContentsList()
+        .stream()
+        .filter(fileContent -> fileContent.getStatus() != 200)
+        .forEach(fileContent
+            -> executionLogCallback.saveExecutionLog(
+                new StringBuilder("Unable to fetch files for filePath [")
+                    .append(fileContent.getPath())
+                    .append("]")
+                    .append(gitFileConfig.isUseBranch() ? " for Branch: " : " for CommitId: ")
+                    .append(gitFileConfig.isUseBranch() ? gitFileConfig.getBranch() : gitFileConfig.getCommitId())
+                    .toString(),
+                WARN));
+
     List<GitFile> gitFiles =
         fileBatchContentResponse.getFileBatchContentResponse()
             .getFileContentsList()
             .stream()
+            .filter(fileContent -> fileContent.getStatus() == 200)
             .map(fileContent
                 -> GitFile.builder().fileContent(fileContent.getContent()).filePath(fileContent.getPath()).build())
             .collect(Collectors.toList());
