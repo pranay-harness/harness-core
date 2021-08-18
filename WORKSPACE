@@ -4221,9 +4221,9 @@ go_repository(
 
 http_archive(
     name = "rules_spring",
-    sha256 = "2178aa714516fe3ba8e88663aef8e183e6ab28c8bf1f9da96f76533ee86a47b4",
+    sha256 = "9385652bb92d365675d1ca7c963672a8091dc5940a9e307104d3c92e7a789c8e",
     urls = [
-        "https://github.com/salesforce/rules_spring/releases/download/2.1.0/rules-spring-2.1.0.zip",
+        "https://github.com/salesforce/rules_spring/releases/download/2.1.4/rules-spring-2.1.4.zip",
     ],
 )
 
