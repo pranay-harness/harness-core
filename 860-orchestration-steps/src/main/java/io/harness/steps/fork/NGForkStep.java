@@ -1,4 +1,4 @@
-package io.harness.steps.common;
+package io.harness.steps.fork;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
@@ -12,7 +12,6 @@ import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.OrchestrationStepTypes;
-import io.harness.steps.fork.ForkStepParameters;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;
@@ -22,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class NGForkStep implements ChildrenExecutable<ForkStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(OrchestrationStepTypes.NG_FORK).setStepCategory(StepCategory.STEP).build();
+      StepType.newBuilder().setType(OrchestrationStepTypes.NG_FORK).setStepCategory(StepCategory.FORK).build();
 
   @Override
   public ChildrenExecutableResponse obtainChildren(

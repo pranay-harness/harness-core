@@ -178,7 +178,7 @@ public class ParallelPlanCreatorTest extends CategoryTest {
     assertThat(planForParentNode.getName()).isEqualTo("parallel");
     assertThat(planForParentNode.getIdentifier()).isEqualTo("parallel" + parallelStagesField.getNode().getUuid());
     assertThat(planForParentNode.getStepType())
-        .isEqualTo(StepType.newBuilder().setType("NG_FORK").setStepCategory(StepCategory.STEP).build());
+        .isEqualTo(StepType.newBuilder().setType("NG_FORK").setStepCategory(StepCategory.FORK).build());
     assertThat(planForParentNode.getStepParameters() instanceof ForkStepParameters).isTrue();
     assertThat(((ForkStepParameters) planForParentNode.getStepParameters()).getParallelNodeIds())
         .isEqualTo(childrenNodeIds);
@@ -236,7 +236,7 @@ public class ParallelPlanCreatorTest extends CategoryTest {
     assertThat(planForParentNode.getName()).isEqualTo("parallel");
     assertThat(planForParentNode.getIdentifier()).isEqualTo("parallel" + parallelStepsField.getNode().getUuid());
     assertThat(planForParentNode.getStepType())
-        .isEqualTo(StepType.newBuilder().setType("NG_FORK").setStepCategory(StepCategory.STEP).build());
+        .isEqualTo(StepType.newBuilder().setType("NG_FORK").setStepCategory(StepCategory.FORK).build());
     assertThat(planForParentNode.getStepParameters() instanceof ForkStepParameters).isTrue();
     assertThat(((ForkStepParameters) planForParentNode.getStepParameters()).getParallelNodeIds())
         .isEqualTo(childrenNodeIds);
