@@ -224,9 +224,9 @@ logging:
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
 
 timescaledb:
-  timescaledbUrl: ""
-  timescaledbUsername: ""
-  timescaledbPassword: ""
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
   connectTimeout: 10
   socketTimeout: 30
   logUnclosedConnections: false
@@ -625,3 +625,5 @@ auditClientConfig:
 enableAudit: false
 
 disableDelegateMgmtInManager: false
+
+

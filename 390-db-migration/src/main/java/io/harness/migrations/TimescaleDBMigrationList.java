@@ -48,6 +48,7 @@ import io.harness.migrations.timescaledb.DeploymentAdditionalColumns;
 import io.harness.migrations.timescaledb.InitSchemaMigration;
 import io.harness.migrations.timescaledb.InitTriggerFunctions;
 import io.harness.migrations.timescaledb.InitVerificationSchemaMigration;
+import io.harness.migrations.timescaledb.OverviewDashboardMigration;
 import io.harness.migrations.timescaledb.RecommendationsRelatedTables;
 import io.harness.migrations.timescaledb.RenameInstanceMigration;
 import io.harness.migrations.timescaledb.UniqueIndexCEUtilizationDataTables;
@@ -119,6 +120,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(51, CreateCeRecommendationTable.class))
         .add(Pair.of(52, CreateNodeInfoTableAndIsAliveFunction.class))
         .add(Pair.of(53, CreateAccountTables.class))
+        .add(Pair.of(54, OverviewDashboardMigration.class))
         .build();
   }
 }
