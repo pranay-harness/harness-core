@@ -14,8 +14,6 @@ public interface PollingService {
 
   PollingDocument get(String accountId, String pollingDocId);
 
-  String update(@Valid PollingDocument pollingDocument);
-
   void delete(PollingDocument pollingDocument);
 
   boolean attachPerpetualTask(String accountId, String pollDocId, String perpetualTaskId);

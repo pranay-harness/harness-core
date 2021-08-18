@@ -32,7 +32,6 @@ public class PollingServiceImpl implements PollingService {
   @Override
   public String save(PollingDocument pollingDocument) {
     validatePollingDocument(pollingDocument);
-
     PollingDocument savedPollingDoc = pollingRepository.addSubscribersToExistingPollingDoc(
         pollingDocument.getAccountId(), pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(),
         pollingDocument.getPollingType(), pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
@@ -55,26 +54,17 @@ public class PollingServiceImpl implements PollingService {
 
   @Override
   public PollingDocument get(String accountId, String pollingDocId) {
-    return pollingRepository.findByAccountIdAndUuid(accountId, pollingDocId);
-  }
-
-  @Override
-  public String update(PollingDocument pollingDocument) {
-    // not yet implemented / discussed
-    return null;
+    return pollingRepository.findByUuidAndAccountId(accountId, pollingDocId);
   }
 
   @Override
   public void delete(PollingDocument pollingDocument) {
-    PollingDocument savedPollDoc = pollingRepository.deleteDocumentIfOnlySubscriber(pollingDocument.getAccountId(),
-        pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
-        pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
-
+    PollingDocument savedPollDoc = pollingRepository.removeDocumentIfOnlySubscriber(
+        pollingDocument.getAccountId(), pollingDocument.getUuid(), pollingDocument.getSignatures());
     // if savedPollDoc is null that means either it was not the only subscriber or this poll doc doesn't exist in db.
     if (savedPollDoc == null) {
-      pollingRepository.deleteSubscribersFromExistingPollingDoc(pollingDocument.getAccountId(),
-          pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
-          pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
+      pollingRepository.removeSubscribersFromExistingPollingDoc(
+          pollingDocument.getAccountId(), pollingDocument.getUuid(), pollingDocument.getSignatures());
     } else {
       deletePerpetualTask(savedPollDoc);
     }
@@ -101,18 +91,34 @@ public class PollingServiceImpl implements PollingService {
 
   @Override
   public String subscribe(PollingItem pollingItem) {
-    //    if (pollingItem.hasOldPollingPayloadData()) {
-    //      delete(pollingDocumentMapper.toPollingDocument(
-    //          pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getOldPollingPayloadData()));
-    //    }
-    return save(pollingDocumentMapper.toPollingDocument(
-        pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getPollingPayloadData()));
+    boolean newSubscriptionRequest = true;
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
+    PollingDocument existingPollingDoc = null;
+    if (pollingDocument.getUuid() != null) {
+      existingPollingDoc =
+          pollingRepository.findByUuidAndAccountId(pollingDocument.getAccountId(), pollingDocument.getUuid());
+    }
+
+    // Determine if update request
+    if (existingPollingDoc != null && existingPollingDoc.getSignatures().contains(pollingItem.getSignature())) {
+      newSubscriptionRequest = false;
+    }
+
+    if (newSubscriptionRequest) {
+      return save(pollingDocument);
+    } else {
+      if (existingPollingDoc.getPollingInfo().equals(pollingDocument.getPollingInfo())) {
+        return existingPollingDoc.getUuid();
+      } else {
+        delete(pollingDocument);
+        return save(pollingDocument);
+      }
+    }
   }
 
   @Override
   public boolean unsubscribe(PollingItem pollingItem) {
-    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(
-        pollingItem.getQualifier(), pollingItem.getCategory(), pollingItem.getPollingPayloadData());
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
     delete(pollingDocument);
     return true;
   }
