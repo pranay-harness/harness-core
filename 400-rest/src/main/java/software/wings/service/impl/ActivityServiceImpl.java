@@ -9,7 +9,9 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -62,6 +64,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ActivityServiceImpl implements ActivityService {
   public static final int MAX_ACTIVITY_VERSION_RETRY = 5;
   @Inject private WingsPersistence wingsPersistence;

@@ -199,6 +199,7 @@ public class NGSecretResourceV2 {
   }
 
   @POST
+  @Path("/list")
   @ApiOperation(value = "List secrets", nickname = "listSecretsV3")
   public ResponseDTO<PageResponse<SecretResponseWrapper>> listSecrets(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,

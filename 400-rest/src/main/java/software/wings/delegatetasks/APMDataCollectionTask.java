@@ -632,7 +632,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             dataCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(currentEndTime - collectionStartMinute) - 1);
             addHeartbeatRecords(groupNameSet, records);
             List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);
-            log.info("fetched records: {}", allMetricRecords);
+            log.debug("fetched records: {}", allMetricRecords);
             if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
                     dataCollectionInfo.getStateExecutionId(), allMetricRecords)) {
               log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",

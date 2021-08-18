@@ -32,6 +32,7 @@ java_library(
         "//955-delegate-beans:module",
         "//955-filters-sdk:module",
         "//955-outbox-sdk:module",
+        "//956-feature-flag-beans:module",
         "//959-common-entities:module",
         "//960-api-services:module",
         "//960-continuous-features:module",

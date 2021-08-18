@@ -58,6 +58,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InstanaConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
@@ -1036,6 +1037,36 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> settingValidationService.validate(attribute))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("Delegate Selector must be provided if inherit from delegate option is selected.");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testK8sDelegateSelectorValidation() throws IllegalAccessException {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().useKubernetesDelegate(true).skipValidation(true).build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(kubernetesClusterConfig);
+
+    GcpHelperServiceManager gcpHelperServiceManager = mock(GcpHelperServiceManager.class);
+
+    FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
+
+    // useDelegate = true, delegateSelector Provided
+    kubernetesClusterConfig.setDelegateSelectors(Collections.singleton("delegate1"));
+    assertThat(settingValidationService.validate(attribute)).isTrue();
+
+    // useDelegate = true, no delegateSelector Provided
+    kubernetesClusterConfig.setDelegateSelectors(null);
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No Delegate Selector Provided");
+
+    // useDelegate = true, empty delegateSelector Provided
+    kubernetesClusterConfig.setDelegateSelectors(Collections.singleton(""));
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No or Empty Delegate Selector Provided");
   }
 
   @Test

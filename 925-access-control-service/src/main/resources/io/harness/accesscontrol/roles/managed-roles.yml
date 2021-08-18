@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 9
+version: 10
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -85,6 +85,7 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
+        - core_serviceaccount_view
       allowedScopeLevels:
         - project
       managed: true
@@ -153,6 +154,7 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
+        - core_serviceaccount_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -228,6 +230,7 @@ roles:
         - core_license_view
         - core_authsetting_view
         - core_account_view
+        - core_serviceaccount_view
       allowedScopeLevels:
         - account
       managed: true

@@ -11,6 +11,7 @@ import io.harness.accesscontrol.acl.persistence.SourceMetadata;
 import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
 import io.harness.aggregator.consumers.ChangeConsumerService;
+import io.harness.aggregator.consumers.RoleAssignmentCRUDEventHandler;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -29,14 +30,17 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   private ACLRepository aclRepository;
   private RoleAssignmentRepository roleAssignmentRepository;
   private ChangeConsumerService changeConsumerService;
+  private RoleAssignmentCRUDEventHandler roleAssignmentCRUDEventHandler;
 
   @Before
   public void setup() {
     aclRepository = mock(ACLRepository.class);
     roleAssignmentRepository = mock(RoleAssignmentRepository.class);
     changeConsumerService = mock(ChangeConsumerService.class);
-    roleAssignmentChangeConsumer =
-        new RoleAssignmentChangeConsumerImpl(aclRepository, roleAssignmentRepository, changeConsumerService);
+    roleAssignmentCRUDEventHandler = mock(RoleAssignmentCRUDEventHandler.class);
+
+    roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
+        aclRepository, roleAssignmentRepository, changeConsumerService, roleAssignmentCRUDEventHandler);
   }
 
   private List<ACL> getAlreadyExistingACLS() {

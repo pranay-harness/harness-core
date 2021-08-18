@@ -8,7 +8,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
 import java.util.List;
@@ -20,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ExpressionProcessor {
   /**
    * The constant WILD_CHAR.

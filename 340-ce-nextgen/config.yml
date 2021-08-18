@@ -123,6 +123,7 @@ featureFlagConfig:
 
 gcpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
+  gcpAwsConnectorCrudPubSubTopic: "ce-aws-connector-crud"
 
 ceAzureSetupConfig:
   azureAppClientId: azureAppClientIdPlaceholder

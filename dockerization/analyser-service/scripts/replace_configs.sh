@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-CONFIG_FILE=/opt/harness/batch-processing-config.yml
+CONFIG_FILE=/opt/harness/config.yml
 
 replace_key_value () {
   CONFIG_KEY="$1";
@@ -10,6 +10,10 @@ replace_key_value () {
     yq write -i "$CONFIG_FILE" "$CONFIG_KEY" "$CONFIG_VALUE"
   fi
 }
+
+yq delete -i $CONFIG_FILE server.applicationConnectors[0]
+yq write -i $CONFIG_FILE server.adminConnectors "[]"
+
 
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
@@ -39,6 +43,15 @@ if [[ "" != "$MONGO_TRANSACTIONS_ALLOWED" ]]; then
   yq write -i $CONFIG_FILE mongo.transactionsEnabled $MONGO_TRANSACTIONS_ALLOWED
 fi
 
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE eventsFramework.redis.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
 
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE

@@ -9,6 +9,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -22,11 +23,13 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.beans.ShellScriptProvisionOutputVariables;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
@@ -37,7 +40,6 @@ import io.harness.tasks.ResponseData;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
-import software.wings.api.shellscript.provision.ShellScriptProvisionOutputVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
@@ -176,10 +178,14 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     if (executionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       String output = executionData.getOutput();
       Map<String, Object> outputMap = parseOutput(output);
+
+      boolean isSavingOutputToSweepingOutput = featureFlagService.isEnabled(
+          FeatureName.SAVE_SHELL_SCRIPT_PROVISION_OUTPUTS_TO_SWEEPING_OUTPUT, context.getAccountId());
+      validateReserveNameForProvisionerOutput(isSavingOutputToSweepingOutput);
+
       handleSweepingOutput(sweepingOutputService, context, outputMap);
 
-      if (featureFlagService.isEnabled(
-              FeatureName.SAVE_SHELL_SCRIPT_PROVISION_OUTPUTS_TO_SWEEPING_OUTPUT, context.getAccountId())) {
+      if (isSavingOutputToSweepingOutput) {
         saveOutputs(context, outputMap);
       } else {
         outputInfoElement.addOutPuts(outputMap);
@@ -198,6 +204,15 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
         .executionStatus(executionData.getExecutionStatus())
         .errorMessage(executionData.getErrorMsg())
         .build();
+  }
+
+  private void validateReserveNameForProvisionerOutput(boolean isSavingOutputToSweepingOutput) {
+    if (isSavingOutputToSweepingOutput
+        && ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME.equals(getSweepingOutputName())) {
+      throw new InvalidArgumentsException(
+          format("Output variables can not be exported in context with reserved name: %s ",
+              ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME));
+    }
   }
 
   private void saveOutputs(ExecutionContext context, Map<String, Object> outputMap) {

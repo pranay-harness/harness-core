@@ -1790,11 +1790,13 @@ public class AccountServiceImpl implements AccountService {
 
       Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-      long assureInterval = ofDays(2).toMillis();
+      long assureInterval;
       if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
         assureInterval = ofDays(10).toMillis();
       } else if (Calendar.DAY_OF_WEEK == Calendar.SUNDAY) {
         assureInterval = ofDays(30).toMillis();
+      } else {
+        return;
       }
 
       long assureTo = now + assureInterval;

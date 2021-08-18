@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -29,18 +30,23 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.ShellScriptProvisionOutputVariables;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -49,7 +55,6 @@ import io.harness.tasks.ResponseData;
 import software.wings.WingsBaseTest;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
-import software.wings.api.shellscript.provision.ShellScriptProvisionOutputVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -84,6 +89,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ActivityService activityService;
@@ -175,14 +182,18 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.ERROR);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.ERROR);
     assertThat(response.getErrorMessage()).isEqualTo("Error during execution");
-    assertThat(response.getContextElements().get(0)).isNotNull(); // Should create new OutputElement
-    assertThat(response.getNotifyElements().get(0)).isNotNull(); // Should create new OutputElement
+    // Should create new OutputElement
+    assertThat(response.getContextElements().get(0)).isNotNull();
+    // Should create new OutputElement
+    assertThat(response.getNotifyElements().get(0)).isNotNull();
 
     ShellScriptProvisionerOutputElement outputElement = ShellScriptProvisionerOutputElement.builder().build();
     doReturn(outputElement).when(executionContext).getContextElement(ContextElementType.SHELL_SCRIPT_PROVISION);
     response = state.handleAsyncResponse(executionContext, responseData);
-    assertThat(response.getContextElements().get(0)).isSameAs(outputElement); // Reuse existing OutputElement
-    assertThat(response.getNotifyElements().get(0)).isSameAs(outputElement); // Reuse existing OutputElement
+    // Reuse existing OutputElement
+    assertThat(response.getContextElements().get(0)).isSameAs(outputElement);
+    // Reuse existing OutputElement
+    assertThat(response.getNotifyElements().get(0)).isSameAs(outputElement);
   }
 
   @Test
@@ -358,6 +369,20 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
         (ShellScriptProvisionOutputVariables) outputInstances.get(1).getValue();
     assertThat(storedOutputVariables.keySet())
         .containsExactlyInAnyOrder("existing", "outputVariableFromContext", "key");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSaveProvisionerOutputsWithNameShellScriptProvisioner() {
+    String provisionerOutput = "{\"key\": \"value\"}";
+    Map<String, ResponseData> responseData =
+        prepareTestWithResponseDataMap(provisionerOutput, Collections.emptyMap(), null);
+    state.setSweepingOutputName(ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME);
+
+    assertThatThrownBy(() -> state.handleAsyncResponse(executionContext, responseData))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("Output variables can not be exported in context with reserved name");
   }
 
   private Map<String, ResponseData> prepareTestWithResponseDataMap(String provisionerOutput,

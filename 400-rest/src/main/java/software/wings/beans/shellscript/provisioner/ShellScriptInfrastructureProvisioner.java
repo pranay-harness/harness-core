@@ -1,5 +1,9 @@
 package software.wings.beans.shellscript.provisioner;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.api.ShellScriptProvisionerOutputElement;
@@ -17,9 +21,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(HarnessTeam.CDP)
 @JsonTypeName("SHELL_SCRIPT")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ShellScriptInfrastructureProvisioner extends InfrastructureProvisioner {
   @NotEmpty private String scriptBody;
 

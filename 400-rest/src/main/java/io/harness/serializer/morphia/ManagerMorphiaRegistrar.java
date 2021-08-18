@@ -136,7 +136,6 @@ import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.api.pcf.SwapRouteRollbackSweepingOutputPcf;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
-import software.wings.api.shellscript.provision.ShellScriptProvisionOutputVariables;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terragrunt.TerragruntApplyMarkerParam;
@@ -1623,7 +1622,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terraform.TerraformOutputVariables", TerraformOutputVariables.class);
     w.put("api.terragrunt.TerragruntOutputVariables", TerragruntOutputVariables.class);
     w.put("api.arm.ARMOutputVariables", ARMOutputVariables.class);
-    w.put("api.shellscript.provision.ShellScriptProvisionOutputVariables", ShellScriptProvisionOutputVariables.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 
