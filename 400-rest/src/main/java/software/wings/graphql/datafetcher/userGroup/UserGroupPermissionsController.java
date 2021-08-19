@@ -21,6 +21,7 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLO
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.ALLOW_DEPLOYMENTS_DURING_FREEZE;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
@@ -195,6 +196,8 @@ public class UserGroupPermissionsController {
         return MANAGE_IP_WHITELIST;
       case MANAGE_DEPLOYMENT_FREEZES:
         return MANAGE_DEPLOYMENT_FREEZES;
+      case ALLOW_DEPLOYMENTS_DURING_FREEZE:
+        return ALLOW_DEPLOYMENTS_DURING_FREEZE;
       case MANAGE_PIPELINE_GOVERNANCE_STANDARDS:
         return MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
       case VIEW_USER_AND_USER_GROUPS_AND_API_KEYS:
@@ -484,6 +487,8 @@ public class UserGroupPermissionsController {
         return QLAccountPermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
       case MANAGE_DEPLOYMENT_FREEZES:
         return QLAccountPermissionType.MANAGE_DEPLOYMENT_FREEZES;
+      case ALLOW_DEPLOYMENTS_DURING_FREEZE:
+        return QLAccountPermissionType.ALLOW_DEPLOYMENTS_DURING_FREEZE;
       case MANAGE_IP_WHITELIST:
         return QLAccountPermissionType.MANAGE_IP_WHITELIST;
       case MANAGE_AUTHENTICATION_SETTINGS:
