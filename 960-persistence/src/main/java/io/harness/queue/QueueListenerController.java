@@ -22,6 +22,7 @@ public class QueueListenerController implements Managed {
   private List<QueueListener<?>> abstractQueueListeners = new ArrayList<>();
   @Inject private WorkersConfiguration workersConfiguration;
   public void register(QueueListener<?> listener, int threads) {
+    log.info("Initializing QueueListener QueueListenerController");
     if (!workersConfiguration.confirmWorkerIsActive(listener.getClass())) {
       log.info("Not initializing QueueListener: [{}], worker has been configured as inactive", listener.getClass());
       return;
