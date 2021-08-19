@@ -138,6 +138,7 @@ modules = [
     "//940-feature-flag",
     "//940-ng-audit-service",
     "//940-notification-client",
+    "//940-plan-feature-sdk",
     "//940-primary-version-manager",
     "//940-resource-group-beans",
     "//940-secret-manager-client",

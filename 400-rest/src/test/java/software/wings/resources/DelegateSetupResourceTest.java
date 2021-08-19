@@ -33,6 +33,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -94,6 +95,9 @@ import org.mockito.ArgumentCaptor;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@BreakDependencyOn("software.wings.exception.WingsExceptionMapper")
+@BreakDependencyOn("software.wings.service.intfc.DownloadTokenService")
+@BreakDependencyOn("software.wings.utils.ResourceTestRule")
 public class DelegateSetupResourceTest extends CategoryTest {
   private static String accountId = "ACCOUNT_ID";
   private static DelegateService delegateService = mock(DelegateService.class);
@@ -243,7 +247,7 @@ public class DelegateSetupResourceTest extends CategoryTest {
                                                                             .replicas(1)
                                                                             .taskLimit(50)
                                                                             .cpu(0.5)
-                                                                            .ram(1650)
+                                                                            .ram(2560)
                                                                             .build());
     when(delegateService.fetchAvailableSizes()).thenReturn(delegateSizes);
     RestResponse<List<DelegateSizeDetails>> restResponse =

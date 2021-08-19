@@ -333,12 +333,12 @@ public class ManifestHelper {
     return filteredResources.get(0);
   }
 
-  public static String getValuesYamlGitFilePath(String filePath) {
+  public static String getValuesYamlGitFilePath(String filePath, String varFileKey) {
     if (isBlank(filePath)) {
-      return values_filename;
+      return varFileKey;
     }
 
-    return normalizeFolderPath(filePath) + values_filename;
+    return normalizeFolderPath(filePath) + varFileKey;
   }
 
   public static boolean validateValuesFileContents(String valuesFileContent) {

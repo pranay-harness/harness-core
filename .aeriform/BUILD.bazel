@@ -296,6 +296,8 @@ aeriform("//940-ng-audit-service:tests")
 
 aeriform("//940-notification-client:module")
 
+aeriform("//940-plan-feature-sdk:module")
+
 aeriform("//940-primary-version-manager:module")
 
 aeriform("//940-primary-version-manager:tests")

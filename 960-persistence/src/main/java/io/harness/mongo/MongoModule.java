@@ -167,7 +167,7 @@ public class MongoModule extends AbstractModule {
     MongoClient mongoClient = new MongoClient(uri);
 
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
-    primaryDatastore.setQueryFactory(new QueryFactory());
+    primaryDatastore.setQueryFactory(new QueryFactory(mongoConfig.getTraceMode()));
 
     Store store = null;
     if (Objects.nonNull(mongoConfig.getAliasDBName())) {

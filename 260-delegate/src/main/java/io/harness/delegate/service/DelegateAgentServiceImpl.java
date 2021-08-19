@@ -457,6 +457,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       if (!delegateConfiguration.isInstallClientToolsInBackground()) {
+        log.info("Client tools will be installed synchronously, before delegate registers");
         if (delegateConfiguration.isClientToolsDownloadDisabled()) {
           kubectlInstalled = true;
           goTemplateInstalled = true;
@@ -478,6 +479,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           kustomizeInstalled = installKustomize(delegateConfiguration);
           scmInstalled = installScm(delegateConfiguration);
         }
+      } else {
+        log.info("Client tools will be installed in the background, while delegate registers");
       }
 
       logCfCliConfiguration();

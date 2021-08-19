@@ -28,7 +28,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.query.QLApproveOrRejectApprovalsInput;
+import software.wings.graphql.schema.mutation.approval.input.QLApproveOrRejectApprovalsInput;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import graphql.GraphQLContext;
@@ -63,8 +63,8 @@ public class ApproveOrRejectApprovalsDataFetcherTest extends AbstractDataFetcher
   @Owner(developers = ABHINAV_MITTAL)
   @Category(UnitTests.class)
   public void testMutateAndFetchForJiraApprovalType() throws Exception {
-    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput(
-        "executionId", "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment");
+    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput("executionId",
+        "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment", "clientMutationId");
     ApprovalDetails approvalDetails = new ApprovalDetails();
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId("approvalId")
@@ -92,8 +92,8 @@ public class ApproveOrRejectApprovalsDataFetcherTest extends AbstractDataFetcher
   @Owner(developers = ABHINAV_MITTAL)
   @Category(UnitTests.class)
   public void testMutateAndFetchForServiceNowApprovalType() throws Exception {
-    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput(
-        "executionId", "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment");
+    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput("executionId",
+        "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment", "clientMutationId");
     ApprovalDetails approvalDetails = new ApprovalDetails();
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId("approvalId")
@@ -121,8 +121,8 @@ public class ApproveOrRejectApprovalsDataFetcherTest extends AbstractDataFetcher
   @Owner(developers = ABHINAV_MITTAL)
   @Category(UnitTests.class)
   public void testMutateAndFetchForShellApprovalType() throws Exception {
-    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput(
-        "executionId", "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment");
+    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput("executionId",
+        "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment", "clientMutationId");
     ApprovalDetails approvalDetails = new ApprovalDetails();
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId("approvalId")
@@ -153,8 +153,8 @@ public class ApproveOrRejectApprovalsDataFetcherTest extends AbstractDataFetcher
     MutationContext mutationContext =
         MutationContext.builder().accountId("accountId").dataFetchingEnvironment(dataFetchingEnvironment).build();
 
-    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput(
-        "executionId", "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment");
+    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput("executionId",
+        "approvalId", ApprovalDetails.Action.APPROVE, null, "applicationId", "comment", "clientMutationId");
 
     when(persistence.createAuthorizedQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
 
@@ -178,8 +178,8 @@ public class ApproveOrRejectApprovalsDataFetcherTest extends AbstractDataFetcher
     List<NameValuePair> approvalVariableInputs = new LinkedList<>();
     approvalVariableInputs.add(new NameValuePair("approvalName", null, null));
 
-    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput(
-        "executionId", "approvalId", ApprovalDetails.Action.APPROVE, variableInputs, "applicationId", "comment");
+    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput("executionId",
+        "approvalId", ApprovalDetails.Action.APPROVE, variableInputs, "applicationId", "comment", "clientMutationId");
     ApprovalDetails approvalDetails = new ApprovalDetails();
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId("approvalId")
@@ -214,8 +214,8 @@ public class ApproveOrRejectApprovalsDataFetcherTest extends AbstractDataFetcher
     List<NameValuePair> approvalVariableInputs = new LinkedList<>();
     approvalVariableInputs.add(new NameValuePair("approvalName", null, null));
 
-    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput(
-        "executionId", "approvalId", ApprovalDetails.Action.APPROVE, variableInputs, "applicationId", "comment");
+    QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput = new QLApproveOrRejectApprovalsInput("executionId",
+        "approvalId", ApprovalDetails.Action.APPROVE, variableInputs, "applicationId", "comment", "clientMutationId");
     ApprovalDetails approvalDetails = new ApprovalDetails();
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()
                                                    .approvalId("approvalId")

@@ -6,9 +6,7 @@ import static io.harness.exception.WingsException.USER;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.InvalidRequestException;
@@ -22,8 +20,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.query.QLApproveOrRejectApprovalsInput;
-import software.wings.graphql.schema.type.approval.QLApproveOrRejectApprovalsPayload;
+import software.wings.graphql.schema.mutation.approval.input.QLApproveOrRejectApprovalsInput;
+import software.wings.graphql.schema.mutation.approval.payload.QLApproveOrRejectApprovalsPayload;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -35,7 +33,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 @OwnedBy(CDC)
 public class ApproveOrRejectApprovalsDataFetcher
     extends BaseMutatorDataFetcher<QLApproveOrRejectApprovalsInput, QLApproveOrRejectApprovalsPayload> {
@@ -83,7 +80,10 @@ public class ApproveOrRejectApprovalsDataFetcher
         workflowExecutionService.approveOrRejectExecution(approveOrRejectApprovalsInput.getApplicationId(),
             approvalStateExecutionData.getUserGroups(), approvalDetails, apiKeyEntry);
 
-    return QLApproveOrRejectApprovalsPayload.builder().success(success).build();
+    return QLApproveOrRejectApprovalsPayload.builder()
+        .success(success)
+        .clientMutationId(approveOrRejectApprovalsInput.getClientMutationId())
+        .build();
   }
 
   private void verifyApproveOrRejectApprovalsInput(QLApproveOrRejectApprovalsInput approveOrRejectApprovalsInput,

@@ -5,7 +5,7 @@
       "label" : "Laptop",
       "taskLimit" : "50",
       "replicas" : "1",
-      "ram" : "1650",
+      "ram" : "2560",
       "cpu" : "0.5"
     },
     {
@@ -13,7 +13,7 @@
       "label" : "Small",
       "taskLimit" : "100",
       "replicas" : "2",
-      "ram" : "3300",
+      "ram" : "5120",
       "cpu" : "1"
     },
     {
@@ -21,7 +21,7 @@
       "label" : "Medium",
       "taskLimit" : "200",
       "replicas" : "4",
-      "ram" : "6600",
+      "ram" : "10240",
       "cpu" : "2"
     },
     {
@@ -29,7 +29,7 @@
       "label" : "Large",
       "taskLimit" : "400",
       "replicas" : "8",
-      "ram" : "13200",
+      "ram" : "20480",
       "cpu" : "4"
     }
   ]

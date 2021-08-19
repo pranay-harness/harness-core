@@ -20,6 +20,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
@@ -872,13 +873,13 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     Map<K8sValuesLocation, Collection<String>> valuesMap = new HashMap<>();
     valuesMap.put(K8sValuesLocation.ServiceOverride, singletonList("values"));
     when(applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
-             context, appManifestMap, successfulFetchResponse))
+             context, appManifestMap, successfulFetchResponse, VALUES_YAML_KEY))
         .thenReturn(valuesMap);
     abstractK8SState.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
     k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.ServiceOverride)).containsExactly("values");
     verify(applicationManifestUtils, times(1))
-        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse);
+        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse, VALUES_YAML_KEY);
   }
 
   @Test
@@ -1154,7 +1155,9 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     doReturn(infrastructureMapping).when(infrastructureMappingService).get(APP_ID, null);
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build()).when(activityService).save(any(Activity.class));
     doReturn(appManifestMap).when(applicationManifestUtils).getApplicationManifests(context, AppManifestKind.VALUES);
-    doReturn(mockParams).when(applicationManifestUtils).createCustomManifestValuesFetchParams(context, appManifestMap);
+    doReturn(mockParams)
+        .when(applicationManifestUtils)
+        .createCustomManifestValuesFetchParams(context, appManifestMap, VALUES_YAML_KEY);
     doReturn(serviceTemplateId).when(serviceTemplateHelper).fetchServiceTemplateId(infrastructureMapping);
     abstractK8SState.executeWrapperWithManifest(k8sStateExecutor, context, 90000);
 

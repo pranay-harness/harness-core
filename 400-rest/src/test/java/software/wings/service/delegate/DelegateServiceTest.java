@@ -237,6 +237,7 @@ import org.mockito.Mock;
 @BreakDependencyOn("software.wings.licensing.LicenseService")
 @BreakDependencyOn("software.wings.beans.LicenseInfo")
 @BreakDependencyOn("software.wings.cdn.CdnConfig")
+@BreakDependencyOn("software.wings.beans.Event")
 public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
   private static final String DELEGATE_NAME = "harness-delegate";
@@ -1077,7 +1078,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                           .replicas(1)
                                           .taskLimit(50)
                                           .cpu(0.5)
-                                          .ram(1650)
+                                          .ram(2560)
                                           .build();
 
     DelegateParams params = DelegateParams.builder()
@@ -3045,7 +3046,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                        .label("Laptop")
                                        .taskLimit(50)
                                        .replicas(1)
-                                       .ram(1650)
+                                       .ram(2560)
                                        .cpu(0.5)
                                        .build(),
             DelegateSizeDetails.builder()
@@ -3053,7 +3054,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Small")
                 .taskLimit(100)
                 .replicas(2)
-                .ram(3300)
+                .ram(5120)
                 .cpu(1)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3061,7 +3062,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Medium")
                 .taskLimit(200)
                 .replicas(4)
-                .ram(6600)
+                .ram(10240)
                 .cpu(2)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3069,7 +3070,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Large")
                 .taskLimit(400)
                 .replicas(8)
-                .ram(13200)
+                .ram(20480)
                 .cpu(4)
                 .build());
   }

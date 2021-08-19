@@ -117,6 +117,7 @@ BAZEL_MODULES="\
   //940-notification-client:module \
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
+  //940-plan-feature-sdk:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //945-account-mgmt:module \

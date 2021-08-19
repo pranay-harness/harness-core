@@ -76,4 +76,8 @@ public class YamlPipelineUtils {
   public ObjectMapper getMapper() {
     return mapper;
   }
+
+  public String getYamlString(Object value) throws JsonProcessingException {
+    return writeString(value).replaceFirst("---\n", "");
+  }
 }

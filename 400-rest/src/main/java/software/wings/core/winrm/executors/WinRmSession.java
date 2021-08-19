@@ -71,6 +71,9 @@ public class WinRmSession implements AutoCloseable {
       SshHelperUtils.generateTGT(getUserPrincipal(config.getUsername(), config.getDomain()), config.getPassword(),
           config.getKeyTabFilePath(), logCallback);
       shell = null;
+      if (executeCommandString("echo 'checking connection'", null, null, false) != 0) {
+        throw new InvalidRequestException("Cannot reach remote host");
+      }
       winRmTool = null;
       return;
     }

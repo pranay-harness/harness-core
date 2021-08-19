@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.validation.Validator.notNullCheck;
@@ -230,7 +231,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         executionLogCallback.saveExecutionLog("Deployment failed.");
         deleteAndPurgeHelmRelease(commandRequest, executionLogCallback);
       }
-      FileIo.deleteDirectoryAndItsContentIfExists(getWorkingDirectory(commandRequest));
+      deleteDirectoryAndItsContentIfExists(getWorkingDirectory(commandRequest));
     }
   }
 
@@ -366,7 +367,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   private static void copyManifestFilesToWorkingDir(File src, File dest) throws IOException {
     FileUtils.copyDirectory(src, dest);
-    FileUtils.deleteDirectory(src);
+    deleteDirectoryAndItsContentIfExists(src.getAbsolutePath());
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
   }
 
@@ -608,7 +609,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   private void cleanupWorkingDirectory(HelmCommandRequest commandRequest) {
     try {
       if (commandRequest.getWorkingDir() != null) {
-        FileIo.deleteDirectoryAndItsContentIfExists(commandRequest.getWorkingDir());
+        deleteDirectoryAndItsContentIfExists(commandRequest.getWorkingDir());
       }
     } catch (IOException e) {
       log.info("Unable to delete working directory: " + commandRequest.getWorkingDir(), e);

@@ -87,6 +87,7 @@ public class GitSyncModule extends AbstractModule {
         .put(EntityType.CONNECTORS, Microservice.CORE)
         .put(EntityType.PIPELINES, Microservice.PMS)
         .put(EntityType.INPUT_SETS, Microservice.PMS)
+        .put(EntityType.TEMPLATE, Microservice.TEMPLATESERVICE)
         .build();
   }
 

@@ -4221,9 +4221,9 @@ go_repository(
 
 http_archive(
     name = "rules_spring",
-    sha256 = "2178aa714516fe3ba8e88663aef8e183e6ab28c8bf1f9da96f76533ee86a47b4",
+    sha256 = "9385652bb92d365675d1ca7c963672a8091dc5940a9e307104d3c92e7a789c8e",
     urls = [
-        "https://github.com/salesforce/rules_spring/releases/download/2.1.0/rules-spring-2.1.0.zip",
+        "https://github.com/salesforce/rules_spring/releases/download/2.1.4/rules-spring-2.1.4.zip",
     ],
 )
 
@@ -4472,7 +4472,7 @@ plain_artifacts = [
     "commons-collections:commons-collections:3.2.2",
     "commons-dbcp:commons-dbcp:1.4",
     "commons-digester:commons-digester:2.1",
-    "commons-io:commons-io:2.6",
+    "commons-io:commons-io:2.7",
     "commons-lang:commons-lang:2.3",
     "commons-logging:commons-logging:1.1.1",
     "commons-net:commons-net:3.6",

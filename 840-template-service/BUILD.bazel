@@ -6,9 +6,12 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
+    "//900-git-sync-sdk:module",
     "//940-primary-version-manager:module",
     "//948-access-control-sdk:module",
+    "//953-events-api:module",
     "//955-filters-sdk:module",
+    "//955-outbox-sdk:module",
     "//958-migration-sdk:module",
     "//960-ng-core-beans:module",
     "//960-persistence:module",
