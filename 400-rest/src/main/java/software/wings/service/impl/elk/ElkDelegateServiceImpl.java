@@ -34,7 +34,6 @@ import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -141,63 +140,43 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   @Override
-  public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
-    if (apiCallLog == null) {
-      apiCallLog = createApiCallLog(elkConfig.getAccountId(), null);
-    }
+  public Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    ThirdPartyApiCallLog apiCallLog = createApiCallLog(elkConfig.getAccountId(), null);
     apiCallLog.setTitle("Fetching indices from " + elkConfig.getElkUrl());
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    apiCallLog.setRequest(Lists.newArrayList(ThirdPartyApiCallField.builder()
-                                                 .name("connector")
-                                                 .value(elkConfig.getElkConnector().getName())
-                                                 .type(FieldType.TEXT)
-                                                 .build(),
-        ThirdPartyApiCallField.builder()
-            .name("url")
-            .value(elkConfig.getElkUrl() + "/_template")
-            .type(FieldType.URL)
-            .build()));
+
     final Call<Map<String, Map<String, Object>>> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails).template()
         : getElkRestClient(elkConfig, encryptedDataDetails).template();
-    final Response<Map<String, Map<String, Object>>> response = request.execute();
 
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (!response.isSuccessful()) {
-      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-      delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
-      throw new WingsException(response.errorBody().string());
-    }
-
-    apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+    final Map<String, Map<String, Object>> response = requestExecutor.executeRequest(apiCallLog, request);
     final Map<String, ElkIndexTemplate> rv = new HashMap<>();
-    for (Entry<String, Map<String, Object>> indexEntry : response.body().entrySet()) {
+    for (Entry<String, Map<String, Object>> indexEntry : response.entrySet()) {
       if (indexEntry.getKey().charAt(0) != '.') {
         JSONObject jsonObject = new JSONObject((Map) indexEntry.getValue().get("mappings"));
-
         for (String key : jsonObject.keySet()) {
-          JSONObject outerObject = jsonObject.getJSONObject(key);
-          if (outerObject.get("properties") != null) {
-            ElkIndexTemplate indexTemplate = new ElkIndexTemplate();
-            if (indexEntry.getValue().containsKey("index_patterns")) {
-              // TODO picking only the first pattern. should pick all patterns
-              indexTemplate.setName(((ArrayList<String>) indexEntry.getValue().get("index_patterns")).get(0));
-            } else {
-              indexTemplate.setName((String) indexEntry.getValue().get("template"));
+          Object value = jsonObject.get(key);
+          if (value instanceof JSONObject) {
+            JSONObject outerObject = (JSONObject) value;
+            if (outerObject.has("properties")) {
+              ElkIndexTemplate indexTemplate = new ElkIndexTemplate();
+              if (indexEntry.getValue().containsKey("index_patterns")) {
+                // TODO picking only the first pattern. should pick all patterns
+                indexTemplate.setName(((ArrayList<String>) indexEntry.getValue().get("index_patterns")).get(0));
+              } else {
+                indexTemplate.setName((String) indexEntry.getValue().get("template"));
+              }
+              JSONObject propertiesObject = outerObject.getJSONObject("properties");
+              final Map<String, Object> propertiesMap = new HashMap<>();
+              for (String property : propertiesObject.keySet()) {
+                propertiesMap.put(property, propertiesObject.getJSONObject(property).toMap());
+              }
+              indexTemplate.setProperties(propertiesMap);
+              rv.put(indexTemplate.getName(), indexTemplate);
             }
-            JSONObject propertiesObject = outerObject.getJSONObject("properties");
-            final Map<String, Object> propertiesMap = new HashMap<>();
-            for (String property : propertiesObject.keySet()) {
-              propertiesMap.put(property, propertiesObject.getJSONObject(property).toMap());
-            }
-            indexTemplate.setProperties(propertiesMap);
-            rv.put(indexTemplate.getName(), indexTemplate);
           }
         }
       }
     }
-    delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
     return rv;
   }
 

@@ -1,5 +1,7 @@
 package io.harness.cvng.utils;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.UnexpectedException;
 
 import com.google.inject.Inject;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class CVNGParallelExecutor {
   @Inject @Named("cvngParallelExecutor") protected ExecutorService executorService;
 
