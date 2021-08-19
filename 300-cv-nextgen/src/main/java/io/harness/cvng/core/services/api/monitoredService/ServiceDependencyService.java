@@ -3,8 +3,8 @@ package io.harness.cvng.core.services.api.monitoredService;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 
