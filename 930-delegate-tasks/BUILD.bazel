@@ -101,8 +101,6 @@ java_library(
         "module",
         "//:lombok",
         "//950-delegate-tasks-beans:module",
-        "//952-scm-java-client:module",
-        "//953-events-api:module",
         "//954-connector-beans:module",
         "//955-delegate-beans:module",
         "//957-cg-beans:module",
