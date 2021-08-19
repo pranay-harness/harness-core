@@ -63,10 +63,8 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
 
     stringServiceInfoMapBinder.addBinding("io.harness.delegate.DelegateTask")
-        .toInstance(ServiceInfo.builder()
-                        .id("delegate-service-classic")
-                        .secret(delegateServiceConfig.getDelegateServiceSecret())
-                        .build());
+        .toInstance(
+            ServiceInfo.builder().id("delegate-service-classic").secret(delegateServiceConfig.getDmsSecret()).build());
 
     // exception mapper
     Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =
