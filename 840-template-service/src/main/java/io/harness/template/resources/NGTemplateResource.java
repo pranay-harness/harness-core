@@ -15,6 +15,9 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.template.beans.TemplateApplyRequestDTO;
 import io.harness.template.beans.TemplateResponseDTO;
+import io.harness.template.entity.TemplateEntity;
+import io.harness.template.mappers.NGTemplateDtoMapper;
+import io.harness.template.services.NGTemplateService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -52,6 +55,8 @@ import org.springframework.data.domain.Page;
     })
 @Slf4j
 public class NGTemplateResource {
+  private final NGTemplateService templateService;
+
   @GET
   @Path("{templateIdentifier}")
   @ApiOperation(value = "Gets Template", nickname = "getTemplate")
@@ -68,8 +73,17 @@ public class NGTemplateResource {
   @POST
   @ApiOperation(value = "Creates a Template", nickname = "createTemplate")
   public ResponseDTO<TemplateResponseDTO> create(@NotNull String templateYaml,
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    return null;
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId) {
+    TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountId, orgId, projectId, templateYaml);
+    log.info(String.format("Creating Template with identifier %s with label %s in project %s, org %s, account %s",
+        templateEntity.getIdentifier(), templateEntity.getVersionLabel(), projectId, orgId, accountId));
+
+    // TODO(archit): Add schema validations
+    TemplateEntity createdTemplate = templateService.create(templateEntity);
+    return ResponseDTO.newResponse(
+        createdTemplate.getVersion().toString(), NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate));
   }
 
   @PUT

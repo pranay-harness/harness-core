@@ -31,10 +31,10 @@ public class TemplateResponseDTO {
 
   @NotEmpty String yaml;
 
-  String label;
+  String versionLabel;
   boolean isStableTemplate;
 
-  String templateEntityType;
+  TemplateEntityType templateEntityType;
   String childType;
 
   Scope templateScope;

@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
 import static io.harness.TemplateServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -7,7 +8,19 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.exception.GeneralException;
+import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSdkConfiguration;
+import io.harness.gitsync.GitSyncEntitiesConfiguration;
+import io.harness.gitsync.GitSyncSdkConfiguration;
+import io.harness.gitsync.GitSyncSdkConfiguration.DeployMode;
+import io.harness.gitsync.GitSyncSdkInitHelper;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
+import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
@@ -21,6 +34,9 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.request.RequestContextFilter;
 import io.harness.template.InspectCommand;
+import io.harness.template.beans.yaml.NGTemplateConfig;
+import io.harness.template.entity.TemplateEntity;
+import io.harness.template.gitsync.TemplateEntityGitSyncHandler;
 import io.harness.template.migration.TemplateMigrationProvider;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -28,6 +44,8 @@ import io.harness.utils.NGObjectMapperHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -45,8 +63,11 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import lombok.extern.slf4j.Slf4j;
@@ -118,6 +139,32 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     modules.add(TemplateServiceModule.getInstance(templateServiceConfiguration));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(NGMigrationSdkModule.getInstance());
+    CacheModule cacheModule = new CacheModule(templateServiceConfiguration.getCacheConfig());
+    modules.add(cacheModule);
+    if (templateServiceConfiguration.isShouldDeployWithGitSync()) {
+      GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(templateServiceConfiguration);
+      modules.add(new AbstractGitSyncSdkModule() {
+        @Override
+        public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
+          return gitSyncSdkConfiguration;
+        }
+      });
+    } else {
+      modules.add(
+          new SCMGrpcClientModule(templateServiceConfiguration.getGitSdkConfiguration().getScmConnectionConfig()));
+      modules.add(new AbstractGitSyncSdkModule() {
+        @Override
+        protected void configure() {
+          bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+          bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
+        }
+
+        @Override
+        public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
+          return null;
+        }
+      });
+    }
 
     Injector injector = Guice.createInjector(modules);
     registerCorsFilter(templateServiceConfiguration, environment);
@@ -126,10 +173,13 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     registerHealthCheck(environment, injector);
     registerRequestContextFilter(environment);
     registerCorrelationFilter(environment, injector);
+
+    if (templateServiceConfiguration.isShouldDeployWithGitSync()) {
+      registerGitSyncSdk(templateServiceConfiguration, injector, environment);
+    }
     registerMigrations(injector);
 
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
-
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -183,5 +233,40 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
           { add(TemplateMigrationProvider.class); } // Add all migration provider classes here
         })
         .build();
+  }
+
+  private GitSyncSdkConfiguration getGitSyncConfiguration(TemplateServiceConfiguration config) {
+    final Supplier<List<EntityType>> sortOrder = () -> Lists.newArrayList(EntityType.TEMPLATE);
+    ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+    configureObjectMapper(objectMapper);
+    Set<GitSyncEntitiesConfiguration> gitSyncEntitiesConfigurations = new HashSet<>();
+    gitSyncEntitiesConfigurations.add(GitSyncEntitiesConfiguration.builder()
+                                          .yamlClass(NGTemplateConfig.class)
+                                          .entityClass(TemplateEntity.class)
+                                          .entityType(EntityType.TEMPLATE)
+                                          .entityHelperClass(TemplateEntityGitSyncHandler.class)
+                                          .build());
+    final GitSdkConfiguration gitSdkConfiguration = config.getGitSdkConfiguration();
+    return GitSyncSdkConfiguration.builder()
+        .gitSyncSortOrder(sortOrder)
+        .grpcClientConfig(gitSdkConfiguration.getGitManagerGrpcClientConfig())
+        .grpcServerConfig(gitSdkConfiguration.getGitSdkGrpcServerConfig())
+        .deployMode(DeployMode.REMOTE)
+        .microservice(Microservice.TEMPLATESERVICE)
+        .scmConnectionConfig(gitSdkConfiguration.getScmConnectionConfig())
+        .eventsRedisConfig(config.getEventsFrameworkConfiguration().getRedisConfig())
+        .serviceHeader(TEMPLATE_SERVICE)
+        .gitSyncEntitiesConfiguration(gitSyncEntitiesConfigurations)
+        .objectMapper(objectMapper)
+        .build();
+  }
+
+  private void registerGitSyncSdk(TemplateServiceConfiguration config, Injector injector, Environment environment) {
+    GitSyncSdkConfiguration sdkConfig = getGitSyncConfiguration(config);
+    try {
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, sdkConfig);
+    } catch (Exception ex) {
+      throw new GeneralException("Failed to start template service because git sync registration failed", ex);
+    }
   }
 }
