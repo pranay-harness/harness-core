@@ -16,6 +16,7 @@ import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
+import io.harness.licensing.usage.resources.LicenseUsageResource;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.migration.MigrationProvider;
@@ -189,6 +190,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
       }
     }
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
+    environment.jersey().register(injector.getInstance(LicenseUsageResource.class));
   }
 
   private void registerAuthFilters(CENextGenConfiguration configuration, Environment environment, Injector injector) {
