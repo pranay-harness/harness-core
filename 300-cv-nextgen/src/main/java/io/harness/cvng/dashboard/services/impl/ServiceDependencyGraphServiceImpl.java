@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.Risk;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
