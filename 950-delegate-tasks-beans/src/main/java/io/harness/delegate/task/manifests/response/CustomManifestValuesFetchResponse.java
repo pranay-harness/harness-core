@@ -24,6 +24,5 @@ public class CustomManifestValuesFetchResponse implements DelegateTaskNotifyResp
   // Nullable for now as errorMessage is not getting used in K8s CustomValueFetchTask
   @Nullable String errorMessage;
   @NonFinal @Setter String zippedManifestFileId;
-
   @NonFinal @Setter DelegateMetaInfo delegateMetaInfo;
 }
