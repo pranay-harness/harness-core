@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.MOUNIK;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
@@ -44,4 +45,9 @@ public class EventConfigServiceTest extends CategoryTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Event config requires rule to be specified");
   }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void abcd() {}
 }
