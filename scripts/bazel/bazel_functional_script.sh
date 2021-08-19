@@ -13,8 +13,8 @@ if [ "${PLATFORM}" == "jenkins" ]; then
 fi
 
 BAZEL_DIRS=${HOME}/.bazel-dirs
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=standalone"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=ignore"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=remote,worker,sandboxed,local"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=900"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
@@ -29,7 +29,7 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   bazel run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app &
   MANAGER_PID=$!
 
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
+#  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
 
   java -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError \
     -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC \
@@ -37,7 +37,7 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   DELEGATE_PID=$!
 
   #TODO: https://harness.atlassian.net/browse/BT-434
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test/... \
+  bazel test --flaky_test_attempts=1 ${GCP} ${BAZEL_ARGUMENTS} --jobs=1 -- //200-functional-test/... \
     -//200-functional-test:io.harness.functional.nas.NASBuildWorkflowExecutionTest \
     -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest || true
 
