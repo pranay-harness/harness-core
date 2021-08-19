@@ -111,6 +111,7 @@ import org.jvnet.hk2.annotations.Optional;
 @Path("setup-as-code/yaml")
 @Produces(APPLICATION_JSON)
 @Scope(SETTING)
+@ApiKeyAuthorized
 @OwnedBy(DX)
 @Slf4j
 public class YamlResource {
