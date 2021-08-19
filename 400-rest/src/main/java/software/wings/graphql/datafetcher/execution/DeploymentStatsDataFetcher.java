@@ -596,7 +596,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
+    if (!isEnvironmentTypeFilterPresent(filters)
+        && featureFlagService.isEnabled(
+            FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
       selectQuery.addCustomFromTable("deployment_parent t0");
     } else {
       selectQuery.addCustomFromTable(schema.getDeploymentTable());
@@ -618,8 +620,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     addAccountFilter(selectQuery, accountId);
-    if (!CollectionUtils.isEmpty(
-            filters.stream().filter(item -> item.getEnvironmentType() != null).collect(Collectors.toList()))) {
+    if (isEnvironmentTypeFilterPresent(filters)) {
       addWorkflowNotNullFilter(selectQuery);
       addPipelineNullFilter(selectQuery);
     } else if (!includeIndirectExecutions) {
@@ -720,8 +721,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     addAccountFilter(selectTags, accountId);
-    if (!CollectionUtils.isEmpty(
-            filters.stream().filter(filter -> filter.getEnvironmentType() != null).collect(Collectors.toList()))) {
+    if (isEnvironmentTypeFilterPresent(filters)) {
       addWorkflowNotNullFilter(selectQuery);
       addPipelineNullFilter(selectQuery);
     } else if (!includeIndirectExecutions) {
@@ -762,7 +762,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
+    if (!isEnvironmentTypeFilterPresent(filters)
+        && featureFlagService.isEnabled(
+            FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
       existsQuery.addCustomFromTable("deployment_parent t0");
     } else {
       existsQuery.addCustomFromTable("deployment t0");
@@ -1653,6 +1655,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     fieldNames.add(DeploymentMetaDataFields.valueOf(groupBy.getName()));
     selectQuery.addCondition(UnaryCondition.isNotNull(groupBy));
     groupByFields.add(DeploymentMetaDataFields.valueOf(groupBy.getName()));
+  }
+
+  private boolean isEnvironmentTypeFilterPresent(List<QLDeploymentFilter> filters) {
+    return !CollectionUtils.isEmpty(
+        filters.stream().filter(item -> item.getEnvironmentType() != null).collect(Collectors.toList()));
   }
 
   private boolean isValidGroupBy(List<QLDeploymentEntityAggregation> groupBy) {
