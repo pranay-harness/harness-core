@@ -5,9 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -109,5 +111,25 @@ public class MergeHelper {
       log.error("", e);
       return inputSetValue;
     }
+  }
+
+  public String mergeYamlUpdates(YamlUpdates yamlUpdatesFromResponse, String pipelineJson) {
+    Map<String, String> fqnToJsonMap = yamlUpdatesFromResponse.getFqnToYamlMap();
+    YamlNode pipelineNode;
+    try {
+      pipelineNode = YamlUtils.readTree(pipelineJson).getNode();
+    } catch (IOException e) {
+      log.error("Could not read the pipeline json:\n" + pipelineJson, e);
+      throw new InvalidRequestException("Could not read the pipeline json", e);
+    }
+    fqnToJsonMap.keySet().forEach(fqn -> {
+      try {
+        pipelineNode.replacePath(fqn, YamlUtils.readTree(fqnToJsonMap.get(fqn)).getNode().getCurrJsonNode());
+      } catch (IOException e) {
+        log.error("Could not read json provided for the fqn: " + fqn + ". Json:\n" + fqnToJsonMap.get(fqn), e);
+        throw new InvalidRequestException("Could not read json provided for the fqn: " + fqn, e);
+      }
+    });
+    return pipelineNode.toString();
   }
 }

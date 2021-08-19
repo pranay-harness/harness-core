@@ -13,6 +13,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -207,5 +208,33 @@ public class MergeHelperTest extends CategoryTest {
     String fullYamlFile = "helm-command-flags-merged-pipeline.yaml";
     String fullYaml = readFile(fullYamlFile);
     assertThat(mergedYaml).isEqualTo(fullYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeYamlUpdates() {
+    String jsonFile = "pipeline-json.json";
+    String pipelineJson = readFile(jsonFile);
+
+    String updateFile = "pipeline-json-execution-update.json";
+    String executionUpdate = readFile(updateFile);
+    updateFile = "pipeline-json-headers-update.json";
+    String headersUpdate = readFile(updateFile);
+    String headerUpdate = "{\"key\" : \"g\", \"value\" : \"h\"}";
+
+    String fqn1 = "pipeline/stages/[0]/stage/spec/execution";
+    String fqn2 = "pipeline/stages/[0]/stage/spec/execution/steps/[0]/parallel/[0]/step/spec/headers";
+    String fqn3 = "pipeline/stages/[0]/stage/spec/execution/steps/[0]/parallel/[0]/step/spec/headers/[1]";
+    YamlUpdates yamlUpdates = YamlUpdates.newBuilder()
+                                  .putFqnToYaml(fqn1, executionUpdate)
+                                  .putFqnToYaml(fqn2, headersUpdate)
+                                  .putFqnToYaml(fqn3, headerUpdate)
+                                  .build();
+    String updatedJson = MergeHelper.mergeYamlUpdates(yamlUpdates, pipelineJson);
+
+    String resFile = "pipeline-json-updated.json";
+    String pipelineJsonUpdated = readFile(resFile);
+    assertThat(updatedJson).isEqualTo(pipelineJsonUpdated);
   }
 }

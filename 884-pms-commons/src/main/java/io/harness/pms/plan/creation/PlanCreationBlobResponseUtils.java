@@ -10,6 +10,8 @@ import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.YamlUpdates;
+import io.harness.pms.merger.helpers.MergeHelper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -104,5 +106,11 @@ public class PlanCreationBlobResponseUtils {
       layoutNodeInfo.putAllLayoutNodes(layoutMap);
       builder.setGraphLayoutInfo(layoutNodeInfo);
     }
+  }
+
+  public void mergeYamlUpdates(PlanCreationBlobResponse.Builder builder, YamlUpdates yamlUpdatesFromResponse) {
+    String pipelineJson = builder.getDeps().getYaml();
+    String updatedPipelineJson = MergeHelper.mergeYamlUpdates(yamlUpdatesFromResponse, pipelineJson);
+    builder.setDeps(builder.getDeps().toBuilder().setYaml(updatedPipelineJson).build());
   }
 }

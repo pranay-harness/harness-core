@@ -1,0 +1,27 @@
+{
+  "steps" : [ {
+    "parallel" : [ {
+      "step" : {
+        "identifier" : "bing_in_parallel",
+        "type" : "Http",
+        "name" : "bing in parallel",
+        "spec" : {
+          "url" : "https://www.bing.com",
+          "method" : "GET",
+          "headers" : [
+
+          ],
+          "outputVariables" : [
+
+          ],
+          "__uuid" : "BCZCOpjsRtqliAdrYye1ow"
+        },
+        "timeout" : "10s",
+        "__uuid" : "eYwdCXMATPSdvwY5aKKJtQ"
+      },
+      "__uuid" : "B8u2AA6CShCaPtUVjaJrZg"
+    } ],
+    "__uuid" : "lJSRQm6PRF6xT6HpBKLTyA"
+  } ],
+            "__uuid" : "GgSgi-CwSleAZz9j_lqtLg"
+}

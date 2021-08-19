@@ -11,6 +11,8 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,9 +65,6 @@ public class YamlNode implements Visitable {
     }
 
     YamlField field = YamlUtils.readTree(yaml);
-    if (field == null) {
-      return null;
-    }
     return field.getNode().gotoPath(path);
   }
 
@@ -123,6 +122,55 @@ public class YamlNode implements Visitable {
     }
 
     return curr;
+  }
+
+  public void replacePath(String path, JsonNode newNode) {
+    if (EmptyPredicate.isEmpty(path)) {
+      return;
+    }
+
+    List<String> pathList = Arrays.asList(path.split(PATH_SEP));
+    if (EmptyPredicate.isEmpty(pathList)) {
+      return;
+    }
+
+    JsonNode curr = this.currJsonNode;
+    for (int i = 0; i < pathList.size() - 1; i++) {
+      String currName = pathList.get(i);
+      if (curr == null) {
+        return;
+      }
+
+      if (currName.charAt(0) == '[') {
+        if (!curr.isArray()) {
+          throw new YamlException(String.format("Trying to use index path (%s) on non-array node", currName));
+        }
+        try {
+          int idx = Integer.parseInt(currName.substring(1, currName.length() - 1));
+          curr = curr.get(idx);
+        } catch (Exception ex) {
+          throw new YamlException(String.format("Incorrect index path (%s) on array node", currName));
+        }
+      } else {
+        curr = curr.get(currName);
+      }
+    }
+    String lastName = pathList.get(pathList.size() - 1);
+    if (lastName.charAt(0) == '[') {
+      if (!curr.isArray()) {
+        throw new YamlException(String.format("Trying to use index path (%s) on non-array node", lastName));
+      }
+      try {
+        int idx = Integer.parseInt(lastName.substring(1, lastName.length() - 1));
+        ArrayNode arrayNode = (ArrayNode) curr;
+        arrayNode.set(idx, newNode);
+      } catch (Exception ex) {
+        throw new YamlException(String.format("Incorrect index path (%s) on array node", lastName));
+      }
+    } else {
+      ObjectNode objectNode = (ObjectNode) curr;
+      objectNode.set(lastName, newNode);
+    }
   }
 
   public boolean isObject() {

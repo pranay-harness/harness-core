@@ -112,6 +112,7 @@ public class PlanCreatorMergeService {
       }
       PlanCreationBlobResponseUtils.mergeContext(finalResponseBuilder, currIterationResponse.getContextMap());
       PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDeps());
+      PlanCreationBlobResponseUtils.mergeYamlUpdates(finalResponseBuilder, currIterationResponse.getYamlUpdates());
     }
 
     return finalResponseBuilder.build();

@@ -35,6 +35,7 @@ message PlanCreationBlobResponse {
   map<string, PlanCreationContextValue> context = 4;
   GraphLayoutInfo graphLayoutInfo = 5;
   Dependencies deps = 6;
+  YamlUpdates yamlUpdates = 7;
 }
 
 message GraphLayoutInfo {
@@ -118,4 +119,8 @@ message VariablesCreationMetadata {
 message Dependencies {
   string yaml = 1;
   map<string, string> dependencies = 2;
+}
+
+message YamlUpdates {
+  map<string, string> fqnToYaml = 1;
 }

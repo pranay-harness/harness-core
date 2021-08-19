@@ -1,0 +1,78 @@
+{
+  "pipeline" : {
+    "identifier" : "plan_creator_2",
+    "name" : "plan creator 2",
+    "projectIdentifier" : "LocalDev",
+    "orgIdentifier" : "default",
+    "tags" : {"__uuid" : "nXHtTaSkQYWKRPy8Ya96jg"},
+    "stages" : [ {
+      "stage" : {
+        "identifier" : "a11",
+        "type" : "Approval",
+        "name" : "a1-1",
+        "description" : "",
+        "spec" : {
+          "execution" : {
+            "steps" : [ {
+              "parallel" : [
+                {
+                  "step" : {
+                    "identifier" : "google_again",
+                    "type" : "Http",
+                    "name" : "google again",
+                    "spec" : {
+                      "url" : "https://www.google.com",
+                      "method" : "GET",
+                      "headers" : [
+
+                      ],
+                      "outputVariables" : [
+
+                      ],
+                      "__uuid" : "350xoqw5QXm2J2FcGSEyFQ"
+                    },
+                    "timeout" : "10s",
+                    "__uuid" : "rTmUqerVQX6vEWSZiXHkbw"
+                  },
+                  "__uuid" : "vwlk4ua6Rq-Zt3OBwDDUrg"
+                },
+                {
+                  "step" : {
+                    "identifier" : "bing_in_parallel",
+                    "type" : "Http",
+                    "name" : "bing in parallel",
+                    "spec" : {
+                      "url" : "https://www.bing.com",
+                      "method" : "GET",
+                      "headers" : [
+
+                      ],
+                      "outputVariables" : [
+
+                      ],
+                      "__uuid" : "BCZCOpjsRtqliAdrYye1ow"
+                    },
+                    "timeout" : "10s",
+                    "__uuid" : "eYwdCXMATPSdvwY5aKKJtQ"
+                  },
+                  "__uuid" : "B8u2AA6CShCaPtUVjaJrZg"
+                }
+              ],
+              "__uuid" : "lJSRQm6PRF6xT6HpBKLTyA"
+            } ],
+            "__uuid" : "GgSgi-CwSleAZz9j_lqtLg"
+          },
+          "serviceDependencies" : [
+
+          ],
+          "__uuid" : "OIoWFqN9T8ey-YEsn3G95A"
+        },
+        "tags" : {"__uuid" : "YaK6do3mQ5GqbYpVnMZGkw"},
+        "__uuid" : "qmgHkfwcTx2xpRQq1MWtMQ"
+      },
+      "__uuid" : "mtd1DR-cSy274qbC61ZSWg"
+    } ],
+    "__uuid" : "OF57fQJyT66moPyxHVEArg"
+  },
+               "__uuid" : "bfcgyu6iTwqXzbIPxaWlPA"
+}
