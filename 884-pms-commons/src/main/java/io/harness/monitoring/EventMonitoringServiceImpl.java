@@ -25,12 +25,13 @@ public class EventMonitoringServiceImpl implements EventMonitoringService {
       }
       long currentTimeMillis = System.currentTimeMillis();
       if (currentTimeMillis % 100 == 0 || (currentTimeMillis - monitoringInfo.getCreatedAt() > 5000)) {
-        log.info("Sampling the query....");
+        log.info(String.format("Sampled the metric [%s]", metricName));
         metricService.recordMetric(String.format(metricName, monitoringInfo.getMetricPrefix()),
             System.currentTimeMillis() - monitoringInfo.getCreatedAt());
       }
 
     } catch (Exception ex) {
+      log.error("Unknown exception occurred while registering metrics", ex);
       // Ignore the error
     }
   }
