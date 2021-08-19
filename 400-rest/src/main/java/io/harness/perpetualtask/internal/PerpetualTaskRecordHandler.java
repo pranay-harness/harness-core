@@ -117,7 +117,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
-            .persistenceProvider(persistenceProvider)
+            .persistenceProvider(persistenceRequiredProvider)
             .redistribute(true));
     rebalanceIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()

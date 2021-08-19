@@ -431,16 +431,22 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerResources(environment, injector);
 
     // Managed beans
-    registerManagedBeansCommon(configuration, environment, injector);
+    //registerManagedBeansCommon(configuration, environment, injector);
+    //registerManagedBeansManager(configuration, environment, injector);
     if (isManager()) {
-      registerManagedBeansManager(configuration, environment, injector);
+
     }
     if (shouldEnableDelegateMgmt) {
+      registerManagedBeansCommon(configuration, environment, injector);
+      registerManagedBeansManager(configuration, environment, injector);
       registerManagedBeansDelegateService(configuration, environment, injector);
     }
+
     registerWaitEnginePublishers(injector);
+    registerQueueListeners(injector);
+
     if (isManager()) {
-      registerQueueListeners(injector);
+
     }
 
     // Schedule jobs
@@ -452,6 +458,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       scheduleJobsManager(injector, configuration);
     }
     if (shouldEnableDelegateMgmt) {
+
       scheduleJobsDelegateService(injector, configuration);
     }
 
@@ -459,11 +466,12 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerObservers(configuration, injector);
 
-    registerInprocPerpetualTaskServiceClients(injector);
+
 
     if (shouldEnableDelegateMgmt) {
-
+      registerInprocPerpetualTaskServiceClients(injector);
     }
+
 
     if (isManager()) {
       registerCronJobs(injector);
@@ -1121,14 +1129,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
-
-    AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
-    accountService.getAccountCrudSubject().register(
-            (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
-    accountService.getAccountCrudSubject().register(injector.getInstance(Key.get(CEPerpetualTaskHandler.class)));
-    accountService.getAccountCrudSubject().register(
-            (DelegateTokenServiceImpl) injector.getInstance(Key.get(DelegateTokenService.class)));
-
 
   }
 

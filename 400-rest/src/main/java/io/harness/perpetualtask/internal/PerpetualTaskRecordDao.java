@@ -55,6 +55,7 @@ public class PerpetualTaskRecordDao {
   }
 
   public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason) {
+    log.info("Start update on updateTaskUnassignedReason " + taskId);
     Query<PerpetualTaskRecord> query =
         persistence.createQuery(PerpetualTaskRecord.class)
             .filter(PerpetualTaskRecordKeys.uuid, taskId)
