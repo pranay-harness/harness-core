@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
-@TargetModule(_870_CG_ORCHESTRATION)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
