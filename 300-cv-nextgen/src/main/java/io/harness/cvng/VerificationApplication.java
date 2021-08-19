@@ -103,6 +103,7 @@ import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsu
 import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -724,6 +725,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
   }
 
   private void registerResources(Environment environment, Injector injector) {

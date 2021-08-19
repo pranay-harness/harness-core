@@ -31,8 +31,7 @@ public class EventMonitoringServiceImpl implements EventMonitoringService {
       }
 
     } catch (Exception ex) {
-      log.error("Unknown exception occurred while registering metrics", ex);
-      // Ignore the error
+      log.error("Exception Occurred while recording metrics", ex);
     }
   }
 }

@@ -11,6 +11,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.sdk.execution.events.PmsCommonsBaseEventHandler;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
@@ -21,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
-public abstract class PmsBaseEventHandler<T extends Message> {
+public abstract class PmsBaseEventHandler<T extends Message> implements PmsCommonsBaseEventHandler<T> {
   public static String LISTENER_END_METRIC = "%s_queue_time";
   public static String LISTENER_START_METRIC = "%s_time_in_queue";
 
