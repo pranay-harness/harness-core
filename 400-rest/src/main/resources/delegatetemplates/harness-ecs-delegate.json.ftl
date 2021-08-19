@@ -109,6 +109,10 @@
         {
            "name": "KUBECTL_PATH",
            "value": ""
+        },
+        {
+          "name": "INSTALL_CLIENT_TOOLS_IN_BACKGROUND",
+          "value": "true"
         }
       ],
       "memory": 6144,
