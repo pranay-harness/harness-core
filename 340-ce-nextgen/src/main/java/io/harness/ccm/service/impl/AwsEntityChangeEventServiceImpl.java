@@ -97,6 +97,7 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
               ceAwsConnectorDTO.getCrossAccountAccess().getExternalId(),
               ceAwsConnectorDTO.getCrossAccountAccess().getCrossAccountRoleArn(), ceAwsConnectorDTO.getAwsAccountId(),
               entityChangeEvents);
+          publishMessage(entityChangeEvents);
         }
         log.info("CEAwsConnectorDTO: {}", ceAwsConnectorDTO);
         List<CECloudAccount> awsAccounts = new ArrayList<>();
@@ -116,14 +117,7 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
         for (CECloudAccount account : awsAccounts) {
           log.info("Inserting CECloudAccount: {}", account);
           cloudAccountDao.create(account);
-          if (isVisibilityFeatureEnabled(ceAwsConnectorDTO)) {
-            updateEventData(action, identifier, accountIdentifier,
-                account.getAwsCrossAccountAttributes().getExternalId(),
-                account.getAwsCrossAccountAttributes().getCrossAccountRoleArn(), account.getInfraAccountId(),
-                entityChangeEvents);
-          }
         }
-        publishMessage(entityChangeEvents);
         break;
       case UPDATE_ACTION:
         ceAwsConnectorDTO =
@@ -148,16 +142,8 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
         }
         break;
       case DELETE_ACTION:
-        // TODO: Add support later. This has limitations PL-18560
-        /*ceAwsConnectorDTO =
-            (CEAwsConnectorDTO) getConnectorConfigDTO(accountIdentifier, identifier).getConnectorConfig();
-        if (isVisibilityFeatureEnabled(ceAwsConnectorDTO)) {
-          updateEventData(action, identifier, accountIdentifier,
-              ceAwsConnectorDTO.getCrossAccountAccess().getExternalId(),
-              ceAwsConnectorDTO.getCrossAccountAccess().getCrossAccountRoleArn(), ceAwsConnectorDTO.getAwsAccountId(),
-              entityChangeEvents);
-          publishMessage(entityChangeEvents);
-        }*/
+        updateEventData(action, identifier, accountIdentifier, "", "", "", entityChangeEvents);
+        publishMessage(entityChangeEvents);
         break;
       default:
         log.info("Not processing AWS Event, action: {}, entityChangeDTO: {}", action, entityChangeDTO);
