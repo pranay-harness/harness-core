@@ -416,9 +416,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     boolean shouldEnableDelegateMgmt = shouldEnableDelegateMgmt(configuration);
 
-    registerAtmosphereStreams(environment, injector);
     if (shouldEnableDelegateMgmt) {
-
+      registerAtmosphereStreams(environment, injector);
     }
 
     initializeFeatureFlags(configuration, injector);
@@ -434,10 +433,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerResources(environment, injector);
 
-    if (shouldEnableDelegateMgmt){
-      registerDSM(environment, injector);
-    }
-
 
     // Managed beans
     registerManagedBeansCommon(configuration, environment, injector);
@@ -446,9 +441,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
 
-    if (shouldEnableDelegateMgmt){
-      registerWaitEnginePublishers(injector);
-    }
+    registerWaitEnginePublishers(injector);
     if (isManager()) {
       registerQueueListeners(injector);
     }
@@ -456,7 +449,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Schedule jobs
     ScheduledExecutorService delegateExecutor =
         injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegatePool")));
-
     if (isManager()) {
       scheduleJobsManager(injector, configuration, delegateExecutor);
     }
@@ -468,9 +460,11 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerObservers(configuration, injector);
 
-    registerInprocPerpetualTaskServiceClients(injector);
-    if (isManager()) {
+    if (shouldEnableDelegateMgmt){
+      registerInprocPerpetualTaskServiceClients(injector);
+    }
 
+    if (isManager()) {
       registerCronJobs(injector);
     }
 
@@ -901,11 +895,12 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage(injector.getInstance(TimerScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
+    environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
   }
 
   private void registerManagedBeansManager(
       MainConfiguration configuration, Environment environment, Injector injector) {
-    environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
+
     environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));
     environment.lifecycle().manage(injector.getInstance(GcpMarketplaceSubscriberService.class));
     // Perpetual task
@@ -1032,11 +1027,10 @@ public class WingsApplication extends Application<MainConfiguration> {
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
 
     if (isManager()) {
-
+      registerManagerObservers(injector, delegateServiceImpl);
     }
 
     if (shouldEnableDelegateMgmt(configuration)) {
-      registerManagerObservers(injector, delegateServiceImpl);
       registerDelegateServiceObservers(injector, delegateServiceImpl);
     }
   }
@@ -1115,7 +1109,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         (InfrastructureMappingServiceImpl) injector.getInstance(Key.get(InfrastructureMappingService.class));
     infrastructureMappingService.getSubject().register(clusterRecordHandler);
 
-    // Eventually will be moved to dms
     CEPerpetualTaskHandler cePerpetualTaskHandler = injector.getInstance(Key.get(CEPerpetualTaskHandler.class));
     ClusterRecordServiceImpl clusterRecordService =
         (ClusterRecordServiceImpl) injector.getInstance(Key.get(ClusterRecordService.class));

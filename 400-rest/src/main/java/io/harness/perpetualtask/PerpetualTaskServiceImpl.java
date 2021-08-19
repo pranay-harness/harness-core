@@ -151,6 +151,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public boolean resumeTask(String accountId, String taskId) {
+    log.info("Resume the perpetual task");
     return resetTask(accountId, taskId, null);
   }
 
@@ -161,6 +162,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public List<PerpetualTaskAssignDetails> listAssignedTasks(String delegateId) {
+    log.info("Get unassigned perpetual task");
     String accountId = DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY.get(Context.current());
 
     List<PerpetualTaskRecord> taskRecords = perpetualTaskRecordDao.listAssignedTasks(delegateId, accountId);
@@ -176,6 +178,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public List<PerpetualTaskRecord> listAllTasksForAccount(String accountId) {
+    log.info("List All perpetual task");
     return perpetualTaskRecordDao.listAllPerpetualTasksForAccount(accountId);
   }
 
@@ -192,6 +195,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public PerpetualTaskExecutionContext perpetualTaskContext(String taskId) {
+    log.info("Perpetual task context");
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
 
     PerpetualTaskExecutionParams params = getTaskParams(perpetualTaskRecord);
@@ -250,6 +254,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public void onDisconnected(String accountId, String delegateId) {
+    log.info("onDisconnected  perpetual task");
     perpetualTaskRecordDao.markAllTasksOnDelegateForReassignment(accountId, delegateId);
     perpetualTaskCrudSubject.fireInform(PerpetualTaskCrudObxxxxxxxx:onRebalanceRequired);
   }

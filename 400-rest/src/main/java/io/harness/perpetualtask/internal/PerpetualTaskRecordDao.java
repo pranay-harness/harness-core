@@ -188,6 +188,7 @@ public class PerpetualTaskRecordDao {
   }
 
   public void markAllTasksOnDelegateForReassignment(String accountId, String delegateId) {
+    log.info("markAllTasksOnDelegateForReassignmen  perpetual task");
     Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
                                            .filter(PerpetualTaskRecordKeys.accountId, accountId)
                                            .filter(PerpetualTaskRecordKeys.delegateId, delegateId);
