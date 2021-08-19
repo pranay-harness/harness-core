@@ -17,6 +17,8 @@ import io.harness.persistence.UserProvider;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
+import io.harness.template.services.NGTemplateService;
+import io.harness.template.services.NGTemplateServiceImpl;
 import io.harness.time.TimeModule;
 
 import com.google.common.collect.ImmutableList;
@@ -65,6 +67,7 @@ public class TemplateServiceModule extends AbstractModule {
     install(TimeModule.getInstance());
 
     bind(HPersistence.class).to(MongoPersistence.class);
+    bind(NGTemplateService.class).to(NGTemplateServiceImpl.class);
   }
 
   @Provides
