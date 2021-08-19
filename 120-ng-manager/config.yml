@@ -68,6 +68,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: false
   aliasDBName: ng-harness
+  traceMode: DISABLED
 
 accountConfig:
   deploymentClusterName: ""
