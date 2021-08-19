@@ -89,6 +89,23 @@ public class PerpetualTaskRecordDao {
     return update.getUpdatedCount() > 0;
   }
 
+  public long updateTasksSchedule(String accountId, String perpetualTaskType, long intervalInMillis) {
+    Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
+                                           .filter(PerpetualTaskRecordKeys.accountId, accountId)
+                                           .filter(PerpetualTaskRecordKeys.perpetualTaskType, perpetualTaskType);
+
+    UpdateOperations<PerpetualTaskRecord> updateOperations =
+        persistence.createUpdateOperations(PerpetualTaskRecord.class)
+            .set(PerpetualTaskRecordKeys.delegateId, "")
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
+            .set(PerpetualTaskRecordKeys.intervalSeconds, intervalInMillis / 1000)
+            .unset(PerpetualTaskRecordKeys.unassignedReason)
+            .unset(PerpetualTaskRecordKeys.assignerIterations);
+
+    UpdateResults updateResults = persistence.update(query, updateOperations);
+    return updateResults.getUpdatedCount();
+  }
+
   public boolean pauseTask(String accountId, String taskId) {
     Query<PerpetualTaskRecord> query = persistence.createQuery(PerpetualTaskRecord.class)
                                            .filter(PerpetualTaskRecordKeys.accountId, accountId)
