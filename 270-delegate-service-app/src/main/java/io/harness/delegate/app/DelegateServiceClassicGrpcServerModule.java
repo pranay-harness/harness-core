@@ -54,7 +54,7 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
 
     bindableServiceMultibinder.addBinding().to(DelegateServiceClassicGrpcImpl.class);
 
-    bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
+    //bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
     //bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);
 
 

@@ -108,6 +108,7 @@ import io.harness.perpetualtask.instancesync.AzureWebAppInstanceSyncPerpetualTas
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskClient;
+import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
@@ -414,8 +415,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
 
     boolean shouldEnableDelegateMgmt = shouldEnableDelegateMgmt(configuration);
+
+    registerAtmosphereStreams(environment, injector);
     if (shouldEnableDelegateMgmt) {
-      registerAtmosphereStreams(environment, injector);
+
     }
 
     initializeFeatureFlags(configuration, injector);
@@ -442,6 +445,10 @@ public class WingsApplication extends Application<MainConfiguration> {
       registerManagedBeansManager(configuration, environment, injector);
     }
 
+
+    if (shouldEnableDelegateMgmt){
+      registerWaitEnginePublishers(injector);
+    }
     if (isManager()) {
       registerQueueListeners(injector);
     }
@@ -449,6 +456,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Schedule jobs
     ScheduledExecutorService delegateExecutor =
         injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegatePool")));
+
     if (isManager()) {
       scheduleJobsManager(injector, configuration, delegateExecutor);
     }
@@ -923,7 +931,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
 
-    registerWaitEnginePublishers(injector);
+
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     EventListener genericEventListener =
@@ -991,9 +999,10 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void scheduleJobsDelegateService(
       Injector injector, MainConfiguration configuration, ScheduledExecutorService delegateExecutor) {
     log.info("Initializing delegate service scheduled jobs ...");
+
     // delegate task broadcasting schedule job
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
+            .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
 
     delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
                                                 injector.getInstance(ProgressUpdateService.class)),
@@ -1023,10 +1032,11 @@ public class WingsApplication extends Application<MainConfiguration> {
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
 
     if (isManager()) {
-      registerManagerObservers(injector, delegateServiceImpl);
+
     }
 
     if (shouldEnableDelegateMgmt(configuration)) {
+      registerManagerObservers(injector, delegateServiceImpl);
       registerDelegateServiceObservers(injector, delegateServiceImpl);
     }
   }
@@ -1055,11 +1065,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     delegateServiceImpl.getDelegateProfileSubject().register(delegateProfileEventHandler);
     delegateProfileService.getDelegateProfileSubject().register(delegateProfileEventHandler);
 
-    CapabilityServiceImpl capabilityService =
-        (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
-    capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
-        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
-
     // Eventually will be moved to dms
     PerpetualTaskServiceImpl perpetualTaskService =
             (PerpetualTaskServiceImpl) injector.getInstance(Key.get(PerpetualTaskService.class));
@@ -1068,6 +1073,16 @@ public class WingsApplication extends Application<MainConfiguration> {
     perpetualTaskService.getPerpetualTaskStateObserverSubject().register(
             injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
     delegateServiceImpl.getSubject().register(perpetualTaskService);
+
+
+
+    CapabilityServiceImpl capabilityService =
+        (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
+    capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
+        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
+
+
+
   }
 
   /**
