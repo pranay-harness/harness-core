@@ -7,7 +7,9 @@ import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType
 import static software.wings.beans.GitConfig.ProviderType.GITHUB;
 import static software.wings.beans.GitConfig.ProviderType.GITLAB;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
@@ -24,6 +26,7 @@ import java.util.Arrays;
 
 @Singleton
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ScmFetchFilesHelper {
   public boolean shouldUseScm(boolean isOptimizedFilesFetch, GitConfig gitConfig) {
     return isOptimizedFilesFetch && gitConfig.getSshSettingAttribute() == null
