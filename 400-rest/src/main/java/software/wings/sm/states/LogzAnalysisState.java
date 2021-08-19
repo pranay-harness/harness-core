@@ -7,6 +7,9 @@ import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -43,6 +46,8 @@ import org.slf4j.Logger;
  * Created by rsingh on 8/21/17.
  */
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class LogzAnalysisState extends ElkAnalysisState {
   public LogzAnalysisState(String name) {
     super(name, StateType.LOGZ.getType());

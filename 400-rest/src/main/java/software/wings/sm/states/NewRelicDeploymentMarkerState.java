@@ -8,6 +8,9 @@ import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -41,6 +44,8 @@ import org.slf4j.Logger;
 @Attributes
 @Slf4j
 @FieldNameConstants(innerTypeName = "NewRelicDeploymentMarkerStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class NewRelicDeploymentMarkerState extends AbstractAnalysisState {
   @Inject private NewRelicService newRelicService;
 

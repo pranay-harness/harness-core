@@ -7,6 +7,8 @@ import static software.wings.common.VerificationConstants.TIME_DURATION_FOR_LOGS
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.VerificationOperationException;
@@ -43,6 +45,7 @@ import org.json.JSONObject;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAnalysisService {
   @Inject private MLServiceUtils mlServiceUtils;
 
@@ -64,7 +67,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                          .build();
     return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-        .getIndices(elkConfig, encryptedDataDetails, null);
+        .getIndices(elkConfig, encryptedDataDetails);
   }
 
   @Override
