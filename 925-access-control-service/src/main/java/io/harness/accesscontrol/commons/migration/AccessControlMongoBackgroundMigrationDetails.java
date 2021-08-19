@@ -32,7 +32,7 @@ public class AccessControlMongoBackgroundMigrationDetails implements MigrationDe
         .add(Pair.of(1, RoleAssignmentScopeAdditionMigration.class))
         .add(Pair.of(2, ScopeMigration.class))
         .add(Pair.of(3, RoleAssignmentScopeAdditionMigration.class))
-        .add(Pair.of(4, PrivilegedRoleAssignmentMigration.class))
+        .add(Pair.of(5, PrivilegedRoleAssignmentMigration.class))
         .build();
   }
 }
