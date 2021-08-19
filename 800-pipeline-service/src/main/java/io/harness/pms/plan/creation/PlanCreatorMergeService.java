@@ -1,32 +1,44 @@
 package io.harness.pms.plan.creation;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static java.lang.String.format;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.execution.PlanExecutionMetadata;
+import io.harness.pms.async.plan.PartialPlanResponseCallback;
+import io.harness.pms.contracts.plan.CreatePartialPlanEvent;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.PartialPlanResponse;
 import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,10 +57,44 @@ public class PlanCreatorMergeService {
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   private final PmsSdkHelper pmsSdkHelper;
+  private final WaitNotifyEngine waitNotifyEngine;
+  private String publisherName;
+  PmsEventSender pmsEventSender;
 
   @Inject
-  public PlanCreatorMergeService(PmsSdkHelper pmsSdkHelper) {
+  public PlanCreatorMergeService(PmsSdkHelper pmsSdkHelper, PmsEventSender pmsEventSender,
+      WaitNotifyEngine waitNotifyEngine, @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
     this.pmsSdkHelper = pmsSdkHelper;
+    this.pmsEventSender = pmsEventSender;
+    this.waitNotifyEngine = waitNotifyEngine;
+    this.publisherName = publisherName;
+  }
+
+  public void createPlanV2(String accountId, String orgIdentifier, String projectIdentifier, String planUuid,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
+    log.info("Starting plan creation");
+    YamlField pipelineField = YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml());
+    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
+    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
+    String notifyId = generateUuid();
+    pmsEventSender.sendEvent(CreatePartialPlanEvent.newBuilder()
+                                 .putAllDependencies(dependencies)
+                                 .putAllContext(createInitialPlanCreationContext(accountId, orgIdentifier,
+                                     projectIdentifier, metadata, planExecutionMetadata.getTriggerPayload()))
+                                 .setNotifyId(notifyId)
+                                 .build()
+                                 .toByteString(),
+        new HashMap<>(), PmsEventCategory.CREATE_PARTIAL_PLAN, "pms");
+    waitNotifyEngine.waitForAllOnInList(publisherName,
+        PartialPlanResponseCallback.builder()
+            .planUuid(planUuid)
+            .depth(0)
+            .finalResponse(
+                PartialPlanResponse.newBuilder()
+                    .setBlobResponse(PlanCreationBlobResponse.newBuilder().putAllDependencies(dependencies).build())
+                    .build())
+            .build(),
+        Collections.singletonList(notifyId), Duration.ofMinutes(2));
   }
 
   public PlanCreationBlobResponse createPlan(String accountId, String orgIdentifier, String projectIdentifier,

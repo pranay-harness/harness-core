@@ -54,6 +54,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
+import io.harness.plan.consumers.PartialPlanResponseRedisConsumer;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
@@ -96,6 +97,7 @@ import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsu
 import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
@@ -556,6 +558,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
     pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
+    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {

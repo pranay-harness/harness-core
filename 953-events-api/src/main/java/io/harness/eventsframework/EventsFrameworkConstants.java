@@ -44,6 +44,9 @@ public final class EventsFrameworkConstants {
   public static final String PIPELINE_SDK_RESPONSE_EVENT_TOPIC = "pipeline_sdk_response";
   public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
 
+  public static final String PIPELINE_PARTIAL_PLAN_RESPONSE = "pipeline_partial_plan_response";
+  public static final int PIPELINE_PARTIAL_PLAN_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
+
   public static final String PIPELINE_INTERRUPT_TOPIC = "pipeline_interrupt";
   public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 1;
   public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
@@ -67,6 +70,10 @@ public final class EventsFrameworkConstants {
   public static final String PIPELINE_NODE_RESUME_EVENT_TOPIC = "pipeline_node_resume";
   public static final int PIPELINE_NODE_RESUME_BATCH_SIZE = 1;
   public static final int PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE = 5000;
+
+  public static final String START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC = "pipeline_start_plan";
+  public static final int START_PARTIAL_PLAN_CREATOR_BATCH_SIZE = 1;
+  public static final int START_PARTIAL_PLAN_CREATOR_MAX_TOPIC_SIZE = 5000;
 
   public static final int DEFAULT_TOPIC_SIZE = 10000;
   public static final int USER_MEMBERSHIP_TOPIC_SIZE = 100000;
