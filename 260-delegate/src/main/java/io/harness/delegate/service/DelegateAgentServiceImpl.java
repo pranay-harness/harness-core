@@ -1477,7 +1477,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       statusData.put(DELEGATE_SELF_DESTRUCT, true);
     } else {
       statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-      statusData.put(DELEGATE_VERSION, getVersion());
+      statusData.put(DELEGATE_VERSION, getVersionWithPatch());
       statusData.put(DELEGATE_IS_NEW, false);
       statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
       statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
