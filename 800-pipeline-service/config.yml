@@ -156,6 +156,9 @@ logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
+opaServerConfig:
+  baseUrl: http://localhost:3000
+
 iteratorsConfig:
   approvalInstanceIteratorConfig:
     enabled: true
