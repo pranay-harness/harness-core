@@ -1343,7 +1343,8 @@
             "HttpHelmRepo",
             "NewRelic",
             "Datadog",
-            "SumoLogic"
+            "SumoLogic",
+            "PagerDuty"
           ]
         }
       },
@@ -1761,6 +1762,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/NexusConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "PagerDuty"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PagerDutyConnectorDTO"
               }
             }
           }
@@ -3647,6 +3664,32 @@
               ]
             }
           ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PagerDutyConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiTokenRef"
+          ],
+          "properties": {
+            "apiTokenRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
