@@ -10,6 +10,7 @@ import static io.harness.mongo.IndexManagerCollectionSession.createCollectionSes
 import static io.harness.mongo.IndexManagerSession.Type.NORMAL_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.SPARSE_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.UNIQUE_INDEX;
+import static io.harness.mongo.IndexUtils.isUniqueIndex;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.lang.String.format;
@@ -414,6 +415,9 @@ public class IndexManagerSession {
     BasicDBObject tempOptions = (BasicDBObject) indexCreator.getOptions().copy();
     tempOptions.put(NAME, "TRI_" + currentTimeMillis());
 
+    // The new temporary index should serve only for querying. We have to stop enforcing the uniqueness.
+    tempOptions.remove(UNIQUE);
+
     IndexCreator tempCreator = IndexCreator.builder()
                                    .originalName(indexCreator.name())
                                    .collection(indexCreator.getCollection())
@@ -434,21 +438,35 @@ public class IndexManagerSession {
 
     // Check if the temporary index soaked enough
     long indexTime = Long.parseLong(triIndex.get(NAME).toString().substring(4));
-    if (indexTime + waitFor.toMillis() > currentTimeMillis()) {
-      return false;
-    }
+    boolean socked = indexTime + waitFor.toMillis() < currentTimeMillis();
 
-    // now it is safe to drop the colliding indexes
+    boolean pathIsClear = true;
+    boolean anotherIndexAssuresUniquenessIfNeeded = false;
     DBObject indexByFields = collectionSession.findIndexByFields(indexCreator);
     if (indexByFields != null) {
-      String currentName = (String) indexByFields.get(NAME);
-      dropIndex(indexCreator.getCollection(), currentName);
+      // if we have colliding field index it is ok to wait for the soaking period, only if the unique flag is the same
+      if (socked || isUniqueIndex(indexCreator.getOptions()) != isUniqueIndex(indexByFields)) {
+        String dbName = (String) indexByFields.get(NAME);
+        dropIndex(indexCreator.getCollection(), dbName);
+      } else {
+        anotherIndexAssuresUniquenessIfNeeded = true;
+        pathIsClear = false;
+      }
     }
 
     String currentName = (String) indexCreator.getOptions().get(NAME);
     DBObject indexByName = collectionSession.findIndexByName(currentName);
     if (indexByName != null && indexByName != indexByFields) {
-      dropIndex(indexCreator.getCollection(), currentName);
+      // If we are unique index we have to clean the path if there is no another index to assure the uniqueness
+      if (socked || (isUniqueIndex(indexCreator.getOptions()) && !anotherIndexAssuresUniquenessIfNeeded)) {
+        dropIndex(indexCreator.getCollection(), currentName);
+      } else {
+        pathIsClear = false;
+      }
+    }
+
+    if (!pathIsClear) {
+      return false;
     }
 
     // Lets create the target index

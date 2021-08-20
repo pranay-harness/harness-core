@@ -1,12 +1,9 @@
 package io.harness.mongo;
 
-import static io.harness.mongo.IndexManagerSession.UNIQUE;
-
 import io.harness.mongo.index.IndexType;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import java.util.Iterator;
 import java.util.Map;
 import lombok.Builder;
@@ -79,11 +76,6 @@ public class IndexCreator {
       }
     }
     return !iterator2.hasNext();
-  }
-
-  public static boolean isUniqueIndex(DBObject index) {
-    Boolean flag = (Boolean) index.get(UNIQUE);
-    return flag != null && flag.booleanValue();
   }
 
   public boolean sameKeysOrder(BasicDBObject keys) {

@@ -114,16 +114,8 @@ class IndexManagerCollectionSession {
     }
 
     if (indexByName != null) {
-      Boolean newUniqueFlag = (Boolean) indexCreator.getOptions().get(UNIQUE);
-
-      if (newUniqueFlag == null || !newUniqueFlag.booleanValue()) {
-        if (IndexCreator.isUniqueIndex(indexByName)) {
-          return true;
-        }
-      } else {
-        if (!IndexCreator.isUniqueIndex(indexByName)) {
-          return true;
-        }
+      if (IndexUtils.isUniqueIndex(indexCreator.getOptions()) != IndexUtils.isUniqueIndex(indexByName)) {
+        return true;
       }
     }
 

@@ -173,10 +173,10 @@ public class IndexManagerCollectionSessionTest extends PersistenceTestBase {
     DBCollection collection = persistence.getCollection(TestIndexEntity.class);
     DBObject index = createCollectionSession(collection).findIndexByName("index");
     assertThat(index).isNotNull();
-    assertThat(IndexCreator.isUniqueIndex(index)).isFalse();
+    assertThat(IndexUtils.isUniqueIndex(index)).isFalse();
 
     DBObject uniqueIndex = createCollectionSession(collection).findIndexByName("uniqueTest_1");
     assertThat(uniqueIndex).isNotNull();
-    assertThat(IndexCreator.isUniqueIndex(uniqueIndex)).isTrue();
+    assertThat(IndexUtils.isUniqueIndex(uniqueIndex)).isTrue();
   }
 }
