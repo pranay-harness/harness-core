@@ -135,7 +135,7 @@ public class EcrArtifactResource {
     return ResponseDTO.newResponse(isValidArtifactImage);
   }
 
-  @GET
+  @POST
   @Path("validateArtifact")
   @ApiOperation(value = "Validate Ecr Artifact", nickname = "validateArtifactForEcr")
   public ResponseDTO<Boolean> validateArtifact(@NotNull @QueryParam("imagePath") String imagePath,
