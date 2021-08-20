@@ -1,6 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 load("//:tools/bazel/macros.bzl", "resources")
+load("//:tools/bazel/harness.bzl", "application_version")
 
 resources()
 

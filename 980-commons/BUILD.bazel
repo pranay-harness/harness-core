@@ -20,12 +20,12 @@ java_library(
     ],
     resources = [
         "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
         ":980_commons_java_proto",
         "//:lombok",
+        "//990-commons-test:abstract-module",
         "//999-annotations:module",
         "@maven//:aopalliance_aopalliance",
         "@maven//:ch_qos_logback_contrib_logback_jackson",

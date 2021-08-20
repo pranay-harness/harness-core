@@ -2536,17 +2536,6 @@
                 <inherited>false</inherited>
                 <executions>
                     <execution>
-                        <id>1.populate versionInfo</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <executable>bash</executable>
-                            <commandlineArgs>${basedir}/scripts/bazel/UpdateVersionInfoyaml.sh "${build.number}"</commandlineArgs>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>2.generate bazel credentials</id>
                         <goals>
                             <goal>exec</goal>

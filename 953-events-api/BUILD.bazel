@@ -1,6 +1,7 @@
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/harness.bzl", "java_library")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "java_binary")
 
 HarnessTeam = "PL"
 

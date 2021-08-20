@@ -8,7 +8,7 @@ container_run_and_commit(
     name = "delegate_layer_1_image",
     commands = [
         "apt-get update",
-        "apt-get -y install apt-utils curl unzip apt-transport-https gnupg2 vim",
+        "apt-get -y install apt-utils curl unzip apt-transport-https gnupg2",
         "curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -",
         "echo \"deb http://apt.kubernetes.io/ kubernetes-xenial main\" > /etc/apt/sources.list.d/kubernetes.list",
         "apt-get -y install kubectl",

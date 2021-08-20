@@ -1,5 +1,7 @@
 exports_files([
+    "build.properties",
     "tools/bazel/signer.sh",
+    "tools/bazel/version.sh",
 ])
 
 ########################################################################################################
