@@ -785,7 +785,6 @@ import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwapRoutesExecut
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
-import software.wings.utils.RepositoryType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
@@ -1387,7 +1386,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BugsnagSetupTestData.class, 7168);
     kryo.register(ServiceNowFields.class, 7169);
     kryo.register(ServiceNowExecutionData.class, 7170);
-    kryo.register(RepositoryType.class, 7171);
     kryo.register(BuildDetails.BuildStatus.class, 7174);
     kryo.register(MLAnalysisType.class, 7175);
     kryo.register(GCSHelmRepoConfig.class, 7176);

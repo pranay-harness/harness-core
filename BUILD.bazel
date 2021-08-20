@@ -163,6 +163,7 @@ modules = [
     #"//950-timeout-engine",
     "//950-wait-engine",
     "//950-walktree-visitor",
+    "//951-cg-git-sync",
     "//951-ng-audit-commons",
     "//952-scm-java-client",
     "//953-events-api",
