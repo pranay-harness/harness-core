@@ -15,16 +15,19 @@ echo "JIRA Key is : $KEY "
 jira_response=`curl -X GET -H "Content-Type: application/json" https://harness.atlassian.net/rest/api/2/issue/${KEY}?fields=issuetype,customfield_10687,customfield_10709,customfield_10748,customfield_10763,customfield_10785 --user $JIRA_USERNAME:$JIRA_PASSWORD`
 
 issuetype=`echo "${jira_response}" | jq ".fields.issuetype.name" | tr -d '"'`
-bug_resolution=`echo "${jira_response}" | jq ".fields.customfield_10687" | tr -d '"'`
-jira_resolved_as=`echo "${jira_response}" | jq ".fields.customfield_10709" | tr -d '"'`
-phase_injected=`echo "${jira_response}" | jq ".fields.customfield_10748" | tr -d '"'`
 if [[ $KEY == BT-* ]]
 then
+  bug_resolution="n/a"
   what_changed="n/a"
   ff_added="n/a"
+  jira_resolved_as="n/a"
+  phase_injected="n/a"
 else
+  bug_resolution=`echo "${jira_response}" | jq ".fields.customfield_10687" | tr -d '"'`
   what_changed=`echo "${jira_response}" | jq ".fields.customfield_10763" | tr -d '"'`
   ff_added=`echo "${jira_response}" | jq ".fields.customfield_10785.value" | tr -d '"'`
+  jira_resolved_as=`echo "${jira_response}" | jq ".fields.customfield_10709" | tr -d '"'`
+  phase_injected=`echo "${jira_response}" | jq ".fields.customfield_10748" | tr -d '"'`
 fi
 
 echo "issueType is ${issuetype}"
@@ -38,7 +41,7 @@ then
 
       if [[ "${jira_resolved_as}" = "null" ]]
       then
-        echo "jira resolved is not selected"
+        echo "jira_resolved_as is not selected"
       fi
 
       if [[ "${phase_injected}" = "null" ]]
