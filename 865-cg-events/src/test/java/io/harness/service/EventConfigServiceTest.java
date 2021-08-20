@@ -113,7 +113,7 @@ public class EventConfigServiceTest extends CategoryTest {
     CgEventRule eventRule = new CgEventRule();
     eventRule.setType(CgEventRule.CgRuleType.ALL);
     CgEventConfig cgEventConfig = CgEventConfig.builder()
-                                      .name("config")
+                                      .name("config4")
                                       .accountId(GLOBAL_ACCOUNT_ID)
                                       .appId(GLOBAL_APP_ID)
                                       .enabled(true)
