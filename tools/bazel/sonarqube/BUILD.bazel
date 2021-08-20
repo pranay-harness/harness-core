@@ -8,8 +8,8 @@ sonarqube_coverage_generator_binary()
 genrule(
     name = "sonarqube_coverage_generator",
     outs = ["coverage.launcher"],
-    cmd = "ln -snf $$(readlink $(location :SonarQubeCoverageGenerator)) $@",
-    executable = 1,
+    cmd = "ln -snf $$(readlink $(location :SonarQubeCoverageGenerator)) \"$@\"",
+    executable = True,
     tags = ["no-cache"],  # successful execution even when --remote_cache is involved
     tools = [":SonarQubeCoverageGenerator"],
     visibility = ["//visibility:public"],
