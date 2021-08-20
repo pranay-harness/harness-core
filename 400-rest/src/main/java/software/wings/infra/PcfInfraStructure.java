@@ -5,7 +5,9 @@ import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.Expression;
 
 import software.wings.annotation.IncludeFieldMap;
@@ -25,6 +27,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PcfInfraStructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   private String cloudProviderId;
   @Expression(DISALLOW_SECRETS) @IncludeFieldMap private String organization;

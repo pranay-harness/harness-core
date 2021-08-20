@@ -9,7 +9,9 @@ import static software.wings.beans.InfrastructureType.AWS_ECS;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
@@ -38,6 +40,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "AwsEcsInfrastructureKeys")
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsEcsInfrastructure
     implements InfraMappingInfrastructureProvider, ContainerInfrastructure, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;
