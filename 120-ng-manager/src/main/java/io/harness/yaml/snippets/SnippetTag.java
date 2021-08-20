@@ -47,5 +47,6 @@ public enum SnippetTag implements YamlSnippetTags {
   prometheus,
   datadog,
   sumologic,
-  dynatrace
+  dynatrace,
+  pagerduty
 }

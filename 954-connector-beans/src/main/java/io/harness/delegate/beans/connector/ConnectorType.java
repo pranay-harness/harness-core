@@ -42,7 +42,8 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo"),
   @JsonProperty("NewRelic") NEW_RELIC("NewRelic"),
   @JsonProperty("Datadog") DATADOG("Datadog"),
-  @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic");
+  @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic"),
+  @JsonProperty("PagerDuty") PAGER_DUTY("PagerDuty");
   private final String displayName;
 
   @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
