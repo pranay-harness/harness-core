@@ -321,6 +321,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
+    fetchFilesTaskParams.setOptimizedFilesFetch(
+        featureFlagService.isEnabled(OPTIMIZED_GIT_FETCH_FILES, context.getAccountId()));
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
     fetchFilesTaskParams.setDelegateSelectors(
