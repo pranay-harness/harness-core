@@ -77,6 +77,8 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("hostname") String hostname;
+  @JsonProperty("basePathPrefix") String basePathPrefix;
 
   private String managerServiceSecret;
   private String managerTarget;
@@ -115,7 +117,8 @@ public class PipelineServiceConfiguration extends Configuration {
     String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setHost("{{localhost}}");
+    defaultSwaggerBundleConfiguration.setHost(hostname);
+    defaultSwaggerBundleConfiguration.setUriPrefix(basePathPrefix);
     defaultSwaggerBundleConfiguration.setTitle("PMS API Reference");
     defaultSwaggerBundleConfiguration.setVersion("2.0");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
