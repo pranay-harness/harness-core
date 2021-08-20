@@ -581,6 +581,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       }
     }
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
+      if (infrastructureProvisionerService.get(infraDefinition.getAppId(), infraDefinition.getProvisionerId())
+          == null) {
+        throw new InvalidRequestException("ProvisionerId is Invaild", USER);
+      }
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();
       Map<String, String> expressions = provisionerAwareInfra.getExpressions();
       if (isEmpty(expressions)) {
