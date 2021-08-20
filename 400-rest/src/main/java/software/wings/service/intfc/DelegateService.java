@@ -47,8 +47,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
-  boolean checkDelegateConnected(String accountId, String delegateId);
-
   List<String> getKubernetesDelegateNames(String accountId);
 
   Set<String> getAllDelegateSelectors(String accountId);
