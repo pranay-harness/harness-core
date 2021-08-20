@@ -31,6 +31,7 @@ java_library(
         "//950-ng-project-n-orgs:module",
         "//950-wait-engine:module",
         "//951-ng-audit-commons:module",
+        "//953-events-api:module",
         "//955-alert-beans:module",
         "//955-delegate-beans:module",
         "//955-filters-sdk:module",
@@ -80,6 +81,7 @@ java_library(
         "@maven//:org_mongodb_morphia_morphia",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_data_spring_data_commons",
+        "@maven//:ru_vyarus_guice_validator",
     ],
 )
 
@@ -92,6 +94,8 @@ java_library(
         ":module",
         "//:lombok",
         "//420-delegate-service/src/test/java/resources",
+        "//460-capability:module",
+        "//470-alert:module",
         "//870-cg-orchestration:module",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
