@@ -118,6 +118,7 @@ import software.wings.helpers.ext.gcb.models.TimeSpan;
 import software.wings.helpers.ext.gcb.models.VerifyOption;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.internal.SdkInternalList;
@@ -295,6 +296,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(NexusRequest.class, 1441);
     kryo.register(RepositoryFormat.class, 7204);
+    kryo.register(RepositoryType.class, 7171);
 
     kryo.register(AzureAppServiceApplicationSetting.class, 1442);
     kryo.register(AzureAppServiceConnectionString.class, 1443);

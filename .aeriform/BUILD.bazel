@@ -370,6 +370,8 @@ aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
 
+aeriform("//951-cg-git-sync:module")
+
 aeriform("//951-ng-audit-commons:module")
 
 aeriform("//952-scm-java-client:module")

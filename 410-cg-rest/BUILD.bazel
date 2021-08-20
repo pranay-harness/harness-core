@@ -8,6 +8,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//445-cg-connectors:module",
         "//870-cg-orchestration:module",
         "//940-feature-flag:module",
         "//950-delegate-tasks-beans:module",
