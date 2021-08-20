@@ -298,6 +298,8 @@ aeriform("//940-notification-client:module")
 
 aeriform("//940-plan-feature-sdk:module")
 
+aeriform("//940-plan-feature-sdk:tests")
+
 aeriform("//940-primary-version-manager:module")
 
 aeriform("//940-primary-version-manager:tests")
@@ -355,6 +357,10 @@ aeriform("//950-ng-core:tests")
 aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
+
+aeriform("//950-opa-client:module")
+
+aeriform("//950-opa-client:tests")
 
 aeriform("//950-telemetry:module")
 
