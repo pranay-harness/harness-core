@@ -102,6 +102,10 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
       criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).regex(startsWithScope);
     }
 
+    if (!roleAssignmentFilter.getScopeLevelFilter().isEmpty()) {
+      criteria.and(RoleAssignmentDBOKeys.scopeLevel).in(roleAssignmentFilter.getScopeLevelFilter());
+    }
+
     if (!roleAssignmentFilter.getRoleFilter().isEmpty()) {
       criteria.and(RoleAssignmentDBOKeys.roleIdentifier).in(roleAssignmentFilter.getRoleFilter());
     }
