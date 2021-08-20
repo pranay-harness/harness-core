@@ -1,12 +1,10 @@
 package io.harness.cvng;
 
-import com.google.common.collect.Sets;
-import io.harness.cvng.core.beans.ProjectParams;
-import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
-import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO.ChangeSourceDTOBuilder;
-import io.harness.cvng.core.entities.changeSource.HarnessCDNGChangeSource;
-import io.harness.cvng.core.entities.changeSource.HarnessCDNGChangeSource.HarnessCDNGChangeSourceBuilder;
-import io.harness.cvng.core.types.ChangeSourceType;
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
@@ -17,7 +15,8 @@ import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
+import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO.ChangeSourceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -25,6 +24,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Monitored
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.core.entities.CVConfig;
@@ -39,6 +39,9 @@ import io.harness.cvng.core.entities.StackdriverCVConfig;
 import io.harness.cvng.core.entities.StackdriverCVConfig.StackdriverCVConfigBuilder;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
+import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
+import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource.HarnessCDChangeSourceBuilder;
+import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
@@ -52,13 +55,8 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO.EnvironmentResp
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO.ServiceResponseDTOBuilder;
 import io.harness.pms.yaml.ParameterField;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.Value;
 
+import com.google.common.collect.Sets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -71,10 +69,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.Value;
 
 @Data
 @Builder(buildMethodName = "unsafeBuild")
@@ -296,19 +296,19 @@ public class BuilderFactory {
         .productName(generateUuid());
   }
 
-  public HarnessCDNGChangeSourceBuilder getHarnessCDNGChangeSourceBuilder() {
-    return HarnessCDNGChangeSource.builder()
+  public HarnessCDChangeSourceBuilder getHarnessCDChangeSourceBuilder() {
+    return HarnessCDChangeSource.builder()
         .accountId(context.getAccountId())
         .orgIdentifier(context.getOrgIdentifier())
         .projectIdentifier(context.getProjectIdentifier())
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier())
         .enabled(true)
-        .type(ChangeSourceType.HARNESS_CDNG);
+        .type(ChangeSourceType.HARNESS_CD);
   }
 
-  public ChangeSourceDTOBuilder getHarnessCDNGChangeSourceDTOBuilder() {
-    return getChangeSourceDTOBuilder(ChangeSourceType.HARNESS_CDNG);
+  public ChangeSourceDTOBuilder getHarnessCDChangeSourceDTOBuilder() {
+    return getChangeSourceDTOBuilder(ChangeSourceType.HARNESS_CD);
   }
 
   private ChangeSourceDTOBuilder getChangeSourceDTOBuilder(ChangeSourceType changeSourceType) {

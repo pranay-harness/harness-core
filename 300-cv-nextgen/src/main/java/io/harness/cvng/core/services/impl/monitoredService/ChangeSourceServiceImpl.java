@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
-import io.harness.cvng.core.beans.EnvironmentParams;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
@@ -30,10 +30,8 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Inject private Map<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeSourceUpdatableMap;
 
   @Override
-  public void create(@NonNull EnvironmentParams environmentParams, @NonNull Set<ChangeSourceDTO> changeSourceDTOs) {
-    if (CollectionUtils.isEmpty(changeSourceDTOs)) {
-      return;
-    }
+  public void create(
+      @NonNull ServiceEnvironmentParams environmentParams, @NonNull Set<ChangeSourceDTO> changeSourceDTOs) {
     validate(changeSourceDTOs);
     validateChangeSourcesDoesntExist(environmentParams, changeSourceDTOs);
     List<ChangeSource> changeSources = changeSourceDTOs.stream()
@@ -43,7 +41,8 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   }
 
   @Override
-  public Set<ChangeSourceDTO> get(@NonNull EnvironmentParams environmentParams, @NonNull List<String> identifiers) {
+  public Set<ChangeSourceDTO> get(
+      @NonNull ServiceEnvironmentParams environmentParams, @NonNull List<String> identifiers) {
     if (CollectionUtils.isEmpty(identifiers)) {
       return Collections.emptySet();
     }
@@ -57,12 +56,13 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   }
 
   @Override
-  public void delete(@NonNull EnvironmentParams environmentParams, @NonNull List<String> identifiers) {
+  public void delete(@NonNull ServiceEnvironmentParams environmentParams, @NonNull List<String> identifiers) {
     mongoQuery(environmentParams).field(ChangeSourceKeys.identifier).in(identifiers).forEach(hPersistence::delete);
   }
 
   @Override
-  public void update(@NonNull EnvironmentParams environmentParams, @NonNull Set<ChangeSourceDTO> changeSourceDTOs) {
+  public void update(
+      @NonNull ServiceEnvironmentParams environmentParams, @NonNull Set<ChangeSourceDTO> changeSourceDTOs) {
     validate(changeSourceDTOs);
     Map<String, ChangeSource> newChangeSourceMap =
         changeSourceDTOs.stream()
@@ -121,17 +121,17 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     return hPersistence.createQuery(ChangeSource.class).field(ChangeSourceKeys.uuid).in(uuids);
   }
 
-  private Query<ChangeSource> mongoQuery(EnvironmentParams environmentParams) {
+  private Query<ChangeSource> mongoQuery(ServiceEnvironmentParams environmentParams) {
     return hPersistence.createQuery(ChangeSource.class)
-        .filter(ChangeSourceKeys.accountId, environmentParams.getProjectParams().getAccountIdentifier())
-        .filter(ChangeSourceKeys.orgIdentifier, environmentParams.getProjectParams().getOrgIdentifier())
-        .filter(ChangeSourceKeys.projectIdentifier, environmentParams.getProjectParams().getProjectIdentifier())
+        .filter(ChangeSourceKeys.accountId, environmentParams.getAccountIdentifier())
+        .filter(ChangeSourceKeys.orgIdentifier, environmentParams.getOrgIdentifier())
+        .filter(ChangeSourceKeys.projectIdentifier, environmentParams.getProjectIdentifier())
         .filter(ChangeSourceKeys.serviceIdentifier, environmentParams.getServiceIdentifier())
-        .filter(ChangeSourceKeys.envIdentifier, environmentParams.getEnvIdentifier());
+        .filter(ChangeSourceKeys.envIdentifier, environmentParams.getEnvironmentIdentifier());
   }
 
   private void validateChangeSourcesDoesntExist(
-      EnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs) {
+      ServiceEnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs) {
     Set<ChangeSourceDTO> changeSourceDTOS = get(environmentParams,
         changeSourceDTOs.stream().map(changeSourceDTO -> changeSourceDTO.getIdentifier()).collect(Collectors.toList()));
 

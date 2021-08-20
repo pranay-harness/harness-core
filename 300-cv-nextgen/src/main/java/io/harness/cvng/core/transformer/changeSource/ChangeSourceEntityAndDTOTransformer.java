@@ -1,7 +1,7 @@
 package io.harness.cvng.core.transformer.changeSource;
 
-import io.harness.cvng.core.beans.EnvironmentParams;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 
 import com.google.inject.Inject;
@@ -12,7 +12,7 @@ import com.google.inject.name.Names;
 public class ChangeSourceEntityAndDTOTransformer {
   @Inject Injector injector;
 
-  public ChangeSource getEntity(EnvironmentParams environmentParams, ChangeSourceDTO changeSourceDTO) {
+  public ChangeSource getEntity(ServiceEnvironmentParams environmentParams, ChangeSourceDTO changeSourceDTO) {
     ChangeSourceSpecTransformer changeSourceSpecTransformer =
         injector.getInstance(Key.get(ChangeSourceSpecTransformer.class, Names.named(changeSourceDTO.getType().name())));
     return changeSourceSpecTransformer.getEntity(environmentParams, changeSourceDTO);

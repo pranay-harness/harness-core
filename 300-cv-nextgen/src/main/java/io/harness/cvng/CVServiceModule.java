@@ -61,7 +61,7 @@ import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntit
 import io.harness.cvng.core.entities.StackdriverCVConfig.StackDriverCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
-import io.harness.cvng.core.entities.changeSource.HarnessCDNGChangeSource;
+import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -144,7 +144,7 @@ import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServi
 import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServiceImpl;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
-import io.harness.cvng.core.transformer.changeSource.HarnessCDNGChangeSourceSpecTransformer;
+import io.harness.cvng.core.transformer.changeSource.HarnessCDChangeSourceSpecTransformer;
 import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
@@ -454,14 +454,14 @@ public class CVServiceModule extends AbstractModule {
 
     MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
-    changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CDNG)
-        .to(HarnessCDNGChangeSource.UpdatableCDNGChangeSourceEntity.class);
+    changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
+        .to(HarnessCDChangeSource.UpdatableCDNGChangeSourceEntity.class);
 
     bind(ChangeSourceService.class).to(ChangeSourceServiceImpl.class);
     bind(ChangeSourceEntityAndDTOTransformer.class);
     bind(ChangeSourceSpecTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.HARNESS_CDNG.name()))
-        .to(HarnessCDNGChangeSourceSpecTransformer.class);
+        .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
+        .to(HarnessCDChangeSourceSpecTransformer.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

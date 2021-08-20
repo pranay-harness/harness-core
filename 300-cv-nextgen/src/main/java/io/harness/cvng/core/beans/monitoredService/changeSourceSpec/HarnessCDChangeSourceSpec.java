@@ -5,4 +5,4 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class HarnessCDNGChangeSourceSpec extends ChangeSourceSpec {}
+public class HarnessCDChangeSourceSpec extends ChangeSourceSpec {}

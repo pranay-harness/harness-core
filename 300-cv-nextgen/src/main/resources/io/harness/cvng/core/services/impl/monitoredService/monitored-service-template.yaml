@@ -10,7 +10,8 @@ monitoredService:
   sources:
     healthSources:
     changeSources:
-      - identifier:
-        type: HarnessCDNG
+      - name:
+        identifier:
+        type: HarnessCD
         desc:
         enabled :

@@ -1,17 +1,17 @@
 package io.harness.cvng.core.services.api.monitoredService;
 
-import io.harness.cvng.core.beans.EnvironmentParams;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 
 import java.util.List;
 import java.util.Set;
 
 public interface ChangeSourceService {
-  void create(EnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs);
+  void create(ServiceEnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs);
 
-  Set<ChangeSourceDTO> get(EnvironmentParams environmentParams, List<String> identifiers);
+  Set<ChangeSourceDTO> get(ServiceEnvironmentParams environmentParams, List<String> identifiers);
 
-  void delete(EnvironmentParams environmentParams, List<String> identifiers);
+  void delete(ServiceEnvironmentParams environmentParams, List<String> identifiers);
 
-  void update(EnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs);
+  void update(ServiceEnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs);
 }

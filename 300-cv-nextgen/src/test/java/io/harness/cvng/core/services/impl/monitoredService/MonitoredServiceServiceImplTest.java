@@ -21,8 +21,6 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.beans.EnvironmentParams;
-import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
@@ -31,6 +29,8 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRe
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -98,7 +98,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   String changeSourceIdentifier;
   String description;
   ProjectParams projectParams;
-  EnvironmentParams environmentParams;
+  ServiceEnvironmentParams environmentParams;
   Map<String, String> tags;
 
   @Before
@@ -131,10 +131,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                         .orgIdentifier(orgIdentifier)
                         .projectIdentifier(projectIdentifier)
                         .build();
-    environmentParams = EnvironmentParams.builder()
-                            .projectParams(projectParams)
+    environmentParams = ServiceEnvironmentParams.builder()
+                            .accountIdentifier(accountId)
+                            .orgIdentifier(orgIdentifier)
+                            .projectIdentifier(projectIdentifier)
                             .serviceIdentifier(serviceIdentifier)
-                            .envIdentifier(environmentIdentifier)
+                            .environmentIdentifier(environmentIdentifier)
                             .build();
 
     FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
@@ -736,7 +738,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             MonitoredServiceDTO.Sources.builder()
                 .healthSources(
                     Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
-                .changeSources(Arrays.asList(builderFactory.getHarnessCDNGChangeSourceDTOBuilder().build())
+                .changeSources(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())
                                    .stream()
                                    .collect(Collectors.toSet()))
                 .build())

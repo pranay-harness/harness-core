@@ -14,15 +14,17 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ChangeSourceDTO {
+  @NotEmpty String name;
   @NotEmpty String identifier;
   @NotEmpty String description;
 
-  @JsonProperty(DATA_SOURCE_TYPE) ChangeSourceType type;
   boolean enabled;
+
+  @JsonProperty(DATA_SOURCE_TYPE) ChangeSourceType type;
 
   ChangeSourceSpec spec;
 }

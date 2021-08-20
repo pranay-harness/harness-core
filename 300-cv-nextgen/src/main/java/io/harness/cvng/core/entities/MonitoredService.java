@@ -90,4 +90,11 @@ public final class MonitoredService
     }
     return healthSourceIdentifiers;
   }
+
+  public List<String> getChangeSourceIdentifiers() {
+    if (changeSourceIdentifiers == null) {
+      return new ArrayList<>();
+    }
+    return changeSourceIdentifiers;
+  }
 }
