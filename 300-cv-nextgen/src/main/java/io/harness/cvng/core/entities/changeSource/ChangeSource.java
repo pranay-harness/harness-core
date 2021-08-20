@@ -42,6 +42,7 @@ public abstract class ChangeSource
   long lastUpdatedAt;
 
   @NotNull String accountId;
+  @NotNull String name;
   @NotNull String orgIdentifier;
   @NotNull String projectIdentifier;
 

@@ -17,6 +17,7 @@ public class HarnessCDChangeSourceSpecTransformer
         .serviceIdentifier(environmentParams.getServiceIdentifier())
         .envIdentifier(environmentParams.getEnvironmentIdentifier())
         .identifier(changeSourceDTO.getIdentifier())
+        .name(changeSourceDTO.getName())
         .enabled(changeSourceDTO.isEnabled())
         .description(changeSourceDTO.getDescription())
         .type(ChangeSourceType.HARNESS_CD)

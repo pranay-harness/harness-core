@@ -13,6 +13,7 @@ public abstract class ChangeSourceSpecTransformer<E extends ChangeSource, S exte
         .spec(getSpec(changeSource))
         .description(changeSource.getDescription())
         .enabled(changeSource.isEnabled())
+        .name(changeSource.getName())
         .identifier(changeSource.getIdentifier())
         .type(changeSource.getType())
         .build();
