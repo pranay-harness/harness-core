@@ -1,5 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
@@ -9,6 +11,10 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -73,6 +79,26 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                                               : Arrays.asList(LogAnalysisTag.values());
     return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, tags,
         Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), cvConfigIds, page, size);
+  }
+
+  @Override
+  public PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
+      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, DataSourceType dataSourceType,
+      PageParams pageParams) {
+    List<CVConfig> configs =
+        cvConfigService.getConfigsOfProductionEnvironments(serviceEnvironmentParams.getAccountIdentifier(),
+            serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+            serviceEnvironmentParams.getEnvironmentIdentifier(), serviceEnvironmentParams.getServiceIdentifier(), null);
+    if (dataSourceType != null) {
+      configs =
+          configs.stream().filter(cvConfig -> cvConfig.getType().equals(dataSourceType)).collect(Collectors.toList());
+    }
+    List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+    List<LogAnalysisTag> tags = isEmpty(clusterTypes) ? Arrays.asList(LogAnalysisTag.values()) : clusterTypes;
+    return getLogs(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+        serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getServiceIdentifier(),
+        serviceEnvironmentParams.getEnvironmentIdentifier(), tags, timeRangeParams.getStartTime(),
+        timeRangeParams.getEndTime(), cvConfigIds, pageParams.getPage(), pageParams.getSize());
   }
 
   private List<String> getCVConfigIdsForActivity(String accountId, String activityId) {
