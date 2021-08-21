@@ -20,6 +20,7 @@ import io.harness.Microservice;
 import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
+import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.filter.NGScopeAccessCheckFilter;
 import io.harness.annotations.dev.OwnedBy;
@@ -547,6 +548,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.jersey().register(OptimisticLockingFailureExceptionMapper.class);
     environment.jersey().register(NotFoundExceptionMapper.class);
     environment.jersey().register(InvalidUserRemoveRequestExceptionMapper.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }
