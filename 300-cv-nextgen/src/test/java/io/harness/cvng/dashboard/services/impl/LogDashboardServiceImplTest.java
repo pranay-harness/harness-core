@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
@@ -23,6 +24,10 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -44,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +63,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
   private String serviceIdentifier;
   private String envIdentifier;
   private String accountId;
+  private ServiceEnvironmentParams serviceEnvironmentParams;
 
   @Inject private LogDashboardService logDashboardService;
   @Inject private HPersistence hPersistence;
@@ -73,6 +80,13 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
     accountId = generateUuid();
+    serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                   .accountIdentifier(accountId)
+                                   .orgIdentifier(orgIdentifier)
+                                   .projectIdentifier(projectIdentifier)
+                                   .serviceIdentifier(serviceIdentifier)
+                                   .environmentIdentifier(envIdentifier)
+                                   .build();
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(logDashboardService, "logAnalysisService", mockLogAnalysisService, true);
     FieldUtils.writeField(logDashboardService, "cvConfigService", mockCvConfigService, true);
@@ -406,6 +420,215 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_AnomalousLogs() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, true, startTime, endTime, labelList);
+    when(mockCvConfigService.getConfigsOfProductionEnvironments(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    PageResponse<AnalyzedLogDataDTO> pageResponse =
+        logDashboardService.getAllLogsData(serviceEnvironmentParams, timeRangeParams,
+            LogAnalysisTag.getAnomalousTags().stream().collect(Collectors.toList()), DataSourceType.SPLUNK, pageParams);
+
+    verify(mockCvConfigService)
+        .getConfigsOfProductionEnvironments(
+            accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    pageResponse.getContent().forEach(analyzedLogDataDTO -> {
+      assertThat(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED)
+                     .contains(analyzedLogDataDTO.getLogData().getTag()));
+    });
+
+    boolean containsKnown = false;
+    for (AnalyzedLogDataDTO analyzedLogDataDTO : pageResponse.getContent()) {
+      if (analyzedLogDataDTO.getLogData().getTag().equals(LogAnalysisTag.KNOWN)) {
+        containsKnown = true;
+        break;
+      }
+    }
+    assertThat(containsKnown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_AnomalousLogsFilteredWithDataSourceType() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, true, startTime, endTime, labelList);
+    when(mockCvConfigService.getConfigsOfProductionEnvironments(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(serviceEnvironmentParams,
+        timeRangeParams, LogAnalysisTag.getAnomalousTags().stream().collect(Collectors.toList()),
+        DataSourceType.APP_DYNAMICS, pageParams);
+
+    verify(mockCvConfigService)
+        .getConfigsOfProductionEnvironments(
+            accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_AnomalousLogsValidatePagination() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(1).build();
+
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, true, startTime, endTime, labelList);
+    when(mockCvConfigService.getConfigsOfProductionEnvironments(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(serviceEnvironmentParams,
+        timeRangeParams, LogAnalysisTag.getAnomalousTags().stream().collect(Collectors.toList()), null, pageParams);
+
+    verify(mockCvConfigService)
+        .getConfigsOfProductionEnvironments(
+            accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getTotalItems()).isEqualTo(4);
+    assertThat(pageResponse.getPageSize()).isEqualTo(1);
+    assertThat(pageResponse.getTotalPages()).isGreaterThan(1);
+    pageResponse.getContent().forEach(analyzedLogDataDTO -> {
+      assertThat(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED)
+                     .contains(analyzedLogDataDTO.getLogData().getTag()));
+    });
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_AnomalousLogsNoCvConfigPresent() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(1).build();
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, true, startTime, endTime, labelList);
+    when(mockCvConfigService.getConfigsOfProductionEnvironments(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(new ArrayList<>());
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(serviceEnvironmentParams,
+        timeRangeParams, LogAnalysisTag.getAnomalousTags().stream().collect(Collectors.toList()), null, pageParams);
+
+    verify(mockCvConfigService)
+        .getConfigsOfProductionEnvironments(
+            accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_AllLogs() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+    when(mockCvConfigService.getConfigsOfProductionEnvironments(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, Arrays.asList(LogAnalysisTag.values()), null, pageParams);
+
+    verify(mockCvConfigService)
+        .getConfigsOfProductionEnvironments(
+            accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    boolean containsKnown = false;
+    for (AnalyzedLogDataDTO analyzedLogDataDTO : pageResponse.getContent()) {
+      if (analyzedLogDataDTO.getLogData().getTag().equals(LogAnalysisTag.KNOWN)) {
+        containsKnown = true;
+        break;
+      }
+    }
+    assertThat(containsKnown).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_AllLogsFilteredUsingDataSourceType() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+    when(mockCvConfigService.getConfigsOfProductionEnvironments(
+             accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(serviceEnvironmentParams,
+        timeRangeParams, Arrays.asList(LogAnalysisTag.values()), DataSourceType.SPLUNK, pageParams);
+
+    verify(mockCvConfigService)
+        .getConfigsOfProductionEnvironments(
+            accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    boolean containsKnown = false;
+    for (AnalyzedLogDataDTO analyzedLogDataDTO : pageResponse.getContent()) {
+      if (analyzedLogDataDTO.getLogData().getTag().equals(LogAnalysisTag.KNOWN)) {
+        containsKnown = true;
+        break;
+      }
+    }
+    assertThat(containsKnown).isTrue();
   }
 
   private List<LogAnalysisResult> buildLogAnalysisResults(
