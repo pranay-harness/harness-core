@@ -65,7 +65,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
           break;
         }
 
-        log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
+        log.debug("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
         ResponseData responseData = disableDeserialization
             ? BinaryResponseData.builder().data(lockedAsyncTaskResponse.getResponseData()).build()
             : (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData());
@@ -108,7 +108,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
                                        .in(responsesToBeDeleted));
 
     if (deleteSuccessful) {
-      log.info("Deleted process responses for task list {}", responsesToBeDeleted);
+      log.debug("Deleted process responses for task list {}", responsesToBeDeleted);
       responsesToBeDeleted.clear();
     }
 

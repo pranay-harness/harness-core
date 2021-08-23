@@ -234,7 +234,7 @@ public class DelegateAgentResource {
       long startTime = System.currentTimeMillis();
       DelegateRegisterResponse registerResponse =
           delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
-      log.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
+      log.debug("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
       return new RestResponse<>(registerResponse);
     }
   }
@@ -454,9 +454,9 @@ public class DelegateAgentResource {
       @PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId, byte[] logsBlob) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      log.info("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
+      log.debug("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
       List<ThirdPartyApiCallLog> logs = (List<ThirdPartyApiCallLog>) kryoSerializer.asObject(logsBlob);
-      log.info("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
+      log.debug("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
 
       persistence.save(logs);
     }
@@ -479,7 +479,7 @@ public class DelegateAgentResource {
       BuildSourceExecutionResponse executionResponse = (BuildSourceExecutionResponse) kryoSerializer.asObject(response);
 
       if (executionResponse.getBuildSourceResponse() != null) {
-        log.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+        log.debug("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
       }
       artifactCollectionResponseHandler.processArtifactCollectionResult(accountId, perpetualTaskId, executionResponse);
     }
@@ -528,7 +528,7 @@ public class DelegateAgentResource {
           (ManifestCollectionExecutionResponse) kryoSerializer.asObject(serializedExecutionResponse);
 
       if (executionResponse.getManifestCollectionResponse() != null) {
-        log.info("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
+        log.debug("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
       }
       manifestCollectionResponseHandler.handleManifestCollectionResponse(accountId, perpetualTaskId, executionResponse);
     }

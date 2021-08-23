@@ -136,7 +136,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
               DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
         persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
         persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
-        log.info("Batch saved successfully");
+        log.debug("Batch saved successfully");
       } else {
         batch.getDelegateSelectionLogs().stream().map(this::constructSelectionLogString).distinct().forEach(log::info);
       }
@@ -362,7 +362,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       final Set<String> delegateIds, final Map<String, DelegateSelectionLogMetadata> metadata, final String message,
       final String conclusion, final String groupId) {
     if (batch == null) {
-      log.info("SelectionLog (no taskId): {}, Conclusion {}, groupId {}", message, conclusion, groupId);
+      log.debug("SelectionLog (no taskId): {}, Conclusion {}, groupId {}", message, conclusion, groupId);
       return;
     }
 

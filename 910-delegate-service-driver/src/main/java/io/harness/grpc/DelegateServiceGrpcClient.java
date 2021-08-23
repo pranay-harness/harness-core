@@ -102,7 +102,7 @@ public class DelegateServiceGrpcClient {
     final SubmitTaskResponse submitTaskResponse =
         submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
-    log.info("sync task id created =[{}]", taskId);
+    log.debug("sync task id created =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
         Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
@@ -129,7 +129,7 @@ public class DelegateServiceGrpcClient {
     final SubmitTaskResponse submitTaskResponse =
         submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
-    log.info("ID for Sync Task =[{}]", taskId);
+    log.debug("ID for Sync Task =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
         Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
