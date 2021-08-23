@@ -27,16 +27,29 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
     LdapSearch ldapSearch = ldapGetUsersRequest.getLdapSearch();
     LdapUserConfig ldapUserConfig = ldapGetUsersRequest.getLdapUserConfig();
     SearchResult searchResult = null;
-    try {
-      searchResult = ldapSearch.execute(ldapUserConfig.getReturnAttrs());
-      if (searchResult == null || searchResult.size() == 0) {
-        log.info("Got zero results with regular search, trying with fallbackLDAPSearch instead for search to work");
-        searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
-      }
-    } catch (LdapException le) {
-      ldapResultCode = le.getResultCode();
+    if (!ldapGetUsersRequest.isUseOnlyFallBackMechanism()) {
       try {
-        log.info("LDAP Search failed errorCode = {} , trying fallback ldapSearch", ldapResultCode);
+        searchResult = ldapSearch.execute(ldapUserConfig.getReturnAttrs());
+        if (searchResult == null || searchResult.size() == 0) {
+          log.info("Got zero results with regular search, trying with fallbackLDAPSearch instead for search to work");
+          searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
+        }
+      } catch (LdapException le) {
+        ldapResultCode = le.getResultCode();
+        try {
+          log.info("LDAP Search failed errorCode = {} , trying fallback ldapSearch", ldapResultCode);
+          searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
+        } catch (LdapException ldapException) {
+          ldapResultCode = ldapException.getResultCode();
+          log.error("LdapException ErrorCode = {}", ldapResultCode);
+          log.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {}",
+              ldapUserConfig.getBaseDN(), ldapUserConfig.getSearchFilter());
+        }
+        searchStatusMsg = ldapResultCode != null ? ldapResultCode.toString() : "";
+      }
+    } else {
+      try {
+        log.info("LDAP isUseOnlyFallBackMechanism is true, trying fallback ldapSearch");
         searchResult = getFallBackLdapSearch(ldapSearch).execute(ldapUserConfig.getReturnAttrs());
       } catch (LdapException ldapException) {
         ldapResultCode = ldapException.getResultCode();
@@ -44,7 +57,7 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
         log.error("LdapException exception occurred for user config with baseDN = {}, searchFilter = {}",
             ldapUserConfig.getBaseDN(), ldapUserConfig.getSearchFilter());
       }
-      searchStatusMsg = ldapResultCode.toString();
+      searchStatusMsg = ldapResultCode != null ? ldapResultCode.toString() : "";
     }
 
     if (searchResult != null) { // Scenario when search result

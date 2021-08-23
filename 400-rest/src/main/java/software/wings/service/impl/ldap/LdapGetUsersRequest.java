@@ -18,11 +18,13 @@ import lombok.experimental.FieldDefaults;
 public class LdapGetUsersRequest extends AbstractLdapRequest {
   LdapSearch ldapSearch;
   String groupBaseDn;
+  Boolean useOnlyFallBackMechanism;
 
   public LdapGetUsersRequest(@NotNull final LdapUserConfig ldapUserConfig, @NotNull final LdapSearch ldapSearch,
-      int responseTimeoutInSeconds, String groupBaseDn) {
+      int responseTimeoutInSeconds, String groupBaseDn, Boolean useOnlyFallBackMechanism) {
     super(ldapUserConfig, responseTimeoutInSeconds);
     this.ldapSearch = ldapSearch;
     this.groupBaseDn = groupBaseDn;
+    this.useOnlyFallBackMechanism = useOnlyFallBackMechanism;
   }
 }
