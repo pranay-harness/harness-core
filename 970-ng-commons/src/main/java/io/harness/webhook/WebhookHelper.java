@@ -15,7 +15,7 @@ public class WebhookHelper {
   public static final String WEBHOOK_ENDPOINT = "webhook";
 
   public String generateWebhookUrl(WebhookConfigProvider webhookConfigProvider, String accountId) {
-    String webhookBaseUrl = webhookConfigProvider.getPmsApiBaseUrl();
+    String webhookBaseUrl = webhookConfigProvider.getWebhookApiBaseUrl();
     if (isBlank(webhookBaseUrl)) {
       return null;
     }
@@ -42,7 +42,7 @@ public class WebhookHelper {
 
   public String generateCustomWebhookUrl(WebhookConfigProvider webhookConfigProvider, String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String triggerIdentifier) {
-    String webhookUrl = webhookConfigProvider.getPmsApiBaseUrl();
+    String webhookUrl = webhookConfigProvider.getCustomApiBaseUrl();
     if (isBlank(webhookUrl)) {
       return null;
     }

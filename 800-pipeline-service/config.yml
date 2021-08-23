@@ -127,7 +127,6 @@ ngManagerServiceHttpClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
-
 pipelineServiceClientConfig:
   baseUrl: http://localhost:12001/api/
   connectTimeOutSeconds: 15
@@ -151,6 +150,10 @@ accessControlClient:
 
 pipelineServiceBaseUrl: https://localhost:8181/#
 pmsApiBaseUrl: http://localhost:12001/api/
+
+triggerConfig:
+  webhookBaseUrl: http://localhost:7457/api/
+  customBaseUrl: http://localhost:12001/api/
 
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
