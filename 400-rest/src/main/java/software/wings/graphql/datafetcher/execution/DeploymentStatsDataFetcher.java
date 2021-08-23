@@ -596,7 +596,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
     }
 
-    if (!isEnvironmentTypeFilterPresent(filters)
+    if (!includeIndirectExecutions
         && featureFlagService.isEnabled(
             FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
       selectQuery.addCustomFromTable("deployment_parent t0");
@@ -617,14 +617,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
 
     if (isValidGroupBy(groupBy)) {
       decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
-    }
-
-    addAccountFilter(selectQuery, accountId);
-    if (isEnvironmentTypeFilterPresent(filters)) {
-      addWorkflowNotNullFilter(selectQuery);
-      addPipelineNullFilter(selectQuery);
-    } else if (!includeIndirectExecutions) {
-      addParentIdFilter(selectQuery);
     }
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
@@ -721,12 +713,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     addAccountFilter(selectTags, accountId);
-    if (isEnvironmentTypeFilterPresent(filters)) {
-      addWorkflowNotNullFilter(selectQuery);
-      addPipelineNullFilter(selectQuery);
-    } else if (!includeIndirectExecutions) {
-      addParentIdFilter(selectTags);
-    }
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
     if (!isValidGroupByTime(groupByTime)) {
@@ -762,7 +748,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
     }
 
-    if (!isEnvironmentTypeFilterPresent(filters)
+    if (!includeIndirectExecutions
         && featureFlagService.isEnabled(
             FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
       existsQuery.addCustomFromTable("deployment_parent t0");
@@ -1655,11 +1641,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     fieldNames.add(DeploymentMetaDataFields.valueOf(groupBy.getName()));
     selectQuery.addCondition(UnaryCondition.isNotNull(groupBy));
     groupByFields.add(DeploymentMetaDataFields.valueOf(groupBy.getName()));
-  }
-
-  private boolean isEnvironmentTypeFilterPresent(List<QLDeploymentFilter> filters) {
-    return !CollectionUtils.isEmpty(
-        filters.stream().filter(item -> item.getEnvironmentType() != null).collect(Collectors.toList()));
   }
 
   private boolean isValidGroupBy(List<QLDeploymentEntityAggregation> groupBy) {
