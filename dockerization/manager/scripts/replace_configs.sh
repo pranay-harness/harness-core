@@ -867,3 +867,11 @@ fi
 if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
   yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
 fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_INTERVAL" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.syncInterval "$LDAP_GROUP_SYNC_INTERVAL"
+fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_POOL_SIZE" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.poolSize "$LDAP_GROUP_SYNC_POOL_SIZE"
+fi
