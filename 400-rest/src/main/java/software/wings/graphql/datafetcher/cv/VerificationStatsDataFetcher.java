@@ -21,11 +21,11 @@ import software.wings.graphql.schema.type.aggregation.QLNoOpAggregateFunction;
 import software.wings.graphql.schema.type.aggregation.QLNoOpSortCriteria;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.cv.QLCVEntityAggregation;
+import software.wings.graphql.schema.type.aggregation.cv.QLCVTagAggregation;
 import software.wings.graphql.schema.type.aggregation.cv.QLCVWorkflowTagFilter;
 import software.wings.graphql.schema.type.aggregation.cv.QLCVWorkflowTagType;
 import software.wings.graphql.schema.type.aggregation.cv.QLVerificationAggregation;
 import software.wings.graphql.schema.type.aggregation.cv.QLVerificationResultFilter;
-import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagAggregation;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
 
 import com.google.inject.Inject;
@@ -40,13 +40,13 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 @OwnedBy(CV)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public class VerificationStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction,
-    QLVerificationResultFilter, QLVerificationAggregation, QLNoOpSortCriteria, QLCVWorkflowTagType,
-    QLDeploymentTagAggregation, QLCVEntityAggregation> {
+public class VerificationStatsDataFetcher
+    extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLVerificationResultFilter,
+        QLVerificationAggregation, QLNoOpSortCriteria, QLCVWorkflowTagType, QLCVTagAggregation, QLCVEntityAggregation> {
   @Inject protected TagHelper tagHelper;
 
   @Override
-  protected QLDeploymentTagAggregation getTagAggregation(QLVerificationAggregation groupBy) {
+  protected QLCVTagAggregation getTagAggregation(QLVerificationAggregation groupBy) {
     return groupBy.getTagAggregation();
   }
 
@@ -61,7 +61,7 @@ public class VerificationStatsDataFetcher extends RealTimeStatsDataFetcherWithTa
   }
 
   @Override
-  protected QLCVEntityAggregation getGroupByEntityFromTag(QLDeploymentTagAggregation groupByTag) {
+  protected QLCVEntityAggregation getGroupByEntityFromTag(QLCVTagAggregation groupByTag) {
     switch (groupByTag.getEntityType()) {
       case SERVICE:
         return QLCVEntityAggregation.Service;

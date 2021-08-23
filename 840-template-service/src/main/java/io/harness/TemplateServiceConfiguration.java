@@ -10,6 +10,7 @@ import io.harness.cache.CacheConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,10 +48,18 @@ public class TemplateServiceConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+
+  @JsonProperty(value = "enableAudit") private boolean enableAudit;
+  @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
+  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
+  @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
+  @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
 
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
+  private String managerServiceSecret;
 
   public TemplateServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

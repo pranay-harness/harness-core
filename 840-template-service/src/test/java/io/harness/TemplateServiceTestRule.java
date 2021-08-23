@@ -19,7 +19,11 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -31,6 +35,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.utils.NGObjectMapperHelper;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -107,6 +112,13 @@ public class TemplateServiceTestRule implements InjectorRuleMixin, MethodRule, M
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(TemplateServiceModuleRegistrars.springConverters)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+        return new OutboxServiceImpl(
+            new OutboxDaoImpl(outboxEventRepository), NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
       }
 
       @Provides

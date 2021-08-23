@@ -5,8 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.graphql.schema.type.aggregation.Aggregation;
-import software.wings.graphql.schema.type.aggregation.QLTimeSeriesAggregation;
+import software.wings.graphql.schema.type.aggregation.TagAggregation;
 
 import lombok.Builder;
 import lombok.Value;
@@ -15,8 +14,7 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public class QLVerificationAggregation implements Aggregation {
-  private QLCVEntityAggregation entityAggregation;
-  private QLTimeSeriesAggregation timeAggregation;
-  private QLCVTagAggregation tagAggregation;
+public class QLCVTagAggregation implements TagAggregation {
+  private QLCVWorkflowTagType entityType;
+  private String tagName;
 }
