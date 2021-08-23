@@ -3,6 +3,8 @@ package io.harness.delegate.resources;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 
+import software.wings.annotations.DelegateServiceResource;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
@@ -10,7 +12,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.annotations.DelegateServiceResource;
 
 @Api("/agent/delegates/v2")
 @Path("/agent/delegates/v2")
