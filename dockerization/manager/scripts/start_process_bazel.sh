@@ -15,12 +15,12 @@ fi
 echo "Using memory " $MEMORY
 
 if [[ -f /mongo/ca.pem ]]; then
-  keytool -importcert -trustcacerts -file /mongo/ca.pem -keystore keystore.jks -storepass password -noprompt
+  keytool -importcert -trustcacerts -file /mongo/ca.pem -keystore keystore.jks -storepass password -noprompt -alias mongoca
   echo "Mongo CA file added to truststore"
 fi
 
 if [[ -f /mongo/client.pem ]]; then
-  keytool -importcert -trustcacerts -file /mongo/client.pem -keystore keystore.jks -storepass password -noprompt
+  keytool -importcert -trustcacerts -file /mongo/client.pem -keystore keystore.jks -storepass password -noprompt -alias mongoclient
   echo "Mongo Client pem file added to truststore"
 fi
 
