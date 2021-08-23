@@ -165,7 +165,7 @@ public class LdapHelperTest extends WingsBaseTest {
     when(search.execute(Matchers.anyVararg())).thenReturn(searchResult);
     when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
     when(searchResult.size()).thenReturn(1);
-    helper.populateGroupSize(groups, ldapSettings.getUserSettingsList());
+    helper.populateGroupSize(groups, ldapSettings);
     assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
   }
 
@@ -182,7 +182,7 @@ public class LdapHelperTest extends WingsBaseTest {
         .thenReturn(searchResult);
     when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
     when(searchResult.size()).thenReturn(1);
-    helper.populateGroupSize(groups, ldapSettings.getUserSettingsList());
+    helper.populateGroupSize(groups, ldapSettings);
     assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
   }
 
