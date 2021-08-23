@@ -258,7 +258,7 @@ public class LdapHelper {
                                         .build();
                 return new LdapGetUsersRequest(userConfig, search,
                     connectionConfig.getConnectTimeout() + connectionConfig.getResponseTimeout(), groupDn,
-                    settings.isUseFallBackMechanism());
+                    settings.isUseOnlyFallBackMechanism());
               }))
               .collect(Collectors.toList());
 

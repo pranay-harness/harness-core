@@ -206,8 +206,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
         return groupResponse;
       }
 
-      List<LdapGetUsersResponse> ldapGetUsersResponses =
-          helper.listGroupUsers(settings.getUserSettingsList(), Collections.singletonList(dn));
+      List<LdapGetUsersResponse> ldapGetUsersResponses = helper.listGroupUsers(settings, Collections.singletonList(dn));
 
       Collection<LdapUserResponse> userResponses =
           ldapGetUsersResponses.stream()
