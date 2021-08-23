@@ -201,7 +201,7 @@ public class DockerPublicRegistryProcessor {
       DockerInternalConfig dockerConfig, String imageName, List<String> buildNos) {
     DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     Function<Headers, String> getToken = headers -> getToken(headers, registryRestClient);
-    return dockerRegistryUtils.getLabels(registryRestClient, getToken, "", imageName, buildNos);
+    return dockerRegistryUtils.getLabels(dockerConfig, registryRestClient, getToken, "", imageName, buildNos);
   }
 
   private String getToken(Headers headers, DockerRegistryRestClient registryRestClient) {
