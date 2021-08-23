@@ -13,6 +13,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -85,6 +86,7 @@ public class PipelineServiceConfiguration extends Configuration {
   private String managerAuthority;
   private ServiceHttpClientConfig managerClientConfig;
   private LogStreamingServiceConfiguration logStreamingServiceConfig;
+  private TriggerConfiguration triggerConfig;
   private OpaServiceConfiguration opaServerConfig;
 
   private PipelineServiceIteratorsConfig iteratorsConfig;
