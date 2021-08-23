@@ -1728,4 +1728,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       log.error("Failed publishing task response for task", ex);
     }
   }
+
+  @Override
+  public boolean checkDelegateConnected(String accountId, String delegateId) {
+    return delegateConnectionDao.checkDelegateConnected(
+        accountId, delegateId, versionInfoManager.getVersionInfo().getVersion());
+  }
 }

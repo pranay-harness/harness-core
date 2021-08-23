@@ -203,7 +203,9 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     // todo(abhinav): Think about what if something happens in middle of operations.
     saveGitEntity(pushInfo, entityDetail, yamlGitConfigDTO);
-    saveGitCommit(pushInfo, yamlGitConfigDTO);
+    if (!pushInfo.getIsSyncFromGit()) {
+      saveGitCommit(pushInfo, yamlGitConfigDTO);
+    }
     shortListTheBranch(
         yamlGitConfigDTO, entityRef.getAccountIdentifier(), pushInfo.getBranchName(), pushInfo.getIsNewBranch());
 

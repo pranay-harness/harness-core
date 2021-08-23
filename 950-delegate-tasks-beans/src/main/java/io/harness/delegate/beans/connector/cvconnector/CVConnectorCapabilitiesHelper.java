@@ -17,6 +17,8 @@ import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.newrelicconnector.NewRelicCapabilityHelper;
+import io.harness.delegate.beans.connector.pagerduty.PagerDutyCapabilityHelper;
+import io.harness.delegate.beans.connector.pagerduty.PagerDutyConnectorDTO;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusCapabilityHelper;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkCapabilityHelper;
@@ -57,6 +59,8 @@ public class CVConnectorCapabilitiesHelper extends ConnectorTaskParams {
       return SumoLogicCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
     } else if (connectorDTO instanceof DynatraceConnectorDTO) {
       return DynatraceCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
+    } else if (connectorDTO instanceof PagerDutyConnectorDTO) {
+      return PagerDutyCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, connectorDTO);
     } else {
       throw new InvalidRequestException("Connector capability not found for " + connectorDTO);
     }

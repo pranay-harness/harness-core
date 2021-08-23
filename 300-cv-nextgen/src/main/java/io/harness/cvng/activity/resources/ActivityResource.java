@@ -16,7 +16,7 @@ import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;

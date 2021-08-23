@@ -20,6 +20,7 @@ java_library(
         "//955-cg-yaml:module",
         "//955-delegate-beans:module",
         "//957-cg-beans:module",
+        "//959-common-entities:module",
         "//959-file-service-commons:module",
         "//960-api-services:module",
         "//960-ng-core-beans:module",

@@ -100,6 +100,7 @@ java_binary(
         "//950-telemetry:module",
         "//950-wait-engine:module",
         "//950-walktree-visitor:module",
+        "//951-cg-git-sync:module",
         "//951-ng-audit-commons:module",
         "//952-scm-java-client:module",
         "//953-events-api:module",

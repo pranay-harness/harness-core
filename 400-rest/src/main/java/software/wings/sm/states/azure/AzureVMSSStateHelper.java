@@ -18,6 +18,10 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.beans.EncryptedData;
@@ -97,6 +101,8 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AzureVMSSStateHelper {
   public static final String VIRTUAL_MACHINE_SCALE_SET_ID_PATTERN =
       "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachineScaleSets/%s";

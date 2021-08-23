@@ -11,6 +11,7 @@ java_library(
         "//953-events-api:module",
         "//960-ng-core-beans:module",
         "//970-ng-commons:module",
+        "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
@@ -29,11 +30,15 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//980-commons:module",
         "//990-commons-test:module",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_inject_guice",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_reflections_reflections",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 

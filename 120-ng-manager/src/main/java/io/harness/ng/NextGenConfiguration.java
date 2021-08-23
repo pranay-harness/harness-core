@@ -110,6 +110,8 @@ public class NextGenConfiguration extends Configuration {
   private SignupNotificationConfiguration signupNotificationConfiguration;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty(value = "scopeAccessCheckEnabled", defaultValue = "false") private boolean isScopeAccessCheckEnabled;
+  @JsonProperty("hostname") String hostname;
+  @JsonProperty("basePathPrefix") String basePathPrefix;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
@@ -120,8 +122,8 @@ public class NextGenConfiguration extends Configuration {
     String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setHost(
-        "localhost"); // TODO, we should set the appropriate host here ex: qa.harness.io etc
+    defaultSwaggerBundleConfiguration.setHost(hostname);
+    defaultSwaggerBundleConfiguration.setUriPrefix(basePathPrefix);
     defaultSwaggerBundleConfiguration.setTitle("CD NextGen API Reference");
     defaultSwaggerBundleConfiguration.setVersion("2.0");
 

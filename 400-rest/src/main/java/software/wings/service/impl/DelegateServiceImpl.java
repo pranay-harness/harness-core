@@ -275,7 +275,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
 @BreakDependencyOn("software.wings.app.MainConfiguration")
 @BreakDependencyOn("software.wings.beans.User")
-@BreakDependencyOn("io.harness.grpc.DelegateServiceClassicGrpcClient")
 @BreakDependencyOn("software.wings.beans.Event")
 @OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
@@ -404,12 +403,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return persistence.query(Delegate.class, pageRequest);
-  }
-
-  @Override
-  public boolean checkDelegateConnected(String accountId, String delegateId) {
-    return delegateConnectionDao.checkDelegateConnected(
-        accountId, delegateId, versionInfoManager.getVersionInfo().getVersion());
   }
 
   @Override

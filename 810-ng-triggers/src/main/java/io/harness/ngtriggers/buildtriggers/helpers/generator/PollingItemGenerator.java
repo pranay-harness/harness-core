@@ -21,13 +21,20 @@ public interface PollingItemGenerator {
       throw new InvalidArgumentsException("Only MANIFEST and ARTIFACT trigger types are supported");
     }
 
-    return PollingItem.newBuilder()
-        .setCategory(ngTriggerEntity.getType() == MANIFEST ? Category.MANIFEST : Category.ARTIFACT)
+    PollingItem.Builder pollingItem = PollingItem.newBuilder();
+
+    pollingItem.setCategory(ngTriggerEntity.getType() == MANIFEST ? Category.MANIFEST : Category.ARTIFACT)
         .setQualifier(Qualifier.newBuilder()
                           .setAccountId(ngTriggerEntity.getAccountId())
                           .setOrganizationId(ngTriggerEntity.getOrgIdentifier())
                           .setProjectId(ngTriggerEntity.getProjectIdentifier())
-                          .setSignature(ngTriggerEntity.getSignature())
-                          .build());
+                          .build())
+        .setSignature(ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().getSignature());
+
+    if (null != ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().getPollingDocId()) {
+      pollingItem.setPollingDocId(
+          ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().getPollingDocId());
+    }
+    return pollingItem;
   }
 }

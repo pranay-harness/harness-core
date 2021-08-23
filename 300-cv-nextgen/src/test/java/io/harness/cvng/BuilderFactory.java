@@ -15,7 +15,6 @@ import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
-import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -23,6 +22,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Monitored
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.core.entities.CVConfig;

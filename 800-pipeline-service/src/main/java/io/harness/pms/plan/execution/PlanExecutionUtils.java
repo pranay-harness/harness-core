@@ -35,6 +35,22 @@ public class PlanExecutionUtils {
     return planBuilder.build();
   }
 
+  public Plan extractPlan(String planNodeUuid, PlanCreationBlobResponse planCreationBlobResponse) {
+    PlanBuilder planBuilder = Plan.builder();
+    Collection<PlanNodeProto> planNodeProtoList = planCreationBlobResponse.getNodesMap().values();
+    for (PlanNodeProto planNodeProto : planNodeProtoList) {
+      planBuilder.node(planNodeProto);
+    }
+    if (planCreationBlobResponse.getStartingNodeId() != null) {
+      planBuilder.startingNodeId(planCreationBlobResponse.getStartingNodeId());
+    }
+    if (planCreationBlobResponse.getGraphLayoutInfo() != null) {
+      planBuilder.graphLayoutInfo(planCreationBlobResponse.getGraphLayoutInfo());
+    }
+    planBuilder.uuid(planNodeUuid);
+    return planBuilder.build();
+  }
+
   public String getFQNUsingLevelDTOs(List<LevelDTO> levels) {
     List<String> fqnList = new ArrayList<>();
     for (LevelDTO level : levels) {

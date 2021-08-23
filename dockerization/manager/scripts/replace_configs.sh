@@ -76,6 +76,10 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_TRACE_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
+fi
+
 if [[ "" != "$MONGO_SSL_CONFIG" ]]; then
   yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
 fi

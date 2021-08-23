@@ -82,7 +82,7 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
             CompoundMongoIndex.builder()
                 .name("accId_signature_index")
                 .field(NGTriggerEntityKeys.accountId)
-                .field(NGTriggerEntityKeys.signature)
+                .field("metadata.buildMetadata.pollingConfig.signature")
                 .build())
         .build();
   }
@@ -99,7 +99,6 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   @NotEmpty String projectIdentifier;
   @NotEmpty String targetIdentifier;
   @NotEmpty TargetType targetType;
-  String signature;
 
   @NotEmpty NGTriggerMetadata metadata;
   ValidationStatus validationStatus;

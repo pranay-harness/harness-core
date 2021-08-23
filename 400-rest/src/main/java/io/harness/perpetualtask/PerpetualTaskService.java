@@ -13,6 +13,8 @@ public interface PerpetualTaskService {
 
   boolean resetTask(String accountId, String taskId, PerpetualTaskExecutionBundle taskExecutionBundle);
 
+  long updateTasksSchedule(String accountId, String perpetualTaskType, long intervalInMillis);
+
   boolean deleteTask(String accountId, String taskId);
 
   boolean pauseTask(String accountId, String taskId);
