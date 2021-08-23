@@ -423,3 +423,39 @@ fi
 if [[ "" != "$DELEGATE_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE dmsSecret $DELEGATE_SERVICE_SECRET
 fi
+
+if [[ "" != "$CDN_URL" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.url "$CDN_URL"
+fi
+
+if [[ "" != "$CDN_KEY" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.keyName "$CDN_KEY"
+fi
+
+if [[ "" != "$CDN_KEY_SECRET" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.keySecret "$CDN_KEY_SECRET"
+fi
+
+if [[ "" != "$CDN_DELEGATE_JAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.delegateJarPath "$CDN_DELEGATE_JAR_PATH"
+fi
+
+if [[ "" != "$CDN_WATCHER_JAR_BASE_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.watcherJarBasePath "$CDN_WATCHER_JAR_BASE_PATH"
+fi
+
+if [[ "" != "$CDN_WATCHER_JAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.watcherJarPath "$CDN_WATCHER_JAR_PATH"
+fi
+
+if [[ "" != "$CDN_WATCHER_METADATA_FILE_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.watcherMetaDataFilePath "$CDN_WATCHER_METADATA_FILE_PATH"
+fi
+
+if [[ "" != "$CDN_ORACLE_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.cdnJreTarPaths.oracle8u191 "$CDN_ORACLE_JRE_TAR_PATH"
+fi
+
+if [[ "" != "$CDN_OPENJDK_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE cdnConfig.cdnJreTarPaths.openjdk8u242 "$CDN_OPENJDK_JRE_TAR_PATH"
+fi

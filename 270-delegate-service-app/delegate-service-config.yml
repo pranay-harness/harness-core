@@ -260,6 +260,19 @@ pipelineConfig:
   envStateTimeout: -1
   approvalStateTimeout: -1
 
+cdnConfig:
+  url: https://qa.harness.io
+  keyName: storage-qa-private
+  keySecret: cdnSignedUrlKey
+  delegateJarPath: private/shared/delegates/builds/oracle-8u191/%s/delegate.jar
+  watcherJarBasePath: public/shared/watchers/builds
+  watcherJarPath: oracle-8u191/%s/watcher.jar
+  watcherMetaDataFilePath: public/%s/%s/watchers/current.version
+  alpnJarPath: public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+  cdnJreTarPaths:
+    oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
+    openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+
 #should not need for dms, keeping it for injection
 commandLibraryServiceConfig:
   baseUrl: https://localhost:5050/command-library-service/
