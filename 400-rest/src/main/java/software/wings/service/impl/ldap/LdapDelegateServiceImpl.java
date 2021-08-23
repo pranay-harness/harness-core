@@ -166,7 +166,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
     Collection<LdapGroupResponse> ldapGroupResponse = new ArrayList<>();
     for (LdapListGroupsResponse ldapListGroupsResponse : ldapListGroupsResponses) {
       if (LdapResponse.Status.SUCCESS == ldapListGroupsResponse.getLdapResponse().getStatus()) {
-        helper.populateGroupSize(ldapListGroupsResponse.getSearchResult(), ldapSettings.getUserSettingsList());
+        helper.populateGroupSize(ldapListGroupsResponse.getSearchResult(), ldapSettings);
         Collection<LdapEntry> entries = ldapListGroupsResponse.getSearchResult().getEntries();
         for (LdapEntry entry : entries) {
           ldapGroupResponse.add(buildLdapGroupResponse(entry, ldapListGroupsResponse.getLdapGroupConfig()));
@@ -193,7 +193,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       log.info("LDAP : listGroupsResponse for groupDn {} is {}", dn, listGroupsResponse);
 
       SearchResult groups = listGroupsResponse.getSearchResult();
-      helper.populateGroupSize(groups, settings.getUserSettingsList());
+      helper.populateGroupSize(groups, settings);
 
       // If there are no entries in the group.
       LdapEntry group = groups.getEntries().isEmpty() ? null : groups.getEntries().iterator().next();
@@ -207,8 +207,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
         return groupResponse;
       }
 
-      List<LdapGetUsersResponse> ldapGetUsersResponses =
-          helper.listGroupUsers(settings.getUserSettingsList(), Collections.singletonList(dn));
+      List<LdapGetUsersResponse> ldapGetUsersResponses = helper.listGroupUsers(settings, Collections.singletonList(dn));
 
       Collection<LdapUserResponse> userResponses =
           ldapGetUsersResponses.stream()

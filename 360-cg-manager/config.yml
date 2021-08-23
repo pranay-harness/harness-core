@@ -613,3 +613,7 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15
