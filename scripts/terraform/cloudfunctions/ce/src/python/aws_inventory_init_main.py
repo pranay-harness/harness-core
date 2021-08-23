@@ -44,8 +44,7 @@ def manage_scheduler_jobs(event_json):
 
 
 def manage_inventory_scheduler_job(event, inventory_type):
-    name = f"{parent}/jobs/ce-aws-%s-%s-%s" % (inventory_type, event["accountId"], event["awsInfraAccountId"])
-    print("Creating %s" % name)
+    name = f"{parent}/jobs/ce-aws-%s-%s-%s" % (inventory_type, event["accountId"], event["connectorId"])
     schedule = "0 * * * *"  # Run every hour
     jsonData = {
         "accountId": event["accountId"],
@@ -64,8 +63,10 @@ def manage_inventory_scheduler_job(event, inventory_type):
     }
     print(job)
     if event["action"] == "create":
+        print("Creating %s" % name)
         upsert_job(job)
     elif event["action"] == "delete":
+        print("Deleting %s" % name)
         delete_job(name)
 
 
@@ -74,7 +75,7 @@ def upsert_job(job):
         sc_client.update_job(job=job)
         print("Job updated.")
     except Exception as e:
-        print("%s. This can be ignored" % e, "WARN")
+        print(e)
         response = sc_client.create_job(
             request={
                 "parent": parent,
@@ -89,12 +90,12 @@ def delete_job(name):
         sc_client.delete_job(name=name)
         print("Job deleted.")
     except Exception as e:
-        print("%s. This can be ignored" % e, "WARN")
+        print(e)
+
 
 
 def manage_inventory_load_scheduler_job(event, inventory_type):
     name = f"{parent}/jobs/ce-aws-%s-load-%s" % (inventory_type, event["accountId"])
-    print("Creating %s" % name)
     topic_path = publisher.topic_path(PROJECTID, f"ce-awsdata-{inventory_type}-inventory-load-scheduler")
 
     schedule = "15 * * * *"  # Run every hour
@@ -112,14 +113,15 @@ def manage_inventory_load_scheduler_job(event, inventory_type):
     }
 
     if event["action"] == "create":
+        print("Creating %s" % name)
         upsert_job(job)
     elif event["action"] == "delete":
+        print("Deleting %s" % name)
         delete_job(name)
 
 
 def manage_inventory_metric_scheduler_job(event, inventory_type):
-    name = f"{parent}/jobs/ce-aws-%s-metric-%s-%s" % (inventory_type, event["accountId"], event["awsInfraAccountId"])
-    print("Creating %s" % name)
+    name = f"{parent}/jobs/ce-aws-%s-metric-%s-%s" % (inventory_type, event["accountId"], event["connectorId"])
     schedule = "0 10 * * *"  # Run at 10 UTC daily
     if inventory_type == "ebs":
         topic_path = publisher.topic_path(PROJECTID, f"ce-awsdata-{inventory_type}-metrics-inventory-scheduler")
@@ -142,6 +144,8 @@ def manage_inventory_metric_scheduler_job(event, inventory_type):
     }
 
     if event["action"] == "create":
+        print("Creating %s" % name)
         upsert_job(job)
     elif event["action"] == "delete":
+        print("Deleting %s" % name)
         delete_job(name)

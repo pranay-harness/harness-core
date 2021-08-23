@@ -20,7 +20,9 @@ import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 @OwnedBy(CDC)
 public class HarnessApprovalStep extends AsyncExecutableWithRollback {
@@ -29,13 +31,15 @@ public class HarnessApprovalStep extends AsyncExecutableWithRollback {
 
   @Inject private ApprovalInstanceService approvalInstanceService;
   @Inject private ApprovalNotificationHandler approvalNotificationHandler;
+  @Inject @Named("PipelineExecutorService") ExecutorService executorService;
 
   @Override
   public AsyncExecutableResponse executeAsync(Ambiance ambiance, StepElementParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     HarnessApprovalInstance approvalInstance = HarnessApprovalInstance.fromStepParameters(ambiance, stepParameters);
-    approvalInstance = (HarnessApprovalInstance) approvalInstanceService.save(approvalInstance);
-    approvalNotificationHandler.sendNotification(approvalInstance, ambiance);
+    HarnessApprovalInstance savedApprovalInstance =
+        (HarnessApprovalInstance) approvalInstanceService.save(approvalInstance);
+    executorService.submit(() -> approvalNotificationHandler.sendNotification(savedApprovalInstance, ambiance));
 
     return AsyncExecutableResponse.newBuilder().addCallbackIds(approvalInstance.getId()).build();
   }

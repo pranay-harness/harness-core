@@ -17,6 +17,7 @@ import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
+import static software.wings.beans.yaml.YamlConstants.VALUES_YAML_KEY;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.utils.Utils.splitCommaSeparatedFilePath;
 
@@ -440,7 +441,7 @@ public class ApplicationManifestUtils {
       if (K8sValuesLocation.Service.name().equals(entry.getKey())) {
         GitFetchFilesConfig gitFetchFileConfig = entry.getValue();
         gitFetchFileConfig.getGitFileConfig().setFilePath(
-            getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath()));
+            getValuesYamlGitFilePath(gitFetchFileConfig.getGitFileConfig().getFilePath(), VALUES_YAML_KEY));
       }
     }
   }
@@ -640,16 +641,16 @@ public class ApplicationManifestUtils {
   }
 
   public CustomManifestValuesFetchParams createCustomManifestValuesFetchParams(
-      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String varFileKey) {
     return CustomManifestValuesFetchParams.builder()
-        .fetchFilesList(getCustomManifestFetchFilesList(context, appManifestMap))
+        .fetchFilesList(getCustomManifestFetchFilesList(context, appManifestMap, varFileKey))
         .accountId(context.getAccountId())
         .appId(context.getAppId())
         .build();
   }
 
   private List<String> getCustomSourceFilePathList(
-      ExecutionContext context, K8sValuesLocation location, ApplicationManifest manifest) {
+      ExecutionContext context, K8sValuesLocation location, ApplicationManifest manifest, String varFileKey) {
     StateExecutionContext stateExecutionContext =
         StateExecutionContext
             .builder()
@@ -661,9 +662,9 @@ public class ApplicationManifestUtils {
     if (K8sValuesLocation.Service == location) {
       // Don't want to fetch any files for Openshift, just use the script output for params overrides that is reusing
       // service manifest script
-      filesPathList = CUSTOM_OPENSHIFT_TEMPLATE == manifest.getStoreType()
-          ? emptyList()
-          : Arrays.asList(getValuesYamlGitFilePath(filesPath));
+      String valuesYamlGitFilePath = getValuesYamlGitFilePath(filesPath, varFileKey);
+      filesPathList =
+          CUSTOM_OPENSHIFT_TEMPLATE == manifest.getStoreType() ? emptyList() : Arrays.asList(valuesYamlGitFilePath);
     } else {
       filesPathList = splitCommaSeparatedFilePath(filesPath);
     }
@@ -672,14 +673,14 @@ public class ApplicationManifestUtils {
   }
 
   private List<CustomManifestFetchConfig> getCustomManifestFetchFilesList(
-      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String varFileKey) {
     List<CustomManifestFetchConfig> customManifestFetchFilesList = new ArrayList<>();
     for (Map.Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       if (CUSTOM != entry.getValue().getStoreType() && CUSTOM_OPENSHIFT_TEMPLATE != entry.getValue().getStoreType()) {
         continue;
       }
 
-      List<String> filesPathList = getCustomSourceFilePathList(context, entry.getKey(), entry.getValue());
+      List<String> filesPathList = getCustomSourceFilePathList(context, entry.getKey(), entry.getValue(), varFileKey);
       CustomSourceConfig customSourceConfig = entry.getValue().getCustomSourceConfig();
       CustomManifestSource customManifestSource =
           CustomManifestSource.builder().script(customSourceConfig.getScript()).filePaths(filesPathList).build();
@@ -697,7 +698,7 @@ public class ApplicationManifestUtils {
 
   public Map<K8sValuesLocation, Collection<String>> getValuesFilesFromCustomFetchValuesResponse(
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
-      CustomManifestValuesFetchResponse response) {
+      CustomManifestValuesFetchResponse response, String varFileKey) {
     Multimap<K8sValuesLocation, String> valuesFiles = ArrayListMultimap.create();
     if (isEmpty(response.getValuesFilesContentMap())) {
       return valuesFiles.asMap();
@@ -712,15 +713,15 @@ public class ApplicationManifestUtils {
       K8sValuesLocation valuesLocation = K8sValuesLocation.valueOf(entry.getKey());
       ApplicationManifest manifest = appManifestMap.get(valuesLocation);
       valuesFiles.putAll(
-          valuesLocation, getOrderedCustomFiles(context, valuesLocation, manifest, namedCustomSourceFiles));
+          valuesLocation, getOrderedCustomFiles(context, valuesLocation, manifest, namedCustomSourceFiles, varFileKey));
     }
 
     return valuesFiles.asMap();
   }
 
   private Collection<String> getOrderedCustomFiles(ExecutionContext context, K8sValuesLocation location,
-      ApplicationManifest appManifest, Map<String, CustomSourceFile> sourceFiles) {
-    List<String> filePathList = getCustomSourceFilePathList(context, location, appManifest);
+      ApplicationManifest appManifest, Map<String, CustomSourceFile> sourceFiles, String varFileKey) {
+    List<String> filePathList = getCustomSourceFilePathList(context, location, appManifest, varFileKey);
     if (K8sValuesLocation.Service == location || isEmpty(filePathList)) {
       return isNotEmpty(sourceFiles) ? singletonList(sourceFiles.values().iterator().next().getFileContent())
                                      : emptyList();

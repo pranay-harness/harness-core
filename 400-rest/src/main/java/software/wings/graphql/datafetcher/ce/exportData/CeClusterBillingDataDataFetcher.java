@@ -69,7 +69,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   @Inject QLBillingStatsHelper statsHelper;
   @Inject K8sWorkloadDao dao;
   @Inject CeAccountExpirationChecker accountChecker;
-  private static final int LIMIT_THRESHOLD = 100;
+  private static final int LIMIT_THRESHOLD = 1000;
   private static final String SELECT = "select";
   private static final String DEFAULT_SELECTED_LABEL = "-";
   private static final String UNALLOCATED = "Unallocated";

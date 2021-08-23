@@ -1,5 +1,8 @@
 package software.wings.sm.states.azure.appservices;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
@@ -23,6 +26,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("azureAppServiceSlotSetupContextElement")
+@TargetModule(_957_CG_BEANS)
 public class AzureAppServiceSlotSetupContextElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;

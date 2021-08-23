@@ -139,8 +139,8 @@ public class RoleResource {
     if (!identifier.equals(roleDTO.getIdentifier())) {
       throw new InvalidRequestException("Role identifier in the request body and the url do not match");
     }
-    RoleUpdateResult roleUpdateResult = roleService.update(fromDTO(scopeIdentifier, roleDTO));
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleUpdateResult roleUpdateResult = roleService.update(fromDTO(scopeIdentifier, roleDTO));
       RoleResponseDTO response = roleDTOMapper.toResponseDTO(roleUpdateResult.getUpdatedRole());
       outboxService.save(new RoleUpdateEvent(response.getScope().getAccountIdentifier(), response.getRole(),
           roleDTOMapper.toResponseDTO(roleUpdateResult.getOriginalRole()).getRole(), response.getScope()));

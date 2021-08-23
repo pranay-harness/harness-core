@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.persistance.GitSyncablePersistenceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.SpringPersistenceConfig;
@@ -17,7 +18,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class TemplateServicePersistenceModule extends SpringPersistenceModule {
   @Override
   protected Class<?>[] getConfigClasses() {
-    return new Class<?>[] {SpringPersistenceConfig.class};
+    return new Class<?>[] {SpringPersistenceConfig.class, GitSyncablePersistenceConfig.class};
   }
 
   @Provides

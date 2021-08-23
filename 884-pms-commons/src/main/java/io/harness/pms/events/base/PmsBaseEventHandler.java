@@ -1,33 +1,28 @@
 package io.harness.pms.events.base;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
-import io.harness.manage.GlobalContextManager;
-import io.harness.metrics.ThreadAutoLogContext;
 import io.harness.monitoring.EventMonitoringService;
-import io.harness.monitoring.MonitoringContext;
 import io.harness.monitoring.MonitoringInfo;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.sdk.execution.events.PmsCommonsBaseEventHandler;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
-public abstract class PmsBaseEventHandler<T extends Message> {
+public abstract class PmsBaseEventHandler<T extends Message> implements PmsCommonsBaseEventHandler<T> {
   public static String LISTENER_END_METRIC = "%s_queue_time";
   public static String LISTENER_START_METRIC = "%s_time_in_queue";
 
@@ -48,14 +43,8 @@ public abstract class PmsBaseEventHandler<T extends Message> {
 
   public void handleEvent(T event, Map<String, String> metadataMap, long createdAt) {
     try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event);
-         ThreadAutoLogContext metricContext = new ThreadAutoLogContext(extractMetricContext(event))) {
+         PmsMetricContextGuard metricContext = new PmsMetricContextGuard(metadataMap, extractMetricContext(event))) {
       log.info("[PMS_MESSAGE_LISTENER] Starting to process {} event ", event.getClass().getSimpleName());
-      // TODO (sahil/prashants) change this
-      GlobalContextManager.upsertGlobalContextRecord(
-          MonitoringContext.builder()
-              .isMonitoringEnabled(
-                  Objects.equals(metadataMap.getOrDefault(PIPELINE_MONITORING_ENABLED, "false"), "true"))
-              .build());
       MonitoringInfo monitoringInfo = MonitoringInfo.builder()
                                           .createdAt(createdAt)
                                           .metricPrefix(getMetricPrefix(event))
@@ -65,7 +54,8 @@ public abstract class PmsBaseEventHandler<T extends Message> {
       eventMonitoringService.sendMetric(LISTENER_START_METRIC, monitoringInfo, metadataMap);
       handleEventWithContext(event);
       eventMonitoringService.sendMetric(LISTENER_END_METRIC, monitoringInfo, metadataMap);
-      log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event", event.getClass().getSimpleName());
+      log.info(
+          "[PMS_MESSAGE_LISTENER] EventHandler processing finished for {} event", event.getClass().getSimpleName());
     } catch (Exception ex) {
       try (AutoLogContext autoLogContext = autoLogContext(event)) {
         log.error("Exception occurred while handling {}", event.getClass().getSimpleName(), ex);
@@ -73,7 +63,8 @@ public abstract class PmsBaseEventHandler<T extends Message> {
       throw ex;
     } finally {
       try (AutoLogContext autoLogContext = autoLogContext(event)) {
-        log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event", event.getClass().getSimpleName());
+        log.info(
+            "[PMS_MESSAGE_LISTENER] Event Handler Processing Finished for {} event", event.getClass().getSimpleName());
       }
     }
   }

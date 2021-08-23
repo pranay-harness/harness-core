@@ -14,6 +14,12 @@ java_library(
         "//870-cg-orchestration:module",
         "//960-persistence:module",
         "//980-commons:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_github_reinert_jjschema",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_mongodb_morphia_morphia",
     ],
 )
 
@@ -25,12 +31,19 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//870-cg-orchestration:module",
+        "//960-persistence:module",
         "//960-persistence:supporter-test",
+        "//980-commons:module",
         "//990-commons-test:module",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_morphia_morphia",
+        "@maven//:org_slf4j_slf4j_api",
     ],
 )
 

@@ -26,4 +26,5 @@ enum EntityTypeProtoEnum {
   TRIGGERS = 18;
   FEATURE_FLAG_STAGE = 19;
   MONITORED_SERVICE = 20;
+  TEMPLATE = 21;
 }

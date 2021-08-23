@@ -1,10 +1,13 @@
 package io.harness.pms.sdk.core.execution.events.node.resume;
 
+import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -12,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.resume.ChainDetails;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
@@ -23,8 +27,12 @@ import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
+import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
@@ -33,9 +41,12 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -162,5 +173,134 @@ public class NodeResumeEventHandlerTest extends PmsSdkCoreTestBase {
     Mockito.verify(sdkNodeExecutionService)
         .handleStepResponse(eq(nodeResumeEvent.getAmbiance().getPlanExecutionId()),
             eq(AmbianceUtils.obtainCurrentRuntimeId(nodeResumeEvent.getAmbiance())), any(StepResponseProto.class));
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testHandleEventWithContextForChildChain() {
+    StepResponseNotifyData notifyData = StepResponseNotifyData.builder().status(Status.RUNNING).build();
+    Map<String, ByteString> responseDataMap = new HashMap<>();
+    ByteString byteString = ByteString.copyFrom(kryoSerializer1.asDeflatedBytes(notifyData));
+    responseDataMap.put("response", byteString);
+    ByteString passThroughData =
+        ByteString.copyFrom(RecastOrchestrationUtils.toBytes(TestPassThroughData.builder().data("SOME_DATA").build()));
+
+    ByteString stepParameters =
+        ByteString.copyFrom(RecastOrchestrationUtils.toBytes(TestStepParameters.builder().data("SOME_DATA").build()));
+    NodeResumeEvent childChainResumeEvent =
+        NodeResumeEvent.newBuilder()
+            .setExecutionMode(ExecutionMode.CHILD_CHAIN)
+            .setAmbiance(ambiance)
+            .setAsyncError(false)
+            .putAllResponse(responseDataMap)
+            .setStepParameters(stepParameters)
+            .setChainDetails(ChainDetails.newBuilder().setIsEnd(true).setPassThroughData(passThroughData).build())
+            .build();
+
+    when(mockedKryoSerializer.asInflatedObject(byteString.toByteArray())).thenReturn(notifyData);
+    ExecutableProcessor executableProcessor = mock(ExecutableProcessor.class);
+    when(executableProcessorFactory.obtainProcessor(ExecutionMode.CHILD_CHAIN)).thenReturn(executableProcessor);
+    nodeResumeEventHandler.handleEventWithContext(childChainResumeEvent);
+    ArgumentCaptor<ResumePackage> resumePackageArgumentCaptor = ArgumentCaptor.forClass(ResumePackage.class);
+    verify(executableProcessor).handleResume(resumePackageArgumentCaptor.capture());
+
+    ResumePackage resumePackage = resumePackageArgumentCaptor.getValue();
+
+    assertThat(resumePackage.getChainDetails()).isNotNull();
+    io.harness.pms.sdk.core.execution.ChainDetails chainDetails = resumePackage.getChainDetails();
+    assertThat(chainDetails.isShouldEnd()).isTrue();
+    assertThat(chainDetails.getPassThroughData()).isNull();
+    assertThat(chainDetails.getPassThroughBytes()).isNotNull();
+    assertThat(chainDetails.getPassThroughBytes()).isEqualTo(passThroughData);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testHandleEventWithContextForChildChainEmptyPassThrough() {
+    StepResponseNotifyData notifyData = StepResponseNotifyData.builder().status(Status.RUNNING).build();
+    Map<String, ByteString> responseDataMap = new HashMap<>();
+    ByteString byteString = ByteString.copyFrom(kryoSerializer1.asDeflatedBytes(notifyData));
+    responseDataMap.put("response", byteString);
+
+    ByteString stepParameters =
+        ByteString.copyFrom(RecastOrchestrationUtils.toBytes(TestStepParameters.builder().data("SOME_DATA").build()));
+    NodeResumeEvent childChainResumeEvent = NodeResumeEvent.newBuilder()
+                                                .setExecutionMode(ExecutionMode.CHILD_CHAIN)
+                                                .setAmbiance(ambiance)
+                                                .setAsyncError(false)
+                                                .putAllResponse(responseDataMap)
+                                                .setStepParameters(stepParameters)
+                                                .setChainDetails(ChainDetails.newBuilder().setIsEnd(true).build())
+                                                .build();
+
+    when(mockedKryoSerializer.asInflatedObject(byteString.toByteArray())).thenReturn(notifyData);
+    ExecutableProcessor executableProcessor = mock(ExecutableProcessor.class);
+    when(executableProcessorFactory.obtainProcessor(ExecutionMode.CHILD_CHAIN)).thenReturn(executableProcessor);
+    nodeResumeEventHandler.handleEventWithContext(childChainResumeEvent);
+    ArgumentCaptor<ResumePackage> resumePackageArgumentCaptor = ArgumentCaptor.forClass(ResumePackage.class);
+    verify(executableProcessor).handleResume(resumePackageArgumentCaptor.capture());
+
+    ResumePackage resumePackage = resumePackageArgumentCaptor.getValue();
+
+    assertThat(resumePackage.getChainDetails()).isNotNull();
+    io.harness.pms.sdk.core.execution.ChainDetails chainDetails = resumePackage.getChainDetails();
+    assertThat(chainDetails.isShouldEnd()).isTrue();
+    assertThat(chainDetails.getPassThroughData()).isNull();
+    assertThat(chainDetails.getPassThroughBytes()).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testHandleEventWithContextForTaskChain() {
+    StepResponseNotifyData notifyData = StepResponseNotifyData.builder().status(Status.RUNNING).build();
+    Map<String, ByteString> responseDataMap = new HashMap<>();
+    ByteString byteString = ByteString.copyFrom(kryoSerializer1.asDeflatedBytes(notifyData));
+    responseDataMap.put("response", byteString);
+    ByteString passThroughData =
+        ByteString.copyFrom(RecastOrchestrationUtils.toBytes(TestPassThroughData.builder().data("SOME_DATA").build()));
+
+    ByteString stepParameters =
+        ByteString.copyFrom(RecastOrchestrationUtils.toBytes(TestStepParameters.builder().data("SOME_DATA").build()));
+    NodeResumeEvent childChainResumeEvent =
+        NodeResumeEvent.newBuilder()
+            .setExecutionMode(ExecutionMode.TASK_CHAIN)
+            .setAmbiance(ambiance)
+            .setAsyncError(false)
+            .putAllResponse(responseDataMap)
+            .setStepParameters(stepParameters)
+            .setChainDetails(ChainDetails.newBuilder().setIsEnd(true).setPassThroughData(passThroughData).build())
+            .build();
+
+    when(mockedKryoSerializer.asInflatedObject(byteString.toByteArray())).thenReturn(notifyData);
+    ExecutableProcessor executableProcessor = mock(ExecutableProcessor.class);
+    when(executableProcessorFactory.obtainProcessor(ExecutionMode.TASK_CHAIN)).thenReturn(executableProcessor);
+    nodeResumeEventHandler.handleEventWithContext(childChainResumeEvent);
+    ArgumentCaptor<ResumePackage> resumePackageArgumentCaptor = ArgumentCaptor.forClass(ResumePackage.class);
+    verify(executableProcessor).handleResume(resumePackageArgumentCaptor.capture());
+
+    ResumePackage resumePackage = resumePackageArgumentCaptor.getValue();
+
+    assertThat(resumePackage.getChainDetails()).isNotNull();
+    io.harness.pms.sdk.core.execution.ChainDetails chainDetails = resumePackage.getChainDetails();
+    assertThat(chainDetails.isShouldEnd()).isTrue();
+    assertThat(chainDetails.getPassThroughData()).isNotNull();
+    assertThat(chainDetails.getPassThroughData()).isInstanceOf(TestPassThroughData.class);
+    assertThat(((TestPassThroughData) chainDetails.getPassThroughData()).getData()).isEqualTo("SOME_DATA");
+    assertThat(chainDetails.getPassThroughBytes()).isNull();
+  }
+
+  @Value
+  @Builder
+  private static class TestPassThroughData implements PassThroughData {
+    String data;
+  }
+
+  @Value
+  @Builder
+  private static class TestStepParameters implements StepParameters {
+    String data;
   }
 }
