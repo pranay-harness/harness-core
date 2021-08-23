@@ -186,8 +186,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
-  @JsonProperty(value = "enableAudit") private boolean enableAudit;
   @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
+  @JsonProperty(value = "enableAudit") private boolean enableAudit;
 
   private int applicationPort;
   private boolean sslEnabled;
