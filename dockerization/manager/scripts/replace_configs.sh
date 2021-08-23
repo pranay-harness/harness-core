@@ -886,3 +886,7 @@ fi
 if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
   yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
 fi
+
+if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
+  yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
+fi
