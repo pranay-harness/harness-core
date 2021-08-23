@@ -20,6 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class ExecutorUtils {
+  private static final String BAZEL_BIN_PATH;
+  static {
+    BAZEL_BIN_PATH = getBazelBinPath(null);
+    if (null == BAZEL_BIN_PATH){
+      BAZEL_BIN_PATH =
+    }
+  }
+
   public static void addJacocoAgentVM(final Path jar, List<String> command) {
     final String jacocoAgentPath = System.getenv("JACOCO_AGENT_PATH");
     if (jacocoAgentPath == null) {
@@ -40,41 +48,40 @@ public class ExecutorUtils {
   }
 
   public static String getBazelBinPath(File file) {
-//    Process processFinal = null;
-    return "/tmp/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin";
-//    try {
-//      String rc = file == null ? "--noworkspace_rc" : "";
-//      processFinal = Runtime.getRuntime().exec(String.format("bazel %s info bazel-bin", rc), null, file);
-//      if (processFinal.waitFor() == 0) {
-//        try (InputStream inputStream = processFinal.getInputStream()) {
-//          BufferedReader processStdErr = new BufferedReader(new InputStreamReader(inputStream));
-//          return processStdErr.readLine();
-//        }
-//      } else {
-//        try (InputStream inputStream = processFinal.getErrorStream()) {
-//          Pattern pattern = Pattern.compile("ERROR: .* The pertinent workspace directory is: '(.*?)'");
-//
-//          BufferedReader processStdErr = new BufferedReader(new InputStreamReader(inputStream));
-//
-//          String error = "";
-//          String line;
-//          while ((line = processStdErr.readLine()) != null) {
-//            Matcher matcher = pattern.matcher(line);
-//            if (matcher.find() && file == null) {
-//              return getBazelBinPath(new File(matcher.group(1)));
-//            }
-//            error += line;
-//          }
-//          throw new RuntimeException(error);
-//        }
-//      }
-//    } catch (IOException | InterruptedException e) {
-//      throw new RuntimeException(e);
-//    } finally {
-//      if (processFinal != null) {
-//        processFinal.destroyForcibly();
-//      }
-//    }
+    Process processFinal = null;
+    try {
+      String rc = file == null ? "--noworkspace_rc" : "";
+      processFinal = Runtime.getRuntime().exec(String.format("bazel %s info bazel-bin", rc), null, file);
+      if (processFinal.waitFor() == 0) {
+        try (InputStream inputStream = processFinal.getInputStream()) {
+          BufferedReader processStdErr = new BufferedReader(new InputStreamReader(inputStream));
+          return processStdErr.readLine();
+        }
+      } else {
+        try (InputStream inputStream = processFinal.getErrorStream()) {
+          Pattern pattern = Pattern.compile("ERROR: .* The pertinent workspace directory is: '(.*?)'");
+
+          BufferedReader processStdErr = new BufferedReader(new InputStreamReader(inputStream));
+
+          String error = "";
+          String line;
+          while ((line = processStdErr.readLine()) != null) {
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.find() && file == null) {
+              return getBazelBinPath(new File(matcher.group(1)));
+            }
+            error += line;
+          }
+          throw new RuntimeException(error);
+        }
+      }
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
+    } finally {
+      if (processFinal != null) {
+        processFinal.destroyForcibly();
+      }
+    }
   }
 
   public static Path getJar(String moduleName) {
@@ -86,7 +93,14 @@ public class ExecutorUtils {
   }
 
   public static Path getJar(String moduleName, String jarFileName) {
-    return Paths.get(getBazelBinPath(null), moduleName, jarFileName);
+    return Paths.get(getBazelBinPathCached(), moduleName, jarFileName);
+  }
+
+  private static String getBazelBinPathCached() {
+    if (null != BAZEL_BIN_PATH) {
+      return BAZEL_BIN_PATH;
+    }
+    return getBazelBinPath(null);
   }
 
   public static void addJar(Path jar, List<String> command) {
