@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.polling.bean.PollingDocument;
@@ -16,6 +17,7 @@ import io.harness.polling.contracts.Category;
 import io.harness.polling.contracts.GcsHelmPayload;
 import io.harness.polling.contracts.HelmVersion;
 import io.harness.polling.contracts.HttpHelmPayload;
+import io.harness.polling.contracts.PollingItem;
 import io.harness.polling.contracts.PollingPayloadData;
 import io.harness.polling.contracts.Qualifier;
 import io.harness.polling.contracts.S3HelmPayload;
@@ -24,10 +26,11 @@ import java.util.Collections;
 
 @OwnedBy(HarnessTeam.CDC)
 public class PollingRequestToPollingDocumentMapper {
-  public PollingDocument toPollingDocument(
-      Qualifier qualifier, Category category, PollingPayloadData pollingPayloadData) {
+  public PollingDocument toPollingDocument(PollingItem pollingItem) {
     PollingInfo pollingInfo = null;
     PollingDocumentBuilder pollingDocumentBuilder = PollingDocument.builder();
+    PollingPayloadData pollingPayloadData = pollingItem.getPollingPayloadData();
+    final Category category = pollingItem.getCategory();
     switch (category) {
       case MANIFEST:
         pollingDocumentBuilder.pollingType(PollingType.MANIFEST);
@@ -40,11 +43,13 @@ public class PollingRequestToPollingDocumentMapper {
         throw new InvalidRequestException("Unsupported category type " + category);
     }
 
+    Qualifier qualifier = pollingItem.getQualifier();
     return pollingDocumentBuilder.accountId(qualifier.getAccountId())
         .orgIdentifier(qualifier.getOrganizationId())
         .projectIdentifier(qualifier.getProjectId())
-        .signatures(Collections.singletonList(qualifier.getSignature()))
+        .signatures(Collections.singletonList(pollingItem.getSignature()))
         .pollingInfo(pollingInfo)
+        .uuid(EmptyPredicate.isEmpty(pollingItem.getPollingDocId()) ? null : pollingItem.getPollingDocId())
         .failedAttempts(0)
         .build();
   }

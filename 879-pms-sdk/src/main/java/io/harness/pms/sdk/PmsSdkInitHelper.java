@@ -7,6 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
@@ -134,6 +135,7 @@ public class PmsSdkInitHelper {
         .setProgressEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.PROGRESS_EVENT))
         .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
         .setNodeResumeEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_RESUME))
+        .setPlanCreationEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.CREATE_PARTIAL_PLAN))
         .build();
   }
 
@@ -192,6 +194,8 @@ public class PmsSdkInitHelper {
         return Redis.newBuilder().setTopicName(PIPELINE_NODE_ADVISE_EVENT_TOPIC).build();
       case NODE_RESUME:
         return Redis.newBuilder().setTopicName(PIPELINE_NODE_RESUME_EVENT_TOPIC).build();
+      case CREATE_PARTIAL_PLAN:
+        return Redis.newBuilder().setTopicName(START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC).build();
       default:
         throw new InvalidRequestException("Not a valid Event Category");
     }

@@ -7,6 +7,8 @@ import static java.time.Duration.ofDays;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PersistenceTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -20,6 +22,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PL)
 public class AccountDataRetentionTest extends PersistenceTestBase {
   @Inject io.harness.dataretention.AccountDataRetentionService accountDataRetentionService;
   @Inject HPersistence persistence;
@@ -79,7 +82,8 @@ public class AccountDataRetentionTest extends PersistenceTestBase {
       assertThat(entity.getValidUntil().getTime()).as(entity.getUuid()).isEqualTo(now + dataRetention);
     });
 
-    Map<String, Long> newAccounts = ImmutableMap.<String, Long>builder().put(accountId, dataRetention + 1).build();
+    // Adding two minutes to the set data retention
+    Map<String, Long> newAccounts = ImmutableMap.<String, Long>builder().put(accountId, dataRetention + 120000).build();
     assertThat(accountDataRetentionService.corectValidUntilAccount(
                    io.harness.dataretention.AccountDataRetentionTestEntity.class, newAccounts, now, now + 1000))
         .isEqualTo(0);

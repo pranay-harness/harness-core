@@ -362,6 +362,40 @@ public class OrchestrationServiceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testOrchestrate_ignoreStateMachinesAtCreatedState() {
+    AnalysisOrchestrator orchestrator = AnalysisOrchestrator.builder()
+                                            .verificationTaskId(cvConfigId)
+                                            .status(AnalysisStatus.CREATED)
+                                            .analysisStateMachineQueue(new ArrayList<>())
+                                            .build();
+
+    AnalysisStateMachine stateMachine =
+        dataGenerator.buildStateMachine(AnalysisStatus.SUCCESS, verificationTaskId, timeSeriesAnalysisState);
+    hPersistence.save(stateMachine);
+
+    List<AnalysisStateMachine> ignoreList = new ArrayList<>();
+
+    for (int i = 0; i < STATE_MACHINE_IGNORE_LIMIT - 10; i++) {
+      AnalysisStateMachine firstSM =
+          dataGenerator.buildStateMachine(AnalysisStatus.CREATED, verificationTaskId, timeSeriesAnalysisState);
+      firstSM.setAnalysisStartTime(clock.instant().minus(STATE_MACHINE_IGNORE_MINUTES + 20, ChronoUnit.MINUTES));
+      firstSM.setAnalysisEndTime(clock.instant().minus(STATE_MACHINE_IGNORE_MINUTES + 10, ChronoUnit.MINUTES));
+      orchestrator.getAnalysisStateMachineQueue().add(firstSM);
+      if (i < STATE_MACHINE_IGNORE_LIMIT) {
+        ignoreList.add(firstSM);
+      }
+    }
+    hPersistence.save(orchestrator);
+
+    orchestrate(cvConfigId);
+    AnalysisOrchestrator orchestratorFromDB = hPersistence.createQuery(AnalysisOrchestrator.class).get();
+    assertThat(orchestratorFromDB.getAnalysisStateMachineQueue()).isEmpty();
+    assertThat(orchestratorFromDB.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testValidateAllFieldsOnUpsert() {
     AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
                                             .filter(AnalysisOrchestratorKeys.verificationTaskId, cvConfigId)

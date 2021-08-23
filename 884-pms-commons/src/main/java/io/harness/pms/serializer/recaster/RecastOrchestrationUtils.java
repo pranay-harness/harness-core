@@ -17,6 +17,7 @@ import io.harness.serializer.recaster.proto.ProtoRecastTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -47,6 +48,15 @@ public class RecastOrchestrationUtils {
 
   public <T> Map<String, Object> toMap(T entity) {
     return recast.toMap(entity);
+  }
+
+  public <T> byte[] toBytes(T entity) {
+    return toJson(entity).getBytes(StandardCharsets.UTF_8);
+  }
+
+  public <T> T fromBytes(byte[] bytes, Class<T> entityClass) {
+    String json = new String(bytes, StandardCharsets.UTF_8);
+    return fromJson(json, entityClass);
   }
 
   public <T> String toJson(T entity) {

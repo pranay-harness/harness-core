@@ -2,10 +2,10 @@ package io.harness.accesscontrol.clients;
 
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.accesscontrol.NGAccessDeniedException;
 import io.harness.accesscontrol.Principal;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.UnexpectedException;
 
@@ -112,14 +112,15 @@ public abstract class AbstractAccessControlClient implements AccessControlClient
     if (!StringUtils.isEmpty(exceptionMessage)) {
       finalMessage = exceptionMessage;
     } else {
-      finalMessage = String.format("Missing permission on %s", accessControlDTO.getResourceType().toLowerCase());
+      finalMessage = String.format("Missing permission %s on %s", accessControlDTO.getPermission(),
+          accessControlDTO.getResourceType().toLowerCase());
       if (!StringUtils.isEmpty(accessControlDTO.getResourceIdentifier())) {
         finalMessage =
             finalMessage.concat(String.format(" with identifier %s", accessControlDTO.getResourceIdentifier()));
       }
     }
     if (!accessControlDTO.isPermitted()) {
-      throw new AccessDeniedException(finalMessage, ErrorCode.NG_ACCESS_DENIED, USER);
+      throw new NGAccessDeniedException(finalMessage, USER, Collections.singletonList(permissionCheckDTO));
     }
   }
 

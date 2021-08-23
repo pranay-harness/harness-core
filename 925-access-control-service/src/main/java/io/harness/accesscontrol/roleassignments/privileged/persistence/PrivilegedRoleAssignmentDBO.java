@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.roleassignments.privileged.persistence;
 
+import static io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentDBO.COLLECTION_NAME;
 import static io.harness.ng.DbAliases.ACCESS_CONTROL;
 
 import io.harness.accesscontrol.AccessControlEntity;
@@ -43,11 +44,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @ToString
 @EqualsAndHashCode
 @FieldNameConstants(innerTypeName = "PrivilegedRoleAssignmentDBOKeys")
-@Entity(value = "privilegedRoleAssignments", noClassnameStored = true)
-@Document("privilegedRoleAssignments")
-@TypeAlias("privilegedRoleAssignments")
+@Entity(value = COLLECTION_NAME, noClassnameStored = true)
+@Document(COLLECTION_NAME)
+@TypeAlias(COLLECTION_NAME)
 @StoreIn(ACCESS_CONTROL)
 public class PrivilegedRoleAssignmentDBO implements PersistentEntity, AccessControlEntity {
+  public static final String COLLECTION_NAME = "privilegedRoleAssignments";
+
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @NotNull final PrincipalType principalType;
   @NotEmpty final String principalIdentifier;
@@ -67,7 +70,7 @@ public class PrivilegedRoleAssignmentDBO implements PersistentEntity, AccessCont
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("uniqueIndex")
+                 .name("uniqueIndexV2")
                  .unique(true)
                  .field(PrivilegedRoleAssignmentDBOKeys.principalType)
                  .field(PrivilegedRoleAssignmentDBOKeys.principalIdentifier)

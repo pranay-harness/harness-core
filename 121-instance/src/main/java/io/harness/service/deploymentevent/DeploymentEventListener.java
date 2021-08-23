@@ -79,7 +79,8 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
       DeploymentSummaryDTO deploymentSummaryDTO = createDeploymentSummary(
           ambiance, serviceStepOutcome, infrastructureOutcome, infrastructureMappingDTO, serverInstanceInfoList);
 
-      instanceSyncService.processInstanceSyncForNewDeployment(new DeploymentEvent(deploymentSummaryDTO, null));
+      instanceSyncService.processInstanceSyncForNewDeployment(
+          new DeploymentEvent(deploymentSummaryDTO, null, infrastructureOutcome));
     } catch (Exception exception) {
       log.error("Exception occured while handling event for instance sync", exception);
     }
@@ -89,9 +90,6 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
 
   private InfrastructureMappingDTO createInfrastructureMappingIfNotExists(
       Ambiance ambiance, ServiceStepOutcome serviceOutcome, InfrastructureOutcome infrastructureOutcome) {
-    AbstractInstanceSyncHandler abstractInstanceSyncHandler =
-        instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureOutcome.getKind());
-
     InfrastructureMappingDTO infrastructureMappingDTO =
         InfrastructureMappingDTO.builder()
             .accountIdentifier(getAccountIdentifier(ambiance))
@@ -100,7 +98,7 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
             .serviceIdentifier(serviceOutcome.getIdentifier())
             .envIdentifier(infrastructureOutcome.getEnvironment().getIdentifier())
             .infrastructureKey(infrastructureOutcome.getInfrastructureKey())
-            .infrastructureKind(abstractInstanceSyncHandler.getInfrastructureKind())
+            .infrastructureKind(infrastructureOutcome.getKind())
             .connectorRef(infrastructureOutcome.getConnectorRef())
             .build();
 

@@ -3,6 +3,7 @@ package io.harness.delegate.configuration;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.delegate.configuration.InstallUtils.helm2Version;
 import static io.harness.delegate.configuration.InstallUtils.helm3Version;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
@@ -24,7 +25,6 @@ import io.harness.rule.Owner;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -180,7 +180,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   private void deleteOcDirectory() throws Exception {
     File file = new File("./client-tools/oc/");
     if (file.exists()) {
-      org.apache.commons.io.FileUtils.deleteDirectory(file);
+      deleteDirectoryAndItsContentIfExists(file.getAbsolutePath());
     }
   }
 
@@ -219,7 +219,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
     assumeThat(SystemUtils.IS_OS_WINDOWS).isFalse();
     assumeThat(SystemUtils.IS_OS_MAC).isFalse();
 
-    FileUtils.deleteDirectory(new File("./client-tools/kustomize/"));
+    deleteDirectoryAndItsContentIfExists("./client-tools/kustomize/");
     assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
 
     // Won't download this time

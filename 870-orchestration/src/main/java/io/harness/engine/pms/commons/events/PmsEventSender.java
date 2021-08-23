@@ -40,6 +40,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -72,18 +73,27 @@ public class PmsEventSender {
   public String sendEvent(Ambiance ambiance, ByteString eventData, PmsEventCategory eventCategory, String serviceName,
       boolean isMonitored) {
     log.info("Sending {} event for {} to the producer", eventCategory, serviceName);
-    Producer producer = obtainProducer(eventCategory, serviceName);
-
     ImmutableMap.Builder<String, String> metadataBuilder = ImmutableMap.<String, String>builder()
                                                                .put(SERVICE_NAME, serviceName)
                                                                .putAll(AmbianceUtils.logContextMap(ambiance));
+    Producer producer = obtainProducer(eventCategory, serviceName);
+
     if (isMonitored
         && pmsFeatureFlagService.isEnabled(AmbianceUtils.getAccountId(ambiance), FeatureName.PIPELINE_MONITORING)) {
       metadataBuilder.put(PIPELINE_MONITORING_ENABLED, "true");
     }
-
     String messageId =
         producer.send(Message.newBuilder().putAllMetadata(metadataBuilder.build()).setData(eventData).build());
+    log.info("Successfully Sent {} event for {} to the producer. MessageId {}", eventCategory, serviceName, messageId);
+    return messageId;
+  }
+
+  public String sendEvent(
+      ByteString eventData, Map<String, String> metadataMap, PmsEventCategory eventCategory, String serviceName) {
+    log.info("Sending {} event for {} to the producer", eventCategory, serviceName);
+    Producer producer = obtainProducer(eventCategory, serviceName);
+    metadataMap.put(SERVICE_NAME, serviceName);
+    String messageId = producer.send(Message.newBuilder().putAllMetadata(metadataMap).setData(eventData).build());
     log.info("Successfully Sent {} event for {} to the producer. MessageId {}", eventCategory, serviceName, messageId);
     return messageId;
   }
@@ -126,6 +136,9 @@ public class PmsEventSender {
       case NODE_RESUME:
         return extractProducer(
             instance.getNodeResumeEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
+      case CREATE_PARTIAL_PLAN:
+        return extractProducer(instance.getStartPlanCreationEventConsumerConfig(),
+            EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
       default:
         throw new InvalidRequestException("Invalid Event Category while obtaining Producer");
     }

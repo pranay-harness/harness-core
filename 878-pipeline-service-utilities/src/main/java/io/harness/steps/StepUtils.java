@@ -66,6 +66,8 @@ import org.apache.commons.collections4.ListUtils;
 public class StepUtils {
   private StepUtils() {}
 
+  public static final String DEFAULT_STEP_TIMEOUT = "10m";
+
   public static StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
 

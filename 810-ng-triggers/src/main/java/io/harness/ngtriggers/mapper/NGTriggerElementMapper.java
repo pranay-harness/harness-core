@@ -37,6 +37,7 @@ import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO.NGTriggerDetailsResponseDTOBuilder;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
+import io.harness.ngtriggers.beans.dto.PollingConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails.WebhookDetailsBuilder;
@@ -191,14 +192,16 @@ public class NGTriggerElementMapper {
     return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
   }
 
-  private void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
-    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
-      if (isNotEmpty(existingEntity.getSignature())) {
-        newEntity.setSignature(existingEntity.getSignature());
+  public void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
+    PollingConfig existingPollingConfig = existingEntity.getMetadata().getBuildMetadata().getPollingConfig();
+    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST && null != existingPollingConfig) {
+      if (isNotEmpty(existingPollingConfig.getSignature())) {
+        newEntity.getMetadata().getBuildMetadata().getPollingConfig().setSignature(
+            existingPollingConfig.getSignature());
       }
-      if (isNotEmpty(existingEntity.getMetadata().getBuildMetadata().getPollingDocId())) {
-        newEntity.getMetadata().getBuildMetadata().setPollingDocId(
-            existingEntity.getMetadata().getBuildMetadata().getPollingDocId());
+      if (isNotEmpty(existingPollingConfig.getPollingDocId())) {
+        newEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
+            existingPollingConfig.getPollingDocId());
       }
     }
   }
@@ -227,7 +230,6 @@ public class NGTriggerElementMapper {
                                                .targetType(TargetType.PIPELINE)
                                                .metadata(toMetadata(config.getSource()))
                                                .enabled(config.getEnabled())
-                                               .signature(generateUuid())
                                                .tags(TagMapper.convertToList(config.getTags()));
     if (config.getSource().getType() == NGTriggerType.SCHEDULED) {
       entityBuilder.nextIterations(new ArrayList<>());
@@ -272,7 +274,11 @@ public class NGTriggerElementMapper {
           artifactSourceType = artifactTypeSpec.getClass().getName();
         }
         return NGTriggerMetadata.builder()
-            .buildMetadata(BuildMetadata.builder().type(ARTIFACT).buildSourceType(artifactSourceType).build())
+            .buildMetadata(BuildMetadata.builder()
+                               .type(ARTIFACT)
+                               .buildSourceType(artifactSourceType)
+                               .pollingConfig(PollingConfig.builder().buildRef(EMPTY).signature(generateUuid()).build())
+                               .build())
             .build();
       case MANIFEST:
         ManifestTypeSpec manifestTypeSpec = ((ManifestTriggerConfig) triggerSource.getSpec()).getSpec();
@@ -282,7 +288,11 @@ public class NGTriggerElementMapper {
         }
 
         return NGTriggerMetadata.builder()
-            .buildMetadata(BuildMetadata.builder().type(MANIFEST).buildSourceType(manifestSourceType).build())
+            .buildMetadata(BuildMetadata.builder()
+                               .type(MANIFEST)
+                               .buildSourceType(manifestSourceType)
+                               .pollingConfig(PollingConfig.builder().buildRef(EMPTY).signature(generateUuid()).build())
+                               .build())
             .build();
       default:
         throw new InvalidRequestException("Type " + triggerSource.getType().toString() + " is invalid");

@@ -12,4 +12,8 @@ FROM alpine:3.12
 COPY linux_amd64_pure_stripped/ci-addon /usr/local/bin/ci-addon-linux-amd64
 RUN chmod +x /usr/local/bin/ci-addon-linux-amd64
 COPY java-agent.jar /usr/local/bin/
+
+RUN adduser -g harness -s /bin/sh -D -u 1000 harness
+USER harness:harness
+
 CMD ["/usr/local/bin/ci-addon-linux-amd64"]

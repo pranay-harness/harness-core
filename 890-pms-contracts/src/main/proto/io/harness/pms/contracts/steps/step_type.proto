@@ -33,4 +33,6 @@ enum StepCategory {
   STAGE = 2;
   STEP = 3;
   STAGES = 4;
+  FORK = 5;
+  STEP_GROUP = 6;
 }

@@ -6,6 +6,9 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.mongo.MongoConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -43,6 +46,11 @@ public class TemplateServiceConfiguration extends Configuration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
+  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+
+  private boolean shouldDeployWithGitSync;
+  private GitSdkConfiguration gitSdkConfiguration;
 
   public TemplateServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

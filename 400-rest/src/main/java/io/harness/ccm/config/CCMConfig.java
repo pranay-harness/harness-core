@@ -2,7 +2,9 @@ package io.harness.ccm.config;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.yaml.BaseYaml;
 
 import lombok.Builder;
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @OwnedBy(CE)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class CCMConfig {
   boolean cloudCostEnabled;
   boolean skipK8sEventCollection;

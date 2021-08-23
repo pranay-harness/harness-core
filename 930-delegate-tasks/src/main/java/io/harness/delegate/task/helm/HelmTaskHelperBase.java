@@ -762,7 +762,7 @@ public class HelmTaskHelperBase {
                                                        manifest.getChartName(), repoName, destinationDirectory),
           destinationDirectory, "Helm chart fetch versions command failed ", timeoutInMillis,
           HelmCliCommandType.FETCH_ALL_VERSIONS);
-      String commandOutput = processResult.toString();
+      String commandOutput = processResult.getOutput().getUTF8();
       return parseHelmVersionsFromOutput(commandOutput, manifest);
     } finally {
       if (chartMuseumServer != null) {

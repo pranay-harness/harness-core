@@ -2,6 +2,7 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.ccm.health.HealthStatusService.UID;
+import static io.harness.perpetualtask.k8s.utils.DebugConstants.RELATIVITY_CLUSTER_IDS;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
 
@@ -18,7 +19,6 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -72,8 +72,6 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   private static final String POD_EVENT_MSG = "Pod: {}, action: {}";
   private static final String FAILED_PUBLISH_MSG = "Error publishing V1Pod.{} event.";
   private static final String MESSAGE_PROCESSOR_TYPE_EXCEPTION = "EXCEPTION";
-  // 5ee15b482aa4186d1c9c1ef6 -> ctus-prod-1-apps
-  private static final Set<String> DEBUG_CLUSTER_IDS = ImmutableSet.of("5ee15b482aa4186d1c9c1ef6");
 
   @Inject
   public PodWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -184,13 +182,13 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
 
       eventPublisher.publishMessage(
           podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, uid));
-      if (DEBUG_CLUSTER_IDS.contains(clusterId)) {
+      if (RELATIVITY_CLUSTER_IDS.contains(clusterId)) {
         log.info("published PodInfo UID:[{}], Name:[{}]", uid, pod.getMetadata().getName());
       }
 
       publishedPods.add(uid);
     } else if (podScheduledCondition == null) {
-      if (DEBUG_CLUSTER_IDS.contains(clusterId)) {
+      if (RELATIVITY_CLUSTER_IDS.contains(clusterId)) {
         log.warn("podScheduledCondition is null Pod UID:[{}], Name:[{}]", uid, pod.getMetadata().getName());
       }
     }

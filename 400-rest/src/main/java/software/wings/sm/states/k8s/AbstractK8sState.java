@@ -16,6 +16,7 @@ import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -377,7 +378,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId,
       K8sStateExecutor k8sStateExecutor) {
     CustomManifestValuesFetchParams fetchValuesParams =
-        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap);
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap, VALUES_YAML_KEY);
     fetchValuesParams.setActivityId(activityId);
     fetchValuesParams.setCommandUnitName(FetchFiles);
     fetchValuesParams.setAppId(context.getAppId());
@@ -830,7 +831,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     Map<K8sValuesLocation, Collection<String>> valuesFiles =
         applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
-            context, appManifestMap, executionResponse);
+            context, appManifestMap, executionResponse, VALUES_YAML_KEY);
     k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
 
     return k8sStateExecutor.executeK8sTask(context, activityId);

@@ -26,6 +26,7 @@ message PushInfo {
   string branch_name = 7;
   string folder_path = 8;
   map<string, string> context_map = 9;
+  bool is_sync_from_git = 10;
 }
 
 message PushResponse {

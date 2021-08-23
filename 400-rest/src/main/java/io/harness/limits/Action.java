@@ -2,7 +2,9 @@ package io.harness.limits;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;
@@ -14,6 +16,7 @@ import org.slf4j.helpers.MessageFormatter;
 @Value
 @AllArgsConstructor
 @OwnedBy(PL)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Action {
   private String accountId;
   private ActionType actionType;

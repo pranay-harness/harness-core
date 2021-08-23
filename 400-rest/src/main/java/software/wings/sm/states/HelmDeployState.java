@@ -20,6 +20,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
@@ -319,7 +320,7 @@ public class HelmDeployState extends State {
     }
 
     CustomManifestValuesFetchParams fetchValuesParams =
-        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap);
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap, VALUES_YAML_KEY);
     fetchValuesParams.setActivityId(activityId);
     fetchValuesParams.setCommandUnitName(FetchFiles);
     fetchValuesParams.setAppId(context.getAppId());
@@ -657,7 +658,7 @@ public class HelmDeployState extends State {
       Map<K8sValuesLocation, ApplicationManifest> appManifestMap = helmDeployStateExecutionData.getAppManifestMap();
       Map<K8sValuesLocation, Collection<String>> valuesFiles =
           applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
-              context, appManifestMap, executionResponse);
+              context, appManifestMap, executionResponse, VALUES_YAML_KEY);
       helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
     }
 

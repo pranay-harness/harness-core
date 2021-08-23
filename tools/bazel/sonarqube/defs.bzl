@@ -259,18 +259,12 @@ def sq_project(
         test_srcs = test_srcs,
         source_encoding = source_encoding,
         targets = targets,
+        modules = modules,
         test_targets = test_targets,
         test_reports = test_reports,
-        modules = modules,
         sq_properties_template = sq_properties_template,
         sq_properties = "sonar-project.properties",
         tags = tags,
         visibility = visibility,
         checkstyle_report_path = checkstyle_report_path,
     )
-
-def get_sonar_targets(modules = []):
-    _targets = dict()
-    for f in modules:
-        _targets.update({f + ":sq_mycomponent": f[2:]})
-    return _targets

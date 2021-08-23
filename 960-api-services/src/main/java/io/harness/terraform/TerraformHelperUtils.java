@@ -52,7 +52,7 @@ public class TerraformHelperUtils {
   public void copyFilesToWorkingDirectory(String sourceDir, String destinationDir) throws IOException {
     File dest = new File(destinationDir);
     File src = new File(sourceDir);
-    FileUtils.deleteDirectory(dest);
+    deleteDirectoryAndItsContentIfExists(dest.getAbsolutePath());
     FileUtils.copyDirectory(src, dest);
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
   }

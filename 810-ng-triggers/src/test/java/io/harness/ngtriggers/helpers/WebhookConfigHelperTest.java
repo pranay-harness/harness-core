@@ -6,6 +6,8 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_R
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_MERGED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CREATED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.DELETED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.EDITED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_CLOSE;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.GITLAB_MERGED;
@@ -25,10 +27,12 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUE
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PUSH;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.REPOSITORY;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.TAG;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLAB;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.JAMIE;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -117,5 +121,20 @@ public class WebhookConfigHelperTest extends CategoryTest {
     assertThat(actionsList).isEmpty();
     actionsList = WebhookConfigHelper.getActionsList(GITLAB, DELETE);
     assertThat(actionsList).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetActionListAWS() {
+    List<WebhookAction> actionsList = WebhookConfigHelper.getActionsList(AWS_CODECOMMIT, BRANCH);
+    assertThat(actionsList).containsExactlyInAnyOrder(CREATED, DELETED);
+    actionsList = WebhookConfigHelper.getActionsList(AWS_CODECOMMIT, TAG);
+    assertThat(actionsList).containsExactlyInAnyOrder(CREATED, DELETED);
+    actionsList = WebhookConfigHelper.getActionsList(AWS_CODECOMMIT, PUSH);
+    assertThat(actionsList).isEmpty();
+    assertThatThrownBy(() -> WebhookConfigHelper.getActionsList(AWS_CODECOMMIT, PULL_REQUEST))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Event PULL_REQUEST not an AWS code commit event");
   }
 }

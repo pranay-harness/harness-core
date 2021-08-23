@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
 import software.wings.sm.ContextElement;
@@ -15,6 +18,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@TargetModule(_957_CG_BEANS)
 public class InstanceElementListParam implements ContextElement {
   public static final String INSTANCE_LIST_PARAMS = "INSTANCE_LIST_PARAMS";
 

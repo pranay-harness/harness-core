@@ -275,6 +275,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
 @BreakDependencyOn("software.wings.app.MainConfiguration")
 @BreakDependencyOn("software.wings.beans.User")
+@BreakDependencyOn("software.wings.beans.Event")
 @OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
   /**
@@ -309,8 +310,6 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String ENV_ENV_VAR = "ENV";
   public static final String TASK_SELECTORS = "Task Selectors";
   public static final String TASK_CATEGORY_MAP = "Task Category Map";
-  public static final double RESERVED_CPU_FOR_NG_KUBERNETES = 0.05;
-  public static final int RESERVED_MEMORY_FOR_NG_KUBERNETES = 100;
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -404,12 +403,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return persistence.query(Delegate.class, pageRequest);
-  }
-
-  @Override
-  public boolean checkDelegateConnected(String accountId, String delegateId) {
-    return delegateConnectionDao.checkDelegateConnected(
-        accountId, delegateId, versionInfoManager.getVersionInfo().getVersion());
   }
 
   @Override
@@ -627,13 +620,12 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateReplicas(sizeDetails.getReplicas())
               .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
-              .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas() - RESERVED_MEMORY_FOR_NG_KUBERNETES)
-              .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas() - RESERVED_CPU_FOR_NG_KUBERNETES)
+              .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas())
+              .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
               .delegateGroupId(delegateGroup.getUuid())
               .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
-              .build(),
-          true);
+              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       String templateName = obtainK8sTemplateNameFromConfig(delegateSetupDetails.getK8sConfigDetails());
@@ -1097,8 +1089,7 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateXmx(delegateXmx)
-            .build(),
-        true);
+            .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -1144,8 +1135,7 @@ public class DelegateServiceImpl implements DelegateService {
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(delegateTokenName)
             .delegateName(StringUtils.defaultString(delegateName))
-            .build(),
-        false);
+            .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -1222,15 +1212,14 @@ public class DelegateServiceImpl implements DelegateService {
     private String delegateTokenName;
   }
 
-  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
-      ScriptRuntimeParamMapInquiry inquiry, boolean isNg) {
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
     String delegateStorageUrl = null;
     String delegateCheckLocation = null;
     boolean jarFileExists = false;
-    String delegateDockerImage = isNg ? "harness/delegate:ng" : "harness/delegate:latest";
+    String delegateDockerImage = "harness/delegate:latest";
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
     boolean useCDN =
         featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
@@ -1548,8 +1537,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(SHELL_SCRIPT)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(),
-          false);
+              .build());
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -1671,8 +1659,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(DOCKER)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(),
-          false);
+              .build());
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -1746,8 +1733,7 @@ public class DelegateServiceImpl implements DelegateService {
               .ciEnabled(isCiEnabled)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(),
-          false);
+              .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + ".yaml.ftl");
@@ -1795,8 +1781,7 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(true)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .build(),
-        false);
+            .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
     saveProcessedTemplate(scriptParams, yaml,
@@ -1840,8 +1825,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateType(HELM_DELEGATE)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .build(),
-        false);
+            .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
     saveProcessedTemplate(params, yaml, "delegate-helm-values.yaml.ftl");
@@ -1880,8 +1864,7 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateGroupId(delegateGroup.getUuid())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build(),
-          false);
+              .build());
 
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 
