@@ -12,7 +12,6 @@ import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.time.DurationUtils.durationTillDayTime;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
-import static java.util.stream.Collectors.partitioningBy;
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
@@ -24,6 +23,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -289,7 +289,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -435,11 +434,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerStores(configuration, injector);
 
     if (isManager()) {
-      registerResources(environment, injector);
+      registerResourcesManager(environment, injector);
     }
 
     if (shouldEnableDelegateMgmt) {
-      // registerResources(environment, injector);
       registerDelegateService(environment, injector);
     }
 
@@ -871,7 +869,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
-  private void registerResources(Environment environment, Injector injector) {
+  private void registerResourcesManager(Environment environment, Injector injector) {
     Reflections reflections =
         new Reflections(AppResource.class.getPackage().getName(), DelegateTaskResource.class.getPackage().getName());
 
