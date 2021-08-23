@@ -1,0 +1,16 @@
+Var validationUrl = concat(Env:baseUrl, "services")
+Var results = sync-call(url=Var:validationUrl, header=Env:commonHeaders)
+Var services = []
+Var entry = extract(Var:results, $.services)
+foreach service in Var:entry {
+  Var savedService = {}
+
+  Var id = extract(Var:service, $.id)
+  Var:savedService.put("id", Var:id)
+
+  Var name = extract(Var:service, $.name)
+  Var:savedService.put("name", Var:name)
+
+  Var:services.append(Var:savedService)
+}
+return Var:services
