@@ -108,7 +108,7 @@ public class DelegateFileResource {
       String fileId = fileService.saveFile(fileMetadata,
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
           fileBucket);
-      log.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
+      log.debug("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
 
       idempotent.succeeded(DelegateFileResource.FileIdempotentResult.builder().fileId(fileId).build());
       return new RestResponse<>(fileId);
@@ -151,7 +151,7 @@ public class DelegateFileResource {
   @ExceptionMetered
   public StreamingOutput downloadFile(@QueryParam("fileId") @NotEmpty String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
-    log.info(
+    log.debug(
         "fileId: {}, fileBucket: {}", fileId.replaceAll("[\r\n]", ""), fileBucket.toString().replaceAll("[\r\n]", ""));
     return output -> fileService.downloadToStream(fileId, output, fileBucket);
   }
@@ -163,7 +163,7 @@ public class DelegateFileResource {
   @ExceptionMetered
   public RestResponse<DelegateFile> getFileInfo(@QueryParam("fileId") String fileId,
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
-    log.info(
+    log.debug(
         "fileId: {}, fileBucket: {}", fileId.replaceAll("[\r\n]", ""), fileBucket.toString().replaceAll("[\r\n]", ""));
 
     FileMetadata fileMetadata = fileService.getFileMetadata(fileId, fileBucket);

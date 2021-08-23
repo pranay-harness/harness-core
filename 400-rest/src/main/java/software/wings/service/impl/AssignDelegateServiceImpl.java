@@ -334,7 +334,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       taskSetupAbstractionsPrintable.append(entity.getKey() + ":" + entity.getValue() + "; ");
     }
     String logSequence = batch != null && isNotBlank(batch.getTaskId()) ? batch.getTaskId() : generateUuid();
-    log.info(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
+    log.debug(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
         taskSetupAbstractionsPrintable.toString());
 
     Set<String> failedRulesDescriptions = new HashSet<>();
@@ -687,7 +687,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public String pickFirstAttemptDelegate(DelegateTask task) {
     List<String> delegates = connectedWhitelistedDelegates(task);
     if (delegates.isEmpty()) {
-      log.info("No first attempt delegate was picked");
+      log.debug("No first attempt delegate was picked");
       return null;
     }
     return delegates.get(random.nextInt(delegates.size()));
@@ -715,9 +715,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                     .set(DelegateConnectionResultKeys.validUntil, DelegateConnectionResult.getValidUntilTime());
             DelegateConnectionResult result = persistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {
-              log.info("Whitelist entry refreshed");
+              log.debug("Whitelist entry refreshed");
             } else {
-              log.info("Whitelist entry was not updated");
+              log.debug("Whitelist entry was not updated");
             }
           }
         }
@@ -765,7 +765,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   @Override
   public String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask) {
-    log.info("Delegate task is terminated");
+    log.debug("Delegate task is terminated");
 
     String errorMessage = "Unknown";
 
@@ -954,7 +954,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   @Override
   public RetryDelegate onPossibleRetry(RetryDelegate retryDelegate) {
-    log.info("Delegate returned retryable error for task");
+    log.debug("Delegate returned retryable error for task");
 
     Set<String> alreadyTriedDelegates = retryDelegate.getDelegateTask().getAlreadyTriedDelegates();
     List<String> remainingConnectedDelegates =
@@ -965,7 +965,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
             .collect(toList());
 
     if (!remainingConnectedDelegates.isEmpty()) {
-      log.info("Requeueing task");
+      log.debug("Requeueing task");
 
       persistence.update(retryDelegate.getTaskQuery(),
           persistence.createUpdateOperations(DelegateTask.class)

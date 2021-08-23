@@ -285,13 +285,13 @@ public class DelegateQueueTask implements Runnable {
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
-          log.info("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
+          log.debug("Rebroadcast queued task. broadcast count: {}", delegateTask.getBroadcastCount());
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }
       }
 
-      log.info("{} tasks were rebroadcast", count);
+      log.debug("{} tasks were rebroadcast", count);
     }
   }
 
