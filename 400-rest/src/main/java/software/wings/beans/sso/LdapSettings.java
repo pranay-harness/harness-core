@@ -49,7 +49,6 @@ import org.hibernate.validator.constraints.NotBlank;
 public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
-  private Boolean useOnlyFallBackMechanism;
 
   /**
    * Keeping the below two attributes only for migration purpose.

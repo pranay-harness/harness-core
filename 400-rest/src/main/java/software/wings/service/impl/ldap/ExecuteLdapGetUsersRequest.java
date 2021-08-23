@@ -27,7 +27,10 @@ public class ExecuteLdapGetUsersRequest implements Function<LdapGetUsersRequest,
     LdapSearch ldapSearch = ldapGetUsersRequest.getLdapSearch();
     LdapUserConfig ldapUserConfig = ldapGetUsersRequest.getLdapUserConfig();
     SearchResult searchResult = null;
-    if (!Boolean.TRUE.equals(ldapGetUsersRequest.getUseOnlyFallBackMechanism())) {
+    boolean useRecursiveSearch = ldapGetUsersRequest.getUseRecursiveGroupMembershipSearch() != null
+        ? ldapGetUsersRequest.getUseRecursiveGroupMembershipSearch()
+        : true;
+    if (useRecursiveSearch) {
       try {
         searchResult = ldapSearch.execute(ldapUserConfig.getReturnAttrs());
         if (searchResult == null || searchResult.size() == 0) {
