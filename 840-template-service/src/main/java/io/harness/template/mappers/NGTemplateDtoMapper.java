@@ -8,6 +8,7 @@ import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.template.beans.TemplateResponseDTO;
@@ -37,10 +38,12 @@ public class NGTemplateDtoMapper {
         .templateScope(templateEntity.getTemplateScope())
         .versionLabel(templateEntity.getVersionLabel())
         .tags(TagMapper.convertToMap(templateEntity.getTags()))
+        .version(templateEntity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(templateEntity))
         .build();
   }
 
-  public TemplateEntity toTemplateEntity(
+  public TemplateEntity toTemplateEntityResponse(
       String accountId, String orgId, String projectId, NGTemplateConfig templateConfig, String yaml) {
     validateTemplateYaml(templateConfig, orgId, projectId);
     NGTemplateReference templateReference =
@@ -70,7 +73,7 @@ public class NGTemplateDtoMapper {
 
   public TemplateEntity toTemplateEntity(String accountId, NGTemplateConfig templateConfig) {
     try {
-      return toTemplateEntity(accountId, templateConfig.getTemplateInfoConfig().getOrgIdentifier(),
+      return toTemplateEntityResponse(accountId, templateConfig.getTemplateInfoConfig().getOrgIdentifier(),
           templateConfig.getTemplateInfoConfig().getProjectIdentifier(), templateConfig,
           YamlPipelineUtils.getYamlString(templateConfig));
     } catch (Exception e) {
@@ -81,7 +84,7 @@ public class NGTemplateDtoMapper {
   public TemplateEntity toTemplateEntity(String accountId, String templateYaml) {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
-      return toTemplateEntity(accountId, templateConfig.getTemplateInfoConfig().getOrgIdentifier(),
+      return toTemplateEntityResponse(accountId, templateConfig.getTemplateInfoConfig().getOrgIdentifier(),
           templateConfig.getTemplateInfoConfig().getProjectIdentifier(), templateConfig,
           YamlPipelineUtils.getYamlString(templateConfig));
     } catch (IOException e) {
@@ -92,7 +95,19 @@ public class NGTemplateDtoMapper {
   public TemplateEntity toTemplateEntity(String accountId, String orgId, String projectId, String templateYaml) {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
-      return toTemplateEntity(
+      return toTemplateEntityResponse(
+          accountId, orgId, projectId, templateConfig, YamlPipelineUtils.getYamlString(templateConfig));
+    } catch (IOException e) {
+      throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
+    }
+  }
+
+  public TemplateEntity toTemplateEntity(String accountId, String orgId, String projectId, String templateIdentifier,
+      String versionLabel, String templateYaml) {
+    try {
+      NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
+      validateTemplateYaml(templateConfig, orgId, projectId, templateIdentifier, versionLabel);
+      return toTemplateEntityResponse(
           accountId, orgId, projectId, templateConfig, YamlPipelineUtils.getYamlString(templateConfig));
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
@@ -113,6 +128,17 @@ public class NGTemplateDtoMapper {
     } catch (IOException ex) {
       throw new InvalidRequestException("Cannot create template yaml: " + ex.getMessage(), ex);
     }
+  }
+
+  private void validateTemplateYaml(NGTemplateConfig templateConfig, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel) {
+    if (!templateConfig.getTemplateInfoConfig().getIdentifier().equals(templateIdentifier)) {
+      throw new InvalidRequestException("Template Identifier for template is not matching as in template yaml.");
+    }
+    if (!templateConfig.getTemplateInfoConfig().getVersionLabel().equals(versionLabel)) {
+      throw new InvalidRequestException("VersionLabel for template is not matching as in template yaml.");
+    }
+    validateTemplateYaml(templateConfig, orgIdentifier, projectIdentifier);
   }
 
   private void validateTemplateYaml(NGTemplateConfig templateConfig, String orgIdentifier, String projectIdentifier) {

@@ -1,22 +1,29 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.filter.FiltersModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
+import io.harness.template.events.TemplateOutboxEventHandler;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceImpl;
 import io.harness.time.TimeModule;
@@ -65,7 +72,14 @@ public class TemplateServiceModule extends AbstractModule {
     install(PersistentLockModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
     install(TimeModule.getInstance());
+    install(FiltersModule.getInstance());
 
+    install(new AuditClientModule(this.templateServiceConfiguration.getAuditClientConfig(),
+        this.templateServiceConfiguration.getManagerServiceSecret(), TEMPLATE_SERVICE.getServiceId(),
+        this.templateServiceConfiguration.isEnableAudit()));
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, TEMPLATE_SERVICE.getServiceId(), false));
+
+    bind(OutboxEventHandler.class).to(TemplateOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(NGTemplateService.class).to(NGTemplateServiceImpl.class);
   }
