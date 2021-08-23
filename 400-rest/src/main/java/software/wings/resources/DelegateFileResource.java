@@ -25,6 +25,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.stream.BoundedInputStream;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.app.MainConfiguration;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.security.annotations.Scope;
@@ -59,6 +60,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("agent/delegateFiles")
 @Produces("application/json")
 @Scope(DELEGATE)
+@DelegateServiceResource
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)

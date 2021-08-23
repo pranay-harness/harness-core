@@ -42,6 +42,7 @@ import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.service.intfc.DelegateCache;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateStatus;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -87,6 +88,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("/setup/delegates")
 @Produces("application/json")
 @Scope(DELEGATE)
+@DelegateServiceResource
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)

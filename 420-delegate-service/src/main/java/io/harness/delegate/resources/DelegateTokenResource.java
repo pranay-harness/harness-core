@@ -10,6 +10,7 @@ import io.harness.delegate.beans.DelegateTokenStatus;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateTokenService;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Path("/delegate-token")
 @Produces("application/json")
 @Scope(DELEGATE)
+@DelegateServiceResource
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateTokenResource {

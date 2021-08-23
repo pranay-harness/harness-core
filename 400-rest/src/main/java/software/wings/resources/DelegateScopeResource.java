@@ -15,6 +15,7 @@ import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.rest.RestResponse;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.DelegateScopeService;
@@ -43,6 +44,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("/delegate-scopes")
 @Produces("application/json")
 @Scope(DELEGATE_SCOPE)
+@DelegateServiceResource
 @AuthRule(permissionType = LOGGED_IN)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)

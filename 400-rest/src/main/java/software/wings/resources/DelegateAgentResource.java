@@ -57,6 +57,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.beans.Account;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
@@ -100,6 +101,7 @@ import org.jetbrains.annotations.NotNull;
 @Path("/agent/delegates")
 @Produces("application/json")
 @Scope(DELEGATE)
+@DelegateServiceResource
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)

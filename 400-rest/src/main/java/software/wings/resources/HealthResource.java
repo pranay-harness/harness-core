@@ -14,6 +14,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.AsymmetricEncryptor;
 import io.harness.security.annotations.PublicApi;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.app.MainConfiguration;
 import software.wings.search.framework.ElasticsearchConfig;
 
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Path("/health")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@DelegateServiceResource
 @PublicApi
 @Slf4j
 public class HealthResource {

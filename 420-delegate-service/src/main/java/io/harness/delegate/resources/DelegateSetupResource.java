@@ -19,6 +19,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateSetupService;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -38,6 +39,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("/setup/delegates/v2")
 @Produces("application/json")
 @AuthRule(permissionType = LOGGED_IN)
+@DelegateServiceResource
 //@Scope(DELEGATE)
 // This NG specific, switching to NG access control. AuthRule to be removed also when NG access control is fully
 // enabled.

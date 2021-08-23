@@ -21,6 +21,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.service.intfc.DelegateSetupService;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
@@ -41,6 +42,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Consumes("application/json")
 @AuthRule(permissionType = LOGGED_IN)
 @NextGenManagerAuth
+@DelegateServiceResource
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)

@@ -12,6 +12,7 @@ import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.time.DurationUtils.durationTillDayTime;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import static java.util.stream.Collectors.partitioningBy;
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
@@ -152,6 +153,7 @@ import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.Account;
 import software.wings.beans.Activity;
@@ -287,6 +289,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -323,6 +326,8 @@ public class WingsApplication extends Application<MainConfiguration> {
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
   private StartupMode startupMode;
+  private String DELEGATE_SERVICE_RESOURCE_PACKAGE = "io.harness.delegate.resources";
+  private String MANGER_RESOURCE_PACAKGE = "software.wings.resources";
 
   public WingsApplication(StartupMode startupMode) {
     this.startupMode = startupMode;
@@ -429,7 +434,14 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerStores(configuration, injector);
 
-    registerResources(environment, injector);
+    if (isManager()) {
+      registerResources(environment, injector);
+    }
+
+    if (shouldEnableDelegateMgmt) {
+      // registerResources(environment, injector);
+      registerDelegateService(environment, injector);
+    }
 
     // Managed beans
     registerManagedBeansCommon(configuration, environment, injector);
@@ -871,6 +883,25 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
   }
 
+  private void registerDelegateService(Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(DELEGATE_SERVICE_RESOURCE_PACKAGE);
+    Set<Class<? extends Object>> delegateResources = reflections.getTypesAnnotatedWith(Path.class);
+
+    // filter resources classes that are shared with manager
+    Reflections managerResources = new Reflections(MANGER_RESOURCE_PACAKGE);
+    Map<Boolean, List<Class<?>>> resources =
+        managerResources.getTypesAnnotatedWith(Path.class)
+            .stream()
+            .collect(partitioningBy(resource -> resource.isAnnotationPresent(DelegateServiceResource.class)));
+    delegateResources.addAll(resources.get(true));
+
+    for (Class<?> resource : delegateResources) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
+  }
+
   private void registerManagedBeansCommon(MainConfiguration configuration, Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
     environment.lifecycle().manage((Managed) injector.getInstance(PersistentLocker.class));
@@ -974,11 +1005,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed cleaning up manager versions.", injector.getInstance(ManagerVersionsCleanUpJob.class)),
         0L, 5L, TimeUnit.MINUTES);
-
-    delegateExecutor.scheduleWithFixedDelay(
-        new Schedulable("Failed while broadcasting perpetual tasks",
-            () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate()),
-        0L, 10L, TimeUnit.SECONDS);
   }
 
   private void scheduleJobsDelegateService(
@@ -1003,6 +1029,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while calculating delegate insights summaries",
                                                 injector.getInstance(DelegateInsightsSummaryJob.class)),
         0L, 10L, TimeUnit.MINUTES);
+
+    delegateExecutor.scheduleWithFixedDelay(
+        new Schedulable("Failed while broadcasting perpetual tasks",
+            () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate()),
+        0L, 10L, TimeUnit.SECONDS);
   }
 
   public void registerObservers(MainConfiguration configuration, Injector injector) {

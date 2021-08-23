@@ -22,6 +22,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateSetupService;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -46,6 +47,7 @@ import retrofit2.http.Body;
 @AuthRule(permissionType = LOGGED_IN)
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
+@DelegateServiceResource
 public class DelegateSetupResourceV2 {
   private final DelegateSetupService delegateSetupService;
   private final AccessControlClient accessControlClient;

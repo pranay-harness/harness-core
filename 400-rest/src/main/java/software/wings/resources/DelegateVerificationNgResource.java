@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateHeartbeatDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.rest.RestResponse;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateService;
 
@@ -32,6 +33,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("/delegates-verification")
 @Produces(MediaType.APPLICATION_JSON)
 @AuthRule(permissionType = LOGGED_IN)
+@DelegateServiceResource
 //@Scope(DELEGATE)
 // This NG specific, switching to NG access control
 @Slf4j

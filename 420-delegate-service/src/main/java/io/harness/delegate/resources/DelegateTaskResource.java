@@ -12,6 +12,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.service.intfc.DelegateTaskService;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.Scope;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -31,6 +32,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("agent/tasks")
 @Produces("application/json")
 @Scope(DELEGATE)
+@DelegateServiceResource
 @Slf4j
 public class DelegateTaskResource {
   private DelegateTaskService delegateTaskService;

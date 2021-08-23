@@ -14,6 +14,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -47,6 +48,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(ResourceType.APPLICATION)
+@DelegateServiceResource
 @OwnedBy(HarnessTeam.CDC)
 public class ServiceTemplateResource {
   /**

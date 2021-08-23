@@ -6,6 +6,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.beans.Log;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -33,6 +34,7 @@ import javax.ws.rs.QueryParam;
 @Api("logs")
 @Path("/logs")
 @Produces("application/json")
+@DelegateServiceResource
 @Scope(ResourceType.APPLICATION)
 public class LogResource {
   @Inject private LogService logService;

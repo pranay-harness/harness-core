@@ -13,6 +13,7 @@ import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 
@@ -35,6 +36,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("/delegate-task-selector-map")
 @Produces("application/json")
 @Scope(DELEGATE_SCOPE)
+@DelegateServiceResource
 @AuthRule(permissionType = LOGGED_IN)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 // TODO: we should use this auth rule: @AuthRule(permissionType = MANAGE_TASK_SELECTORS)

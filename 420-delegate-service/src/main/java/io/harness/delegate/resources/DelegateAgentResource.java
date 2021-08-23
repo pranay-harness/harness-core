@@ -10,10 +10,12 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.annotations.DelegateServiceResource;
 
 @Api("/agent/delegates/v2")
 @Path("/agent/delegates/v2")
 @Produces("application/json")
+@DelegateServiceResource
 //@Scope(DELEGATE)
 @Slf4j
 public class DelegateAgentResource {

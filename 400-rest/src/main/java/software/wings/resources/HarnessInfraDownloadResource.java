@@ -8,6 +8,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.service.impl.infra.InfraDownloadService;
 
 import com.google.inject.Inject;
@@ -23,6 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/agent/infra-download")
 @Path("/agent/infra-download")
+@DelegateServiceResource
 public class HarnessInfraDownloadResource {
   @Inject InfraDownloadService infraDownloadService;
 

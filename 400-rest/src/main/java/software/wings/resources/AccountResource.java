@@ -38,6 +38,7 @@ import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.seeddata.SampleDataProviderService;
 
+import software.wings.annotations.DelegateServiceResource;
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountMigration;
@@ -104,6 +105,7 @@ import retrofit2.http.Body;
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 @Singleton
+@DelegateServiceResource
 @OwnedBy(PL)
 @TargetModule(_955_ACCOUNT_MGMT)
 public class AccountResource {
