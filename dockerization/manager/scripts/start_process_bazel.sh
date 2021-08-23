@@ -14,6 +14,16 @@ fi
 
 echo "Using memory " $MEMORY
 
+if [[ -f /mongo/ca.pem ]]; then
+  keytool -importcert -trustcacerts -file /mongo/ca.pem -keystore keystore.jks -storepass password -noprompt
+  echo "Mongo CA file added to truststore"
+fi
+
+if [[ -f /mongo/client.pem ]]; then
+  keytool -importcert -trustcacerts -file /mongo/client.pem -keystore keystore.jks -storepass password -noprompt
+  echo "Mongo Client pem file added to truststore"
+fi
+
 if [[ -z "$CAPSULE_JAR" ]]; then
    export CAPSULE_JAR=/opt/harness/rest-capsule.jar
 fi
