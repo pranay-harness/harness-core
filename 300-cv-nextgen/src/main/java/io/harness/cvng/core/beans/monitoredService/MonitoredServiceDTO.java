@@ -53,18 +53,11 @@ public class MonitoredServiceDTO implements YamlDTO {
   @Builder
   public static class Sources {
     @Valid Set<HealthSource> healthSources;
+    @Valid Set<ChangeSourceDTO> changeSources;
 
-    public Set<HealthSource> getHealthSources() {
-      if (healthSources == null) {
-        return Collections.emptySet();
-      }
-      return healthSources;
-    }
-    public void addHealthSource(HealthSource healthSource) {
-      if (healthSources == null) {
-        healthSources = new HashSet<>();
-      }
-      healthSources.add(healthSource);
+    public Sources(Set<HealthSource> healthSources, Set<ChangeSourceDTO> changeSources) {
+      this.healthSources = healthSources == null ? Collections.EMPTY_SET : healthSources;
+      this.changeSources = changeSources == null ? Collections.EMPTY_SET : changeSources;
     }
   }
 }
