@@ -23,9 +23,7 @@ public class ExecutorUtils {
   private static final String BAZEL_BIN_PATH;
   static {
     BAZEL_BIN_PATH = getBazelBinPath(null);
-    if (null == BAZEL_BIN_PATH){
-      BAZEL_BIN_PATH =
-    }
+    log.info("BAZEL_BIN_PATH set to {}", BAZEL_BIN_PATH);
   }
 
   public static void addJacocoAgentVM(final Path jar, List<String> command) {
