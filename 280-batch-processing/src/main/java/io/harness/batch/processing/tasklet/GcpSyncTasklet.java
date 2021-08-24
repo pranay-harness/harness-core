@@ -107,7 +107,7 @@ public class GcpSyncTasklet implements Tasklet {
               gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,
               gcpBillingAccount.getUuid(), startTime);
         } catch (Exception e) {
-          log.error("Exception processing CG GCP Connector: {}", connectorInfo.getIdentifier(), e);
+          log.error("Exception processing CG GCP Connector: {}", gcpBillingAccount.getUuid(), e);
         }
       }
     }
