@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
@@ -19,6 +20,7 @@ import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LA
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
+import static com.google.inject.name.Names.named;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -88,6 +90,8 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
+import io.harness.mongo.QueryFactory;
+import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.outbox.OutboxEventPollService;
@@ -117,6 +121,7 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.redis.RedisConfig;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -138,6 +143,8 @@ import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.tracing.AbstractPersistenceTracerModule;
+import io.harness.tracing.MongoRedisTracer;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -428,6 +435,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     registerStores(configuration, injector);
+    if (configuration.getMongoConnectionFactory().getTraceMode() == TraceMode.ENABLED) {
+      registerQueryTracer(injector);
+    }
 
     registerResources(environment, injector);
 
@@ -532,6 +542,12 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
+  }
+
+  private void registerQueryTracer(Injector injector) {
+    AdvancedDatastore datastore = injector.getInstance(Key.get(AdvancedDatastore.class, named("primaryDatastore")));
+    MongoRedisTracer tracer = injector.getInstance(MongoRedisTracer.class);
+    ((QueryFactory) datastore.getQueryFactory()).getTracerSubject().register(tracer);
   }
 
   public boolean isManager() {
@@ -687,6 +703,18 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Override
       public FeatureFlagConfig featureFlagConfig() {
         return configuration.getFeatureFlagConfig();
+      }
+    });
+
+    modules.add(new AbstractPersistenceTracerModule() {
+      @Override
+      protected RedisConfig redisConfigProvider() {
+        return configuration.getEventsFrameworkConfiguration().getRedisConfig();
+      }
+
+      @Override
+      protected String serviceIdProvider() {
+        return MANAGER.getServiceId();
       }
     });
   }
