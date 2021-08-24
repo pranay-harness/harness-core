@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
-import static io.harness.ngtriggers.beans.entity.ValidationStatus.Status.INVALID_TRIGGER_YAML;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
@@ -31,8 +30,13 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
-import io.harness.ngtriggers.beans.entity.ValidationStatus;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookRegistrationStatus;
+import io.harness.ngtriggers.beans.entity.metadata.status.PollingSubscriptionStatus;
+import io.harness.ngtriggers.beans.entity.metadata.status.StatusResult;
+import io.harness.ngtriggers.beans.entity.metadata.status.StatusType;
+import io.harness.ngtriggers.beans.entity.metadata.status.TriggerStatus;
+import io.harness.ngtriggers.beans.entity.metadata.status.ValidationStatus;
+import io.harness.ngtriggers.beans.entity.metadata.status.WebhookAutoRegistrationStatus;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
@@ -113,7 +117,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   private void registerPollingAsync(NGTriggerEntity ngTriggerEntity) {
-    if (null != ngTriggerEntity.getValidationStatus() && ngTriggerEntity.getValidationStatus().isValidationFailure()) {
+    if (checkForValidationFailure(ngTriggerEntity)) {
       log.warn(
           String.format("Trigger Validation Failed for Trigger: %s, Skipping Polling Framework subscription request",
               TriggerHelper.getTriggerRef(ngTriggerEntity)));
@@ -132,22 +136,40 @@ public class NGTriggerServiceImpl implements NGTriggerService {
         byte[] pollingItemBytes = kryoSerializer.asBytes(pollingItem);
         responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
             RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
+        PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asObject(responseDTO.getData());
+        updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument, StatusResult.SUCCESS);
       } catch (Exception exception) {
         log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
                       TriggerHelper.getTriggerRef(ngTriggerEntity)),
             exception);
+        updatePollingRegistrationStatus(ngTriggerEntity, null, StatusResult.FAILED);
         throw new InvalidRequestException(exception.getMessage());
       }
-      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asObject(responseDTO.getData());
-      updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
     });
   }
 
-  private void updatePollingRegistrationStatus(NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument) {
+  private boolean checkForValidationFailure(NGTriggerEntity ngTriggerEntity) {
+    return null != ngTriggerEntity.getTriggerStatus()
+        && ngTriggerEntity.getTriggerStatus().getValidationStatus() != null
+        && ngTriggerEntity.getTriggerStatus().getValidationStatus().getStatusResult() != StatusResult.SUCCESS;
+  }
+
+  private void updatePollingRegistrationStatus(
+      NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument, StatusResult statusResult) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
-    ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
-        pollingDocument.getPollingDocId());
+
+    if (statusResult == StatusResult.SUCCESS) {
+      ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
+          pollingDocument.getPollingDocId());
+    }
+
+    if (ngTriggerEntity.getTriggerStatus() == null) {
+      ngTriggerEntity.setTriggerStatus(
+          TriggerStatus.builder().pollingSubscriptionStatus(PollingSubscriptionStatus.builder().build()).build());
+    }
+    ngTriggerEntity.getTriggerStatus().getPollingSubscriptionStatus().setStatusResult(statusResult);
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+
     if (updatedEntity == null) {
       throw new InvalidRequestException(
           String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
@@ -439,8 +461,16 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   private void updateWebhookRegistrationStatus(
       NGTriggerEntity ngTriggerEntity, WebhookRegistrationStatus registrationStatus) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
+    // TODO: Needs to be removed later, as will re replaced by new TriggerStatus
     ngTriggerEntity.getMetadata().getWebhook().setRegistrationStatus(registrationStatus);
+    if (ngTriggerEntity.getTriggerStatus() == null) {
+      ngTriggerEntity.setTriggerStatus(
+          TriggerStatus.builder()
+              .webhookAutoRegistrationStatus(WebhookAutoRegistrationStatus.builder().build())
+              .build());
+    }
 
+    ngTriggerEntity.getTriggerStatus().getWebhookAutoRegistrationStatus().setRegistrationResult(registrationStatus);
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
     if (updatedEntity == null) {
       throw new InvalidRequestException(
@@ -504,18 +534,22 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
     boolean needsUpdate = false;
 
-    if (validationResult.isSuccess() && ngTriggerEntity.getValidationStatus() != null
-        && ngTriggerEntity.getValidationStatus().isValidationFailure()) {
-      // Validation Status was a failure and now it's a success
-      ngTriggerEntity.setValidationStatus(ValidationStatus.builder().validationFailure(false).build());
+    if (ngTriggerEntity.getTriggerStatus() == null) {
+      ngTriggerEntity.setTriggerStatus(TriggerStatus.builder().build());
+    }
+
+    if (validationResult.isSuccess() && ngTriggerEntity.getTriggerStatus().getValidationStatus() != null
+        && ngTriggerEntity.getTriggerStatus().getValidationStatus().getStatusResult() != StatusResult.SUCCESS) {
+      // Validation result was a failure and now it's a success
+      ngTriggerEntity.getTriggerStatus().setValidationStatus(
+          ValidationStatus.builder().statusResult(StatusResult.SUCCESS).build());
       needsUpdate = true;
     } else if (!validationResult.isSuccess()) {
       // Validation failed
-      ngTriggerEntity.setValidationStatus(ValidationStatus.builder()
-                                              .status(INVALID_TRIGGER_YAML)
-                                              .validationFailure(true)
-                                              .detailMessage(validationResult.getMessage())
-                                              .build());
+      ngTriggerEntity.getTriggerStatus().setValidationStatus(ValidationStatus.builder()
+                                                                 .statusResult(StatusResult.FAILED)
+                                                                 .detailedMessage(validationResult.getMessage())
+                                                                 .build());
       ngTriggerEntity.setEnabled(false);
       needsUpdate = true;
     }

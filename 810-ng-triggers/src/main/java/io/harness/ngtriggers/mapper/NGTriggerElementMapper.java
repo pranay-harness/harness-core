@@ -416,6 +416,7 @@ public class NGTriggerElementMapper {
                               : StringUtils.EMPTY)
             .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
             .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
+            .triggerStatus(ngTriggerEntity.getTriggerStatus())
             .webhookUrl(webhookUrl);
 
     // Webhook Details
