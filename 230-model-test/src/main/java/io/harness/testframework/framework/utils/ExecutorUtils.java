@@ -20,10 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class ExecutorUtils {
-  private static final String BAZEL_BIN_PATH;
+  private static String BAZEL_BIN_PATH = null;
   static {
-    BAZEL_BIN_PATH = getBazelBinPath(null);
-    log.info("BAZEL_BIN_PATH set to {}", BAZEL_BIN_PATH);
+    log.info("initializing bazel bin path");
+    try {
+      BAZEL_BIN_PATH = getBazelBinPath(null);
+      log.info("BAZEL_BIN_PATH set to {}", BAZEL_BIN_PATH);
+    } catch (Exception e) {
+      log.info("Failed to set BAZEL_BIN_PATH");
+    }
   }
 
   public static void addJacocoAgentVM(final Path jar, List<String> command) {
@@ -99,6 +104,7 @@ public class ExecutorUtils {
     if (null != BAZEL_BIN_PATH) {
       return BAZEL_BIN_PATH;
     } else {
+      log.info("Failed to init bazel bin path");
       return "/tmp/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin";
     }
   }
