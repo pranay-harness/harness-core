@@ -597,7 +597,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     if (!includeIndirectExecutions) {
-      addParentIdNotNullFilter(selectQuery);
+      addParentIdNullFilter(selectQuery);
     }
 
     if (!includeIndirectExecutions
@@ -753,7 +753,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     if (!includeIndirectExecutions) {
-      addParentIdNotNullFilter(selectQuery);
+      addParentIdNullFilter(selectQuery);
     }
 
     if (!includeIndirectExecutions
@@ -1011,8 +1011,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     selectQuery.addCondition(UnaryCondition.isNull(schema.getPipeline()));
   }
 
-  private void addParentIdNotNullFilter(SelectQuery selectQuery) {
-    selectQuery.addCondition(UnaryCondition.isNotNull(schema.getParentExecution()));
+  private void addParentIdNullFilter(SelectQuery selectQuery) {
+    selectQuery.addCondition(UnaryCondition.isNull(schema.getParentExecution()));
   }
 
   private List<QLDeploymentSortCriteria> validateAndAddSortCriteria(
