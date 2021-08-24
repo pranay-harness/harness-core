@@ -63,15 +63,15 @@ public class TemplateEntity
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotEmpty String accountId;
-  @Trimmed String orgIdentifier;
-  @Trimmed String projectIdentifier;
+  @Wither @Trimmed String orgIdentifier;
+  @Wither @Trimmed String projectIdentifier;
   @NotEmpty String identifier;
 
   @Wither @EntityName String name;
   @Wither @Size(max = 1024) String description;
   @Wither @Singular @Size(max = 128) List<NGTag> tags;
 
-  @NotEmpty String fullyQualifiedIdentifier;
+  @Wither @NotEmpty String fullyQualifiedIdentifier;
 
   @Wither @NotEmpty String yaml;
   @Wither @Builder.Default Boolean deleted = Boolean.FALSE;

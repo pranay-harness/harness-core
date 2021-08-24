@@ -1,7 +1,10 @@
 package io.harness.ngtriggers.beans.source.webhook;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
 import static java.util.Collections.emptySet;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,12 +13,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CI)
 public enum WebhookAction {
   // Github
   @JsonProperty("created") CREATED("create", "created"),
   @JsonProperty("closed") CLOSED("close", "closed"),
   @JsonProperty("edited") EDITED("edit", "edited"),
-  @JsonProperty("edited") UPDATED("update", "updated"),
+  @JsonProperty("updated") UPDATED("update", "updated"),
   @JsonProperty("opened") OPENED("open", "opened"),
   @JsonProperty("reopened") REOPENED("reopen", "reopened"),
   @JsonProperty("labeled") LABELED("label", "labeled"),
@@ -37,11 +41,7 @@ public enum WebhookAction {
   @JsonProperty("pull request created") BT_PULL_REQUEST_CREATED("open", "pull request created"),
   @JsonProperty("pull request updated") BT_PULL_REQUEST_UPDATED("sync", "pull request updated"),
   @JsonProperty("pull request merged") BT_PULL_REQUEST_MERGED("merge", "pull request merged"),
-  @JsonProperty("pull request declined") BT_PULL_REQUEST_DECLINED("close", "pull request declined"),
-
-  // AWS Codecommit
-  @JsonProperty("created") AWS_CODECOMMIT_DELETED("created", "created"),
-  @JsonProperty("deleted") AWS_CODECOMMIT_CREATED("deleted", "deleted");
+  @JsonProperty("pull request declined") BT_PULL_REQUEST_DECLINED("close", "pull request declined");
 
   // TODO: Add more support for more actions we need to support
   private String value;
@@ -111,11 +111,11 @@ public enum WebhookAction {
     switch (event) {
       case BRANCH:
       case TAG:
-        return EnumSet.of(AWS_CODECOMMIT_CREATED, AWS_CODECOMMIT_DELETED);
+        return EnumSet.of(CREATED, DELETED);
       case PUSH:
         return emptySet();
       default:
-        throw new InvalidRequestException("Event " + event.name() + " not a gitlab event");
+        throw new InvalidRequestException("Event " + event.name() + " not an AWS code commit event");
     }
   }
 }

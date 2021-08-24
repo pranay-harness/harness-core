@@ -198,6 +198,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public PerpetualTaskExecutionContext perpetualTaskContext(String taskId) {
+    log.info("Getting perpetual task context for task with id: {}", taskId);
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
 
     PerpetualTaskExecutionParams params = getTaskParams(perpetualTaskRecord);

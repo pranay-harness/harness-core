@@ -4749,7 +4749,7 @@ plain_artifacts = [
     "org.codehaus.woodstox:stax2-api:4.2",
     "org.conscrypt:conscrypt-openjdk-uber:2.5.1",
     "org.coursera:metrics-datadog:1.1.13",
-    "org.cryptacular:cryptacular:1.1.3",
+    "org.cryptacular:cryptacular:1.1.4",
     "org.eclipse.jetty.http2:http2-common:9.4.35.v20201120",
     "org.eclipse.jetty.http2:http2-hpack:9.4.35.v20201120",
     "org.eclipse.jetty.http2:http2-xxxxxxxx9.4.35.v20201120",

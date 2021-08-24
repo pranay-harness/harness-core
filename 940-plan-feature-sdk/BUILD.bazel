@@ -14,15 +14,17 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//948-access-control-sdk:module",
-        "//956-feature-flag-beans:module",
-        "//960-ng-core-beans:module",
         "//960-ng-license-beans:module",
         "//970-ng-commons:module",
-        "//970-rbac-core:module",
-        "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
+        "//980-commons:module",
+        "//999-annotations:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_core",
     ],
 )
 
@@ -34,13 +36,11 @@ java_library(
     deps = [
         ":module",
         "//990-commons-test:module",
+        "//999-annotations:module",
+        "@maven//:com_google_inject_guice",
         "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_api_mockito",
-        "@maven//:org_powermock_powermock_core",
-        "@maven//:org_powermock_powermock_module_junit4",
-        "@maven//:org_reflections_reflections",
     ],
 )
 

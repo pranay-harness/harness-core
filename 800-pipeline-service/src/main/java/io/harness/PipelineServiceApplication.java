@@ -9,6 +9,7 @@ import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
 import io.harness.consumers.GraphUpdateRedisConsumer;
@@ -583,6 +584,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
 
     environment.jersey().register(MultiPartFeature.class);

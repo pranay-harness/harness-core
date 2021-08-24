@@ -19,7 +19,6 @@ java_library(
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_guava_guava",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_springframework_data_spring_data_commons",
