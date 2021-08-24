@@ -8,15 +8,19 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
 // HandleWrite returns an http.HandlerFunc that writes test information to the DB
-func HandleWrite(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleWrite(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
+
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam,
 			pipelineIdParam, buildIdParam, stageIdParam,
 			stepIdParam, reportParam)
@@ -59,9 +63,12 @@ func HandleWrite(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 }
 
 // HandleSummary returns an http.HandlerFunc that summarises test reports.
-func HandleSummary(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSummary(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 		st := time.Now()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {
@@ -95,9 +102,12 @@ func HandleSummary(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 }
 
 // HandleTestCases returns an http.HandlerFunc that returns test case information.
-func HandleTestCases(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleTestCases(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 		st := time.Now()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam, suiteNameParam, reportParam)
 		if err != nil {
@@ -156,9 +166,12 @@ func HandleTestCases(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 }
 
 // HandleTestSuites returns an http.HandlerFunc that return test suite information.
-func HandleTestSuites(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleTestSuites(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 		st := time.Now()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {

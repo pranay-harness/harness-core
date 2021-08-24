@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/wings-software/portal/commons/go/lib/logs"
 	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
@@ -24,10 +25,12 @@ const (
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
 // based on the files provided.
-func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam,
@@ -102,10 +105,12 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 // the source branch. Otherwise, if the source call graph does not exist, we use the target branch call graph.
 // If a class name is not specified, this will provide a partial visualization graph containing at max limit
 // number of nodes.
-func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleVgSearch(tidb tidb.TiDB, db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 
 		// Info needed:
 		// i) account ID, ... buildID
@@ -189,10 +194,12 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 	}
 }
 
-func HandleReportsInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleReportsInfo(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
 		if err != nil {
@@ -218,10 +225,12 @@ func HandleReportsInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleIntelligenceInfo(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
 		if err != nil {
@@ -249,9 +258,10 @@ func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 
 // HandlePing returns an http.HandlerFunc that pings
 // the backends to ensure smooth working of TI service.
-func HandlePing(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandlePing(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, _ := context.WithTimeout(r.Context(), 5*time.Second) // 5 second timeout for pings
+		log := logs.Logger(ctx)
 
 		if err := db.Ping(ctx); err != nil {
 			if err != nil {
@@ -265,10 +275,12 @@ func HandlePing(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleOverview(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam)
@@ -297,7 +309,7 @@ func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleUploadCg(tidb tidb.TiDB, db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, targetBranchParam)
 		if err != nil {
@@ -313,6 +325,10 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
 		timeMsStr := r.FormValue(timeMsParam)
+
+		// not validating it for backward compatibility
+		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
+		log := logs.Logger(ctx)
 		timeMs, err := strconv.ParseInt(timeMsStr, 10, 32)
 		if err != nil {
 			log.Errorw("could not parse time taken", zap.Error(err))
@@ -373,13 +389,5 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func HandleUploadVg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		_ = tidb
-		_ = db
-		_ = log
 	}
 }

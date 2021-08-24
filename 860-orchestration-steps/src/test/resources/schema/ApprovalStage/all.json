@@ -411,7 +411,6 @@
       "required": [
         "identifier",
         "name",
-        "timeout",
         "type"
       ],
       "properties": {

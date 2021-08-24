@@ -4,6 +4,7 @@ go_library(
     name = "go_default_library",
     srcs = [
         "builder.go",
+        "contextLogger.go",
         "fields.go",
         "iface.go",
         "iface_mock.go",
