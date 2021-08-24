@@ -79,6 +79,7 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
+import io.harness.exception.VersionInfoException;
 import io.harness.filesystem.FileIo;
 import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
 import io.harness.logging.AutoLogContext;
@@ -480,6 +481,8 @@ public class WatcherServiceImpl implements WatcherService {
       heartbeatData.put(WATCHER_PROCESS, getProcessId());
       heartbeatData.put(WATCHER_VERSION, getVersion());
       messageService.putAllData(WATCHER_DATA, heartbeatData);
+    } catch (VersionInfoException e) {
+      return;
     } catch (Exception e) {
       if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
         lastAvailableDiskSpace.set(getDiskFreeSpace());
@@ -1258,9 +1261,13 @@ public class WatcherServiceImpl implements WatcherService {
 
   @VisibleForTesting
   void checkForWatcherUpgrade() {
-    if (!watcherConfiguration.isDoUpgrade()) {
-      log.info("Auto upgrade is disabled in watcher configuration");
-      log.info("Watcher stays on version: [{}]", getVersion());
+    try {
+      if (!watcherConfiguration.isDoUpgrade()) {
+        log.info("Auto upgrade is disabled in watcher configuration");
+        log.info("Watcher stays on version: [{}]", getVersion());
+        return;
+      }
+    } catch (VersionInfoException e) {
       return;
     }
     try {
