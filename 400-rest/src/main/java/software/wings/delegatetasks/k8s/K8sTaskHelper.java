@@ -22,15 +22,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.FileData;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
-import io.harness.delegate.task.scm.ScmDelegateClient;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -43,9 +40,6 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestService;
-import io.harness.product.ci.scm.proto.FileContent;
-import io.harness.product.ci.scm.proto.SCMGrpc;
-import io.harness.service.ScmServiceClient;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
@@ -74,10 +68,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -97,8 +89,6 @@ public class K8sTaskHelper {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private HelmHelper helmHelper;
   @Inject private CustomManifestService customManifestService;
-  @Inject private ScmDelegateClient scmDelegateClient;
-  @Inject private ScmServiceClient scmServiceClient;
   @Inject private ScmFetchFilesHelper scmFetchFilesHelper;
 
   public boolean doStatusCheckAllResourcesForHelm(Kubectl client, List<KubernetesResourceId> resourceIds, String ocPath,
@@ -298,7 +288,8 @@ public class K8sTaskHelper {
       encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails(), false);
 
       if (scmFetchFilesHelper.shouldUseScm(delegateManifestConfig.isOptimizedFilesFetch(), gitConfig)) {
-        downloadFilesUsingScm(manifestFilesDirectory, gitFileConfig, gitConfig, executionLogCallback);
+        scmFetchFilesHelper.downloadFilesUsingScm(
+            manifestFilesDirectory, gitFileConfig, gitConfig, executionLogCallback);
       } else {
         gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
       }
@@ -313,32 +304,6 @@ public class K8sTaskHelper {
           "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
           CommandExecutionStatus.FAILURE);
       return false;
-    }
-  }
-
-  private void downloadFilesUsingScm(String manifestFilesDirectory, GitFileConfig gitFileConfig, GitConfig gitConfig,
-      ExecutionLogCallback executionLogCallback) {
-    String directoryPath = Paths.get(manifestFilesDirectory).toString();
-    ScmConnector scmConnector = scmFetchFilesHelper.getScmConnector(gitConfig);
-    Set<String> folders = new HashSet<>();
-    folders.add(gitFileConfig.getFilePath());
-
-    FileContentBatchResponse fileBatchContentResponse;
-    if (gitFileConfig.isUseBranch()) {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFiles(scmConnector, folders, gitFileConfig.getBranch(), SCMGrpc.newBlockingStub(c)));
-    } else {
-      fileBatchContentResponse = scmDelegateClient.processScmRequest(c
-          -> scmServiceClient.listFoldersFilesByCommitId(
-              scmConnector, folders, gitFileConfig.getCommitId(), SCMGrpc.newBlockingStub(c)));
-    }
-
-    try {
-      for (FileContent fileContent : fileBatchContentResponse.getFileBatchContentResponse().getFileContentsList()) {
-        writeManifestFile(directoryPath, fileContent.getPath(), fileContent.getContent());
-      }
-    } catch (Exception ex) {
-      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR, CommandExecutionStatus.FAILURE);
     }
   }
 

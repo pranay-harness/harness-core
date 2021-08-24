@@ -35,6 +35,7 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   private String namespace;
   private long timeoutInMillis;
   private Map<String, String> valueOverrides;
+  private boolean optimizedFilesFetch;
 
   public HelmInstallCommandRequest(boolean mergeCapabilities) {
     super(HelmCommandType.INSTALL, mergeCapabilities);
@@ -48,7 +49,8 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> encryptedDataDetails,
       LogCallback executionLogCallback, String commandFlags, HelmCommandFlag helmCommandFlag,
       K8sDelegateManifestConfig sourceRepoConfig, HelmVersion helmVersion, String ocPath, String workingDir,
-      boolean k8SteadyStateCheckEnabled, boolean mergeCapabilities, boolean isGitHostConnectivityCheck) {
+      boolean k8SteadyStateCheckEnabled, boolean mergeCapabilities, boolean isGitHostConnectivityCheck,
+      boolean optimizedFilesFetch) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
         executionLogCallback, commandFlags, helmCommandFlag, sourceRepoConfig, helmVersion, ocPath, workingDir,
@@ -59,5 +61,6 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
     this.namespace = namespace;
     this.timeoutInMillis = timeoutInMillis;
     this.valueOverrides = valueOverrides;
+    this.optimizedFilesFetch = optimizedFilesFetch;
   }
 }
