@@ -1,0 +1,17 @@
+monitoredService:
+  identifier:
+  type: Application
+  name:
+  desc:
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  serviceRef:
+  environmentRef:
+  sources:
+    healthSources:
+    changeSources:
+      - name:
+        identifier:
+        type: HarnessCD
+        desc:
+        enabled :
