@@ -459,3 +459,21 @@ fi
 if [[ "" != "$CDN_OPENJDK_JRE_TAR_PATH" ]]; then
   yq write -i $CONFIG_FILE cdnConfig.cdnJreTarPaths.openjdk8u242 "$CDN_OPENJDK_JRE_TAR_PATH"
 fi
+
+if [[ "" != "$CURRENT_JRE" ]]; then
+  yq write -i $CONFIG_FILE currentJre "$CURRENT_JRE"
+fi
+
+if [[ "" != "$MIGRATE_TO_JRE" ]]; then
+  yq write -i $CONFIG_FILE migrateToJre "$MIGRATE_TO_JRE"
+fi
+
+if [[ "" != "$ORACLE_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE jreConfigs.oracle8u191.jreTarPath "$ORACLE_JRE_TAR_PATH"
+fi
+
+if [[ "" != "$OPENJDK_JRE_TAR_PATH" ]]; then
+  yq write -i $CONFIG_FILE jreConfigs.openjdk8u242.jreTarPath "$OPENJDK_JRE_TAR_PATH"
+fi
+
+
