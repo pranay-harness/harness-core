@@ -5,6 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
+import io.harness.dto.PollingResponseDTO;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -69,11 +70,11 @@ public class PollingResource {
 
   @POST
   @Path("subscribe")
-  public ResponseDTO<byte[]> subscribe(byte[] pollingItem) {
+  public ResponseDTO<PollingResponseDTO> subscribe(byte[] pollingItem) {
     PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
     String pollingDocId = pollingService.subscribe(pollingItem1);
     PollingDocument pd = PollingDocument.newBuilder().setPollingDocId(pollingDocId).build();
-    return ResponseDTO.newResponse(kryoSerializer.asBytes(pd));
+    return ResponseDTO.newResponse(PollingResponseDTO.builder().pollingResponse(kryoSerializer.asBytes(pd)).build());
   }
 
   @POST

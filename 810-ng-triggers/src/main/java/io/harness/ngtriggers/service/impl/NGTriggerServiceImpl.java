@@ -10,12 +10,14 @@ import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 
 import static java.util.Collections.emptyList;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.dto.PollingResponseDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -127,18 +129,19 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
     executorService.submit(() -> {
       PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
-      ResponseDTO<byte[]> responseDTO;
+      ResponseDTO<PollingResponseDTO> responseDTO;
       try {
         byte[] pollingItemBytes = kryoSerializer.asBytes(pollingItem);
-        responseDTO = SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
-            RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
+        responseDTO = SafeHttpCall.executeWithExceptions(
+            pollingResourceClient.subscribe(RequestBody.create(MediaType.parse(APPLICATION_JSON), pollingItemBytes)));
       } catch (Exception exception) {
         log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
                       TriggerHelper.getTriggerRef(ngTriggerEntity)),
             exception);
         throw new InvalidRequestException(exception.getMessage());
       }
-      PollingDocument pollingDocument = (PollingDocument) kryoSerializer.asObject(responseDTO.getData());
+      PollingDocument pollingDocument =
+          (PollingDocument) kryoSerializer.asObject(responseDTO.getData().getPollingResponse());
       updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
     });
   }
