@@ -12,6 +12,7 @@ import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
@@ -34,6 +35,7 @@ public class LdapConnectionSettings implements LdapConnectionConfig {
   String encryptedBindPassword;
   int connectTimeout = LdapConstants.DEFAULT_CONNECT_TIMEOUT;
   int responseTimeout = LdapConstants.DEFAULT_RESPONSE_TIMEOUT;
+  Boolean useRecursiveGroupMembershipSearch;
 
   @AssertTrue(message = "Bind password can't be empty if Bind DN is provided.")
   private boolean isNonEmptyCredentials() {
