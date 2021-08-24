@@ -513,7 +513,29 @@ public class SettingValidationService {
             throw new InvalidRequestException("Private key is not specified", USER);
           }
         }
+        validateIfSpecifiedSecretsExist(hostConnectionAttributes);
       }
+    }
+  }
+
+  private void validateIfSpecifiedSecretsExist(HostConnectionAttributes hostConnectionAttributes) {
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedKey())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedKey())) {
+      throw new InvalidRequestException("Specified Encrypted SSH key File doesn't exist", USER);
+    }
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedPassphrase())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedPassphrase())) {
+      throw new InvalidRequestException("Specified Encrypted Passphrase field doesn't exist", USER);
+    }
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedSshPassword())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedSshPassword())) {
+      throw new InvalidRequestException("Specified password field doesn't exist", USER);
     }
   }
 

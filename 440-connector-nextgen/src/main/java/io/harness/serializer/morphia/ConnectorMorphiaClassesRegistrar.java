@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.ConnectorFilterProperties;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
-import io.harness.connector.entities.embedded.argo.ArgoConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication;
@@ -103,7 +102,6 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(CEAwsConfig.class);
     set.add(ArtifactoryConnector.class);
     set.add(JiraConnector.class);
-    set.add(ArgoConnector.class);
     set.add(NexusConnector.class);
     set.add(GithubConnector.class);
     set.add(GitlabConnector.class);
