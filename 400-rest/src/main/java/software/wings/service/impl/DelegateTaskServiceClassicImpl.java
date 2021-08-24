@@ -1103,7 +1103,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         delegateSelectionLogsService.save(batch);
 
         if (!canAssign) {
-          log.debug("Delegate is not scoped for task");
+          log.info("Delegate is not scoped for task");
           ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
           return null;
         }
@@ -1123,7 +1123,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
           return assignTask(delegateId, taskId, delegateTask);
         }
 
-        log.debug("Delegate is blacklisted for task");
+        log.info("Delegate is blacklisted for task");
         return null;
       }
     } finally {
@@ -1138,31 +1138,31 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       final String accountId, final String delegateId, final String taskId, final boolean areClientToolsInstalled) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
     if (delegateTask == null) {
-      log.debug("Task not found or was already assigned");
+      log.info("Task not found or was already assigned");
       return;
     }
 
     if (delegateTask.isForceExecute()) {
-      log.debug("Task is set for force execution");
+      log.info("Task is set for force execution");
       return;
     }
 
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       if (!isValidationComplete(delegateTask)) {
-        log.debug("Task is still being validated");
+        log.info("Task is still being validated");
         return;
       }
       // Check whether a whitelisted delegate is connected
       List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
       if (isNotEmpty(whitelistedDelegates)) {
-        log.debug("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
+        log.info("Waiting for task to be acquired by a whitelisted delegate: {}", whitelistedDelegates);
         return;
       }
 
       log.info("No connected whitelisted delegates found for task");
       String errorMessage = generateValidationError(delegateTask, areClientToolsInstalled);
-      log.debug(errorMessage);
+      log.info(errorMessage);
       DelegateResponseData response;
       if (delegateTask.getData().isAsync()) {
         response = ErrorNotifyResponseData.builder()
@@ -1272,7 +1272,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     boolean validationTimedOut = delegateTask.getValidationStartedAt() != null
         && clock.millis() - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT;
     if (validationTimedOut) {
-      log.debug("Validation timed out for task", delegateTask.getUuid());
+      log.info("Validation timed out for task", delegateTask.getUuid());
     }
     return allDelegatesFinished || validationTimedOut;
   }
@@ -1546,7 +1546,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         log.warn("Delegate task id was null", new IllegalArgumentException());
         return errorMessage;
       }
-      log.debug("Expiring delegate task");
+      log.info("Expiring delegate task");
       Query<DelegateTask> delegateTaskQuery = getRunningTaskQuery(accountId, delegateTaskId);
 
       DelegateTask delegateTask = delegateTaskQuery.get();
@@ -1555,7 +1555,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
           errorMessage =
               "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(EXPIRED, delegateTask);
-          log.debug("Marking task as expired: {}", errorMessage);
+          log.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {
             waitNotifyEngine.doneWith(
@@ -1577,7 +1577,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         log.warn("Delegate task id was null", new IllegalArgumentException());
         return null;
       }
-      log.debug("Aborting delegate task");
+      log.info("Aborting delegate task");
 
       persistence.save(DelegateSyncTaskResponse.builder()
                            .uuid(delegateTaskId)

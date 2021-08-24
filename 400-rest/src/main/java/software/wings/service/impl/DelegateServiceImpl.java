@@ -1003,11 +1003,11 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateKeys.includeScopes, delegate.getIncludeScopes());
     setUnset(updateOperations, DelegateKeys.excludeScopes, delegate.getExcludeScopes());
 
-    log.debug("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
+    log.info("Updating delegate scopes : Delegate:{} includeScopes:{} excludeScopes:{}", delegate.getUuid(),
         delegate.getIncludeScopes(), delegate.getExcludeScopes());
 
     auditServiceHelper.reportForAuditingUsingAccountId(delegate.getAccountId(), null, delegate, Type.UPDATE_SCOPE);
-    log.debug(
+    log.info(
         "Auditing updation of scope for delegateId={} in accountId={}", delegate.getUuid(), delegate.getAccountId());
 
     Delegate updatedDelegate = null;
@@ -1237,7 +1237,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
-        log.debug("Multi-Version is enabled");
+        log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
         String fullVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, inquiry.getAccountId());
@@ -1248,7 +1248,7 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         log.info("Delegate metadata URL is " + delegateMetadataUrl);
         String delegateMatadata = delegateVersionCache.get(inquiry.getAccountId());
-        log.debug("Delegate metadata: [{}]", delegateMatadata);
+        log.info("Delegate metadata: [{}]", delegateMatadata);
         latestVersion = substringBefore(delegateMatadata, " ").trim();
         jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;

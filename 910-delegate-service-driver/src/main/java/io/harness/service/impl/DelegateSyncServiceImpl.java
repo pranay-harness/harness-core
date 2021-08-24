@@ -74,7 +74,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse = null;
     try {
-      log.debug("Executing sync task {}", taskId);
+      log.info("Executing sync task {}", taskId);
       AtomicLong endAt =
           syncTaskWaitMap.computeIfAbsent(taskId, k -> new AtomicLong(currentTimeMillis() + timeout.toMillis()));
       synchronized (endAt) {
@@ -108,7 +108,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
       }
     }
 
-    log.debug("Deserialize and return the response for task {}", taskId);
+    log.info("Deserialize and return the response for task {}", taskId);
     return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
   }
 }
