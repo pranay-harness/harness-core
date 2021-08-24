@@ -280,6 +280,7 @@ public class PipelineExecuteHelper {
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
       ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
+    long startTs = System.currentTimeMillis();
     PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(
         accountId, orgIdentifier, projectIdentifier, executionMetadata, planExecutionMetadata);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
@@ -288,13 +289,15 @@ public class PipelineExecuteHelper {
                                                     .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
                                                     .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
                                                     .build();
-
+    long endTs = System.currentTimeMillis();
+    log.info("Time taken to complete plan: {}", endTs - startTs);
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
   }
 
   @SneakyThrows
   public PlanExecution startExecutionV2(String accountId, String orgIdentifier, String projectIdentifier,
       ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
+    long startTs = System.currentTimeMillis();
     String planCreationId = generateUuid();
     planCreatorMergeService.createPlanV2(
         accountId, orgIdentifier, projectIdentifier, planCreationId, executionMetadata, planExecutionMetadata);
@@ -307,8 +310,10 @@ public class PipelineExecuteHelper {
     while (!planService.fetchPlanOptional(planCreationId).isPresent()) {
       Morpheus.sleep(Duration.ofMillis(100));
     }
+    long endTs = System.currentTimeMillis();
+    log.info("Time taken to complete plan: {}", endTs - startTs);
     Plan plan = planService.fetchPlan(planCreationId);
-    if (plan.isValid()) {
+    if (!plan.isValid()) {
       PmsExceptionUtils.checkAndThrowPlanCreatorException(ImmutableList.of(plan.getErrorResponse()));
       return PlanExecution.builder().build();
     }
