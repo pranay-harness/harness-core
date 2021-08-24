@@ -106,8 +106,8 @@ public class TimeseriesDashboardResource {
   public RestResponse<PageResponse<TimeSeriesMetricDataDTO>> getTimeSeriesMetricData(
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("serviceIdentifier") String serviceIdentifier,
-      @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @QueryParam("anomalous") @DefaultValue("false") boolean anomalous, @QueryParam("filter") String filter,
       @QueryParam("datasourceType") DataSourceType datasourceType, @QueryParam("page") @DefaultValue("0") int page,
