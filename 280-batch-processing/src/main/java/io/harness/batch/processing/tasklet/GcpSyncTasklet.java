@@ -88,17 +88,27 @@ public class GcpSyncTasklet implements Tasklet {
         ConnectorInfoDTO connectorInfo = connector.getConnector();
         GcpCloudCostConnectorDTO gcpCloudCostConnectorDTO =
             (GcpCloudCostConnectorDTO) connectorInfo.getConnectorConfig();
-        processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
-            gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
-            accountId, connectorInfo.getIdentifier(), startTime);
+        try {
+          processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
+              gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
+              accountId, connectorInfo.getIdentifier(), startTime);
+        } catch (Exception e) {
+          log.error("Exception processing NG GCP Connector: {}", connectorInfo.getIdentifier(), e);
+        }
       }
 
       List<GcpBillingAccount> gcpBillingAccounts =
           cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId);
+      log.info("Processing batch size of {} in GCP Sync Job for CG Connectors", gcpBillingAccounts.size());
       for (GcpBillingAccount gcpBillingAccount : gcpBillingAccounts) {
         GcpServiceAccount gcpServiceAccount = cloudToHarnessMappingService.getGcpServiceAccount(accountId);
-        processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(), gcpBillingAccount.getBqDatasetId(),
-            gcpBillingAccount.getBqProjectId(), accountId, gcpBillingAccount.getUuid(), startTime);
+        try {
+          processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(),
+              gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,
+              gcpBillingAccount.getUuid(), startTime);
+        } catch (Exception e) {
+          log.error("Exception processing CG GCP Connector: {}", connectorInfo.getIdentifier(), e);
+        }
       }
     }
     return null;
