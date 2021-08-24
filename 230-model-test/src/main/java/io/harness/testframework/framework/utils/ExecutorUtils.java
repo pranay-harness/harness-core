@@ -24,7 +24,7 @@ public class ExecutorUtils {
   static {
     log.info("initializing bazel bin path");
     try {
-      BAZEL_BIN_PATH = getBazelBinPath(null);
+//      BAZEL_BIN_PATH = getBazelBinPath(null);
       log.info("BAZEL_BIN_PATH set to {}", BAZEL_BIN_PATH);
     } catch (Exception e) {
       log.error("Failed to set BAZEL_BIN_PATH", e);
@@ -101,6 +101,7 @@ public class ExecutorUtils {
   }
 
   private static String getBazelBinPathCached() {
+//    return getBazelBinPath(null);
     if (null != BAZEL_BIN_PATH) {
       return BAZEL_BIN_PATH;
     } else {
