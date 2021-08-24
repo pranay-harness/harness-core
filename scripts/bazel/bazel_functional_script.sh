@@ -15,7 +15,7 @@ fi
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=standalone"
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=900"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=180"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_output=all"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
