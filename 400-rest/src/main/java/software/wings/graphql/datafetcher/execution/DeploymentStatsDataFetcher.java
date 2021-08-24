@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -126,7 +125,6 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-@BreakDependencyOn("software.wings.app.WingsGraphQLModule")
 public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags<QLDeploymentAggregationFunction,
     QLDeploymentFilter, QLDeploymentAggregation, QLDeploymentSortCriteria, QLDeploymentTagType,
     QLDeploymentTagAggregation, QLDeploymentEntityAggregation> {
