@@ -19,9 +19,9 @@ public class MicrosoftTeamsNotificationServiceTest extends WingsBaseTest {
   @Inject private MicrosoftTeamsNotificationService microsoftTeamsNotificationService;
 
   @Test
-  @Ignore("failing in all PRs")
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
+  @Ignore("failing in all PRs")
   public void testSendMessageSuccessful() {
     assertThat(microsoftTeamsNotificationService.sendMessage("some-message", "https://app.harness.io"))
         .isNotEqualTo(200);
