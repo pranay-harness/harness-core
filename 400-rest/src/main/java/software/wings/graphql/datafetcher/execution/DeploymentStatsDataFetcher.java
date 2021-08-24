@@ -596,6 +596,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
     }
 
+    if (!includeIndirectExecutions) {
+      addParentIdNotNullFilter(selectQuery);
+    }
+
     if (!includeIndirectExecutions
         && featureFlagService.isEnabled(
             FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
@@ -746,6 +750,10 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       existsQuery.addCustomColumns(new CustomSql(customSql));
       existsQuery.addCustomColumns(new CustomSql(DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName()));
       addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
+    }
+
+    if (!includeIndirectExecutions) {
+      addParentIdNotNullFilter(selectQuery);
     }
 
     if (!includeIndirectExecutions
@@ -1003,8 +1011,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     selectQuery.addCondition(UnaryCondition.isNull(schema.getPipeline()));
   }
 
-  private void addParentIdFilter(SelectQuery selectQuery) {
-    selectQuery.addCondition(UnaryCondition.isNull(schema.getParentExecution()));
+  private void addParentIdNotNullFilter(SelectQuery selectQuery) {
+    selectQuery.addCondition(UnaryCondition.isNotNull(schema.getParentExecution()));
   }
 
   private List<QLDeploymentSortCriteria> validateAndAddSortCriteria(
