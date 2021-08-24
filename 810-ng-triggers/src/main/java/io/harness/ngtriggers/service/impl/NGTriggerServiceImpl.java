@@ -10,7 +10,6 @@ import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 
 import static java.util.Collections.emptyList;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -72,6 +71,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -129,27 +129,65 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
     executorService.submit(() -> {
       PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity);
-      ResponseDTO<PollingResponseDTO> responseDTO;
+
       try {
         byte[] pollingItemBytes = kryoSerializer.asBytes(pollingItem);
-        responseDTO = SafeHttpCall.executeWithExceptions(
-            pollingResourceClient.subscribe(RequestBody.create(MediaType.parse(APPLICATION_JSON), pollingItemBytes)));
+
+        if (!ngTriggerEntity.getEnabled()
+            && executePollingUnSubscription(ngTriggerEntity, pollingItemBytes).equals(Boolean.TRUE)) {
+          updatePollingRegistrationStatus(ngTriggerEntity, null);
+        } else {
+          ResponseDTO<PollingResponseDTO> responseDTO = executePollingSubscription(ngTriggerEntity, pollingItemBytes);
+          PollingDocument pollingDocument =
+              (PollingDocument) kryoSerializer.asObject(responseDTO.getData().getPollingResponse());
+          updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
+        }
       } catch (Exception exception) {
         log.error(String.format("Polling Subscription Request failed for Trigger: %s with error",
                       TriggerHelper.getTriggerRef(ngTriggerEntity)),
             exception);
         throw new InvalidRequestException(exception.getMessage());
       }
-      PollingDocument pollingDocument =
-          (PollingDocument) kryoSerializer.asObject(responseDTO.getData().getPollingResponse());
-      updatePollingRegistrationStatus(ngTriggerEntity, pollingDocument);
     });
+  }
+
+  private ResponseDTO<PollingResponseDTO> executePollingSubscription(
+      NGTriggerEntity ngTriggerEntity, byte[] pollingItemBytes) {
+    try {
+      return SafeHttpCall.executeWithExceptions(pollingResourceClient.subscribe(
+          RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
+
+    } catch (Exception exception) {
+      String msg = String.format("Polling Subscription Request failed for Trigger: %s with error ",
+                       TriggerHelper.getTriggerRef(ngTriggerEntity))
+          + exception;
+      log.error(msg);
+      throw new InvalidRequestException(msg);
+    }
+  }
+
+  private Boolean executePollingUnSubscription(NGTriggerEntity ngTriggerEntity, byte[] pollingItemBytes) {
+    try {
+      return SafeHttpCall.executeWithExceptions(pollingResourceClient.unsubscribe(
+          RequestBody.create(MediaType.parse("application/octet-stream"), pollingItemBytes)));
+    } catch (Exception exception) {
+      String msg = String.format("Polling Unsubscription Request failed for Trigger: %s with error ",
+                       TriggerHelper.getTriggerRef(ngTriggerEntity))
+          + exception;
+      log.error(msg);
+      throw new InvalidRequestException(msg);
+    }
   }
 
   private void updatePollingRegistrationStatus(NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
-    ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
-        pollingDocument.getPollingDocId());
+    if (null == pollingDocument) {
+      ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(null);
+    } else {
+      ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
+          pollingDocument.getPollingDocId());
+    }
+
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
     if (updatedEntity == null) {
       throw new InvalidRequestException(
@@ -179,6 +217,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   public NGTriggerEntity update(NGTriggerEntity ngTriggerEntity) {
     ngTriggerEntity.setYmlVersion(TRIGGER_CURRENT_YML_VERSION);
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
+    return updateTriggerEntity(ngTriggerEntity, criteria);
+  }
+
+  @NotNull
+  private NGTriggerEntity updateTriggerEntity(NGTriggerEntity ngTriggerEntity, Criteria criteria) {
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
     if (updatedEntity == null) {
       throw new InvalidRequestException(
@@ -193,8 +236,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   public boolean updateTriggerStatus(NGTriggerEntity ngTriggerEntity, boolean status) {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
     ngTriggerEntity.setEnabled(status);
-
-    NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+    NGTriggerEntity updatedEntity = updateTriggerEntity(ngTriggerEntity, criteria);
     if (updatedEntity != null) {
       return updatedEntity.getEnabled();
     } else {
@@ -213,9 +255,25 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       String identifier, Long version) {
     Criteria criteria = getTriggerEqualityCriteria(
         accountId, orgIdentifier, projectIdentifier, targetIdentifier, identifier, false, version);
+
     UpdateResult deleteResult = ngTriggerRepository.delete(criteria);
     if (!deleteResult.wasAcknowledged() || deleteResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(String.format("NGTrigger [%s] couldn't be deleted", identifier));
+    }
+
+    try {
+      // Fetch trigger to unsubscribe from polling
+      Optional<NGTriggerEntity> ngTriggerEntity =
+          get(accountId, orgIdentifier, projectIdentifier, targetIdentifier, identifier, true);
+      if (ngTriggerEntity.isPresent()) {
+        PollingItem pollingItem = pollingSubscriptionHelper.generatePollingItem(ngTriggerEntity.get());
+        if (!executePollingUnSubscription(ngTriggerEntity.get(), kryoSerializer.asBytes(pollingItem))) {
+          log.warn(
+              String.format("Trigger {} failed to unsubsribe from Polling", ngTriggerEntity.get().getIdentifier()));
+        }
+      }
+    } catch (Exception exception) {
+      log.error(exception.getMessage());
     }
     return true;
   }

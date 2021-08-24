@@ -22,5 +22,5 @@ public interface PollingResourceClient {
 
   @POST(POLLING_API + "/subscribe") Call<ResponseDTO<PollingResponseDTO>> subscribe(@Body RequestBody pollingItem);
 
-  @POST(POLLING_API + "/unsubscribe") Call<ResponseDTO<Boolean>> unsubscribe(@Body byte[] pollingItem);
+  @POST(POLLING_API + "/unsubscribe") Call<Boolean> unsubscribe(@Body RequestBody pollingItem);
 }

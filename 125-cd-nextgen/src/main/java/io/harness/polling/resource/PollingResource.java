@@ -30,7 +30,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
-import retrofit2.http.Body;
 
 @Api("polling")
 @Path("polling")
@@ -71,16 +70,16 @@ public class PollingResource {
   @POST
   @Path("subscribe")
   public ResponseDTO<PollingResponseDTO> subscribe(byte[] pollingItem) {
-    PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
-    String pollingDocId = pollingService.subscribe(pollingItem1);
-    PollingDocument pd = PollingDocument.newBuilder().setPollingDocId(pollingDocId).build();
-    return ResponseDTO.newResponse(PollingResponseDTO.builder().pollingResponse(kryoSerializer.asBytes(pd)).build());
+    String pollingDocId = pollingService.subscribe((PollingItem) kryoSerializer.asObject(pollingItem));
+    return ResponseDTO.newResponse(
+        PollingResponseDTO.builder()
+            .pollingResponse(kryoSerializer.asBytes(PollingDocument.newBuilder().setPollingDocId(pollingDocId).build()))
+            .build());
   }
 
   @POST
   @Path("unsubscribe")
-  public Boolean unsubscribe(@Body byte[] pollingItem) {
-    PollingItem pollingItem1 = (PollingItem) kryoSerializer.asObject(pollingItem);
-    return pollingService.unsubscribe(pollingItem1);
+  public Boolean unsubscribe(byte[] pollingItem) {
+    return pollingService.unsubscribe((PollingItem) kryoSerializer.asObject(pollingItem));
   }
 }
