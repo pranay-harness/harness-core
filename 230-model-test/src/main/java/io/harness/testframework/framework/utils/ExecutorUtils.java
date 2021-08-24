@@ -27,7 +27,7 @@ public class ExecutorUtils {
       BAZEL_BIN_PATH = getBazelBinPath(null);
       log.info("BAZEL_BIN_PATH set to {}", BAZEL_BIN_PATH);
     } catch (Exception e) {
-      log.info("Failed to set BAZEL_BIN_PATH");
+      log.error("Failed to set BAZEL_BIN_PATH", e);
     }
   }
 
