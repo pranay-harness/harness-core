@@ -234,7 +234,9 @@ public class DelegateAgentResource {
       long startTime = System.currentTimeMillis();
       DelegateRegisterResponse registerResponse =
           delegateService.register(delegateParams.toBuilder().accountId(accountId).build());
-      log.debug("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
+      if (log.isDebugEnabled()) {
+        log.info("Delegate registration took {} in ms", System.currentTimeMillis() - startTime);
+      }
       return new RestResponse<>(registerResponse);
     }
   }
