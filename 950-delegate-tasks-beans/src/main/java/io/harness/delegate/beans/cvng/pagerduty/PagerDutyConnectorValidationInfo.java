@@ -32,7 +32,7 @@ public class PagerDutyConnectorValidationInfo extends ConnectorValidationInfo<Pa
 
   @Override
   public Map<String, String> collectionHeaders() {
-    return PagerDutyUtils.collectionHeaders(getConnectorConfigDTO());
+    return PagerDutyUtils.getCollectionHeaders(getConnectorConfigDTO());
   }
 
   @Override
