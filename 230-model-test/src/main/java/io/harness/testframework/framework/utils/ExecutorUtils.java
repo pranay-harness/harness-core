@@ -98,8 +98,9 @@ public class ExecutorUtils {
   private static String getBazelBinPathCached() {
     if (null != BAZEL_BIN_PATH) {
       return BAZEL_BIN_PATH;
+    } else {
+      return "/tmp/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin";
     }
-    return getBazelBinPath(null);
   }
 
   public static void addJar(Path jar, List<String> command) {
