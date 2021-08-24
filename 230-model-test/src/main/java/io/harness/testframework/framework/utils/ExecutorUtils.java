@@ -46,6 +46,7 @@ public class ExecutorUtils {
   }
 
   public static String getBazelBinPath(File file) {
+    log.info("Fetching bazel bin path");
     Process processFinal = null;
     try {
       String rc = file == null ? "--noworkspace_rc" : "";
