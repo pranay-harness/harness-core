@@ -420,8 +420,16 @@ if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
   yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
 fi
 
-if [[ "" != "$DELEGATE_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE dmsSecret $DELEGATE_SERVICE_SECRET
+if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcDMSClientConfig.authority "$DELEGATE_SERVICE_MANAGEMENT_AUTHORITY"
+fi
+
+if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcDMSClientConfig.target "$DELEGATE_SERVICE_MANAGEMENT_TARGET"
+fi
+
+if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_SECRET" ]]; then
+  yq write -i $CONFIG_FILE dmsSecret "$DELEGATE_SERVICE_MANAGEMENT_SECRET"
 fi
 
 if [[ "" != "$CDN_URL" ]]; then
