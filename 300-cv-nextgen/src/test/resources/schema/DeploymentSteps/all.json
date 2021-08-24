@@ -3,7 +3,6 @@
   "required": [
     "identifier",
     "name",
-    "timeout",
     "type"
   ],
   "properties": {
@@ -1601,7 +1600,6 @@
       "required": [
         "identifier",
         "name",
-        "timeout",
         "type"
       ],
       "properties": {

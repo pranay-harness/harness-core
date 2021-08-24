@@ -33,6 +33,7 @@ java_binary(
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
         "//920-delegate-service-beans:module",
+        "//937-persistence-tracer:module",
         "//940-feature-flag:module",
         "//950-events-framework:module",
         "//950-wait-engine:module",

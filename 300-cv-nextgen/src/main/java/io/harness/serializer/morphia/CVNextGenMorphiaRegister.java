@@ -57,6 +57,9 @@ import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.WebhookToken;
+import io.harness.cvng.core.entities.changeSource.ChangeSource;
+import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
+import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.migration.beans.CVNGSchema;
@@ -153,7 +156,10 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(PrometheusCVConfig.class);
     set.add(StackdriverLogCVConfig.class);
     set.add(MonitoredService.class);
+    set.add(HarnessCDChangeSource.class);
+    set.add(ChangeSource.class);
     set.add(ServiceDependency.class);
+    set.add(PagerDutyChangeSource.class);
   }
 
   @Override
