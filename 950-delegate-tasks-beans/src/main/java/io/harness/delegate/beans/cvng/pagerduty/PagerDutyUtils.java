@@ -18,11 +18,11 @@ public class PagerDutyUtils {
     return PAGER_DUTY_URL;
   }
 
-  private static String getAuthorizationHeader(PagerDutyConnectorDTO pagerDutyConnectorDTO) {
+  public static String getAuthorizationHeader(PagerDutyConnectorDTO pagerDutyConnectorDTO) {
     return "Token token=" + new String(pagerDutyConnectorDTO.getApiTokenRef().getDecryptedValue());
   }
 
-  public static Map<String, String> collectionHeaders(PagerDutyConnectorDTO pagerDutyConnectorDTO) {
+  public static Map<String, String> getCollectionHeaders(PagerDutyConnectorDTO pagerDutyConnectorDTO) {
     Map<String, String> headers = new HashMap<>();
     headers.put("Connection", "keep-alive");
     headers.put("Authorization", getAuthorizationHeader(pagerDutyConnectorDTO));
