@@ -85,7 +85,6 @@ func (tdb *TimeScaleDb) Ping(ctx context.Context) error {
 // Write writes test cases to DB
 func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, pipelineId,
 	buildId, stageId, stepId, report, repo, sha string, tests ...*types.TestCase) error {
-	log := logs.Logger(ctx)
 	t := now()
 	entries := 21
 	valueStrings := make([]string, 0, len(tests))
@@ -109,7 +108,7 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, 
 					VALUES %s`, tdb.EvalTable, strings.Join(valueStrings, ","))
 			_, err := tdb.Conn.Exec(stmt, valueArgs...)
 			if err != nil {
-				log.Errorw("could not write test data to database", zap.Error(err))
+				logs.Logger(ctx).Errorw("could not write test data to database", zap.Error(err))
 				return err
 			}
 			// Reset all the values
@@ -172,7 +171,6 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId
 
 func (tdb *TimeScaleDb) GetReportsInfo(ctx context.Context, accountId, orgId, projectId, pipelineId,
 	buildId string) ([]types.StepInfo, error) {
-	log := logs.Logger(ctx)
 	query := fmt.Sprintf(`
 		SELECT DISTINCT step_id, stage_id FROM %s WHERE account_id = $1
 		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5`, tdb.EvalTable)
@@ -183,7 +181,7 @@ func (tdb *TimeScaleDb) GetReportsInfo(ctx context.Context, accountId, orgId, pr
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId)
 	defer rows.Close()
 	if err != nil {
-		log.Errorw("could not query database for test summary", zap.Error(err))
+		logs.Logger(ctx).Errorw("could not query database for test summary", zap.Error(err))
 		return res, err
 	}
 
@@ -193,7 +191,7 @@ func (tdb *TimeScaleDb) GetReportsInfo(ctx context.Context, accountId, orgId, pr
 		err = rows.Scan(&stepId, &stageId)
 		if err != nil {
 			// Log error and return
-			log.Errorw("could not read step/stage response from DB", zap.Error(err))
+			logs.Logger(ctx).Errorw("could not read step/stage response from DB", zap.Error(err))
 			return res, err
 		}
 		info := types.StepInfo{Stage: stageId.ValueOrZero(), Step: stepId.ValueOrZero()}
