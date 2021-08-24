@@ -37,6 +37,10 @@ public class AnalyzedLogDataDTO implements Comparable<AnalyzedLogDataDTO> {
 
   @Override
   public int compareTo(@NotNull AnalyzedLogDataDTO o) {
-    return logData.getLabel().compareTo(o.getLogData().getLabel());
+    int result = o.getLogData().getTag().compareTo(logData.getTag());
+    if (result == 0) {
+      result = Integer.valueOf(o.getLogData().getCount()).compareTo(Integer.valueOf(logData.getCount()));
+    }
+    return result;
   }
 }

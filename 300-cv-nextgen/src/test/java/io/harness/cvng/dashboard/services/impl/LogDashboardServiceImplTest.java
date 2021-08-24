@@ -463,6 +463,11 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
       }
     }
     assertThat(containsKnown).isFalse();
+
+    // assert if sorted based on tags
+    int size = pageResponse.getContent().size();
+    assertThat(pageResponse.getContent().get(0).getLogData().getTag().equals(LogAnalysisTag.UNKNOWN));
+    assertThat(pageResponse.getContent().get(size - 1).getLogData().getTag().equals(LogAnalysisTag.UNEXPECTED));
   }
 
   @Test
@@ -593,6 +598,11 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
       }
     }
     assertThat(containsKnown).isTrue();
+
+    // assert if sorted based on tags
+    int size = pageResponse.getContent().size();
+    assertThat(pageResponse.getContent().get(0).getLogData().getTag().equals(LogAnalysisTag.UNKNOWN));
+    assertThat(pageResponse.getContent().get(size - 1).getLogData().getTag().equals(LogAnalysisTag.KNOWN));
   }
 
   @Test
@@ -638,13 +648,14 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     while (analysisTime.isBefore(endTime)) {
       List<AnalysisResult> resultList = new ArrayList<>();
       labels.forEach(label -> {
-        AnalysisResult result = AnalysisResult.builder()
-                                    .count(4)
-                                    .label(label)
-                                    .tag(anomalousOnly       ? LogAnalysisTag.UNKNOWN
-                                            : label % 2 == 0 ? LogAnalysisTag.UNKNOWN
-                                                             : LogAnalysisTag.KNOWN)
-                                    .build();
+        AnalysisResult result =
+            AnalysisResult.builder()
+                .count(4)
+                .label(label)
+                .tag(anomalousOnly       ? label % 2 == 0 ? LogAnalysisTag.UNKNOWN : LogAnalysisTag.UNEXPECTED
+                        : label % 2 == 0 ? LogAnalysisTag.UNKNOWN
+                                         : LogAnalysisTag.KNOWN)
+                .build();
         resultList.add(result);
       });
 
