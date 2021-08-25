@@ -24,6 +24,7 @@ import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -112,7 +113,17 @@ public class ManagerExecutor {
     processExecutor.directory(directory);
     processExecutor.command(command);
 
-    processExecutor.redirectOutput(System.out);
+    FileOutputStream fout;
+    try {
+      File managerFile = new File("/tmp/manager.log");
+      boolean newFile = managerFile.createNewFile();
+      log.info("Created file: {} {}", managerFile.getAbsolutePath(), newFile);
+      fout = new FileOutputStream(managerFile, false);
+    } catch (Exception ex) {
+      fout = null;
+      ex.printStackTrace();
+    }
+    processExecutor.redirectOutput(fout);
     processExecutor.redirectError(System.err);
     return processExecutor;
   }
@@ -143,5 +154,12 @@ public class ManagerExecutor {
 
   public static void main(String[] args) throws IOException {
     ensureManager(ManagerExecutor.class);
+    try {
+      while (true) {
+        Thread.sleep(4 * 60 * 60 * 1000L);
+      }
+    } catch (InterruptedException e) {
+      log.info("Manager exiting");
+    }
   }
 }
