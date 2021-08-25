@@ -213,6 +213,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.security.SSHVaultService;
@@ -276,8 +277,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowExecutionServiceImpl workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject @InjectMocks private InfrastructureDefinitionService infrastructureDefinitionService;
 
+  @Mock private SettingsService mockSettingsService;
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private MultiArtifactWorkflowExecutionServiceHelper multiArtifactWorkflowExecutionServiceHelper;
@@ -1567,6 +1569,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
@@ -1588,6 +1591,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infrastructureDefinition =
@@ -1914,6 +1918,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Infra", "host1");
@@ -1957,6 +1962,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
 
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "Name4", "host1");
@@ -2847,6 +2853,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     SettingAttribute computeProvider =
         aSettingAttribute().withAppId(app.getUuid()).withValue(aPhysicalDataCenterConfig().build()).build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(computeProvider);
     wingsPersistence.save(computeProvider);
     final InfrastructureDefinition infraDefinition = createInfraDefinition(computeProvider, "InfraName", "host1");
 
