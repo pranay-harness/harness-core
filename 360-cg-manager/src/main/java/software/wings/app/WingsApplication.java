@@ -461,6 +461,8 @@ public class WingsApplication extends Application<MainConfiguration> {
       scheduleJobsDelegateService(injector, configuration, delegateExecutor);
     }
 
+    registerWaitEnginePublishers(injector);
+
     registerEventConsumers(injector);
 
     registerObservers(configuration, injector);
@@ -939,8 +941,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
-
-    registerWaitEnginePublishers(injector);
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     EventListener genericEventListener =
