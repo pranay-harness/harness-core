@@ -72,6 +72,13 @@ http_archive(
 
 # Add a go repository
 go_repository(
+    name = "com_github_nbio_st",
+    importpath = "github.com/nbio/st",
+    sum = "h1:W6apQkHrMkS0Muv8G/TipAy/FJl/rCYT0+EuS8+Z0z4=",
+    version = "v0.0.0-20140626010706-e9e8d9816f32",
+)
+
+go_repository(
     name = "com_github_pkg_errors",
     importpath = "github.com/pkg/errors",
     sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",

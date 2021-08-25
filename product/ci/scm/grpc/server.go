@@ -5,8 +5,10 @@ import (
 	"net"
 	"time"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
@@ -58,7 +60,11 @@ func NewSCMServer(port uint, unixSocket string, log *zap.SugaredLogger) (SCMServ
 		log:        log,
 		stopCh:     stopCh,
 	}
-	server.grpcServer = grpc.NewServer()
+	server.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			unaryServerInterceptor(log),
+		)),
+	)
 	server.listener = listener
 	return &server, nil
 }
@@ -90,5 +96,18 @@ func (s *scmServer) Stop() {
 
 		s.log.Infow("Gracefully shutting down CI scm server")
 		s.grpcServer.GracefulStop()
+	}
+}
+
+func unaryServerInterceptor(log *zap.SugaredLogger) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		start := time.Now()
+		log.Infow(fmt.Sprintf("Received Request - Method: %s", info.FullMethod))
+
+		// Calls the handler
+		h, err := handler(ctx, req)
+
+		log.Infow(fmt.Sprintf("Completed Request - Method: %s", info.FullMethod), "time_taken", time.Since(start), "error", err)
+		return h, err
 	}
 }

@@ -3,6 +3,7 @@ module github.com/wings-software/portal/product/ci/scm
 go 1.14
 
 replace github.com/wings-software/portal/commons/go/lib => ../../../commons/go/lib
+replace github.com/wings-software/portal/product/log-service => ../../log-service
 
 require (
 	github.com/alexflint/go-arg v1.3.0
