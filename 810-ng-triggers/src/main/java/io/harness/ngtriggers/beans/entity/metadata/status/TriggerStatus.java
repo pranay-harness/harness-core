@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.beans.entity;
+package io.harness.ngtriggers.beans.entity.metadata.status;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
@@ -13,14 +13,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(PIPELINE)
-public class ValidationStatus {
-  public enum Status {
-    INVALID_TRIGGER_YAML,
-    POLLING_SUBSCRIPTION_FAILED,
-    POLLING_SUBSCRIPTION_SUCCESS,
-  }
-
-  boolean validationFailure;
-  Status status;
-  String detailMessage;
+public class TriggerStatus {
+  PollingSubscriptionStatus pollingSubscriptionStatus;
+  ValidationStatus validationStatus;
+  WebhookAutoRegistrationStatus webhookAutoRegistrationStatus;
 }
