@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
@@ -95,6 +96,23 @@ public class NGTemplateServiceImpl implements NGTemplateService {
           e);
       throw new InvalidRequestException(String.format("Error while saving template [%s] of label [%s]: %s",
           templateEntity.getIdentifier(), templateEntity.getVersionLabel(), e.getMessage()));
+    }
+  }
+
+  @Override
+  public Optional<TemplateEntity> get(String accountId, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel, boolean deleted) {
+    try {
+      return templateRepository
+          .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
+              accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, !deleted);
+    } catch (Exception e) {
+      log.error(String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]",
+                    templateIdentifier, versionLabel),
+          e);
+      throw new InvalidRequestException(
+          String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]: %s",
+              templateIdentifier, versionLabel, ExceptionUtils.getMessage(e)));
     }
   }
 

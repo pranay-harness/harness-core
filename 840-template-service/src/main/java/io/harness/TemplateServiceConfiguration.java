@@ -49,6 +49,7 @@ public class TemplateServiceConfiguration extends Configuration {
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
+  @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
 
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
