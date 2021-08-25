@@ -476,4 +476,7 @@ if [[ "" != "$OPENJDK_JRE_TAR_PATH" ]]; then
   yq write -i $CONFIG_FILE jreConfigs.openjdk8u242.jreTarPath "$OPENJDK_JRE_TAR_PATH"
 fi
 
+if [[ "" != "$MONGO_TRACE_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
+fi
 
