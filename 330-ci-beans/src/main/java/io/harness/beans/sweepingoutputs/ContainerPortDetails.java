@@ -2,6 +2,7 @@ package io.harness.beans.sweepingoutputs;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.validation.Update;
@@ -21,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("containerPortDetails")
 @JsonTypeName("containerPortDetails")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.sweepingoutputs.ContainerPortDetails")
 public class ContainerPortDetails implements ExecutionSweepingOutput {
   public static final String PORT_DETAILS = "portDetails";
   Map<String, List<Integer>> portDetails;

@@ -1,5 +1,6 @@
 package io.harness.cvng.cdng.services.impl;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.DeploymentActivity;
@@ -148,6 +149,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @Builder
   @JsonTypeName("verifyStepOutcome")
   @TypeAlias("verifyStepOutcome")
+  @RecasterAlias("io.harness.cvng.cdng.services.impl.CVNGStep$VerifyStepOutcome")
   public static class VerifyStepOutcome implements ProgressData, Outcome {
     int progressPercentage;
     String estimatedRemainingTime;
