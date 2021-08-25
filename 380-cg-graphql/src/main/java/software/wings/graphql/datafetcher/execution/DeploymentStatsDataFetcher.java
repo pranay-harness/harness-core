@@ -120,7 +120,6 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
@@ -596,7 +595,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
+    if (!includeIndirectExecutions) {
+      addParentIdNullFilter(selectQuery);
+    }
+
+    if (!includeIndirectExecutions
+        && featureFlagService.isEnabled(
+            FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
       selectQuery.addCustomFromTable("deployment_parent t0");
     } else {
       selectQuery.addCustomFromTable(schema.getDeploymentTable());
@@ -613,17 +618,9 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       decorateQueryWithGroupByTime(fieldNames, selectQuery, filters, groupByTime);
     }
 
+    addAccountFilter(selectQuery, accountId);
     if (isValidGroupBy(groupBy)) {
       decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
-    }
-
-    addAccountFilter(selectQuery, accountId);
-    if (!CollectionUtils.isEmpty(
-            filters.stream().filter(item -> item.getEnvironmentType() != null).collect(Collectors.toList()))) {
-      addWorkflowNotNullFilter(selectQuery);
-      addPipelineNullFilter(selectQuery);
-    } else if (!includeIndirectExecutions) {
-      addParentIdFilter(selectQuery);
     }
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
@@ -720,13 +717,6 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     }
 
     addAccountFilter(selectTags, accountId);
-    if (!CollectionUtils.isEmpty(
-            filters.stream().filter(filter -> filter.getEnvironmentType() != null).collect(Collectors.toList()))) {
-      addWorkflowNotNullFilter(selectQuery);
-      addPipelineNullFilter(selectQuery);
-    } else if (!includeIndirectExecutions) {
-      addParentIdFilter(selectTags);
-    }
 
     List<QLDeploymentSortCriteria> finalSortCriteria = null;
     if (!isValidGroupByTime(groupByTime)) {
@@ -762,7 +752,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
     }
 
-    if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
+    if (!includeIndirectExecutions) {
+      addParentIdNullFilter(selectQuery);
+    }
+
+    if (!includeIndirectExecutions
+        && featureFlagService.isEnabled(
+            FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
       existsQuery.addCustomFromTable("deployment_parent t0");
     } else {
       existsQuery.addCustomFromTable("deployment t0");
@@ -1015,7 +1011,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
     selectQuery.addCondition(UnaryCondition.isNull(schema.getPipeline()));
   }
 
-  private void addParentIdFilter(SelectQuery selectQuery) {
+  private void addParentIdNullFilter(SelectQuery selectQuery) {
     selectQuery.addCondition(UnaryCondition.isNull(schema.getParentExecution()));
   }
 
