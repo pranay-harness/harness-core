@@ -2583,10 +2583,11 @@ public class UserServiceImpl implements UserService {
             if (accountService.isNextGenEnabled(accountId)) {
               Boolean isUserPartOfAccountInNG =
                   NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
-              log.info(
-                  "User {} is {} of nextgen in account {}", userId, isUserPartOfAccountInNG ? "" : "not", accountId);
-              if (isUserPartOfAccountInNG) {
-                updatedActiveAccounts.add(account);
+              log.info("User {} is {} of nextgen in account {}", userId,
+                  Boolean.TRUE.equals(isUserPartOfAccountInNG) ? "" : "not", accountId);
+              if (Boolean.TRUE.equals(isUserPartOfAccountInNG)) {
+                throw new InvalidRequestException(
+                    "User cannot be deleted because user is part of Harness NextGen as well. Please remove the user from NextGen first.");
               }
             }
           } else {
