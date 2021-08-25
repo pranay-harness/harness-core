@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sCanaryStepInfoVisitorHelper;
@@ -32,6 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_CANARY_DEPLOY)
 @SimpleVisitorHelper(helperClass = K8sCanaryStepInfoVisitorHelper.class)
 @TypeAlias("k8sCanaryStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sCanaryStepInfo")
 public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;

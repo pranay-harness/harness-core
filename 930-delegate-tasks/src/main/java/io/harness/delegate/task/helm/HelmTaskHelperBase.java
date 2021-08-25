@@ -624,7 +624,7 @@ public class HelmTaskHelperBase {
     }
   }
 
-  private String createDirectory(String directoryBase) throws IOException {
+  String createDirectory(String directoryBase) throws IOException {
     String workingDirectory = Paths.get(directoryBase).normalize().toAbsolutePath().toString();
 
     createDirectoryIfDoesNotExist(workingDirectory);

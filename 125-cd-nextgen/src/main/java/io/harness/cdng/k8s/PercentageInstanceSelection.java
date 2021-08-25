@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
@@ -16,6 +17,7 @@ import lombok.Data;
 @OwnedBy(CDP)
 @Data
 @JsonTypeName("Percentage")
+@RecasterAlias("io.harness.cdng.k8s.PercentageInstanceSelection")
 public class PercentageInstanceSelection implements InstanceSelectionBase {
   @YamlSchemaTypes({string, number}) ParameterField<String> percentage;
   @Override

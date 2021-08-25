@@ -46,6 +46,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @Singleton
 @Slf4j
 public class GraphGenerationServiceImpl implements GraphGenerationService {
+  private static final long THRESHOLD_LOG = 20;
+
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private SpringMongoStore mongoStore;
@@ -70,7 +72,6 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
         OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
     if (lastUpdatedAt == null) {
-      log.info("entity is not present in db, ignoring this update");
       return;
     }
     List<OrchestrationEventLog> unprocessedEventLogs =
@@ -78,10 +79,12 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     if (!unprocessedEventLogs.isEmpty()) {
       OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
       if (orchestrationGraph == null) {
-        log.warn("Orchestration Graph not yet generated. Passing on to next iteration");
+        log.warn("[PMS_GRAPH] Graph not yet generated. Passing on to next iteration");
         return;
       }
-      log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
+      if (unprocessedEventLogs.size() > THRESHOLD_LOG) {
+        log.warn("[PMS_GRAPH] Found [{}] unprocessed event logs", unprocessedEventLogs.size());
+      }
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
         OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
@@ -99,8 +102,8 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
       cachePartialOrchestrationGraph(orchestrationGraph, lastUpdatedAt);
-      log.info("Processing of [{}] orchestration event logs completed in [{}ms]", unprocessedEventLogs.size(),
-          System.currentTimeMillis() - startTs);
+      log.info("[[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
+          unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
     }
   }
 

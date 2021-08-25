@@ -1184,7 +1184,7 @@ public class PcfCommandTaskHandlerTest extends CategoryTest {
         .existingApplicationDetails(Collections.singletonList(
             CfAppSetupTimeDetails.builder().applicationName(activeAppName).initialInstanceCount(1).build()))
         .existingApplicationNames(Collections.singletonList(activeAppName))
-        .newApplicatiaonName(appPrefix + "_6")
+        .newApplicationName(appPrefix + "_6")
         .upSizeInActiveApp(true)
         .existingInActiveApplicationDetails(inActiveApp)
         .cfAppNamePrefix(appPrefix)

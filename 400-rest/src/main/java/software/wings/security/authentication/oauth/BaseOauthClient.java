@@ -1,8 +1,10 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.security.JWT_CATEGORY;
@@ -14,8 +16,9 @@ import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 
-@OwnedBy(PL)
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class BaseOauthClient {
   private static final String STATE_KEY = "state";
 

@@ -505,7 +505,7 @@ org.codehaus.plexus:plexus-utils:jar:3.0.20
 org.codehaus.woodstox:stax2-api:jar:4.2
 org.conscrypt:conscrypt-openjdk-uber:jar:2.5.1
 org.coursera:metrics-datadog:jar:1.1.13
-org.cryptacular:cryptacular:jar:1.1.3
+org.cryptacular:cryptacular:jar:1.1.4
 org.eclipse.jetty.http2:http2-common:jar:9.4.35.v20201120
 org.eclipse.jetty.http2:http2-hpack:jar:9.4.35.v20201120
 org.eclipse.jetty.http2:http2-xxxxxxxxjar:9.4.35.v20201120

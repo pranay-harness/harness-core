@@ -724,10 +724,14 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
     return DelegateStatus.builder()
-        .publishedVersions(delegateConfiguration.getDelegateVersions())
+        .publishedVersions(delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
         .scalingGroups(scalingGroups)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
+  }
+
+  private List<String> delegateVersionListWithoutPatch(List<String> delegateVersions) {
+    return delegateVersions.stream().map(version -> substringBefore(version, "-")).collect(toList());
   }
 
   @NotNull
@@ -1233,8 +1237,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
-        String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
+        String fullVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
+        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, inquiry.getAccountId());
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
           log.info("Using CDN delegateStorageUrl " + delegateStorageUrl);
@@ -1490,6 +1494,14 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (NumberFormatException e) {
         // Leave it null
       }
+    }
+    return delegateVersionNumber;
+  }
+
+  private String getDelegateBuildVersion(String delegateVersion) {
+    String delegateVersionNumber = null;
+    if (isNotBlank(delegateVersion)) {
+      delegateVersionNumber = delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
     }
     return delegateVersionNumber;
   }

@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
@@ -27,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @JsonTypeName(StepSpecTypeConstants.K8S_CANARY_DELETE)
 @TypeAlias("k8sCanaryDeleteStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sCanaryDeleteStepInfo")
 public class K8sCanaryDeleteStepInfo implements CDStepInfo, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)

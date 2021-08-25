@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
@@ -18,6 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("k8sRollingStepParameters")
+@RecasterAlias("io.harness.cdng.k8s.K8sRollingStepParameters")
 public class K8sRollingStepParameters extends K8sRollingBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
   public K8sRollingStepParameters(ParameterField<Boolean> skipDryRun,

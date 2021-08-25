@@ -84,7 +84,7 @@ import lombok.EqualsAndHashCode;
 /**
  * Used to load all the application configuration.
  */
-@TargetModule(HarnessModule._360_CG_MANAGER)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton

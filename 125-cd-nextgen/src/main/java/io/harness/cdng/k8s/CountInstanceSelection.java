@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.integer;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
@@ -16,6 +17,7 @@ import lombok.Data;
 @OwnedBy(CDP)
 @Data
 @JsonTypeName("Count")
+@RecasterAlias("io.harness.cdng.k8s.CountInstanceSelection")
 public class CountInstanceSelection implements InstanceSelectionBase {
   @YamlSchemaTypes({string, integer}) ParameterField<String> count;
   @Override

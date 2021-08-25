@@ -429,6 +429,9 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//320-ci-execution/src/test/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = test_deps + shared_dependencies + [
         "//:lombok",

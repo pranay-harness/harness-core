@@ -2,8 +2,8 @@ name: Faciliator event time
 identifier: facilitator_event
 metricGroup: facilitator_event_group
 metrics:
-  - metricName: faciliator_event_queue_time
-    metricDefinition: Time for which facilitate event was in the queue and was processed completely.
+  - metricName: faciliator_event_service_time
+    metricDefinition: Time for which facilitate was processed completely.
     type: LastValue
     unit: count
   - metricName: faciliatator_event_time_in_queue

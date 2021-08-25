@@ -219,7 +219,6 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
                          .collect(Collectors.toList()))
               .flatMap(Collection::stream)
               .collect(Collectors.toList());
-
       log.info("LDAP : Users set in Group response {}", userResponses);
       groupResponse.setUsers(userResponses);
       return groupResponse;

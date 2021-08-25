@@ -6,6 +6,7 @@ shared_deps = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
+    "//940-primary-version-manager:module",
     "//953-events-api:module",
     "//960-persistence:module",
     "//980-commons:module",
@@ -14,6 +15,8 @@ shared_deps = [
     "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
     "@maven//:ru_vyarus_guice_validator",
     "@maven//:io_dropwizard_dropwizard_core",
+    "@maven//:org_apache_logging_log4j_log4j_api",
+    "@maven//:org_apache_logging_log4j_log4j_to_slf4j",
     "//:lombok",
 ]
 
@@ -22,6 +25,9 @@ java_binary(
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.analyserservice.AnalyserServiceApplication",
+    resources = [
+        "//935-analyser-service/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",

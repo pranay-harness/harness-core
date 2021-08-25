@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.beans;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
@@ -14,6 +15,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sGcpInfraMapping")
 @JsonTypeName("k8sGcpInfraMapping")
 @OwnedBy(HarnessTeam.CDP)
+@RecasterAlias("io.harness.cdng.infra.beans.K8sGcpInfraMapping")
 public class K8sGcpInfraMapping implements InfraMapping {
   @Id private String uuid;
   private String accountId;

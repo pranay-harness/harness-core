@@ -1,10 +1,10 @@
 package io.harness.pms.plan.creation;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
 
 import static java.lang.String.format;
 
-import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -34,7 +34,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.time.Duration;
@@ -58,16 +57,18 @@ public class PlanCreatorMergeService {
 
   private final PmsSdkHelper pmsSdkHelper;
   private final WaitNotifyEngine waitNotifyEngine;
-  private String publisherName;
   PmsEventSender pmsEventSender;
 
   @Inject
-  public PlanCreatorMergeService(PmsSdkHelper pmsSdkHelper, PmsEventSender pmsEventSender,
-      WaitNotifyEngine waitNotifyEngine, @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
+  public PlanCreatorMergeService(
+      PmsSdkHelper pmsSdkHelper, PmsEventSender pmsEventSender, WaitNotifyEngine waitNotifyEngine) {
     this.pmsSdkHelper = pmsSdkHelper;
     this.pmsEventSender = pmsEventSender;
     this.waitNotifyEngine = waitNotifyEngine;
-    this.publisherName = publisherName;
+  }
+
+  public String getPublisher() {
+    return PMS_PLAN_CREATION;
   }
 
   public void createPlanV2(String accountId, String orgIdentifier, String projectIdentifier, String planUuid,
@@ -85,7 +86,7 @@ public class PlanCreatorMergeService {
                                  .build()
                                  .toByteString(),
         new HashMap<>(), PmsEventCategory.CREATE_PARTIAL_PLAN, "pms");
-    waitNotifyEngine.waitForAllOnInList(publisherName,
+    waitNotifyEngine.waitForAllOnInList(getPublisher(),
         PartialPlanResponseCallback.builder()
             .planUuid(planUuid)
             .depth(0)
