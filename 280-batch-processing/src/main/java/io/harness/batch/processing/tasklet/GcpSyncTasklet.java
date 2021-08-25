@@ -118,8 +118,11 @@ public class GcpSyncTasklet implements Tasklet {
       String datasetId, String projectId, String accountId, String connectorId, Long startTime) {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
+    log.info("{}", credentials);
     BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
+    log.info("bigQuery client {}", bigQuery);
     Dataset dataset = bigQuery.getDataset(datasetId);
+    log.info("dataset {}", dataset);
     Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
     tableList.getValues().forEach(table -> {
       if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
