@@ -41,6 +41,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
+import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
@@ -660,6 +661,9 @@ public class PcfSetupState extends State {
             .nonVersioning(!isPcfSetupCommandResponseNull && cfSetupCommandResponse.isNonVersioning())
             .versioningChanged(!isPcfSetupCommandResponseNull && cfSetupCommandResponse.isVersioningChanged())
             .activeAppRevision(isPcfSetupCommandResponseNull ? null : cfSetupCommandResponse.getActiveAppRevision())
+            .existingAppNamingStrategy(isPcfSetupCommandResponseNull
+                    ? AppNamingStrategy.VERSIONING.name()
+                    : cfSetupCommandResponse.getExistingAppNamingStrategy())
             .isUseCfCli(true);
 
     if (!isPcfSetupCommandResponseNull) {
