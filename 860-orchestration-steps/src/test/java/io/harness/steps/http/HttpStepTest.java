@@ -84,7 +84,7 @@ public class HttpStepTest extends CategoryTest {
     Map<String, String> evaluatedVariables = HttpStep.evaluateOutputVariables(variables, response1);
     assertThat(evaluatedVariables).isNotEmpty();
     assertThat(evaluatedVariables.get("name1")).isEqualTo("metadataValue");
-    assertThat(evaluatedVariables.containsKey("name4")).isFalse();
+    assertThat(evaluatedVariables.get("name4")).isEqualTo("directValue");
 
     variables.put("name2", var2);
     variables.put("name3", var3);
