@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.hazelcast.util.Preconditions.checkFalse;
+import static java.lang.String.format;
 
+import com.google.cloud.bigquery.*;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
@@ -31,10 +33,6 @@ import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.Table;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
@@ -105,12 +103,20 @@ public class GcpSyncTasklet implements Tasklet {
   }
 
   public static void main(String[] args) {
-    processGCPConnector(BillingDataPipelineConfig.builder()
-                            .gcpProjectId("ce-qa-274307")
-                            .gcpSyncPubSubTopic("ce-gcp-billing-cf")
-                            .build(),
-        "harness-ce-harnessio-zeaak@ce-qa-274307.iam.gserviceaccount.com", "billing_prod_all_projects",
-        "prod-setup-205416", "Z60xsRGoTeqOoAFRCsmlBQ", "nikunjtestgcp2", 0L);
+    ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    Credentials credentials = getImpersonatedCredentials(sourceCredentials, "harness-ce-oneconcern-4mc6q@ce-prod-274307.iam.gserviceaccount.com");
+    BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
+    DatasetId datasetIdFullyQualified = DatasetId.of("onec-co", "onec_billing_dev");
+    try {
+      Dataset dataset = bigQuery.getDataset(datasetIdFullyQualified);
+      log.info("We are good!");
+      Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
+      tableList.getValues().forEach(table -> {
+        log.info(table.getTableId().getTable());
+      });
+    } catch (BigQueryException e) {
+      log.info("Ex eption {}", e);
+    }
   }
 
   private static void processGCPConnector(BillingDataPipelineConfig billingDataPipelineConfig,
@@ -169,7 +175,7 @@ public class GcpSyncTasklet implements Tasklet {
 
   // read the credential path from env variables
   public static ServiceAccountCredentials getCredentials(String googleCredentialPathSystemEnv) {
-    String googleCredentialsPath = "/Users/rohit/Desktop/ccm-play.json";
+    String googleCredentialsPath = "/Users/rohit/Desktop/ce-prod-274307-fd1a2deca37b.json";
     checkFalse(isEmpty(googleCredentialsPath), "Missing environment variable for GCP credentials.");
     File credentialsFile = new File(googleCredentialsPath);
     ServiceAccountCredentials credentials = null;
