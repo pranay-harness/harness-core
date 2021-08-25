@@ -193,13 +193,14 @@ public class NGTriggerElementMapper {
   }
 
   public void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
-    PollingConfig existingPollingConfig = existingEntity.getMetadata().getBuildMetadata().getPollingConfig();
-    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST && null != existingPollingConfig) {
-      if (isNotEmpty(existingPollingConfig.getSignature())) {
+    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
+      PollingConfig existingPollingConfig = existingEntity.getMetadata().getBuildMetadata().getPollingConfig();
+
+      if (existingPollingConfig != null && isNotEmpty(existingPollingConfig.getSignature())) {
         newEntity.getMetadata().getBuildMetadata().getPollingConfig().setSignature(
             existingPollingConfig.getSignature());
       }
-      if (isNotEmpty(existingPollingConfig.getPollingDocId())) {
+      if (existingPollingConfig != null && isNotEmpty(existingPollingConfig.getPollingDocId())) {
         newEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
             existingPollingConfig.getPollingDocId());
       }
