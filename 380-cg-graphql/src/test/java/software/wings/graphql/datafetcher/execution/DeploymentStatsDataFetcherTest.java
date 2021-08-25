@@ -105,7 +105,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   @Mock TagHelper tagHelper;
   @Mock ResultSet resultSet;
   @Mock WingsPersistence wingsPersistence;
-  @Inject @InjectMocks DeploymentStatsDataFetcher dataFetcher;
+  @Inject @InjectMocks software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher dataFetcher;
 
   final int[] count = {0};
   final int[] intVal = {0};
@@ -1439,7 +1439,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
                 QLDeploymentTypeFilter.builder().operator(QLEnumOperator.IN).values(qlDeploymentTypes).build())
             .build();
 
-    DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
+    software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
     doReturn(Arrays.asList(new String[] {"sid1", "sid2"}))
         .when(dataFetcherSpy)
         .getServiceIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
@@ -1482,7 +1482,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
                 QLOrchestrationWorkflowTypeFilter.builder().operator(QLEnumOperator.IN).values(qlWorkflowTypes).build())
             .build();
 
-    DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
+    software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
     doReturn(Arrays.asList(new String[] {"wid1", "wid2"}))
         .when(dataFetcherSpy)
         .getWorkflowIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
