@@ -101,7 +101,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         "https/repo1.maven.org/maven2",
         "io/harness",
         "ff-java-server-sdk",
-        "1.0.0",
+        "1.0.3",
         Some("CE".to_string()),
     );
 
