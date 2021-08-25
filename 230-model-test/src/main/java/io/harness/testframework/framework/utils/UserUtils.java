@@ -1,7 +1,10 @@
 package io.harness.testframework.framework.utils;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.constants.UserConstants;
@@ -26,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserUtils {
   static final String EXPECTED_RESET_PWD_SUBJECT = "Reset your HARNESS PLATFORM password";
 
