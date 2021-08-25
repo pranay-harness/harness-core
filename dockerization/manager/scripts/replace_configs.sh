@@ -878,6 +878,7 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAME
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 replace_key_value portal.gatewayPathPrefix "$GATEWAY_PATH_PREFIX"
+replace_key_value portal.zendeskBaseUrl "$ZENDESK_BASE_URL"
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"

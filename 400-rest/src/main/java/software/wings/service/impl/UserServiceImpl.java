@@ -2970,8 +2970,8 @@ public class UserServiceImpl implements UserService {
     // Serialise to JWT compact form
     String jwtString = jwsObject.serialize();
 
-    String redirectUrl = "https://"
-        + "harnesssupport.zendesk.com/access/jwt?jwt=" + jwtString;
+    String redirectUrl =
+        String.format("%s/access/jwt?jwt=%s", configuration.getPortal().getZendeskBaseUrl(), jwtString);
 
     if (returnToUrl != null) {
       redirectUrl += "&return_to=" + returnToUrl;

@@ -313,6 +313,7 @@ ngAuthUIEnabled: false
 
 portal:
   url: https://localhost:8000
+  zendeskBaseUrl: "https://harnesssupport.zendesk.com"
   gatewayPathPrefix: "gateway/"
   allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
   companyName: Harness Inc
