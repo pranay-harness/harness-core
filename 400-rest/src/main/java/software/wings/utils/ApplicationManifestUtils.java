@@ -576,7 +576,7 @@ public class ApplicationManifestUtils {
   private void splitGitFileConfigFilePath(GitFileConfig gitFileConfig) {
     String filePath = gitFileConfig.getFilePath();
     gitFileConfig.setFilePath(null);
-    gitFileConfig.setFilePathList(emptyList());
+    gitFileConfig.setFilePathList(new ArrayList<>());
     if (filePath != null) {
       List<String> multipleFiles = splitCommaSeparatedFilePath(filePath);
       gitFileConfig.setFilePathList(multipleFiles);
