@@ -203,7 +203,6 @@ import org.hibernate.validator.constraints.NotBlank;
 @OwnedBy(DX)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 @Deprecated
-@BreakDependencyOn("software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher")
 public class WingsGraphQLModule extends AbstractModule {
   /***
    * This collection is mainly required to inject batched loader at app start time.

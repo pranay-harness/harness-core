@@ -618,6 +618,7 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       decorateQueryWithGroupByTime(fieldNames, selectQuery, filters, groupByTime);
     }
 
+    addAccountFilter(selectQuery, accountId);
     if (isValidGroupBy(groupBy)) {
       decorateQueryWithGroupBy(fieldNames, selectQuery, groupBy, groupByFields);
     }
