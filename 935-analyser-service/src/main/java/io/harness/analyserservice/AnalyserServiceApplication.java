@@ -6,6 +6,8 @@ import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.event.QueryAnalyserEventService;
 import io.harness.event.queryRecords.AnalyserSampleAggregatorService;
 import io.harness.govern.ProviderModule;
@@ -84,6 +86,7 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
       }
     });
     modules.add(AnalyserServiceModule.getInstance(configuration));
+    modules.add(PrimaryVersionManagerModule.getInstance());
     ExecutorModule executorModule = ExecutorModule.getInstance();
     executorModule.setExecutorService(ThreadPool.create(
         10, 20, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
@@ -94,6 +97,9 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
     registerHealthCheck(environment, injector);
     registerManagedBeans(environment, injector);
     registerScheduledJobs(injector, configuration);
+
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
+
     MaintenanceController.forceMaintenance(false);
   }
 
