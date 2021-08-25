@@ -13,13 +13,16 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.template.beans.TemplateApplyRequestDTO;
 import io.harness.template.beans.TemplateResponseDTO;
 import io.harness.template.entity.TemplateEntity;
@@ -62,6 +65,7 @@ import org.springframework.data.domain.Page;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@NextGenManagerAuth
 @Slf4j
 public class NGTemplateResource {
   private final NGTemplateService templateService;
@@ -69,14 +73,32 @@ public class NGTemplateResource {
   @GET
   @Path("{templateIdentifier}")
   @ApiOperation(value = "Gets Template", nickname = "getTemplate")
-  public Optional<TemplateResponseDTO> get(
+  public ResponseDTO<TemplateResponseDTO> get(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @QueryParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String label) {
+      @QueryParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     // if label is not given, return stable template
-    return Optional.empty();
+
+    log.info(
+        String.format("Retrieving Template with identifier %s and versionLabel %s in project %s, org %s, account %s",
+            templateIdentifier, versionLabel, projectId, orgId, accountId));
+    Optional<TemplateEntity> templateEntity =
+        templateService.get(accountId, orgId, projectId, templateIdentifier, versionLabel, deleted);
+
+    String version = "0";
+    if (templateEntity.isPresent()) {
+      version = templateEntity.get().getVersion().toString();
+    }
+    TemplateResponseDTO templateResponseDTO = NGTemplateDtoMapper.writeTemplateResponseDto(templateEntity.orElseThrow(
+        ()
+            -> new InvalidRequestException(String.format(
+                "Template with the given Identifier: %s and versionLabel: %s does not exist or has been deleted",
+                templateIdentifier, versionLabel))));
+    return ResponseDTO.newResponse(version, templateResponseDTO);
   }
 
   @POST
