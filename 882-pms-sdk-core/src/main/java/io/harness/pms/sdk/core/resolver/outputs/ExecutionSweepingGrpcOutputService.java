@@ -38,11 +38,6 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, ExecutionSweepingOutput value, int levelsToKeep) {
-    return null;
-  }
-
-  @Override
   public String consume(Ambiance ambiance, String name, ExecutionSweepingOutput value, String groupName) {
     SweepingOutputConsumeBlobRequest.Builder builder =
         SweepingOutputConsumeBlobRequest.newBuilder().setAmbiance(ambiance).setName(name).setValue(

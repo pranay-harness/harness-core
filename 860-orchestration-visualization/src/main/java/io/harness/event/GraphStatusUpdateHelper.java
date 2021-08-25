@@ -37,32 +37,35 @@ public class GraphStatusUpdateHelper {
       return orchestrationGraph;
     }
     try {
-      log.info("[{}] event log handler started for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId);
+      log.info("[PMS_GRAPH] [{}] event log handler started for [{}] for plan [{}]", eventType, nodeExecutionId,
+          planExecutionId);
 
       NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
       if (orchestrationGraph.getRootNodeIds().isEmpty()) {
-        log.info("Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, planExecutionId);
+        log.info("[PMS_GRAPH]  Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, planExecutionId);
         orchestrationGraph.getRootNodeIds().add(nodeExecutionId);
       }
 
       Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
       if (graphVertexMap.containsKey(nodeExecutionId)) {
         if (nodeExecution.isOldRetry()) {
-          log.info("Removing graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
-              nodeExecution.getStatus(), planExecutionId);
+          log.info("[PMS_GRAPH]  Removing graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]",
+              nodeExecutionId, nodeExecution.getStatus(), planExecutionId);
           orchestrationAdjacencyListGenerator.removeVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
         } else {
           updateGraphVertex(graphVertexMap, nodeExecution, planExecutionId);
         }
       } else if (!nodeExecution.isOldRetry()) {
-        log.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+        log.info("[PMS_GRAPH] Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
             nodeExecution.getStatus(), planExecutionId);
         orchestrationAdjacencyListGenerator.addVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
       }
-      log.info("[{}] event log handler completed for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId);
+      log.info("[PMS_GRAPH]  [{}] event log handler completed for [{}] for plan [{}]", eventType, nodeExecutionId,
+          planExecutionId);
     } catch (Exception e) {
-      log.error("[{}] event failed for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId, e);
+      log.error(
+          "[PMS_GRAPH]  [{}] event failed for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId, e);
       throw e;
     }
     return orchestrationGraph;
@@ -71,7 +74,7 @@ public class GraphStatusUpdateHelper {
   private void updateGraphVertex(
       Map<String, GraphVertex> graphVertexMap, NodeExecution nodeExecution, String planExecutionId) {
     String nodeExecutionId = nodeExecution.getUuid();
-    log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+    log.info("[PMS_GRAPH] Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
         nodeExecution.getStatus(), planExecutionId);
     graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
       GraphVertex newValue = convertFromNodeExecution(prevValue, nodeExecution);
