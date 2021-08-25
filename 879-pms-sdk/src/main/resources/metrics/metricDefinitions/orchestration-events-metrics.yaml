@@ -2,8 +2,8 @@ name: Orchestration Execution Time
 identifier: orchestration_event
 metricGroup: orchestration_event_group
 metrics:
-  - metricName: orchestration_event_queue_time
-    metricDefinition: Time for which Orchestration Event was in the queue and was processed.
+  - metricName: orchestration_event_service_time
+    metricDefinition: Time for which Orchestration Event was processed by the service.
     type: LastValue
     unit: count
   - metricName: orchestration_event_time_in_queue
