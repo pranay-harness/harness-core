@@ -104,8 +104,18 @@ public class GcpSyncTasklet implements Tasklet {
     return null;
   }
 
-  private void processGCPConnector(BillingDataPipelineConfig billingDataPipelineConfig, String serviceAccountEmail,
-      String datasetId, String projectId, String accountId, String connectorId, Long startTime) {
+  public static void main(String[] args) {
+    processGCPConnector(BillingDataPipelineConfig.builder()
+                            .gcpProjectId("ce-qa-274307")
+                            .gcpSyncPubSubTopic("ce-gcp-billing-cf")
+                            .build(),
+        "harness-ce-harnessio-zeaak@ce-qa-274307.iam.gserviceaccount.com", "billing_prod_all_projects",
+        "prod-setup-205416", "Z60xsRGoTeqOoAFRCsmlBQ", "nikunjtestgcp2", 0L);
+  }
+
+  private static void processGCPConnector(BillingDataPipelineConfig billingDataPipelineConfig,
+      String serviceAccountEmail, String datasetId, String projectId, String accountId, String connectorId,
+      Long startTime) {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
     BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
@@ -159,7 +169,7 @@ public class GcpSyncTasklet implements Tasklet {
 
   // read the credential path from env variables
   public static ServiceAccountCredentials getCredentials(String googleCredentialPathSystemEnv) {
-    String googleCredentialsPath = System.getenv(googleCredentialPathSystemEnv);
+    String googleCredentialsPath = "/Users/rohit/Desktop/ccm-play.json";
     checkFalse(isEmpty(googleCredentialsPath), "Missing environment variable for GCP credentials.");
     File credentialsFile = new File(googleCredentialsPath);
     ServiceAccountCredentials credentials = null;

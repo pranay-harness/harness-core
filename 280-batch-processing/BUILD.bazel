@@ -86,7 +86,7 @@ java_binary(
         "src/generated/java/**/*.java",
     ]),
     data = ["//:resource"],
-    main_class = "io.harness.batch.processing.BatchProcessingApplication",
+    main_class = "io.harness.batch.processing.tasklet.GcpSyncTasklet",
     resources = [
         "//280-batch-processing/src/main/resources:resource",
     ],
