@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "external",
     srcs = [
         "log_closer.go",
         "util.go",
@@ -9,12 +9,12 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/common/external",
     visibility = ["//visibility:public"],
     deps = [
-        "//commons/go/lib/exec:go_default_library",
-        "//commons/go/lib/logs:go_default_library",
-        "//product/ci/common/logs:go_default_library",
-        "//product/ci/ti-service/client:go_default_library",
-        "//product/ci/ti-service/types:go_default_library",
-        "//product/log-service/client:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//commons/go/lib/exec",
+        "//commons/go/lib/logs",
+        "//product/ci/common/logs",
+        "//product/ci/ti-service/client",
+        "//product/ci/ti-service/types",
+        "//product/log-service/client",
+        "@org_uber_go_zap//:zap",
     ],
 )
