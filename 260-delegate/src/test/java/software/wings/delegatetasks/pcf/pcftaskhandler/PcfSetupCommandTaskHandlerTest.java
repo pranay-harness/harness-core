@@ -1,13 +1,21 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.IVAN;
 
-import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
+import static software.wings.delegatetasks.pcf.PcfTestConstants.ACCOUNT_ID;
+import static software.wings.delegatetasks.pcf.PcfTestConstants.MANIFEST_YAML;
+import static software.wings.delegatetasks.pcf.PcfTestConstants.ORG;
+import static software.wings.delegatetasks.pcf.PcfTestConstants.RUNNING;
+import static software.wings.delegatetasks.pcf.PcfTestConstants.SPACE;
+import static software.wings.delegatetasks.pcf.PcfTestConstants.STOPPED;
+import static software.wings.delegatetasks.pcf.PcfTestConstants.getPcfConfig;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -26,96 +34,76 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
-import io.harness.delegate.cf.PcfApplicationDetailsCommandTaskHandler;
 import io.harness.delegate.cf.PcfCommandTaskBaseHelper;
-import io.harness.delegate.cf.PcfDataFetchCommandTaskHandler;
-import io.harness.delegate.cf.PcfDeployCommandTaskHandler;
-import io.harness.delegate.cf.PcfRollbackCommandTaskHandler;
-import io.harness.delegate.cf.PcfRouteUpdateCommandTaskHandler;
 import io.harness.delegate.task.pcf.CfCommandRequest;
-import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.delegate.task.pcf.response.CfSetupCommandResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.pcf.CfDeploymentManager;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
 import io.harness.pcf.model.CfManifestFileData;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.pcf.PcfCommandTaskHelper;
 import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.service.intfc.security.EncryptionService;
 
-import com.google.inject.Inject;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
-public class PcfCommandTaskHandlerTest extends WingsBaseTest {
-  public static final String URL = "URL";
-  public static final String MANIFEST_YAML = "  applications:\n"
-      + "  - name : ${APPLICATION_NAME}\n"
-      + "    memory: 350M\n"
-      + "    instances : ${INSTANCE_COUNT}\n"
-      + "    buildpack: https://github.com/cloudfoundry/java-buildpack.git\n"
-      + "    path: ${FILE_LOCATION}\n"
-      + "    routes:\n"
-      + "      - route: ${ROUTE_MAP}\n";
-
-  public static final String ORG = "ORG";
-  public static final String SPACE = "SPACE";
-  public static final String ACCOUNT_ID = "ACCOUNT_ID";
-  public static final String RUNNING = "RUNNING";
-
-  @Mock CfDeploymentManager pcfDeploymentManager;
+@RunWith(MockitoJUnitRunner.class)
+public class PcfSetupCommandTaskHandlerTest extends WingsBaseTest {
   @Mock EncryptionService encryptionService;
   @Mock EncryptedDataDetail encryptedDataDetail;
   @Mock LogCallback executionLogCallback;
   @Mock ILogStreamingTaskClient logStreamingTaskClient;
-  @Mock DelegateFileManager delegateFileManager;
+  @Mock CfDeploymentManager pcfDeploymentManager;
+  @Mock SecretDecryptionService secretDecryptionService;
+
   @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper;
   @InjectMocks @Spy PcfCommandTaskBaseHelper pcfCommandTaskBaseHelper;
-  @InjectMocks @Inject PcfSetupCommandTaskHandler pcfSetupCommandTaskHandler;
-  @InjectMocks @Inject PcfDeployCommandTaskHandler pcfDeployCommandTaskHandler;
-  @InjectMocks @Spy PcfRouteUpdateCommandTaskHandler pcfRouteUpdateCommandTaskHandler;
-  @InjectMocks @Inject PcfRollbackCommandTaskHandler pcfRollbackCommandTaskHandler;
-  @InjectMocks @Inject PcfDataFetchCommandTaskHandler pcfDataFetchCommandTaskHandler;
-  @InjectMocks @Inject PcfApplicationDetailsCommandTaskHandler pcfApplicationDetailsCommandTaskHandler;
+  @InjectMocks PcfSetupCommandTaskHandler pcfSetupCommandTaskHandler;
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = {ADWAIT, IVAN})
   @Category(UnitTests.class)
-  public void testPerformSetup() throws Exception {
+  public void testPerformSetup() throws PivotalClientApiException, IOException, ExecutionException {
     doReturn(executionLogCallback).when(logStreamingTaskClient).obtainLogCallback(anyString());
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
 
     CfCommandRequest cfCommandRequest = CfCommandSetupRequest.builder()
-                                            .pcfCommandType(PcfCommandType.SETUP)
+                                            .pcfCommandType(CfCommandRequest.PcfCommandType.SETUP)
                                             .pcfConfig(getPcfConfig())
-                                            .artifactFiles(Collections.EMPTY_LIST)
+                                            .artifactFiles(Collections.emptyList())
                                             .artifactStreamAttributes(artifactStreamAttributes)
                                             .manifestYaml(MANIFEST_YAML)
                                             .organization(ORG)
@@ -179,6 +167,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
     doNothing().when(pcfDeploymentManager).unmapRouteMapForApplication(any(), anyList(), any());
     doReturn("PASSWORD".toCharArray()).when(pcfCommandTaskHelper).getPassword(any());
+    doReturn(CfInternalConfig.builder().build()).when(secretDecryptionService).decrypt(any(), any(), anyBoolean());
     doNothing().when(pcfDeploymentManager).deleteApplication(any());
     doReturn(ApplicationDetail.builder()
                  .id("10")
@@ -186,7 +175,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                  .instances(0)
                  .memoryLimit(1)
                  .name("a_s_e__4")
-                 .requestedState("STOPPED")
+                 .requestedState(STOPPED)
                  .stack("")
                  .runningInstances(0)
                  .urls(Arrays.asList("1.com", "2.com"))
@@ -205,7 +194,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
                  .instances(0)
                  .memoryLimit(1)
                  .name("a_s_e__6")
-                 .requestedState("STOPPED")
+                 .requestedState(STOPPED)
                  .stack("")
                  .runningInstances(0)
                  .build())
@@ -213,7 +202,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .createApplication(any(), any());
 
     CfCommandExecutionResponse cfCommandExecutionResponse =
-        pcfSetupCommandTaskHandler.executeTask(cfCommandRequest, null, false, logStreamingTaskClient);
+        pcfSetupCommandTaskHandler.executeTaskInternal(cfCommandRequest, null, logStreamingTaskClient, false);
     verify(pcfDeploymentManager, times(1)).createApplication(any(), any());
     verify(pcfDeploymentManager, times(3)).deleteApplication(any());
     verify(pcfDeploymentManager, times(1)).resizeApplication(any());
@@ -236,14 +225,10 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(appsToBeDownsized.contains("a_s_e__4")).isTrue();
   }
 
-  private CfInternalConfig getPcfConfig() {
-    return CfInternalConfig.builder().username(USER_NAME_DECRYPTED).endpointUrl(URL).password(new char[0]).build();
-  }
-
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = {ADWAIT, IVAN})
   @Category(UnitTests.class)
-  public void testCheckIfVarsFilePresent() throws Exception {
+  public void testCheckIfVarsFilePresent() {
     PcfManifestsPackage manifestsPackage = PcfManifestsPackage.builder().build();
     CfCommandSetupRequest setupRequest = CfCommandSetupRequest.builder().pcfManifestsPackage(manifestsPackage).build();
     assertThat(pcfSetupCommandTaskHandler.checkIfVarsFilePresent(setupRequest)).isFalse();
@@ -254,51 +239,6 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     String str = null;
     manifestsPackage.setVariableYmls(Arrays.asList(str));
     assertThat(pcfSetupCommandTaskHandler.checkIfVarsFilePresent(setupRequest)).isFalse();
-  }
-
-  @Test
-  @Owner(developers = ADWAIT)
-  @Category(UnitTests.class)
-  public void testDownsizeApplicationToZero() throws Exception {
-    reset(pcfDeploymentManager);
-    ApplicationSummary applicationSummary = ApplicationSummary.builder()
-                                                .name("a_s_e__1")
-                                                .diskQuota(1)
-                                                .requestedState(RUNNING)
-                                                .id("10")
-                                                .instances(0)
-                                                .memoryLimit(1)
-                                                .runningInstances(0)
-                                                .build();
-
-    ApplicationDetail applicationDetail = ApplicationDetail.builder()
-                                              .id("10")
-                                              .diskQuota(1)
-                                              .instances(0)
-                                              .memoryLimit(1)
-                                              .name("a_s_e__1")
-                                              .requestedState("STOPPED")
-                                              .stack("")
-                                              .runningInstances(0)
-                                              .build();
-    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(any());
-
-    CfCommandSetupRequest cfCommandSetupRequest = CfCommandSetupRequest.builder().useAppAutoscalar(true).build();
-
-    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
-        CfAppAutoscalarRequestData.builder().configPathVar("path").build();
-
-    doReturn(true).when(pcfCommandTaskBaseHelper).disableAutoscalar(any(), any());
-    ArgumentCaptor<CfAppAutoscalarRequestData> argumentCaptor =
-        ArgumentCaptor.forClass(CfAppAutoscalarRequestData.class);
-    pcfSetupCommandTaskHandler.downsizeApplicationToZero(applicationSummary, CfRequestConfig.builder().build(),
-        cfCommandSetupRequest, pcfAppAutoscalarRequestData, executionLogCallback);
-
-    verify(pcfCommandTaskBaseHelper, times(1)).disableAutoscalar(argumentCaptor.capture(), any());
-    pcfAppAutoscalarRequestData = argumentCaptor.getValue();
-    assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
-    assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("a_s_e__1");
-    assertThat(pcfAppAutoscalarRequestData.isExpectedEnabled()).isTrue();
   }
 
   @Test
@@ -330,5 +270,50 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(requestData.getPcfManifestFileData().getVarFiles()).isNotEmpty();
     assertThat(requestData.getPcfManifestFileData().getVarFiles().size()).isEqualTo(2);
     assertThat(requestData.getPcfManifestFileData().getVarFiles()).containsExactly(f1, f2);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testDownsizeApplicationToZero() throws Exception {
+    reset(pcfDeploymentManager);
+    ApplicationSummary applicationSummary = ApplicationSummary.builder()
+                                                .name("a_s_e__1")
+                                                .diskQuota(1)
+                                                .requestedState(RUNNING)
+                                                .id("10")
+                                                .instances(0)
+                                                .memoryLimit(1)
+                                                .runningInstances(0)
+                                                .build();
+
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .id("10")
+                                              .diskQuota(1)
+                                              .instances(0)
+                                              .memoryLimit(1)
+                                              .name("a_s_e__1")
+                                              .requestedState(STOPPED)
+                                              .stack("")
+                                              .runningInstances(0)
+                                              .build();
+    doReturn(applicationDetail).when(pcfDeploymentManager).resizeApplication(any());
+
+    CfCommandSetupRequest cfCommandSetupRequest = CfCommandSetupRequest.builder().useAppAutoscalar(true).build();
+
+    CfAppAutoscalarRequestData pcfAppAutoscalarRequestData =
+        CfAppAutoscalarRequestData.builder().configPathVar("path").build();
+
+    doReturn(true).when(pcfCommandTaskBaseHelper).disableAutoscalar(any(), any());
+    ArgumentCaptor<CfAppAutoscalarRequestData> argumentCaptor =
+        ArgumentCaptor.forClass(CfAppAutoscalarRequestData.class);
+    pcfSetupCommandTaskHandler.downsizeApplicationToZero(applicationSummary, CfRequestConfig.builder().build(),
+        cfCommandSetupRequest, pcfAppAutoscalarRequestData, executionLogCallback);
+
+    verify(pcfCommandTaskBaseHelper, times(1)).disableAutoscalar(argumentCaptor.capture(), any());
+    pcfAppAutoscalarRequestData = argumentCaptor.getValue();
+    assertThat(pcfAppAutoscalarRequestData.getApplicationGuid()).isEqualTo("10");
+    assertThat(pcfAppAutoscalarRequestData.getApplicationName()).isEqualTo("a_s_e__1");
+    assertThat(pcfAppAutoscalarRequestData.isExpectedEnabled()).isTrue();
   }
 }
