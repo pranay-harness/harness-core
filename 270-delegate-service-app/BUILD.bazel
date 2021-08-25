@@ -29,6 +29,7 @@ shared_dependencies = [
     "//920-delegate-service-beans:module",
     "//930-delegate-tasks:module",
     "//930-ng-core-clients:module",
+    "//937-persistence-tracer:module",
     "//955-delegate-beans:module",
     "//940-secret-manager-client:module",
     "//950-command-library-common:module",
