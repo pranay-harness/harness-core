@@ -22,6 +22,9 @@ java_binary(
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.analyserservice.AnalyserServiceApplication",
+    resources = [
+        "//935-analyser-service/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",

@@ -13,6 +13,16 @@ fi
 
 echo "Using memory " $MEMORY
 
+if [[ -f /mongo/ca.pem ]]; then
+  echo "Adding Mongo CA file to truststore"
+  keytool -importcert -trustcacerts -file /mongo/ca.pem -keystore keystore.jks -storepass password -noprompt -alias mongoca
+fi
+
+if [[ -f /mongo/client.pem ]]; then
+  echo "Adding Mongo Client pem file to truststore"
+  keytool -importcert -trustcacerts -file /mongo/client.pem -keystore keystore.jks -storepass password -noprompt -alias mongoclient
+fi
+
 if [[ -z "$COMMAND" ]]; then
    export COMMAND=server
 fi

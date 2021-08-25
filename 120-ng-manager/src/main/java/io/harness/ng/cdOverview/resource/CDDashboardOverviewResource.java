@@ -1,5 +1,9 @@
 package io.harness.ng.cdOverview.resource;
 
+import static io.harness.NGDateUtils.getNumberOfDays;
+import static io.harness.NGDateUtils.getStartTimeOfNextDay;
+import static io.harness.NGDateUtils.getStartTimeOfPreviousInterval;
+import static io.harness.NGDateUtils.getStartTimeOfTheDayAsEpoch;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 
@@ -165,10 +169,10 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
       @QueryParam(NGServiceConstants.ENVIRONMENT_TYPE) EnvironmentType envType) {
     log.info("Getting workloads");
-    startInterval = epochShouldBeOfStartOfDay(startInterval);
-    endInterval = epochShouldBeOfStartOfDay(endInterval);
-
-    long previousStartInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
+    startInterval = getStartTimeOfTheDayAsEpoch(startInterval);
+    endInterval = getStartTimeOfNextDay(endInterval);
+    long numDays = getNumberOfDays(startInterval, endInterval);
+    long previousStartInterval = getStartTimeOfPreviousInterval(startInterval, numDays);
 
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDashboardWorkloadDeployment(accountIdentifier,
         orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartInterval, envType));

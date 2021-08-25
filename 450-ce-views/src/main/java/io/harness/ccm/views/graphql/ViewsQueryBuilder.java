@@ -250,6 +250,9 @@ public class ViewsQueryBuilder {
     boolean isClusterConditionOrFilterPresent = false;
     boolean isPodFilterPresent = false;
     boolean isLabelsOperationPresent = false;
+    if (rules.isEmpty() && filters.isEmpty() && groupByEntity.isEmpty() && customFields.isEmpty()) {
+      isClusterConditionOrFilterPresent = true;
+    }
     for (ViewRule rule : rules) {
       for (ViewCondition condition : rule.getViewConditions()) {
         ViewIdCondition viewIdCondition = (ViewIdCondition) condition;

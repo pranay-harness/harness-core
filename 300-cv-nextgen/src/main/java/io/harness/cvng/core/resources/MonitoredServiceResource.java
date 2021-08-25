@@ -46,6 +46,8 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 @OwnedBy(HarnessTeam.CV)
 public class MonitoredServiceResource {
+  private static final String YAML_TEMPLATE_KEY = "yaml";
+
   @Inject MonitoredServiceService monitoredServiceService;
 
   @POST
@@ -197,5 +199,21 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
     return ResponseDTO.newResponse(
         monitoredServiceService.listEnvironments(accountId, orgIdentifier, projectIdentifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/yaml-template")
+  @ApiOperation(value = "yaml template for monitored service", nickname = "getMonitoredServiceYamlTemplate")
+  public RestResponse<String> yamlTemplate(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    return new RestResponse<>(monitoredServiceService.getYamlTemplate(ProjectParams.builder()
+                                                                          .accountIdentifier(accountId)
+                                                                          .orgIdentifier(orgIdentifier)
+                                                                          .projectIdentifier(projectIdentifier)
+                                                                          .build()));
   }
 }

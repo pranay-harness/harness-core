@@ -253,7 +253,7 @@ public class QueryBuilderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testQueryBuilderServiceDeployments() {
     String expectedQueryResult =
-        "select status, time_entity, COUNT(*) as numberOfRecords from (select service_status as status, service_startts as execution_time, time_bucket_gapfill(86400000, service_startts, 1620000000000, 1620950400000) as time_entity, pipeline_execution_summary_cd_id  from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where accountid='account' and orgidentifier='org' and projectidentifier='project') and service_startts>=1620000000000 and service_startts<1620950400000) as innertable group by status, time_entity;";
+        "select status, time_entity, COUNT(*) as numberOfRecords from (select service_status as status, service_startts as execution_time, time_bucket_gapfill(86400000, service_startts, 1620000000000, 1620950400000) as time_entity, pipeline_execution_summary_cd_id  from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where accountid='account' and orgidentifier='org' and projectidentifier='project') and accountid='account' and orgidentifier='org' and projectidentifier='project' and service_startts>=1620000000000 and service_startts<1620950400000) as innertable group by status, time_entity;";
     String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderServiceDeployments(
         "account", "org", "project", 1620000000000L, 1620950400000L, 1, null);
     assertThat(queryResult).isEqualTo(expectedQueryResult);

@@ -13,6 +13,7 @@ java_library(
         "//460-capability:module",
         "//470-alert:module",
         "//820-platform-service:module",
+        "//867-polling-contracts:module",
         "//870-cg-orchestration:module",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",

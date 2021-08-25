@@ -80,6 +80,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
+  @JsonProperty(value = "useRedisForOrchestrationNotify") private boolean useRedisForOrchestrationNotify;
 
   private String managerServiceSecret;
   private String managerTarget;
