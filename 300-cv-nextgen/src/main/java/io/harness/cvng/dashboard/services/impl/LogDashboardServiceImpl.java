@@ -26,6 +26,7 @@ import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.beans.PageResponse;
+import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -219,7 +220,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<List<LogData>> logDataResults = cvngParallelExecutor.executeParallel(logDataCallables);
     logDataResults.forEach(result -> logDataToBeReturned.addAll(result));
 
-    SortedSet<AnalyzedLogDataDTO> sortedList = new TreeSet<>();
+    List<AnalyzedLogDataDTO> sortedList = new ArrayList<>();
     // create the sorted set first. Then form the page response.
     logDataToBeReturned.forEach(logData -> {
       sortedList.add(AnalyzedLogDataDTO.builder()
@@ -230,8 +231,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                          .logData(logData)
                          .build());
     });
-
-    return formPageResponse(page, size, sortedList);
+    Collections.sort(sortedList);
+    return PageUtils.offsetAndLimit(sortedList, page, size);
   }
 
   private List<AnalysisResult> getAnalysisResultForCvConfigId(

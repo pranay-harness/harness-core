@@ -75,6 +75,15 @@ public final class EventsFrameworkConstants {
   public static final int START_PARTIAL_PLAN_CREATOR_BATCH_SIZE = 1;
   public static final int START_PARTIAL_PLAN_CREATOR_MAX_TOPIC_SIZE = 5000;
 
+  public static final String PLAN_NOTIFY_EVENT_PRODUCER = "plan_notify_event_producer";
+  public static final String PLAN_NOTIFY_EVENT_TOPIC = "plan_notify_event";
+  public static final int PLAN_NOTIFY_EVENT_BATCH_SIZE = 1;
+  public static final int PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE = 5000;
+
+  public static final String PMS_ORCHESTRATION_NOTIFY_EVENT = "pms_orchestration_notify_event";
+  public static final int PMS_ORCHESTRATION_NOTIFY_EVENT_BATCH_SIZE = 1;
+  public static final int PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE = 5000;
+
   public static final int DEFAULT_TOPIC_SIZE = 10000;
   public static final int USER_MEMBERSHIP_TOPIC_SIZE = 100000;
   public static final int ENTITY_CRUD_MAX_TOPIC_SIZE = 100000;
@@ -103,6 +112,7 @@ public final class EventsFrameworkConstants {
   public static final Duration HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME = Duration.ofSeconds(50);
   public static final Duration GIT_CONFIG_STREAM_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration ORCHESTRATION_LOG_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
+  public static final Duration PLAN_NOTIFY_EVENT_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
 
   public static final int DEFAULT_READ_BATCH_SIZE = 50;
   public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;

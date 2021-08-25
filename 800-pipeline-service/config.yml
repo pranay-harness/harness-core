@@ -213,3 +213,5 @@ cacheConfig:
 hostname: ${HOSTNAME:-localhost}
 
 basePathPrefix: ${BASE_PATH_PREFIX:-}
+
+useRedisForOrchestrationNotify: false
