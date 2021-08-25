@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
+import io.restassured.config.SSLConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -120,10 +121,11 @@ public class ManagerExecutor {
 
   private static boolean isHealthy() {
     try {
-      RestAssuredConfig config =
-          RestAssured.config().httpClient(httpClientConfig()
-                                              .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
-                                              .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000));
+      RestAssuredConfig config = RestAssured.config()
+                                     .httpClient(httpClientConfig()
+                                                     .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
+                                                     .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000))
+                                     .sslConfig(SSLConfig.sslConfig().relaxedHTTPSValidation());
 
       Setup.portal().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {

@@ -97,7 +97,7 @@ public class ExecutorUtils {
   }
 
   public static Path getJar(String moduleName, String jarFileName) {
-    return Paths.get(getBazelBinPathCached(), moduleName, jarFileName);
+    return Paths.get(getBazelBinPath(null), moduleName, jarFileName);
   }
 
   private static String getBazelBinPathCached() {

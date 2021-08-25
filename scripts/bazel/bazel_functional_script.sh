@@ -17,6 +17,7 @@ BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal -
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=standalone"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=180"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_output=all"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --cache_test_results=no"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
@@ -28,6 +29,7 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar --output alpn-boot-8.1.13.v20181017.jar
 
   bazel run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app &
+  # this is not manager PID but model-test one.
   MANAGER_PID=$!
 
   bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
