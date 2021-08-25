@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -297,8 +298,8 @@ public class MapRouteState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   protected Activity createActivity(ExecutionContext executionContext) {
-    return pcfStateHelper.createActivity(
-        executionContext, PCF_MAP_ROUTE_COMMAND, getStateType(), CommandUnitType.PCF_MAP_ROUTE, activityService);
+    return pcfStateHelper.createActivity(executionContext, PCF_MAP_ROUTE_COMMAND, getStateType(),
+        CommandUnitType.PCF_MAP_ROUTE, activityService, emptyList());
   }
 
   public boolean checkIfMapRouteOperation() {

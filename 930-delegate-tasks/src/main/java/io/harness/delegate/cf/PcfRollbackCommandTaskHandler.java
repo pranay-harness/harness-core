@@ -153,8 +153,14 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       cfDeployCommandResponse.setInstanceDataUpdated(cfServiceDataUpdated);
       cfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElements);
 
-      if (isRollbackCompleted(commandRollbackRequest, cfRequestConfig)) {
-        renameApps(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+      if (commandRollbackRequest.isStandardBlueGreenWorkflow()) {
+        deleteNewApp(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+      } else {
+        // for basic & canary
+        if (isRollbackCompleted(commandRollbackRequest, cfRequestConfig)) {
+          deleteNewApp(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+          renameApps(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+        }
       }
 
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback completed successfully", INFO, SUCCESS);
@@ -191,6 +197,16 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .build();
   }
 
+  private void deleteNewApp(CfRequestConfig cfRequestConfig, CfCommandRollbackRequest commandRollbackRequest,
+      LogCallback logCallback) throws PivotalClientApiException {
+    // app downsized - to be deleted
+    CfAppSetupTimeDetails newApp = commandRollbackRequest.getNewApplicationDetails();
+
+    cfRequestConfig.setApplicationName(newApp.getApplicationName());
+    logCallback.saveExecutionLog("Deleting application " + encodeColor(newApp.getApplicationName()));
+    pcfDeploymentManager.deleteApplication(cfRequestConfig);
+  }
+
   private boolean isRollbackCompleted(CfCommandRollbackRequest commandRollbackRequest, CfRequestConfig cfRequestConfig)
       throws PivotalClientApiException {
     // app downsized - to be deleted
@@ -218,13 +234,6 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
 
   private void renameApps(CfRequestConfig cfRequestConfig, CfCommandRollbackRequest commandRollbackRequest,
       LogCallback logCallback) throws PivotalClientApiException {
-    // app downsized - to be deleted
-    CfAppSetupTimeDetails newApp = commandRollbackRequest.getNewApplicationDetails();
-
-    cfRequestConfig.setApplicationName(newApp.getApplicationName());
-    logCallback.saveExecutionLog("Deleting application " + encodeColor(newApp.getApplicationName()));
-    pcfDeploymentManager.deleteApplication(cfRequestConfig);
-
     if (commandRollbackRequest.isNonVersioning()) {
       logCallback.saveExecutionLog("\n# Reverting app names");
       // app upsized - to be renamed
