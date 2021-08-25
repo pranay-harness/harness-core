@@ -2,6 +2,7 @@ package io.harness.cdng.manifest.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
@@ -21,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestType.HelmChart)
 @TypeAlias("helmChartManifestOutcome")
 @FieldNameConstants(innerTypeName = "HelmChartManifestOutcomeKeys")
+@RecasterAlias("io.harness.cdng.manifest.yaml.HelmChartManifestOutcome")
 public class HelmChartManifestOutcome implements ManifestOutcome {
   String identifier;
   String type = ManifestType.HelmChart;

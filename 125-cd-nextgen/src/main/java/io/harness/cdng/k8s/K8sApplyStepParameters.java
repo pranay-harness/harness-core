@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.k8s.K8sStepHelper.getParameterFieldBooleanValue;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.k8s.K8sCommandUnitConstants;
@@ -24,6 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("k8sApplyStepParameters")
+@RecasterAlias("io.harness.cdng.k8s.K8sApplyStepParameters")
 public class K8sApplyStepParameters extends K8sApplyBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
   public K8sApplyStepParameters(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,

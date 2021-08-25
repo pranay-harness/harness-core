@@ -1,5 +1,6 @@
 package io.harness.cdng.provision.terraform.steps.rolllback;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
@@ -23,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode
 @TypeAlias("TerraformRollbackStepParameters")
 @OwnedBy(HarnessTeam.CDP)
+@RecasterAlias("io.harness.cdng.provision.terraform.steps.rolllback.TerraformRollbackStepParameters")
 public class TerraformRollbackStepParameters implements SpecParameters {
   @NotNull String provisionerIdentifier;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> delegateSelectors;
