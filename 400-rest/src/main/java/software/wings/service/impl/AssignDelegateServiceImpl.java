@@ -334,10 +334,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       taskSetupAbstractionsPrintable.append(entity.getKey() + ":" + entity.getValue() + "; ");
     }
     String logSequence = batch != null && isNotBlank(batch.getTaskId()) ? batch.getTaskId() : generateUuid();
-    if (log.isDebugEnabled()) {
-      log.debug(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
-          taskSetupAbstractionsPrintable.toString());
-    }
+    log.debug("{} - Starting profile scoping rules match with task abstractions {}.", logSequence,
+        taskSetupAbstractionsPrintable.toString());
+
     Set<String> failedRulesDescriptions = new HashSet<>();
     for (DelegateProfileScopingRule scopingRule : delegateProfileScopingRules) {
       boolean scopingRuleMatched = true;

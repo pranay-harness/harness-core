@@ -291,7 +291,7 @@ public class DelegateQueueTask implements Runnable {
         }
       }
 
-      log.debug("{} tasks were rebroadcast", count);
+      log.info("{} tasks were rebroadcast", count);
     }
   }
 
