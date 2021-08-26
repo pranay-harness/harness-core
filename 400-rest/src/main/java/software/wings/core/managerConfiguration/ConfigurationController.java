@@ -109,7 +109,7 @@ public class ConfigurationController implements Managed, QueueController {
       // current primary version of manager. If the `primaryVersion` from DB doesn't have patch then we fall back to
       // using getVersion() like earlier. We always build the full version from buildNo and patch like below.
       String currPrimaryVersion = managerConfiguration.getPrimaryVersion().contains("-")
-          ? versionInfoManager.getVersionInfo().getBuildNo() + "-" + versionInfoManager.getVersionInfo().getPatch()
+          ? versionInfoManager.getVersionInfo().getVersion() + "-" + versionInfoManager.getVersionInfo().getPatch()
           : versionInfoManager.getVersionInfo().getVersion();
 
       boolean isPrimary = StringUtils.equals(MATCH_ALL_VERSION, managerConfiguration.getPrimaryVersion())
