@@ -19,8 +19,7 @@ BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings"
   curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar --output alpn-boot-8.1.13.v20181017.jar
 
   bazel run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app
-  # this is not manager PID but model-test one.
-  MANAGER_PID=$!
+  MANAGER_PID=`ps ax | grep 'java' | grep '360-cg-manager/modified_config' |  awk '{print $1}'`
 
   bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
 
@@ -35,7 +34,7 @@ BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings"
 #    -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest || true
 
   echo "INFO: MANAGER_PID = $MANAGER_PID"
-#  echo "INFO: DELEGATE_PID = $DELEGATE_PID"
+  echo "INFO: DELEGATE_PID = $DELEGATE_PID"
 
 #  kill -9 $MANAGER_PID || true
 #  kill -9 $DELEGATE_PID || true
