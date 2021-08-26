@@ -37,6 +37,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.chartmuseum.ChartMuseumServer;
+import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
@@ -801,8 +802,11 @@ public class HelmTaskHelperBase {
     switch (helmStoreDelegateConfig.getType()) {
       case S3_HELM:
         S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) helmStoreDelegateConfig;
-        for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
-          decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+        if (s3HelmStoreConfig.getAwsConnector().getCredential().getAwsCredentialType()
+            == AwsCredentialType.MANUAL_CREDENTIALS) {
+          for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+            decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+          }
         }
         break;
       case GCS_HELM:

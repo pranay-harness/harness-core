@@ -1,5 +1,7 @@
 package io.harness.connector.mappers.awsmapper;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig.AwsConfigBuilder;
@@ -13,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Singleton;
 
+@OwnedBy(HarnessTeam.DX)
 @Singleton
 public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDTO, AwsConfig> {
   @Override
@@ -26,6 +29,9 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
         break;
       case MANUAL_CREDENTIALS:
         awsConfigBuilder = buildManualCredential(credential);
+        break;
+      case IRSA:
+        awsConfigBuilder = buildIRSA(credential);
         break;
       default:
         throw new InvalidRequestException("Invalid Credential type.");
@@ -47,5 +53,9 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
                                                      .secretKeyRef(secretKeyRef)
                                                      .build();
     return AwsConfig.builder().credentialType(AwsCredentialType.MANUAL_CREDENTIALS).credential(accessKeyCredential);
+  }
+
+  private AwsConfigBuilder buildIRSA(AwsCredentialDTO connector) {
+    return AwsConfig.builder().credentialType(AwsCredentialType.IRSA).credential(null);
   }
 }

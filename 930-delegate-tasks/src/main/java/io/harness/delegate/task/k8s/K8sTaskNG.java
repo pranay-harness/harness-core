@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
@@ -187,8 +188,11 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
       case S3_HELM:
         S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
-        for (DecryptableEntity decryptableEntity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
-          decryptionService.decrypt(decryptableEntity, s3HelmStoreConfig.getEncryptedDataDetails());
+        if (s3HelmStoreConfig.getAwsConnector().getCredential().getAwsCredentialType()
+            == AwsCredentialType.MANUAL_CREDENTIALS) {
+          for (DecryptableEntity decryptableEntity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+            decryptionService.decrypt(decryptableEntity, s3HelmStoreConfig.getEncryptedDataDetails());
+          }
         }
         break;
 

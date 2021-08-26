@@ -90,7 +90,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
     final String region = "us-west1";
 
     ChartMuseumServer startedServer =
-        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true);
+        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, true, null, null, false);
     assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Map> envCaptor = ArgumentCaptor.forClass(Map.class);
@@ -154,7 +154,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
   }
 
   private void testGetEnvForAwsConfigWithAssumeDelegateRole() {
-    Map<String, String> env = ChartMuseumClientHelper.getEnvForAwsConfig(null, null, true);
+    Map<String, String> env = ChartMuseumClientHelper.getEnvForAwsConfig(null, null, true, false);
     assertThat(env).isEmpty();
   }
 
@@ -162,7 +162,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
     String accessKey = "access-key";
     String secretKey = "secret-key";
     Map<String, String> env =
-        ChartMuseumClientHelper.getEnvForAwsConfig(accessKey.toCharArray(), secretKey.toCharArray(), false);
+        ChartMuseumClientHelper.getEnvForAwsConfig(accessKey.toCharArray(), secretKey.toCharArray(), false, false);
     assertThat(env.keySet()).hasSize(2);
     assertThat(env.get(AWS_ACCESS_KEY_ID)).isEqualTo(accessKey);
     assertThat(env.get(AWS_SECRET_ACCESS_KEY)).isEqualTo(secretKey);

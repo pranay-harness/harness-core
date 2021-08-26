@@ -359,7 +359,8 @@
           "type": "string",
           "enum": [
             "InheritFromDelegate",
-            "ManualConfig"
+            "ManualConfig",
+            "Irsa"
           ]
         }
       },
