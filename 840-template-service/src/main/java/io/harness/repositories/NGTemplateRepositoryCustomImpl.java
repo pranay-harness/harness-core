@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
@@ -14,6 +13,7 @@ import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.events.TemplateCreateEvent;
+import io.harness.template.events.TemplateDeleteEvent;
 import io.harness.template.events.TemplateUpdateEvent;
 
 import com.google.inject.Inject;
@@ -62,29 +62,54 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   }
 
   @Override
-  public TemplateEntity updateTemplateYaml(
-      TemplateEntity templateToUpdate, NGTemplateConfig templateConfig, ChangeType changeType) {
+  public Optional<TemplateEntity>
+  findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier, boolean notDeleted) {
+    return gitAwarePersistence.findOne(Criteria.where(TemplateEntityKeys.deleted)
+                                           .is(!notDeleted)
+                                           .and(TemplateEntityKeys.isStableTemplate)
+                                           .is(true)
+                                           .and(TemplateEntityKeys.identifier)
+                                           .is(templateIdentifier)
+                                           .and(TemplateEntityKeys.projectIdentifier)
+                                           .is(projectIdentifier)
+                                           .and(TemplateEntityKeys.orgIdentifier)
+                                           .is(orgIdentifier)
+                                           .and(TemplateEntityKeys.accountId)
+                                           .is(accountId),
+        projectIdentifier, orgIdentifier, accountId, TemplateEntity.class);
+  }
+
+  @Override
+  public TemplateEntity updateTemplateYaml(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
+      NGTemplateConfig templateConfig, ChangeType changeType) {
     Supplier<OutboxEvent> supplier = null;
     if (!gitSyncSdkService.isGitSyncEnabled(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
             templateToUpdate.getProjectIdentifier())) {
-      Optional<TemplateEntity> optionalTemplate =
-          findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
-              templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
-              templateToUpdate.getProjectIdentifier(), templateToUpdate.getIdentifier(),
-              templateToUpdate.getVersionLabel(), true);
-      if (optionalTemplate.isPresent()) {
-        TemplateEntity oldTemplateEntity = optionalTemplate.get();
-        supplier = ()
-            -> outboxService.save(
-                new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
-                    templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity));
-      } else {
-        throw new InvalidRequestException("No such template exist with identifier - " + templateToUpdate.getIdentifier()
-                + " and versionLabel - " + templateToUpdate.getVersionLabel(),
-            WingsException.USER);
-      }
+      supplier = ()
+          -> outboxService.save(
+              new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
+                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity));
     }
     return gitAwarePersistence.save(
         templateToUpdate, templateToUpdate.getYaml(), changeType, TemplateEntity.class, supplier);
+  }
+
+  @Override
+  public TemplateEntity deleteTemplate(TemplateEntity templateToDelete, NGTemplateConfig templateConfig) {
+    Optional<TemplateEntity> optionalTemplateEntity =
+        findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
+            templateToDelete.getAccountId(), templateToDelete.getOrgIdentifier(),
+            templateToDelete.getProjectIdentifier(), templateToDelete.getIdentifier(),
+            templateToDelete.getVersionLabel(), true);
+    if (optionalTemplateEntity.isPresent()) {
+      Supplier<OutboxEvent> supplier = ()
+          -> outboxService.save(new TemplateDeleteEvent(templateToDelete.getAccountIdentifier(),
+              templateToDelete.getOrgIdentifier(), templateToDelete.getProjectIdentifier(), templateToDelete));
+      return gitAwarePersistence.save(
+          templateToDelete, templateToDelete.getYaml(), ChangeType.DELETE, TemplateEntity.class, supplier);
+    }
+    throw new InvalidRequestException("No such template exists with identifier - " + templateToDelete.getIdentifier()
+        + " and versionLabel - " + templateToDelete.getVersionLabel());
   }
 }
