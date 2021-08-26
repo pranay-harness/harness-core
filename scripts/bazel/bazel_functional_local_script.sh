@@ -18,7 +18,7 @@ BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings"
   bazel build ${GCP} ${BAZEL_ARGUMENTS} -- //200-functional-test/...
   curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar --output alpn-boot-8.1.13.v20181017.jar
 
-  bazel run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app &
+  bazel run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app
   # this is not manager PID but model-test one.
   MANAGER_PID=$!
 
