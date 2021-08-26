@@ -63,3 +63,6 @@ io.harness.steps.approval.step.harness.HarnessApprovalOutcome
 io.harness.steps.common.steps.stepgroup.StepGroupStepParameters
 io.harness.steps.approval.step.jira.beans.JexlCriteriaSpec
 io.harness.ngpipeline.artifact.bean.SidecarsOutcome
+io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters
+io.harness.pms.yaml.ParameterFieldValueWrapper
+io.harness.pms.yaml.ParameterDocumentField
