@@ -6,6 +6,7 @@ import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
@@ -20,6 +21,7 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.AbortInterruptCallback;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
@@ -45,6 +47,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class AbortHelperTest extends OrchestrationTestBase {
   @Mock private OrchestrationEngine engine;
+  @Mock private InterruptHelper interruptHelper;
   @Mock private NodeExecutionService nodeExecutionService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private InterruptEventPublisher interruptEventPublisher;
@@ -132,5 +135,34 @@ public class AbortHelperTest extends OrchestrationTestBase {
     verify(waitNotifyEngine, times(0)).waitForAllOn(any(), any(), any());
 
     verify(engine, times(1)).endTransition(eq(nodeExecution));
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestAbortException() {
+    when(interruptHelper.discontinueTaskIfRequired(any())).thenThrow(new RuntimeException("TEST_EXCEPTION"));
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .type(InterruptType.ABORT_ALL)
+                              .interruptConfig(InterruptConfig.newBuilder().build())
+                              .planExecutionId(generateUuid())
+                              .state(State.PROCESSING)
+                              .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(DISCONTINUING)
+            .mode(ExecutionMode.ASYNC)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
+    assertThatThrownBy(() -> abortHelper.discontinueMarkedInstance(nodeExecution, interrupt))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Error in discontinuing, TEST_EXCEPTION");
   }
 }

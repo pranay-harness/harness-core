@@ -3,6 +3,7 @@ package io.harness.plancreator.steps.http;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.data.structure.CollectionUtils;
@@ -43,6 +44,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
 @TypeAlias("httpStepInfo")
 @OwnedBy(PIPELINE)
+@RecasterAlias("io.harness.plancreator.steps.http.HttpStepInfo")
 public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visitable {
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;

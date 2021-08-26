@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -869,7 +870,7 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
 
   private InfrastructureDefinition getValidInfra(@NotNull String type, boolean withProvisioner) {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
-    when(mockSettingsService.getByAccountAndId(anyString(), anyString())).thenReturn(settingAttribute);
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(settingAttribute);
     InfrastructureDefinitionBuilder builder = InfrastructureDefinition.builder()
                                                   .name(INFRA_DEFINITION_NAME)
                                                   .uuid(INFRA_DEFINITION_ID)
@@ -1031,6 +1032,51 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
     when(mockSettingsService.get(def.getInfrastructure().getCloudProviderId())).thenReturn(null);
     assertThat(infrastructureDefinitionService.cloudProviderNameForDefinition(def.getAppId(), def.getUuid()))
         .isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testInvalidCloudProviderId() {
+    InfrastructureDefinition valid;
+
+    valid = getValidInfra(PHYSICAL_INFRA, true);
+    InfrastructureDefinition inValid_phy_prov = valid.cloneForUpdate();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(inValid_phy_prov));
+
+    valid = getValidInfra(GCP_KUBERNETES_ENGINE, true);
+    InfrastructureDefinition inValid_gcp_k8s_engine = valid.cloneForUpdate();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(inValid_gcp_k8s_engine));
+
+    valid = getValidInfra(AWS_ECS, true);
+    InfrastructureDefinition inValid_aws_ecs = valid.cloneForUpdate();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> infrastructureDefinitionService.validateAndPrepareInfraDefinition(inValid_aws_ecs));
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testCloudProviderIdForCustomInfra() {
+    CustomInfrastructure customInfrastructure =
+        CustomInfrastructure.builder()
+            .customDeploymentName("weblogic")
+            .infraVariables(asList(NameValuePair.builder().name("key").value("foo").build()))
+            .build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(null);
+    InfrastructureDefinition customInfraDefn = InfrastructureDefinition.builder()
+                                                   .infrastructure(customInfrastructure)
+                                                   .name("infra")
+                                                   .deploymentType(DeploymentType.CUSTOM)
+                                                   .cloudProviderType(CloudProviderType.CUSTOM)
+                                                   .build();
+    infrastructureDefinitionService.save(customInfraDefn, true);
+    verify(customDeploymentTypeService, times(1)).putCustomDeploymentTypeNameIfApplicable(customInfraDefn);
   }
 
   @Test
@@ -1631,6 +1677,7 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
                                                    .deploymentTypeTemplateId("id")
                                                    .cloudProviderType(CloudProviderType.CUSTOM)
                                                    .build();
+    when(mockSettingsService.getByAccountAndId(any(), any())).thenReturn(new SettingAttribute());
     doReturn(infraDefinition)
         .when(wingsPersistence)
         .getWithAppId(eq(InfrastructureDefinition.class), anyString(), anyString());

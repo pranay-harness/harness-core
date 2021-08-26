@@ -25,7 +25,7 @@ public class QueryAnalysisMessageListener implements MessageListener {
 
   @Override
   public boolean handleMessage(Message message) {
-    log.debug("Message data : {}", message.getMessage().getData().toStringUtf8());
+    log.info("Message data : {}", message.getMessage().getData().toStringUtf8());
     String data = message.getMessage().getData().toStringUtf8();
     String queryResult = "{ \"queryExplainResult\":" + data + "}";
     QueryExplainResult queryExplainResult = JsonUtils.asObject(queryResult, QueryExplainResult.class);

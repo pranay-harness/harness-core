@@ -124,7 +124,7 @@ import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.BambooStepYamlBuilder;
-import software.wings.service.impl.yaml.handler.workflow.CloudFormationStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.CloudFormationProvisionStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.CommandStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.GcbStepYamlBuilder;
@@ -545,17 +545,17 @@ public enum StepType {
       asList(INFRASTRUCTURE_PROVISIONER), asList(PhaseStepType.values()),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
           DeploymentType.AWS_CODEDEPLOY, DeploymentType.WINRM, DeploymentType.CUSTOM),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), CloudFormationStepYamlBuilder.class),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), CloudFormationProvisionStepYamlBuilder.class),
   CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, CF_DELETE_STACK,
       asList(INFRASTRUCTURE_PROVISIONER), asList(PhaseStepType.values()),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
           DeploymentType.AWS_CODEDEPLOY, DeploymentType.WINRM, DeploymentType.CUSTOM),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), CloudFormationStepYamlBuilder.class),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), CloudFormationProvisionStepYamlBuilder.class),
   CLOUD_FORMATION_ROLLBACK_STACK(CloudFormationRollbackStackState.class, ROLLBACK_CLOUD_FORMATION,
       asList(INFRASTRUCTURE_PROVISIONER), singletonList(PRE_DEPLOYMENT),
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
-      asList(PhaseType.ROLLBACK), CloudFormationStepYamlBuilder.class),
+      asList(PhaseType.ROLLBACK), CloudFormationProvisionStepYamlBuilder.class),
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_PROVISION,
       asList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,

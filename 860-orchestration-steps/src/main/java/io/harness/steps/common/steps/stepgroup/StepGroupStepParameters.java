@@ -1,5 +1,6 @@
 package io.harness.steps.common.steps.stepgroup;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.StepGroupElementConfig;
@@ -24,6 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stepGroupStepParameters")
+@RecasterAlias("io.harness.steps.common.steps.stepgroup.StepGroupStepParameters")
 public class StepGroupStepParameters implements StepParameters {
   String identifier;
   String name;

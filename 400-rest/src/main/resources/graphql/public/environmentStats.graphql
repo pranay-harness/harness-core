@@ -1,0 +1,27 @@
+# Possible entity values for Environment aggregation
+enum EnvironmentEntityAggregation {
+  Application
+  EnvironmentType
+}
+
+# Set Environment aggregation criteria
+input EnvironmentAggregation {
+  # Aggregate by entity
+  entityAggregation: EnvironmentEntityAggregation
+  # Aggregate by tag
+  tagAggregation: EnvironmentTagAggregation
+}
+
+# Aggregate by Environment tag
+input EnvironmentTagAggregation {
+  # Set entity type
+  entityType: EnvironmentTagType
+  # Set tag name
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics of Harness Environments
+  environmentStats(filters: [EnvironmentFilter], groupBy: [EnvironmentAggregation]): Data
+    @dataFetcher(name: environmentStats)
+}

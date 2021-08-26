@@ -62,6 +62,7 @@ import io.harness.cvng.core.entities.StackdriverCVConfig.StackDriverCVConfigUpda
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
+import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -89,6 +90,7 @@ import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
+import io.harness.cvng.core.services.api.PagerDutyService;
 import io.harness.cvng.core.services.api.PrometheusService;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
 import io.harness.cvng.core.services.api.SplunkService;
@@ -122,6 +124,7 @@ import io.harness.cvng.core.services.impl.NewRelicCVConfigTransformer;
 import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
+import io.harness.cvng.core.services.impl.PagerDutyServiceImpl;
 import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
 import io.harness.cvng.core.services.impl.PrometheusDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
@@ -145,6 +148,7 @@ import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServ
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.HarnessCDChangeSourceSpecTransformer;
+import io.harness.cvng.core.transformer.changeSource.PagerDutyChangeSourceSpecTransformer;
 import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
@@ -451,17 +455,23 @@ public class CVServiceModule extends AbstractModule {
     bind(ServiceDependencyService.class).to(ServiceDependencyServiceImpl.class);
     bind(ServiceDependencyGraphService.class).to(ServiceDependencyGraphServiceImpl.class);
     bind(SetupUsageEventService.class).to(SetupUsageEventServiceImpl.class);
+    bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
 
     MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
         .to(HarnessCDChangeSource.UpdatableCDNGChangeSourceEntity.class);
+    changeTypeSourceMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
+        .to(PagerDutyChangeSource.UpdatablePagerDutyChangeSourceEntity.class);
 
     bind(ChangeSourceService.class).to(ChangeSourceServiceImpl.class);
     bind(ChangeSourceEntityAndDTOTransformer.class);
     bind(ChangeSourceSpecTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
         .to(HarnessCDChangeSourceSpecTransformer.class);
+    bind(ChangeSourceSpecTransformer.class)
+        .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
+        .to(PagerDutyChangeSourceSpecTransformer.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {
