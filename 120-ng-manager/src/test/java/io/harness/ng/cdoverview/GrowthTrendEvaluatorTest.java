@@ -93,7 +93,7 @@ public class GrowthTrendEvaluatorTest extends CategoryTest {
     List<TimeValuePair<Integer>> trend =
         GrowthTrendEvaluator.getGrowthTrend(entities, startTimeInMs, endTimeInMs, TimeGroupType.DAY);
     List<Integer> finalTrendDataPointsExpected =
-        new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 5, 6, 7, 8, 9, 9, 9, 8, 8, 8, 8, 8, 7, 7, 7));
+        new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 6, 7, 8, 9, 10, 10, 10, 9, 9, 9, 9, 9, 8, 8, 8));
     assertThat(trend.size()).isEqualTo(21);
     int i = 0;
     for (TimeValuePair<Integer> timeValuePair : trend) {
