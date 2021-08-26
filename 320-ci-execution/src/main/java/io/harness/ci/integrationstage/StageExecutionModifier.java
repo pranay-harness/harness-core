@@ -3,6 +3,7 @@ package io.harness.ci.integrationstage;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
@@ -22,5 +23,6 @@ public interface StageExecutionModifier {
    * @return modified execution
    */
   ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution, StageElementConfig stageConfig,
-      PlanCreationContext context, String podName, CodeBase ciCodeBase, Infrastructure infrastructure);
+      PlanCreationContext context, String podName, CodeBase ciCodeBase, Infrastructure infrastructure,
+      ExecutionSource executionSource);
 }
