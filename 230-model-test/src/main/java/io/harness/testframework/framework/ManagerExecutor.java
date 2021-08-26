@@ -55,9 +55,9 @@ public class ManagerExecutor {
     if (failedAlready) {
       return;
     }
-    String directoryPath = Project.rootDirectory(ManagerExecutor.class);
+    String directoryPath = "/tmp/locks/";
+    FileIo.createDirectoryIfDoesNotExist(directoryPath);
     final File lockfile = new File(directoryPath, "manager");
-
     if (FileIo.acquireLock(lockfile, waiting)) {
       try {
         if (isHealthy()) {
