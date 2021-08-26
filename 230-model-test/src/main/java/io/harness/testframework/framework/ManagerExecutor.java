@@ -115,7 +115,7 @@ public class ManagerExecutor {
 
     FileOutputStream fout;
     try {
-      File managerFile = new File("/tmp/manager.log");
+      File managerFile = new File("/harness/manager.log");
       boolean newFile = managerFile.createNewFile();
       log.info("Created file: {} {}", managerFile.getAbsolutePath(), newFile);
       fout = new FileOutputStream(managerFile, false);
