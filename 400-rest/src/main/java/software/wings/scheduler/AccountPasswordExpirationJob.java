@@ -1,10 +1,14 @@
 package software.wings.scheduler;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HIterator;
@@ -39,6 +43,8 @@ import org.quartz.TriggerBuilder;
  */
 @Slf4j
 @DisallowConcurrentExecution
+@OwnedBy(CDC)
+@TargetModule(_360_CG_MANAGER)
 public class AccountPasswordExpirationJob implements Job {
   public static final String NAME = "LOGIN_SETTINGS_CRON";
   public static final String GROUP = "PASSWORD_POLICY_EXPIRATION";
