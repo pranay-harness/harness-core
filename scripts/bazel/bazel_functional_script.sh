@@ -4,6 +4,7 @@ set -ex
 
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
+BAZEL_TEST_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]; then
   GCP="--google_credentials=${GCP_KEY}"
   local_repo=/root/.m2/repository
@@ -18,6 +19,7 @@ BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=standalone"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=180"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_output=all"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --cache_test_results=no"
+BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
@@ -32,7 +34,7 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   # this is not manager PID but model-test one.
   MANAGER_PID=$!
 
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
+  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
 
   java -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError \
     -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC \
@@ -40,7 +42,7 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   DELEGATE_PID=$!
 
   #TODO: https://harness.atlassian.net/browse/BT-434
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test/... \
+  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test/... \
     -//200-functional-test:io.harness.functional.nas.NASBuildWorkflowExecutionTest \
     -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest || true
 
