@@ -147,6 +147,8 @@ import io.harness.notifications.AlertVisibilityCheckerImpl;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pcf.CfDeploymentManager;
+import io.harness.perpetualtask.PerpetualTaskScheduleService;
+import io.harness.perpetualtask.PerpetualTaskScheduleServiceImpl;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.polling.client.PollResourceClientModule;
@@ -1276,6 +1278,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
+    bind(PerpetualTaskScheduleService.class).to(PerpetualTaskScheduleServiceImpl.class);
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
