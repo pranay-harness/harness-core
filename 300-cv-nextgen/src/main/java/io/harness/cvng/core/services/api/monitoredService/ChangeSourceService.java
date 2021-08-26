@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api.monitoredService;
 
+import io.harness.cvng.beans.change.event.type.ChangeSourceType;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
@@ -12,6 +13,8 @@ public interface ChangeSourceService extends DeleteEntityByHandler<ChangeSource>
   void create(ServiceEnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs);
 
   Set<ChangeSourceDTO> get(ServiceEnvironmentParams environmentParams, List<String> identifiers);
+
+  Set<ChangeSourceDTO> getByType(ServiceEnvironmentParams environmentParams, ChangeSourceType changeSourceType);
 
   void delete(ServiceEnvironmentParams environmentParams, List<String> identifiers);
 

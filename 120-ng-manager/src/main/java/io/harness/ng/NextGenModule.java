@@ -51,6 +51,7 @@ import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.events.ConnectorEventHandler;
 import io.harness.connector.services.ConnectorService;
+import io.harness.cvng.client.CVNGClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -443,6 +444,8 @@ public class NextGenModule extends AbstractModule {
     install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(new CVNGClientModule(this.appConfig.getCvngClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
     install(new AuditClientModule(this.appConfig.getAuditClientConfig(),

@@ -1,6 +1,4 @@
-package io.harness.cvng.core.beans.monitoredService.changeSourceSpec;
-
-import static io.harness.cvng.CVConstants.DATA_SOURCE_TYPE;
+package io.harness.cvng.beans.change.event.metadata;
 
 import io.harness.cvng.beans.change.event.type.ChangeSourceType;
 
@@ -16,11 +14,9 @@ import lombok.experimental.SuperBuilder;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = HarnessCDChangeSourceSpec.class, name = "HarnessCD")
-  , @JsonSubTypes.Type(value = PagerDutyChangeSourceSpec.class, name = "PagerDuty")
-})
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = DATA_SOURCE_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
-public abstract class ChangeSourceSpec {
+@JsonSubTypes({ @JsonSubTypes.Type(value = HarnessCDEventMetaData.class, name = "HarnessCD") })
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+public abstract class ChangeEventMetaData {
   @JsonIgnore public abstract ChangeSourceType getType();
 }

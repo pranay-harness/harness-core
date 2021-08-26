@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
+import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.morphia.FeedbackMorphiaRegistrars;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.MockRoleAssignmentMorphiaRegistrar;
@@ -33,6 +34,7 @@ public class NextGenRegistrars {
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
+          .add(CvNextGenCommonsBeansKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

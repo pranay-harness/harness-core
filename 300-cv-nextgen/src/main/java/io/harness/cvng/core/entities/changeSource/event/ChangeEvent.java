@@ -1,4 +1,4 @@
-package io.harness.cvng.core.entities.changeSource;
+package io.harness.cvng.core.entities.changeSource.event;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
@@ -23,19 +23,20 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @SuperBuilder
-@FieldNameConstants(innerTypeName = "ChangeSourceKeys")
+@FieldNameConstants(innerTypeName = "ChangeEventKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "changeSources")
+@Entity(value = "changeSourcesEvents")
 @OwnedBy(HarnessTeam.CV)
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.CVNG)
-public abstract class ChangeSource
+public abstract class ChangeEvent
     implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware, CreatedAtAware {
   @Id String uuid;
   long createdAt;
@@ -49,24 +50,30 @@ public abstract class ChangeSource
   @NotNull String serviceIdentifier;
   @NotNull String envIdentifier;
 
-  @NotNull String identifier;
-  @NotNull String description;
+  @NotNull String changeSourceIdentifier;
   @NotNull ChangeSourceType type;
 
-  boolean enabled;
+  long eventTime;
 
-  public abstract static class UpdatableChangeSourceEntity<T extends ChangeSource, D extends ChangeSource>
+  public abstract static class ChangeEventMongoUtil<T extends ChangeEvent, D extends ChangeEvent>
       implements UpdatableEntity<T, D> {
-    protected void setCommonOperations(UpdateOperations<T> updateOperations, D changeSource) {
-      updateOperations.set(ChangeSourceKeys.accountId, changeSource.getAccountId())
-          .set(ChangeSourceKeys.orgIdentifier, changeSource.getOrgIdentifier())
-          .set(ChangeSourceKeys.projectIdentifier, changeSource.getProjectIdentifier())
-          .set(ChangeSourceKeys.serviceIdentifier, changeSource.getServiceIdentifier())
-          .set(ChangeSourceKeys.envIdentifier, changeSource.getEnvIdentifier())
-          .set(ChangeSourceKeys.identifier, changeSource.getIdentifier())
-          .set(ChangeSourceKeys.description, changeSource.getDescription())
-          .set(ChangeSourceKeys.type, changeSource.getType())
-          .set(ChangeSourceKeys.enabled, changeSource.isEnabled());
+    public abstract Class getEntityClass();
+
+    public Query<T> populateKeyQuery(Query<T> query, D changeEvent) {
+      return query.filter(ChangeEventKeys.orgIdentifier, changeEvent.getOrgIdentifier())
+          .filter(ChangeEventKeys.projectIdentifier, changeEvent.getProjectIdentifier())
+          .filter(ChangeEventKeys.serviceIdentifier, changeEvent.getServiceIdentifier())
+          .filter(ChangeEventKeys.envIdentifier, changeEvent.getEnvIdentifier());
+    }
+
+    protected void setCommonUpdateOperations(UpdateOperations<T> updateOperations, D changeEvent) {
+      updateOperations.set(ChangeEventKeys.accountId, changeEvent.getAccountId())
+          .set(ChangeEventKeys.orgIdentifier, changeEvent.getOrgIdentifier())
+          .set(ChangeEventKeys.projectIdentifier, changeEvent.getProjectIdentifier())
+          .set(ChangeEventKeys.serviceIdentifier, changeEvent.getServiceIdentifier())
+          .set(ChangeEventKeys.envIdentifier, changeEvent.getEnvIdentifier())
+          .set(ChangeEventKeys.eventTime, changeEvent.getEventTime())
+          .set(ChangeEventKeys.type, changeEvent.getType());
     }
   }
 }

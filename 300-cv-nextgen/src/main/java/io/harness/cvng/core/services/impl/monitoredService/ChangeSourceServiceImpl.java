@@ -1,12 +1,12 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import io.harness.cvng.beans.change.event.type.ChangeSourceType;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.persistence.HPersistence;
 
@@ -49,6 +49,16 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     return mongoQuery(environmentParams)
         .field(ChangeSourceKeys.identifier)
         .in(identifiers)
+        .asList()
+        .stream()
+        .map(changeSourceTransformer::getDto)
+        .collect(Collectors.toSet());
+  }
+
+  @Override
+  public Set<ChangeSourceDTO> getByType(ServiceEnvironmentParams environmentParams, ChangeSourceType changeSourceType) {
+    return mongoQuery(environmentParams)
+        .filter(ChangeSourceKeys.type, changeSourceType)
         .asList()
         .stream()
         .map(changeSourceTransformer::getDto)

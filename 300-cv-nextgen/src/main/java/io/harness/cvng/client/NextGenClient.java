@@ -28,7 +28,7 @@ public interface NextGenClient {
 
   @POST(CONNECTOR_BASE_PATH)
   Call<ResponseDTO<ConnectorResponseDTO>> create(
-      @Body ConnectorDTO connector, @Path("accountIdentifier") String accountIdentifier);
+      @Body ConnectorDTO connector, @Path("accountIden;tifier") String accountIdentifier);
 
   @GET(CONNECTOR_BASE_PATH + "/{connectorIdentifier}")
   Call<ResponseDTO<ConnectorResponseDTO>> get(@Path("connectorIdentifier") String connectorIdentifier,

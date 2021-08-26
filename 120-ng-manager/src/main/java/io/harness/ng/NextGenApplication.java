@@ -75,6 +75,7 @@ import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
 import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
+import io.harness.ng.cv.listener.HarnessCDChangeEventListener;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
@@ -495,7 +496,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         new HashMap<>();
     List<Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>>> orchestrationEventHandlersList =
         new ArrayList<>(Arrays.asList(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(),
-            DeploymentEventListenerRegistrar.getEngineEventHandlers()));
+            DeploymentEventListenerRegistrar.getEngineEventHandlers(),
+            HarnessCDChangeEventListener.getEngineEventHandlers()));
     orchestrationEventHandlersList.forEach(
         orchestrationEventHandlers -> mergeEventHandlers(orchestrationEventTypeSetHashMap, orchestrationEventHandlers));
     return orchestrationEventTypeSetHashMap;
