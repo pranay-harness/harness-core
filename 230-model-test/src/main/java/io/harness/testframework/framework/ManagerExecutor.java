@@ -154,12 +154,12 @@ public class ManagerExecutor {
 
   public static void main(String[] args) throws IOException {
     ensureManager(ManagerExecutor.class);
-    try {
-      while (true) {
-        Thread.sleep(4 * 60 * 60 * 1000L);
-      }
-    } catch (InterruptedException e) {
-      log.info("Manager exiting");
-    }
+//    try {
+//      while (true) {
+//        Thread.sleep(4 * 60 * 60 * 1000L);
+//      }
+//    } catch (InterruptedException e) {
+//      log.info("Manager exiting");
+//    }
   }
 }
