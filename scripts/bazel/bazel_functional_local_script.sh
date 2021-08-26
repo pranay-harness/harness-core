@@ -36,5 +36,5 @@ BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings"
   echo "INFO: MANAGER_PID = $MANAGER_PID"
   echo "INFO: DELEGATE_PID = $DELEGATE_PID"
 
-#  kill -9 $MANAGER_PID || true
-#  kill -9 $DELEGATE_PID || true
+  kill -9 $MANAGER_PID || true
+  kill -9 $DELEGATE_PID || true
