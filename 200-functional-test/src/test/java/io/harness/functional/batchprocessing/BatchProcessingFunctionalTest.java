@@ -10,6 +10,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.BatchProcessingExecutor;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -19,6 +20,7 @@ public class BatchProcessingFunctionalTest extends CategoryTest {
   @Test
   @Owner(developers = {AVMOHAN, UTSAV})
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldEnsureBatchProcessingStartsUp() throws Exception {
     assertThatCode(() -> batchProcessingExecutor.ensureBatchProcessing(getClass())).doesNotThrowAnyException();
   }

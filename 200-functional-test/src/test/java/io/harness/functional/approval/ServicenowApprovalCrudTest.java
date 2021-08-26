@@ -20,6 +20,7 @@ import io.harness.generator.SettingGenerator.Settings;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
+import org.junit.Ignore;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
@@ -61,6 +62,7 @@ public class ServicenowApprovalCrudTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     log.info("Creating the workflow");
 

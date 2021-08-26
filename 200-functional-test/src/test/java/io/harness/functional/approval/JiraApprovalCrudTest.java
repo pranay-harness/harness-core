@@ -22,6 +22,7 @@ import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
+import org.junit.Ignore;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
@@ -64,6 +65,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();

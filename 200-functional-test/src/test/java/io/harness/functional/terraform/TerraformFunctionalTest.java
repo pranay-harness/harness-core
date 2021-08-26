@@ -29,6 +29,7 @@ import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
+import org.junit.Ignore;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -103,6 +104,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
+  @Ignore
   public void createTerraformPlanForApply() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
