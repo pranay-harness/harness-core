@@ -17,7 +17,7 @@ BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal -
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=standalone"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=180"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_output=all"
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --cache_test_results=no --test_verbose_timeout_warnings"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --cache_test_results=no"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
