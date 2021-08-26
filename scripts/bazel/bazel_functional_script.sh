@@ -53,5 +53,5 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
 
   kill -9 $MANAGER_PID || true
   kill -9 $DELEGATE_PID || true
-  kill -9 MODEL_TEST_APP_PID || true
+  kill -9 $MODEL_TEST_APP_PID || true
 fi
