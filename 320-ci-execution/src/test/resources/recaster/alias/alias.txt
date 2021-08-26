@@ -96,3 +96,6 @@ io.harness.beans.sweepingoutputs.ContainerPortDetails
 io.harness.steps.common.steps.stepgroup.StepGroupStepParameters
 io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo
 io.harness.steps.approval.step.jira.beans.JexlCriteriaSpec
+io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters
+io.harness.pms.yaml.ParameterFieldValueWrapper
+io.harness.pms.yaml.ParameterDocumentField
