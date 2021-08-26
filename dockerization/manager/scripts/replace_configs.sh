@@ -891,3 +891,11 @@ fi
 if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
   yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
 fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_INTERVAL" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.syncInterval "$LDAP_GROUP_SYNC_INTERVAL"
+fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_POOL_SIZE" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.poolSize "$LDAP_GROUP_SYNC_POOL_SIZE"
+fi

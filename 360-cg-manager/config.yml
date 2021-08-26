@@ -627,3 +627,7 @@ auditClientConfig:
 enableAudit: false
 
 disableDelegateMgmtInManager: false
+
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15
