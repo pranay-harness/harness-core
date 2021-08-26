@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -39,6 +40,7 @@ public class InfraProvisionStepYamlBuilder extends StepYamlBuilder {
   private static final String ENCRYPTED_TEXT = "ENCRYPTED_TEXT";
   private static final String VALUE_TYPE = "valueType";
   private static final String VALUE = "value";
+  private static final String NAME = "name";
   protected static final String PROVISIONER_NAME = "provisionerName";
   private static final List<String> ENCRYPTION_TYPES =
       Stream.of(EncryptionType.values()).map(EncryptionType::getYamlName).collect(Collectors.toList());
@@ -89,9 +91,14 @@ public class InfraProvisionStepYamlBuilder extends StepYamlBuilder {
     String valueType = String.valueOf(subProperty.get(VALUE_TYPE));
     if (ENCRYPTED_TEXT.equals(valueType)) {
       String secretYamlRef = (String) subProperty.get(VALUE);
-      if (!isYamlRefSecretName(secretYamlRef)) {
-        String encryptedYamlRef = secretManager.getEncryptedYamlRef(accountId, secretYamlRef);
-        subProperty.put(VALUE, encryptedYamlRef);
+      String secretYamlName = (String) subProperty.get(NAME);
+      try {
+        if (!isYamlRefSecretName(secretYamlName, secretYamlRef, accountId)) {
+          String encryptedYamlRef = secretManager.getEncryptedYamlRef(accountId, secretYamlRef);
+          subProperty.put(VALUE, encryptedYamlRef);
+        }
+      } catch (SecretManagementException sme) {
+        log.error("Secret yaml ref does not exist for {}", secretYamlRef);
       }
     }
   }
@@ -117,19 +124,31 @@ public class InfraProvisionStepYamlBuilder extends StepYamlBuilder {
     String valueType = subProperty.get(VALUE_TYPE);
     if (ENCRYPTED_TEXT.equals(valueType)) {
       String secretYamlRef = subProperty.get(VALUE);
-      if (isYamlRefSecretName(secretYamlRef)) {
+      String secretYamlName = subProperty.get(NAME);
+      if (isYamlRefSecretName(secretYamlName, secretYamlRef, accountId)) {
         EncryptedData encryptedYamlRef = secretManager.getEncryptedDataFromYamlRef(secretYamlRef, accountId);
         subProperty.put(VALUE, encryptedYamlRef.getUuid());
+      } else {
+        secretManager.getEncryptedYamlRef(accountId, secretYamlRef);
       }
     }
   }
 
-  private boolean isYamlRefSecretName(final String secretYamlRef) {
+  private boolean isYamlRefSecretName(String secretYamlName, final String secretYamlRef, String accountId) {
     if (StringUtils.isBlank(secretYamlRef)) {
-      return false;
+      throw new SecretManagementException(
+          RESOURCE_NOT_FOUND, String.format("Could not find secret value for name: %s", secretYamlName), USER);
     }
 
     String[] yamlRefs = secretYamlRef.split(YAML_REF_DELIMITER);
-    return yamlRefs.length == 2 && ENCRYPTION_TYPES.contains(yamlRefs[0]);
+    if (yamlRefs.length == 2) {
+      if (!ENCRYPTION_TYPES.contains(yamlRefs[0])) {
+        throw new SecretManagementException(
+            RESOURCE_NOT_FOUND, String.format("Could not find type: %s in account: %s", yamlRefs[0], accountId), USER);
+      } else {
+        return true;
+      }
+    }
+    return false;
   }
 }
