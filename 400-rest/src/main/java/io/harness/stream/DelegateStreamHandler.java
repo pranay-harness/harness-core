@@ -80,7 +80,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           delegateService.registerHeartbeat(accountId, delegateId,
               DelegateConnectionHeartbeat.builder()
                   .delegateConnectionId(delegateConnectionId)
-                  .version(delegateVersion)
+                  .version(delegate.getVersion())
                   .build(),
               ConnectionMode.STREAMING);
 
@@ -118,7 +118,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         delegateService.registerHeartbeat(accountId, delegateId,
             DelegateConnectionHeartbeat.builder()
                 .delegateConnectionId(delegateConnectionId)
-                .version(delegateVersion)
+                .version(delegate.getVersion())
                 .location(delegate.getLocation())
                 .build(),
             ConnectionMode.STREAMING);
