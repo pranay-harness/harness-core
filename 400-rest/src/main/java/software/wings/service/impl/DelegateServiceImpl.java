@@ -724,14 +724,10 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
     return DelegateStatus.builder()
-        .publishedVersions(delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
+        .publishedVersions(delegateConfiguration.getDelegateVersions())
         .scalingGroups(scalingGroups)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
-  }
-
-  private List<String> delegateVersionListWithoutPatch(List<String> delegateVersions) {
-    return delegateVersions.stream().map(version -> substringBefore(version, "-")).collect(toList());
   }
 
   @NotNull

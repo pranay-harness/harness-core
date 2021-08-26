@@ -65,7 +65,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
              AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
           String delegateConnectionId = req.getParameter("delegateConnectionId");
-          String delegateVersion = req.getHeader("Version");
 
           // These 2 will be sent by ECS delegate only
           String sequenceNum = req.getParameter("sequenceNum");
@@ -80,7 +79,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           delegateService.registerHeartbeat(accountId, delegateId,
               DelegateConnectionHeartbeat.builder()
                   .delegateConnectionId(delegateConnectionId)
-                  .version(delegateVersion)
+                  .version(delegate.getVersion())
                   .build(),
               ConnectionMode.STREAMING);
 
@@ -110,7 +109,6 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
         String delegateConnectionId = req.getParameter("delegateConnectionId");
-        String delegateVersion = req.getHeader("Version");
 
         Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
         delegate.setUuid(delegateId);
@@ -118,7 +116,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         delegateService.registerHeartbeat(accountId, delegateId,
             DelegateConnectionHeartbeat.builder()
                 .delegateConnectionId(delegateConnectionId)
-                .version(delegateVersion)
+                .version(delegate.getVersion())
                 .location(delegate.getLocation())
                 .build(),
             ConnectionMode.STREAMING);
