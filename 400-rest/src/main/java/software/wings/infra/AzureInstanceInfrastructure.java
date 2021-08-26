@@ -3,6 +3,11 @@ package software.wings.infra;
 import static software.wings.beans.AzureInfrastructureMapping.Builder.anAzureInfrastructureMapping;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureInfrastructureMapping;
@@ -21,6 +26,8 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("AZURE_INFRA")
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AzureInstanceInfrastructure implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider,
                                                     SshBasedInfrastructure, WinRmBasedInfrastructure {
   private String cloudProviderId;

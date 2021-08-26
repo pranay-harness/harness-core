@@ -1,8 +1,10 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
@@ -27,6 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonTypeName("spotinstTrafficShiftAlbSetupElement")
 @OwnedBy(CDP)
+@TargetModule(_957_CG_BEANS)
 public class SpotinstTrafficShiftAlbSetupElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;

@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import static io.harness.annotations.dev.HarnessModule._959_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -65,7 +65,7 @@ import org.mongodb.morphia.annotations.Transient;
  * @author Rishi.
  */
 @OwnedBy(CDC)
-@TargetModule(_959_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class WorkflowStandardParams implements ExecutionContextAware, ContextElement {
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
   public static final String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";

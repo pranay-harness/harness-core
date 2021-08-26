@@ -100,7 +100,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testExecuteAsync_whenHealthSourcesAreEmpty() {
     monitoredServiceService.createDefault(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+        builderFactory.getContext().getProjectParams(), serviceIdentifier, envIdentifier);
     Ambiance ambiance = getAmbiance();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
@@ -137,7 +137,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   public void testExecuteAsync_createActivity() {
     Ambiance ambiance = getAmbiance();
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
     AsyncExecutableResponse asyncExecutableResponse =

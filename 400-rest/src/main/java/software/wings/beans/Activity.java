@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -45,6 +47,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Version;
 
+@OwnedBy(HarnessTeam.CDC)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ActivityKeys")
@@ -52,7 +55,7 @@ import org.mongodb.morphia.annotations.Version;
 @AllArgsConstructor
 @Entity(value = "activities", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Activity implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
                                  CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

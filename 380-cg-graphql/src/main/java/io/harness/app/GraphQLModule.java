@@ -10,6 +10,8 @@ import io.harness.app.datafetcher.delegate.DelegateListDataFetcher;
 import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
 
 import software.wings.app.WingsGraphQLModule;
+import software.wings.graphql.datafetcher.approval.ApprovalDetailsDataFetcher;
+import software.wings.graphql.datafetcher.approval.ApproveOrRejectApprovalsDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactCleanupDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactConnectionDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
@@ -18,7 +20,12 @@ import software.wings.graphql.datafetcher.event.DeleteEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigConnectionDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.UpdateEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
+import software.wings.graphql.datafetcher.secretManager.HashicorpVaultDataFetcher;
+import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetchers;
+import software.wings.graphql.datafetcher.secretManager.SecretManagerMutationDataFetcher;
+import software.wings.graphql.datafetcher.secretmanager.CustomSecretManagerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.CreateTriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.DeleteTriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.TriggerConnectionDataFetcher;
@@ -106,6 +113,17 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EventsConfigConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateEventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApprovalDetailsDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApproveOrRejectApprovalsDataFetcher.class);
+    binder()
+        .bind(SecretManagerMutationDataFetcher.class)
+        .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))
+        .to(HashicorpVaultDataFetcher.class);
+    binder()
+        .bind(SecretManagerMutationDataFetcher.class)
+        .annotatedWith(Names.named(SecretManagerDataFetchers.CUSTOM_SECRET_MANAGER_DATA_FETCHER.getName()))
+        .to(CustomSecretManagerDataFetcher.class);
   }
 
   @NotNull

@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.ACLService;
+import io.harness.accesscontrol.acl.PermissionCheck;
 import io.harness.accesscontrol.acl.PermissionCheckResult;
 import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
@@ -86,7 +87,7 @@ public class ACLResource {
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
   public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
     io.harness.security.dto.Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
-    List<PermissionCheckDTO> permissionChecks = dto.getPermissions();
+    List<PermissionCheckDTO> permissionChecksDTOs = dto.getPermissions();
     Principal principalToCheckPermissionsFor = dto.getPrincipal();
 
     boolean preconditionsValid = checkPreconditions(contextPrincipal, principalToCheckPermissionsFor);
@@ -95,7 +96,7 @@ public class ACLResource {
       return ResponseDTO.newResponse(
           AccessCheckResponseDTO.builder()
               .principal(Principal.of(SERVICE, contextPrincipal.getName()))
-              .accessControlList(permissionChecks.stream()
+              .accessControlList(permissionChecksDTOs.stream()
                                      .map(permissionCheckDTO
                                          -> AccessControlDTO.builder()
                                                 .permitted(true)
@@ -114,12 +115,12 @@ public class ACLResource {
           USER);
     }
 
-    Optional<String> accountIdentifierOptional = getAccountIdentifier(permissionChecks);
+    Optional<String> accountIdentifierOptional = getAccountIdentifier(permissionChecksDTOs);
     if (accountIdentifierOptional.isPresent()
         && !accessControlPreferenceService.isAccessControlEnabled(accountIdentifierOptional.get())) {
       return ResponseDTO.newResponse(
           AccessCheckResponseDTO.builder()
-              .accessControlList(permissionChecks.stream()
+              .accessControlList(permissionChecksDTOs.stream()
                                      .map(permissionCheckDTO -> getAccessControlDTO(permissionCheckDTO, true))
                                      .collect(Collectors.toList()))
               .principal(principalToCheckPermissionsFor)
@@ -130,9 +131,10 @@ public class ACLResource {
       principalToCheckPermissionsFor =
           Principal.of(fromSecurityPrincipalType(contextPrincipal.getType()), contextPrincipal.getName());
     }
-
-    List<PermissionCheckResult> permissionCheckResults = aclService.checkAccess(principalToCheckPermissionsFor,
-        permissionChecks.stream().map(PermissionCheckDTOMapper::fromDTO).collect(Collectors.toList()));
+    List<PermissionCheck> permissionChecks =
+        permissionChecksDTOs.stream().map(PermissionCheckDTOMapper::fromDTO).collect(Collectors.toList());
+    List<PermissionCheckResult> permissionCheckResults =
+        aclService.checkAccess(principalToCheckPermissionsFor, permissionChecks);
 
     AccessCheckResponseDTO accessCheckResponseDTO =
         AccessCheckResponseDTO.builder()
@@ -150,7 +152,7 @@ public class ACLResource {
       PrivilegedAccessCheck privilegedAccessCheck = PrivilegedAccessCheck.builder()
                                                         .principal(principal)
                                                         .accountIdentifier(accountIdentifierOptional.get())
-                                                        .permissions(permissionChecks)
+                                                        .permissionChecks(permissionChecks)
                                                         .build();
       PrivilegedAccessResult privilegedAccessResult =
           privilegedRoleAssignmentService.checkAccess(privilegedAccessCheck);
@@ -158,7 +160,7 @@ public class ACLResource {
       int index = 0;
       while (iterator.hasNext()) {
         AccessControlDTO rbacAccess = iterator.next();
-        AccessControlDTO privilegedAccess = privilegedAccessResult.getPermissionCheckResults().get(index);
+        PermissionCheckResult privilegedAccess = privilegedAccessResult.getPermissionCheckResults().get(index);
         rbacAccess.setPermitted(privilegedAccess.isPermitted() || rbacAccess.isPermitted());
         index++;
       }

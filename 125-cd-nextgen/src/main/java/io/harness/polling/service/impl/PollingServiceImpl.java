@@ -32,7 +32,6 @@ public class PollingServiceImpl implements PollingService {
   @Override
   public String save(PollingDocument pollingDocument) {
     validatePollingDocument(pollingDocument);
-
     PollingDocument savedPollingDoc = pollingRepository.addSubscribersToExistingPollingDoc(
         pollingDocument.getAccountId(), pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(),
         pollingDocument.getPollingType(), pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
@@ -55,26 +54,17 @@ public class PollingServiceImpl implements PollingService {
 
   @Override
   public PollingDocument get(String accountId, String pollingDocId) {
-    return pollingRepository.findByAccountIdAndUuid(accountId, pollingDocId);
-  }
-
-  @Override
-  public String update(PollingDocument pollingDocument) {
-    // not yet implemented / discussed
-    return null;
+    return pollingRepository.findByUuidAndAccountId(pollingDocId, accountId);
   }
 
   @Override
   public void delete(PollingDocument pollingDocument) {
-    PollingDocument savedPollDoc = pollingRepository.deleteDocumentIfOnlySubscriber(pollingDocument.getAccountId(),
-        pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
-        pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
-
+    PollingDocument savedPollDoc = pollingRepository.removeDocumentIfOnlySubscriber(
+        pollingDocument.getAccountId(), pollingDocument.getUuid(), pollingDocument.getSignatures());
     // if savedPollDoc is null that means either it was not the only subscriber or this poll doc doesn't exist in db.
     if (savedPollDoc == null) {
-      pollingRepository.deleteSubscribersFromExistingPollingDoc(pollingDocument.getAccountId(),
-          pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier(), pollingDocument.getPollingType(),
-          pollingDocument.getPollingInfo(), pollingDocument.getSignatures());
+      pollingRepository.removeSubscribersFromExistingPollingDoc(
+          pollingDocument.getAccountId(), pollingDocument.getUuid(), pollingDocument.getSignatures());
     } else {
       deletePerpetualTask(savedPollDoc);
     }
@@ -100,9 +90,33 @@ public class PollingServiceImpl implements PollingService {
   }
 
   @Override
-  public String subscribe(PollingItem pollingItem) {
+  public String subscribe(PollingItem pollingItem) throws InvalidRequestException {
     PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
-    return save(pollingDocument);
+    PollingDocument existingPollingDoc = null;
+    if (pollingDocument.getUuid() != null) {
+      existingPollingDoc = pollingRepository.findByUuidAndAccountIdAndSignature(
+          pollingDocument.getUuid(), pollingDocument.getAccountId(), pollingDocument.getSignatures());
+    }
+
+    if (null != existingPollingDoc && pollingDocument.getUuid() != null) {
+      throw new InvalidRequestException(
+          "PollingDocument and ExistingPollingDocument both cannot be not null. Please check subscribers configuration"
+          + existingPollingDoc.getUuid());
+    }
+    // Determine if update request
+    if (existingPollingDoc == null) {
+      return save(pollingDocument);
+    }
+
+    if (existingPollingDoc.getPollingInfo().equals(pollingDocument.getPollingInfo())) {
+      return existingPollingDoc.getUuid();
+    } else {
+      delete(pollingDocument);
+      // Note: This is intentional. The pollingDocId sent to us is stale, we need to set it to null so that the save
+      // call creates a new pollingDoc
+      pollingDocument.setUuid(null);
+      return save(pollingDocument);
+    }
   }
 
   @Override
@@ -121,6 +135,7 @@ public class PollingServiceImpl implements PollingService {
     }
   }
 
+  // TODO: Do not delete. Tihs will be used for connector update case.
   private void resetPerpetualTask(@NotNull PollingDocument pollingDocument) {
     try {
       subject.fireInform(PollingServiceObxxxxxxxx:onUpdated, pollingDocument);

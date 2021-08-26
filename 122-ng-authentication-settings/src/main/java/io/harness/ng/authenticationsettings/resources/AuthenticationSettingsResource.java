@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -147,6 +148,7 @@ public class AuthenticationSettingsResource {
   @Multipart
   @POST
   @Path("/saml-metadata-upload")
+  @Consumes("multipart/form-data")
   @ApiOperation(value = "Create SAML Config", nickname = "uploadSamlMetaData")
   public RestResponse<SSOConfig> uploadSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,
@@ -172,6 +174,7 @@ public class AuthenticationSettingsResource {
   @Multipart
   @PUT
   @Path("/saml-metadata-upload")
+  @Consumes("multipart/form-data")
   @ApiOperation(value = "Edit SAML Config", nickname = "updateSamlMetaData")
   public RestResponse<SSOConfig> updateSamlMetaData(@QueryParam("accountId") String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,

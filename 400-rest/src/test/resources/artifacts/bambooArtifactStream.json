@@ -1,0 +1,41 @@
+{
+  "artifactStreamType": "BAMBOO",
+  "uuid": null,
+  "appId": "ANoEiuLmSEShkPmRYdLG8A",
+  "createdBy": null,
+  "createdAt": 0,
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": 0,
+  "artifactStreamId": null,
+  "sourceName": "TES-GAR",
+  "settingId": "6e8r_vb7R_eF0VZDcri5ig",
+  "artifactServerName": null,
+  "name": "bamboo",
+  "autoPopulate": false,
+  "serviceId": null,
+  "service": null,
+  "autoDownload": false,
+  "autoApproveForProduction": false,
+  "metadataOnly": false,
+  "failedCronAttempts": 0,
+  "nextIteration": 0,
+  "nextCleanupIteration": 0,
+  "templateUuid": null,
+  "templateVersion": null,
+  "templateVariables": [],
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "keywords": [
+    "bamboo",
+    "tes-gar"
+  ],
+  "artifactCount": 0,
+  "artifacts": null,
+  "sample": false,
+  "perpetualTaskId": null,
+  "collectionStatus": null,
+  "artifactStreamParameterized": false,
+  "jobname": "TES-GAR",
+  "artifactPaths": [
+    "metadata.json/metadata.json"
+  ]
+}

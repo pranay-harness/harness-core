@@ -84,6 +84,8 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, String envId, @NotNull String orchestrationId,
       @NotNull ExecutionArgs executionArgs, Trigger trigger);
 
+  int getActiveServiceCount(String accountId);
+
   WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, String envId, @NotNull String orchestrationId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, Trigger trigger);
 

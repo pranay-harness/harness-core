@@ -22,6 +22,7 @@ java_binary(
         "//960-persistence:module",
         "//970-ng-commons:module",
         "//980-commons:module",
+        "//999-annotations:module",
         "@maven//:aopalliance_aopalliance",
         "@maven//:cglib_cglib_nodep",
         "@maven//:ch_qos_logback_contrib_logback_jackson",

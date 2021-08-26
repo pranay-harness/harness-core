@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
  * The Class Node.
  */
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Builder
 @NoArgsConstructor

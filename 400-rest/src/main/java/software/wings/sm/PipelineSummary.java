@@ -12,7 +12,7 @@ import lombok.Data;
 @OwnedBy(CDC)
 @Data
 @Builder
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PipelineSummary {
   private String pipelineId;
   private String pipelineName;

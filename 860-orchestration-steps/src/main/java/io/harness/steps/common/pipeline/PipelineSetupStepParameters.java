@@ -2,6 +2,7 @@ package io.harness.steps.common.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.plancreator.flowcontrol.FlowControlConfig;
@@ -28,6 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @TypeAlias("pipelineSetupStepParameters")
 @OwnedBy(PIPELINE)
+@RecasterAlias("io.harness.steps.common.pipeline.PipelineSetupStepParameters")
 public class PipelineSetupStepParameters implements StepParameters {
   String childNodeID;
 

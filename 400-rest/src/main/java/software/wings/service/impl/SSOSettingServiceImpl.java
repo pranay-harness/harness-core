@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -9,6 +10,9 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
@@ -72,6 +76,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
+@OwnedBy(HarnessTeam.PL)
 public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;

@@ -3,7 +3,9 @@ package io.harness.limits;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @UtilityClass
 @Slf4j
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public class LimitEnforcementUtils {
   /**
    * execute the given function while enforcing usage limits.

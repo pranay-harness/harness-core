@@ -122,11 +122,8 @@ public class CVConfigServiceImpl implements CVConfigService {
     if (cvConfig == null) {
       return;
     }
-    deletedCVConfigService.save(DeletedCVConfig.builder()
-                                    .cvConfig(cvConfig)
-                                    .accountId(cvConfig.getAccountId())
-                                    .perpetualTaskId(cvConfig.getPerpetualTaskId())
-                                    .build());
+    deletedCVConfigService.save(
+        DeletedCVConfig.builder().cvConfig(cvConfig).accountId(cvConfig.getAccountId()).build());
     hPersistence.delete(CVConfig.class, cvConfigId);
   }
 
@@ -467,25 +464,6 @@ public class CVConfigServiceImpl implements CVConfigService {
                    .verificationType(config.getVerificationType())
                    .build())
         .collect(Collectors.toSet());
-  }
-
-  @Override
-  public List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds) {
-    if (isNotEmpty(cvConfigIds)) {
-      List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
-                                     .filter(CVConfigKeys.accountId, accountId)
-                                     .field(CVConfigKeys.uuid)
-                                     .in(cvConfigIds)
-                                     .asList();
-      List<String> perpetualTaskIds = cvConfigs.stream().map(CVConfig::getPerpetualTaskId).collect(toList());
-      verificationManagerService.deletePerpetualTasks(accountId, perpetualTaskIds);
-      Query<CVConfig> cvConfigQuery = hPersistence.createQuery(CVConfig.class).field(CVConfigKeys.uuid).in(cvConfigIds);
-      UpdateOperations<CVConfig> cvConfigUpdateOperations =
-          hPersistence.createUpdateOperations(CVConfig.class).unset(CVConfigKeys.perpetualTaskId);
-      hPersistence.update(cvConfigQuery, cvConfigUpdateOperations);
-      log.info("Cleaned up perpetual tasks for the following cvConfigs : " + cvConfigIds);
-    }
-    return cvConfigIds;
   }
 
   @Override

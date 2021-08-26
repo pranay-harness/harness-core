@@ -1,6 +1,7 @@
 package io.harness.manifest;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 
 import static java.util.Collections.emptyList;
 
@@ -92,7 +93,7 @@ public class CustomManifestServiceImpl implements CustomManifestService {
   private void cleanup(String path) {
     if (isNotEmpty(path)) {
       try {
-        FileUtils.deleteDirectory(new File(path));
+        deleteDirectoryAndItsContentIfExists(path);
       } catch (IOException e) {
         log.error("Failed to delete file " + path, e);
       }

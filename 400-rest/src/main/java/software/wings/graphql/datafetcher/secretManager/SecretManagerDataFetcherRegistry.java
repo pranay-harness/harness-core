@@ -1,8 +1,11 @@
 package software.wings.graphql.datafetcher.secretManager;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.security.encryption.EncryptionType.CUSTOM;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptionType;
@@ -15,6 +18,7 @@ import com.google.inject.name.Names;
 import java.util.EnumMap;
 import java.util.Optional;
 
+@OwnedBy(PL)
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class SecretManagerDataFetcherRegistry {
@@ -26,6 +30,7 @@ public class SecretManagerDataFetcherRegistry {
     this.injector = injector;
     this.registeredDataFetchers = new EnumMap<>(EncryptionType.class);
     this.registeredDataFetchers.put(VAULT, SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER);
+    this.registeredDataFetchers.put(CUSTOM, SecretManagerDataFetchers.CUSTOM_SECRET_MANAGER_DATA_FETCHER);
   }
 
   public SecretManagerMutationDataFetcher getDataFetcher(EncryptionType encryptionType) {

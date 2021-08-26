@@ -31,7 +31,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "helmCharts", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "HelmChartKeys")
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class HelmChart implements AccountAccess, NameAccess, PersistentEntity, UuidAware, CreatedAtAware,
                                   UpdatedAtAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

@@ -55,6 +55,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     return executePlan(savedPlan, setupAbstractions, metadata, planExecutionMetadata);
   }
 
+  public PlanExecution startExecutionV2(String planId, Map<String, String> setupAbstractions,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
+    return executePlan(planService.fetchPlan(planId), setupAbstractions, metadata, planExecutionMetadata);
+  }
+
   private PlanExecution executePlan(@Valid Plan plan, Map<String, String> setupAbstractions, ExecutionMetadata metadata,
       PlanExecutionMetadata planExecutionMetadata) {
     PlanExecution savedPlanExecution = createPlanExecution(plan, setupAbstractions, metadata, planExecutionMetadata);

@@ -28,7 +28,7 @@ public class ScmValidationParams implements ConnectorValidationParams, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return GitCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, gitConfigDTO);
+    return GitCapabilityHelper.fetchRequiredExecutionCapabilitiesSimpleCheck(gitConfigDTO);
   }
 
   @Override

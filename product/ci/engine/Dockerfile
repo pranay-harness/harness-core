@@ -12,4 +12,7 @@ RUN apk add git
 COPY linux_amd64_pure_stripped/engine /usr/local/bin/ci-lite-engine
 RUN chmod +x /usr/local/bin/ci-lite-engine
 
+RUN adduser -g harness -s /bin/sh -D -u 1000 harness
+USER harness:harness
+
 CMD ["/usr/local/bin/ci-lite-engine"]

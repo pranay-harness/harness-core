@@ -25,7 +25,6 @@ import lombok.EqualsAndHashCode;
 public class DelegateServiceConfig extends MainConfiguration implements AssetsBundleConfiguration {
   @JsonProperty("delegateServiceUrl") private String delegateServiceUrl;
   @JsonProperty("grpcServerClassicConfig") private GrpcServerConfig grpcServerClassicConfig;
-  @JsonProperty("delegateServiceSecret") private String delegateServiceSecret;
 
   private static final String IS_OPTION_HEAD_HTTP_METHOD_BLOCKED = "IS_OPTION_HEAD_REQUEST_METHOD_BLOCKED";
 

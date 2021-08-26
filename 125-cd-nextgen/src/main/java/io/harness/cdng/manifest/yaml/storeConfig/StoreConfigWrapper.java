@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import static java.lang.String.format;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
@@ -33,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = StoreConfigWrapperVisitorHelper.class)
 @TypeAlias("storeConfigWrapper")
+@RecasterAlias("io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper")
 public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>, Visitable {
   @NotNull @JsonProperty("type") StoreConfigType type;
   @NotNull

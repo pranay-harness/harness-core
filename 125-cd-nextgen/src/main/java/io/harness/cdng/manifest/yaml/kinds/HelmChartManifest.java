@@ -6,6 +6,7 @@ import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
@@ -47,6 +48,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = HelmChartManifestVisitorHelper.class)
 @TypeAlias("helmChartManifest")
+@RecasterAlias("io.harness.cdng.manifest.yaml.kinds.HelmChartManifest")
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither

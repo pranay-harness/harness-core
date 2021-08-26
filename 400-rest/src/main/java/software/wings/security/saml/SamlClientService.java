@@ -1,11 +1,13 @@
 package software.wings.security.saml;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
 import static com.google.common.base.Charsets.UTF_8;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.account.AuthenticationMechanism;
@@ -36,6 +38,7 @@ import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
 @Singleton
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SamlClientService {
   public static final String SAML_REQUEST_URI_KEY = "SAMLRequest";
   @Inject AuthenticationUtils authenticationUtils;

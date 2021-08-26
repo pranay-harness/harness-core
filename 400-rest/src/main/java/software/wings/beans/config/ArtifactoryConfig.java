@@ -3,7 +3,9 @@ package software.wings.beans.config;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -41,6 +43,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ArtifactoryConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Artifactory URL", required = true) @NotEmpty private String artifactoryUrl;
 

@@ -33,6 +33,7 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 			"package":         v.Package,
 			"method":          v.Method,
 			"id":              v.ID,
+			"classId":         v.ClassId,
 			"params":          v.Params,
 			"class":           v.Class,
 			"type":            v.Type,
@@ -82,6 +83,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 							node.Package = v.(string)
 						case "id":
 							node.ID = int(v.(int32))
+						case "classId":
+							node.ClassId = int(v.(int32))
 						case "params":
 							node.Params = v.(string)
 						case "class":
@@ -161,6 +164,7 @@ type Node struct {
 	Package         string
 	Method          string
 	ID              int
+	ClassId         int
 	Params          string
 	Class           string
 	Type            string
@@ -179,16 +183,4 @@ type Input struct {
 type Relation struct {
 	Source int
 	Tests  []int
-}
-
-// TODO -- not required. Delete it as now visgraph format only contains id's instead of node information
-func NewNode(id int, typ, pkg, class, method, params string) *Node {
-	return &Node{
-		Package: pkg,
-		Method:  method,
-		ID:      id,
-		Params:  params,
-		Class:   class,
-		Type:    typ,
-	}
 }

@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -143,7 +143,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AuthRule(permissionType = LOGGED_IN)
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(_970_RBAC_CORE)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserResource {
   private UserService userService;
   private AuthService authService;

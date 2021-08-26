@@ -2,6 +2,7 @@ package io.harness.beans.common;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 
@@ -12,4 +13,5 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("variablesSweepingOutput")
 @JsonTypeName("variablesSweepingOutput")
 @OwnedBy(CDC)
+@RecasterAlias("io.harness.beans.common.VariablesSweepingOutput")
 public class VariablesSweepingOutput extends HashMap<String, Object> implements ExecutionSweepingOutput {}

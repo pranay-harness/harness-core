@@ -32,7 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("AMI")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -63,6 +63,22 @@ public class AmiArtifactStream extends ArtifactStream {
   @Override
   public String fetchArtifactDisplayName(String amiName) {
     return isEmpty(tags) ? format("%s_%s", getRegion(), amiName) : format("%s_%s", getSourceName(), amiName);
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .region(region)
+        .platform(platform)
+        .tags(tags)
+        .filters(filters)
+        .build();
   }
 
   @Override

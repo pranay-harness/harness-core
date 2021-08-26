@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.PmsSdkCoreConfig;
 import io.harness.pms.sdk.core.PmsSdkCoreModule;
 import io.harness.pms.sdk.execution.PmsSdkEventsFrameworkModule;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
+import io.harness.testing.TestExecution;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -46,6 +47,13 @@ public class PmsSdkModule extends AbstractModule {
     MapBinder<Class<? extends Exception>, ExceptionHandler> exceptionHandlerMapBinder = MapBinder.newMapBinder(
         binder(), new TypeLiteral<Class<? extends Exception>>() {}, new TypeLiteral<ExceptionHandler>() {});
     requireBinding(ExceptionManager.class);
+
+    MapBinder<String, TestExecution> testExecutionMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+    //    testExecutionMapBinder.addBinding("RecasterAlias Registration")
+    //        .toInstance(PmsSdkComponentTester::testRecasterAlias);
+    testExecutionMapBinder.addBinding("RecasterAlias Immutablity")
+        .toInstance(PmsSdkComponentTester::ensureRecasterAliasImmutability);
   }
 
   @NotNull
@@ -57,6 +65,8 @@ public class PmsSdkModule extends AbstractModule {
                                                  .grpcServerConfig(config.getGrpcServerConfig())
                                                  .sdkDeployMode(config.getDeploymentMode())
                                                  .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+                                                 .executionPoolConfig(config.getExecutionPoolConfig())
+                                                 .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
                                                  .build()));
     modules.add(
         PmsSdkEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));

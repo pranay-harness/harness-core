@@ -9,7 +9,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.logging.CommandExecutionStatus;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum GcbBuildStatus {
   STATUS_UNKNOWN(ExecutionStatus.FAILED, CommandExecutionStatus.FAILURE),
   QUEUED(ExecutionStatus.QUEUED, CommandExecutionStatus.QUEUED),

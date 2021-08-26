@@ -115,6 +115,10 @@ if [ -z $CLIENT_TOOLS_DOWNLOAD_DISABLED ]; then
   export CLIENT_TOOLS_DOWNLOAD_DISABLED=false
 fi
 
+if [ -z $INSTALL_CLIENT_TOOLS_IN_BACKGROUND ]; then
+  export INSTALL_CLIENT_TOOLS_IN_BACKGROUND=true
+fi
+
 if [ ! -e config-delegate.yml ]; then
   echo "accountId: ${accountId}" > config-delegate.yml
   echo "accountSecret: ${accountSecret}" >> config-delegate.yml

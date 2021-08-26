@@ -6,9 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.pricing.banzai.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.vmpricing.VMPricingService;
 import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;

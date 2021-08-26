@@ -274,15 +274,6 @@ public class RecastReflectionUtils {
     return recasterAlias.value();
   }
 
-  public static <T> void setIdentifier(Map<String, Object> map, Class<T> clazz) {
-    String recasterAliasValue = obtainRecasterAliasValueOrNull(clazz);
-    if (recasterAliasValue != null) {
-      map.put(Recaster.RECAST_CLASS_KEY, recasterAliasValue);
-    } else {
-      map.put(Recaster.RECAST_CLASS_KEY, clazz.getName());
-    }
-  }
-
   @Nullable
   public static Object getIdentifier(Map<String, Object> recastedMap) {
     return recastedMap.get(Recaster.RECAST_CLASS_KEY);

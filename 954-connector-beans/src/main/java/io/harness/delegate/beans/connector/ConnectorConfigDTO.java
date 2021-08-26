@@ -8,6 +8,7 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConne
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerDTO;
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
@@ -24,6 +25,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
+import io.harness.delegate.beans.connector.pagerduty.PagerDutyConnectorDTO;
 import io.harness.delegate.beans.connector.prometheusconnector.PrometheusConnectorDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
@@ -55,6 +57,7 @@ import java.util.List;
       @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
       @JsonSubTypes.Type(value = GcpKmsConnectorDTO.class, name = "GcpKms"),
       @JsonSubTypes.Type(value = AwsKmsConnectorDTO.class, name = "AwsKms"),
+      @JsonSubTypes.Type(value = AwsSecretManagerDTO.class, name = "AwsSecretManager"),
       @JsonSubTypes.Type(value = AzureKeyVaultConnectorDTO.class, name = "AzureKeyVault"),
       @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
       @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
@@ -69,7 +72,8 @@ import java.util.List;
       @JsonSubTypes.Type(value = CEAzureConnectorDTO.class, name = "CEAzure"),
       @JsonSubTypes.Type(value = CEKubernetesClusterConfigDTO.class, name = "CEK8sCluster"),
       @JsonSubTypes.Type(value = GcpCloudCostConnectorDTO.class, name = "GcpCloudCost"),
-      @JsonSubTypes.Type(value = HttpHelmConnectorDTO.class, name = "HttpHelmRepo")
+      @JsonSubTypes.Type(value = HttpHelmConnectorDTO.class, name = "HttpHelmRepo"),
+      @JsonSubTypes.Type(value = PagerDutyConnectorDTO.class, name = "PagerDuty"),
 })
 @OwnedBy(DX)
 public abstract class ConnectorConfigDTO implements DecryptableEntity {

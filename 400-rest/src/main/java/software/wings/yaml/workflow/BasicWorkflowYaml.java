@@ -2,7 +2,9 @@ package software.wings.yaml.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.NotificationRule;
@@ -27,6 +29,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("BASIC")
 @JsonPropertyOrder({"harnessApiVersion"})
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class BasicWorkflowYaml extends WorkflowYaml {
   @Builder
   public BasicWorkflowYaml(String type, String harnessApiVersion, String description, List<Yaml> templateExpressions,

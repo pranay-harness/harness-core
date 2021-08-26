@@ -78,7 +78,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
+import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -176,6 +176,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
   @Mock private LogCallback mockLogCallback;
   private final Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", "test-account").build();
+  private static final String SOME_URL = "https://url.com/owner/repo.git";
 
   @Before
   public void setup() {
@@ -886,7 +887,8 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(
         Optional.of(ConnectorResponseDTO.builder()
                         .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                       .connectorConfig(
+                                           GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                                        .name("test")
                                        .build())
 
@@ -917,7 +919,7 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().size()).isEqualTo(1);
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().get(0))
         .isEqualTo("path/to/k8s/manifest/values.yaml");
-    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(GitConnectionNGCapability.class);
   }
 
   @Test
@@ -956,7 +958,8 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(
         Optional.of(ConnectorResponseDTO.builder()
                         .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                       .connectorConfig(
+                                           GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                                        .name("test")
                                        .build())
                         .build()))
@@ -986,7 +989,7 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().size()).isEqualTo(1);
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().get(0))
         .isEqualTo("path/to/helm/chart/values.yaml");
-    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
+    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(GitConnectionNGCapability.class);
   }
 
   @Test
@@ -1530,7 +1533,8 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(
         Optional.of(ConnectorResponseDTO.builder()
                         .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                       .connectorConfig(
+                                           GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).url(SOME_URL).build())
                                        .name("test")
                                        .build())
 

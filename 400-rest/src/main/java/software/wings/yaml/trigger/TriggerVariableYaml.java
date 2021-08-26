@@ -2,7 +2,9 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.NameValuePair;
@@ -17,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerVariableYaml extends NameValuePair.AbstractYaml {
   String entityType;
 

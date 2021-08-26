@@ -76,6 +76,10 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_TRACE_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
+fi
+
 if [[ "" != "$MONGO_SSL_CONFIG" ]]; then
   yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
 fi
@@ -874,6 +878,7 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAME
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 replace_key_value portal.gatewayPathPrefix "$GATEWAY_PATH_PREFIX"
+replace_key_value portal.zendeskBaseUrl "$ZENDESK_BASE_URL"
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
@@ -881,4 +886,8 @@ fi
 
 if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
   yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
+fi
+
+if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
+  yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
 fi

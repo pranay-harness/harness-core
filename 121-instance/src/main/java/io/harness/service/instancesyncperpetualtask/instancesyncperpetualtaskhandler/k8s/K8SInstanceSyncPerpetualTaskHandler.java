@@ -48,10 +48,10 @@ public class K8SInstanceSyncPerpetualTaskHandler extends InstanceSyncPerpetualTa
   private final K8sStepHelper k8sStepHelper;
 
   @Override
-  public PerpetualTaskExecutionBundle getExecutionBundle(
-      InfrastructureMappingDTO infrastructure, List<DeploymentInfoDTO> deploymentInfoDTOList) {
+  public PerpetualTaskExecutionBundle getExecutionBundle(InfrastructureMappingDTO infrastructure,
+      List<DeploymentInfoDTO> deploymentInfoDTOList, InfrastructureOutcome infrastructureOutcome) {
     List<K8sDeploymentReleaseData> deploymentReleaseList =
-        populateDeploymentReleaseList(infrastructure, deploymentInfoDTOList);
+        populateDeploymentReleaseList(infrastructure, deploymentInfoDTOList, infrastructureOutcome);
 
     Any perpetualTaskPack =
         packK8sInstanceSyncPerpetualTaskParams(infrastructure.getAccountIdentifier(), deploymentReleaseList);
@@ -63,18 +63,20 @@ public class K8SInstanceSyncPerpetualTaskHandler extends InstanceSyncPerpetualTa
   }
 
   private List<K8sDeploymentReleaseData> populateDeploymentReleaseList(
-      InfrastructureMappingDTO infrastructureMappingDTO, List<DeploymentInfoDTO> deploymentInfoDTOList) {
+      InfrastructureMappingDTO infrastructureMappingDTO, List<DeploymentInfoDTO> deploymentInfoDTOList,
+      InfrastructureOutcome infrastructureOutcome) {
     return deploymentInfoDTOList.stream()
         .filter(Objects::nonNull)
         .map(K8sDeploymentInfoDTO.class ::cast)
-        .map(deploymentInfoDTO -> toK8sDeploymentReleaseData(infrastructureMappingDTO, deploymentInfoDTO))
+        .map(deploymentInfoDTO
+            -> toK8sDeploymentReleaseData(infrastructureMappingDTO, deploymentInfoDTO, infrastructureOutcome))
         .collect(Collectors.toList());
   }
 
-  private K8sDeploymentReleaseData toK8sDeploymentReleaseData(
-      InfrastructureMappingDTO infrastructureMappingDTO, K8sDeploymentInfoDTO deploymentInfoDTO) {
+  private K8sDeploymentReleaseData toK8sDeploymentReleaseData(InfrastructureMappingDTO infrastructureMappingDTO,
+      K8sDeploymentInfoDTO deploymentInfoDTO, InfrastructureOutcome infrastructureOutcome) {
     K8sInfraDelegateConfig k8sInfraDelegateConfig =
-        getK8sInfraDelegateConfig(deploymentInfoDTO.getReleaseName(), infrastructureMappingDTO);
+        getK8sInfraDelegateConfig(infrastructureMappingDTO, infrastructureOutcome);
     return K8sDeploymentReleaseData.builder()
         .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
         .namespaces(deploymentInfoDTO.getNamespaces())
@@ -83,10 +85,8 @@ public class K8SInstanceSyncPerpetualTaskHandler extends InstanceSyncPerpetualTa
   }
 
   private K8sInfraDelegateConfig getK8sInfraDelegateConfig(
-      String releaseName, InfrastructureMappingDTO infrastructure) {
+      InfrastructureMappingDTO infrastructure, InfrastructureOutcome infrastructureOutcome) {
     BaseNGAccess baseNGAccess = getBaseNGAccess(infrastructure);
-    InfrastructureOutcome infrastructureOutcome =
-        getInfrastructureOutcome(releaseName, infrastructure.getInfrastructureKind(), infrastructure.getConnectorRef());
     return k8sStepHelper.getK8sInfraDelegateConfig(infrastructureOutcome, baseNGAccess);
   }
 

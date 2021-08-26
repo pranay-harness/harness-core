@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @AllArgsConstructor
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Criteria {
   @Setter Map<String, List<String>> conditions;
   @Getter @Setter ConditionalOperator operator;

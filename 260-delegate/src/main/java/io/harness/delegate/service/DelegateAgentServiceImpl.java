@@ -427,7 +427,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
-                                .version(getVersion())
+                                .version(getVersionWithPatch())
                                 .location(Paths.get("").toAbsolutePath().toString())
                                 .build();
 
@@ -457,6 +457,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       if (!delegateConfiguration.isInstallClientToolsInBackground()) {
+        log.info("Client tools will be installed synchronously, before delegate registers");
         if (delegateConfiguration.isClientToolsDownloadDisabled()) {
           kubectlInstalled = true;
           goTemplateInstalled = true;
@@ -478,6 +479,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           kustomizeInstalled = installKustomize(delegateConfiguration);
           scmInstalled = installScm(delegateConfiguration);
         }
+      } else {
+        log.info("Client tools will be installed in the background, while delegate registers");
       }
 
       logCfCliConfiguration();
@@ -525,7 +528,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
-                                          .version(getVersion())
+                                          .version(getVersionWithPatch())
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
@@ -1457,48 +1460,54 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void startLocalHeartbeat() {
-    localHeartbeatExecutor.scheduleAtFixedRate(() -> {
-      try {
-        systemExecutor.submit(() -> {
-          Map<String, Object> statusData = new HashMap<>();
-          if (selfDestruct.get()) {
-            statusData.put(DELEGATE_SELF_DESTRUCT, true);
-          } else {
-            statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-            statusData.put(DELEGATE_VERSION, getVersion());
-            statusData.put(DELEGATE_IS_NEW, false);
-            statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
-            statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
-            statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
-            statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
-            if (switchStorage.get() && !switchStorageMsgSent) {
-              statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
-              switchStorageMsgSent = true;
-            }
-            if (sendJreInformationToWatcher) {
-              log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
-                  migrateToJreVersion);
-              statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
-              statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
-            }
-            if (upgradePending.get()) {
-              statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
-            }
-            if (!acquireTasks.get()) {
-              statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
-            }
-            if (isNotBlank(migrateTo)) {
-              statusData.put(DELEGATE_MIGRATE, migrateTo);
-            }
-          }
-          messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-          watchWatcher();
-        });
-      } catch (Exception e) {
-        log.error("Exception while scheduling local heartbeat", e);
+    localHeartbeatExecutor.scheduleAtFixedRate(this::submit, 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void submit() {
+    try {
+      log.info("Starting local heartbeat.");
+      systemExecutor.submit(this::fillStatusData);
+    } catch (Exception e) {
+      log.error("Exception while scheduling local heartbeat", e);
+    }
+    logCurrentTasks();
+  }
+
+  private void fillStatusData() {
+    log.info("Filling status data.");
+    Map<String, Object> statusData = new HashMap<>();
+    if (selfDestruct.get()) {
+      statusData.put(DELEGATE_SELF_DESTRUCT, true);
+    } else {
+      statusData.put(DELEGATE_HEARTBEAT, clock.millis());
+      statusData.put(DELEGATE_VERSION, getVersionWithPatch());
+      statusData.put(DELEGATE_IS_NEW, false);
+      statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
+      statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
+      statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
+      statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+      if (switchStorage.get() && !switchStorageMsgSent) {
+        statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+        switchStorageMsgSent = true;
       }
-      logCurrentTasks();
-    }, 0, 10, TimeUnit.SECONDS);
+      if (sendJreInformationToWatcher) {
+        log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
+            migrateToJreVersion);
+        statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
+        statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
+      }
+      if (upgradePending.get()) {
+        statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
+      }
+      if (!acquireTasks.get()) {
+        statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+      }
+      if (isNotBlank(migrateTo)) {
+        statusData.put(DELEGATE_MIGRATE, migrateTo);
+      }
+    }
+    messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
+    watchWatcher();
   }
 
   private void watchWatcher() {
@@ -1522,8 +1531,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.warn("Watcher version mismatched for {} seconds. Version is {} but should be {}",
           WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
     }
-    boolean multiVersionRestartNeeded =
-        multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
+
+    boolean multiVersionRestartNeeded = multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT
+        && !new File(getVersionWithPatch()).exists();
 
     if (heartbeatTimedOut || versionMatchTimedOut
         || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
@@ -2355,7 +2365,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void removeDelegateVersionFromCapsule() {
     try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersionWithPatch(), upgradeVersion,
+          "delegate-");
     } catch (Exception ex) {
       log.error("Failed to clean delegate version [{}] from Capsule", upgradeVersion, ex);
     }
@@ -2372,6 +2383,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  private String getVersionWithPatch() {
+    return versionInfoManager.getFullVersion();
   }
 
   private void initiateSelfDestruct() {

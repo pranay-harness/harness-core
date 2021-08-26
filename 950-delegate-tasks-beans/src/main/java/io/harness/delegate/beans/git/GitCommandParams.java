@@ -34,6 +34,6 @@ public class GitCommandParams extends ConnectorTaskParams implements TaskParamet
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return GitCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, gitConfig);
+    return GitCapabilityHelper.fetchRequiredExecutionCapabilitiesSimpleCheck(gitConfig);
   }
 }

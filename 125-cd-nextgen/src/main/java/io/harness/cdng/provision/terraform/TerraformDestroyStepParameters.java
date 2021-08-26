@@ -1,5 +1,6 @@
 package io.harness.cdng.provision.terraform;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
@@ -18,6 +19,7 @@ import lombok.NonNull;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(HarnessTeam.CDP)
+@RecasterAlias("io.harness.cdng.provision.terraform.TerraformDestroyStepParameters")
 public class TerraformDestroyStepParameters extends TerraformDestroyBaseStepInfo implements SpecParameters {
   @NonNull TerraformStepConfigurationParameters configuration;
 

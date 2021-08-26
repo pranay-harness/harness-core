@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
@@ -30,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class GithubEntityToDTOTest {
+public class GithubEntityToDTOTest extends CategoryTest {
   @InjectMocks GithubEntityToDTO githubEntityToDTO;
 
   @Before

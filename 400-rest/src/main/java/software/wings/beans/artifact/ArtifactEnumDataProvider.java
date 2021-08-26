@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._959_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Singleton
 public class ArtifactEnumDataProvider implements DataProvider {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;

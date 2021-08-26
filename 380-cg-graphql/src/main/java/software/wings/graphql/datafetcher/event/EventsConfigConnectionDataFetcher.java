@@ -16,6 +16,7 @@ import software.wings.graphql.schema.query.QLEventsConfigsQueryParameters;
 import software.wings.graphql.schema.type.event.QLEventsConfig;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -28,12 +29,16 @@ public class EventsConfigConnectionDataFetcher
     extends AbstractArrayDataFetcher<QLEventsConfig, QLEventsConfigsQueryParameters> {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EventConfigService eventConfigService;
+  @Inject private AppService appService;
 
   @Override
   @AuthRule(permissionType = LOGGED_IN, action = PermissionAttribute.Action.READ)
   protected List<QLEventsConfig> fetch(QLEventsConfigsQueryParameters qlQueries, String accountId) {
     if (!featureFlagService.isEnabled(APP_TELEMETRY, accountId)) {
       throw new InvalidRequestException("Please enable feature flag to configure events");
+    }
+    if (!appService.exist(qlQueries.getAppId())) {
+      throw new InvalidRequestException("Application does not exist");
     }
     List<CgEventConfig> cgEventConfigs = eventConfigService.listAllEventsConfig(accountId, qlQueries.getAppId());
     return cgEventConfigs.stream()

@@ -47,7 +47,7 @@ class CustomSecretsManagerUtils {
     CustomSecretsManagerConfigBuilder configBuilder = CustomSecretsManagerConfig.builder()
                                                           .name("CustomSecretsManager")
                                                           .templateId(UUIDGenerator.generateUuid())
-                                                          .delegateSelectors(new ArrayList<>())
+                                                          .delegateSelectors(new HashSet<>())
                                                           .executeOnDelegate(true)
                                                           .isConnectorTemplatized(false)
                                                           .testVariables(obtainTestVariables(null))

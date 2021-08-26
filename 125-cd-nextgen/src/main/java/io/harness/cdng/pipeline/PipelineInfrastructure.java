@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline;
 
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
@@ -37,6 +38,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OneOfField(fields = {"infrastructureDefinition", "useFromStage"})
 @SimpleVisitorHelper(helperClass = PipelineInfrastructureVisitorHelper.class)
 @TypeAlias("pipelineInfrastructure")
+@RecasterAlias("io.harness.cdng.pipeline.PipelineInfrastructure")
 public class PipelineInfrastructure implements StepParameters, Visitable {
   private InfrastructureDef infrastructureDefinition;
   @Wither private InfraUseFromStage useFromStage;

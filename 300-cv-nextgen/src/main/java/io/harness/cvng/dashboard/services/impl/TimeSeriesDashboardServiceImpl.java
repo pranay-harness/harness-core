@@ -10,6 +10,9 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -47,6 +50,18 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVNGParallelExecutor cvngParallelExecutor;
   @Inject private ActivityService activityService;
+
+  @Override
+  public PageResponse<TimeSeriesMetricDataDTO> getTimeSeriesMetricData(
+      ServiceEnvironmentParams serviceEnvironmentParams, TimeRangeParams timeRangeParams, boolean anomalous,
+      DataSourceType dataSourceType, String filter, PageParams pageParams) {
+    return getSortedMetricData(serviceEnvironmentParams.getAccountIdentifier(),
+        serviceEnvironmentParams.getProjectIdentifier(), serviceEnvironmentParams.getOrgIdentifier(),
+        serviceEnvironmentParams.getEnvironmentIdentifier(), serviceEnvironmentParams.getServiceIdentifier(), null,
+        timeRangeParams.getStartTime().toEpochMilli(), timeRangeParams.getEndTime().toEpochMilli(),
+        timeRangeParams.getStartTime().toEpochMilli(), anomalous, pageParams.getPage(), pageParams.getSize(), filter,
+        dataSourceType);
+  }
 
   @Override
   public PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,

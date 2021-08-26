@@ -17,6 +17,8 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -76,6 +78,7 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by rsingh on 7/6/17.
  */
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public static final int HOST_BATCH_SIZE = 5;
   private static String DEMO_REQUEST_BODY;

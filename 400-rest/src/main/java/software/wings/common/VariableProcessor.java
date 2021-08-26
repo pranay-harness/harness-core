@@ -4,9 +4,12 @@
 
 package software.wings.common;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
 import static software.wings.beans.ServiceVariable.Type.ARTIFACT;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
 import software.wings.api.InstanceElement;
@@ -29,6 +32,7 @@ import org.mongodb.morphia.annotations.Transient;
  * The type Variable processor.
  */
 @Singleton
+@TargetModule(_957_CG_BEANS)
 public class VariableProcessor {
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
 

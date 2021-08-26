@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -20,6 +21,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -27,6 +29,8 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRe
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -35,6 +39,8 @@ import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.SetupUsageEventService;
+import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
@@ -68,10 +74,12 @@ import org.mockito.Mock;
 public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject MetricPackService metricPackService;
   @Inject CVConfigService cvConfigService;
+  @Inject ChangeSourceService changeSourceService;
   @Inject MonitoredServiceService monitoredServiceService;
   @Inject HPersistence hPersistence;
   @Inject ServiceDependencyService serviceDependencyService;
   @Mock NextGenService nextGenService;
+  @Mock SetupUsageEventService setupUsageEventService;
 
   private BuilderFactory builderFactory;
   String healthSourceName;
@@ -87,7 +95,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   String applicationName;
   String monitoredServiceName;
   String monitoredServiceIdentifier;
+  String changeSourceIdentifier;
   String description;
+  ProjectParams projectParams;
+  ServiceEnvironmentParams environmentParams;
   Map<String, String> tags;
 
   @Before
@@ -108,14 +119,28 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     monitoredServiceName = "monitoredServiceName";
     monitoredServiceIdentifier = "monitoredServiceIdentifier";
     description = "description";
+    changeSourceIdentifier = "changeSourceIdentifier";
     tags = new HashMap<String, String>() {
       {
         put("tag1", "value1");
         put("tag2", "");
       }
     };
+    projectParams = ProjectParams.builder()
+                        .accountIdentifier(accountId)
+                        .orgIdentifier(orgIdentifier)
+                        .projectIdentifier(projectIdentifier)
+                        .build();
+    environmentParams = ServiceEnvironmentParams.builder()
+                            .accountIdentifier(accountId)
+                            .orgIdentifier(orgIdentifier)
+                            .projectIdentifier(projectIdentifier)
+                            .serviceIdentifier(serviceIdentifier)
+                            .environmentIdentifier(environmentIdentifier)
+                            .build();
 
     FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(monitoredServiceService, "setupUsageEventService", setupUsageEventService, true);
   }
 
   @Test
@@ -125,8 +150,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSource.setName("some-health_source-name");
-    monitoredServiceDTO.getSources().addHealthSource(healthSource);
-    assertThatThrownBy(() -> monitoredServiceService.create(accountId, monitoredServiceDTO))
+    monitoredServiceDTO.getSources().getHealthSources().add(healthSource);
+    assertThatThrownBy(
+        () -> monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             String.format("Multiple Health Sources exists with the same identifier %s", healthSourceIdentifier));
@@ -137,8 +163,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate_monitoredServiceAlreadyPresentWithSameIdentifier() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
-    assertThatThrownBy(() -> monitoredServiceService.create(accountId, monitoredServiceDTO))
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    assertThatThrownBy(
+        () -> monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO))
         .isInstanceOf(DuplicateFieldException.class)
         .hasMessage(String.format(
             "Monitored Source Entity  with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
@@ -151,9 +178,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate_monitoredServiceAlreadyPresentWithServiceAndEnvironmentRef() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     monitoredServiceDTO.setIdentifier("some-other-identifier");
-    assertThatThrownBy(() -> monitoredServiceService.create(accountId, monitoredServiceDTO))
+    assertThatThrownBy(
+        () -> monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO))
         .isInstanceOf(DuplicateFieldException.class)
         .hasMessage(String.format(
             "Monitored Source Entity  with duplicate service ref %s, environmentRef %s having identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
@@ -184,7 +212,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             .build();
     cvConfigService.save(cvConfig);
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    assertThatThrownBy(() -> monitoredServiceService.create(accountId, monitoredServiceDTO))
+    assertThatThrownBy(
+        () -> monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO))
         .isInstanceOf(DuplicateFieldException.class)
         .hasMessage(String.format(
             "Already Existing configs for Monitored Service  with identifier %s and orgIdentifier %s and projectIdentifier %s",
@@ -199,7 +228,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceDTO.setSources(MonitoredServiceDTO.Sources.builder().build());
     MonitoredServiceDTO savedMonitoredServiceDTO =
-        monitoredServiceService.create(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+        monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
@@ -211,7 +241,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   public void testCreate_monitoredServiceNonEmptyHealthSources() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     MonitoredServiceDTO savedMonitoredServiceDTO =
-        monitoredServiceService.create(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+        monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
@@ -223,12 +254,33 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testCreate_monitoredServiceNonEmptyChangeSource() {
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
+    MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
+    assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
+    Set<ChangeSourceDTO> changeSources = changeSourceService.get(environmentParams,
+        savedMonitoredServiceDTO.getSources()
+            .getChangeSources()
+            .stream()
+            .map(changeSource -> changeSource.getIdentifier())
+            .collect(toList()));
+    assertThat(changeSources.size()).isEqualTo(1);
+  }
+
+  @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
   public void testCreate_monitoredServiceNonEmptyDependencies() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTOWithDependencies();
     MonitoredServiceDTO savedMonitoredServiceDTO =
-        monitoredServiceService.create(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+        monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
@@ -253,7 +305,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGet_usingIdentifier() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredServiceDTO getMonitoredServiceDTO =
         monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier)
             .getMonitoredServiceDTO();
@@ -274,7 +326,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGet_usingServiceEnvironment() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredServiceDTO getMonitoredServiceDTO =
         monitoredServiceService
             .get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier)
@@ -287,19 +339,20 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testDelete() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
         HealthSourceService.getNameSpacedIdentifier(monitoredServiceIdentifier, healthSourceIdentifier));
     assertThat(cvConfigs.size()).isEqualTo(1);
     boolean isDeleted =
-        monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier);
+        monitoredServiceService.delete(builderFactory.getContext().getProjectParams(), monitoredServiceIdentifier);
     assertThat(isDeleted).isEqualTo(true);
     monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertThat(monitoredService).isEqualTo(null);
     cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
         HealthSourceService.getNameSpacedIdentifier(monitoredServiceIdentifier, healthSourceIdentifier));
+    assertThat(changeSourceService.get(environmentParams, Arrays.asList(changeSourceIdentifier))).isEmpty();
     assertThat(cvConfigs.size()).isEqualTo(0);
   }
 
@@ -308,12 +361,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testList_withEnvironmentFilter() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     environmentIdentifier = "new-environment";
     monitoredServiceIdentifier = "new-monitored-service-identifier";
     healthSourceIdentifier = "new-health-source-identifier";
     monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     when(nextGenService.listService(anyString(), anyString(), anyString(), any()))
         .thenReturn(Arrays.asList(ServiceResponse.builder()
                                       .service(builderFactory.serviceResponseDTOBuilder()
@@ -346,12 +399,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testList_forAllEnvironment() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     environmentIdentifier = "new-environment";
     monitoredServiceIdentifier = "new-monitored-service-identifier";
     healthSourceIdentifier = "new-health-source-identifier";
     monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
 
     when(nextGenService.listService(anyString(), anyString(), anyString(), any()))
         .thenReturn(Arrays.asList(ServiceResponse.builder()
@@ -388,7 +441,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testDeleteByAccountId() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
@@ -407,7 +460,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testDeleteByProjectIdentifier() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
@@ -427,7 +480,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testDeleteByOrgIdentifier() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
@@ -447,7 +500,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   public void testCreateDefault() {
     MonitoredServiceDTO monitoredServiceDTO =
         monitoredServiceService
-            .createDefault(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier)
+            .createDefault(builderFactory.getContext().getProjectParams(), serviceIdentifier, environmentIdentifier)
             .getMonitoredServiceDTO();
     assertThat(monitoredServiceDTO.getName()).isEqualTo(serviceIdentifier + "_" + environmentIdentifier);
     assertThat(monitoredServiceDTO.getIdentifier()).isEqualTo(serviceIdentifier + "_" + environmentIdentifier);
@@ -464,7 +517,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate_monitoredServiceDoesNotExists() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    assertThatThrownBy(() -> monitoredServiceService.update(accountId, monitoredServiceDTO))
+    assertThatThrownBy(
+        () -> monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(String.format(
             "Monitored Source Entity  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
@@ -476,9 +530,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate_serviceRefUpdateNotAllowed() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     monitoredServiceDTO.setServiceRef("new-service-ref");
-    assertThatThrownBy(() -> monitoredServiceService.update(accountId, monitoredServiceDTO))
+    assertThatThrownBy(
+        () -> monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("serviceRef update is not allowed");
   }
@@ -488,9 +543,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate_environmentRefUpdateNotAllowed() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     monitoredServiceDTO.setEnvironmentRef("new-environement-ref");
-    assertThatThrownBy(() -> monitoredServiceService.update(accountId, monitoredServiceDTO))
+    assertThatThrownBy(
+        () -> monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("environmentRef update is not allowed");
   }
@@ -500,11 +556,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate_monitoredServiceBasics() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     monitoredServiceDTO.setName("new-name");
     monitoredServiceDTO.setDescription("new-description");
     MonitoredServiceDTO savedMonitoredServiceDTO =
-        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+        monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceIdentifier);
     assertThat(monitoredService.getName()).isEqualTo("new-name");
@@ -517,7 +574,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate_deletingHealthSource() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
 
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
@@ -526,7 +583,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(cvConfigs.size()).isEqualTo(1);
     monitoredServiceDTO.getSources().setHealthSources(null);
     MonitoredServiceDTO savedMonitoredServiceDTO =
-        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+        monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
@@ -540,7 +598,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate_addingHealthSource() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
@@ -553,7 +611,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     healthSource.setIdentifier("new-healthSource-identifier");
     monitoredServiceDTO.getSources().getHealthSources().add(healthSource);
     MonitoredServiceDTO savedMonitoredServiceDTO =
-        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+        monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
@@ -575,7 +634,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate_updatingHealthSource() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
@@ -588,7 +647,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     monitoredServiceDTO.getSources().getHealthSources().iterator().next().setSpec(healthSourceSpec);
 
     MonitoredServiceDTO savedMonitoredServiceDTO =
-        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+        monitoredServiceService.update(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
@@ -604,7 +664,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testSetHealthMonitoringFlag() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     monitoredServiceService.setHealthMonitoringFlag(
         accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier, false);
     MonitoredService updatedMonitoredService = getMonitoredService(monitoredServiceIdentifier);
@@ -622,7 +682,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testListEnvironments() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
 
     when(nextGenService.listEnvironment(anyString(), anyString(), anyString(), any()))
         .thenReturn(Arrays.asList(EnvironmentResponse.builder()
@@ -644,7 +704,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testListMonitoredServices() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
 
     List<MonitoredService> monitoredServices =
         monitoredServiceService.list(builderFactory.getContext().getProjectParams(),
@@ -678,6 +738,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             MonitoredServiceDTO.Sources.builder()
                 .healthSources(
                     Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
+                .changeSources(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())
+                                   .stream()
+                                   .collect(Collectors.toSet()))
                 .build())
         .build();
   }

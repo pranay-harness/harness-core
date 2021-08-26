@@ -2,7 +2,9 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -13,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public interface StateMachineExecutionCallback {
   /**

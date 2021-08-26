@@ -50,11 +50,10 @@ import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
 import software.wings.beans.TaskType;
 import software.wings.service.InstanceSyncConstants;
-import software.wings.service.impl.DelegateTaskServiceClassicImpl;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
 import com.google.inject.Inject;
@@ -86,7 +85,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private DelegateTaskServiceClassicImpl delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
@@ -138,11 +137,9 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceRequiredProvider)
             .redistribute(true));
-    log.info("perpetualtask record handler iterators");
   }
 
   public void assign(PerpetualTaskRecord taskRecord) {
-    log.info("Start assign perpetual task " + taskRecord.getUuid());
     try (AutoLogContext ignore0 = new AccountLogContext(taskRecord.getAccountId(), OVERRIDE_ERROR)) {
       String taskId = taskRecord.getUuid();
       log.info("Assigning Delegate to the inactive {} perpetual task with id={}.", taskRecord.getPerpetualTaskType(),
@@ -150,7 +147,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
       DelegateTask validationTask = getValidationTask(taskRecord);
 
       try {
-        DelegateResponseData response = delegateService.executeTask(validationTask);
+        DelegateResponseData response = delegateTaskServiceClassic.executeTask(validationTask);
 
         if (response instanceof DelegateTaskNotifyResponseData) {
           if (response instanceof PerpetualTaskCapabilityCheckResponse) {
@@ -214,12 +211,11 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   }
 
   public void rebalance(PerpetualTaskRecord taskRecord) {
-    if (delegateService.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
+    if (delegateTaskServiceClassic.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
       perpetualTaskService.appointDelegate(taskRecord.getAccountId(), taskRecord.getUuid(), taskRecord.getDelegateId(),
           taskRecord.getClientContext().getLastContextUpdated());
       return;
     }
-    log.info("Rebalance perpetual task record " + taskRecord.getUuid());
     assign(taskRecord);
   }
 

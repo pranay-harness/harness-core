@@ -40,8 +40,13 @@ test --define=HARNESS_ARGS=
 build --define=HARNESS_ARGS=
 
 # Bazel SonarQube Integration
-# coverage --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-# coverage --remote_cache=https://storage.googleapis.com/harness-bazel-cache
-# coverage --collect_code_coverage
-# coverage --combined_report=lcov
-# coverage --coverage_report_generator=//tools/bazel/sonarqube:sonarqube_coverage_generator
+coverage --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
+coverage --collect_code_coverage
+coverage --combined_report=lcov
+coverage --coverage_report_generator=//tools/bazel/sonarqube:sonarqube_coverage_generator
+coverage --experimental_fetch_all_coverage_outputs
+coverage --strict_java_deps=off
+coverage --cache_test_results=yes
+coverage --test_output=summary
+coverage --flaky_test_attempts=default
+coverage --build_runfile_links

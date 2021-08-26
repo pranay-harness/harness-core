@@ -1,0 +1,42 @@
+{
+  "artifactStreamType": "JENKINS",
+  "uuid": null,
+  "appId": "ANoEiuLmSEShkPmRYdLG8A",
+  "createdBy": null,
+  "createdAt": 0,
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": 0,
+  "artifactStreamId": null,
+  "sourceName": "CDP-Test-Artifacts",
+  "settingId": "nbjfyEtlQWSst_ptd98xjQ",
+  "artifactServerName": null,
+  "name": "jenkins-CDP",
+  "autoPopulate": false,
+  "serviceId": null,
+  "service": null,
+  "autoDownload": false,
+  "autoApproveForProduction": false,
+  "metadataOnly": false,
+  "failedCronAttempts": 0,
+  "nextIteration": 0,
+  "nextCleanupIteration": 0,
+  "templateUuid": null,
+  "templateVersion": null,
+  "templateVariables": [],
+  "accountId": "kmpySmUISimoRrJL6NL73w",
+  "keywords": [
+    "jenkins-cdp",
+    "jenkins",
+    "cdp-test-artifacts"
+  ],
+  "artifactCount": 0,
+  "artifacts": null,
+  "sample": false,
+  "perpetualTaskId": null,
+  "collectionStatus": null,
+  "artifactStreamParameterized": false,
+  "jobname": "CDP-Test-Artifacts",
+  "artifactPaths": [
+    "function.zip"
+  ]
+}

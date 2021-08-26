@@ -6,5 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(PIPELINE)
 public interface WebhookConfigProvider {
-  String getPmsApiBaseUrl();
+  String getWebhookApiBaseUrl();
+  String getCustomApiBaseUrl();
 }

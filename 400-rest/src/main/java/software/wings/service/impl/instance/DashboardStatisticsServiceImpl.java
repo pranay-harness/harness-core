@@ -96,6 +96,7 @@ import software.wings.features.api.RestrictedFeature;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys;
+import software.wings.service.impl.instance.ServiceInfoResponseSummary.ServiceInfoResponseSummaryBuilder;
 import software.wings.service.impl.instance.ServiceInfoSummary.ServiceInfoSummaryKeys;
 import software.wings.service.impl.instance.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AccountService;
@@ -121,6 +122,9 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.mongodb.AggregationOptions;
+import com.mongodb.ReadPreference;
+import com.mongodb.TagSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -128,6 +132,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -165,6 +170,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject @Named(FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private TagSet mongoTagSet;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(
@@ -1233,13 +1239,18 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     query.filter("serviceId", serviceId);
     return query;
   }
-
   @Override
   public PageResponse<CompareEnvironmentAggregationResponseInfo> getCompareServicesByEnvironment(
       String accountId, String appId, String envId1, String envId2, int offset, int limit) {
+    ReadPreference readPreference;
+    if (Objects.isNull(mongoTagSet)) {
+      readPreference = ReadPreference.secondaryPreferred();
+    } else {
+      readPreference = ReadPreference.secondary(mongoTagSet);
+    }
     Query<Instance> query;
     try {
-      query = getQueryForCompareServicesByEnvironment(accountId, appId, envId1, envId2);
+      query = getQueryForCompareServicesByEnvironment(appId, envId1, envId2);
     } catch (NoResultFoundException nre) {
       return getEmptyPageResponse();
     }
@@ -1277,7 +1288,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     aggregationPipeline.limit(limit);
 
     final Iterator<CompareEnvironmentAggregationInfo> aggregate =
-        HPersistence.retry(() -> aggregationPipeline.aggregate(CompareEnvironmentAggregationInfo.class));
+        HPersistence.retry(()
+                               -> aggregationPipeline.aggregate(CompareEnvironmentAggregationInfo.class,
+                                   AggregationOptions.builder().build(), readPreference));
     aggregate.forEachRemaining(instanceInfoList::add);
 
     List<CompareEnvironmentAggregationResponseInfo> responseList = new ArrayList<>();
@@ -1289,15 +1302,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                            .envInfo(emptyIfNull(instanceInfo.getServiceInfoSummaries())
                                         .stream()
                                         .collect(Collectors.groupingBy(ServiceInfoSummary::getEnvId,
-                                            Collectors.mapping(item
-                                                -> ServiceInfoResponseSummary.builder()
-                                                       .lastArtifactBuildNum(item.getLastArtifactBuildNum())
-                                                       .lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
-                                                       .lastWorkflowExecutionName(item.getLastWorkflowExecutionName())
-                                                       .infraMappingName(item.getInfraMappingName())
-                                                       .infraMappingId(item.getInfraMappingId())
-                                                       .build(),
-                                                toList()))))
+                                            Collectors.mapping(item -> createServiceSummary(item), toList()))))
                            .build());
     }
 
@@ -1327,13 +1332,35 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .build();
   }
 
-  private Query<Instance> getQueryForCompareServicesByEnvironment(
-      String accountId, String appId, String envId1, String envId2) {
+  private ServiceInfoResponseSummary createServiceSummary(ServiceInfoSummary item) {
+    String lastWorkflowExecutionId = item.getLastWorkflowExecutionId();
+    // To fetch last execution
+    WorkflowExecution lastWorkflowExecution = null;
+
+    if (isNotEmpty(lastWorkflowExecutionId)) {
+      lastWorkflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                  .filter(WorkflowExecutionKeys.uuid, lastWorkflowExecutionId)
+                                  .get();
+    }
+
+    ServiceInfoResponseSummaryBuilder serviceInfoResponseSummaryBuilder =
+        ServiceInfoResponseSummary.builder()
+            .lastArtifactBuildNum(item.getLastArtifactBuildNum())
+            .infraMappingName(item.getInfraMappingName())
+            .infraMappingId(item.getInfraMappingId());
+
+    if (lastWorkflowExecution != null) {
+      serviceInfoResponseSummaryBuilder.lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
+          .lastWorkflowExecutionName(item.getLastWorkflowExecutionName());
+    }
+    return serviceInfoResponseSummaryBuilder.build();
+  }
+
+  private Query<Instance> getQueryForCompareServicesByEnvironment(String appId, String envId1, String envId2) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    query.filter(InstanceKeys.accountId, accountId);
+    query.filter(InstanceKeys.appId, appId);
     query.filter(InstanceKeys.isDeleted, false);
-    query.and(query.criteria(InstanceKeys.appId).equal(appId),
-        query.or(query.criteria(InstanceKeys.envId).equal(envId1), query.criteria(InstanceKeys.envId).equal(envId2)));
+    query.or(query.criteria(InstanceKeys.envId).equal(envId1), query.criteria(InstanceKeys.envId).equal(envId2));
     return query;
   }
 }

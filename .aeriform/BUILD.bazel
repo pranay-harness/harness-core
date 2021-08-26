@@ -296,6 +296,10 @@ aeriform("//940-ng-audit-service:tests")
 
 aeriform("//940-notification-client:module")
 
+aeriform("//940-plan-feature-sdk:module")
+
+aeriform("//940-plan-feature-sdk:tests")
+
 aeriform("//940-primary-version-manager:module")
 
 aeriform("//940-primary-version-manager:tests")
@@ -330,8 +334,6 @@ aeriform("//949-access-control-commons:module")
 
 aeriform("//950-command-library-common:module")
 
-aeriform("//959-common-entities:module")
-
 aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
@@ -356,6 +358,10 @@ aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
 
+aeriform("//950-opa-client:module")
+
+aeriform("//950-opa-client:tests")
+
 aeriform("//950-telemetry:module")
 
 aeriform("//950-telemetry:tests")
@@ -369,6 +375,8 @@ aeriform("//950-wait-engine:tests")
 aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
+
+aeriform("//951-cg-git-sync:module")
 
 aeriform("//951-ng-audit-commons:module")
 
@@ -408,13 +416,15 @@ aeriform("//955-setup-usage-sdk:tests")
 
 aeriform("//956-feature-flag-beans:module")
 
+aeriform("//957-cg-beans:module")
+
 aeriform("//958-migration-sdk:module")
 
 aeriform("//958-migration-sdk:tests")
 
 aeriform("//958-ng-file-service-sdk:module")
 
-aeriform("//959-cg-beans:module")
+aeriform("//959-common-entities:module")
 
 aeriform("//959-file-service-commons:module")
 

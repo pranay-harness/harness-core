@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookRegistrationStatus;
+import io.harness.ngtriggers.beans.entity.metadata.status.TriggerStatus;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -28,8 +29,10 @@ public class NGTriggerDetailsResponseDTO {
   String identifier;
   String description;
   NGTriggerType type;
+  TriggerStatus triggerStatus;
   LastTriggerExecutionDetails lastTriggerExecutionDetails;
   WebhookDetails webhookDetails;
+  BuildDetails buildDetails;
   Map<String, String> tags;
   List<Integer> executions;
   String yaml;

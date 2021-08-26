@@ -1,5 +1,7 @@
 package software.wings.service.mappers.artifact;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.nexus.NexusRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -8,6 +10,7 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CDC)
 public class NexusConfigToNexusRequestMapper {
   public static NexusRequest toNexusRequest(
       NexusConfig nexusConfig, EncryptionService encryptionService, List<EncryptedDataDetail> encryptedDetails) {

@@ -4,7 +4,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instanceinfo.InstanceInfo;
-import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
@@ -34,6 +34,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Instance {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .unique(true)
+                 .name("unique_instanceKey_infrastructureMappingId_idx")
+                 .field(InstanceKeys.instanceKey)
+                 .field(InstanceKeys.infrastructureMappingId)
+                 .build())
         .add(SortCompoundMongoIndex.builder()
                  .name("accountId_organizationId_projectId_isDeleted_createdAt_deletedAt_idx")
                  .field(InstanceKeys.accountIdentifier)
@@ -88,7 +94,7 @@ public class Instance {
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
-  @FdUniqueIndex private String instanceKey;
+  private String instanceKey;
   @NotEmpty private InstanceType instanceType;
 
   private String envIdentifier;

@@ -3,6 +3,7 @@ package io.harness.cvng.cdng.beans;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.cdng.services.impl.CVNGStep;
@@ -27,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("Verify")
 @TypeAlias("verificationStepInfo")
 @OwnedBy(HarnessTeam.CV)
+@RecasterAlias("io.harness.cvng.cdng.beans.CVNGStepInfo")
 public class CVNGStepInfo implements CVStepInfoBase {
   private static final String SERVICE_IDENTIFIER_EXPRESSION = "<+service.identifier>";
   private static final String ENV_IDENTIFIER_EXPRESSION = "<+env.identifier>";

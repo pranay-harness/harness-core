@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._959_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
@@ -39,7 +39,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
-@TargetModule(_959_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class PcfConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Endpoint URL", required = true) @NotEmpty private String endpointUrl;
   @Attributes(title = "Username", required = true)
