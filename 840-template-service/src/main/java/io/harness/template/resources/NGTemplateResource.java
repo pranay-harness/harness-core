@@ -13,10 +13,12 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -96,8 +98,8 @@ public class NGTemplateResource {
     TemplateResponseDTO templateResponseDTO = NGTemplateDtoMapper.writeTemplateResponseDto(templateEntity.orElseThrow(
         ()
             -> new InvalidRequestException(String.format(
-                "Template with the given Identifier: %s and versionLabel: %s does not exist or has been deleted",
-                templateIdentifier, versionLabel))));
+                "Template with the given Identifier: %s and %s does not exist or has been deleted", templateIdentifier,
+                EmptyPredicate.isEmpty(versionLabel) ? "stable versionLabel" : "versionLabel: " + versionLabel))));
     return ResponseDTO.newResponse(version, templateResponseDTO);
   }
 
@@ -153,15 +155,20 @@ public class NGTemplateResource {
   }
 
   @DELETE
-  @Path("/{templateIdentifier}/{label}")
-  @ApiOperation(value = "Deletes template label", nickname = "deleteTemplateLabel")
-  public ResponseDTO<String> deleteTemplate(
+  @Path("/{templateIdentifier}/{versionLabel}")
+  @ApiOperation(value = "Deletes template versionLabel", nickname = "deleteTemplateLabel")
+  public ResponseDTO<Boolean> deleteTemplate(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @NotNull @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String templateLabel) {
-    return null;
+      @NotNull @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+      @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
+    log.info(String.format("Deleting Template with identifier %s and versionLabel %s in project %s, org %s, account %s",
+        templateIdentifier, versionLabel, projectId, orgId, accountId));
+
+    return ResponseDTO.newResponse(templateService.delete(
+        accountId, orgId, projectId, templateIdentifier, versionLabel, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
   @POST

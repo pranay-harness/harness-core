@@ -17,6 +17,11 @@ public interface NGTemplateRepositoryCustom {
       String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier, String versionLabel,
       boolean notDeleted);
 
-  TemplateEntity updateTemplateYaml(
-      TemplateEntity templateEntity, NGTemplateConfig templateConfig, ChangeType changeType);
+  Optional<TemplateEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier, boolean notDeleted);
+
+  TemplateEntity updateTemplateYaml(TemplateEntity templateEntity, TemplateEntity oldTemplateEntity,
+      NGTemplateConfig templateConfig, ChangeType changeType);
+
+  TemplateEntity deleteTemplate(TemplateEntity templateToDelete, NGTemplateConfig templateConfig);
 }
