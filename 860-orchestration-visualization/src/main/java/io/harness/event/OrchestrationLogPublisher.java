@@ -1,5 +1,7 @@
 package io.harness.event;
 
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationEventLog;
@@ -64,9 +66,10 @@ public class OrchestrationLogPublisher
             .build());
     OrchestrationLogEvent orchestrationLogEvent =
         OrchestrationLogEvent.newBuilder().setPlanExecutionId(planExecutionId).build();
+
     producer.send(Message.newBuilder()
-                      .putAllMetadata(ImmutableMap.of("nodeExecutionId", nodeExecutionId, "planExecutionId",
-                          planExecutionId, "eventType", eventType.name()))
+                      .putAllMetadata(ImmutableMap.of("nodeExecutionId", emptyIfNull(nodeExecutionId),
+                          "planExecutionId", planExecutionId, "eventType", eventType.name()))
                       .setData(orchestrationLogEvent.toByteString())
                       .build());
   }
