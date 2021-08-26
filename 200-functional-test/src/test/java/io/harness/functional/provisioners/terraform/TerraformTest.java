@@ -39,6 +39,7 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.restutils.InfraProvisionerRestUtils;
 
+import org.junit.Ignore;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -164,6 +165,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldFetchTerraformVariablesWithAccountGitConnector() throws Exception {
     setupStuff(
         Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);
@@ -184,6 +186,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldFetchTerraformTargetsWithAccountGitConnector() throws Exception {
     setupStuff(
         Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);
@@ -199,6 +202,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(FunctionalTests.class)
+  @Ignore
   public void shouldRunTerraformWorkflowWithAccountGitConnector() throws Exception {
     setupStuff(
         Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);

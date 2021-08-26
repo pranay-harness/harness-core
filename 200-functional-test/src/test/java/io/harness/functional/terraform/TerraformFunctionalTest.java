@@ -123,6 +123,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
+  @Ignore
   public void applyApprovedPlanThenDestroy() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
@@ -143,6 +144,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
+  @Ignore
   public void createTerraformPlanForDestroy() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
@@ -161,6 +163,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
+  @Ignore
   public void workflowWithCommitId() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(false, false);
 
@@ -181,6 +184,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
+  @Ignore
   public void workflowWithEnvVars() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, true);
 
