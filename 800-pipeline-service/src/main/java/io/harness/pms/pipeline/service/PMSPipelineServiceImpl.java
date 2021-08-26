@@ -116,7 +116,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
     if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
-      return makePipelineUpdateCall(pipelineEntity, changeType);
+      // sending old entity as null here because a new mongo entity will be created. If audit trail needs to be added
+      // to git synced projects, a get call needs to be added here to the base branch of this pipeline update
+      return makePipelineUpdateCall(pipelineEntity, null, changeType);
     }
     Optional<PipelineEntity> optionalOriginalEntity =
         pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
@@ -132,14 +134,15 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags());
 
-    return makePipelineUpdateCall(tempEntity, changeType);
+    return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
 
-  private PipelineEntity makePipelineUpdateCall(PipelineEntity pipelineEntity, ChangeType changeType) {
+  private PipelineEntity makePipelineUpdateCall(
+      PipelineEntity pipelineEntity, PipelineEntity oldEntity, ChangeType changeType) {
     try {
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
       PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
-          entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo), changeType);
+          entityWithUpdatedInfo, oldEntity, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo), changeType);
 
       if (updatedResult == null) {
         throw new InvalidRequestException(format(
