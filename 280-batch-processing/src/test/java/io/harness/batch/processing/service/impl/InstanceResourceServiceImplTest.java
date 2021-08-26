@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
+import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.vmpricing.VMPricingServiceImpl;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.constants.CloudProvider;

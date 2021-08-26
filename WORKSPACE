@@ -5310,3 +5310,17 @@ http_file(
     sha256 = "05165e53fd9aeb774f95178c85740c3ee9ea72a9ca489497df837cc397a5da06",
     urls = ["https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"],
 )
+
+go_repository(
+    name = "com_github_go_co_op_gocron",
+    importpath = "github.com/go-co-op/gocron",
+    sum = "h1:gkWhY/CLtDdVXTquqGtBthig0sdHGTBOyo+kR36Pglw=",
+    version = "v1.7.0",
+)
+
+go_repository(
+    name = "com_github_robfig_cron_v3",
+    importpath = "github.com/robfig/cron/v3",
+    sum = "h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=",
+    version = "v3.0.1",
+)

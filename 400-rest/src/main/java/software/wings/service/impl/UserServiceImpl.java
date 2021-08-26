@@ -2583,10 +2583,11 @@ public class UserServiceImpl implements UserService {
             if (accountService.isNextGenEnabled(accountId)) {
               Boolean isUserPartOfAccountInNG =
                   NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
-              log.info(
-                  "User {} is {} of nextgen in account {}", userId, isUserPartOfAccountInNG ? "" : "not", accountId);
-              if (isUserPartOfAccountInNG) {
-                updatedActiveAccounts.add(account);
+              log.info("User {} is {} of nextgen in account {}", userId,
+                  Boolean.TRUE.equals(isUserPartOfAccountInNG) ? "" : "not", accountId);
+              if (Boolean.TRUE.equals(isUserPartOfAccountInNG)) {
+                throw new InvalidRequestException(
+                    "User cannot be deleted because user is part of Harness NextGen as well. Please remove the user from NextGen first.");
               }
             }
           } else {
@@ -2969,8 +2970,8 @@ public class UserServiceImpl implements UserService {
     // Serialise to JWT compact form
     String jwtString = jwsObject.serialize();
 
-    String redirectUrl = "https://"
-        + "harnesssupport.zendesk.com/access/jwt?jwt=" + jwtString;
+    String redirectUrl =
+        String.format("%s/access/jwt?jwt=%s", configuration.getPortal().getZendeskBaseUrl(), jwtString);
 
     if (returnToUrl != null) {
       redirectUrl += "&return_to=" + returnToUrl;

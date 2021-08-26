@@ -3,6 +3,7 @@ package io.harness.beans.sweepingoutputs;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -28,6 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8PodDetails")
 @JsonTypeName("k8PodDetails")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.sweepingoutputs.K8PodDetails")
 public class K8PodDetails implements PersistentEntity, UuidAware, ContextElement, AccountAccess {
   private String namespace; // Don't use it, it will be removed soon
   private String stageID;

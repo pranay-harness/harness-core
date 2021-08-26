@@ -2,6 +2,10 @@ package software.wings.api.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
@@ -18,6 +22,8 @@ import lombok.Value;
 @Value
 @Builder
 @JsonTypeName("setupSweepingOutputPcf")
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class SetupSweepingOutputPcf implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "setupSweepingOutputPcf";
 
@@ -52,6 +58,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   private boolean versioningChanged;
   private boolean nonVersioning;
   private Integer activeAppRevision;
+  private String existingAppNamingStrategy;
 
   public InfoVariables fetchPcfVariableInfo() {
     InfoVariablesBuilder infoVariablesBuilder = InfoVariables.builder();

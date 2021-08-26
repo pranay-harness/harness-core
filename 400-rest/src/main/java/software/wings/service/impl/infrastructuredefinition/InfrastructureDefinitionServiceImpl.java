@@ -552,6 +552,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateAndPrepareInfraDefinition(@Valid InfrastructureDefinition infraDefinition) {
     validateCloudProviderAndDeploymentType(infraDefinition.getCloudProviderType(), infraDefinition.getDeploymentType());
+    if (infraDefinition.getCloudProviderType() != CloudProviderType.CUSTOM
+        && settingsService.getByAccountAndId(
+               infraDefinition.getAccountId(), infraDefinition.getInfrastructure().getCloudProviderId())
+            == null) {
+      throw new InvalidRequestException("Invalid Cloud Provider Id", USER);
+    }
     if (infraDefinition.getDeploymentType() == DeploymentType.SSH
         && infraDefinition.getInfrastructure() instanceof SshBasedInfrastructure) {
       notEmptyCheck("Connection Attributes can't be empty",

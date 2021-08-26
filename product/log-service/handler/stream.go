@@ -36,6 +36,7 @@ func (bwc *BufioWriterCloser) Close() error {
 func HandleOpen(stream stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		st := time.Now()
 
 		accountID := r.FormValue(accountIDParam)
 		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
@@ -49,6 +50,10 @@ func HandleOpen(stream stream.Stream) http.HandlerFunc {
 			return
 		}
 
+		logger.FromRequest(r).WithField("key", key).
+			WithField("latency", time.Since(st)).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			Infoln("api: successfully created stream")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -58,6 +63,7 @@ func HandleOpen(stream stream.Stream) http.HandlerFunc {
 func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		st := time.Now()
 		var keys []string
 
 		accountID := r.FormValue(accountIDParam)
@@ -77,7 +83,7 @@ func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 					WithError(err).
 					WithField("key", key).
 					WithField("prefix", "true").
-					Errorln("api: could not fetch prefixes")
+					Errorln("api: unable to fetch prefixes")
 				return
 			}
 		} else {
@@ -114,10 +120,13 @@ func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 					logger.FromRequest(r).
 						WithError(err).
 						WithField("key", k).
-						Errorln("api: could not snapshot stream to store")
+						Errorln("api: unable to snapshot stream to store")
 					return // don't delete the stream if snapshotting failed
 				}
 			}
+			logger.FromRequest(r).WithField("keys", keys).
+				WithField("num_keys", len(keys)).
+				Infoln("api: successfully snapshotted all keys")
 		}
 
 		for _, k := range keys {
@@ -131,6 +140,13 @@ func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 			}
 		}
 
+		logger.FromRequest(r).WithField("keys", keys).
+			WithField("snapshot", snapshot).
+			WithField("prefix", usePrefix).
+			WithField("latency", time.Since(st)).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			WithField("num_keys", len(keys)).
+			Infoln("api: successfully completed closing of streams")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -140,6 +156,7 @@ func HandleClose(logStream stream.Stream, store store.Store) http.HandlerFunc {
 func HandleWrite(s stream.Stream) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		st := time.Now()
 
 		accountID := r.FormValue(accountIDParam)
 		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
@@ -165,6 +182,11 @@ func HandleWrite(s stream.Stream) http.HandlerFunc {
 			}
 		}
 
+		logger.FromRequest(r).WithField("key", key).
+			WithField("latency", time.Since(st)).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			WithField("num_lines", len(in)).
+			Infoln("api: successfully wrote to stream")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -250,6 +272,10 @@ func HandleTail(s stream.Stream) http.HandlerFunc {
 
 		io.WriteString(w, "event: error\ndata: eof\n")
 		f.Flush()
+
+		logger.FromRequest(r).WithField("key", key).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			Infoln("api: successfully tailed stream")
 	}
 }
 

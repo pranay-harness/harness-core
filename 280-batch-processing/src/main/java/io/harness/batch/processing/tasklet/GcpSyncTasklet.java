@@ -34,6 +34,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
+import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.collect.ImmutableMap;
@@ -88,17 +89,27 @@ public class GcpSyncTasklet implements Tasklet {
         ConnectorInfoDTO connectorInfo = connector.getConnector();
         GcpCloudCostConnectorDTO gcpCloudCostConnectorDTO =
             (GcpCloudCostConnectorDTO) connectorInfo.getConnectorConfig();
-        processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
-            gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
-            accountId, connectorInfo.getIdentifier(), startTime);
+        try {
+          processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
+              gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
+              accountId, connectorInfo.getIdentifier(), startTime);
+        } catch (Exception e) {
+          log.error("Exception processing NG GCP Connector: {}", connectorInfo.getIdentifier(), e);
+        }
       }
 
       List<GcpBillingAccount> gcpBillingAccounts =
           cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId);
+      log.info("Processing batch size of {} in GCP Sync Job for CG Connectors", gcpBillingAccounts.size());
       for (GcpBillingAccount gcpBillingAccount : gcpBillingAccounts) {
         GcpServiceAccount gcpServiceAccount = cloudToHarnessMappingService.getGcpServiceAccount(accountId);
-        processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(), gcpBillingAccount.getBqDatasetId(),
-            gcpBillingAccount.getBqProjectId(), accountId, gcpBillingAccount.getUuid(), startTime);
+        try {
+          processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(),
+              gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,
+              gcpBillingAccount.getUuid(), startTime);
+        } catch (Exception e) {
+          log.error("Exception processing CG GCP Connector: {}", gcpBillingAccount.getUuid(), e);
+        }
       }
     }
     return null;
@@ -109,7 +120,8 @@ public class GcpSyncTasklet implements Tasklet {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
     BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
-    Dataset dataset = bigQuery.getDataset(datasetId);
+    DatasetId datasetIdFullyQualified = DatasetId.of(projectId, datasetId);
+    Dataset dataset = bigQuery.getDataset(datasetIdFullyQualified);
     Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
     tableList.getValues().forEach(table -> {
       if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {

@@ -1,5 +1,6 @@
 package io.harness.cdng.provision.terraform;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
@@ -35,6 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("terraformDestroyStepInfo")
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_DESTROY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@RecasterAlias("io.harness.cdng.provision.terraform.TerraformDestroyStepInfo")
 public class TerraformDestroyStepInfo
     extends TerraformDestroyBaseStepInfo implements CDStepInfo, Visitable, WithConnectorRef {
   @NotNull @JsonProperty("configuration") TerraformStepConfiguration terraformStepConfiguration;

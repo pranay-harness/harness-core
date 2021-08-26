@@ -18,7 +18,12 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class RedisSdkResponseEventPublisher implements SdkResponseEventPublisher {
-  @Inject @Named(SDK_RESPONSE_EVENT_PRODUCER) private Producer eventProducer;
+  private Producer eventProducer;
+
+  @Inject
+  public RedisSdkResponseEventPublisher(@Named(SDK_RESPONSE_EVENT_PRODUCER) Producer producer) {
+    this.eventProducer = producer;
+  }
 
   @Override
   public void publishEvent(SdkResponseEventProto event) {

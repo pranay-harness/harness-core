@@ -11,10 +11,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.data.ZonePrice;
-import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.pricing.banzai.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.banzai.ZonePrice;
+import io.harness.batch.processing.pricing.vmpricing.VMPricingService;
 import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;

@@ -25,11 +25,10 @@ public class EventMonitoringServiceImpl implements EventMonitoringService {
       }
       long currentTimeMillis = System.currentTimeMillis();
       if (currentTimeMillis % 100 == 0 || (currentTimeMillis - monitoringInfo.getCreatedAt() > 5000)) {
-        log.info(String.format("Sampled the metric [%s]", metricName));
-        metricService.recordMetric(String.format(metricName, monitoringInfo.getMetricPrefix()),
-            System.currentTimeMillis() - monitoringInfo.getCreatedAt());
+        String metricValue = String.format(metricName, monitoringInfo.getMetricPrefix());
+        log.info(String.format("Sampled the metric [%s]", String.format(metricName, monitoringInfo.getMetricPrefix())));
+        metricService.recordMetric(metricValue, System.currentTimeMillis() - monitoringInfo.getCreatedAt());
       }
-
     } catch (Exception ex) {
       log.error("Exception Occurred while recording metrics", ex);
     }

@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
@@ -31,6 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode
 @JsonTypeName(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
 @TypeAlias("k8sBGSwapServicesStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sBGSwapServicesStepInfo")
 public class K8sBGSwapServicesStepInfo implements CDStepInfo, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @YamlSchemaTypes({runtime})

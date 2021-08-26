@@ -2,6 +2,7 @@ package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
@@ -36,6 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = ValuesManifestVisitorHelper.class)
 @TypeAlias("valuesManifest")
+@RecasterAlias("io.harness.cdng.manifest.yaml.kinds.ValuesManifest")
 public class ValuesManifest implements ManifestAttributes, Visitable {
   String identifier;
   @Wither

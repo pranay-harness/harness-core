@@ -1,11 +1,19 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.experimental.UtilityClass;
 
 /*
 ** Class for constants defining Infrastructure types
 */
 @UtilityClass
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class InfrastructureType {
   public static final String GCP_KUBERNETES_ENGINE = "GCP_KUBERNETES";
   public static final String PHYSICAL_INFRA = "PHYSICAL_DATA_CENTER_SSH";

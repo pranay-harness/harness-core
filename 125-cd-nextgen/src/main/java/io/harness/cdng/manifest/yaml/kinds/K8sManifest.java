@@ -5,6 +5,7 @@ import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.Store
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -42,6 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = K8sManifestVisitorHelper.class)
 @TypeAlias("k8sManifest")
 @OwnedBy(CDC)
+@RecasterAlias("io.harness.cdng.manifest.yaml.kinds.K8sManifest")
 public class K8sManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither

@@ -2,5 +2,5 @@ name: Resume Metrics Group
 identifier: resume_event_group
 labels:
   - accountId
-  - orgIdentifier
-  - projectIdentifier
+  - stepType
+  - module
