@@ -419,7 +419,8 @@ public class RolesManagementJobTest extends AccessControlTestBase {
         PermissionFilter.builder().includedInAllRolesFilter(PERMISSIONS_INCLUDED_IN_ALL_ROLES).build();
     Set<Permission> currentIncludeInAllRolesPermissions = new HashSet<>(permissionService.list(permissionFilter));
     currentRoles.forEach(currentRole -> currentIncludeInAllRolesPermissions.forEach(permission -> {
-      if (!Sets.intersection(currentRole.getAllowedScopeLevels(), permission.getAllowedScopeLevels()).isEmpty()) {
+      if (Sets.difference(currentRole.getAllowedScopeLevels(), permission.getAllowedScopeLevels()).isEmpty()
+          && !Sets.intersection(currentRole.getAllowedScopeLevels(), permission.getAllowedScopeLevels()).isEmpty()) {
         assertTrue(currentRole.getPermissions().contains(permission.getIdentifier()));
       }
     }));
