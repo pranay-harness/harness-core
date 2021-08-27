@@ -53,9 +53,14 @@ public class ChangeConsumerServiceImpl implements ChangeConsumerService {
       principals.add(roleAssignment.getPrincipalIdentifier());
     }
 
-    Set<String> resourceSelectors = resourceGroup.get().isFullScopeSelected()
-        ? Collections.singleton("/*/*")
-        : resourceGroup.get().getResourceSelectors();
+    Set<String> resourceSelectors;
+    if (Boolean.TRUE.equals(resourceGroup.get().getNestedScopesSelected())) {
+      resourceSelectors = Collections.singleton("/**/*/*");
+    } else if (resourceGroup.get().isFullScopeSelected()) {
+      resourceSelectors = Collections.singleton("/*/*");
+    } else {
+      resourceSelectors = resourceGroup.get().getResourceSelectors();
+    }
 
     List<ACL> acls = new ArrayList<>();
     for (String permission : role.get().getPermissions()) {

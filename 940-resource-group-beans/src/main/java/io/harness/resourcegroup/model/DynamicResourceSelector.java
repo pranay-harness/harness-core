@@ -8,4 +8,5 @@ import lombok.Data;
 @Builder
 public class DynamicResourceSelector implements ResourceSelector {
   @NotNull String resourceType;
+  Boolean includeNestedScopes;
 }

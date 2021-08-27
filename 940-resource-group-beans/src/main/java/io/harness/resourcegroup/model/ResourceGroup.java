@@ -86,6 +86,7 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @NotNull @Builder.Default Boolean harnessManaged = Boolean.FALSE;
   @NotNull @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
   @Builder.Default Boolean fullScopeSelected = Boolean.FALSE;
+  @Builder.Default Boolean nestedScopesSelected = Boolean.FALSE;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;

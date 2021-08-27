@@ -6,6 +6,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.PermissionCheck;
 import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
+import io.harness.accesscontrol.resources.resourcegroups.ResourceGroup;
+import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.annotations.dev.OwnedBy;
 
@@ -41,6 +43,14 @@ public class ACLDAOImpl implements ACLDAO {
     return PATH_DELIMITER.concat(resourceType).concat(PATH_DELIMITER).concat(resourceIdentifier);
   }
 
+  private String getNestedResourceSelector(String resourceType) {
+    return PATH_DELIMITER.concat(ResourceGroup.NESTED_SCOPES_IDENTIFIER)
+        .concat(PATH_DELIMITER)
+        .concat(resourceType)
+        .concat(PATH_DELIMITER)
+        .concat("*");
+  }
+
   private Set<String> getQueryStrings(PermissionCheck permissionCheck, Principal principal) {
     String scope =
         Optional.ofNullable(permissionCheck.getResourceScope()).flatMap(rs -> Optional.of(rs.toString())).orElse("");
@@ -62,6 +72,19 @@ public class ACLDAOImpl implements ACLDAO {
     queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
         principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
+    Scope currentScope = permissionCheck.getResourceScope();
+    while (currentScope != null) {
+      // query for resource=/**/RESOURCE_TYPE/* in given scope
+      queryStrings.add(getAclQueryString(currentScope.toString(), getNestedResourceSelector(resourceType),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      // query for resource=/**/*/* in given scope
+      queryStrings.add(getAclQueryString(currentScope.toString(), getNestedResourceSelector("*"),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      currentScope = currentScope.getParentScope();
+    }
+
     // if RESOURCE_TYPE is a scope, query for scope = {given_scope}/RESOURCE_TYPE/{resourceIdentifier}
     if (scopeResourceTypes.contains(resourceType)) {
       scope = scope.concat(PATH_DELIMITER + resourceType + PATH_DELIMITER + resourceIdentifier);
@@ -78,6 +101,14 @@ public class ACLDAOImpl implements ACLDAO {
 
       // and resource = /*/*
       queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
+          principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      // query for resource=/**/RESOURCE_TYPE/* in given scope
+      queryStrings.add(getAclQueryString(scope, getNestedResourceSelector(resourceType),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      // query for resource=/**/*/* in given scope
+      queryStrings.add(getAclQueryString(scope, getNestedResourceSelector("*"), principal.getPrincipalType().name(),
           principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
     }
     return queryStrings;

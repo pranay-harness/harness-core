@@ -37,6 +37,7 @@ public class ResourceGroupFactory {
         .resourceSelectors(resourceSelectors)
         .managed(resourceGroupResponse.isHarnessManaged())
         .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
+        .nestedScopesSelected(Boolean.TRUE.equals(resourceGroupDTO.getNestedScopesSelected()))
         .build();
   }
 
@@ -52,6 +53,12 @@ public class ResourceGroupFactory {
           .collect(Collectors.toSet());
     } else if (resourceSelector instanceof DynamicResourceSelector) {
       DynamicResourceSelector dynamicResourceSelector = (DynamicResourceSelector) resourceSelector;
+      if (Boolean.TRUE.equals(dynamicResourceSelector.getIncludeNestedScopes())) {
+        return Collections.singleton(PATH_DELIMITER.concat(ResourceGroup.NESTED_SCOPES_IDENTIFIER)
+                                         .concat(dynamicResourceSelector.getResourceType())
+                                         .concat(PATH_DELIMITER)
+                                         .concat(ResourceGroup.ALL_RESOURCES_IDENTIFIER));
+      }
       return Collections.singleton(PATH_DELIMITER.concat(dynamicResourceSelector.getResourceType())
                                        .concat(PATH_DELIMITER)
                                        .concat(ResourceGroup.ALL_RESOURCES_IDENTIFIER));

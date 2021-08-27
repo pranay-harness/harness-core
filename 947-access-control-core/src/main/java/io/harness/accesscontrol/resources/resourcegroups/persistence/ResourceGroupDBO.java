@@ -55,6 +55,7 @@ public class ResourceGroupDBO implements PersistentRegularIterable, AccessContro
   @EqualsAndHashCode.Include @NotEmpty final String name;
   @EqualsAndHashCode.Include @NotNull final Set<String> resourceSelectors;
   @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean fullScopeSelected = Boolean.FALSE;
+  @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean nestedScopesSelected = Boolean.FALSE;
   @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean managed = Boolean.FALSE;
 
   @Setter @CreatedDate Long createdAt;

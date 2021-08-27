@@ -208,6 +208,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     savedResourceGroup.setTags(updatedResourceGroup.getTags());
     savedResourceGroup.setDescription(updatedResourceGroup.getDescription());
     savedResourceGroup.setFullScopeSelected(updatedResourceGroup.getFullScopeSelected());
+    savedResourceGroup.setNestedScopesSelected(updatedResourceGroup.getNestedScopesSelected());
     savedResourceGroup.setResourceSelectors(updatedResourceGroup.getResourceSelectors());
 
     updatedResourceGroup =

@@ -24,12 +24,14 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode
 public class ResourceGroup {
   public static final String ALL_RESOURCES_IDENTIFIER = "*";
+  public static final String NESTED_SCOPES_IDENTIFIER = "**";
 
   @NotEmpty final String scopeIdentifier;
   @NotEmpty final String identifier;
   @NotEmpty final String name;
   @NotNull final Set<String> resourceSelectors;
   final boolean fullScopeSelected;
+  final Boolean nestedScopesSelected;
   final boolean managed;
   @EqualsAndHashCode.Exclude @Setter Long createdAt;
   @EqualsAndHashCode.Exclude @Setter Long lastModifiedAt;
