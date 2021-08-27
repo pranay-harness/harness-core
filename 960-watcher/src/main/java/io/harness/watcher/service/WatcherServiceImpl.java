@@ -632,7 +632,7 @@ public class WatcherServiceImpl implements WatcherService {
               boolean upgradeTimedOut = now - upgradeStarted > DELEGATE_UPGRADE_TIMEOUT;
 
               if (multiVersion) {
-                if (!expectedVersions.contains(delegateVersion) && !shutdownPending) {
+                if (!delegateVersion.contains(expectedVersions) && !shutdownPending) {
                   messageService.writeMessageToChannel(
                       DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
                   log.info("Delegate version {} ({}) is not a published version. Future requests will go to primary.",
