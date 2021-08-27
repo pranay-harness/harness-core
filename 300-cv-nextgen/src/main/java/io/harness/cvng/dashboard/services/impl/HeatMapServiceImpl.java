@@ -551,7 +551,7 @@ public class HeatMapServiceImpl implements HeatMapService {
 
   @Override
   public List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
-      List<Pair<String, String>> serviceEnvIdentifiers) {
+      List<Pair<String, String>> serviceEnvIdentifiers, Duration bufferTime) {
     Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
         "Based on page size, the health score calculation should be done for less than 10 services");
     int size = serviceEnvIdentifiers.size();
@@ -566,7 +566,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
     }
 
-    Instant endTime = roundDownTo5MinBoundary(clock.instant().minus(5, ChronoUnit.MINUTES));
+    Instant endTime = roundDownTo5MinBoundary(clock.instant().minus(bufferTime));
     Instant startTime = endTime.minus(5, ChronoUnit.MINUTES);
 
     HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
