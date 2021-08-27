@@ -282,6 +282,7 @@ roles:
       managed: true
       allowedScopeLevels:
         - account
+        - organization
     - identifier: _dashboard_manage
       name: Dashboards Manager
       description: Can manage existing dashboards
@@ -291,3 +292,4 @@ roles:
       managed: true
       allowedScopeLevels:
         - account
+        - organization
