@@ -112,18 +112,7 @@ public class ManagerExecutor {
     ProcessExecutor processExecutor = new ProcessExecutor();
     processExecutor.directory(directory);
     processExecutor.command(command);
-
-    FileOutputStream fout;
-    try {
-      File managerFile = new File("/harness/manager.log");
-      boolean newFile = managerFile.createNewFile();
-      log.info("Created file: {} {}", managerFile.getAbsolutePath(), newFile);
-      fout = new FileOutputStream(managerFile, false);
-    } catch (Exception ex) {
-      fout = null;
-      ex.printStackTrace();
-    }
-    processExecutor.redirectOutput(fout);
+    processExecutor.redirectOutput(System.out);
     processExecutor.redirectError(System.err);
     return processExecutor;
   }
@@ -154,12 +143,5 @@ public class ManagerExecutor {
 
   public static void main(String[] args) throws IOException {
     ensureManager(ManagerExecutor.class);
-//    try {
-//      while (true) {
-//        Thread.sleep(4 * 60 * 60 * 1000L);
-//      }
-//    } catch (InterruptedException e) {
-//      log.info("Manager exiting");
-//    }
   }
 }

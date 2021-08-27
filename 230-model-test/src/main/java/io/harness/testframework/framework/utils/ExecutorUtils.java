@@ -21,15 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExecutorUtils {
   private static String BAZEL_BIN_PATH = null;
-  static {
-    log.info("initializing bazel bin path");
-    try {
-//      BAZEL_BIN_PATH = getBazelBinPath(null);
-      log.info("BAZEL_BIN_PATH set to {}", BAZEL_BIN_PATH);
-    } catch (Exception e) {
-      log.error("Failed to set BAZEL_BIN_PATH", e);
-    }
-  }
 
   public static void addJacocoAgentVM(final Path jar, List<String> command) {
     final String jacocoAgentPath = System.getenv("JACOCO_AGENT_PATH");
@@ -76,7 +67,7 @@ public class ExecutorUtils {
             }
             error += line;
           }
-//          throw new RuntimeException(error);
+          log.error("Error getBazelBinPath {}", error);
           return "/tmp/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin";
         }
       }
@@ -99,16 +90,6 @@ public class ExecutorUtils {
 
   public static Path getJar(String moduleName, String jarFileName) {
     return Paths.get(getBazelBinPath(null), moduleName, jarFileName);
-  }
-
-  private static String getBazelBinPathCached() {
-//    return getBazelBinPath(null);
-    if (null != BAZEL_BIN_PATH) {
-      return BAZEL_BIN_PATH;
-    } else {
-      log.info("Failed to init bazel bin path");
-      return "/tmp/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin";
-    }
   }
 
   public static void addJar(Path jar, List<String> command) {
