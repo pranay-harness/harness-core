@@ -25,5 +25,6 @@ public interface Resource {
 
   List<Boolean> validate(List<String> resourceIds, Scope scope);
 
+  // Enhance it to have {Scope,List<ValidatorType>} with validations
   EnumSet<ValidatorType> getSelectorKind();
 }
