@@ -204,8 +204,12 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   private void stampPollingStatusInfo(
       NGTriggerEntity ngTriggerEntity, PollingDocument pollingDocument, StatusResult statusResult) {
-    String pollingDocId = null == pollingDocument ? null : pollingDocument.getPollingDocId();
-    ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(pollingDocId);
+    // change pollingDocId only if request was successful. Else, we dont know what happened.
+    // In next trigger upsert, we will try again
+    if (statusResult == StatusResult.SUCCESS) {
+      String pollingDocId = null == pollingDocument ? null : pollingDocument.getPollingDocId();
+      ngTriggerEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(pollingDocId);
+    }
 
     if (ngTriggerEntity.getTriggerStatus() == null) {
       ngTriggerEntity.setTriggerStatus(
@@ -586,11 +590,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   public NGTriggerEntity validateTrigger(NGTriggerEntity ngTriggerEntity) {
-    // Not adding it for webhook and cron for now as still in testing
-    if (ngTriggerEntity.getType() != MANIFEST && ngTriggerEntity.getType() != ARTIFACT) {
-      return ngTriggerEntity;
-    }
-
     try {
       ValidationResult validationResult = triggerValidationHandler.applyValidations(
           ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
