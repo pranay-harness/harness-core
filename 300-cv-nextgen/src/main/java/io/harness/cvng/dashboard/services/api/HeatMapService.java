@@ -12,6 +12,7 @@ import io.harness.cvng.dashboard.beans.HeatMapDTO;
 import io.harness.cvng.dashboard.beans.RiskSummaryPopoverDTO;
 import io.harness.cvng.dashboard.entities.HeatMap;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,7 @@ public interface HeatMapService {
       List<Pair<String, String>> serviceEnvIdentifiers, int hours);
 
   List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
-      List<Pair<String, String>> serviceEnvIdentifiers);
+      List<Pair<String, String>> serviceEnvIdentifiers, Duration bufferTime);
 
   HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
       String environmentIdentifier, DurationDTO duration, Instant endTime);
