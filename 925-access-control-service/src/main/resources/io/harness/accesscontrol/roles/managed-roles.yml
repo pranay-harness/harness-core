@@ -274,15 +274,15 @@ roles:
         - account
         - organization
         - project
-    - identifier: _dashboard_viewer_role
-      name: Dashboards Viewer Role
+    - identifier: _dashboard_viewer
+      name: Dashboards Viewer
       description: Can view existing dashboards
       permissions:
         - core_dashboards_view
       managed: true
       allowedScopeLevels:
         - account
-    - identifier: _dashboard_manage_role
+    - identifier: _dashboard_manage
       name: Dashboards Manager
       description: Can manage existing dashboards
       permissions:
