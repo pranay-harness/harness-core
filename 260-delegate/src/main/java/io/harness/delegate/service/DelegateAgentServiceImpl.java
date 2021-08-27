@@ -1480,7 +1480,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       statusData.put(DELEGATE_SELF_DESTRUCT, true);
     } else {
       statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-      statusData.put(DELEGATE_VERSION, getVersionWithPatch());
+      statusData.put(DELEGATE_VERSION, getVersion());
       statusData.put(DELEGATE_IS_NEW, false);
       statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
       statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
@@ -2365,8 +2365,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void removeDelegateVersionFromCapsule() {
     try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersionWithPatch(), upgradeVersion,
-          "delegate-");
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
     } catch (Exception ex) {
       log.error("Failed to clean delegate version [{}] from Capsule", upgradeVersion, ex);
     }
