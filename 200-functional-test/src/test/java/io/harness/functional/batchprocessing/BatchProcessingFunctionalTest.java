@@ -23,7 +23,7 @@ public class BatchProcessingFunctionalTest extends CategoryTest {
   @Test
   @Owner(developers = {AVMOHAN, UTSAV})
   @Category(FunctionalTests.class)
-  @Ignore
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void shouldEnsureBatchProcessingStartsUp() throws Exception {
     assertThatCode(() -> batchProcessingExecutor.ensureBatchProcessing(getClass())).doesNotThrowAnyException();
   }
