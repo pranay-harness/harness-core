@@ -15,7 +15,9 @@ import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.application.AppFilterController;
 import software.wings.graphql.datafetcher.environment.EnvFilterController;
 import software.wings.graphql.schema.type.QLAppFilter;
@@ -24,7 +26,9 @@ import software.wings.graphql.schema.type.permissions.QLAppPermission;
 import software.wings.graphql.schema.type.permissions.QLPermissionType;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.service.intfc.InfrastructureProvisionerService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,6 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UserGroupPermissionValidator {
   @Inject EnvFilterController envFilterController;
+  @Inject WorkflowService workflowService;
+  @Inject PipelineService pipelineService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject AppFilterController appFilterController;
@@ -71,6 +77,37 @@ public class UserGroupPermissionValidator {
     PageResponse<Service> res = serviceResourceService.list(req, false, false, false, null);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(Service::getUuid).collect(Collectors.toList());
+    checkForInvalidIds(ids, idsPresent);
+  }
+
+  private void checkWorkflowExists(Set<String> workflowIds, String accountId) {
+    if (isEmpty(workflowIds)) {
+      return;
+    }
+    List<String> ids = new ArrayList<>(workflowIds);
+    PageRequest<Workflow> req = aPageRequest()
+                                    .addFieldsIncluded("_id")
+                                    .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                    .addFilter("_id", IN, workflowIds.toArray())
+                                    .build();
+    PageResponse<Workflow> res = workflowService.listWorkflows(req);
+    // This Ids are wrong
+    List<String> idsPresent = res.stream().map(Workflow::getUuid).collect(Collectors.toList());
+    checkForInvalidIds(ids, idsPresent);
+  }
+
+  private void checkPipelineExists(Set<String> pipelineIds, String accountId) {
+    if (isEmpty(pipelineIds)) {
+      return;
+    }
+    List<String> ids = new ArrayList<>(pipelineIds);
+    PageRequest<Pipeline> req = aPageRequest()
+                                    .addFieldsIncluded("_id")
+                                    .addFilter("accountId", SearchFilter.Operator.EQ, accountId)
+                                    .addFilter("_id", IN, pipelineIds.toArray())
+                                    .build();
+    PageResponse<Pipeline> res = pipelineService.listPipelines(req);
+    List<String> idsPresent = res.stream().map(Pipeline::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
   }
 
@@ -101,9 +138,11 @@ public class UserGroupPermissionValidator {
         break;
       case WORKFLOW:
         envFilterController.checkEnvExists(appPermissions.getWorkflows().getEnvIds(), accountId);
+        checkWorkflowExists(appPermissions.getWorkflows().getWorkflowIds(), accountId);
         break;
       case PIPELINE:
         envFilterController.checkEnvExists(appPermissions.getPipelines().getEnvIds(), accountId);
+        checkPipelineExists(appPermissions.getPipelines().getPipelineIds(), accountId);
         break;
       case DEPLOYMENT:
         envFilterController.checkEnvExists(appPermissions.getDeployments().getEnvIds(), accountId);
@@ -168,6 +207,7 @@ public class UserGroupPermissionValidator {
       case WORKFLOW:
         if (appPermission.getWorkflows() != null
             && (isNotEmpty(appPermission.getWorkflows().getEnvIds())
+                || isNotEmpty(appPermission.getWorkflows().getWorkflowIds())
                 || isNotEmpty(appPermission.getWorkflows().getFilterTypes()))) {
           return;
         }
@@ -175,6 +215,7 @@ public class UserGroupPermissionValidator {
       case PIPELINE:
         if (appPermission.getPipelines() != null
             && (isNotEmpty(appPermission.getPipelines().getEnvIds())
+                || isNotEmpty(appPermission.getPipelines().getPipelineIds())
                 || isNotEmpty(appPermission.getPipelines().getFilterTypes()))) {
           return;
         }
@@ -231,12 +272,12 @@ public class UserGroupPermissionValidator {
         }
         break;
       case WORKFLOW:
-        if (appPermission.getWorkflows().getEnvIds() == null) {
+        if (appPermission.getWorkflows().getEnvIds() == null && appPermission.getWorkflows().getWorkflowIds() == null) {
           return;
         }
         break;
       case PIPELINE:
-        if (appPermission.getPipelines().getEnvIds() == null) {
+        if (appPermission.getPipelines().getEnvIds() == null && appPermission.getPipelines().getPipelineIds() == null) {
           return;
         }
         break;
