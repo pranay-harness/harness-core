@@ -610,7 +610,7 @@ logStreamingServiceConfig:
   serviceToken: token
 
 accessControlClient:
-  enableAccessControl: false
+  enableAccessControl: true
   accessControlServiceConfig:
     baseUrl: http://localhost:9006/api/
     connectTimeOutSeconds: 15
