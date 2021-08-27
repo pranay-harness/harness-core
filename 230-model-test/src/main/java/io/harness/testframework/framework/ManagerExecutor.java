@@ -7,6 +7,7 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 import static io.harness.testframework.framework.utils.ExecutorUtils.getJar;
 
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
+import static io.restassured.config.SSLConfig.sslConfig;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -22,7 +23,6 @@ import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import io.restassured.RestAssured;
 import io.restassured.config.RestAssuredConfig;
-import io.restassured.config.SSLConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -124,7 +124,7 @@ public class ManagerExecutor {
                                      .httpClient(httpClientConfig()
                                                      .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
                                                      .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000))
-                                     .sslConfig(SSLConfig.sslConfig().relaxedHTTPSValidation());
+                                     .sslConfig(sslConfig().relaxedHTTPSValidation());
 
       Setup.portal().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {
