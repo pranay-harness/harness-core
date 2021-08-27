@@ -545,8 +545,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Double getConnectedRatioWithPrimary(String targetVersion) {
-    long primary =
-        delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(configurationController.getPrimaryVersion());
+    targetVersion = Arrays.stream(targetVersion.split("-")).findFirst().get();
+    String primaryVersion = Arrays.stream(configurationController.getPrimaryVersion().split("-")).findFirst().get();
+
+    long primary = delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(primaryVersion);
 
     // If we do not have any delegates in the primary version, lets unblock the deployment,
     // that will be very rare and we are in trouble anyways, let report 1 to let the new deployment go.
@@ -1237,8 +1239,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
-        String fullVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, inquiry.getAccountId());
+        String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
+        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
           log.info("Using CDN delegateStorageUrl " + delegateStorageUrl);
@@ -1494,14 +1496,6 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (NumberFormatException e) {
         // Leave it null
       }
-    }
-    return delegateVersionNumber;
-  }
-
-  private String getDelegateBuildVersion(String delegateVersion) {
-    String delegateVersionNumber = null;
-    if (isNotBlank(delegateVersion)) {
-      delegateVersionNumber = delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
     }
     return delegateVersionNumber;
   }

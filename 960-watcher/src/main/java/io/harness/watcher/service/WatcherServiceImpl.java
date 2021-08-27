@@ -46,7 +46,6 @@ import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 import static io.harness.watcher.app.WatcherApplication.getProcessId;
 
 import static com.google.common.collect.Sets.newHashSet;
-import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -63,7 +62,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.or;
 import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
@@ -989,35 +987,20 @@ public class WatcherServiceImpl implements WatcherService {
     return 0;
   }
 
-  private String getDelegateVersionWithPatch(String delegateVersion) {
-    if (isNotBlank(delegateVersion)) {
-      return delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
-    }
-    return EMPTY;
-  }
-
   private void downloadRunScripts(String directory, String version, boolean forceDownload) throws Exception {
     if (!forceDownload && new File(directory + File.separator + DELEGATE_SCRIPT).exists()) {
       return;
     }
 
-    // Get patched version
-    final String patchVersion = substringAfter(version, "-");
-    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
-
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));
+      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
+          () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
+    } else {
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
-                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), updatedVersion, patchVersion)));
-    } else {
-      log.info(format("Calling getDelegateScriptsNg with version %s and patch %s", updatedVersion, patchVersion));
-      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
-          ()
-              -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                  watcherConfiguration.getAccountId(), updatedVersion, delegateSize, patchVersion)));
+                  managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
     }
 
     if (restResponse == null) {
