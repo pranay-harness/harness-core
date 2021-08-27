@@ -15,6 +15,7 @@ public class HarnessCDEventMetadataTransformer
         .projectIdentifier(changeEventDTO.getProjectIdentifier())
         .serviceIdentifier(changeEventDTO.getServiceIdentifier())
         .envIdentifier(changeEventDTO.getEnvIdentifier())
+        .eventTime(changeEventDTO.getEventTime())
         .type(changeEventDTO.getType())
         .status(metaData.getStatus())
         .stageId(metaData.getStageId())

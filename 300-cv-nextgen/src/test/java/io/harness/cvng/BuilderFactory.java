@@ -8,6 +8,9 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.change.event.ChangeEventDTO;
+import io.harness.cvng.beans.change.event.ChangeEventDTO.ChangeEventDTOBuilder;
+import io.harness.cvng.beans.change.event.metadata.HarnessCDEventMetaData;
 import io.harness.cvng.beans.change.event.type.ChangeSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
@@ -47,6 +50,8 @@ import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource.HarnessCDChangeSourceBuilder;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource.PagerDutyChangeSourceBuilder;
+import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent;
+import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent.HarnessCDChangeEventBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
@@ -335,6 +340,45 @@ public class BuilderFactory {
                   .connectorRef(randomAlphabetic(20))
                   .pagerDutyServiceId(randomAlphabetic(20))
                   .build());
+  }
+
+  public HarnessCDChangeEventBuilder getHarnessCDChangeEventBuilder() {
+    return HarnessCDChangeEvent.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .eventTime(Instant.EPOCH.getEpochSecond())
+        .changeSourceIdentifier("changeSourceID")
+        .type(ChangeSourceType.HARNESS_CD)
+        .stageId("stage")
+        .executionId("executionId")
+        .deploymentEndTime(Instant.EPOCH.getEpochSecond())
+        .deploymentStartTime(Instant.EPOCH.getEpochSecond());
+  }
+
+  public ChangeEventDTOBuilder getHarnessCDChangeEventDTOBuilder() {
+    return getChangeEventDTOBuilder()
+        .type(ChangeSourceType.HARNESS_CD)
+        .changeEventMetaData(HarnessCDEventMetaData.builder()
+                                 .stageId("stage")
+                                 .executionId("executionId")
+                                 .deploymentEndTime(Instant.EPOCH.getEpochSecond())
+                                 .deploymentStartTime(Instant.EPOCH.getEpochSecond())
+                                 .status(io.harness.pms.contracts.execution.Status.SUCCEEDED)
+                                 .build());
+  }
+
+  public ChangeEventDTOBuilder getChangeEventDTOBuilder() {
+    return ChangeEventDTO.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .eventTime(Instant.EPOCH.getEpochSecond())
+        .changeSourceIdentifier("changeSourceID");
   }
 
   private ChangeSourceDTOBuilder getChangeSourceDTOBuilder(ChangeSourceType changeSourceType) {
