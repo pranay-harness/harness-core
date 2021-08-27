@@ -2,12 +2,13 @@ package io.harness.ccm.commons.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import com.google.inject.Inject;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.commons.entities.billing.CECloudAccount.CECloudAccountKeys;
 import io.harness.persistence.HPersistence;
 
-import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CE)
@@ -51,6 +52,15 @@ public class CECloudAccountDao {
         .equal(harnessAccountId)
         .field(CECloudAccountKeys.masterAccountSettingId)
         .equal(masterAccountSettingId)
+        .asList();
+  }
+
+  public List<CECloudAccount> getByInfraAccountId(List<String> accountIds, String harnessAccountId) {
+    return hPersistence.createQuery(CECloudAccount.class)
+        .field(CECloudAccountKeys.accountId)
+        .equal(harnessAccountId)
+        .field(CECloudAccountKeys.infraAccountId)
+        .in(accountIds)
         .asList();
   }
 }
