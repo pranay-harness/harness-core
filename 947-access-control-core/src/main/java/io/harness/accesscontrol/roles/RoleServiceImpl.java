@@ -247,8 +247,14 @@ public class RoleServiceImpl implements RoleService {
             .build();
     List<Permission> permissionList = permissionService.list(permissionFilter);
     permissionList = permissionList == null ? new ArrayList<>() : permissionList;
-    Set<String> compulsoryPermissions =
-        permissionList.stream().map(Permission::getIdentifier).collect(Collectors.toSet());
+    Set<String> compulsoryPermissions = permissionList.stream()
+                                            .filter(permission -> {
+                                              Set<String> scopesMissingInPermission = Sets.difference(
+                                                  role.getAllowedScopeLevels(), permission.getAllowedScopeLevels());
+                                              return scopesMissingInPermission.isEmpty();
+                                            })
+                                            .map(Permission::getIdentifier)
+                                            .collect(Collectors.toSet());
     role.getPermissions().addAll(compulsoryPermissions);
   }
 }
