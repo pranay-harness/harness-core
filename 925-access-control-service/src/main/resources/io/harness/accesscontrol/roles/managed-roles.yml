@@ -283,8 +283,8 @@ roles:
       allowedScopeLevels:
         - account
         - organization
-    - identifier: _dashboard_manage
-      name: Dashboards Manager
+    - identifier: _dashboard_editor
+      name: Dashboards Editor
       description: Can manage existing dashboards
       permissions:
         - core_dashboards_view
