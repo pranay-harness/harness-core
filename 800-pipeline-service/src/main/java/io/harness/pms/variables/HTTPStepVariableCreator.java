@@ -1,5 +1,7 @@
 package io.harness.pms.variables;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class HTTPStepVariableCreator extends GenericStepVariableCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
@@ -38,7 +41,7 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
 
     YamlField outputVariablesField = yamlNode.getField(YAMLFieldNameConstants.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
-      addVariablesForVariables(outputVariablesField, yamlPropertiesMap);
+      addVariablesForOutputVariables(outputVariablesField, yamlOutputPropertiesMap);
     }
     YamlField headersField = yamlNode.getField(YAMLFieldNameConstants.HEADERS);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(headersField)) {
