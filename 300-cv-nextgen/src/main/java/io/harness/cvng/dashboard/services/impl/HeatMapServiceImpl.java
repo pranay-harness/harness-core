@@ -614,12 +614,12 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Override
   public HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
       String environmentIdentifier, DurationDTO duration, Instant endTime) {
-    HistoricalTrend historicalTrend = HistoricalTrend.builder().size(48).build();
-
     HeatMapResolution heatMapResolution = getHeatMapResolution(endTime.minus(duration.getDuration()), endTime);
     Instant trendEndTime = getBoundaryOfResolution(endTime, heatMapResolution.getResolution())
                                .plusMillis(heatMapResolution.getResolution().toMillis());
     Instant trendStartTime = trendEndTime.minus(duration.getDuration());
+
+    HistoricalTrend historicalTrend = HistoricalTrend.timeStampBuild(48, trendStartTime, trendEndTime);
 
     Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
                                       .filter(HeatMapKeys.accountId, projectParams.getAccountIdentifier())

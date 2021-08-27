@@ -9,6 +9,7 @@ import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.ONE_HOUR_THIRTY_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THIRTY_MINUTES;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.THREE_HOURS_THIRTY_MINUTES;
+import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.getHeatMapResolution;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -1186,6 +1187,29 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     historicalTrend = heatMapService.getOverAllHealthScore(builderFactory.getContext().getProjectParams(),
         serviceIdentifier, envIdentifier, DurationDTO.FOUR_HOURS, endTime);
     assertOverallHealthScoreWithInOneHeatMap(historicalTrend);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetOverAllHealthScoreTimeStampSetupForAllPossibleDuration() {
+    for (DurationDTO duration : DurationDTO.values()) {
+      Instant endTime = clock.instant();
+      HistoricalTrend historicalTrend = heatMapService.getOverAllHealthScore(
+          builderFactory.getContext().getProjectParams(), serviceIdentifier, envIdentifier, duration, endTime);
+
+      HeatMapResolution heatMapResolution = getHeatMapResolution(endTime.minus(duration.getDuration()), endTime);
+      Instant trendEndTime = getBoundaryOfResolution(endTime, heatMapResolution.getResolution())
+                                 .plusMillis(heatMapResolution.getResolution().toMillis());
+      Instant trendStartTime = trendEndTime.minus(duration.getDuration());
+      assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
+      for (int i = 0; i < 48; i++) {
+        assertThat(historicalTrend.getHealthScores().get(i).getTimeRange().getStartTime()).isEqualTo(trendStartTime);
+        assertThat(historicalTrend.getHealthScores().get(i).getTimeRange().getEndTime())
+            .isEqualTo(trendStartTime.plus(heatMapResolution.getResolution()));
+        trendStartTime = trendStartTime.plus(heatMapResolution.getResolution());
+      }
+    }
   }
 
   @Test
