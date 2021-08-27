@@ -140,4 +140,31 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
       }
     });
   }
+
+  protected void addVariablesForOutputVariables(
+      YamlField variablesField, Map<String, YamlOutputProperties> yamlOutputPropertiesMap) {
+    List<YamlNode> variableNodes = variablesField.getNode().asArray();
+    variableNodes.forEach(variableNode -> {
+      YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
+      if (uuidNode != null) {
+        // replace 'spec.outputVariables' with 'output.outputVariables' for output variables paths.
+        String original = YAMLFieldNameConstants.SPEC + "." + YAMLFieldNameConstants.OUTPUT_VARIABLES;
+        String replacement = YAMLFieldNameConstants.OUTPUT + "." + YAMLFieldNameConstants.OUTPUT_VARIABLES;
+
+        String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode()).replace(original, replacement);
+        String localName =
+            YamlUtils.getQualifiedNameTillGivenField(uuidNode.getNode(), YAMLFieldNameConstants.EXECUTION)
+                .replace(original, replacement);
+        YamlField valueNode = variableNode.getField(YAMLFieldNameConstants.VALUE);
+        String variableName =
+            Objects.requireNonNull(variableNode.getField(YAMLFieldNameConstants.NAME)).getNode().asText();
+        if (valueNode == null) {
+          throw new InvalidRequestException(
+              "Variable with name \"" + variableName + "\" added without any value. Fqn: " + fqn);
+        }
+        yamlOutputPropertiesMap.put(valueNode.getNode().getCurrJsonNode().textValue(),
+            YamlOutputProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
+      }
+    });
+  }
 }

@@ -1277,7 +1277,7 @@ public class WatcherServiceImpl implements WatcherService {
       if (!watcherConfiguration.getDelegateCheckLocation().startsWith("file://")) {
         String watcherMetadata = getResponseStringFromUrl();
         latestVersion = substringBefore(watcherMetadata, " ").trim();
-        if (Pattern.matches("\\d{1}\\.\\d{1}\\.\\d{5,6}(\\-\\d{3})?", latestVersion)) {
+        if (Pattern.matches("\\d{1}\\.\\d{1}\\.\\d{5,7}(\\-\\d{3})?", latestVersion)) {
           upgrade = !StringUtils.equals(getVersion(), latestVersion);
         }
       }

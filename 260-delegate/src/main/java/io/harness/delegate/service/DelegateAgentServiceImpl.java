@@ -427,7 +427,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
-                                .version(getVersionWithPatch())
+                                .version(getVersion())
                                 .location(Paths.get("").toAbsolutePath().toString())
                                 .build();
 
