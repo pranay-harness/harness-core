@@ -37,9 +37,6 @@ public class GraphStatusUpdateHelper {
       return orchestrationGraph;
     }
     try {
-      log.info("[PMS_GRAPH] [{}] event log handler started for [{}] for plan [{}]", eventType, nodeExecutionId,
-          planExecutionId);
-
       NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
       if (orchestrationGraph.getRootNodeIds().isEmpty()) {
@@ -61,8 +58,6 @@ public class GraphStatusUpdateHelper {
             nodeExecution.getStatus(), planExecutionId);
         orchestrationAdjacencyListGenerator.addVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
       }
-      log.info("[PMS_GRAPH]  [{}] event log handler completed for [{}] for plan [{}]", eventType, nodeExecutionId,
-          planExecutionId);
     } catch (Exception e) {
       log.error(
           "[PMS_GRAPH]  [{}] event failed for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId, e);

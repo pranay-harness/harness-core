@@ -7,6 +7,7 @@ import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
+import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -39,8 +40,10 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -58,7 +61,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   private static final String DEFAULT_YAML_TEMPLATE;
-
+  private static final int BUFFER_TIME_FOR_LATEST_HEALTH_SCORE = 5;
   static {
     try {
       DEFAULT_YAML_TEMPLATE = Resources.toString(
@@ -465,8 +468,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
 
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
-    List<RiskData> currentRiskScoreList =
-        heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers);
+    List<RiskData> currentRiskScoreList = heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier,
+        serviceEnvironmentIdentifiers, Duration.ofMinutes(BUFFER_TIME_FOR_LATEST_HEALTH_SCORE));
 
     List<MonitoredServiceListItemDTO> monitoredServiceListDTOS = new ArrayList<>();
     int index = 0;
@@ -639,6 +642,17 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     Preconditions.checkNotNull(monitoredService, "Monitored service with identifier %s does not exists", identifier);
     return heatMapService.getOverAllHealthScore(projectParams, monitoredService.getServiceIdentifier(),
         monitoredService.getEnvironmentIdentifier(), duration, endTime);
+  }
+
+  @Override
+  public HealthScoreDTO getCurrentScore(ServiceEnvironmentParams serviceEnvironmentParams) {
+    List<Pair<String, String>> serviceEnvIdentifiers = Arrays.asList(
+        Pair.of(serviceEnvironmentParams.getServiceIdentifier(), serviceEnvironmentParams.getEnvironmentIdentifier()));
+    List<RiskData> currentRiskScoreList =
+        heatMapService.getLatestRiskScore(serviceEnvironmentParams.getAccountIdentifier(),
+            serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+            serviceEnvIdentifiers, Duration.ofMinutes(BUFFER_TIME_FOR_LATEST_HEALTH_SCORE));
+    return HealthScoreDTO.builder().currentHealthScore(currentRiskScoreList.get(0)).build();
   }
 
   public String getYamlTemplate(ProjectParams projectParams) {

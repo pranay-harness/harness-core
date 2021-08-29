@@ -8,16 +8,11 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
-import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.steps.SkipType;
-import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
-import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.yaml.YamlField;
 import io.harness.serializer.KryoSerializer;
 import io.harness.states.codebase.CodeBaseStep;
@@ -38,17 +33,9 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class CodebasePlanCreator {
-  public List<PlanNode> createPlanForCodeBase(PlanCreationContext ctx, YamlField ciCodeBaseField, String childNodeId,
-      KryoSerializer kryoSerializer, String codeBaseNodeUUID) {
-    PlanCreationContextValue planCreationContextValue = ctx.getGlobalContext().get("metadata");
-    ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
-
-    ExecutionTriggerInfo triggerInfo = executionMetadata.getTriggerInfo();
-    TriggerPayload triggerPayload = planCreationContextValue.getTriggerPayload();
-
+  public List<PlanNode> createPlanForCodeBase(YamlField ciCodeBaseField, String childNodeId,
+      KryoSerializer kryoSerializer, String codeBaseNodeUUID, ExecutionSource executionSource) {
     CodeBase ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseField.getNode());
-    ExecutionSource executionSource =
-        IntegrationStageUtils.buildExecutionSource(triggerInfo, triggerPayload, "codebase", ciCodeBase.getBuild());
 
     return buildCodebasePlanNodes(codeBaseNodeUUID, childNodeId, kryoSerializer, ciCodeBase, executionSource);
   }

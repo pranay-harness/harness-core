@@ -19,20 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 @OwnedBy(CDP)
-public class CloudFormationStepYamlBuilder extends InfraProvisionStepYamlBuilder {
-  @Override
-  public void convertIdToNameForKnownTypes(String name, Object objectValue, Map<String, Object> outputProperties,
-      String appId, Map<String, Object> inputProperties) {
-    if (CloudFormationStateKeys.variables.equals(name)) {
-      convertPropertyIdsToNames(name, appId, objectValue);
-    } else if (CloudFormationStateKeys.provisionerId.equals(name)) {
-      objectValue = convertProvisionerIdToName(appId, objectValue);
-      name = PROVISIONER_NAME;
-    }
-
-    outputProperties.put(name, objectValue);
-  }
-
+public class CloudFormationProvisionStepYamlBuilder extends InfraProvisionStepYamlBuilder {
   @Override
   public void validate(ChangeContext<StepYaml> changeContext) {
     super.validate(changeContext);
@@ -60,6 +47,19 @@ public class CloudFormationStepYamlBuilder extends InfraProvisionStepYamlBuilder
             "Provided CloudFormation Step Yaml is Invalid: skipBasedOnStackStatus is null, but the list stackStatusesToMarkAsSuccess is not empty");
       }
     }
+  }
+
+  @Override
+  public void convertIdToNameForKnownTypes(String name, Object objectValue, Map<String, Object> outputProperties,
+      String appId, Map<String, Object> inputProperties) {
+    if (CloudFormationStateKeys.variables.equals(name)) {
+      convertPropertyIdsToNames(name, appId, objectValue);
+    } else if (CloudFormationStateKeys.provisionerId.equals(name)) {
+      objectValue = convertProvisionerIdToName(appId, objectValue);
+      name = PROVISIONER_NAME;
+    }
+
+    outputProperties.put(name, objectValue);
   }
 
   @Override

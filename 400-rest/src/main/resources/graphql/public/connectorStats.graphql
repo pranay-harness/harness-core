@@ -1,8 +1,10 @@
+# Possible type values for Connector type aggregation
 enum ConnectorTypeAggregation {
   Type
 }
 
 input ConnectorAggregation {
+  # Aggregate by Connector type
   typeAggregation: ConnectorTypeAggregation
 }
 

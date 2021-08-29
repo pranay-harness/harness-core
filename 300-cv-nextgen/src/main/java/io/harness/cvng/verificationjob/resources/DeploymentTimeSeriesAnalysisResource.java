@@ -37,6 +37,6 @@ public class DeploymentTimeSeriesAnalysisResource {
       @QueryParam("hostName") String hostName, @QueryParam("filter") String filter,
       @QueryParam("pageNumber") int pageNumber) {
     return new RestResponse(deploymentTimeSeriesAnalysisService.getMetrics(
-        accountId, verificationJobInstanceId, anomalousMetricsOnly, hostName, filter, pageNumber));
+        accountId, verificationJobInstanceId, anomalousMetricsOnly, hostName, filter, null, pageNumber));
   }
 }

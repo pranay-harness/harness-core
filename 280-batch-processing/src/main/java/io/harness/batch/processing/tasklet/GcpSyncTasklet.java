@@ -36,6 +36,7 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableId;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
@@ -80,7 +81,7 @@ public class GcpSyncTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    Long startTime = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
+    Long endTime = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
     BillingDataPipelineConfig billingDataPipelineConfig = mainConfig.getBillingDataPipelineConfig();
 
     if (billingDataPipelineConfig.isGcpSyncEnabled()) {
@@ -92,7 +93,7 @@ public class GcpSyncTasklet implements Tasklet {
         try {
           processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
               gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
-              accountId, connectorInfo.getIdentifier(), startTime);
+              accountId, connectorInfo.getIdentifier(), endTime);
         } catch (Exception e) {
           log.error("Exception processing NG GCP Connector: {}", connectorInfo.getIdentifier(), e);
         }
@@ -106,7 +107,7 @@ public class GcpSyncTasklet implements Tasklet {
         try {
           processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(),
               gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,
-              gcpBillingAccount.getUuid(), startTime);
+              gcpBillingAccount.getUuid(), endTime);
         } catch (Exception e) {
           log.error("Exception processing CG GCP Connector: {}", gcpBillingAccount.getUuid(), e);
         }
@@ -116,7 +117,7 @@ public class GcpSyncTasklet implements Tasklet {
   }
 
   private void processGCPConnector(BillingDataPipelineConfig billingDataPipelineConfig, String serviceAccountEmail,
-      String datasetId, String projectId, String accountId, String connectorId, Long startTime) {
+      String datasetId, String projectId, String accountId, String connectorId, Long endTime) {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
     BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
@@ -125,9 +126,12 @@ public class GcpSyncTasklet implements Tasklet {
     Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
     tableList.getValues().forEach(table -> {
       if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
-        Long lastModifiedTime = table.getLastModifiedTime();
+        TableId tableId = TableId.of(projectId, datasetId, table.getTableId().getTable());
+        Table tableGranularData = bigQuery.getTable(tableId);
+
+        Long lastModifiedTime = tableGranularData.getLastModifiedTime();
         lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
-        if (lastModifiedTime > startTime) {
+        if (lastModifiedTime > endTime) {
           try {
             publishMessage(billingDataPipelineConfig.getGcpProjectId(),
                 billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,

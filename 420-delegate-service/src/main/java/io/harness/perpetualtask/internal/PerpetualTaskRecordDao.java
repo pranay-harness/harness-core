@@ -7,9 +7,8 @@ import static io.harness.perpetualtask.PerpetualTaskState.TASK_UNASSIGNED;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.DelegateLogContext;
+import io.harness.network.FibonacciBackOff;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskState;
@@ -22,15 +21,16 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class PerpetualTaskRecordDao {
   private final HPersistence persistence;
+  private static final int MAX_FIBONACCI_INDEX_FOR_TASK_ASSIGNMENT = 8;
 
   @Inject
   public PerpetualTaskRecordDao(HPersistence persistence) {
@@ -46,6 +46,8 @@ public class PerpetualTaskRecordDao {
           persistence.createUpdateOperations(PerpetualTaskRecord.class)
               .set(PerpetualTaskRecordKeys.delegateId, delegateId)
               .set(PerpetualTaskRecordKeys.state, TASK_ASSIGNED)
+              .unset(PerpetualTaskRecordKeys.assignAfterMs)
+              .unset(PerpetualTaskRecordKeys.assignTryCount)
               .unset(PerpetualTaskRecordKeys.unassignedReason)
               .unset(PerpetualTaskRecordKeys.assignerIterations)
               .set(PerpetualTaskRecordKeys.client_context_last_updated, lastContextUpdated);
@@ -53,7 +55,7 @@ public class PerpetualTaskRecordDao {
     }
   }
 
-  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason) {
+  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason, int assignTryCount) {
     Query<PerpetualTaskRecord> query =
         persistence.createQuery(PerpetualTaskRecord.class)
             .filter(PerpetualTaskRecordKeys.uuid, taskId)
@@ -62,7 +64,13 @@ public class PerpetualTaskRecordDao {
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.unassignedReason, reason)
-            .set(PerpetualTaskRecordKeys.state, TASK_UNASSIGNED);
+            .set(PerpetualTaskRecordKeys.state, TASK_UNASSIGNED)
+            .set(PerpetualTaskRecordKeys.assignTryCount,
+                Math.min(MAX_FIBONACCI_INDEX_FOR_TASK_ASSIGNMENT, assignTryCount + 1))
+            .set(PerpetualTaskRecordKeys.assignAfterMs,
+                System.currentTimeMillis()
+                    + TimeUnit.MINUTES.toMillis(FibonacciBackOff.getFibonacciElement(
+                        Math.min(MAX_FIBONACCI_INDEX_FOR_TASK_ASSIGNMENT, assignTryCount + 1))));
     persistence.update(query, updateOperations);
   }
 

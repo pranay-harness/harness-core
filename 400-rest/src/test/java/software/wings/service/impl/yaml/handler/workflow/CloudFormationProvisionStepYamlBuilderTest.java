@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,7 +14,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.intfc.AppService;
@@ -26,18 +26,22 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(HarnessTeam.CDP)
-public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
+public class CloudFormationProvisionStepYamlBuilderTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private AppService appService;
   @Mock private SecretManager secretManager;
 
-  @InjectMocks private CloudFormationStepYamlBuilder cloudFormationStepYamlBuilder;
+  @InjectMocks private CloudFormationProvisionStepYamlBuilder cloudFormationProvisionStepYamlBuilder;
 
   @Test
   @Owner(developers = RAGHVENDRA)
@@ -46,7 +50,7 @@ public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
     List<String> stackStatusesToMarkAsSuccess = Arrays.asList("CREATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE");
     Map<String, Object> changeContextParams = getChangeContextParams(true, stackStatusesToMarkAsSuccess);
     ChangeContext changeContext = buildChangeContext(changeContextParams);
-    assertThatCode(() -> cloudFormationStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
+    assertThatCode(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
   }
 
   @Test
@@ -56,9 +60,9 @@ public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
     List<String> stackStatusesToMarkAsSuccess = null;
     Map<String, Object> changeContextParams = getChangeContextParams(true, stackStatusesToMarkAsSuccess);
     ChangeContext changeContext = buildChangeContext(changeContextParams);
-    assertThatThrownBy(() -> cloudFormationStepYamlBuilder.validate(changeContext))
+    assertThatThrownBy(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext))
         .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> cloudFormationStepYamlBuilder.validate(changeContext))
+    assertThatThrownBy(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext))
         .hasMessage(
             "Provided CloudFormation Step Yaml is Invalid: skipBasedOnStackStatus is true, but the list stackStatusesToMarkAsSuccess is empty");
   }
@@ -70,9 +74,9 @@ public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
     List<String> stackStatusesToMarkAsSuccess = new ArrayList<>();
     Map<String, Object> changeContextParams = getChangeContextParams(true, stackStatusesToMarkAsSuccess);
     ChangeContext changeContext = buildChangeContext(changeContextParams);
-    assertThatThrownBy(() -> cloudFormationStepYamlBuilder.validate(changeContext))
+    assertThatThrownBy(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext))
         .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> cloudFormationStepYamlBuilder.validate(changeContext))
+    assertThatThrownBy(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext))
         .hasMessage(
             "Provided CloudFormation Step Yaml is Invalid: skipBasedOnStackStatus is true, but the list stackStatusesToMarkAsSuccess is empty");
   }
@@ -84,7 +88,7 @@ public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
     List<String> stackStatusesToMarkAsSuccess = null;
     Map<String, Object> changeContextParams = getChangeContextParams(false, stackStatusesToMarkAsSuccess);
     ChangeContext changeContext = buildChangeContext(changeContextParams);
-    assertThatCode(() -> cloudFormationStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
+    assertThatCode(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
   }
 
   @Test
@@ -94,7 +98,7 @@ public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
     List<String> stackStatusesToMarkAsSuccess = null;
     Map<String, Object> changeContextParams = getChangeContextParams(false, stackStatusesToMarkAsSuccess);
     ChangeContext changeContext = buildChangeContext(changeContextParams);
-    assertThatCode(() -> cloudFormationStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
+    assertThatCode(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
   }
 
   @Test
@@ -104,9 +108,9 @@ public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
     List<String> stackStatusesToMarkAsSuccess = Arrays.asList("CREATE_COMPLETE", "UPDATE_ROLLBACK_COMPLETE");
     Map<String, Object> changeContextParams = getChangeContextParams(false, stackStatusesToMarkAsSuccess);
     ChangeContext changeContext = buildChangeContext(changeContextParams);
-    assertThatThrownBy(() -> cloudFormationStepYamlBuilder.validate(changeContext))
+    assertThatThrownBy(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext))
         .isInstanceOf(InvalidArgumentsException.class);
-    assertThatThrownBy(() -> cloudFormationStepYamlBuilder.validate(changeContext))
+    assertThatThrownBy(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext))
         .hasMessage(
             "Provided CloudFormation Step Yaml is Invalid: skipBasedOnStackStatus is false, but the list stackStatusesToMarkAsSuccess is not empty");
   }
@@ -118,7 +122,7 @@ public class CloudFormationStepYamlBuilderTest extends WingsBaseTest {
     List<String> stackStatusesToMarkAsSuccess = null;
     Map<String, Object> changeContextParams = getChangeContextParams(null, stackStatusesToMarkAsSuccess);
     ChangeContext changeContext = buildChangeContext(changeContextParams);
-    assertThatCode(() -> cloudFormationStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
+    assertThatCode(() -> cloudFormationProvisionStepYamlBuilder.validate(changeContext)).doesNotThrowAnyException();
   }
 
   private ChangeContext buildChangeContext(Map<String, Object> parameters) {
