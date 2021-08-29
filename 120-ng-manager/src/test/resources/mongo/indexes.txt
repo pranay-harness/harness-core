@@ -431,6 +431,7 @@ instance {"name": "instance_index1", "background": true} {"appId": 1, "isDeleted
 instance {"name": "instance_index10", "background": true} {"accountId": 1, "infraMappingId": 1}
 instance {"name": "instance_index11", "background": true} {"infraMappingId": 1, "appId": 1, "createdAt": 1, "isDeleted": 1}
 instance {"name": "instance_index12", "background": true} {"accountId": 1, "createdAt": 1, "isDeleted": 1}
+instance {"name": "instance_index13", "background": true} {"appId": 1, "isDeleted": 1, "envId": 1}
 instance {"name": "instance_index2", "background": true} {"appId": 1, "infraMappingId": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "instance_index3", "background": true} {"accountId": 1, "createdAt": 1, "isDeleted": 1, "deletedAt": 1}
 instance {"name": "instance_index5", "background": true} {"appId": 1, "serviceId": 1, "createdAt": 1, "isDeleted": 1, "deletedAt": 1}
@@ -449,7 +450,7 @@ instanceNG {"name": "accountId_organizationId_projectId_infrastructureMappingId_
 instanceNG {"name": "accountId_organizationId_projectId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
 instanceNG {"name": "accountId_organizationId_projectId_serviceId_envId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "serviceIdentifier": 1, "envIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
 instanceNG {"name": "accountId_organizationId_projectId_serviceId_isDeleted_createdAt_deletedAt_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "serviceIdentifier": 1, "isDeleted": 1, "createdAt": 1, "deletedAt": 1}
-instanceNG {"name": "instanceKey_1", "unique": true} {"instanceKey": 1}
+instanceNG {"name": "unique_instanceKey_infrastructureMappingId_idx", "unique": true} {"instanceKey": 1, "infrastructureMappingId": 1}
 instanceStats {"name": "appId_1", "background": true} {"appId": 1}
 instanceStats {"name": "createdAt_1", "background": true} {"createdAt": 1}
 instanceStats {"name": "timestamp_1", "background": true} {"timestamp": 1}
@@ -584,9 +585,10 @@ permits {"name": "createdAt_1", "background": true} {"createdAt": 1}
 permits {"name": "expireAt_1", "background": true, "expireAfterSeconds": 0} {"expireAt": 1}
 permits {"name": "key_1", "unique": true} {"key": 1}
 perpetualTask {"name": "accountId_1", "background": true} {"accountId": 1}
-perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignerIterations": 1}
+perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignAfterMs": 1, "assignerIterations": 1}
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "rebalanceIterator", "background": true} {"state": 1, "rebalanceIteration": 1}
+perpetualTaskScheduleConfig {"name": "unique_perpetualTaskScheduleConfig_index1", "unique": true} {"accountId": 1, "perpetualTaskType": 1}
 personalization {"name": "unique_identification", "unique": true} {"accountId": 1, "userId": 1}
 pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}
 pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}

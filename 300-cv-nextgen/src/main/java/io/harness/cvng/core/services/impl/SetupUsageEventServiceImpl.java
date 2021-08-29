@@ -10,9 +10,9 @@ import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SERV
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
-import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;

@@ -1,3 +1,4 @@
+# Possible entity values for Deployment aggregation
 enum DeploymentEntityAggregation {
   Application
   Service
@@ -11,63 +12,99 @@ enum DeploymentEntityAggregation {
   Pipeline
 }
 
+# Possible types of sort
 enum DeploymentSortType {
   Duration
   Count
 }
 
+# Set sort criteria
 input DeploymentSortCriteria {
+  # Set sort type
   sortType: DeploymentSortType
+  # Set sort order
   sortOrder: SortOrder
 }
 
+# Set Deployment filter criteria
 input DeploymentFilter {
+  # Filter by Application id
   application: IdFilter
+  # Filter by Service id
   service: IdFilter
+  # Filter by Cloud Provider id
   cloudProvider: IdFilter
+  # Filter by Environment id
   environment: IdFilter
+  # Filter by Environment Type id
   environmentType: EnvironmentTypeFilter
+  # Filter by Deployment Type filter
   deploymentType: DeploymentTypeFilter
+  # Filter by Orchestration Workflow Type filter
   orchestrationWorkflowType: OrchestrationWorkflowTypeFilter
+  # Filter by Status id
   status: IdFilter
+  # Filter by Deployment end time
   endTime: TimeFilter
+  # Filter by Deployment start time
   startTime: TimeFilter
+  # Filter by Deployment duration
   duration: NumberFilter
+  # Filter by Rollback Duration
   rollbackDuration: NumberFilter
+  # Filter by Triggered-by id
   triggeredBy: IdFilter
+  # Filter by Trigger id
   trigger: IdFilter
+  # Filter by Workflow id
   workflow: IdFilter
+  # Filter by Pipeline id
   pipeline: IdFilter
+  # Filter by Deployment Tag
   tag: DeploymentTagFilter
 }
 
+# Set Deployment aggregation function
 input DeploymentAggregationFunction {
+  # Set count
   count: CountAggregateOperation
+  # Set duration
   duration: DurationAggregateOperation
+  # Set rollback duration
   rollbackDuration: DurationAggregateOperation
+  # Set instances deployed
   instancesDeployed: CountAggregateOperation
+  # Set rollback count
   rollbackCount: CountAggregateOperation
 }
 
+# Possible Duration aggregation values
 enum DurationAggregateOperation {
   AVERAGE
   MIN
   MAX
 }
 
+# Set Deployment aggregation criteria
 input DeploymentAggregation {
+  # Aggregate by entity
   entityAggregation: DeploymentEntityAggregation
+  # Aggregate by time aggregators
   timeAggregation: TimeSeriesAggregation
+  # Aggregate by tag
   tagAggregation: DeploymentTagAggregation
 }
 
+# Aggregate by Deployment tag
 input DeploymentTagAggregation {
+  # Set entity type
   entityType: DeploymentTagType
+  # Set tag name
   tagName: String
 }
 
 extend type Query {
-  #Get statistics about one or multiple deployments.
+  #Get statistics of one or multiple deployments.
   deploymentStats(
     aggregateFunction: DeploymentAggregationFunction
     filters: [DeploymentFilter]

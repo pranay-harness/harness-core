@@ -2,6 +2,7 @@ package io.harness.batch.processing.ccm;
 
 import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER;
 import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_BILLING;
+import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_NODE_RECOMMENDATION;
 import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_RECOMMENDATION;
 import static io.harness.batch.processing.ccm.BatchJobBucket.OTHERS;
 import static io.harness.batch.processing.ccm.BatchJobBucket.OUT_OF_CLUSTER;
@@ -25,6 +26,7 @@ public enum BatchJobType {
   BILLING_DATA_PIPELINE(50, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   SYNC_BILLING_REPORT_S3(100, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   SYNC_BILLING_REPORT_AZURE(100, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
+  SYNC_BILLING_REPORT_GCP(100, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   AWS_ECS_CLUSTER_SYNC(110, 1, ChronoUnit.DAYS, emptyList(), OUT_OF_CLUSTER),
   AWS_ECS_CLUSTER_DATA_SYNC(115, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   DEPLOYMENT_EVENT(150, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),
@@ -40,7 +42,7 @@ public enum BatchJobType {
   NODE_POD_COUNT(860, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
   K8S_WORKLOAD_RECOMMENDATION(875, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_EVENT), IN_CLUSTER_RECOMMENDATION),
   K8S_NODE_RECOMMENDATION(
-      877, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_UTILIZATION), IN_CLUSTER_RECOMMENDATION),
+      877, 1, ChronoUnit.DAYS, Collections.singletonList(K8S_UTILIZATION), IN_CLUSTER_NODE_RECOMMENDATION),
   INSTANCE_BILLING_HOURLY_AGGREGATION(
       881, 1, ChronoUnit.HOURS, singletonList(ACTUAL_IDLE_COST_BILLING_HOURLY), IN_CLUSTER_BILLING),
   INSTANCE_BILLING_AGGREGATION(887, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), IN_CLUSTER_BILLING),

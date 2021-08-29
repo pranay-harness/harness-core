@@ -3,6 +3,8 @@ package software.wings.beans.appmanifest;
 import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity("manifestFile")
 @HarnessEntity(exportable = true)
+@OwnedBy(HarnessTeam.CDP)
 @TargetModule(_957_CG_BEANS)
 public class ManifestFile extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

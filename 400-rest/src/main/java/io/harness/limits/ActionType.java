@@ -1,11 +1,17 @@
 package io.harness.limits;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.lib.LimitType;
 
 import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum ActionType {
   CREATE_APPLICATION(Collections.singletonList(LimitType.STATIC)),
   CREATE_SERVICE(Collections.singletonList(LimitType.STATIC)),

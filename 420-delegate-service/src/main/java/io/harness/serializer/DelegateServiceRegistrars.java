@@ -42,6 +42,7 @@ public class DelegateServiceRegistrars {
           .add(CommonEntitiesMorphiaRegister.class)
           .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
           .add(DelegateServiceMorphiaRegistrar.class)
+          .addAll(EventsFrameworkRegistrars.morphiaRegistrars)
           .add(FeatureFlagBeansMorphiaRegistrar.class)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)

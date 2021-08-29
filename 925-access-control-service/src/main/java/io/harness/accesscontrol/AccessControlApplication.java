@@ -219,6 +219,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(ConstraintViolationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }

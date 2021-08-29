@@ -25,4 +25,11 @@ import lombok.experimental.FieldDefaults;
 public class UserFilter {
   private String searchTerm;
   private Set<String> identifiers;
+  @Builder.Default private ParentFilter parentFilter = ParentFilter.NO_PARENT_SCOPES;
+
+  public ParentFilter getParentFilter() {
+    return parentFilter == null ? ParentFilter.NO_PARENT_SCOPES : parentFilter;
+  }
+
+  public enum ParentFilter { NO_PARENT_SCOPES, INCLUDE_PARENT_SCOPES, STRICTLY_PARENT_SCOPES }
 }

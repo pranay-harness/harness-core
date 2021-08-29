@@ -1,5 +1,6 @@
 package io.harness.pms.sdk.core.plan.creation.beans;
 
+import io.harness.async.AsyncCreatorResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
@@ -15,7 +16,7 @@ import lombok.Singular;
 
 @Data
 @Builder
-public class PlanCreationResponse {
+public class PlanCreationResponse implements AsyncCreatorResponse {
   @Singular Map<String, PlanNode> nodes;
   @Singular Map<String, YamlField> dependencies;
   @Singular("contextMap") Map<String, PlanCreationContextValue> contextMap;

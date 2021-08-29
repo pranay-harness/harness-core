@@ -24,7 +24,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class TerraformExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
 

@@ -2,7 +2,9 @@ package software.wings.service.intfc.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.beans.TaskType;
@@ -17,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public interface ServiceNowDelegateService {
   @DelegateTaskType(TaskType.SERVICENOW_VALIDATION) boolean validateConnector(ServiceNowTaskParameters taskParameters);
   @DelegateTaskType(TaskType.SERVICENOW_SYNC)

@@ -339,7 +339,8 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private String message;
   @Transient private String failureDetails;
 
-  @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  // Making this consistent with data retention default of 183 days instead of "6 months"
+  @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(183).toInstant());
 
   public String normalizedName() {
     if (isBlank(name)) {

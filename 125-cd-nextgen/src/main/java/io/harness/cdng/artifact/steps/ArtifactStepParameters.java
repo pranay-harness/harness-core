@@ -1,5 +1,6 @@
 package io.harness.cdng.artifact.steps;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
@@ -16,6 +17,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("artifactStepParameters")
+@RecasterAlias("io.harness.cdng.artifact.steps.ArtifactStepParameters")
 public class ArtifactStepParameters implements StepParameters {
   String identifier;
   ArtifactSourceType type;

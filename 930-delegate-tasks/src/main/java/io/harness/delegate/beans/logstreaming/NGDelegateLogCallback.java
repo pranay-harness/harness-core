@@ -25,8 +25,7 @@ public class NGDelegateLogCallback implements LogCallback {
   public NGDelegateLogCallback(ILogStreamingTaskClient iLogStreamingTaskClient, String commandUnitName,
       boolean shouldOpenStream, CommandUnitsProgress commandUnitsProgress) {
     if (iLogStreamingTaskClient == null) {
-      throw new InvalidRequestException(
-          "Log Streaming Client is not present. Ensure that feature flag [LOG_STREAMING_INTEGRATION] is on.");
+      throw new InvalidRequestException("Log Streaming Client is not present.");
     }
     this.iLogStreamingTaskClient = iLogStreamingTaskClient;
     this.commandUnitName = commandUnitName;

@@ -14,6 +14,7 @@ import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRI
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
 import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
@@ -49,8 +50,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -113,6 +116,7 @@ import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 
 @OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public final class ApplicationManifestUtilsTest extends WingsBaseTest {
   @Mock private DeploymentExecutionContext context;
   @Mock private ApplicationManifestService applicationManifestService;
@@ -1138,8 +1142,8 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
 
     doReturn(multiplePath).when(context).renderExpression(expressionMultiplePath, stateExecutionContext);
 
-    CustomManifestValuesFetchParams params =
-        applicationManifestUtils.createCustomManifestValuesFetchParams(context, applicationManifestMap);
+    CustomManifestValuesFetchParams params = applicationManifestUtils.createCustomManifestValuesFetchParams(
+        context, applicationManifestMap, VALUES_YAML_KEY);
     assertThat(params.getFetchFilesList()).isNotEmpty();
     assertThat(params.getFetchFilesList()).hasSize(4);
     for (CustomManifestFetchConfig fetchConfig : params.getFetchFilesList()) {
@@ -1190,8 +1194,8 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
         ImmutableMap.of(ServiceOverride, customAppManifest(singlePath, script, CUSTOM), K8sValuesLocation.Service,
             customAppManifest(singlePath, script, CUSTOM_OPENSHIFT_TEMPLATE));
 
-    CustomManifestValuesFetchParams params =
-        applicationManifestUtils.createCustomManifestValuesFetchParams(context, applicationManifestMap);
+    CustomManifestValuesFetchParams params = applicationManifestUtils.createCustomManifestValuesFetchParams(
+        context, applicationManifestMap, VALUES_YAML_KEY);
     assertThat(params.getFetchFilesList()).isNotEmpty();
     assertThat(params.getFetchFilesList()).hasSize(2);
 
@@ -1245,7 +1249,8 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     doReturn(multiplePath).when(context).renderExpression(expressionMultiplePath, stateExecutionContext);
 
     Map<K8sValuesLocation, Collection<String>> result =
-        applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, fetchResponse);
+        applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
+            context, appManifestMap, fetchResponse, VALUES_YAML_KEY);
     assertThat(result.get(ServiceOverride)).containsExactly("service-override");
     assertThat(result.get(Environment)).containsExactly("env-1", "env-2");
     assertThat(result.get(EnvironmentGlobal)).containsExactly("env-global-1", "env-global-2");

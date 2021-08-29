@@ -37,6 +37,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.chartmuseum.ChartMuseumServer;
+import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
@@ -624,7 +625,7 @@ public class HelmTaskHelperBase {
     }
   }
 
-  private String createDirectory(String directoryBase) throws IOException {
+  String createDirectory(String directoryBase) throws IOException {
     String workingDirectory = Paths.get(directoryBase).normalize().toAbsolutePath().toString();
 
     createDirectoryIfDoesNotExist(workingDirectory);
@@ -762,7 +763,7 @@ public class HelmTaskHelperBase {
                                                        manifest.getChartName(), repoName, destinationDirectory),
           destinationDirectory, "Helm chart fetch versions command failed ", timeoutInMillis,
           HelmCliCommandType.FETCH_ALL_VERSIONS);
-      String commandOutput = processResult.toString();
+      String commandOutput = processResult.getOutput().getUTF8();
       return parseHelmVersionsFromOutput(commandOutput, manifest);
     } finally {
       if (chartMuseumServer != null) {
@@ -801,8 +802,11 @@ public class HelmTaskHelperBase {
     switch (helmStoreDelegateConfig.getType()) {
       case S3_HELM:
         S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) helmStoreDelegateConfig;
-        for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
-          decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+        if (s3HelmStoreConfig.getAwsConnector().getCredential().getAwsCredentialType()
+            == AwsCredentialType.MANUAL_CREDENTIALS) {
+          for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+            decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+          }
         }
         break;
       case GCS_HELM:

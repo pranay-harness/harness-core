@@ -41,13 +41,11 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(DEL)
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
-
-  boolean checkDelegateConnected(String accountId, String delegateId);
 
   List<String> getKubernetesDelegateNames(String accountId);
 

@@ -4221,9 +4221,9 @@ go_repository(
 
 http_archive(
     name = "rules_spring",
-    sha256 = "2178aa714516fe3ba8e88663aef8e183e6ab28c8bf1f9da96f76533ee86a47b4",
+    sha256 = "9385652bb92d365675d1ca7c963672a8091dc5940a9e307104d3c92e7a789c8e",
     urls = [
-        "https://github.com/salesforce/rules_spring/releases/download/2.1.0/rules-spring-2.1.0.zip",
+        "https://github.com/salesforce/rules_spring/releases/download/2.1.4/rules-spring-2.1.4.zip",
     ],
 )
 
@@ -4472,7 +4472,7 @@ plain_artifacts = [
     "commons-collections:commons-collections:3.2.2",
     "commons-dbcp:commons-dbcp:1.4",
     "commons-digester:commons-digester:2.1",
-    "commons-io:commons-io:2.6",
+    "commons-io:commons-io:2.7",
     "commons-lang:commons-lang:2.3",
     "commons-logging:commons-logging:1.1.1",
     "commons-net:commons-net:3.6",
@@ -4565,7 +4565,7 @@ plain_artifacts = [
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
     "io.harness.cv:data-collection-dsl:0.27-RELEASE",
-    "io.harness:ff-java-server-sdk:1.0.0",
+    "io.harness:ff-java-server-sdk:1.0.3",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
     "io.kubernetes:client-java-extended:9.0.2",
@@ -4736,10 +4736,10 @@ plain_artifacts = [
     "org.bouncycastle:bcprov-jdk15on:1.64",
     "org.checkerframework:checker-compat-qual:2.5.5",
     "org.checkerframework:checker-qual:2.10.0",
-    "org.cloudfoundry:cloudfoundry-client-reactor:4.8.0.RELEASE",
-    "org.cloudfoundry:cloudfoundry-client:4.8.0.RELEASE",
-    "org.cloudfoundry:cloudfoundry-operations:4.8.0.RELEASE",
-    "org.cloudfoundry:cloudfoundry-util:4.8.0.RELEASE",
+    "org.cloudfoundry:cloudfoundry-client-reactor:4.15.0.RELEASE",
+    "org.cloudfoundry:cloudfoundry-client:4.15.0.RELEASE",
+    "org.cloudfoundry:cloudfoundry-operations:4.15.0.RELEASE",
+    "org.cloudfoundry:cloudfoundry-util:4.15.0.RELEASE",
     "org.codehaus.groovy:groovy:3.0.7",
     "org.codehaus.jackson:jackson-core-asl:1.9.11",
     "org.codehaus.janino:commons-compiler:3.0.6",
@@ -4749,7 +4749,7 @@ plain_artifacts = [
     "org.codehaus.woodstox:stax2-api:4.2",
     "org.conscrypt:conscrypt-openjdk-uber:2.5.1",
     "org.coursera:metrics-datadog:1.1.13",
-    "org.cryptacular:cryptacular:1.1.3",
+    "org.cryptacular:cryptacular:1.1.4",
     "org.eclipse.jetty.http2:http2-common:9.4.35.v20201120",
     "org.eclipse.jetty.http2:http2-hpack:9.4.35.v20201120",
     "org.eclipse.jetty.http2:http2-xxxxxxxx9.4.35.v20201120",
@@ -5309,4 +5309,18 @@ http_file(
     name = "alpn_boot_8.1.13.v20181017",
     sha256 = "05165e53fd9aeb774f95178c85740c3ee9ea72a9ca489497df837cc397a5da06",
     urls = ["https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"],
+)
+
+go_repository(
+    name = "com_github_go_co_op_gocron",
+    importpath = "github.com/go-co-op/gocron",
+    sum = "h1:gkWhY/CLtDdVXTquqGtBthig0sdHGTBOyo+kR36Pglw=",
+    version = "v1.7.0",
+)
+
+go_repository(
+    name = "com_github_robfig_cron_v3",
+    importpath = "github.com/robfig/cron/v3",
+    sum = "h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=",
+    version = "v3.0.1",
 )

@@ -40,6 +40,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,6 +63,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Mock K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;
+  @Mock DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Mock PerpetualTaskService perpetualTaskService;
   @Mock PerpetualTaskRecordDao perpetualTaskRecordDao;
   @Mock AlertService alertService;
@@ -93,7 +95,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                                                   .delegateId(delegateId)
                                                   .delegateMetaInfo(DelegateMetaInfo.builder().id(delegateId).build())
                                                   .build();
-    when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
+    when(delegateTaskServiceClassic.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.assign(record);
     verify(perpetualTaskService).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
     verify(alertService, times(1))
@@ -145,7 +147,8 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotHandle_NoDelegateAvailableToHandlePerpetualTask() throws InterruptedException {
-    when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new NoAvailableDelegatesException());
+    when(delegateTaskServiceClassic.executeTask(isA(DelegateTask.class)))
+        .thenThrow(new NoAvailableDelegatesException());
     perpetualTaskRecordHandler.assign(record);
     String expectedMessage =
         String.format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, record.getPerpetualTaskType());
@@ -162,7 +165,8 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldNotHandle_ServiceUnavailableNoDelegateInstalledToHandlePT() throws InterruptedException {
-    when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new NoInstalledDelegatesException());
+    when(delegateTaskServiceClassic.executeTask(isA(DelegateTask.class)))
+        .thenThrow(new NoInstalledDelegatesException());
     perpetualTaskRecordHandler.assign(record);
     String expectedMessage =
         String.format(NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK, record.getPerpetualTaskType());
@@ -179,7 +183,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotHandle_PerpetualTaskFailedToBeAssignedToAnyDelegate() throws InterruptedException {
-    when(delegateService.executeTask(isA(DelegateTask.class))).thenThrow(new WingsException(""));
+    when(delegateTaskServiceClassic.executeTask(isA(DelegateTask.class))).thenThrow(new WingsException(""));
     perpetualTaskRecordHandler.assign(record);
     String expectedMessage =
         String.format(PERPETUAL_TASK_FAILED_TO_BE_ASSIGNED_TO_ANY_DELEGATE, record.getPerpetualTaskType());
@@ -220,7 +224,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
                  .clientContext(PerpetualTaskClientContext.builder().build())
                  .build();
-    when(delegateService.checkDelegateConnected(accountId, delegateId)).thenReturn(true);
+    when(delegateTaskServiceClassic.checkDelegateConnected(accountId, delegateId)).thenReturn(true);
     perpetualTaskRecordHandler.rebalance(record);
     verify(perpetualTaskService).appointDelegate(eq(accountId), eq(taskId), eq(delegateId), anyLong());
   }

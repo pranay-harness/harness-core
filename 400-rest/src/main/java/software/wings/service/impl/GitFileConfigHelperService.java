@@ -6,7 +6,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class GitFileConfigHelperService {
   @Inject private SettingsService settingsService;
 

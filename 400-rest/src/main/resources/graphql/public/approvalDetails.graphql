@@ -10,14 +10,8 @@ extend type Mutation {
   """
   Approve or Reject the Approvals
   """
-  approveOrRejectApprovals(
-    executionId: String!
-    approvalId: String!
-    action: Action!
-    variableInputs: [UserInput]
-    applicationId: String!
-    comments: String
-  ): ApproveOrRejectApprovalsInputPayload @dataFetcher(name: approveOrRejectApprovals)
+  approveOrRejectApprovals(input: ApproveOrRejectApprovalsInput!): ApproveOrRejectApprovalsInputPayload
+    @dataFetcher(name: approveOrRejectApprovals)
 }
 
 input ApprovalDetailsInput {
@@ -32,10 +26,12 @@ input ApproveOrRejectApprovalsInput {
   variableInputs: [UserInput]
   applicationId: String!
   comments: String
+  clientMutationId: String
 }
 
 type ApproveOrRejectApprovalsInputPayload {
   success: Boolean!
+  clientMutationId: String
 }
 
 type ApprovalDetailsPayload {

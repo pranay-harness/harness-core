@@ -81,7 +81,7 @@ public class TriggerFilterHelper {
   public Criteria createCriteriaFormBuildTriggerUsingAccIdAndSignature(String accountId, List<String> signatures) {
     Criteria criteria = new Criteria();
     criteria.and(NGTriggerEntityKeys.accountId).is(accountId);
-    criteria.and(NGTriggerEntityKeys.signature).in(signatures);
+    criteria.and("metadata.buildMetadata.pollingConfig.signature").in(signatures);
     criteria.and(NGTriggerEntityKeys.deleted).is(false);
     criteria.and(NGTriggerEntityKeys.enabled).is(true);
     return criteria;
@@ -126,7 +126,7 @@ public class TriggerFilterHelper {
     update.set(NGTriggerEntityKeys.enabled, triggerEntity.getEnabled());
     update.set(NGTriggerEntityKeys.tags, triggerEntity.getTags());
     update.set(NGTriggerEntityKeys.deleted, false);
-    update.set(NGTriggerEntityKeys.validationStatus, triggerEntity.getValidationStatus());
+    update.set(NGTriggerEntityKeys.triggerStatus, triggerEntity.getTriggerStatus());
     if (triggerEntity.getNextIterations() != null) {
       update.set(NGTriggerEntityKeys.nextIterations, triggerEntity.getNextIterations());
     }

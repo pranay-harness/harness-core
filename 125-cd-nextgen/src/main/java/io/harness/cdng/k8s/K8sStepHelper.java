@@ -20,6 +20,8 @@ import static io.harness.logging.UnitStatus.RUNNING;
 import static io.harness.steps.StepUtils.prepareCDTaskRequest;
 import static io.harness.validation.Validator.notEmptyCheck;
 
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
+
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -481,12 +483,12 @@ public class K8sStepHelper {
     switch (manifestType) {
       case ManifestType.HelmChart:
         String folderPath = getParameterFieldValue(gitstoreConfig.getFolderPath());
-        paths.add(getValuesYamlGitFilePath(folderPath));
+        paths.add(getValuesYamlGitFilePath(folderPath, VALUES_YAML_KEY));
         break;
       case ManifestType.K8Manifest:
         List<String> filePaths = getParameterFieldValue(gitstoreConfig.getPaths());
         for (String filePath : filePaths) {
-          paths.add(getValuesYamlGitFilePath(filePath));
+          paths.add(getValuesYamlGitFilePath(filePath, VALUES_YAML_KEY));
         }
         break;
       default:

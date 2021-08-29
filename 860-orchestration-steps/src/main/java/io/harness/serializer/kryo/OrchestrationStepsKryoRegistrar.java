@@ -25,7 +25,6 @@ import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintResponseData;
-import io.harness.steps.section.SectionStepParameters;
 import io.harness.steps.section.chain.SectionChainPassThroughData;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
@@ -47,7 +46,6 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(HoldingScope.class, 3210);
 
     kryo.register(ForkStepParameters.class, 3211);
-    kryo.register(SectionStepParameters.class, 3212);
     kryo.register(SectionChainStepParameters.class, 3214);
 
     kryo.register(SectionChainPassThroughData.class, 3217);

@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(PL)
 @ValidateOnExecution
 @Singleton
+@Slf4j
 public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   private final RoleAssignmentRepository roleAssignmentRepository;
 
@@ -85,7 +87,10 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
     return roleAssignmentRepository.deleteByIdentifierAndScopeIdentifier(identifier, scopeIdentifier)
         .stream()
         .findFirst()
-        .flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));
+        .flatMap(r -> {
+          log.info("The role assignment is being deleted, {}", r);
+          return Optional.of(RoleAssignmentDBOMapper.fromDBO(r));
+        });
   }
 
   @Override
@@ -100,6 +105,10 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
     } else {
       Pattern startsWithScope = Pattern.compile("^".concat(roleAssignmentFilter.getScopeFilter()));
       criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).regex(startsWithScope);
+    }
+
+    if (!roleAssignmentFilter.getScopeLevelFilter().isEmpty()) {
+      criteria.and(RoleAssignmentDBOKeys.scopeLevel).in(roleAssignmentFilter.getScopeLevelFilter());
     }
 
     if (!roleAssignmentFilter.getRoleFilter().isEmpty()) {

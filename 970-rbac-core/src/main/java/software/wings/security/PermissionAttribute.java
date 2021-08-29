@@ -494,6 +494,11 @@ public class PermissionAttribute {
     MANAGE_DEPLOYMENT_FREEZES,
 
     /**
+     * Deploy during Deployment Freezes
+     */
+    ALLOW_DEPLOYMENTS_DURING_FREEZE,
+
+    /**
      * Manage Pipeline Governance Standards
      */
     MANAGE_PIPELINE_GOVERNANCE_STANDARDS,

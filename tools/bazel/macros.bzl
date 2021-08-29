@@ -3,6 +3,7 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 load("//:tools/bazel/duplicated.bzl", "report_duplicated")
 load("@rules_jvm_external//:specs.bzl", "maven")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests_targets")
 
 def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = None):
     native.java_library(
@@ -13,10 +14,6 @@ def resources(name = "resources", runtime_deps = [], testonly = 0, visibility = 
         testonly = testonly,
         visibility = visibility,
     )
-
-def test_targets_list(exclude = []):
-    test_files = native.glob(["src/test/java/**/*Test.java"], exclude = exclude)
-    return [file.split("/")[-1][:-5] for file in test_files]
 
 def getCheckstyleReportPathForSonar():
     return "../../../" + native.package_name() + "/checkstyle.xml"
@@ -38,7 +35,7 @@ def sonarqube_test(
     srcs = native.glob(["src/main/java/**/*.java"])
     targets = [":module"]
     if name == None:
-        name = "sq_mycomponent"
+        name = "sonarqube"
     if project_key == None:
         project_key = native.package_name()
     if project_name == None:
@@ -46,13 +43,14 @@ def sonarqube_test(
     if test_srcs == []:
         test_srcs = native.glob(["src/test/**/*.java"])
     if test_targets == []:
-        test_targets = test_targets_list()
+        test_targets = run_tests_targets()
     if test_reports == []:
         test_reports = ["//:test_reports"]
     if tags == []:
-        tags = ["manual", "no-ide"]
+        tags = ["manual", "no-ide", "sonarqube"]
     if visibility == []:
         visibility = ["//visibility:public"]
+
     sq_project(
         name = name,
         project_key = project_key,
@@ -71,7 +69,8 @@ def run_analysis(
         run_checkstyle = True,
         run_pmd = True,
         run_sonar = True,
-        run_duplicated = True):
+        run_duplicated = True,
+        test_targets = []):
     if run_checkstyle:
         checkstyle()
 
@@ -79,7 +78,7 @@ def run_analysis(
         pmd()
 
     if run_sonar:
-        sonarqube_test()
+        sonarqube_test(test_targets = test_targets)
 
     if run_duplicated:
         report_duplicated()

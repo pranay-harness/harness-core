@@ -4,12 +4,14 @@ import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
-import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
+import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -46,6 +48,8 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 @OwnedBy(HarnessTeam.CV)
 public class MonitoredServiceResource {
+  private static final String YAML_TEMPLATE_KEY = "yaml";
+
   @Inject MonitoredServiceService monitoredServiceService;
 
   @POST
@@ -168,6 +172,28 @@ public class MonitoredServiceResource {
         accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier));
   }
 
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/scores")
+  @ApiOperation(value = "get monitored service scores from service and env ref",
+      nickname = "getMonitoredServiceScoresFromServiceAndEnvironment")
+  public ResponseDTO<HealthScoreDTO>
+  getMonitoredServiceScoreFromServiceAndEnvironment(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getCurrentScore(serviceEnvironmentParams));
+  }
+
   @DELETE
   @Timed
   @ExceptionMetered
@@ -197,5 +223,21 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
     return ResponseDTO.newResponse(
         monitoredServiceService.listEnvironments(accountId, orgIdentifier, projectIdentifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/yaml-template")
+  @ApiOperation(value = "yaml template for monitored service", nickname = "getMonitoredServiceYamlTemplate")
+  public RestResponse<String> yamlTemplate(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    return new RestResponse<>(monitoredServiceService.getYamlTemplate(ProjectParams.builder()
+                                                                          .accountIdentifier(accountId)
+                                                                          .orgIdentifier(orgIdentifier)
+                                                                          .projectIdentifier(projectIdentifier)
+                                                                          .build()));
   }
 }

@@ -1,10 +1,16 @@
 package io.harness.beans;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.core.AliasRegistry;
 import io.harness.utils.RecastReflectionUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class RecasterMap extends LinkedHashMap<String, Object> implements Map<String, Object> {
   public static final String RECAST_CLASS_KEY = "__recast";
   public static final String ENCODED_VALUE = "__encodedValue";
@@ -32,6 +38,9 @@ public class RecasterMap extends LinkedHashMap<String, Object> implements Map<St
     if (recasterAliasValue != null) {
       this.put(RECAST_CLASS_KEY, recasterAliasValue);
     } else {
+      if (AliasRegistry.getInstance().shouldContainAlias(clazz)) {
+        log.warn("[RECAST_ALIAS]: Consider adding @RecasterAlias annotation to this class {}", clazz.getName());
+      }
       this.put(RECAST_CLASS_KEY, clazz.getName());
     }
   }

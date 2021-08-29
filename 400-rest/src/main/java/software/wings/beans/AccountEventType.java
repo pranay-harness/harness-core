@@ -1,5 +1,12 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public enum AccountEventType {
   APP_CREATED,
   SERVICE_CREATED,

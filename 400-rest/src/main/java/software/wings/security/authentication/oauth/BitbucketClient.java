@@ -1,8 +1,10 @@
 package software.wings.security.authentication.oauth;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
@@ -32,6 +34,7 @@ import org.json.JSONObject;
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class BitbucketClient extends BaseOauthClient implements OauthClient {
   OAuth20Service service;
   BitbucketConfig bitbucketConfig;

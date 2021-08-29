@@ -24,9 +24,9 @@ import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDa
 import io.harness.batch.processing.billing.writer.support.BillingDataGenerationValidator;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
+import io.harness.batch.processing.pricing.PricingSource;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;

@@ -4,7 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.serializer.FiltersRegistrars;
+import io.harness.gitsync.serializer.GitSyncSdkRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.NGTemplateKryoRegistrar;
+import io.harness.serializer.morphia.NGTemplateMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -22,6 +25,12 @@ public class TemplateServiceModuleRegistrars {
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.kryoRegistrars)
           .addAll(FiltersRegistrars.kryoRegistrars)
+          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
+          .addAll(FiltersRegistrars.kryoRegistrars)
+          .addAll(GitSyncSdkRegistrar.kryoRegistrars)
+          .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(OutboxEventRegistrars.kryoRegistrars)
+          .add(NGTemplateKryoRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -30,6 +39,12 @@ public class TemplateServiceModuleRegistrars {
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .addAll(FiltersRegistrars.morphiaRegistrars)
+          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
+          .addAll(FiltersRegistrars.morphiaRegistrars)
+          .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
+          .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .add(NGTemplateMorphiaRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

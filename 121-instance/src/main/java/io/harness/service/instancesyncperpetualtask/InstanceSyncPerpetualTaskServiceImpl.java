@@ -3,6 +3,7 @@ package io.harness.service.instancesyncperpetualtask;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.delegate.AccountId;
 import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
@@ -33,9 +34,10 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
 
   @Override
   public String createPerpetualTask(InfrastructureMappingDTO infrastructureMappingDTO,
-      AbstractInstanceSyncHandler abstractInstanceSyncHandler, List<DeploymentInfoDTO> deploymentInfoDTOList) {
-    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        getExecutionBundle(infrastructureMappingDTO, abstractInstanceSyncHandler, deploymentInfoDTOList);
+      AbstractInstanceSyncHandler abstractInstanceSyncHandler, List<DeploymentInfoDTO> deploymentInfoDTOList,
+      InfrastructureOutcome infrastructureOutcome) {
+    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle = getExecutionBundle(
+        infrastructureMappingDTO, abstractInstanceSyncHandler, deploymentInfoDTOList, infrastructureOutcome);
 
     PerpetualTaskId perpetualTaskId = delegateServiceGrpcClient.createPerpetualTask(
         AccountId.newBuilder().setId(infrastructureMappingDTO.getAccountIdentifier()).build(),
@@ -49,9 +51,9 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   @Override
   public void resetPerpetualTask(String accountIdentifier, String perpetualTaskId,
       InfrastructureMappingDTO infrastructureMappingDTO, AbstractInstanceSyncHandler abstractInstanceSyncHandler,
-      List<DeploymentInfoDTO> deploymentInfoDTOList) {
-    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
-        getExecutionBundle(infrastructureMappingDTO, abstractInstanceSyncHandler, deploymentInfoDTOList);
+      List<DeploymentInfoDTO> deploymentInfoDTOList, InfrastructureOutcome infrastructureOutcome) {
+    PerpetualTaskExecutionBundle perpetualTaskExecutionBundle = getExecutionBundle(
+        infrastructureMappingDTO, abstractInstanceSyncHandler, deploymentInfoDTOList, infrastructureOutcome);
 
     delegateServiceGrpcClient.resetPerpetualTask(AccountId.newBuilder().setId(accountIdentifier).build(),
         PerpetualTaskId.newBuilder().setId(perpetualTaskId).build(), perpetualTaskExecutionBundle);
@@ -92,10 +94,12 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   }
 
   private PerpetualTaskExecutionBundle getExecutionBundle(InfrastructureMappingDTO infrastructureMappingDTO,
-      AbstractInstanceSyncHandler abstractInstanceSyncHandler, List<DeploymentInfoDTO> deploymentInfoDTOList) {
+      AbstractInstanceSyncHandler abstractInstanceSyncHandler, List<DeploymentInfoDTO> deploymentInfoDTOList,
+      InfrastructureOutcome infrastructureOutcome) {
     InstanceSyncPerpetualTaskHandler instanceSyncPerpetualTaskHandler =
         getInstanceSyncPerpetualTaskHandler(abstractInstanceSyncHandler);
-    return instanceSyncPerpetualTaskHandler.getExecutionBundle(infrastructureMappingDTO, deploymentInfoDTOList);
+    return instanceSyncPerpetualTaskHandler.getExecutionBundle(
+        infrastructureMappingDTO, deploymentInfoDTOList, infrastructureOutcome);
   }
 
   private InstanceSyncPerpetualTaskHandler getInstanceSyncPerpetualTaskHandler(

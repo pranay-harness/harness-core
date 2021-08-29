@@ -64,6 +64,8 @@ import io.harness.connector.mappers.newerlicmapper.NewRelicDTOToEntity;
 import io.harness.connector.mappers.newerlicmapper.NewRelicEntityToDTO;
 import io.harness.connector.mappers.nexusmapper.NexusDTOToEntity;
 import io.harness.connector.mappers.nexusmapper.NexusEntityToDTO;
+import io.harness.connector.mappers.pagerduty.PagerDutyDTOToEntity;
+import io.harness.connector.mappers.pagerduty.PagerDutyEntityToDTO;
 import io.harness.connector.mappers.prometheusmapper.PrometheusDTOToEntity;
 import io.harness.connector.mappers.prometheusmapper.PrometheusEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.AwsKmsDTOToEntity;
@@ -206,6 +208,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.HTTP_HELM_REPO,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, HttpHelmRepoConnectionValidator.class,
             HttpHelmConnectorValidationParamsProvider.class, HttpHelmDTOToEntity.class, HttpHelmEntityToDTO.class));
+    registrar.put(ConnectorType.PAGER_DUTY,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class));
   }
 
   public static Class<? extends ConnectionValidator> getConnectorValidator(ConnectorType connectorType) {

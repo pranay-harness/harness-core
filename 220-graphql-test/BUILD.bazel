@@ -19,6 +19,7 @@ java_library(
     deps = [
         "//:lombok",
         "//230-model-test:module",
+        "//360-cg-manager:module",
         "//380-cg-graphql:module",
         "//400-rest:module",
         "//400-rest:supporter-test",
@@ -59,6 +60,7 @@ java_library(
     deps = [
         ":supporter-test",
         "//:lombok",
+        "//380-cg-graphql:module",
         "//990-commons-test:module",
         "@maven//:de_bwaldvogel_mongo_java_server_core",
         "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",

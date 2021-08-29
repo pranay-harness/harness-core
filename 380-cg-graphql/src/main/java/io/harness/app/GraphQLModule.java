@@ -10,6 +10,8 @@ import io.harness.app.datafetcher.delegate.DelegateListDataFetcher;
 import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
 
 import software.wings.app.WingsGraphQLModule;
+import software.wings.graphql.datafetcher.approval.ApprovalDetailsDataFetcher;
+import software.wings.graphql.datafetcher.approval.ApproveOrRejectApprovalsDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactCleanupDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactConnectionDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
@@ -18,6 +20,7 @@ import software.wings.graphql.datafetcher.event.DeleteEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigConnectionDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.UpdateEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
 import software.wings.graphql.datafetcher.secretManager.HashicorpVaultDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetchers;
@@ -110,6 +113,9 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EventsConfigConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateEventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApprovalDetailsDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ApproveOrRejectApprovalsDataFetcher.class);
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
         .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))
