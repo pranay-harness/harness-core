@@ -540,7 +540,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         }
 
         if (assignableDelegate && activeDelegates.contains(delegateId)) {
-          log.debug("Setting preAssignedDelegate to {}.", delegateId);
+          log.info("Setting preAssignedDelegate to {}.", delegateId);
           return delegateId;
         }
       }
@@ -575,7 +575,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       delegateSelectionLogsService.save(batch);
 
       if (canAssign) {
-        log.debug("Setting preAssignedDelegate for task without agent capabilities to {}.", delegateId);
+        log.info("Setting preAssignedDelegate for task without agent capabilities to {}.", delegateId);
         return delegateId;
       }
     }
@@ -1049,7 +1049,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-      log.debug("Delegate completed validating {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
+      log.info("Delegate completed validating {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
 
       UpdateOperations<DelegateTask> updateOperations =
           persistence.createUpdateOperations(DelegateTask.class)
@@ -1310,7 +1310,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             delegateTask.getDelegateId(), delegateTask.getStatus());
       }
     } else {
-      log.debug("Task no longer exists", taskId);
+      log.info("Task no longer exists", taskId);
     }
     return null;
   }
@@ -1523,7 +1523,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     }
 
     task.getData().setParameters(delegateTask.getData().getParameters());
-    log.debug("Returning previously assigned task to delegate");
+    log.info("Returning previously assigned task to delegate");
     return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
   }
 

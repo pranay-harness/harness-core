@@ -159,27 +159,21 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       DelegateCallbackService delegateCallbackService =
           delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
       if (delegateCallbackService == null) {
-        log.debug(
+        log.info(
             "Failed to obtain Delegate callback service for the given task. Skipping processing of task response.");
         return;
       }
 
       if (delegateTask.getData().isAsync()) {
-        log.debug("Publishing async task response...");
         delegateCallbackService.publishAsyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
-        log.debug("Published async task response.");
       } else {
-        log.debug("Publishing sync task response...");
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
-        log.debug("Published sync task response.");
       }
     } catch (Exception ex) {
       log.error("Failed publishing task response", ex);
     }
-
-    log.debug("Finished processing task response.");
   }
 
   private void handleInprocResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
