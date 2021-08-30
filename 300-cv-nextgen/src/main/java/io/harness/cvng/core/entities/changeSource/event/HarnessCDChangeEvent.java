@@ -25,8 +25,8 @@ public class HarnessCDChangeEvent extends ChangeEvent {
   String stageId;
   Status status;
 
-  public static class HarnessCDChangeEventMongoUtil
-      extends ChangeEventMongoUtil<HarnessCDChangeEvent, HarnessCDChangeEvent> {
+  public static class HarnessCDChangeEventUpdatableEntity
+      extends ChangeEventUpdatableEntity<HarnessCDChangeEvent, HarnessCDChangeEvent> {
     @Override
     public Class getEntityClass() {
       return HarnessCDChangeEvent.class;

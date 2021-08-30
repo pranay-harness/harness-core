@@ -65,8 +65,8 @@ import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConf
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
-import io.harness.cvng.core.entities.changeSource.event.ChangeEvent.ChangeEventMongoUtil;
-import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent;
+import io.harness.cvng.core.entities.changeSource.event.ChangeEvent.ChangeEventUpdatableEntity;
+import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent.HarnessCDChangeEventUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -153,7 +153,7 @@ import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServi
 import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServiceImpl;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
-import io.harness.cvng.core.transformer.changeEvent.HarnessCDEventMetadataTransformer;
+import io.harness.cvng.core.transformer.changeEvent.HarnessCDChangeEventTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.HarnessCDChangeSourceSpecTransformer;
@@ -482,16 +482,15 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
         .to(PagerDutyChangeSourceSpecTransformer.class);
 
-    MapBinder<ChangeSourceType, ChangeEventMongoUtil> changeTypeMongoUtilMapBinder =
-        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventMongoUtil.class);
-    changeTypeMongoUtilMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
-        .to(HarnessCDChangeEvent.HarnessCDChangeEventMongoUtil.class);
+    MapBinder<ChangeSourceType, ChangeEventUpdatableEntity> changeTypeMongoUtilMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventUpdatableEntity.class);
+    changeTypeMongoUtilMapBinder.addBinding(ChangeSourceType.HARNESS_CD).to(HarnessCDChangeEventUpdatableEntity.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
     bind(ChangeEventMetaDataTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
-        .to(HarnessCDEventMetadataTransformer.class);
+        .to(HarnessCDChangeEventTransformer.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

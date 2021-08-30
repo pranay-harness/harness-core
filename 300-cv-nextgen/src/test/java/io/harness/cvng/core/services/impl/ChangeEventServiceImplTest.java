@@ -16,7 +16,6 @@ import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
 import org.assertj.core.api.Assertions;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,12 +32,6 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
   @Before
   public void before() {
     builderFactory = BuilderFactory.getDefault();
-  }
-
-  @After
-  public void after() {
-    changeEventService.deleteByProjectIdentifier(ChangeEvent.class, builderFactory.getContext().getAccountId(),
-        builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier());
   }
 
   @Test
@@ -86,40 +79,5 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
 
     ChangeEvent changeEventFromDb = hPersistence.createQuery(ChangeEvent.class).get();
     Assertions.assertThat(changeEventFromDb).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = ABHIJITH)
-  @Category(UnitTests.class)
-  public void deleteByProjectIdentifier() {
-    ChangeEvent changeEvent = builderFactory.getHarnessCDChangeEventBuilder().build();
-    hPersistence.save(changeEvent);
-    changeEventService.deleteByProjectIdentifier(ChangeEvent.class, builderFactory.getContext().getAccountId(),
-        builderFactory.getContext().getOrgIdentifier(), builderFactory.getContext().getProjectIdentifier());
-    ChangeEvent changeEventFromDb = hPersistence.createQuery(ChangeEvent.class).get();
-    Assertions.assertThat(changeEventFromDb).isNull();
-  }
-
-  @Test
-  @Owner(developers = ABHIJITH)
-  @Category(UnitTests.class)
-  public void deleteByOrgIdentifier() {
-    ChangeEvent changeEvent = builderFactory.getHarnessCDChangeEventBuilder().build();
-    hPersistence.save(changeEvent);
-    changeEventService.deleteByOrgIdentifier(
-        ChangeEvent.class, builderFactory.getContext().getAccountId(), builderFactory.getContext().getOrgIdentifier());
-    ChangeEvent changeEventFromDb = hPersistence.createQuery(ChangeEvent.class).get();
-    Assertions.assertThat(changeEventFromDb).isNull();
-  }
-
-  @Test
-  @Owner(developers = ABHIJITH)
-  @Category(UnitTests.class)
-  public void deleteByAccountIdentifier() {
-    ChangeEvent changeEvent = builderFactory.getHarnessCDChangeEventBuilder().build();
-    hPersistence.save(changeEvent);
-    changeEventService.deleteByAccountIdentifier(ChangeEvent.class, builderFactory.getContext().getAccountId());
-    ChangeEvent changeEventFromDb = hPersistence.createQuery(ChangeEvent.class).get();
-    Assertions.assertThat(changeEventFromDb).isNull();
   }
 }

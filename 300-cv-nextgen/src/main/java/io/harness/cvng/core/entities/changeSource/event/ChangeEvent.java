@@ -55,7 +55,7 @@ public abstract class ChangeEvent
 
   long eventTime;
 
-  public abstract static class ChangeEventMongoUtil<T extends ChangeEvent, D extends ChangeEvent>
+  public abstract static class ChangeEventUpdatableEntity<T extends ChangeEvent, D extends ChangeEvent>
       implements UpdatableEntity<T, D> {
     public abstract Class getEntityClass();
 

@@ -4,7 +4,7 @@ import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData;
 import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent;
 
-public class HarnessCDEventMetadataTransformer
+public class HarnessCDChangeEventTransformer
     extends ChangeEventMetaDataTransformer<HarnessCDChangeEvent, HarnessCDEventMetaData> {
   @Override
   public HarnessCDChangeEvent getEntity(ChangeEventDTO changeEventDTO) {
