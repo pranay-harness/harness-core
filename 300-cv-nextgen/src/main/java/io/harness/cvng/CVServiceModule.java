@@ -65,6 +65,8 @@ import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConf
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
+import io.harness.cvng.core.entities.changeSource.event.ChangeEvent.ChangeEventUpdatableEntity;
+import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent.HarnessCDChangeEventUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -78,6 +80,7 @@ import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.CVSetupService;
+import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -113,6 +116,7 @@ import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
+import io.harness.cvng.core.services.impl.ChangeEventServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
@@ -147,6 +151,9 @@ import io.harness.cvng.core.services.impl.monitoredService.ChangeSourceServiceIm
 import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
 import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServiceImpl;
+import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
+import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
+import io.harness.cvng.core.transformer.changeEvent.HarnessCDChangeEventTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.HarnessCDChangeSourceSpecTransformer;
@@ -474,6 +481,16 @@ public class CVServiceModule extends AbstractModule {
     bind(ChangeSourceSpecTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
         .to(PagerDutyChangeSourceSpecTransformer.class);
+
+    MapBinder<ChangeSourceType, ChangeEventUpdatableEntity> changeTypeMongoUtilMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventUpdatableEntity.class);
+    changeTypeMongoUtilMapBinder.addBinding(ChangeSourceType.HARNESS_CD).to(HarnessCDChangeEventUpdatableEntity.class);
+
+    bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
+    bind(ChangeEventEntityAndDTOTransformer.class);
+    bind(ChangeEventMetaDataTransformer.class)
+        .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
+        .to(HarnessCDChangeEventTransformer.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {
