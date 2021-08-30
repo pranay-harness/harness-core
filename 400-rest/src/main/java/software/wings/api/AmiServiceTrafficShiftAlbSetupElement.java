@@ -44,6 +44,7 @@ public class AmiServiceTrafficShiftAlbSetupElement implements ContextElement, Sw
   private AwsAmiPreDeploymentData preDeploymentData;
   private List<String> baseScalingPolicyJSONs;
   private List<LbDetailsForAlbTrafficShift> detailsWithTargetGroups;
+  private List<String> baseAsgScheduledActionJSONs;
 
   @Override
   public ContextElementType getElementType() {
