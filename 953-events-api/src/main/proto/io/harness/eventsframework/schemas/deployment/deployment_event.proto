@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package io.harness.eventsframework.schemas.deployment;
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message DeploymentEventDTO {
+  string accountId = 1;
+  string orgIdentifier = 2;
+  string projectIdentifier = 3;
+  string serviceIdentifier = 4;
+  string environmentIdentifier = 5;
+  ExecutionDetails executionDetails = 6;
+  ArtifactDetails artifactDetails = 7;
+  string deploymentStatus = 8;
+  int64 deploymentStartTime = 9;
+  int64 deploymentEndTime = 10;
+}
+
+message ExecutionDetails {
+  string planExecutionId = 1;
+  string stageSetupId = 2;
+  string pipelineId = 3;
+  string stageId = 4;
+}
+
+message ArtifactDetails {
+  string artifactType = 1;
+  string artifactTag = 2;
+}
