@@ -63,6 +63,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migrations.InstanceMigrationProvider;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
+import io.harness.ng.cdOverview.eventGenerator.DeploymentInfoEventGenerator;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -495,7 +496,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         new HashMap<>();
     List<Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>>> orchestrationEventHandlersList =
         new ArrayList<>(Arrays.asList(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(),
-            DeploymentEventListenerRegistrar.getEngineEventHandlers()));
+            DeploymentEventListenerRegistrar.getEngineEventHandlers(),
+            DeploymentInfoEventGenerator.getEngineEventHandlers()));
     orchestrationEventHandlersList.forEach(
         orchestrationEventHandlers -> mergeEventHandlers(orchestrationEventTypeSetHashMap, orchestrationEventHandlers));
     return orchestrationEventTypeSetHashMap;
