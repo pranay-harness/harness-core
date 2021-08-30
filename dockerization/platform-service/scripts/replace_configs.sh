@@ -125,7 +125,7 @@ if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$DMS_GRPC_SECRET" ]]; then
-  yq write -i $CONFIG_FILE dmsGrpcClient.authority "$DMS_GRPC_SECRET"
+  yq write -i $CONFIG_FILE dmsGrpcClient.secret "$DMS_GRPC_SECRET"
 fi
 
 if [[ "" != "$DMS_GRPC_TARGET" ]]; then
