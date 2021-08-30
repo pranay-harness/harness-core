@@ -6,7 +6,6 @@ import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
@@ -65,10 +64,5 @@ public class TriggerValidationHandler {
     }
 
     return validators;
-  }
-
-  private TriggerDetails prepareTriggerDetails(NGTriggerEntity ngTriggerEntity) {
-    NGTriggerConfigV2 ngTriggerConfigV2 = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerEntity.getYaml());
-    return TriggerDetails.builder().ngTriggerEntity(ngTriggerEntity).ngTriggerConfigV2(ngTriggerConfigV2).build();
   }
 }

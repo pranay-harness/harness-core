@@ -10,6 +10,7 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.mongo.tracing.Tracer;
 import io.harness.persistence.HQuery;
+import io.harness.serializer.JsonUtils;
 import io.harness.tracing.shapedetector.QueryShapeDetector;
 import io.harness.version.VersionInfoManager;
 
@@ -17,7 +18,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.mongodb.DBObject;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +93,13 @@ public class MongoRedisTracer implements Tracer {
     command.put("explain", explainDocument);
 
     Document explainResult = mongoTemplate.getDb().runCommand(command);
-    processExplainResult(qHash, explainResult);
+    log.debug(String.format("Explain Results: %s", explainResult.toJson()));
+    producer.send(Message.newBuilder()
+                      .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
+                      .putMetadata(SERVICE_ID, serviceId)
+                      .putMetadata(QUERY_HASH, qHash)
+                      .setData(ByteString.copyFromUtf8(explainResult.toJson()))
+                      .build());
   }
 
   private void traceMorphiaQueryInternal(HQuery<?> query) {
@@ -105,8 +111,14 @@ public class MongoRedisTracer implements Tracer {
       return;
     }
 
-    Document explainResult = toDocument(query.explain());
-    processExplainResult(qHash, explainResult);
+    String explainResult = JsonUtils.asJson(query.explain());
+    log.debug(String.format("Explain Results: %s", explainResult));
+    producer.send(Message.newBuilder()
+                      .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
+                      .putMetadata(SERVICE_ID, serviceId)
+                      .putMetadata(QUERY_HASH, qHash)
+                      .setData(ByteString.copyFromUtf8(explainResult))
+                      .build());
   }
 
   private boolean skipSample(String qHash) {
@@ -119,16 +131,6 @@ public class MongoRedisTracer implements Tracer {
     return newCount != 1;
   }
 
-  private void processExplainResult(String qHash, Document explainResult) {
-    log.debug(String.format("Explain Results: %s", explainResult.toJson()));
-    producer.send(Message.newBuilder()
-                      .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
-                      .putMetadata(SERVICE_ID, serviceId)
-                      .putMetadata(QUERY_HASH, qHash)
-                      .setData(ByteString.copyFromUtf8(explainResult.toJson()))
-                      .build());
-  }
-
   private static Document nonNullDocument(Document doc) {
     return doc == null ? new Document() : doc;
   }
@@ -138,12 +140,5 @@ public class MongoRedisTracer implements Tracer {
       return new Document();
     }
     return new Document(dbObject.toMap());
-  }
-
-  private static Document toDocument(Map<String, Object> map) {
-    if (map == null) {
-      return new Document();
-    }
-    return new Document(map);
   }
 }

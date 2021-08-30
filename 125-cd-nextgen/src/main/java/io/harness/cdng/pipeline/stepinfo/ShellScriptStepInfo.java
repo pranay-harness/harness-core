@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.stepinfo;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
@@ -36,6 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = ShellScriptStepInfoVisitorHelper.class)
 @TypeAlias("shellScriptStepInfo")
 @OwnedBy(HarnessTeam.CDC)
+@RecasterAlias("io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo")
 public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDStepInfo, Visitable {
   List<NGVariable> outputVariables;
   List<NGVariable> environmentVariables;

@@ -1,0 +1,16 @@
+# Possible type values for Cloud Provider aggregation
+enum CloudProviderTypeAggregation {
+  Type
+}
+
+# Set cloud provider aggregation criteria
+input CloudProviderAggregation {
+  # Aggregate by Cloud Provider type
+  typeAggregation: CloudProviderTypeAggregation
+}
+
+extend type Query {
+  # Get statistics for a Cloud Provider.
+  cloudProviderStats(filters: [CloudProviderFilter], groupBy: [CloudProviderAggregation]): Data
+    @dataFetcher(name: cloudProviderStats)
+}

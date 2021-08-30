@@ -13,6 +13,7 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
@@ -63,7 +64,8 @@ public interface ActivityService {
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
   TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize);
+      boolean anomalousMetricsOnly, String hostName, String filter, DataSourceType dataSourceType, int pageNumber,
+      int pageSize);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 
   List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(

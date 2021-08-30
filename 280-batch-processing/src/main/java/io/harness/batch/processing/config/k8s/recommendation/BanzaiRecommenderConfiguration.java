@@ -3,7 +3,7 @@ package io.harness.batch.processing.config.k8s.recommendation;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import io.harness.batch.processing.config.BatchMainConfig;
-import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.banzai.BanzaiRecommenderClient;
 import io.harness.network.Http;
 import io.harness.remote.client.ServiceHttpClientConfig;
 

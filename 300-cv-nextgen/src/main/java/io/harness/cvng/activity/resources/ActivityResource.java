@@ -14,6 +14,7 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -158,10 +159,11 @@ public class ActivityResource {
       @NotEmpty @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @DefaultValue("false") @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
       @QueryParam("hostName") String hostName, @QueryParam("filter") String filter,
+      @QueryParam("healthSource") DataSourceType dataSourceType,
       @QueryParam("pageNumber") @DefaultValue("0") int pageNumber,
       @QueryParam("pageSize") @DefaultValue("10") int pageSize) {
     return new RestResponse(activityService.getDeploymentActivityTimeSeriesData(
-        accountId, activityId, anomalousMetricsOnly, hostName, filter, pageNumber, pageSize));
+        accountId, activityId, anomalousMetricsOnly, hostName, filter, dataSourceType, pageNumber, pageSize));
   }
 
   @GET

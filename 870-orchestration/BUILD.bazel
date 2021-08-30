@@ -42,6 +42,7 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
+    resources = ["//870-orchestration/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         ":module",

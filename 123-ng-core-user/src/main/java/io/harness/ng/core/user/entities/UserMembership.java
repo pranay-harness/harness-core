@@ -21,6 +21,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -45,16 +46,16 @@ public class UserMembership implements PersistentRegularIterable, PersistentEnti
         .add(CompoundMongoIndex.builder()
                  .name("uniqueUserMembershipV2UserAccountOrgProject")
                  .field(UserMembershipKeys.userId)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                 .field(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
                  .unique(true)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("userMembershipV2AccountOrgProjectList")
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                 .field(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                 .field(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
                  .build())
         .build();
   }
@@ -83,5 +84,12 @@ public class UserMembership implements PersistentRegularIterable, PersistentEnti
   @Override
   public String getUuid() {
     return this.uuid;
+  }
+
+  @UtilityClass
+  public static final class UserMembershipKeys {
+    public static final String ACCOUNT_IDENTIFIER_KEY = UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier;
+    public static final String ORG_IDENTIFIER_KEY = UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier;
+    public static final String PROJECT_IDENTIFIER_KEY = UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier;
   }
 }

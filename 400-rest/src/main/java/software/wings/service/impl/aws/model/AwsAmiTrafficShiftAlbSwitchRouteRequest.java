@@ -41,9 +41,10 @@ public class AwsAmiTrafficShiftAlbSwitchRouteRequest extends AwsAmiRequest {
       String region, String accountId, String appId, String activityId, String commandName, String oldAsgName,
       String newAsgName, AwsAmiPreDeploymentData preDeploymentData, boolean downscaleOldAsg, boolean rollback,
       List<String> baseScalingPolicyJSONs, Integer timeoutIntervalInMin, int newAutoscalingGroupWeight,
-      List<LbDetailsForAlbTrafficShift> lbDetails, boolean amiInServiceHealthyStateFFEnabled) {
-    super(
-        awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB, region, amiInServiceHealthyStateFFEnabled);
+      List<LbDetailsForAlbTrafficShift> lbDetails, boolean amiInServiceHealthyStateFFEnabled,
+      boolean amiAsgConfigCopyEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB, region,
+        amiInServiceHealthyStateFFEnabled, amiAsgConfigCopyEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.activityId = activityId;

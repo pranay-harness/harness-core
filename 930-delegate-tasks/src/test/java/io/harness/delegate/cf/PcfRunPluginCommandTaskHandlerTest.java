@@ -1,7 +1,13 @@
 package io.harness.delegate.cf;
 
-import static io.harness.delegate.cf.PcfCommandTaskHandlerTest.USER_NAME_DECRYPTED;
+import static io.harness.delegate.cf.CfTestConstants.ACCOUNT_ID;
+import static io.harness.delegate.cf.CfTestConstants.CF_PATH;
+import static io.harness.delegate.cf.CfTestConstants.ORG;
+import static io.harness.delegate.cf.CfTestConstants.SPACE;
+import static io.harness.delegate.cf.CfTestConstants.URL;
+import static io.harness.delegate.cf.CfTestConstants.USER_NAME_DECRYPTED;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,6 +45,7 @@ import io.harness.security.encryption.SecretDecryptionService;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -51,13 +58,6 @@ import org.mockito.Spy;
 
 @OwnedBy(HarnessTeam.CDP)
 public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
-  private static final String USERNMAE = "USERNAME";
-  public static final String URL = "URL";
-  public static final String ACCOUNT_ID = "ACCOUNT_ID";
-  public static final String ORG = "ORG";
-  public static final String SPACE = "SPACE";
-  public static final String RUNNING = "RUNNING";
-
   @Mock private CfDeploymentManager pcfDeploymentManager;
   @Mock private PcfCommandTaskBaseHelper pcfCommandTaskHelper;
   @Mock EncryptedDataDetail encryptedDataDetail;
@@ -142,5 +142,49 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
       assertThat(invalidArgumentsException.getParams())
           .containsValue("cfCommandRequest: Must be instance of CfPluginCommandRequest");
     }
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testPrepareFinalScriptWithRepoRoot() {
+    String script = "${service.cli} create-service-push --service-manifest\n"
+        + "${service.manifest.repoRoot}/manifests";
+    String workingDirPath = "working-dir-path";
+    String finalScript =
+        pcfRunPluginCommandTaskHandler.prepareFinalScript(script, workingDirPath, StringUtils.EMPTY, CF_PATH);
+    assertThat(finalScript)
+        .isEqualTo("cf-path/cf create-service-push --service-manifest\n"
+            + "working-dir-path/manifests");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testPrepareFinalScriptWithDeployYaml() {
+    String script = "${service.cli} create-service-push --service-manifest\n"
+        + "${service.manifest}/manifests/deploy.yml --no-push";
+    String repoRoot = "root-path/rd";
+    String finalScript =
+        pcfRunPluginCommandTaskHandler.prepareFinalScript(script, StringUtils.EMPTY, repoRoot, CF_PATH);
+    assertThat(finalScript)
+        .isEqualTo("cf-path/cf create-service-push --service-manifest\n"
+            + "root-path/rd/manifests/deploy.yml --no-push");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testPrepareFinalScript() {
+    String script = "${service.cli} create-service-push --service-manifest\n"
+        + "${service.manifest.repoRoot}/manifests\n"
+        + "${service.manifest}/manifests/deploy.yml --no-push";
+    String workingDirPath = "working-dir-path/";
+    String repoRoot = "root-path/rd";
+    String finalScript = pcfRunPluginCommandTaskHandler.prepareFinalScript(script, workingDirPath, repoRoot, CF_PATH);
+    assertThat(finalScript)
+        .isEqualTo("cf-path/cf create-service-push --service-manifest\n"
+            + "working-dir-path//manifests\n"
+            + "working-dir-path/root-path/rd/manifests/deploy.yml --no-push");
   }
 }

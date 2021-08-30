@@ -11,7 +11,7 @@ use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
-use crate::java_module::{modules, JavaModule, JavaModuleTraits};
+use crate::java_module::{JavaModule, JavaModuleTraits, modules};
 use crate::team::UNKNOWN_TEAM;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -921,7 +921,7 @@ fn check_for_demotion(
                 let indirect_classes = [dependee_class.name.clone()].iter().cloned().collect();
 
                 results.push(Report {
-                    kind: Kind::Warning,
+                    kind: Kind::DevAction,
                     explanation: Explanation::UsedInDeprecatedClass,
                     message: format!(
                         "{} is deprecated and depends on {}, this dependency has to be broken",

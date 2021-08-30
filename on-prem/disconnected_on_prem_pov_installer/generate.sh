@@ -224,7 +224,7 @@ for chartmuseumversion in v0.8.2; do
     curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
 done
 
-for tfConfigInspectVersion in v1.0; do
+for tfConfigInspectVersion in v1.0 v1.1; do
   echo "Adding terraform-config-inspect" $tfConfigInspectVersion
 
   TF_CONFIG_INSPECT_LINUX_DIR="${IMAGES_DIR}/tf-config-inspect/linux/$tfConfigInspectVersion/"

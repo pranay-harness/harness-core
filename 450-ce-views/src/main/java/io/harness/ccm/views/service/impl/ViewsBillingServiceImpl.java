@@ -69,6 +69,7 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_LIMIT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.NAMESPACE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.PARENT_INSTANCE_ID;
+import static io.harness.ccm.views.utils.ClusterTableKeys.PRICING_SOURCE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TASK_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.WORKLOAD_NAME;
 import static io.harness.ccm.views.utils.ClusterTableKeys.WORKLOAD_TYPE;
@@ -259,7 +260,6 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       costTrendData = getEntityStatsDataForCostTrend(bigQuery, filters, groupBy, aggregateFunction, sort,
           cloudProviderTableName, limit, offset, accountId, isClusterQuery);
       startTimeForTrendData = getStartTimeForTrendFilters(filters);
-      log.info("Cost trend data for view table : {} ", costTrendData);
     }
     SelectQuery query =
         getQuery(filters, groupBy, aggregateFunction, sort, cloudProviderTableName, false, accountId, isClusterQuery);
@@ -711,18 +711,20 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
     // account id is not passed in current gen queries
     if (accountId != null) {
+      boolean isPodQuery = false;
       if (isClusterPerspective(filters) || isClusterQuery) {
+        isPodQuery = isPodQuery(modifiedGroupBy);
         if (isInstanceDetailsQuery(modifiedGroupBy)) {
           idFilters.add(getFilterForInstanceDetails(modifiedGroupBy));
         }
         modifiedGroupBy = addAdditionalRequiredGroupBy(modifiedGroupBy);
-
+        idFilters = addNotNullFilters(idFilters, modifiedGroupBy);
         // Changes column name for cost to billingamount
         aggregateFunction = getModifiedAggregations(aggregateFunction);
         sort = getModifiedSort(sort);
       }
       cloudProviderTableName = getUpdatedCloudProviderTableName(
-          filters, modifiedGroupBy, aggregateFunction, "", cloudProviderTableName, isClusterQuery);
+          filters, modifiedGroupBy, aggregateFunction, "", cloudProviderTableName, isClusterQuery, isPodQuery);
     }
 
     return viewsQueryBuilder.getQuery(
@@ -875,6 +877,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       Double cost = null;
       String name = DEFAULT_STRING_VALUE;
       String entityId = DEFAULT_STRING_VALUE;
+      String pricingSource = DEFAULT_STRING_VALUE;
 
       Map<String, java.lang.reflect.Field> builderFields = new HashMap<>();
       for (java.lang.reflect.Field builderField : clusterDataBuilder.getClass().getDeclaredFields()) {
@@ -899,6 +902,9 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
                 break;
               case ACTUAL_IDLE_COST:
                 clusterDataBuilder.idleCost(getNumericValue(row, field));
+                break;
+              case PRICING_SOURCE:
+                pricingSource = fetchStringValue(row, field);
                 break;
               default:
                 break;
@@ -933,6 +939,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       dataPointBuilder.isClusterPerspective(true);
       dataPointBuilder.id(entityId);
       dataPointBuilder.name(name);
+      dataPointBuilder.pricingSource(pricingSource);
       entityStatsDataPoints.add(dataPointBuilder.build());
     }
     if (isInstanceDetailsData && !isUsedByTimeSeriesStats) {
@@ -1228,6 +1235,27 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return modifiedGroupBy;
   }
 
+  private List<QLCEViewFilter> addNotNullFilters(List<QLCEViewFilter> filters, List<QLCEViewGroupBy> groupByList) {
+    List<QLCEViewFilter> updatedFilters = new ArrayList<>(filters);
+    groupByList.forEach(groupBy -> {
+      if (groupBy.getEntityGroupBy() != null) {
+        switch (groupBy.getEntityGroupBy().getFieldName()) {
+          case GROUP_BY_INSTANCE_ID:
+          case GROUP_BY_INSTANCE_NAME:
+          case GROUP_BY_INSTANCE_TYPE:
+            break;
+          default:
+            updatedFilters.add(QLCEViewFilter.builder()
+                                   .field(groupBy.getEntityGroupBy())
+                                   .operator(QLCEViewFilterOperator.NOT_NULL)
+                                   .values(new String[] {""})
+                                   .build());
+        }
+      }
+    });
+    return updatedFilters;
+  }
+
   private QLCEViewGroupBy getGroupBy(String fieldName, String fieldId, ViewFieldIdentifier identifier) {
     return QLCEViewGroupBy.builder()
         .entityGroupBy(
@@ -1239,6 +1267,13 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   public String getUpdatedCloudProviderTableName(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy,
       List<QLCEViewAggregation> aggregateFunction, String accountId, String cloudProviderTableName,
       boolean isClusterQuery) {
+    return getUpdatedCloudProviderTableName(
+        filters, groupBy, aggregateFunction, accountId, cloudProviderTableName, isClusterQuery, false);
+  }
+
+  public String getUpdatedCloudProviderTableName(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy,
+      List<QLCEViewAggregation> aggregateFunction, String accountId, String cloudProviderTableName,
+      boolean isClusterQuery, boolean isPodQuery) {
     if (!isClusterPerspective(filters) && !isClusterQuery) {
       return cloudProviderTableName;
     }
@@ -1255,7 +1290,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       aggregateFunction = new ArrayList<>();
     }
 
-    if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
+    if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId) && !isPodQuery
         && areAggregationsValidForPreAggregation(aggregateFunction) && isValidGroupByForPreAggregation(entityGroupBy)) {
       tableName = isGroupByHour(groupBy) || shouldUseHourlyData(getTimeFilters(filters))
           ? CLUSTER_TABLE_HOURLY_AGGREGRATED
@@ -1320,7 +1355,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     }
     return groupByList.stream().noneMatch(groupBy
         -> groupBy.getFieldId().equals(CLOUD_SERVICE_NAME) || groupBy.getFieldId().equals(TASK_ID)
-            || groupBy.getFieldId().equals(LAUNCH_TYPE));
+            || groupBy.getFieldId().equals(LAUNCH_TYPE) || groupBy.getFieldId().equals(PRICING_SOURCE));
   }
 
   private boolean areFiltersValidForPreAggregation(List<QLCEViewFilter> filters) {
@@ -1343,6 +1378,14 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return entityGroupBy.stream().anyMatch(groupBy
         -> groupBy.getFieldName().equals(GROUP_BY_NODE) || groupBy.getFieldName().equals(GROUP_BY_POD)
             || groupBy.getFieldName().equals(GROUP_BY_STORAGE));
+  }
+
+  private boolean isPodQuery(List<QLCEViewGroupBy> groupByList) {
+    List<QLCEViewFieldInput> entityGroupBy = groupByList.stream()
+                                                 .filter(groupBy -> groupBy.getEntityGroupBy() != null)
+                                                 .map(QLCEViewGroupBy::getEntityGroupBy)
+                                                 .collect(Collectors.toList());
+    return entityGroupBy.stream().anyMatch(groupBy -> groupBy.getFieldName().equals(GROUP_BY_POD));
   }
 
   private QLCEViewFilter getFilterForInstanceDetails(List<QLCEViewGroupBy> groupByList) {

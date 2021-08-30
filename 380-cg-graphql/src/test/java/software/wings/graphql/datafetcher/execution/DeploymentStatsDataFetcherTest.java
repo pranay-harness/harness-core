@@ -105,7 +105,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
   @Mock TagHelper tagHelper;
   @Mock ResultSet resultSet;
   @Mock WingsPersistence wingsPersistence;
-  @Inject @InjectMocks DeploymentStatsDataFetcher dataFetcher;
+  @Inject @InjectMocks software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher dataFetcher;
 
   final int[] count = {0};
   final int[] intVal = {0};
@@ -180,7 +180,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY t0.APPID");
+            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.APPID IS NOT NULL) GROUP BY t0.APPID");
 
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
 
@@ -190,7 +190,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL)");
+            "SELECT COUNT(*) AS COUNT FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID')");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.SINGLE_POINT);
 
     queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
@@ -200,7 +200,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,t0.APPID,ENVID FROM DEPLOYMENT t0, unnest(ENVIRONMENTS) ENVID WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY t0.APPID,ENVID");
+            "SELECT COUNT(*) AS COUNT,t0.APPID,ENVID FROM DEPLOYMENT t0, unnest(ENVIRONMENTS) ENVID WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.APPID IS NOT NULL) GROUP BY t0.APPID,ENVID");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_BAR_CHART);
 
     queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
@@ -214,7 +214,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET,t0.APPID FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY TIME_BUCKET,t0.APPID ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.APPID IS NOT NULL) GROUP BY TIME_BUCKET,t0.APPID ORDER BY TIME_BUCKET ASC");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_TIME_SERIES);
 
     queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
@@ -227,7 +227,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.TIME_SERIES);
 
     QLDeploymentFilter appTagFilter =
@@ -266,7 +266,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IN ('DATA1','DATA2') ) AND ((t0.SERVICES @>'{DATA1}') OR (t0.SERVICES @>'{DATA2}')) AND ((t0.ENVIRONMENTS @>'{DATA1}') OR (t0.ENVIRONMENTS @>'{DATA2}')) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IN ('DATA1','DATA2') ) AND ((t0.SERVICES @>'{DATA1}') OR (t0.SERVICES @>'{DATA2}')) AND ((t0.ENVIRONMENTS @>'{DATA1}') OR (t0.ENVIRONMENTS @>'{DATA2}')) AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
   }
 
   @Test
@@ -652,7 +652,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values");
+            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID'))))) as tab1 WHERE (t0.PARENT_EXECUTION IS NULL) AND (tab1.key='commitId') GROUP BY tab1.values");
 
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
 
@@ -667,7 +667,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values");
+            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ACCOUNTID = 'ACCOUNTID'))))) as tab1 WHERE (t0.PARENT_EXECUTION IS NULL) AND (tab1.key='commitId') GROUP BY tab1.values");
 
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
 
@@ -682,7 +682,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag,ENVID FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values,unnest(ENVIRONMENTS) ENVID FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values,ENVID");
+            "SELECT COUNT(*) AS COUNT,concat('commitId:',values) as tag,ENVID FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values,unnest(ENVIRONMENTS) ENVID FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID'))))) as tab1 WHERE (t0.PARENT_EXECUTION IS NULL) AND (tab1.key='commitId') GROUP BY tab1.values,ENVID");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_BAR_CHART);
 
     queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
@@ -696,7 +696,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 days',endtime) AS TIME_BUCKET,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET,t0.APPID ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 days',endtime) AS TIME_BUCKET,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.APPID IS NOT NULL) GROUP BY TIME_BUCKET,t0.APPID ORDER BY TIME_BUCKET ASC");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_TIME_SERIES);
 
     queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID, null,
@@ -709,7 +709,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.APPID IN ('DATA1','DATA2') ) AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.APPID IN ('DATA1','DATA2') ) AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.TIME_SERIES);
 
     queryMetaData = dataFetcher.formQueryWithNonHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
@@ -718,7 +718,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT AVG(t0.DURATION) AS DURATION FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL)");
+            "SELECT AVG(t0.DURATION) AS DURATION FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.tags ->'commitId' IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID')");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.SINGLE_POINT);
 
     queryMetaData = dataFetcher.formQueryWithHStoreGroupBy(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
@@ -736,7 +736,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT MAX(DURATION) AS DURATION,TIME_BUCKET,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values,DURATION,time_bucket('1 days',endtime) AS TIME_BUCKET FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 WHERE (tab1.key='commitId') GROUP BY tab1.values,TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT MAX(DURATION) AS DURATION,TIME_BUCKET,concat('commitId:',values) as tag FROM (SELECT (each(TAGS)).key AS key ,(each(TAGS)).value::text AS values,DURATION,time_bucket('1 days',endtime) AS TIME_BUCKET FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.TAGS) as x(tagname) WHERE ((x.tagname='commitId') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ACCOUNTID = 'ACCOUNTID'))))) as tab1 WHERE (t0.PARENT_EXECUTION IS NULL) AND (tab1.key='commitId') GROUP BY tab1.values,TIME_BUCKET ORDER BY TIME_BUCKET ASC");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.STACKED_TIME_SERIES);
   }
 
@@ -995,7 +995,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.STARTTIME <= '2019-08-07T22:36:04Z') AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.STARTTIME >= '2019-07-31T22:36:04Z') AND (t0.STATUS IN ('RUNNING','PAUSED') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY t0.APPID");
+            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND (t0.STARTTIME <= '2019-08-07T22:36:04Z') AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.STARTTIME >= '2019-07-31T22:36:04Z') AND (t0.STATUS IN ('RUNNING','PAUSED') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.APPID IS NOT NULL) GROUP BY t0.APPID");
     assertThat(queryMetaData.getQuery()).doesNotContain("t0.ENDTIME >=");
     assertThat(queryMetaData.getQuery()).doesNotContain("t0.ENDTIME <=");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
@@ -1042,7 +1042,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-24T22:41:09Z') AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('ABORTED','ERROR','EXPIRED','REJECTED') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY t0.APPID");
+            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND (t0.ENDTIME >= '2019-07-24T22:41:09Z') AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('ABORTED','ERROR','EXPIRED','REJECTED') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.APPID IS NOT NULL) GROUP BY t0.APPID");
     assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME >=");
     assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME <=");
     assertThat(queryMetaData.getResultType()).isEqualTo(ResultType.AGGREGATE_DATA);
@@ -1093,7 +1093,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.STARTTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.APPID IS NOT NULL) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY t0.APPID");
+            "SELECT COUNT(*) AS COUNT,t0.APPID FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.STARTTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.APPID IS NOT NULL) GROUP BY t0.APPID");
     assertThat(queryMetaData.getQuery()).contains("t0.STARTTIME >=");
     assertThat(queryMetaData.getQuery()).contains("t0.ENDTIME <=");
     assertThat(queryMetaData.getQuery()).doesNotContain("t0.STARTTIME <=");
@@ -1178,7 +1178,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND ((t0.ENVIRONMENTS @>'{DATA1}') OR (t0.ENVIRONMENTS @>'{DATA2}')) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.WORKFLOWS IS NOT NULL) AND (t0.PIPELINE IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{SERVICE1}') OR (t0.SERVICES @>'{SERVICE2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.STATUS IN ('SUCCESS','FAILURE') ) AND (t0.ENVTYPES @>'{PROD}') AND ((t0.ENVIRONMENTS @>'{DATA1}') OR (t0.ENVIRONMENTS @>'{DATA2}')) AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
   }
 
   @Test
@@ -1439,7 +1439,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
                 QLDeploymentTypeFilter.builder().operator(QLEnumOperator.IN).values(qlDeploymentTypes).build())
             .build();
 
-    DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
+    software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
     doReturn(Arrays.asList(new String[] {"sid1", "sid2"}))
         .when(dataFetcherSpy)
         .getServiceIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
@@ -1456,7 +1456,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.SERVICES @>'{sid1}') OR (t0.SERVICES @>'{sid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.SERVICES @>'{sid1}') OR (t0.SERVICES @>'{sid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
   }
 
   @Test
@@ -1482,7 +1482,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
                 QLOrchestrationWorkflowTypeFilter.builder().operator(QLEnumOperator.IN).values(qlWorkflowTypes).build())
             .build();
 
-    DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
+    software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher dataFetcherSpy = Mockito.spy(dataFetcher);
     doReturn(Arrays.asList(new String[] {"wid1", "wid2"}))
         .when(dataFetcherSpy)
         .getWorkflowIds(DeploymentStatsDataFetcherTestKeys.ACCOUNTID,
@@ -1499,7 +1499,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.WORKFLOWS @>'{wid1}') OR (t0.WORKFLOWS @>'{wid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.WORKFLOWS @>'{wid1}') OR (t0.WORKFLOWS @>'{wid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
   }
 
   @Test
@@ -1556,7 +1556,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE ((t0.WORKFLOWS @>'{wid1}') OR (t0.WORKFLOWS @>'{wid2}')) AND ((t0.SERVICES @>'{sid1}') OR (t0.SERVICES @>'{sid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND ((t0.WORKFLOWS @>'{wid1}') OR (t0.WORKFLOWS @>'{wid2}')) AND ((t0.SERVICES @>'{sid1}') OR (t0.SERVICES @>'{sid2}')) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
   }
 
   @Test
@@ -1642,7 +1642,7 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS ROLLBACK_COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ROLLBACK_DURATION > 0) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS ROLLBACK_COUNT,time_bucket('1 hours',endtime) AS TIME_BUCKET FROM DEPLOYMENT t0 WHERE (t0.PARENT_EXECUTION IS NULL) AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ROLLBACK_DURATION > 0) AND (t0.ACCOUNTID = 'ACCOUNTID') GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
   }
 
   @Test
@@ -1675,6 +1675,6 @@ public class DeploymentStatsDataFetcherTest extends WingsBaseTest {
 
     assertThat(queryMetaData.getQuery())
         .isEqualTo(
-            "SELECT COUNT(*) AS ROLLBACK_COUNT,TIME_BUCKET FROM (SELECT  FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.) as x(tagname) WHERE ((x.tagname='') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ROLLBACK_DURATION > 0) AND (t0.ACCOUNTID = 'ACCOUNTID') AND (t0.PARENT_EXECUTION IS NULL))))) as tab1 GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
+            "SELECT COUNT(*) AS ROLLBACK_COUNT,TIME_BUCKET FROM (SELECT  FROM deployment t0 WHERE (EXISTS (SELECT * FROM skeys(t0.) as x(tagname) WHERE ((x.tagname='') AND (t0.ENDTIME >= '2019-07-31T22:36:04Z') AND (t0.ENDTIME <= '2019-07-31T22:41:09Z') AND (t0.ROLLBACK_DURATION > 0) AND (t0.ACCOUNTID = 'ACCOUNTID'))))) as tab1 WHERE (t0.PARENT_EXECUTION IS NULL) GROUP BY TIME_BUCKET ORDER BY TIME_BUCKET ASC");
   }
 }

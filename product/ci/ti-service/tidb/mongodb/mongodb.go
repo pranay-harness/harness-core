@@ -99,6 +99,12 @@ type VCSInfo struct {
 // NewNode creates Node object form given fields
 func NewNode(id, classId int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
+		DefaultModel: mgm.DefaultModel{
+			DateFields: mgm.DateFields{
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		},
 		Id:              id,
 		ClassId:         classId,
 		Package:         pkg,
@@ -118,6 +124,12 @@ func NewNode(id, classId int, pkg, method, params, class, typ, file string, call
 // NewRelation creates Relation object form given fields
 func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *Relation {
 	return &Relation{
+		DefaultModel: mgm.DefaultModel{
+			DateFields: mgm.DateFields{
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		},
 		Source:  source,
 		Tests:   tests,
 		Acct:    acc,
@@ -129,6 +141,12 @@ func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *R
 
 func NewVisEdge(caller int, callee []int, account, org, project string, vcs VCSInfo) *VisEdge {
 	return &VisEdge{
+		DefaultModel: mgm.DefaultModel{
+			DateFields: mgm.DateFields{
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		},
 		Caller:  caller,
 		Callee:  callee,
 		Acct:    account,

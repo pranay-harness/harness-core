@@ -2,6 +2,7 @@ package io.harness.cdng.provision.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.provision.terraform.TerraformStepConfigurationParameters.TerraformStepConfigurationParametersBuilder;
 import io.harness.validation.Validator;
@@ -14,6 +15,7 @@ import lombok.NoArgsConstructor;
 @OwnedBy(CDP)
 @Data
 @NoArgsConstructor
+@RecasterAlias("io.harness.cdng.provision.terraform.TerraformStepConfiguration")
 public class TerraformStepConfiguration {
   @NotNull @JsonProperty("type") TerraformStepConfigurationType terraformStepConfigurationType;
   @JsonProperty("spec") TerraformExecutionData terraformExecutionData;

@@ -1,7 +1,16 @@
 package io.harness.delegate.cf;
 
+import static io.harness.delegate.cf.CfTestConstants.ACCOUNT_ID;
+import static io.harness.delegate.cf.CfTestConstants.NOT_MANIFEST_YML_ELEMENT;
+import static io.harness.delegate.cf.CfTestConstants.RELEASE_NAME;
+import static io.harness.delegate.cf.CfTestConstants.RUNNING;
 import static io.harness.pcf.model.PcfConstants.HARNESS__INACTIVE__IDENTIFIER;
+import static io.harness.pcf.model.PcfConstants.INSTANCE_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.MEMORY_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
+import static io.harness.pcf.model.PcfConstants.TIMEOUT_MANIFEST_YML_ELEMENT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.IVAN;
@@ -51,10 +60,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
@@ -70,10 +81,6 @@ import org.mockito.Spy;
 
 @OwnedBy(HarnessTeam.CDP)
 public class PcfCommandTaskBaseHelperTest extends CategoryTest {
-  public static final String ACCOUNT_ID = "ACCOUNT_ID";
-  public static final String RUNNING = "RUNNING";
-  public static final String APP_ID = "APP_ID";
-  public static final String ACTIVITY_ID = "ACTIVITY_ID";
   public static final String MANIFEST_YAML = "  applications:\n"
       + "  - name: ${APPLICATION_NAME}\n"
       + "    memory: 350M\n"
@@ -93,10 +100,6 @@ public class PcfCommandTaskBaseHelperTest extends CategoryTest {
       + "  routes:\n"
       + "  - route: app.harness.io\n"
       + "  - route: stage.harness.io\n";
-
-  private static final String RELEASE_NAME = "name"
-      + "_pcfCommandHelperTest";
-
   @Mock CfDeploymentManager pcfDeploymentManager;
   @Mock LogCallback executionLogCallback;
   @Mock CfCliDelegateResolver cfCliDelegateResolver;
@@ -873,5 +876,134 @@ public class PcfCommandTaskBaseHelperTest extends CategoryTest {
     summaries.add(summary2);
     assertThat(pcfCommandTaskHelper.findActiveApplication(executionLogCallback, false, config, summaries))
         .isEqualTo(summary3);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testShouldUseRandomRoute() {
+    Map<String, Object> applicationToBeUpdated = new HashMap<>();
+    List<String> routeMaps = new ArrayList<>();
+    applicationToBeUpdated.put(RANDOM_ROUTE_MANIFEST_YML_ELEMENT, Boolean.TRUE);
+    boolean shouldUseRandomRoute = pcfCommandTaskHelper.shouldUseRandomRoute(applicationToBeUpdated, routeMaps);
+    assertThat(shouldUseRandomRoute).isTrue();
+
+    applicationToBeUpdated = Collections.emptyMap();
+    routeMaps.add("app.random.route");
+    shouldUseRandomRoute = pcfCommandTaskHelper.shouldUseRandomRoute(applicationToBeUpdated, routeMaps);
+    assertThat(shouldUseRandomRoute).isFalse();
+
+    routeMaps = Collections.emptyList();
+    shouldUseRandomRoute = pcfCommandTaskHelper.shouldUseRandomRoute(applicationToBeUpdated, routeMaps);
+    assertThat(shouldUseRandomRoute).isTrue();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateFinalManifestFilePath() {
+    String manifestFilePath = "path-to-manifests/manifest_file.yml";
+    String updatedManifestFilePath = "path-to-manifests/manifest_file_1.yml";
+    String notManifestFilePath = "path-to-manifests/manifest_file";
+
+    manifestFilePath = pcfCommandTaskHelper.generateFinalManifestFilePath(manifestFilePath);
+    assertThat(manifestFilePath).isEqualTo(updatedManifestFilePath);
+
+    String updatedNotManifestFilePath = pcfCommandTaskHelper.generateFinalManifestFilePath(notManifestFilePath);
+    assertThat(updatedNotManifestFilePath).isEqualTo(notManifestFilePath);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateFinalMapForYamlDump() {
+    Map<String, Object> applicationToBeUpdated = new TreeMap<>();
+    applicationToBeUpdated.put(NAME_MANIFEST_YML_ELEMENT, "NAME_MANIFEST_YML_ELEMENT");
+    applicationToBeUpdated.put(MEMORY_MANIFEST_YML_ELEMENT, "MEMORY_MANIFEST_YML_ELEMENT");
+    applicationToBeUpdated.put(INSTANCE_MANIFEST_YML_ELEMENT, "INSTANCE_MANIFEST_YML_ELEMENT");
+    applicationToBeUpdated.put(TIMEOUT_MANIFEST_YML_ELEMENT, "TIMEOUT_MANIFEST_YML_ELEMENT");
+    applicationToBeUpdated.put(NOT_MANIFEST_YML_ELEMENT, NOT_MANIFEST_YML_ELEMENT);
+
+    Map<String, Object> finalMapForYamlDump = pcfCommandTaskHelper.generateFinalMapForYamlDump(applicationToBeUpdated);
+
+    assertThat(finalMapForYamlDump.size()).isEqualTo(4);
+    assertThat(finalMapForYamlDump.get(NAME_MANIFEST_YML_ELEMENT)).isEqualTo("NAME_MANIFEST_YML_ELEMENT");
+    assertThat(finalMapForYamlDump.get(MEMORY_MANIFEST_YML_ELEMENT)).isEqualTo("MEMORY_MANIFEST_YML_ELEMENT");
+    assertThat(finalMapForYamlDump.get(INSTANCE_MANIFEST_YML_ELEMENT)).isEqualTo("INSTANCE_MANIFEST_YML_ELEMENT");
+    assertThat(finalMapForYamlDump.get(TIMEOUT_MANIFEST_YML_ELEMENT)).isEqualTo("TIMEOUT_MANIFEST_YML_ELEMENT");
+    assertThat(finalMapForYamlDump.get(NOT_MANIFEST_YML_ELEMENT)).isNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testUpsizeListOfInstances() throws PivotalClientApiException {
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
+
+    List<InstanceDetail> instancesAfterUpsize = new ArrayList<>();
+    instancesAfterUpsize.add(InstanceDetail.builder().index("idx1").state("RUNNING").build());
+    instancesAfterUpsize.add(InstanceDetail.builder().index("idx1").state("RUNNING").build());
+
+    List<CfServiceData> upszeList = new ArrayList<>();
+    upszeList.add(CfServiceData.builder().desiredCount(5).previousCount(2).build());
+
+    List<CfInternalInstanceElement> pcfInstanceElements = new ArrayList<>();
+
+    doReturn(getApplicationDetail(Collections.emptyList()))
+        .when(pcfDeploymentManager)
+        .getApplicationByName(cfRequestConfig);
+    doReturn(getApplicationDetail(instancesAfterUpsize))
+        .when(pcfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(cfRequestConfig, executionLogCallback);
+
+    pcfCommandTaskHelper.upsizeListOfInstances(
+        executionLogCallback, pcfDeploymentManager, new ArrayList<>(), cfRequestConfig, upszeList, pcfInstanceElements);
+
+    assertThat(pcfInstanceElements.size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testUpsizeNewApplication() throws PivotalClientApiException {
+    int previousCount = 2;
+    int desiredCount = 5;
+    CfCommandDeployRequest cfCommandDeployRequest =
+        CfCommandDeployRequest.builder().newReleaseName("releaseName").updateCount(previousCount).build();
+    CfRequestConfig cfRequestConfig = CfRequestConfig.builder().build();
+
+    List<InstanceDetail> instancesAfterUpsize = new ArrayList<>();
+    instancesAfterUpsize.add(InstanceDetail.builder().index("idx1").state("RUNNING").build());
+    instancesAfterUpsize.add(InstanceDetail.builder().index("idx1").state("RUNNING").build());
+
+    List<CfServiceData> cfServiceDataUpdated = new ArrayList<>();
+    cfServiceDataUpdated.add(CfServiceData.builder().desiredCount(desiredCount).previousCount(previousCount).build());
+
+    ApplicationDetail applicationDetail = getApplicationDetail(Collections.emptyList());
+    List<CfInternalInstanceElement> pcfInstanceElements = new ArrayList<>();
+
+    doReturn(applicationDetail).when(pcfDeploymentManager).getApplicationByName(cfRequestConfig);
+    doReturn(getApplicationDetail(instancesAfterUpsize))
+        .when(pcfDeploymentManager)
+        .upsizeApplicationWithSteadyStateCheck(cfRequestConfig, executionLogCallback);
+
+    pcfCommandTaskHelper.upsizeNewApplication(executionLogCallback, cfCommandDeployRequest, cfServiceDataUpdated,
+        cfRequestConfig, applicationDetail, pcfInstanceElements);
+
+    assertThat(pcfInstanceElements.size()).isEqualTo(previousCount);
+  }
+
+  private ApplicationDetail getApplicationDetail(List<InstanceDetail> instances) {
+    return ApplicationDetail.builder()
+        .diskQuota(1)
+        .id("appId")
+        .name("appName")
+        .memoryLimit(1)
+        .stack("stack")
+        .runningInstances(1)
+        .requestedState("RUNNING")
+        .instances(2)
+        .instanceDetails(instances)
+        .build();
   }
 }

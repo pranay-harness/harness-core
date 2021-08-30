@@ -28,13 +28,14 @@ public class CfSetupCommandResponse extends CfCommandResponse {
   private boolean versioningChanged;
   private boolean nonVersioning;
   private Integer activeAppRevision;
+  private String existingAppNamingStrategy;
 
   @Builder
   public CfSetupCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,
       CfAppSetupTimeDetails newApplicationDetails, Integer totalPreviousInstanceCount,
       List<CfAppSetupTimeDetails> downsizeDetails, Integer instanceCountForMostRecentVersion,
       CfAppSetupTimeDetails mostRecentInactiveAppVersion, boolean versioningChanged, boolean nonVersioning,
-      Integer activeAppRevision) {
+      Integer activeAppRevision, String existingAppNamingStrategy) {
     super(commandExecutionStatus, output);
     this.newApplicationDetails = newApplicationDetails;
     this.totalPreviousInstanceCount = totalPreviousInstanceCount;
@@ -44,5 +45,6 @@ public class CfSetupCommandResponse extends CfCommandResponse {
     this.versioningChanged = versioningChanged;
     this.nonVersioning = nonVersioning;
     this.activeAppRevision = activeAppRevision;
+    this.existingAppNamingStrategy = existingAppNamingStrategy;
   }
 }
