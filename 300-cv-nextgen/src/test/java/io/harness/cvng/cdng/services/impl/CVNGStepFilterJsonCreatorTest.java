@@ -232,7 +232,6 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
           if (result != null) {
             return result;
           }
-          System.out.println(child);
         }
       }
       return null;

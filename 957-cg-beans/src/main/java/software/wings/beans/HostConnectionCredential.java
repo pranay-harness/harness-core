@@ -1,8 +1,16 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 /**
  * Created by anubhaw on 5/31/16.
  */
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class HostConnectionCredential {
   private String sshUser;
   private char[] sshPassword;

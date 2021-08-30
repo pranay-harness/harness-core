@@ -2,11 +2,13 @@ package io.harness.cvng.core.services.api.monitoredService;
 
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
+import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.ng.beans.PageResponse;
@@ -42,6 +44,8 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
 
   HistoricalTrend getOverAllHealthScore(
       ProjectParams projectParams, String identifier, DurationDTO duration, Instant endTime);
+
+  HealthScoreDTO getCurrentScore(ServiceEnvironmentParams serviceEnvironmentParams);
 
   String getYamlTemplate(ProjectParams projectParams);
 }

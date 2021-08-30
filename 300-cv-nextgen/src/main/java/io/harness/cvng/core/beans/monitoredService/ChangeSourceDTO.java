@@ -3,6 +3,7 @@ package io.harness.cvng.core.beans.monitoredService;
 import static io.harness.cvng.CVConstants.DATA_SOURCE_TYPE;
 
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.ChangeSourceSpec;
+import io.harness.cvng.core.types.ChangeCategory;
 import io.harness.cvng.core.types.ChangeSourceType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,4 +34,8 @@ public class ChangeSourceDTO {
   @Valid
   @NotNull
   ChangeSourceSpec spec;
+
+  public ChangeCategory getCategory() {
+    return type.getChangeCategory();
+  }
 }

@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
@@ -717,6 +718,16 @@ public class AuthHandlerTest extends WingsBaseTest {
         .build();
   }
 
+  private AppPermission constructAppPermissionWithEntityFilter(
+      GenericEntityFilter genericEntityFilter, PermissionType permissionType) {
+    return AppPermission.builder()
+        .permissionType(permissionType)
+        .appFilter(GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+        .entityFilter(genericEntityFilter)
+        .actions(new HashSet<>(allActions))
+        .build();
+  }
+
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
@@ -1168,5 +1179,161 @@ public class AuthHandlerTest extends WingsBaseTest {
                       .build());
     }
     return envList;
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldFetchPermissionsForWorkflowPipelineEntityFilterTypeAll() {
+    setupForAllApp(true);
+    EnvFilter envFilter = new EnvFilter();
+    envFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.SELECTED));
+    envFilter.setIds(Sets.newHashSet(dev.getUuid()));
+
+    WorkflowFilter workflowFilter = new WorkflowFilter();
+    workflowFilter.setFilterTypes(Sets.newHashSet(NON_PROD));
+
+    GenericEntityFilter entityFilter = GenericEntityFilter.builder().filterType("ALL").build();
+
+    AppPermission envPermission = constructAppPermission(envFilter, ENV);
+
+    AppPermission workflowPermission = constructAppPermissionWithEntityFilter(entityFilter, WORKFLOW);
+
+    AppPermission pipelinePermission = constructAppPermissionWithEntityFilter(entityFilter, PIPELINE);
+
+    AppPermission deploymentPermission = constructAppPermission(envFilter, DEPLOYMENT);
+
+    List<UserGroup> userGroups = Collections.singletonList(
+        UserGroup.builder()
+            .accountId(ACCOUNT_ID)
+            .appPermissions(
+                new HashSet<>(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
+            .build());
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
+
+    assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
+    AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
+    assertThat(accountPermissionSummary.getPermissions()).isEmpty();
+
+    assertThat(userPermissionInfo.getAppPermissionMap()).isNotNull().hasSize(1).containsOnlyKeys(APP_ID);
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID)).isNotNull();
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID))
+        .extracting("canCreateService", "canCreateEnvironment", "canCreateWorkflow", "canCreatePipeline")
+        .contains(false, false, false, false);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getServicePermissions()).isNull();
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getEnvPermissions())
+        .isNotNull()
+        .containsOnlyKeys(dev.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getEnvPermissions().get(dev.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+
+    // All Workflows should be present when filterType ALL is used for Workflows
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions())
+        .isNotNull()
+        .containsOnlyKeys(workflow1.getUuid(), workflow2.getUuid(), workflow3.getUuid(), workflow4.getUuid());
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
+        .isNotNull()
+        .containsOnlyKeys(pipeline0.getUuid(), pipeline1.getUuid(), pipeline2.getUuid(), pipeline3.getUuid(),
+            pipeline4.getUuid(), pipeline5.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions().get(pipeline0.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions().get(pipeline5.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .isNotNull()
+        .containsOnlyKeys(workflow1.getUuid(), workflow4.getUuid(), pipeline0.getUuid(), pipeline5.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions().get(workflow1.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions().get(workflow4.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldFetchPermissionsForWorkflowPipelineEntityFilterTypeSelected() {
+    setupForAllApp(true);
+    EnvFilter envFilter = new EnvFilter();
+    envFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.SELECTED));
+    envFilter.setIds(Sets.newHashSet(dev.getUuid()));
+
+    WorkflowFilter workflowFilter = new WorkflowFilter();
+    workflowFilter.setFilterTypes(Sets.newHashSet(NON_PROD));
+
+    GenericEntityFilter workflowEntityFilter =
+        GenericEntityFilter.builder().filterType("SELECTED").ids(Collections.singleton(workflow1.getUuid())).build();
+
+    GenericEntityFilter pipelineEntityFilter =
+        GenericEntityFilter.builder().filterType("SELECTED").ids(Collections.singleton(pipeline0.getUuid())).build();
+
+    AppPermission envPermission = constructAppPermission(envFilter, ENV);
+
+    AppPermission workflowPermission = constructAppPermissionWithEntityFilter(workflowEntityFilter, WORKFLOW);
+
+    AppPermission pipelinePermission = constructAppPermissionWithEntityFilter(pipelineEntityFilter, PIPELINE);
+
+    AppPermission deploymentPermission = constructAppPermission(envFilter, DEPLOYMENT);
+
+    List<UserGroup> userGroups = Collections.singletonList(
+        UserGroup.builder()
+            .accountId(ACCOUNT_ID)
+            .appPermissions(
+                new HashSet<>(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
+            .build());
+    UserPermissionInfo userPermissionInfo = authHandler.evaluateUserPermissionInfo(ACCOUNT_ID, userGroups, null);
+
+    assertThat(userPermissionInfo).isNotNull().hasFieldOrPropertyWithValue("accountId", ACCOUNT_ID);
+    AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
+    assertThat(accountPermissionSummary.getPermissions()).isEmpty();
+
+    assertThat(userPermissionInfo.getAppPermissionMap()).isNotNull().hasSize(1).containsOnlyKeys(APP_ID);
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID)).isNotNull();
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID))
+        .extracting("canCreateService", "canCreateEnvironment", "canCreateWorkflow", "canCreatePipeline")
+        .contains(false, false, false, false);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getServicePermissions()).isNull();
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getEnvPermissions())
+        .isNotNull()
+        .containsOnlyKeys(dev.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getEnvPermissions().get(dev.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+
+    // Only those Workflows should be present which are selected when filterType SELECTED
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions())
+        .isNotNull()
+        .containsOnlyKeys(workflow1.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions().get(workflow2.getUuid()))
+        .isNull();
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
+        .isNotNull()
+        .containsOnlyKeys(pipeline0.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions().get(pipeline0.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions().get(pipeline5.getUuid()))
+        .isNull();
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .isNotNull()
+        .containsOnlyKeys(workflow1.getUuid(), workflow4.getUuid(), pipeline0.getUuid(), pipeline5.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions().get(workflow1.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions().get(workflow4.getUuid()))
+        .isNotNull()
+        .contains(Action.UPDATE, Action.READ, Action.DELETE);
   }
 }

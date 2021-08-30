@@ -98,11 +98,6 @@ public class PollingServiceImpl implements PollingService {
           pollingDocument.getUuid(), pollingDocument.getAccountId(), pollingDocument.getSignatures());
     }
 
-    if (null != existingPollingDoc && pollingDocument.getUuid() != null) {
-      throw new InvalidRequestException(
-          "PollingDocument and ExistingPollingDocument both cannot be not null. Please check subscribers configuration"
-          + existingPollingDoc.getUuid());
-    }
     // Determine if update request
     if (existingPollingDoc == null) {
       return save(pollingDocument);
