@@ -44,9 +44,9 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
 
 #  TODO: https://harness.atlassian.net/browse/BT-434
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test/... \
-    -//200-functional-test:io.harness.functional.nas.NASBuildWorkflowExecutionTest \
-    -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest || true
+#  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test/... \
+#    -//200-functional-test:io.harness.functional.nas.NASBuildWorkflowExecutionTest \
+#    -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest || true
 
   echo "INFO: MANAGER_PID = $MANAGER_PID"
   echo "INFO: DELEGATE_PID = $DELEGATE_PID"
