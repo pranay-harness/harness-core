@@ -19,7 +19,7 @@ BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=standalone"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=900"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_output=all"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --cache_test_results=no"
-BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings --test_summary=detailed"
+BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
