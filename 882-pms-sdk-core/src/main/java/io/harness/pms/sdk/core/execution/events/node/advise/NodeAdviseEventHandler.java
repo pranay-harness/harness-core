@@ -80,6 +80,7 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
       }
 
       if (adviserResponse != null) {
+        log.info("Calculated Adviser response is of type {}", adviserResponse.getType());
         sdkNodeExecutionService.handleAdviserResponse(
             ambiance.getPlanExecutionId(), nodeExecutionId, event.getNotifyId(), adviserResponse);
       } else {
