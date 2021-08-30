@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -142,6 +143,13 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteInternalError(w, err)
 			log.Errorw("api: could not get selection overview for VG search", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
 				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId, zap.Error(err))
+			return
+		}
+
+		if overview.Skipped == 0 {
+			WriteInternalError(w, errors.New("no call graph is generated when all tests are run"))
+			log.Errorw("api: could not get visualisation graph as all tests were selected", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId)
 			return
 		}
 
