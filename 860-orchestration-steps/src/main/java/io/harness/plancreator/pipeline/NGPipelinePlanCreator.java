@@ -15,6 +15,7 @@ import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
 import io.harness.pms.timeout.SdkTimeoutObtainment;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -50,8 +51,8 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
     }
 
     dependencies.put(stagesYamlNode.getNode().getUuid(), stagesYamlNode);
-    responseMap.put(
-        stagesYamlNode.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependencies).build());
+    responseMap.put(stagesYamlNode.getNode().getUuid(),
+        PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(dependencies)).build());
     return responseMap;
   }
 

@@ -74,8 +74,8 @@ public abstract class AsyncCreatorBaseEventHandler<T extends Message, C extends 
       }
     }
 
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
-      initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().remove(k));
+    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies().getDependenciesMap())) {
+      initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().getDependenciesMap().remove(k));
     }
     return finalResponse;
   }

@@ -23,7 +23,7 @@ import lombok.Value;
  */
 @Value
 @Builder
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class GitConnectionCapability implements ExecutionCapability {
   @Override
   public EvaluationMode evaluationMode() {
