@@ -153,7 +153,7 @@ public class CreatePartialPlanEventHandler
       YamlField field1 = dependenciesList.get(i);
       PlanCreationResponse response = planCreationResponses.get(i);
       if (response == null) {
-        planCreationResponse.addDependency(field1);
+        //        planCreationResponse.addDependency(field1);
         continue;
       }
 
@@ -161,11 +161,11 @@ public class CreatePartialPlanEventHandler
       planCreationResponse.mergeContext(response.getContextMap());
       planCreationResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
       planCreationResponse.mergeStartingNodeId(response.getStartingNodeId());
-      if (EmptyPredicate.isNotEmpty(response.getDependencies())) {
-        for (YamlField childField : response.getDependencies().values()) {
-          dependencies.put(childField.getNode().getUuid(), childField);
-        }
-      }
+      //      if (EmptyPredicate.isNotEmpty(response.getDependencies())) {
+      //        for (YamlField childField : response.getDependencies().values()) {
+      //          dependencies.put(childField.getNode().getUuid(), childField);
+      //        }
+      //      }
     }
   }
 

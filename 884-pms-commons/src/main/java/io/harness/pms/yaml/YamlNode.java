@@ -2,16 +2,23 @@ package io.harness.pms.yaml;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.YamlException;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,24 +37,140 @@ public class YamlNode implements Visitable {
   public static final String NAME_FIELD_NAME = "name";
   public static final String KEY_FIELD_NAME = "key";
 
+  private static final String PATH_SEP = "/";
+
+  String fieldName;
   YamlNode parentNode;
   @NotNull JsonNode currJsonNode;
 
   public YamlNode(JsonNode currJsonNode) {
-    this.currJsonNode = currJsonNode;
-    this.parentNode = null;
+    this(null, currJsonNode, null);
+  }
+
+  public YamlNode(String name, JsonNode currJsonNode) {
+    this(name, currJsonNode, null);
   }
 
   @JsonCreator
-  public YamlNode(
-      @JsonProperty("currJsonNode") JsonNode currJsonNode, @JsonProperty("parentNode") YamlNode parentNode) {
+  public YamlNode(@JsonProperty("fieldName") String fieldName, @JsonProperty("currJsonNode") JsonNode currJsonNode,
+      @JsonProperty("parentNode") YamlNode parentNode) {
+    this.fieldName = fieldName;
     this.currJsonNode = currJsonNode;
     this.parentNode = parentNode;
+  }
+
+  public static YamlNode fromYamlPath(String yaml, String path) throws IOException {
+    if (EmptyPredicate.isEmpty(yaml)) {
+      return null;
+    }
+
+    YamlField field = YamlUtils.readTree(yaml);
+    return field.getNode().gotoPath(path);
   }
 
   @Override
   public String toString() {
     return currJsonNode.toString();
+  }
+
+  public String getYamlPath() {
+    List<String> path = new ArrayList<>();
+    YamlNode curr = this;
+    while (curr != null && curr.getParentNode() != null) {
+      path.add(curr.getFieldName());
+      curr = curr.parentNode;
+    }
+    Collections.reverse(path);
+    return String.join(PATH_SEP, path);
+  }
+
+  public YamlNode gotoPath(String path) {
+    if (EmptyPredicate.isEmpty(path)) {
+      return this;
+    }
+
+    List<String> pathList = Arrays.asList(path.split(PATH_SEP));
+    if (EmptyPredicate.isEmpty(pathList)) {
+      return this;
+    }
+
+    YamlNode curr = this;
+    for (String currName : pathList) {
+      if (curr == null) {
+        return null;
+      }
+
+      JsonNode next;
+      if (currName.charAt(0) == '[') {
+        if (!curr.isArray()) {
+          throw new YamlException(String.format("Trying to use index path (%s) on non-array node", currName));
+        }
+
+        int idx;
+        try {
+          idx = Integer.parseInt(currName.substring(1, currName.length() - 1));
+        } catch (Exception ex) {
+          throw new YamlException(String.format("Incorrect index path (%s) on array node", currName));
+        }
+
+        next = curr.getCurrJsonNode().get(idx);
+      } else {
+        next = curr.getValueInternal(currName);
+      }
+
+      curr = next == null ? null : new YamlNode(currName, next, curr);
+    }
+
+    return curr;
+  }
+
+  public void replacePath(String path, JsonNode newNode) {
+    if (EmptyPredicate.isEmpty(path)) {
+      return;
+    }
+
+    List<String> pathList = Arrays.asList(path.split(PATH_SEP));
+    if (EmptyPredicate.isEmpty(pathList)) {
+      return;
+    }
+
+    JsonNode curr = this.currJsonNode;
+    for (int i = 0; i < pathList.size() - 1; i++) {
+      String currName = pathList.get(i);
+      if (curr == null) {
+        return;
+      }
+
+      if (currName.charAt(0) == '[') {
+        if (!curr.isArray()) {
+          throw new YamlException(String.format("Trying to use index path (%s) on non-array node", currName));
+        }
+        try {
+          int idx = Integer.parseInt(currName.substring(1, currName.length() - 1));
+          curr = curr.get(idx);
+        } catch (Exception ex) {
+          throw new YamlException(String.format("Incorrect index path (%s) on array node", currName));
+        }
+      } else {
+        curr = curr.get(currName);
+      }
+    }
+    String lastName = pathList.get(pathList.size() - 1);
+    if (lastName.charAt(0) == '[') {
+      if (!curr.isArray()) {
+        throw new YamlException(String.format("Trying to use index path (%s) on non-array node", lastName));
+      }
+      try {
+        int idx = Integer.parseInt(lastName.substring(1, lastName.length() - 1));
+        ArrayNode arrayNode = (ArrayNode) curr;
+        arrayNode.set(idx, newNode);
+      } catch (Exception ex) {
+        throw new YamlException(String.format("Incorrect index path (%s) on array node", lastName));
+      }
+    } else {
+      ObjectNode objectNode = (ObjectNode) curr;
+      objectNode.set(lastName, newNode);
+    }
   }
 
   public boolean isObject() {
@@ -95,14 +218,19 @@ public class YamlNode implements Visitable {
 
   public List<YamlNode> asArray() {
     List<YamlNode> entries = new ArrayList<>();
-    currJsonNode.elements().forEachRemaining(el -> entries.add(new YamlNode(el, this)));
+    int idx = 0;
+    for (Iterator<JsonNode> i = currJsonNode.elements(); i.hasNext();) {
+      JsonNode node = i.next();
+      entries.add(new YamlNode(String.format("[%d]", idx), node, this));
+      idx++;
+    }
     return entries;
   }
 
   public List<YamlField> fields() {
     List<YamlField> entries = new ArrayList<>();
     currJsonNode.fields().forEachRemaining(
-        el -> entries.add(new YamlField(el.getKey(), new YamlNode(el.getValue(), this))));
+        el -> entries.add(new YamlField(new YamlNode(el.getKey(), el.getValue(), this))));
     return entries;
   }
 
@@ -163,7 +291,7 @@ public class YamlNode implements Visitable {
   public YamlField getField(String name) {
     JsonNode valueFromField = getValueInternal(name);
     if (valueFromField != null) {
-      return new YamlField(name, new YamlNode(valueFromField, this));
+      return new YamlField(new YamlNode(name, valueFromField, this));
     }
     return null;
   }
