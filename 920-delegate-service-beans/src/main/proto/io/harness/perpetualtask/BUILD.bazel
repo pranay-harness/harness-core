@@ -25,14 +25,14 @@ go_proto_library(
     proto = ":920_delegate_service_beans_proto",
     visibility = ["//visibility:public"],
     deps = [
-        "//920-delegate-service-beans/src/main/proto/io/harness/callback:go_default_library",
-        "//955-delegate-beans/src/main/proto/io/harness/delegate:go_default_library",
-        "//955-delegate-beans/src/main/proto/io/harness/perpetualtask:go_default_library",
+        "//920-delegate-service-beans/src/main/proto/io/harness/callback",
+        "//955-delegate-beans/src/main/proto/io/harness/delegate",
+        "//955-delegate-beans/src/main/proto/io/harness/perpetualtask",
     ],
 )
 
 go_library(
-    name = "go_default_library",
+    name = "perpetualtask",
     embed = [":920_delegate_service_beans_go_proto"],
     importpath = "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/perpetualtask",
     visibility = ["//visibility:public"],

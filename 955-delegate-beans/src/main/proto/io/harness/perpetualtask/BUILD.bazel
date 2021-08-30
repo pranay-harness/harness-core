@@ -18,11 +18,11 @@ go_proto_library(
     importpath = "github.com/wings-software/portal/955-delegate-beans/src/main/proto/io/harness/perpetualtask",
     proto = ":955_delegate_beans_proto",
     visibility = ["//visibility:public"],
-    deps = ["//955-delegate-beans/src/main/proto/io/harness/delegate:go_default_library"],
+    deps = ["//955-delegate-beans/src/main/proto/io/harness/delegate"],
 )
 
 go_library(
-    name = "go_default_library",
+    name = "perpetualtask",
     embed = [":955_delegate_beans_go_proto"],
     importpath = "github.com/wings-software/portal/955-delegate-beans/src/main/proto/io/harness/perpetualtask",
     visibility = ["//visibility:public"],
