@@ -687,7 +687,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public String pickFirstAttemptDelegate(DelegateTask task) {
     List<String> delegates = connectedWhitelistedDelegates(task);
     if (delegates.isEmpty()) {
-      log.debug("No first attempt delegate was picked");
+      log.info("No first attempt delegate was picked");
       return null;
     }
     return delegates.get(random.nextInt(delegates.size()));
@@ -765,7 +765,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   @Override
   public String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask) {
-    log.debug("Delegate task is terminated");
+    log.info("Delegate task is terminated");
 
     String errorMessage = "Unknown";
 
@@ -954,7 +954,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   @Override
   public RetryDelegate onPossibleRetry(RetryDelegate retryDelegate) {
-    log.debug("Delegate returned retryable error for task");
+    log.info("Delegate returned retryable error for task");
 
     Set<String> alreadyTriedDelegates = retryDelegate.getDelegateTask().getAlreadyTriedDelegates();
     List<String> remainingConnectedDelegates =
@@ -965,7 +965,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
             .collect(toList());
 
     if (!remainingConnectedDelegates.isEmpty()) {
-      log.debug("Requeueing task");
+      log.info("Requeueing task");
 
       persistence.update(retryDelegate.getTaskQuery(),
           persistence.createUpdateOperations(DelegateTask.class)

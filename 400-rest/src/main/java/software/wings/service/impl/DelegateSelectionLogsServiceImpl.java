@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.NgSetupFields.NG;
 
@@ -132,14 +131,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
 
     try {
-      if (featureFlagService.isNotEnabled(
-              DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
-        persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
-        persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
-        log.debug("Batch saved successfully");
-      } else {
-        batch.getDelegateSelectionLogs().stream().map(this::constructSelectionLogString).distinct().forEach(log::info);
-      }
+      persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
+      persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
     } catch (Exception exception) {
       log.error("Error while saving into Database ", exception);
     }
