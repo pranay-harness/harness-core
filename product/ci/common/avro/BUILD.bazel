@@ -1,13 +1,13 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "avro",
     srcs = ["avro.go"],
     importpath = "github.com/wings-software/portal/product/ci/common/avro",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/common/avro/schema/callgraph:go_default_library",
-        "@com_github_linkedin_goavro_v2//:go_default_library",
-        "@com_github_pkg_errors//:go_default_library",
+        "//product/ci/common/avro/schema/callgraph",
+        "@com_github_linkedin_goavro_v2//:goavro",
+        "@com_github_pkg_errors//:errors",
     ],
 )

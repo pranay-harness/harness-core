@@ -2,20 +2,37 @@ package software.wings.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.AMAN;
+import static io.harness.rule.OwnerRule.IVAN;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME_1;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_1_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ORGANIZATION;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.PCF_APP_GUID_1;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.PCF_INSTANCE_INDEX_0;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SPACE;
 
+import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -27,12 +44,18 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.PcfDeploymentInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
+import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.InstanceType;
+import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
+import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.instance.InstanceService;
 
 import com.google.protobuf.util.Durations;
 import java.util.Collections;
@@ -48,12 +71,15 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "accountId";
   private static final String TASK_ID = "taskId";
   private static final String APPLICATION_NAME = "applicationName";
   private static final String INFRA_ID = "infraId";
   private static final String APP_ID = "appId";
+  private PcfInfrastructureMapping pcfInfrastructureMapping;
+
   @Mock PerpetualTaskService perpetualTaskService;
   @InjectMocks PCFInstanceSyncPerpetualTaskCreator pcfInstanceSyncPerpetualTaskCreator;
   @Captor ArgumentCaptor<PerpetualTaskSchedule> scheduleArgumentCaptor;
@@ -61,7 +87,7 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceResourceService serviceResourceService;
-  private PcfInfrastructureMapping pcfInfrastructureMapping;
+  @Mock private InstanceService instanceService;
 
   @Before
   public void setUp() throws Exception {
@@ -73,6 +99,7 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
                                    .uuid(INFRASTRUCTURE_MAPPING_ID)
                                    .accountId(ACCOUNT_ID)
                                    .name(INFRASTRUCTURE_MAPPING_ID)
+                                   .appId(APP_ID)
                                    .build();
     pcfInfrastructureMapping.setDisplayName("infraName");
     when(infrastructureMappingService.get(any(), any())).thenReturn(pcfInfrastructureMapping);
@@ -113,14 +140,54 @@ public class PCFInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   public void createPerpetualTaskForNewDeployment() {
     DeploymentSummary deploymentSummary =
         DeploymentSummary.builder()
-            .appId("appId")
-            .accountId("accountId")
-            .infraMappingId("infraId")
+            .appId(APP_ID)
+            .accountId(ACCOUNT_ID)
+            .infraMappingId(INFRASTRUCTURE_MAPPING_ID)
             .deploymentInfo(
-                PcfDeploymentInfo.builder().applicationGuild("guid").applicationName("applicationName").build())
+                PcfDeploymentInfo.builder().applicationGuild("guid").applicationName(APPLICATION_NAME).build())
             .build();
     List<String> tasks = pcfInstanceSyncPerpetualTaskCreator.createPerpetualTasksForNewDeployment(
-        Collections.singletonList(deploymentSummary), Collections.emptyList(), new PcfInfrastructureMapping());
+        singletonList(deploymentSummary), Collections.emptyList(), new PcfInfrastructureMapping());
     assertEquals(1, tasks.size());
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void createCreatePerpetualTasks() {
+    doReturn(getInstancesForAppAndInframapping())
+        .when(instanceService)
+        .getInstancesForAppAndInframapping(APP_ID, INFRASTRUCTURE_MAPPING_ID);
+
+    List<String> tasks = pcfInstanceSyncPerpetualTaskCreator.createPerpetualTasks(pcfInfrastructureMapping);
+
+    assertEquals(1, tasks.size());
+    assertThat(tasks.get(0)).isEqualTo(TASK_ID);
+  }
+
+  private List<Instance> getInstancesForAppAndInframapping() {
+    return singletonList(
+        Instance.builder()
+            .uuid(INSTANCE_1_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.PCF_PCF.getName())
+            .pcfInstanceKey(PcfInstanceKey.builder().id(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_0).build())
+            .instanceType(InstanceType.PCF_INSTANCE)
+            .instanceInfo(PcfInstanceInfo.builder()
+                              .organization(ORGANIZATION)
+                              .space(SPACE)
+                              .pcfApplicationName(APP_NAME_1)
+                              .pcfApplicationGuid(PCF_APP_GUID_1)
+                              .instanceIndex(PCF_INSTANCE_INDEX_0)
+                              .id(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_0)
+                              .build())
+            .build());
   }
 }
