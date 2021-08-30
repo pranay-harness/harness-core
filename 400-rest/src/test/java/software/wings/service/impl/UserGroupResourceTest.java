@@ -32,7 +32,7 @@ public class UserGroupResourceTest extends WingsBaseTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void shouldSearchUsers() {
-    when(userGroupService.list(anyString(), any(), anyBoolean())).thenReturn(aPageResponse().build());
+    when(userGroupService.list(anyString(), any(), anyBoolean())).thenReturn(aPageResponse().build())
     userGroupResource.list(aPageRequest().build(), UUIDGenerator.generateUuid(), "xyz", false);
     verify(userGroupService).list(anyString(), any(), anyBoolean());
   }
