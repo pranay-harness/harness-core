@@ -439,7 +439,7 @@ public class NextGenModule extends AbstractModule {
     install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
 
-    if (this.appConfig.isUseDMS()) {
+    if (this.appConfig.isUseDms()) {
       install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getDmsGrpcClient().getSecret(),
           this.appConfig.getDmsGrpcClient().getTarget(), this.appConfig.getDmsGrpcClient().getAuthority(), true));
     } else {

@@ -105,7 +105,7 @@ grpcClient:
   target: localhost:9880
   authority: localhost
 
-useDMS: false
+useDms: false
 dmsGrpcClient:
   target: localhost:9890
     authority: localhost

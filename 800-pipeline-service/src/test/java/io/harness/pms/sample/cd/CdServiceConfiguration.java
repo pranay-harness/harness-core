@@ -23,6 +23,8 @@ public class CdServiceConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
+  @JsonProperty(value = "useDms", defaultValue = "false") private boolean useDms;
+  @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 
   private String managerServiceSecret;
   private String managerTarget;

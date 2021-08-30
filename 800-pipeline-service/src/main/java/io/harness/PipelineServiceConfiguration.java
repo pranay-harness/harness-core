@@ -81,7 +81,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
   @JsonProperty(value = "useRedisForOrchestrationNotify") private boolean useRedisForOrchestrationNotify;
-  @JsonProperty(value = "useDMS", defaultValue = "false") private boolean useDMS;
+  @JsonProperty(value = "useDms", defaultValue = "false") private boolean useDms;
   @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 
   private String managerServiceSecret;

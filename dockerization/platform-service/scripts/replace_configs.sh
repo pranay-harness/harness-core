@@ -137,7 +137,7 @@ if [[ "" != "$DMS_GRPC_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$USE_DMS" ]]; then
-  yq write -i $CONFIG_FILE useDMS "$USE_DMS"
+  yq write -i $CONFIG_FILE useDms "$USE_DMS"
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then

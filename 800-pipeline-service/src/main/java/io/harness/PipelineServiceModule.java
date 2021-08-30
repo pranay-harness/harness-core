@@ -205,7 +205,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration()));
     install(PrimaryVersionManagerModule.getInstance());
-    if (configuration.isUseDMS()) {
+    if (configuration.isUseDms()) {
       install(new DelegateServiceDriverGrpcClientModule(configuration.getDmsGrpcClient().getSecret(),
           configuration.getDmsGrpcClient().getTarget(), configuration.getDmsGrpcClient().getAuthority(), true));
     } else {

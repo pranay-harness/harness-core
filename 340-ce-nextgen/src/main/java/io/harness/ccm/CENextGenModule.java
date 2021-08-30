@@ -268,7 +268,7 @@ public class CENextGenModule extends AbstractModule {
     });
 
     install(DelegateServiceDriverModule.getInstance(false));
-    if (configuration.isUseDMS()) {
+    if (configuration.isUseDms()) {
       install(new DelegateServiceDriverGrpcClientModule(configuration.getDmsGrpcClient().getSecret(),
           configuration.getDmsGrpcClient().getTarget(), configuration.getDmsGrpcClient().getAuthority(), true));
     } else {

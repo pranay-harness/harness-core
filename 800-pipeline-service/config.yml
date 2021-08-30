@@ -81,7 +81,7 @@ yamlSchemaClientConfig:
 managerTarget: localhost:9880
 managerAuthority: localhost
 
-useDMS: false
+useDms: false
 dmsGrpcClient:
   target: localhost:9890
     authority: localhost

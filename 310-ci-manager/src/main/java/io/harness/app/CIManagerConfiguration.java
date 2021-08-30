@@ -51,7 +51,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
-  @JsonProperty(value = "useDMS", defaultValue = "false") private boolean useDMS;
+  @JsonProperty(value = "useDms", defaultValue = "false") private boolean useDms;
   @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 
   private String ngManagerServiceSecret;
