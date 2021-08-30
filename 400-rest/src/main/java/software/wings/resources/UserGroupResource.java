@@ -93,7 +93,7 @@ public class UserGroupResource {
   @AuthRule(permissionType = USER_PERMISSION_READ)
   public RestResponse<PageResponse<UserGroup>> list(@BeanParam PageRequest<UserGroup> pageRequest,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
-      @QueryParam("details") @DefaultValue("true") boolean loadUsers) {
+      @QueryParam("details") @DefaultValue("true") boolean loadUsers,String dummy) {
     if (!StringUtils.isEmpty(searchTerm)) {
       SearchFilter searchFilter = SearchFilter.builder()
                                       .fieldName(UserGroupKeys.name)
