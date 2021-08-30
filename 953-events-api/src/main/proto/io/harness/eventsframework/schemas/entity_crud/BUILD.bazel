@@ -17,7 +17,7 @@ go_proto_library(
 )
 
 go_library(
-    name = "go_default_library",
+    name = "entity_crud",
     embed = [":953_events_api_go_proto"],
     importpath = "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/entity_crud",
     visibility = ["//visibility:public"],
