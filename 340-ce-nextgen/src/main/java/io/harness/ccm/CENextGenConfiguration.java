@@ -67,6 +67,8 @@ public class CENextGenConfiguration extends Configuration {
   @JsonProperty(value = "gcpConfig") private GcpConfig gcpConfig;
   @JsonProperty(value = "ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
   @JsonProperty(value = "awsConfig") private AwsConfig awsConfig;
+  @JsonProperty(value = "useDMS", defaultValue = "false") private boolean useDMS;
+  @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerConf = new SwaggerBundleConfiguration();

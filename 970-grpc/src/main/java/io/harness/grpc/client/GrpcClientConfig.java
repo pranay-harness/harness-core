@@ -11,4 +11,5 @@ import lombok.experimental.FieldDefaults;
 public class GrpcClientConfig {
   String target;
   String authority;
+  String secret;
 }
