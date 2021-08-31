@@ -2,7 +2,9 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.KARAN;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,6 +18,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -44,6 +47,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.support.TransactionTemplate;
 import retrofit2.Call;
@@ -57,7 +61,7 @@ public class UserGroupServiceImplTest extends CategoryTest {
   @Mock private AccessControlAdminClient accessControlAdminClient;
   @Mock private TransactionTemplate transactionTemplate;
   @Mock private NgUserService ngUserService;
-  @Inject @InjectMocks private UserGroupServiceImpl userGroupService;
+  @Spy @Inject @InjectMocks private UserGroupServiceImpl userGroupService;
 
   private static final String ACCOUNT_IDENTIFIER = "A1";
   private static final String ORG_IDENTIFIER = "O1";
@@ -181,6 +185,33 @@ public class UserGroupServiceImplTest extends CategoryTest {
       fail("Expected failure as user already present.");
     } catch (InvalidRequestException exception) {
       // all good here
+    }
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testAddUserToUserGroups() {
+    Scope scope = Scope.of(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
+    String userId = "userId";
+    List<String> userGroups = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      String userGroupId = randomAlphabetic(10);
+      userGroups.add(userGroupId);
+      doReturn(i % 2 == 0)
+          .when(userGroupService)
+          .checkMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupId, userId);
+      if (i % 2 == 1) {
+        doReturn(UserGroup.builder().identifier(userGroupId).build())
+            .when(userGroupService)
+            .addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupId, userId);
+      }
+    }
+    userGroupService.addUserToUserGroups(scope, userId, userGroups);
+    for (int i = 0; i < 5; i++) {
+      String userGroupId = userGroups.get(i);
+      verify(userGroupService, times(i % 2))
+          .addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupId, userId);
     }
   }
 }
