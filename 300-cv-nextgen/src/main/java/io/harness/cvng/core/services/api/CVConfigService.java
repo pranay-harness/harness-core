@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.api;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.encryption.Scope;
@@ -45,6 +46,7 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
       String accountId, String orgIdentifier, String projectIdentifier, String envIdentifier, String serviceIdentifier);
   List<CVConfig> getConfigsOfProductionEnvironments(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory);
+
   boolean isProductionConfig(CVConfig cvConfig);
 
   List<CVConfig> getCVConfigs(
@@ -59,4 +61,6 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
 
   void setHealthMonitoringFlag(
       String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers, boolean isEnabled);
+
+  List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams, List<String> identifiers);
 }
