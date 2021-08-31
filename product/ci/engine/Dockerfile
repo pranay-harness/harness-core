@@ -9,7 +9,7 @@ RUN apk add --update \
     curl \
     && rm -rf /var/cache/apk/*
 RUN apk add git
-COPY linux_amd64_pure_stripped/engine /usr/local/bin/ci-lite-engine
+COPY engine_/engine /usr/local/bin/ci-lite-engine
 RUN chmod +x /usr/local/bin/ci-lite-engine
 
 RUN adduser -g harness -s /bin/sh -D -u 1000 harness

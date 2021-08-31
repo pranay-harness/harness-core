@@ -10,6 +10,7 @@ import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
@@ -239,5 +240,28 @@ public class MonitoredServiceResource {
                                                                           .orgIdentifier(orgIdentifier)
                                                                           .projectIdentifier(projectIdentifier)
                                                                           .build()));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/health-sources")
+  @ApiOperation(value = "get all health sources for service and environment",
+      nickname = "getAllHealthSourcesForServiceAndEnvironment")
+  public RestResponse<List<HealthSourceDTO>>
+  getHealthSources(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+
+    return new RestResponse<>(monitoredServiceService.getHealthSources(serviceEnvironmentParams));
   }
 }

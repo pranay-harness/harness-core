@@ -56,6 +56,16 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   }
 
   @Override
+  public Set<ChangeSourceDTO> getByType(ServiceEnvironmentParams environmentParams, ChangeSourceType changeSourceType) {
+    return mongoQuery(environmentParams)
+        .filter(ChangeSourceKeys.type, changeSourceType)
+        .asList()
+        .stream()
+        .map(changeSourceTransformer::getDto)
+        .collect(Collectors.toSet());
+  }
+
+  @Override
   public void delete(@NonNull ServiceEnvironmentParams environmentParams, @NonNull List<String> identifiers) {
     mongoQuery(environmentParams).field(ChangeSourceKeys.identifier).in(identifiers).forEach(hPersistence::delete);
   }
