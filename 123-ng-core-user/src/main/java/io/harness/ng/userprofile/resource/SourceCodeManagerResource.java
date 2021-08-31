@@ -21,6 +21,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
 
 @OwnedBy(PL)
@@ -33,8 +34,9 @@ public class SourceCodeManagerResource {
 
   @GET
   @ApiOperation(value = "get source code manager information", nickname = "getSourceCodeManagers")
-  public ResponseDTO<List<SourceCodeManagerDTO>> get() {
-    return ResponseDTO.newResponse(sourceCodeManagerService.get());
+  public ResponseDTO<List<SourceCodeManagerDTO>> get(
+      @NotNull @QueryParam("accountIdentifier") String accountIdentifier) {
+    return ResponseDTO.newResponse(sourceCodeManagerService.get(accountIdentifier));
   }
 
   @POST
@@ -54,7 +56,8 @@ public class SourceCodeManagerResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "delete source code manager", nickname = "deleteSourceCodeManagers")
-  public ResponseDTO<Boolean> delete(@NotNull @PathParam("identifier") String sourceCodeManagerName) {
-    return ResponseDTO.newResponse(sourceCodeManagerService.delete(sourceCodeManagerName));
+  public ResponseDTO<Boolean> delete(@NotNull @PathParam("identifier") String sourceCodeManagerName,
+      @NotNull @QueryParam("accountIdentifier") String accountIdentifier) {
+    return ResponseDTO.newResponse(sourceCodeManagerService.delete(sourceCodeManagerName, accountIdentifier));
   }
 }

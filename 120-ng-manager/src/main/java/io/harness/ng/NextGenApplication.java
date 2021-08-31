@@ -76,6 +76,7 @@ import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
 import io.harness.ng.migration.NGCoreMigrationProvider;
+import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
@@ -354,6 +355,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(InstanceMigrationProvider.class); }
           { add(UserMetadataMigrationProvider.class); }
           { add(LicenseManagerMigrationProvider.class); }
+          { add(SourceCodeManagerMigrationProvider.class); }
         })
         .build();
   }
