@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
@@ -18,9 +18,7 @@ func HandleWrite(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 
-		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		log := logger.FromContext(r.Context())
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam,
 			pipelineIdParam, buildIdParam, stageIdParam,
 			stepIdParam, reportParam)
@@ -48,7 +46,7 @@ func HandleWrite(db db.Db) http.HandlerFunc {
 			return
 		}
 
-		if err := db.Write(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, repo, sha, in...); err != nil {
+		if err := db.Write(r.Context(), accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, repo, sha, in...); err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot write to db", "account_id", accountId, "org_id", orgId,
 				"project_id", projectId, "build_id", buildId, zap.Error(err))
@@ -67,8 +65,8 @@ func HandleSummary(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {
@@ -106,8 +104,8 @@ func HandleTestCases(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam, suiteNameParam, reportParam)
 		if err != nil {
@@ -170,8 +168,8 @@ func HandleTestSuites(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {

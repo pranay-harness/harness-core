@@ -15,6 +15,7 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/db/timescaledb"
 	"github.com/wings-software/portal/product/ci/ti-service/eventsframework"
 	"github.com/wings-software/portal/product/ci/ti-service/handler"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/server"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
@@ -33,8 +34,10 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	ctx := context.Background()
 
 	// build initial log
-	logs.InitContextLogger("ti-service", "TI-svc")
-	log := logs.Logger(ctx)
+	logBuilder := logs.NewBuilder().Verbose(true).WithDeployment("ti-service").
+		WithFields("application_name", "TI-svc")
+	log := logBuilder.MustBuild().Sugar()
+	logger.InitLogger(log)
 
 	// load the system configuration from the environment.
 	config, err := config.Load()

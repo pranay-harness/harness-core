@@ -25,3 +25,9 @@ func FromContext(ctx context.Context) *zap.SugaredLogger {
 	}
 	return logger.(*zap.SugaredLogger)
 }
+
+// FromContext retrieves the current logger from the context. If no
+// logger is available, the default logger is returned.
+func InitLogger(zap *zap.SugaredLogger) {
+	L = zap
+}

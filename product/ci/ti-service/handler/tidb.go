@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wings-software/portal/commons/go/lib/logs"
 	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -29,8 +29,8 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam,
@@ -109,8 +109,8 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// Info needed:
 		// i) account ID, ... buildID
@@ -198,8 +198,8 @@ func HandleReportsInfo(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
 		if err != nil {
@@ -229,8 +229,8 @@ func HandleIntelligenceInfo(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
 		if err != nil {
@@ -261,7 +261,7 @@ func HandleIntelligenceInfo(db db.Db) http.HandlerFunc {
 func HandlePing(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, _ := context.WithTimeout(r.Context(), 5*time.Second) // 5 second timeout for pings
-		log := logs.Logger(ctx)
+		log := logger.FromContext(ctx)
 
 		if err := db.Ping(ctx); err != nil {
 			if err != nil {
@@ -279,8 +279,8 @@ func HandleOverview(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam)
@@ -327,8 +327,8 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db) http.HandlerFunc {
 		timeMsStr := r.FormValue(timeMsParam)
 
 		// not validating it for backward compatibility
-		ctx := logs.WithRqId(r.Context(), r.FormValue(rqId))
-		log := logs.Logger(ctx)
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		timeMs, err := strconv.ParseInt(timeMsStr, 10, 32)
 		if err != nil {
 			log.Errorw("could not parse time taken", zap.Error(err))
