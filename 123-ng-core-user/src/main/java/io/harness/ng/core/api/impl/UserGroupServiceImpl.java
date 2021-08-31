@@ -258,6 +258,20 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public void addUserToUserGroups(Scope scope, String userId, List<String> userGroups) {
+    if (isEmpty(userGroups)) {
+      return;
+    }
+    userGroups.forEach(userGroup -> {
+      if (!checkMember(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroup,
+              userId)) {
+        addMember(
+            scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroup, userId);
+      }
+    });
+  }
+
+  @Override
   public UserGroup removeMember(Scope scope, String userGroupIdentifier, String userIdentifier) {
     UserGroup existingUserGroup = getOrThrow(
         scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
