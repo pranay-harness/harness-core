@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-set -x
+mkdir -p /opt/harness/logs
+touch /opt/harness/logs/ci-manager.log
 
 if [[ -v "{hostname}" ]]; then
    export HOSTNAME=$(hostname)
 fi
 
-if [[ -z "$MEMORY" ]]; then
-   export MEMORY=2096m
+if [[ -z "$JVM_MIN_MEMORY" ]]; then
+   export MIN_MEMORY=2096m
+fi
+
+if [[ -z "$JVM_MAX_MEMORY" ]]; then
+   export MAX_MEMORY=2096m
 fi
 
 if [[ -z "$COMMAND" ]]; then
@@ -17,12 +22,14 @@ fi
 echo "Using memory " "$MEMORY"
 
 if [[ -z "$CAPSULE_JAR" ]]; then
-   export CAPSULE_JAR=/opt/harness/accesscontrol-service-capsule.jar
+   export CAPSULE_JAR=/opt/harness/ci-manager-capsule.jar
 fi
 
 export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCPauseMillis=1000 -Dfile.encoding=UTF-8"
 
-export JAVA_OPTS="-Xms${MEMORY} -Xmx${MEMORY} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS"
+export JAVA_OPTS="-Xms${MIN_MEMORY} -Xmx${MAX_MEMORY} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS"
+
+JAVA_OPTS=$JAVA_OPTS" -Xbootclasspath/p:/opt/harness/alpn-boot-8.1.13.v20181017.jar"
 
 if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
     mkdir /opt/harness/AppServerAgent-20.8.0.30686 && unzip AppServerAgent-20.8.0.30686.zip -d /opt/harness/AppServerAgent-20.8.0.30686
@@ -32,8 +39,4 @@ if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
     echo "Using Appdynamics java agent"
 fi
 
-if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
-    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml
-else
-    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/accesscontrol-service.log 2>&1
-fi
+java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/ci-manager-config.yml
