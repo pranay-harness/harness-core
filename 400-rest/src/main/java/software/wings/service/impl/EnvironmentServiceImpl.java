@@ -25,6 +25,7 @@ import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.ServiceVariableKeys;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
+import static software.wings.beans.yaml.YamlConstants.CONN_STRINGS_FILE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.yaml.YamlHelper.trimYaml;
@@ -1127,6 +1128,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
 
     notNullCheck("Application manifest kind cannot be null", kind, USER);
+
+    if (isEmpty(manifestFile.getFileContent()) && CONN_STRINGS_FILE.equals(manifestFile.getFileName())) {
+      throw new InvalidRequestException("file content can't be empty for the type Connection Strings", USER);
+    }
+
     validateEnvAndServiceExists(appId, envId, serviceId);
 
     ApplicationManifest applicationManifest =
