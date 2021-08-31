@@ -18,6 +18,7 @@ import software.wings.graphql.datafetcher.event.DeleteEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigConnectionDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.UpdateEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
 import software.wings.graphql.datafetcher.trigger.CreateTriggerDataFetcher;
 import software.wings.graphql.datafetcher.trigger.DeleteTriggerDataFetcher;
@@ -106,6 +107,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EventsConfigConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateEventsConfigDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
   }
 
   @NotNull
