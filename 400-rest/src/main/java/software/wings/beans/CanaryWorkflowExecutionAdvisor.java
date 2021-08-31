@@ -29,6 +29,7 @@ import static software.wings.sm.rollback.RollbackStateMachineGenerator.WHITE_SPA
 import static java.util.Collections.disjoint;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -72,6 +73,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.jexl3.JexlException;
@@ -83,6 +85,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.impl.instance.InstanceHelper")
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public static final String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
@@ -569,14 +572,17 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
                                                                  .getStateExecutionDataHistory();
         if (stateExecutionDataHistory == null || stateExecutionDataHistory.size() < failureStrategy.getRetryCount()) {
           int waitInterval = 0;
-          List<Integer> retryIntervals = failureStrategy.getRetryIntervals();
-          if (isNotEmpty(retryIntervals)) {
-            if (isEmpty(stateExecutionDataHistory)) {
-              waitInterval = retryIntervals.get(0);
-            } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {
-              waitInterval = retryIntervals.get(retryIntervals.size() - 1);
-            } else {
-              waitInterval = retryIntervals.get(stateExecutionDataHistory.size());
+          if (failureStrategy.getRetryIntervals() != null) {
+            List<Integer> retryIntervals =
+                failureStrategy.getRetryIntervals().stream().filter(Objects::nonNull).collect(toList());
+            if (isNotEmpty(retryIntervals)) {
+              if (isEmpty(stateExecutionDataHistory)) {
+                waitInterval = retryIntervals.get(0);
+              } else if (stateExecutionDataHistory.size() > retryIntervals.size() - 1) {
+                waitInterval = retryIntervals.get(retryIntervals.size() - 1);
+              } else {
+                waitInterval = retryIntervals.get(stateExecutionDataHistory.size());
+              }
             }
           }
           return anExecutionEventAdvice()
