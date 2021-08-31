@@ -15,7 +15,6 @@ import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
@@ -26,10 +25,15 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.template.beans.TemplateApplyRequestDTO;
+import io.harness.template.beans.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.TemplateResponseDTO;
+import io.harness.template.beans.TemplateSummaryResponseDTO;
 import io.harness.template.entity.TemplateEntity;
+import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.template.services.NGTemplateService;
+import io.harness.template.services.NGTemplateServiceHelper;
+import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -55,6 +59,11 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Criteria;
+import retrofit2.http.Body;
 
 @OwnedBy(CDC)
 @Api("templates")
@@ -71,6 +80,7 @@ import org.springframework.data.domain.Page;
 @Slf4j
 public class NGTemplateResource {
   private final NGTemplateService templateService;
+  private final NGTemplateServiceHelper templateServiceHelper;
 
   @GET
   @Path("{templateIdentifier}")
@@ -121,15 +131,21 @@ public class NGTemplateResource {
   }
 
   @PUT
-  @Path("/{templateIdentifier}/{label}")
+  @Path("/updateStableTemplate/{templateIdentifier}/{versionLabel}")
   @ApiOperation(value = "Updating stable template label", nickname = "updateStableTemplate")
   public ResponseDTO<String> updateStableTemplate(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String label) {
-    return null;
+      @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel) {
+    log.info(String.format(
+        "Updating Stable Template with identifier %s with versionLabel %s in project %s, org %s, account %s",
+        templateIdentifier, versionLabel, projectId, orgId, accountId));
+
+    TemplateEntity templateEntity =
+        templateService.updateStableTemplateVersion(accountId, orgId, projectId, templateIdentifier, versionLabel);
+    return ResponseDTO.newResponse(templateEntity.getVersion().toString(), templateEntity.getVersionLabel());
   }
 
   @PUT
@@ -175,14 +191,29 @@ public class NGTemplateResource {
   @Path("/list")
   @ApiOperation(value = "Gets all template list", nickname = "getTemplateList")
   // will return non deleted templates only
-  public ResponseDTO<Page<TemplateResponseDTO>> listTemplates(
+  public ResponseDTO<Page<TemplateSummaryResponseDTO>> listTemplates(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam("filterIdentifier") String filterIdentifier, FilterPropertiesDTO filterProperties) {
-    return null;
+      @QueryParam("filterIdentifier") String filterIdentifier, @Body TemplateFilterPropertiesDTO filterProperties,
+      @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
+    log.info(String.format("Get List of templates in project: %s, org: %s, account: %s", projectId, orgId, accountId));
+    Criteria criteria = templateServiceHelper.formCriteria(
+        accountId, orgId, projectId, filterIdentifier, filterProperties, false, searchTerm);
+
+    Pageable pageRequest;
+    if (EmptyPredicate.isEmpty(sort)) {
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, TemplateEntityKeys.lastUpdatedAt));
+    } else {
+      pageRequest = PageUtils.getPageRequest(page, size, sort);
+    }
+
+    Page<TemplateSummaryResponseDTO> templateSummaryResponseDTOS =
+        templateService.list(criteria, pageRequest, accountId, orgId, projectId, getDistinctFromBranches)
+            .map(NGTemplateDtoMapper::prepareTemplateSummaryResponseDto);
+    return ResponseDTO.newResponse(templateSummaryResponseDTOS);
   }
 
   @GET

@@ -1,4 +1,4 @@
-package io.harness.engine.utils;
+package io.harness.springdata;
 
 import com.google.inject.Inject;
 import com.mongodb.MongoException;
@@ -12,7 +12,7 @@ import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
-public class TransactionUtils {
+public class TransactionHelper {
   private final RetryPolicy<Object> transactionRetryPolicy =
       new RetryPolicy<>()
           .withDelay(Duration.ofSeconds(1))
