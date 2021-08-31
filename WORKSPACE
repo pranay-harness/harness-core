@@ -4281,7 +4281,7 @@ plain_artifacts = [
     "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.10",
     "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.10",
     "com.fasterxml.jackson.jaxrs:jackson-jaxrs-yaml-provider:2.11.0",
-    "com.fasterxml.jackson.module:jackson-module-afterburner:2.7.9",
+    "com.fasterxml.jackson.module:jackson-module-afterburner:2.9.10",
     "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.10",
     "com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.10",
     "com.fasterxml.jackson.module:jackson-module-parameter-names:2.9.10",
