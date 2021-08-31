@@ -25,6 +25,7 @@ import software.wings.service.intfc.EmailNotificationService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -63,6 +64,7 @@ public class EmailDispatcherTest extends WingsBaseTest {
     List<Notification> notifications = Collections.singletonList(notification);
 
     emailDispatcher.dispatch(notifications, toAddresses);
+    emailDispatcher.dispatch(notifications, new ArrayList<>());
     Mockito.verify(emailNotificationService).sendAsync(Mockito.any(EmailData.class));
   }
 }
