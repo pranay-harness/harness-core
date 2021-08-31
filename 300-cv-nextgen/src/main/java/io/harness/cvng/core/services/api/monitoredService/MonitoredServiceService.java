@@ -7,6 +7,7 @@ import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.MonitoredService;
@@ -48,4 +49,6 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   HealthScoreDTO getCurrentScore(ServiceEnvironmentParams serviceEnvironmentParams);
 
   String getYamlTemplate(ProjectParams projectParams);
+
+  List<HealthSourceDTO> getHealthSources(ServiceEnvironmentParams serviceEnvironmentParams);
 }

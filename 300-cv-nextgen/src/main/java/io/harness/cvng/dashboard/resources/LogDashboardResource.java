@@ -3,7 +3,6 @@ package io.harness.cvng.dashboard.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
@@ -136,8 +135,8 @@ public class LogDashboardResource {
       @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
       @QueryParam("clusterTypes") List<LogAnalysisTag> clusterTypes,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
-      @QueryParam("datasourceType") DataSourceType datasourceType, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("10") int size) {
+      @QueryParam("healthSources") List<String> healthSourceIdentifiers,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
     ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
                                                             .accountIdentifier(accountId)
                                                             .orgIdentifier(orgIdentifier)
@@ -152,6 +151,6 @@ public class LogDashboardResource {
     PageParams pageParams = PageParams.builder().page(page).size(size).build();
 
     return new RestResponse<>(logDashboardService.getAllLogsData(
-        serviceEnvironmentParams, timeRangeParams, clusterTypes, datasourceType, pageParams));
+        serviceEnvironmentParams, timeRangeParams, clusterTypes, healthSourceIdentifiers, pageParams));
   }
 }

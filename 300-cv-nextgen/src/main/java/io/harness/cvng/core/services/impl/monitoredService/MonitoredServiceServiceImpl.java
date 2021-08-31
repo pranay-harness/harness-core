@@ -16,6 +16,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.MonitoredServiceListItemDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.MonitoredService;
@@ -659,5 +660,18 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     // returning default yaml template, account/org/project specific templates can be generated later.
     return StringUtils.replaceEach(DEFAULT_YAML_TEMPLATE, new String[] {"$projectIdentifier", "$orgIdentifier"},
         new String[] {projectParams.getProjectIdentifier(), projectParams.getOrgIdentifier()});
+  }
+
+  @Override
+  public List<HealthSourceDTO> getHealthSources(ServiceEnvironmentParams serviceEnvironmentParams) {
+    MonitoredService monitoredServiceEntity = getMonitoredService(serviceEnvironmentParams.getAccountIdentifier(),
+        serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+        serviceEnvironmentParams.getServiceIdentifier(), serviceEnvironmentParams.getEnvironmentIdentifier());
+    Set<HealthSource> healthSources = healthSourceService.get(monitoredServiceEntity.getAccountId(),
+        monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
+        monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
+    return healthSources.stream()
+        .map(healthSource -> HealthSourceDTO.toHealthSourceDTO(healthSource))
+        .collect(Collectors.toList());
   }
 }
