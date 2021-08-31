@@ -1,5 +1,10 @@
 package software.wings.dl;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.Account;
 import software.wings.service.intfc.AccountService;
 
@@ -11,11 +16,10 @@ import com.google.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Created by anubhaw on 3/18/16.
- */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._960_PERSISTENCE)
 public class GenericDbCache {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;

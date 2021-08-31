@@ -110,11 +110,14 @@ BAZEL_MODULES="\
   //925-access-control-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
+  //935-analyser-service:module \
+  //937-persistence-tracer:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
+  //940-plan-feature-sdk:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
   //945-account-mgmt:module \
@@ -132,6 +135,7 @@ BAZEL_MODULES="\
   //950-events-framework:module \
   //950-events-framework-monitor:module \
   //950-log-client:module \
+  //951-cg-git-sync:module \
   //951-ng-audit-commons:module \
   //950-ng-authentication-service:module \
   //950-ng-core:module \
@@ -397,6 +401,7 @@ build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
+build_bazel_module 951-cg-git-sync
 build_bazel_module 951-ng-audit-commons
 build_bazel_module 952-scm-java-client
 build_bazel_module 953-events-api

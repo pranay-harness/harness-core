@@ -2,6 +2,7 @@ package io.harness.polling.service.intfc;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.polling.bean.PolledResponse;
 import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.contracts.PollingItem;
@@ -14,8 +15,6 @@ public interface PollingService {
 
   PollingDocument get(String accountId, String pollingDocId);
 
-  String update(@Valid PollingDocument pollingDocument);
-
   void delete(PollingDocument pollingDocument);
 
   boolean attachPerpetualTask(String accountId, String pollDocId, String perpetualTaskId);
@@ -24,7 +23,7 @@ public interface PollingService {
 
   void updatePolledResponse(String accountId, String pollingDocId, PolledResponse polledResponse);
 
-  String subscribe(PollingItem pollingItem);
+  String subscribe(PollingItem pollingItem) throws InvalidRequestException;
 
   boolean unsubscribe(PollingItem pollingItem);
 }

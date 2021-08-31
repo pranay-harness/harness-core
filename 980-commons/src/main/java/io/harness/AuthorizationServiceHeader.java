@@ -20,6 +20,7 @@ public enum AuthorizationServiceHeader {
   NOTIFICATION_SERVICE("NotificationService"),
   AUDIT_SERVICE("AuditService"),
   PIPELINE_SERVICE("PipelineService"),
+  TEMPLATE_SERVICE("TemplateService"),
   ACCESS_CONTROL_SERVICE("accessControlService"),
   RESOUCE_GROUP_SERVICE("ResourceGroupService"),
   PLATFORM_SERVICE("PlatformService"),

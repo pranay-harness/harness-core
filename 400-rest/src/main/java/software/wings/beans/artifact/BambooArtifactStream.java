@@ -72,6 +72,20 @@ public class BambooArtifactStream extends ArtifactStream {
   }
 
   @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .jobname(jobname)
+        .artifactPaths(artifactPaths)
+        .build();
+  }
+
+  @Override
   public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s_%s", getSourceName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
   }

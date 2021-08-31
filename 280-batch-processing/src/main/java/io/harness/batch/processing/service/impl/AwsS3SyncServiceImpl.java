@@ -102,12 +102,14 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
       }
       log.info("sync completed");
     } catch (IOException | TimeoutException | InvalidExitValueException | JsonSyntaxException e) {
-      log.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
+      log.error(e.getMessage(), e);
+      log.info("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
           s3SyncRecord.getBillingBucketPath(), s3SyncRecord.getBillingBucketRegion(), destinationBucketPath,
           s3SyncRecord.getRoleArn());
       return false;
       // throw new BatchProcessingException("S3 sync failed", e);
     } catch (InterruptedException e) {
+      log.error(e.getMessage(), e);
       Thread.currentThread().interrupt();
       return false;
     }

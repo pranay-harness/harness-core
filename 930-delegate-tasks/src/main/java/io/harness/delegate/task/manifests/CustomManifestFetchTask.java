@@ -179,7 +179,8 @@ public class CustomManifestFetchTask extends AbstractDelegateRunnableTask {
     CustomManifestSource customManifestSource = fetchParams.getCustomManifestSource();
     final String destZippedManifestDirectory = customManifestService.getWorkingDirectory();
     final Path destZippedManifestFile = Paths.get(destZippedManifestDirectory, "destZipManifestFile.zip");
-    final Path pathToManifestFiles = Paths.get(manifestFilesDirectory, customManifestSource.getFilePaths().get(0));
+    final Path pathToManifestFiles =
+        Paths.get(manifestFilesDirectory, customManifestSource.getFilePaths().get(0)).normalize();
 
     zipManifestFiles(pathToManifestFiles.toString(), destZippedManifestFile.toString());
 

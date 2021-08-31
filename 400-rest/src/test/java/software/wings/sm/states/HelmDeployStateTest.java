@@ -21,6 +21,7 @@ import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aG
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -1874,7 +1875,9 @@ public class HelmDeployStateTest extends CategoryTest {
     doReturn(infrastructureMapping).when(k8sStateHelper).fetchContainerInfrastructureMapping(context);
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build()).when(activityService).save(any(Activity.class));
     doReturn(appManifestMap).when(applicationManifestUtils).getApplicationManifests(context, AppManifestKind.VALUES);
-    doReturn(mockParams).when(applicationManifestUtils).createCustomManifestValuesFetchParams(context, appManifestMap);
+    doReturn(mockParams)
+        .when(applicationManifestUtils)
+        .createCustomManifestValuesFetchParams(context, appManifestMap, VALUES_YAML_KEY);
     doReturn(serviceTemplateId).when(serviceTemplateHelper).fetchServiceTemplateId(infrastructureMapping);
 
     helmDeployState.executeInternal(context);
@@ -1965,7 +1968,7 @@ public class HelmDeployStateTest extends CategoryTest {
     doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, null);
     doReturn(valuesMap)
         .when(applicationManifestUtils)
-        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse);
+        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse, VALUES_YAML_KEY);
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     doReturn("taskId").when(delegateService).queueTask(delegateTaskCaptor.capture());
     doReturn(false).when(applicationManifestUtils).isValuesInGit(appManifestMap);

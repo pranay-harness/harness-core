@@ -1,6 +1,8 @@
 package software.wings.service.intfc;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -22,7 +24,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-@TargetModule(HarnessModule._957_CG_BEANS)
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ActivityService {
   /**
    * List.

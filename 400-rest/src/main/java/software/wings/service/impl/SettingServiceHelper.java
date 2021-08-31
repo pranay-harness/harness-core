@@ -4,13 +4,16 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 import static software.wings.security.PermissionAttribute.PermissionType;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
@@ -50,8 +53,10 @@ import static software.wings.settings.SettingVariableTypes.SPOT_INST;
 import static software.wings.settings.SettingVariableTypes.SUMO;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
@@ -79,6 +84,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._445_CG_CONNECTORS)
 public class SettingServiceHelper {
   private static final String REFERENCED_SECRET_ERROR_MSG = "Unable to copy encryption details";
   private static final String USE_ENCRYPTED_VALUE_FLAG_FIELD_BASE = "useEncrypted";
@@ -338,6 +344,17 @@ public class SettingServiceHelper {
       }
       case CLOUD_PROVIDER: {
         return MANAGE_CLOUD_PROVIDERS;
+      }
+      case SETTING: {
+        if (!SettingVariableTypes.STRING.equals(SettingVariableTypes.valueOf(settingAttribute.getValue().getType()))) {
+          return MANAGE_SSH_AND_WINRM;
+        } else {
+          if (GLOBAL_APP_ID.equals(settingAttribute.getAppId())) {
+            return ACCOUNT_MANAGEMENT;
+          } else {
+            return MANAGE_APPLICATIONS;
+          }
+        }
       }
       default: {
         return ACCOUNT_MANAGEMENT;

@@ -1,5 +1,8 @@
 package software.wings.service.impl.scalyr;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.ScalyrConfig;
 import software.wings.service.intfc.scalyr.ScalyrService;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
@@ -7,7 +10,7 @@ import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ScalyrServiceImpl implements ScalyrService {
   @Override
   public Map<String, Map<String, ResponseMapper>> createLogCollectionMapping(

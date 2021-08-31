@@ -12,7 +12,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @OwnedBy(HarnessTeam.CDC)
 public interface PollingRepository
     extends PagingAndSortingRepository<PollingDocument, String>, PollingRepositoryCustom {
-  PollingDocument findByAccountIdAndUuid(String accountId, String uuid);
+  PollingDocument findByUuidAndAccountId(String uuid, String accountId);
   PollingDocument findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPollingInfo(
       String accountId, String orgIdentifier, String projectIdentifier, PollingInfo pollingInfo);
 }

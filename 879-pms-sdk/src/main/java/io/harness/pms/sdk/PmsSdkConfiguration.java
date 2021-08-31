@@ -19,6 +19,7 @@ import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.redis.RedisConfig;
+import io.harness.threading.ThreadPoolConfig;
 
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,8 @@ public class PmsSdkConfiguration {
   Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators;
   Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
+  @Builder.Default ThreadPoolConfig executionPoolConfig = ThreadPoolConfig.builder().build();
+  @Builder.Default ThreadPoolConfig orchestrationEventPoolConfig = ThreadPoolConfig.builder().build();
 
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =

@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.FileChanges;
+import io.harness.gitsync.FullSyncChangeSet;
+import io.harness.gitsync.FullSyncResponse;
 import io.harness.gitsync.FullSyncServiceGrpc.FullSyncServiceImplBase;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.logging.MdcContextSetter;
@@ -28,4 +30,6 @@ public class FullSyncGrpcService extends FullSyncServiceImplBase {
       responseObserver.onCompleted();
     }
   }
+
+  public void performEntitySync(FullSyncChangeSet request, StreamObserver<FullSyncResponse> responseObserver) {}
 }

@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.UUIDGenerator;
@@ -58,6 +60,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InstanaConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
@@ -93,6 +96,7 @@ import software.wings.service.intfc.instana.InstanaDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
@@ -144,6 +148,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Mock private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AwsHelperResourceService awsHelperResourceService;
+  @Mock private SecretManager secretManager;
 
   private String accountId;
   private SplunkDelegateService spySplunkDelegateService;
@@ -171,6 +176,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     FieldUtils.writeField(settingValidationService, "awsEc2HelperServiceManager", awsEc2HelperServiceManager, true);
     FieldUtils.writeField(settingValidationService, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(settingValidationService, "awsHelperResourceService", awsHelperResourceService, true);
+    FieldUtils.writeField(settingValidationService, "secretManager", secretManager, true);
 
     spySplunkDelegateService = spy(splunkDelegateService);
     when(delegateProxyFactory.get(eq(SplunkDelegateService.class), any(SyncTaskContext.class)))
@@ -973,6 +979,67 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHostConnectionValidationForWrongSshPassword() {
+    HostConnectionAttributes.Builder hostConnectionAttributes =
+        HostConnectionAttributes.Builder.aHostConnectionAttributes()
+            .withAccessType(AccessType.USER_PASSWORD)
+            .withAuthenticationScheme(SSH_KEY)
+            .withConnectionType(ConnectionType.SSH)
+            .withAccountId(UUIDGenerator.generateUuid())
+            .withKeyless(false)
+            .withSshPassword("testPassword".toCharArray())
+            .withEncryptedSshPassword("encryptedTestPassword")
+            .withUserName("TestUser");
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(hostConnectionAttributes.build());
+
+    when(secretManager.getSecretById(anyString(), anyString())).thenReturn(null);
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .hasMessageContaining("Specified password field doesn't exist")
+        .isInstanceOf(InvalidRequestException.class);
+
+    when(secretManager.getSecretById(anyString(), anyString())).thenReturn(EncryptedData.builder().build());
+    assertThatCode(() -> settingValidationService.validate(attribute)).doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHostConnectionValidationForNonExistingSecrets() {
+    HostConnectionAttributes.Builder hostConnectionAttributes =
+        HostConnectionAttributes.Builder.aHostConnectionAttributes()
+            .withAccessType(AccessType.KEY)
+            .withAuthenticationScheme(SSH_KEY)
+            .withConnectionType(ConnectionType.SSH)
+            .withAccountId(UUIDGenerator.generateUuid())
+            .withKey("Test Private Key".toCharArray())
+            .withEncryptedPassphrase("Encrypted Passphrase")
+            .withEncryptedKey("Encrypted Key")
+            .withKeyless(false)
+            .withUserName("TestUser");
+
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(hostConnectionAttributes.build());
+
+    when(secretManager.getSecretById(anyString(), anyString())).thenReturn(null);
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .hasMessageContaining("Specified Encrypted SSH key File doesn't exist")
+        .isInstanceOf(InvalidRequestException.class);
+
+    when(secretManager.getSecretById(anyString(), anyString()))
+        .thenReturn(EncryptedData.builder().build())
+        .thenReturn(null);
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .hasMessageContaining("Specified Encrypted Passphrase field doesn't exist")
+        .isInstanceOf(InvalidRequestException.class);
+
+    when(secretManager.getSecretById(anyString(), anyString())).thenReturn(EncryptedData.builder().build());
+    assertThatCode(() -> settingValidationService.validate(attribute)).doesNotThrowAnyException();
+  }
+
+  @Test
   @Owner(developers = SAINATH)
   @Category(UnitTests.class)
   public void testGcpConfigSkipValidate() throws IllegalAccessException {
@@ -1036,6 +1103,36 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> settingValidationService.validate(attribute))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("Delegate Selector must be provided if inherit from delegate option is selected.");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testK8sDelegateSelectorValidation() throws IllegalAccessException {
+    KubernetesClusterConfig kubernetesClusterConfig =
+        KubernetesClusterConfig.builder().useKubernetesDelegate(true).skipValidation(true).build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(kubernetesClusterConfig);
+
+    GcpHelperServiceManager gcpHelperServiceManager = mock(GcpHelperServiceManager.class);
+
+    FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
+
+    // useDelegate = true, delegateSelector Provided
+    kubernetesClusterConfig.setDelegateSelectors(Collections.singleton("delegate1"));
+    assertThat(settingValidationService.validate(attribute)).isTrue();
+
+    // useDelegate = true, no delegateSelector Provided
+    kubernetesClusterConfig.setDelegateSelectors(null);
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No Delegate Selector Provided");
+
+    // useDelegate = true, empty delegateSelector Provided
+    kubernetesClusterConfig.setDelegateSelectors(Collections.singleton(""));
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No or Empty Delegate Selector Provided");
   }
 
   @Test

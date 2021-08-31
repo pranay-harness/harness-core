@@ -2,7 +2,9 @@ package software.wings.yaml.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.NotificationRule;
@@ -40,6 +42,7 @@ import lombok.NoArgsConstructor;
       @Type(value = CanaryWorkflowYaml.class, name = "CANARY"), @Type(value = BuildWorkflowYaml.class, name = "BUILD"),
       @Type(value = MultiServiceWorkflowYaml.class, name = "MULTI_SERVICE")
 })
+@TargetModule(HarnessModule._957_CG_BEANS)
 public abstract class WorkflowYaml extends BaseEntityYaml {
   private String description;
   private List<TemplateExpression.Yaml> templateExpressions;

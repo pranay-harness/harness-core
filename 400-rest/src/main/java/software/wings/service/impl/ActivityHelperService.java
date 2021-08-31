@@ -5,6 +5,10 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -35,8 +39,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Created by anubhaw on 2019-02-26.
  */
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 @ValidateOnExecution
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ActivityHelperService {
   @Inject private ActivityService activityService;
 

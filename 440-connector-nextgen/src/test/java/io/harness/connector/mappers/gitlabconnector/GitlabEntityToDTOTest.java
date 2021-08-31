@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
@@ -32,7 +33,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class GitlabEntityToDTOTest {
+public class GitlabEntityToDTOTest extends CategoryTest {
   @InjectMocks GitlabEntityToDTO gitlabEntityToDTO;
 
   @Before

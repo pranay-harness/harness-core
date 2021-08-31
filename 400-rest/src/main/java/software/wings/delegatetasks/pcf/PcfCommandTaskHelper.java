@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.checkIfFileExist;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
@@ -188,7 +189,7 @@ public class PcfCommandTaskHelper {
         FileUtils.moveFile(tempArtifactFile, artifactFile);
       }
 
-      FileUtils.deleteDirectory(tempWorkingDirectory);
+      deleteDirectoryAndItsContentIfExists(tempWorkingDirectory.getAbsolutePath());
       return artifactFile;
     } else {
       throw new InvalidArgumentsException(

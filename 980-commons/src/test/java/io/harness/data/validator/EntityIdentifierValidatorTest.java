@@ -8,6 +8,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -23,7 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PL)
-public class EntityIdentifierValidatorTest {
+public class EntityIdentifierValidatorTest extends CategoryTest {
   private Validator validator;
 
   @Builder

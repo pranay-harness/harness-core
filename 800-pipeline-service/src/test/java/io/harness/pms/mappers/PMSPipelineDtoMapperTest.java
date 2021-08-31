@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static java.time.LocalDate.now;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -24,7 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
-public class PMSPipelineDtoMapperTest {
+public class PMSPipelineDtoMapperTest extends CategoryTest {
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)

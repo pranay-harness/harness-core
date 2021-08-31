@@ -42,7 +42,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class NexusConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Nexus URL", required = true) @NotEmpty private String nexusUrl;
 

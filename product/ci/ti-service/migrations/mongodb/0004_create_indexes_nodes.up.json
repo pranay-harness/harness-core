@@ -124,6 +124,13 @@
           "vcs_info.branch":1.0
         },
         "name":"account_1_id_1_type_1_vcs_info.repo_1_vcs_info.branch_1"
+      },
+      {
+        "key": {
+          "expireAt": 1
+        },
+        "name": "nodes_expireAt_ttl",
+        "expireAfterSeconds": 60
       }
     ]
   }

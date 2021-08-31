@@ -83,7 +83,32 @@ public class PlanExecutionResource {
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
     try {
       PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml);
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml, false);
+      return ResponseDTO.newResponse(planExecutionResponseDto);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
+  }
+
+  @POST
+  @Path("/{identifier}/v2")
+  @ApiOperation(
+      value = "Execute a pipeline with inputSet pipeline yaml V2", nickname = "postPipelineExecuteWithInputSetYamlv2")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
+  public ResponseDTO<PlanExecutionResponseDto>
+  runPipelineWithInputSetPipelineYamlV2(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    try {
+      PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml, true);
       return ResponseDTO.newResponse(planExecutionResponseDto);
     } catch (IOException ex) {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
@@ -110,7 +135,34 @@ public class PlanExecutionResource {
     try {
       PlanExecutionResponseDto planExecutionResponseDto =
           pipelineExecuteHelper.rerunPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
-              pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml);
+              pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml, false);
+      return ResponseDTO.newResponse(planExecutionResponseDto);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
+  }
+
+  @POST
+  @Path("/rerun/v2/{originalExecutionId}/{identifier}")
+  @ApiOperation(value = "Re Execute a pipeline with inputSet pipeline yaml Version 2",
+      nickname = "rePostPipelineExecuteWithInputSetYamlV2")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
+  public ResponseDTO<PlanExecutionResponseDto>
+  rerunPipelineWithInputSetPipelineYamlV2(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType,
+      @NotNull @PathParam("originalExecutionId") String originalExecutionId,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    try {
+      PlanExecutionResponseDto planExecutionResponseDto =
+          pipelineExecuteHelper.rerunPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+              pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml, true);
       return ResponseDTO.newResponse(planExecutionResponseDto);
     } catch (IOException ex) {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);

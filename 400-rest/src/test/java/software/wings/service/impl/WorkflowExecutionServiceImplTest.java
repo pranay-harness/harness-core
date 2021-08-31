@@ -209,6 +209,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -288,7 +289,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private AuthService authService;
   @Mock private GovernanceConfigService governanceConfigService;
   @Mock private SSHVaultService sshVaultService;
-
+  @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private ServiceInstanceService serviceInstanceService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();

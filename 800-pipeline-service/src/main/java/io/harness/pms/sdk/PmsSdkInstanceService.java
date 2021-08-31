@@ -105,7 +105,8 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
             .set(PmsSdkInstanceKeys.nodeStartEventConsumerConfig, request.getNodeStartEventConsumerConfig())
             .set(PmsSdkInstanceKeys.progressEventConsumerConfig, request.getProgressEventConsumerConfig())
             .set(PmsSdkInstanceKeys.nodeAdviseEventConsumerConfig, request.getNodeAdviseEventConsumerConfig())
-            .set(PmsSdkInstanceKeys.nodeResumeEventConsumerConfig, request.getNodeResumeEventConsumerConfig());
+            .set(PmsSdkInstanceKeys.nodeResumeEventConsumerConfig, request.getNodeResumeEventConsumerConfig())
+            .set(PmsSdkInstanceKeys.startPlanCreationEventConsumerConfig, request.getPlanCreationEventConsumerConfig());
     mongoTemplate.findAndModify(
         query, update, new FindAndModifyOptions().upsert(true).returnNew(true), PmsSdkInstance.class);
   }

@@ -40,7 +40,7 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -667,6 +667,7 @@ public class ActivityServiceImpl implements ActivityService {
   private List<String> getVerificationJobInstanceId(String activityId) {
     Preconditions.checkNotNull(activityId);
     Activity activity = get(activityId);
+    Preconditions.checkNotNull(activity, String.format("Activity does not exists with activityID %s", activityId));
     return activity.getVerificationJobInstanceIds();
   }
 

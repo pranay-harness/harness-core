@@ -4,7 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ServiceNowException;
 
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
@@ -32,6 +35,8 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @AllArgsConstructor
 @Slf4j
+@TargetModule(HarnessModule._957_CG_BEANS)
+@BreakDependencyOn("software.wings.service.impl.servicenow.ServiceNowServiceImpl")
 public class ServiceNowApprovalParams {
   private String snowConnectorId;
   private String issueNumber;

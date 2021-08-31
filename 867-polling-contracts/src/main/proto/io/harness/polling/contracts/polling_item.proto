@@ -10,22 +10,23 @@ message PollingItem {
   Category category = 1;
   Qualifier qualifier = 2;
   io.harness.polling.contracts.PollingPayloadData pollingPayloadData = 3;
-  io.harness.polling.contracts.PollingPayloadData oldPollingPayloadData = 4;
+  string signature = 4;
+  string pollingDocId = 5;
 }
 
 message Qualifier {
   string accountId = 1;
   string organizationId = 2;
   string projectId = 3;
-  string signature = 4;
 }
 
 message PollingResponse {
   repeated string signatures = 1;
   string accountId = 2;
-  io.harness.polling.contracts.Type type = 3;
+  string pollingDocId = 3;
+  io.harness.polling.contracts.Type type = 4;
   oneof PollInfo {
-    BuildInfo buildInfo = 4;
+    BuildInfo buildInfo = 5;
   }
 }
 

@@ -96,6 +96,10 @@ if [[ "" != "$AWS_USE_NEW_PIPELINE" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.awsUseNewPipeline "$AWS_USE_NEW_PIPELINE"
 fi
 
+if [[ "" != "$GCP_SYNC_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.isGcpSyncEnabled "$GCP_SYNC_ENABLED"
+fi
+
 if [[ "" != "$CLUSTER_DATA_GCS_BUCKET" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.clusterDataGcsBucketName "$CLUSTER_DATA_GCS_BUCKET"
 fi
@@ -227,3 +231,4 @@ replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
 replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 
 replace_key_value banzaiRecommenderConfig.baseUrl "$BANZAI_RECOMMENDER_BASEURL"
+replace_key_value awsCurBilling "$AWS_CUR_BILLING"

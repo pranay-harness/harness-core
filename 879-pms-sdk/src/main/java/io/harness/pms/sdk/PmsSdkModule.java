@@ -57,6 +57,8 @@ public class PmsSdkModule extends AbstractModule {
                                                  .grpcServerConfig(config.getGrpcServerConfig())
                                                  .sdkDeployMode(config.getDeploymentMode())
                                                  .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+                                                 .executionPoolConfig(config.getExecutionPoolConfig())
+                                                 .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
                                                  .build()));
     modules.add(
         PmsSdkEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));

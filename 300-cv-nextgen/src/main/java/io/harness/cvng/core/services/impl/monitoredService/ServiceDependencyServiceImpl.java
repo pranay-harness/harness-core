@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.ng.core.utils.NGUtils.validate;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceDependency.Key;
 import io.harness.cvng.core.entities.ServiceDependency.ServiceDependencyKeys;

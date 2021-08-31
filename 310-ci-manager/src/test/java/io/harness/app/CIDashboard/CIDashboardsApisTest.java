@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.CategoryTest;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
@@ -37,7 +38,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class CIDashboardsApisTest {
+public class CIDashboardsApisTest extends CategoryTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @InjectMocks @Spy private CIOverviewDashboardServiceImpl ciOverviewDashboardServiceImpl;
 

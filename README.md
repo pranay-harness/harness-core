@@ -643,3 +643,11 @@ AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple f
 We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
 * Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
 * Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager. 
+
+
+### Hotfix instructions
+
+1. Create a new JIRA ticket(Don't use the feature branch).
+2. Checkout the branch to hotfix on and make the changes.
+3. Bump up the build number in the build.properties.
+4. Create a pull request on this branch and master as well, make sure you merge them on master within the next 3 4 hours.

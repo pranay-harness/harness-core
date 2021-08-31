@@ -133,7 +133,8 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
       }
       log.info("azcopy sync completed");
     } catch (InvalidExitValueException | JsonSyntaxException e) {
-      log.error("Exception during azcopy sync for src={}, dest={} exception={}", sourcePath, destinationPath, e);
+      log.error(e.getMessage(), e);
+      log.info("Exception during azcopy sync for src={}, dest={} exception={}", sourcePath, destinationPath, e);
       // throw new BatchProcessingException("azcopy sync failed {}", e);
       return false;
     }

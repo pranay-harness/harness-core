@@ -43,6 +43,7 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
   String microservice;
   @NotNull EntityDetail entityDetail;
   String syncStatus;
+  String yamlGitConfigId;
   int retryCount;
   @FdIndex @NonFinal Long nextRuntime;
 

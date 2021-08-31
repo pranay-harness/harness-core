@@ -184,6 +184,8 @@ spec:
           value: "${grpcServiceConnectorPort}"
         - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
           value: "false"
+        - name: INSTALL_CLIENT_TOOLS_IN_BACKGROUND
+          value: "true"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

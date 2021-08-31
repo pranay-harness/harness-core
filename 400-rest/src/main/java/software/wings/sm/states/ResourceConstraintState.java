@@ -16,7 +16,9 @@ import static software.wings.sm.states.ResourceConstraintState.AcquireMode.ENSUR
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.ResourceConstraint;
@@ -70,6 +72,7 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @FieldNameConstants(innerTypeName = "ResourceConstraintStateKeys")
 public class ResourceConstraintState extends State {
   @Inject @Transient private AppService applicationService;

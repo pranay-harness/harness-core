@@ -9,12 +9,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.mongo.tracing.Tracer;
+import io.harness.persistence.HQuery;
+import io.harness.serializer.JsonUtils;
 import io.harness.tracing.shapedetector.QueryShapeDetector;
 import io.harness.version.VersionInfoManager;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
+import com.mongodb.DBObject;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
@@ -38,11 +41,11 @@ public class MongoRedisTracer implements Tracer {
   private final ConcurrentHashMap<String, Long> queryStatsCache = new ConcurrentHashMap<>();
 
   @Override
-  public void trace(Query query, Class<?> entityClass, MongoTemplate mongoTemplate) {
+  public void traceSpringQuery(Query query, Class<?> entityClass, MongoTemplate mongoTemplate) {
     try {
       executorService.execute(() -> {
         try {
-          traceInternal(query, entityClass, mongoTemplate);
+          traceSpringQueryInternal(query, entityClass, mongoTemplate);
         } catch (Exception ex) {
           log.error(String.format("Unable to trace spring query: %s", query.getQueryObject().toJson()), ex);
         }
@@ -52,7 +55,22 @@ public class MongoRedisTracer implements Tracer {
     }
   }
 
-  private void traceInternal(Query query, Class<?> entityClass, MongoTemplate mongoTemplate) {
+  @Override
+  public void traceMorphiaQuery(HQuery<?> query) {
+    try {
+      executorService.execute(() -> {
+        try {
+          traceMorphiaQueryInternal(query);
+        } catch (Exception ex) {
+          log.error(String.format("Unable to trace morphia query: %s", query.getQueryObject().toString()), ex);
+        }
+      });
+    } catch (Exception ex) {
+      log.error("Unable to submit morphia trace query task", ex);
+    }
+  }
+
+  private void traceSpringQueryInternal(Query query, Class<?> entityClass, MongoTemplate mongoTemplate) {
     String collectionName = mongoTemplate.getCollectionName(entityClass);
     MongoConverter mongoConverter = mongoTemplate.getConverter();
     MongoPersistentEntity<?> entity = mongoConverter.getMappingContext().getPersistentEntity(entityClass);
@@ -75,7 +93,32 @@ public class MongoRedisTracer implements Tracer {
     command.put("explain", explainDocument);
 
     Document explainResult = mongoTemplate.getDb().runCommand(command);
-    processExplainResult(qHash, explainResult);
+    log.debug(String.format("Explain Results: %s", explainResult.toJson()));
+    producer.send(Message.newBuilder()
+                      .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
+                      .putMetadata(SERVICE_ID, serviceId)
+                      .putMetadata(QUERY_HASH, qHash)
+                      .setData(ByteString.copyFromUtf8(explainResult.toJson()))
+                      .build());
+  }
+
+  private void traceMorphiaQueryInternal(HQuery<?> query) {
+    String collectionName = query.getCollection().getName();
+    Document queryDoc = toDocument(query.getQueryObject());
+    Document sortDoc = toDocument(query.getSortObject());
+    String qHash = QueryShapeDetector.getQueryHash(collectionName, queryDoc, sortDoc);
+    if (skipSample(qHash)) {
+      return;
+    }
+
+    String explainResult = JsonUtils.asJson(query.explain());
+    log.debug(String.format("Explain Results: %s", explainResult));
+    producer.send(Message.newBuilder()
+                      .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
+                      .putMetadata(SERVICE_ID, serviceId)
+                      .putMetadata(QUERY_HASH, qHash)
+                      .setData(ByteString.copyFromUtf8(explainResult))
+                      .build());
   }
 
   private boolean skipSample(String qHash) {
@@ -88,17 +131,14 @@ public class MongoRedisTracer implements Tracer {
     return newCount != 1;
   }
 
-  private void processExplainResult(String qHash, Document explainResult) {
-    log.debug(String.format("Explain Results: %s", explainResult.toJson()));
-    producer.send(Message.newBuilder()
-                      .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
-                      .putMetadata(SERVICE_ID, serviceId)
-                      .putMetadata(QUERY_HASH, qHash)
-                      .setData(ByteString.copyFromUtf8(explainResult.toJson()))
-                      .build());
-  }
-
   private static Document nonNullDocument(Document doc) {
     return doc == null ? new Document() : doc;
+  }
+
+  private static Document toDocument(DBObject dbObject) {
+    if (dbObject == null) {
+      return new Document();
+    }
+    return new Document(dbObject.toMap());
   }
 }

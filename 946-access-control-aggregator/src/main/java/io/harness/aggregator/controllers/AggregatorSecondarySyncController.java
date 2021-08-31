@@ -6,17 +6,16 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.acl.persistence.ACL;
 import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
-import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupRepository;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupRepository;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
-import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
+import io.harness.aggregator.consumers.RoleAssignmentCRUDEventHandler;
+import io.harness.aggregator.consumers.UserGroupCRUDEventHandler;
 import io.harness.aggregator.models.AggregatorSecondarySyncState;
 import io.harness.aggregator.models.AggregatorSecondarySyncState.SecondarySyncStatus;
 import io.harness.aggregator.repositories.AggregatorSecondarySyncStateRepository;
@@ -49,15 +48,15 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
   public AggregatorSecondarySyncController(@Named(ACL.SECONDARY_COLLECTION) ACLRepository aclRepository,
       AggregatorSecondarySyncStateRepository aggregatorSecondarySyncStateRepository,
       RoleAssignmentRepository roleAssignmentRepository, RoleRepository roleRepository,
-      ResourceGroupRepository resourceGroupRepository, UserGroupRepository userGroupRepository, RoleService roleService,
-      UserGroupService userGroupService, ResourceGroupService resourceGroupService,
+      ResourceGroupRepository resourceGroupRepository, UserGroupRepository userGroupRepository,
       AggregatorConfiguration aggregatorConfiguration, PersistentLocker persistentLocker,
       ChangeEventFailureHandler changeEventFailureHandler,
       MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository,
-      ChangeConsumerService changeConsumerService) {
+      ChangeConsumerService changeConsumerService, RoleAssignmentCRUDEventHandler roleAssignmentCRUDEventHandler,
+      UserGroupCRUDEventHandler userGroupCRUDEventHandler) {
     super(aclRepository, roleAssignmentRepository, roleRepository, resourceGroupRepository, userGroupRepository,
-        roleService, userGroupService, resourceGroupService, aggregatorConfiguration, persistentLocker,
-        changeEventFailureHandler, AggregatorJobType.SECONDARY, changeConsumerService);
+        aggregatorConfiguration, persistentLocker, changeEventFailureHandler, AggregatorJobType.SECONDARY,
+        changeConsumerService, roleAssignmentCRUDEventHandler, userGroupCRUDEventHandler);
     this.aggregatorSecondarySyncStateRepository = aggregatorSecondarySyncStateRepository;
     this.aclRepository = aclRepository;
     this.mongoReconciliationOffsetRepository = mongoReconciliationOffsetRepository;

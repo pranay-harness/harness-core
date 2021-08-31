@@ -6,6 +6,9 @@ import static software.wings.common.VerificationConstants.KUBERNETES_HOSTNAME;
 import static software.wings.common.VerificationConstants.STACKDRIVER_DEFAULT_LOG_MESSAGE_FIELD;
 import static software.wings.common.VerificationConstants.STACK_DRIVER_DEFAULT_HOSTNAME;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.api.DeploymentType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
@@ -25,6 +28,7 @@ import org.slf4j.Logger;
 
 @Slf4j
 @FieldNameConstants(innerTypeName = "StackDriverLogStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class StackDriverLogState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "GCP account") private String analysisServerConfigId;
 

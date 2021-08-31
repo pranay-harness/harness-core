@@ -1,10 +1,12 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.security.PermissionAttribute.PermissionType;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
@@ -57,6 +59,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
  * Created by anubhaw on 3/28/16.
  */
 @OwnedBy(PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public interface UserService extends OwnedByAccount {
   /**
    * Consider the following characters in email as illegal and prohibit trial signup with the following characters

@@ -2,7 +2,9 @@ package software.wings.stencils;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,6 +15,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  * @param <T> the type parameter
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface Stencil<T> {
   /**
    * The constant DEFAULT_DISPLAY_ORDER.

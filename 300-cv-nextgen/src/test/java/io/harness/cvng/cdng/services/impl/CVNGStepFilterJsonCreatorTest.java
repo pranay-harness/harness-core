@@ -86,7 +86,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testHandleNode_valid() throws IOException {
     MonitoredServiceDTO monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     for (String yamlFilePath : YAML_FILE_PATHS) {
       FilterCreationResponse filterCreationResponse =
           cvngStepFilterJsonCreator.handleNode(FilterCreationContext.builder()
@@ -117,7 +117,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testHandleNode_whenServiceOrEnvIsRuntimeOrExpression() throws IOException {
     MonitoredServiceDTO monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     for (String yamlFilePath : YAML_FILE_PATHS) {
       YamlField yamlField = getVerifyStepYamlField(yamlFilePath, "<+input>", "Prod");
       FilterCreationContextBuilder filterCreationContextBuilder =
@@ -176,7 +176,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testHandleNode_durationIsExpression() throws IOException {
     MonitoredServiceDTO monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     for (String yamlFilePath : YAML_FILE_PATHS) {
       FilterCreationResponse filterCreationResponse =
           cvngStepFilterJsonCreator.handleNode(FilterCreationContext.builder()

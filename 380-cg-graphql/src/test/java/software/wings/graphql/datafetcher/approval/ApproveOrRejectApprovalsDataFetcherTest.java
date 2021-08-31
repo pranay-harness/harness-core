@@ -28,7 +28,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.query.QLApproveOrRejectApprovalsInput;
+import software.wings.graphql.schema.mutation.approval.input.QLApproveOrRejectApprovalsInput;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import graphql.GraphQLContext;

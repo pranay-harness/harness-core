@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsKmsConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.AwsSecretManagerValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsValidationParamsProvider;
 import io.harness.connector.heartbeat.AzureKeyVaultConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
@@ -63,10 +64,14 @@ import io.harness.connector.mappers.newerlicmapper.NewRelicDTOToEntity;
 import io.harness.connector.mappers.newerlicmapper.NewRelicEntityToDTO;
 import io.harness.connector.mappers.nexusmapper.NexusDTOToEntity;
 import io.harness.connector.mappers.nexusmapper.NexusEntityToDTO;
+import io.harness.connector.mappers.pagerduty.PagerDutyDTOToEntity;
+import io.harness.connector.mappers.pagerduty.PagerDutyEntityToDTO;
 import io.harness.connector.mappers.prometheusmapper.PrometheusDTOToEntity;
 import io.harness.connector.mappers.prometheusmapper.PrometheusEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.AwsKmsDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.AwsKmsEntityToDTO;
+import io.harness.connector.mappers.secretmanagermapper.AwsSecretManagerDTOToEntity;
+import io.harness.connector.mappers.secretmanagermapper.AwsSecretManagerEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.AzureKeyVaultDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.AzureKeyVaultEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsDTOToEntity;
@@ -153,6 +158,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.AWS_KMS,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             AwsKmsConnectorValidationParamsProvider.class, AwsKmsDTOToEntity.class, AwsKmsEntityToDTO.class));
+    registrar.put(ConnectorType.AWS_SECRET_MANAGER,
+        new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
+            AwsSecretManagerValidationParamsProvider.class, AwsSecretManagerDTOToEntity.class,
+            AwsSecretManagerEntityToDTO.class));
     registrar.put(ConnectorType.LOCAL,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, LocalDTOToEntity.class, LocalEntityToDTO.class));
@@ -199,6 +208,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.HTTP_HELM_REPO,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, HttpHelmRepoConnectionValidator.class,
             HttpHelmConnectorValidationParamsProvider.class, HttpHelmDTOToEntity.class, HttpHelmEntityToDTO.class));
+    registrar.put(ConnectorType.PAGER_DUTY,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class));
   }
 
   public static Class<? extends ConnectionValidator> getConnectorValidator(ConnectorType connectorType) {

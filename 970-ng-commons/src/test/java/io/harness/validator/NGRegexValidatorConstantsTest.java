@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.SAMARTH;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -15,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class NGRegexValidatorConstantsTest {
+public class NGRegexValidatorConstantsTest extends CategoryTest {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)

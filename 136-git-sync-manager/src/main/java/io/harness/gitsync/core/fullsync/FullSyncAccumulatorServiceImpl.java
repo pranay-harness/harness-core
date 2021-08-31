@@ -7,12 +7,12 @@ import static io.harness.gitsync.core.beans.GitFullSyncEntityInfo.SyncStatus.QUE
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
+import io.harness.gitsync.FileChange;
 import io.harness.gitsync.FileChanges;
 import io.harness.gitsync.FullSyncServiceGrpc.FullSyncServiceBlockingStub;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
-import io.harness.repositories.fullSync.FullSyncRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorService {
   private final Map<Microservice, FullSyncServiceBlockingStub> fullSyncServiceBlockingStubMap;
   private final EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
-  private final FullSyncRepository fullSyncRepository;
+  private final GitFullSyncEntityService gitFullSyncEntityService;
 
   @Override
   public void triggerFullSync(EntityScopeInfo entityScopeInfo, String messageId) {
@@ -49,8 +49,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
     });
   }
 
-  private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
-      io.harness.gitsync.FileChange entityForFullSync) {
+  private void saveFullSyncEntityInfo(
+      EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice, FileChange entityForFullSync) {
     final GitFullSyncEntityInfo gitFullSyncEntityInfo =
         GitFullSyncEntityInfo.builder()
             .accountIdentifier(entityScopeInfo.getAccountId())
@@ -61,9 +61,10 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
             .messageId(messageId)
             .entityDetail(entityDetailProtoToRestMapper.createEntityDetailDTO(entityForFullSync.getEntityDetail()))
             .syncStatus(QUEUED.name())
+            .yamlGitConfigId(entityScopeInfo.getIdentifier())
             .retryCount(0)
             .build();
-    fullSyncRepository.save(gitFullSyncEntityInfo);
+    gitFullSyncEntityService.save(gitFullSyncEntityInfo);
   }
 
   private ScopeDetails getScopeDetails(EntityScopeInfo entityScopeInfo, String messageId) {
