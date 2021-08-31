@@ -645,6 +645,8 @@ public class ViewsQueryBuilder {
         return FunctionCall.max();
       case MIN:
         return FunctionCall.min();
+      case AVG:
+        return FunctionCall.avg();
       default:
         return null;
     }
