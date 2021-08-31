@@ -210,8 +210,8 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 
 		// this is an error from the git provider
 		out = &pb.GetLatestCommitResponse{
-			Error:    err.Error(),
-			Status:   int32(response.Status),
+			Error:  err.Error(),
+			Status: int32(response.Status),
 		}
 		return out, nil
 	}

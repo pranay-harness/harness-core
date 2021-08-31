@@ -301,56 +301,67 @@ func toVis(n Node, imp bool) types.VisNode {
 	return types.VisNode{Id: n.ClassId, Package: n.Package, Class: n.Class, File: n.File, Type: n.Type, Important: imp}
 }
 
-// Helper function to check whether the file caused the test to be run
-// <pkg, cls>: package and class of a test file
-// It also returns the corresponding vis nodes for the changed file
-func check(ctx context.Context, branch, repo, file, pkg, cls, account string) (bool, []types.VisNode, error) {
-	fn, _ := utils.ParseJavaNode(file)
+/* Helper function which returns corresponding visualisation nodes that led to a test being run.
+pkg and cls here are the package and the class of the test which is run and files are the list
+of changed files in the PR. */
+func getVisDirectRelations(ctx context.Context, files []types.File, branch, repo, pkg, cls, account string) ([]types.VisNode, error) {
+	fl := []string{}
 	resp := []types.VisNode{}
-	var q interface{}
-	if fn.Type == utils.NodeType_SOURCE || fn.Type == utils.NodeType_TEST {
-		q = bson.M{"package": fn.Pkg, "class": fn.Class,
-			"vcs_info.repo":   repo,
-			"vcs_info.branch": branch,
-			"account":         account}
-	} else if fn.Type == utils.NodeType_RESOURCE {
-		q = bson.M{"type": "resource", "file": fn.File,
-			"vcs_info.repo":   repo,
-			"vcs_info.branch": branch,
-			"account":         account}
-	} else {
-		return false, resp, nil
+	for _, f := range files {
+		fl = append(fl, f.Name)
 	}
-	// Check the node IDs corresponding to this query
+	fn, _ := utils.ParseFileNames(fl) // Get file nodes corresponding to changed list
+
 	nodes := []Node{}
-	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
-	if err != nil {
-		return false, resp, err
-	}
-	if len(nodes) == 0 { // No nodes were found for the file
-		return false, resp, nil
-	}
-
-	nids := []int{}
-	m := make(map[int]struct{})
-	for _, n := range nodes {
-		nids = append(nids, n.Id)
-		// Check whether it needs to be added in visualisation or not
-		if _, ok := m[n.ClassId]; ok {
-			continue
+	mResources := make(map[string]struct{})
+	allowedPairs := []interface{}{}
+	for _, n := range fn {
+		if n.Type == utils.NodeType_SOURCE {
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "source", "package": n.Pkg, "class": n.Class,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": branch,
+					"account":         account})
+		} else if n.Type == utils.NodeType_RESOURCE {
+			// There can be multiple resource files with the same name
+			if _, ok := mResources[n.File]; ok {
+				continue
+			}
+			mResources[n.File] = struct{}{}
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "resource", "file": n.File,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": branch,
+					"account":         account})
 		}
-		m[n.ClassId] = struct{}{}
-		resp = append(resp, toVis(n, true))
+	}
+	if len(allowedPairs) == 0 {
+		return resp, nil
 	}
 
-	// Get test ID nodes
-	q = bson.M{"vcs_info.repo": repo,
+	// Check the node IDs corresponding to this query
+	all := []Node{}
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, bson.M{"$or": allowedPairs})
+	if err != nil {
+		return resp, err
+	}
+	if len(all) == 0 { // No nodes were found for any file changes
+		return resp, nil
+	}
+	nids := []int{}
+	// Get node IDs
+	for _, n := range all {
+		nids = append(nids, n.Id)
+	}
+
+	// Get test IDs
+	q := bson.M{"vcs_info.repo": repo,
 		"vcs_info.branch": branch,
 		"account":         account, "package": pkg, "class": cls}
 	nodes = []Node{}
 	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
 	if err != nil {
-		return false, resp, err
+		return resp, err
 	}
 	tids := []int{}
 	for _, n := range nodes {
@@ -362,13 +373,23 @@ func check(ctx context.Context, branch, repo, file, pkg, cls, account string) (b
 	relns := []Relation{}
 	err = mgm.Coll(&Relation{}).SimpleFindWithCtx(ctx, &relns, q)
 	if err != nil {
-		return false, resp, err
+		return resp, err
 	}
 	if len(relns) == 0 {
-		return false, resp, nil
+		return resp, nil
 	}
 
-	return true, resp, nil
+	validNodes := make(map[int]struct{})
+	for _, r := range relns {
+		validNodes[r.Source] = struct{}{}
+	}
+
+	for _, n := range all {
+		if _, ok := validNodes[n.Id]; ok {
+			resp = append(resp, toVis(n, true))
+		}
+	}
+	return resp, nil
 }
 
 // isValid checks whether the test is valid or not
@@ -421,15 +442,14 @@ func (mdb *MongoDb) GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgR
 			return resp, err
 		}
 
-		// Check which changed files led to this test being run and add that in the nodes collection.
-		for _, f := range req.DiffFiles {
-			ok, vnodes, err := check(ctx, branch, req.Repo, f.Name, pkg, cls, req.AccountId)
-			if !ok || err != nil {
-				continue
-			}
-			for _, vn := range vnodes {
-				resp.Nodes = append(resp.Nodes, vn)
-			}
+		// Get the direct relations among the changed files which led to this test being run
+		f, err := getVisDirectRelations(ctx, req.DiffFiles, branch, req.Repo, pkg, cls, req.AccountId)
+		if err != nil {
+			mdb.Log.Errorw("could not get linked files for visualization mapping", "diff_files", req.DiffFiles, "branch", branch,
+				"repo", req.Repo, "package", pkg, "class", cls, "account", req.AccountId)
+		}
+		for _, k := range f {
+			resp.Nodes = append(resp.Nodes, k)
 		}
 		return formatVis(resp), nil
 	} else {
@@ -692,7 +712,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 			} else {
 				// If there is any test which was deleted in this PR, don't process it
 				if _, ok := deletedTests[t]; ok {
-					mdb.Log.Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
 					continue
 				}
 				// Test is valid, add the test
