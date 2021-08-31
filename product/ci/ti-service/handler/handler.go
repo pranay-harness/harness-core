@@ -47,6 +47,8 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config) http.Handler {
 
 	r.Mount("/tests", func() http.Handler {
 		sr := chi.NewRouter()
+		// use the logging middleware
+		sr.Use(logger.Middleware)
 		// Validate the accountId in URL with the token generated above and authorize the request
 		if !config.Secrets.DisableAuth {
 			sr.Use(AuthMiddleware(config))

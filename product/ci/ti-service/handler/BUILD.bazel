@@ -19,6 +19,7 @@ go_library(
         "//product/ci/common/avro:go_default_library",
         "//product/ci/ti-service/config:go_default_library",
         "//product/ci/ti-service/db:go_default_library",
+        "//product/ci/ti-service/logger:go_default_library",
         "//product/ci/ti-service/tidb:go_default_library",
         "//product/ci/ti-service/tidb/mongodb:go_default_library",
         "//product/ci/ti-service/types:go_default_library",

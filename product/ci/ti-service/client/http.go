@@ -16,6 +16,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
+	"go.uber.org/zap"
 )
 
 var _ Client = (*HTTPClient)(nil)
@@ -113,7 +114,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 
 		// do not retry on Canceled or DeadlineExceeded
 		if err := ctx.Err(); err != nil {
-			logger.FromContext(ctx).WithError(err).WithField("path", path).Errorln("http: context canceled")
+			logger.FromContext(ctx).Errorw("http: context canceled", "path", path, zap.Error(err))
 			return res, err
 		}
 
@@ -125,7 +126,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
 			if res.StatusCode >= 500 {
-				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: ti-server error: reconnect and retry")
+				logger.FromContext(ctx).Errorw("http: ti-server error: reconnect and retry", "path", path, zap.Error(err))
 				if duration == backoff.Stop {
 					return nil, err
 				}
@@ -133,7 +134,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 				continue
 			}
 		} else if err != nil {
-			logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: request error. Retrying ...")
+			logger.FromContext(ctx).Errorw("http: request error. Retrying ...", "path", path, zap.Error(err))
 			if duration == backoff.Stop {
 				return nil, err
 			}
