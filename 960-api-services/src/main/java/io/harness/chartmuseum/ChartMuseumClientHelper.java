@@ -177,6 +177,9 @@ public class ChartMuseumClientHelper {
       environment.put("AWS_ROLE_ARN", System.getenv("AWS_ROLE_ARN"));
       environment.put("AWS_WEB_IDENTITY_TOKEN_FILE", System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE"));
       environment.put("AWS_ROLE_SESSION_NAME", "aws-sdk-java-" + System.currentTimeMillis());
+
+      // adding this env variable allows access to IRSA creds:
+      environment.put("AWS_SDK_LOAD_CONFIG", "true");
     } else if (!useIamCredentials) {
       environment.put(AWS_ACCESS_KEY_ID, new String(accessKey));
       environment.put(AWS_SECRET_ACCESS_KEY, new String(secretKey));
