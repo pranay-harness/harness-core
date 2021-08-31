@@ -1,9 +1,11 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
 import static io.harness.ConnectorConstants.INHERIT_FROM_DELEGATE_TYPE_ERROR_MSG;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -20,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@OwnedBy(CDP)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
@@ -40,7 +43,8 @@ public class AwsConnectorDTO extends ConnectorConfigDTO implements DelegateSelec
 
   @Override
   public void validate() {
-    if (AwsCredentialType.INHERIT_FROM_DELEGATE.equals(credential.getAwsCredentialType())
+    if ((AwsCredentialType.INHERIT_FROM_DELEGATE.equals(credential.getAwsCredentialType())
+            || AwsCredentialType.IRSA.equals(credential.getAwsCredentialType()))
         && isEmpty(delegateSelectors)) {
       throw new InvalidRequestException(INHERIT_FROM_DELEGATE_TYPE_ERROR_MSG);
     }

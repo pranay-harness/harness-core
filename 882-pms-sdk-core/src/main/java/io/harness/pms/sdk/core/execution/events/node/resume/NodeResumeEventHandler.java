@@ -55,15 +55,6 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  protected Map<String, String> extractMetricContext(NodeResumeEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
-
-  @Override
   protected String getMetricPrefix(NodeResumeEvent message) {
     return "resume_event";
   }

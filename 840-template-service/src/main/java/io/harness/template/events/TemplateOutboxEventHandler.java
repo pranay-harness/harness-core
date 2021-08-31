@@ -68,6 +68,21 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
     return publishAudit(auditEntry, outboxEvent);
   }
 
+  private boolean handleTemplateDeleteEvent(OutboxEvent outboxEvent) throws IOException {
+    TemplateDeleteEvent templateDeleteEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), TemplateDeleteEvent.class);
+    AuditEntry auditEntry = AuditEntry.builder()
+                                .action(Action.DELETE)
+                                .module(ModuleType.TEMPLATESERVICE)
+                                .oldYaml(templateDeleteEvent.getTemplateEntity().getYaml())
+                                .timestamp(outboxEvent.getCreatedAt())
+                                .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+                                .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+                                .insertId(outboxEvent.getId())
+                                .build();
+    return publishAudit(auditEntry, outboxEvent);
+  }
+
   private boolean publishAudit(AuditEntry auditEntry, OutboxEvent outboxEvent) {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
     Principal principal = null;
@@ -87,6 +102,8 @@ public class TemplateOutboxEventHandler implements OutboxEventHandler {
           return handleTemplateCreateEvent(outboxEvent);
         case TemplateOutboxEvents.TEMPLATE_VERSION_UPDATED:
           return handleTemplateUpdateEvent(outboxEvent);
+        case TemplateOutboxEvents.TEMPLATE_VERSION_DELETED:
+          return handleTemplateDeleteEvent(outboxEvent);
         default:
           return false;
       }

@@ -1,5 +1,6 @@
 package io.harness.beans.stages;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.DependencyElement;
@@ -31,6 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("integrationStageStepParameters")
 @OwnedBy(HarnessTeam.CI)
+@RecasterAlias("io.harness.beans.stages.IntegrationStageStepParametersPMS")
 public class IntegrationStageStepParametersPMS implements SpecParameters, StepParameters {
   Infrastructure infrastructure;
   List<DependencyElement> dependencies;

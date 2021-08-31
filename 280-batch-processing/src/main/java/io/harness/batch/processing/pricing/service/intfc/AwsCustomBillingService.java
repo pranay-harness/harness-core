@@ -1,6 +1,6 @@
 package io.harness.batch.processing.pricing.service.intfc;
 
-import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
+import io.harness.batch.processing.pricing.vmpricing.VMInstanceBillingData;
 import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import java.time.Instant;

@@ -3,6 +3,7 @@ package io.harness.beans.steps.stepinfo;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -31,6 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @YamlSchemaIgnoreSubtype
 @TypeAlias("CleanupStepInfo")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.steps.stepinfo.CleanupStepInfo")
 public class CleanupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;

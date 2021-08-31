@@ -1,3 +1,9 @@
 package io.harness.cvng.core.types;
 
-public enum ChangeCategory { DEPLOYMENT, INFRASTRUCTURE, ALERTS }
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public enum ChangeCategory {
+  @JsonProperty("Deployment") DEPLOYMENT,
+  @JsonProperty("Infrastructure") INFRASTRUCTURE,
+  @JsonProperty("Alert") ALERTS
+}

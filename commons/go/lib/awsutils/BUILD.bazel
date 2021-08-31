@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "awsutils",
     srcs = [
         "s3_session.go",
         "s3_uploader.go",
@@ -9,10 +9,10 @@ go_library(
     importpath = "github.com/wings-software/portal/commons/go/lib/awsutils",
     visibility = ["//visibility:public"],
     deps = [
-        "//commons/go/lib/filesystem:go_default_library",
-        "//commons/go/lib/logs:go_default_library",
-        "//commons/go/lib/utils:go_default_library",
-        "//commons/go/lib/x/trace:go_default_library",
+        "//commons/go/lib/filesystem",
+        "//commons/go/lib/logs",
+        "//commons/go/lib/utils",
+        "//commons/go/lib/x/trace",
         "@com_github_aws_aws_sdk_go//aws:go_default_library",
         "@com_github_aws_aws_sdk_go//aws/credentials:go_default_library",
         "@com_github_aws_aws_sdk_go//aws/session:go_default_library",
@@ -23,13 +23,28 @@ go_library(
 )
 
 go_test(
+    name = "awsutils_test",
+    srcs = ["s3_uploader_test.go"],
+    embed = [":awsutils"],
+    deps = [
+        "//commons/go/lib/awsutils/mocks",
+        "//commons/go/lib/filesystem",
+        "//commons/go/lib/logs",
+        "@com_github_aws_aws_sdk_go//service/s3/s3manager",
+        "@com_github_golang_mock//gomock",
+        "@com_github_stretchr_testify//assert",
+        "@org_uber_go_zap//:zap",
+    ],
+)
+
+go_test(
     name = "go_default_test",
     srcs = ["s3_uploader_test.go"],
     embed = [":go_default_library"],
     deps = [
-        "//commons/go/lib/awsutils/mocks:go_default_library",
-        "//commons/go/lib/filesystem:go_default_library",
-        "//commons/go/lib/logs:go_default_library",
+        "//commons/go/lib/awsutils/mocks",
+        "//commons/go/lib/filesystem",
+        "//commons/go/lib/logs",
         "@com_github_aws_aws_sdk_go//service/s3/s3manager:go_default_library",
         "@com_github_golang_mock//gomock:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",

@@ -245,8 +245,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   }
 
   @Override
-  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason) {
-    perpetualTaskRecordDao.updateTaskUnassignedReason(taskId, reason);
+  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason, int assignTryCount) {
+    perpetualTaskRecordDao.updateTaskUnassignedReason(taskId, reason, assignTryCount);
   }
 
   @Override

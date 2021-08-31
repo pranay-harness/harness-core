@@ -128,6 +128,6 @@ public class GrowthTrendEvaluator {
 
   private void updateCounter(Map<Long, Integer> timeValuePairMap, long windowTimestamp, int value) {
     int currentValue = timeValuePairMap.getOrDefault(windowTimestamp, 0);
-    timeValuePairMap.putIfAbsent(windowTimestamp, value + currentValue);
+    timeValuePairMap.put(windowTimestamp, value + currentValue);
   }
 }

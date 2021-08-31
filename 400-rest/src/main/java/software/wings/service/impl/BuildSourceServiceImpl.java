@@ -770,6 +770,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       log.error("Exception on getGcbTriggers: ", e);
     }
     Assert.notNull(delegateResponseData, "Delegate Response data should not be null!");
+    if (delegateResponseData.getErrorMsg() != null) {
+      log.error("Exception on getGcbTriggers: " + delegateResponseData.getErrorMsg());
+      throw new InvalidRequestException(
+          "Exception while fetching GcbTriggers from the delegate: " + delegateResponseData.getErrorMsg(), USER);
+    }
     return delegateResponseData.getTriggers();
   }
 

@@ -137,6 +137,8 @@ public class ConnectorUtils {
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else if (awsCredentialDTO.getAwsCredentialType() == AwsCredentialType.INHERIT_FROM_DELEGATE) {
       return connectorDetailsBuilder.build();
+    } else if (awsCredentialDTO.getAwsCredentialType() == AwsCredentialType.IRSA) {
+      return connectorDetailsBuilder.build();
     }
     throw new InvalidArgumentsException(format("Unsupported aws credential type:[%s] on connector:[%s]",
         awsCredentialDTO.getAwsCredentialType(), awsConnectorDTO));

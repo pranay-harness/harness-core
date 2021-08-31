@@ -473,8 +473,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
                                                       gitConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
                                                   .build();
 
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap =
-        Collections.singletonMap(CF_PARAMETERS, gitFetchFilesConfig);
+    HashMap<String, GitFetchFilesConfig> gitFetchFileConfigMap = new HashMap();
+    gitFetchFileConfigMap.put(CF_PARAMETERS, gitFetchFilesConfig);
 
     return GitFetchFilesTaskParams.builder()
         .appId(app.getAppId())

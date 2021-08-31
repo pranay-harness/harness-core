@@ -33,12 +33,19 @@ public class AmbianceUtils {
     return clone(ambiance, ambiance.getLevelsList().size() - 1);
   }
 
-  public static Ambiance cloneForChild(@NonNull Ambiance ambiance) {
-    return clone(ambiance, ambiance.getLevelsList().size());
+  public static Ambiance cloneForFinish(@NonNull Ambiance ambiance, Level level) {
+    Ambiance.Builder builder = cloneBuilder(ambiance, ambiance.getLevelsList().size() - 1);
+    if (level.getStepType().getStepCategory() == StepCategory.STAGE) {
+      builder.setStageExecutionId(level.getRuntimeId());
+    }
+    return builder.addLevels(level).build();
   }
 
   public static Ambiance cloneForChild(@NonNull Ambiance ambiance, @NonNull Level level) {
     Ambiance.Builder builder = cloneBuilder(ambiance, ambiance.getLevelsList().size());
+    if (level.getStepType().getStepCategory() == StepCategory.STAGE) {
+      builder.setStageExecutionId(level.getRuntimeId());
+    }
     return builder.addLevels(level).build();
   }
 

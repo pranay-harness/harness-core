@@ -5,6 +5,10 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.prune.PruneEvent.MAX_RETRIES;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.CauseCollection;
 import io.harness.exception.WingsException;
 import io.harness.globalcontex.PurgeGlobalContextData;
@@ -50,6 +54,8 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PruneEntityListener extends QueueListener<PruneEvent> {
   @Inject private WingsPersistence wingsPersistence;
 

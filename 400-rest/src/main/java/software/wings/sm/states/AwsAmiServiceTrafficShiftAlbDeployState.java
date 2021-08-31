@@ -26,6 +26,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.delegate.beans.TaskData;
@@ -338,6 +339,12 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
                                          .map(LbDetailsForAlbTrafficShift::getStageTargetGroupArn)
                                          .collect(toList()))
         .amiInServiceHealthyStateFFEnabled(false)
+        .baseAsgScheduledActionJSONs(featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY,
+                                         awsAmiTrafficShiftAlbData.getApp().getAccountId())
+                ? serviceSetupElement.getBaseAsgScheduledActionJSONs()
+                : null)
+        .amiAsgConfigCopyEnabled(featureFlagService.isEnabled(
+            FeatureName.AMI_ASG_CONFIG_COPY, awsAmiTrafficShiftAlbData.getApp().getAccountId()))
         .build();
   }
 

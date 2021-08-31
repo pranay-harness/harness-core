@@ -2,6 +2,7 @@ package io.harness.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.Outcome;
 
@@ -15,6 +16,7 @@ import lombok.Value;
 @AllArgsConstructor
 @JsonTypeName("Dummy1")
 @OwnedBy(PIPELINE)
+@RecasterAlias("io.harness.utils.DummyVisualizationOutcome")
 public class DummyVisualizationOutcome implements Outcome {
   String test;
 }

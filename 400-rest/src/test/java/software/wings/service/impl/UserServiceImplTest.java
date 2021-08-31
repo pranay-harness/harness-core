@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.NANDAN;
@@ -17,6 +19,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -45,7 +49,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-
+@OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 public class UserServiceImplTest extends WingsBaseTest {
   @Mock AccountService accountService;
   @Inject @InjectMocks UserServiceImpl userServiceImpl;

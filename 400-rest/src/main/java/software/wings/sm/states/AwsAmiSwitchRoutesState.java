@@ -15,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -159,6 +160,11 @@ public class AwsAmiSwitchRoutesState extends State {
             .rollback(rollback)
             .baseScalingPolicyJSONs(serviceSetupElement.getBaseScalingPolicyJSONs())
             .amiInServiceHealthyStateFFEnabled(false)
+            .scheduledActions(featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
+                    ? serviceSetupElement.getBaseAsgScheduledActionJSONs()
+                    : null)
+            .amiAsgConfigCopyEnabled(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId()))
             .build();
 
     AwsAmiSwitchRoutesStateExecutionData executionData =

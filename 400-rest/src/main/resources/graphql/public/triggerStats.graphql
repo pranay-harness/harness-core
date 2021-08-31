@@ -1,0 +1,25 @@
+# Possible entity values for Trigger aggregation
+enum TriggerEntityAggregation {
+  Application
+}
+
+# Set Trigger aggregation criteria
+input TriggerAggregation {
+  # Aggregate by entity
+  entityAggregation: TriggerEntityAggregation
+  # Aggregate by tag
+  tagAggregation: TriggerTagAggregation
+}
+
+# Aggregate by Trigger tag
+input TriggerTagAggregation {
+  # Set entity type
+  entityType: TriggerTagType
+  # Set tag name
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics of Triggers.
+  triggerStats(filters: [TriggerFilter], groupBy: [TriggerAggregation]): Data @dataFetcher(name: triggerStats)
+}

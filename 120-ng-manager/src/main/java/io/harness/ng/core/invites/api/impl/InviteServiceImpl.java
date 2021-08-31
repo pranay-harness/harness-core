@@ -37,6 +37,7 @@ import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.entities.Organization;
@@ -136,6 +137,7 @@ public class InviteServiceImpl implements InviteService {
   private final AccessControlClient accessControlClient;
   private final boolean isNgAuthUIEnabled;
   private final UserClient userClient;
+  private final UserGroupService userGroupService;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
@@ -147,7 +149,7 @@ public class InviteServiceImpl implements InviteService {
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
       InviteRepository inviteRepository, NotificationClient notificationClient, AccountClient accountClient,
       OutboxService outboxService, OrganizationService organizationService, ProjectService projectService,
-      AccessControlClient accessControlClient, UserClient userClient,
+      AccessControlClient accessControlClient, UserClient userClient, UserGroupService userGroupService,
       @Named("isNgAuthUIEnabled") boolean isNgAuthUIEnabled) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
@@ -162,6 +164,7 @@ public class InviteServiceImpl implements InviteService {
     this.projectService = projectService;
     this.isNgAuthUIEnabled = isNgAuthUIEnabled;
     this.accessControlClient = accessControlClient;
+    this.userGroupService = userGroupService;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -380,7 +383,8 @@ public class InviteServiceImpl implements InviteService {
                         .set(InviteKeys.createdAt, new Date())
                         .set(InviteKeys.validUntil,
                             Date.from(OffsetDateTime.now().plusDays(INVITATION_VALIDITY_IN_DAYS).toInstant()))
-                        .set(InviteKeys.roleBindings, newInvite.getRoleBindings());
+                        .set(InviteKeys.roleBindings, newInvite.getRoleBindings())
+                        .set(InviteKeys.userGroups, newInvite.getUserGroups());
     inviteRepository.updateInvite(newInvite.getId(), update);
     outboxService.save(new UserInviteUpdateEvent(newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(),
         newInvite.getProjectIdentifier(), writeDTO(newInvite), writeDTO(newInvite)));
@@ -628,6 +632,7 @@ public class InviteServiceImpl implements InviteService {
 
     List<RoleAssignmentDTO> roleAssignmentDTOs = createRoleAssignmentDTOs(invite, user.getUuid());
     ngUserService.addUserToScope(user.getUuid(), scope, roleAssignmentDTOs, ACCEPTED_INVITE);
+    userGroupService.addUserToUserGroups(scope, user.getUuid(), invite.getUserGroups());
     // Adding user to the account for sign in flow to work
     ngUserService.addUserToCG(user.getUuid(), scope);
     markInviteApprovedAndDeleted(invite);

@@ -13,8 +13,8 @@ public class ChangeSourceEntityAndDTOTransformer {
   @Inject Injector injector;
 
   public ChangeSource getEntity(ServiceEnvironmentParams environmentParams, ChangeSourceDTO changeSourceDTO) {
-    ChangeSourceSpecTransformer changeSourceSpecTransformer =
-        injector.getInstance(Key.get(ChangeSourceSpecTransformer.class, Names.named(changeSourceDTO.getType().name())));
+    ChangeSourceSpecTransformer changeSourceSpecTransformer = injector.getInstance(
+        Key.get(ChangeSourceSpecTransformer.class, Names.named(changeSourceDTO.getSpec().getType().name())));
     return changeSourceSpecTransformer.getEntity(environmentParams, changeSourceDTO);
   }
 

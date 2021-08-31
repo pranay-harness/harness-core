@@ -19,6 +19,7 @@ import lombok.experimental.FieldDefaults;
 public class QLCEViewEntityStatsDataPoint {
   String name;
   String id;
+  String pricingSource;
   Number cost;
   Number costTrend;
   boolean isClusterPerspective;

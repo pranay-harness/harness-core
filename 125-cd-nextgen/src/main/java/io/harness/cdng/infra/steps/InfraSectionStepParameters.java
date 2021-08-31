@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.steps;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
@@ -15,6 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @Builder
 @TypeAlias("infraSectionStepParameters")
+@RecasterAlias("io.harness.cdng.infra.steps.InfraSectionStepParameters")
 public class InfraSectionStepParameters implements StepParameters {
   String childNodeID;
   private EnvironmentYaml environment;

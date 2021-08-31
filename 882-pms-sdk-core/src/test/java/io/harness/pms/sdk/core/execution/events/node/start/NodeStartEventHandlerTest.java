@@ -60,18 +60,6 @@ public class NodeStartEventHandlerTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testExtractMetricContext() {
-    Map<String, String> metricsMap = nodeStartEventHandler.extractMetricContext(nodeStartEvent);
-    assertThat(metricsMap.isEmpty()).isFalse();
-    assertThat(metricsMap.size()).isEqualTo(3);
-    assertThat(metricsMap.get("accountId")).isEqualTo(AmbianceTestUtils.ACCOUNT_ID);
-    assertThat(metricsMap.get("orgIdentifier")).isEqualTo(AmbianceTestUtils.ORG_ID);
-    assertThat(metricsMap.get("projectIdentifier")).isEqualTo(AmbianceTestUtils.PROJECT_ID);
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
   public void testMetricPrefix() {
     assertThat(nodeStartEventHandler.getMetricPrefix(nodeStartEvent)).isEqualTo("start_event");
   }

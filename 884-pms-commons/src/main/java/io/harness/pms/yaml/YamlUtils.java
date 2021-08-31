@@ -66,13 +66,13 @@ public class YamlUtils {
 
   public YamlField readTree(String content) throws IOException {
     JsonNode rootJsonNode = mapper.readTree(content);
-    YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode);
     return new YamlField(rootYamlNode);
   }
 
   public YamlField toByteString(String content) throws IOException {
     JsonNode rootJsonNode = mapper.readTree(content);
-    YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode);
     return new YamlField(rootYamlNode);
   }
 
@@ -93,7 +93,7 @@ public class YamlUtils {
       return null;
     }
     injectUuidWithLeafUuid(rootJsonNode);
-    YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode);
     return new YamlField(rootYamlNode);
   }
 
