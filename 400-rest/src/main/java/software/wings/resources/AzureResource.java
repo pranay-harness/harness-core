@@ -42,7 +42,7 @@ public class AzureResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> listSubscriptions(
       @QueryParam("accountId") String accountId, @QueryParam("cloudProviderId") String cloudProviderId) {
-    return new RestResponse(azureResourceService.listSubscriptions(cloudProviderId));
+    return new RestResponse(azureResourceService.listSubscriptions(accountId, cloudProviderId));
   }
 
   @GET
@@ -104,7 +104,7 @@ public class AzureResource {
   public RestResponse<List<AzureResourceGroup>> listResourceGroups(@QueryParam("accountId") String accountId,
       @QueryParam("cloudProviderId") String cloudProviderId,
       @PathParam(value = "subscriptionId") String subscriptionId) {
-    return new RestResponse(azureResourceService.listResourceGroups(cloudProviderId, subscriptionId));
+    return new RestResponse(azureResourceService.listResourceGroups(accountId, cloudProviderId, subscriptionId));
   }
 
   @GET
@@ -115,7 +115,7 @@ public class AzureResource {
       @QueryParam("cloudProviderId") String cloudProviderId, @PathParam(value = "subscriptionId") String subscriptionId,
       @PathParam(value = "resourceGroupName") String resourceGroupName) {
     return new RestResponse(
-        azureResourceService.listImageGalleries(cloudProviderId, subscriptionId, resourceGroupName));
+        azureResourceService.listImageGalleries(accountId, cloudProviderId, subscriptionId, resourceGroupName));
   }
 
   @GET
@@ -128,8 +128,8 @@ public class AzureResource {
       @PathParam(value = "subscriptionId") String subscriptionId,
       @PathParam(value = "resourceGroupName") String resourceGroupName,
       @PathParam(value = "galleryName") String galleryName) {
-    return new RestResponse(
-        azureResourceService.listImageDefinitions(cloudProviderId, subscriptionId, resourceGroupName, galleryName));
+    return new RestResponse(azureResourceService.listImageDefinitions(
+        accountId, cloudProviderId, subscriptionId, resourceGroupName, galleryName));
   }
   /**
    * List Azure regions.
