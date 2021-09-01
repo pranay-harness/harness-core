@@ -1193,7 +1193,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (appManifest == null) {
       return null;
     }
-    if (appManifest.getStoreType() != StoreType.OC_TEMPLATES) {
+    if (appManifest.getStoreType() != StoreType.OC_TEMPLATES
+        && appManifest.getStoreType() != StoreType.CUSTOM_OPENSHIFT_TEMPLATE) {
       return null;
     }
     return generateKindBasedFolder(accountId, service, servicePath, AppManifestKind.OC_PARAMS);
