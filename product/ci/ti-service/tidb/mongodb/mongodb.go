@@ -611,15 +611,18 @@ func contains(s []int, check int) bool {
 	return false
 }
 
-// TODO: (Vistaar) Improve this to be a map so that we don't have to iterate
-// over all the files each time.
+// Check whether the vis node occurs in the changed files list or not
 func isImportant(vn types.VisNode, diffFiles []types.File) bool {
 	for _, f := range diffFiles {
 		n, _ := utils.ParseJavaNode(f.Name)
-		if vn.File != "" && n.File == vn.File { // For resource type
-			return true
-		} else if vn.Package == n.Pkg && vn.Class == n.Class { // For source or test types
-			return true
+		if vn.Type == "resource" { // Resource type
+			if vn.File == n.File {
+				return true
+			}
+		} else { // Source or test type
+			if vn.Package == n.Pkg && vn.Class == n.Class {
+				return true
+			}
 		}
 	}
 	return false
