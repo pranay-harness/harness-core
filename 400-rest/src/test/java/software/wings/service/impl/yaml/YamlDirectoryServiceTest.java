@@ -5,7 +5,6 @@ import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.HINGER;
-import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.Application.Builder.anApplication;
@@ -36,7 +35,6 @@ import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.DOCKER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
@@ -51,7 +49,6 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.UUID;
@@ -63,7 +60,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -86,7 +82,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
-import software.wings.beans.HelmChartConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.JenkinsConfig;
@@ -160,7 +155,7 @@ import org.mockito.Mock;
 
 public class YamlDirectoryServiceTest extends WingsBaseTest {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
-  private static final String APP_MANIFEST_NAME = "APP_MANIFEST_NAME";
+
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -970,44 +965,12 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     doReturn(governanceConfig).when(governanceConfigService).get(anyString());
     when(featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, ACCOUNT_ID)).thenReturn(true);
 
-    final FolderNode governanceConfigFolderNode = yamlDirectoryService.doGovernance(ACCOUNT_ID, UUID, directoryPath);
+    final FolderNode governanceConfigFolderNode = yamlDirectoryService.doGovernance(ACCOUNT_ID, directoryPath);
     List<DirectoryNode> governanceConfigDirectoryNode =
         getNodesOfClass(governanceConfigFolderNode, GovernanceConfig.class);
 
     assertThat(governanceConfigDirectoryNode).hasSize(1);
     assertThat(governanceConfigDirectoryNode.get(0).getName())
         .isEqualTo(YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER + YAML_EXTENSION);
-  }
-
-  @Test
-  @Owner(developers = PRABU)
-  @Category(UnitTests.class)
-  public void shouldGenerateMultipleApplicationManifestYaml() {
-    ApplicationManifest applicationManifest =
-        ApplicationManifest.builder()
-            .name(APP_MANIFEST_NAME)
-            .serviceId(SERVICE_ID)
-            .storeType(StoreType.HelmChartRepo)
-            .kind(AppManifestKind.K8S_MANIFEST)
-            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).build())
-            .build();
-    ApplicationManifest applicationManifest2 =
-        ApplicationManifest.builder()
-            .name(APP_MANIFEST_NAME + 2)
-            .serviceId(SERVICE_ID)
-            .storeType(StoreType.HelmChartRepo)
-            .kind(AppManifestKind.K8S_MANIFEST)
-            .helmChartConfig(HelmChartConfig.builder().connectorId(SETTING_ID).build())
-            .build();
-
-    when(applicationManifestService.getManifestsByServiceId(any(), any(), eq(AppManifestKind.K8S_MANIFEST)))
-        .thenReturn(Arrays.asList(applicationManifest, applicationManifest2));
-    when(featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, ACCOUNT_ID)).thenReturn(true);
-    Service service = Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).build();
-    FolderNode folderNode =
-        yamlDirectoryService.generateApplicationManifestNodeForService(ACCOUNT_ID, service, directoryPath);
-    assertThat(folderNode.getChildren()).hasSize(2);
-    assertThat(folderNode.getChildren().get(0).getName()).isEqualTo(APP_MANIFEST_NAME + ".yaml");
-    assertThat(folderNode.getChildren().get(1).getName()).isEqualTo(APP_MANIFEST_NAME + "2.yaml");
   }
 }
