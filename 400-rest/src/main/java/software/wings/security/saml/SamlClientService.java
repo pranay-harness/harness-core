@@ -46,6 +46,7 @@ public class SamlClientService {
   @Inject SSOSettingService ssoSettingService;
   private static final String GOOGLE_HOST = "accounts.google.com";
   private static final String AZURE_HOST = "login.microsoftonline.com";
+  private static final String ACCOUNT_ID = "accountId";
 
   /**
    * This field is identifier of SAML application and is used to point to the
@@ -124,8 +125,8 @@ public class SamlClientService {
   }
 
   // TODO: this method should return HIterator and close at the end
-  public Iterator<SamlSettings> getSamlSettingsFromOrigin(String origin) {
-    return ssoSettingService.getSamlSettingsIteratorByOrigin(origin);
+  public Iterator<SamlSettings> getSamlSettingsFromOrigin(String origin, String accountId) {
+    return ssoSettingService.getSamlSettingsIteratorByOrigin(origin, accountId);
   }
 
   public HostType getHostType(@NotBlank String url) throws URISyntaxException {

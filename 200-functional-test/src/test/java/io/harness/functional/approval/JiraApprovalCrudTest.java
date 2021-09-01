@@ -9,6 +9,8 @@ import static software.wings.sm.StateType.APPROVAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
@@ -38,10 +40,12 @@ import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class JiraApprovalCrudTest extends AbstractFunctionalTest {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
@@ -64,6 +68,7 @@ public class JiraApprovalCrudTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void shouldCreateReadUpdateApprovalStepInWorkflow() {
     Environment environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     assertThat(environment).isNotNull();

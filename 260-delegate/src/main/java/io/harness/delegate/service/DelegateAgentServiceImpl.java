@@ -528,7 +528,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
-                                          .version(getVersionWithPatch())
+                                          .version(getVersion())
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())

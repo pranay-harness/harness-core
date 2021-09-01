@@ -95,6 +95,8 @@ public class PipelineServiceConfiguration extends Configuration {
   private PipelineServiceIteratorsConfig iteratorsConfig;
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
+  private DelegatePollingConfig delegatePollingConfig;
+
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");

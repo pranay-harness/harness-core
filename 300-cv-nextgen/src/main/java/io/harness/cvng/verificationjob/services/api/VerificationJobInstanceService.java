@@ -49,4 +49,6 @@ public interface VerificationJobInstanceService {
   CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId);
   Set<DatasourceTypeDTO> getDataSourcetypes(List<String> verificationJobInstanceIds);
   void abort(List<String> verficationJobInstanceIds);
+  List<String> getCVConfigIdsForVerificationJobInstance(
+      String verificationJobInstanceId, List<String> filterIdentifiers);
 }

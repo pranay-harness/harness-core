@@ -5250,6 +5250,20 @@ container_pull(
     tag = "safe-ubuntu18.04-sec1338",
 )
 
+container_pull(
+    name = "openjdk_8u242",
+    registry = "index.docker.io",
+    repository = "adoptopenjdk/openjdk8",
+    tag = "x86_64-alpine-jdk8u242-b08",
+)
+
+container_pull(
+    name = "nginx",
+    registry = "index.docker.io",
+    repository = "nginx",
+    tag = "latest",
+)
+
 load(
     "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",

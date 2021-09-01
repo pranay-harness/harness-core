@@ -1,11 +1,8 @@
 package io.harness.cvng.verificationjob.resources;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
-import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
-import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -41,19 +38,5 @@ public class DeploymentLogAnalysisResource {
       @QueryParam("accountId") String accountId, @QueryParam("hostName") String hostName) {
     return new RestResponse(
         deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, hostName));
-  }
-
-  @Path("/{verificationJobInstanceId}")
-  @GET
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "get logs for given verificationJob", nickname = "getLogAnalysisResult")
-  public RestResponse<PageResponse<LogAnalysisClusterDTO>> getLogAnalysisResult(
-      @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
-      @QueryParam("accountId") String accountId, @QueryParam("label") Integer label,
-      @QueryParam("pageNumber") int pageNumber, @QueryParam("hostName") String hostName,
-      @QueryParam("clusterType") ClusterType clusterType) {
-    return new RestResponse(deploymentLogAnalysisService.getLogAnalysisResult(
-        accountId, verificationJobInstanceId, label, pageNumber, DEFAULT_PAGE_SIZE, hostName, clusterType));
   }
 }
