@@ -40,10 +40,20 @@ public class HarnessCDChangeEventTransformerTest {
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentEndTime());
     Assertions.assertThat(harnessCDChangeEvent.getDeploymentStartTime())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentStartTime());
+    Assertions.assertThat(harnessCDChangeEvent.getStageStepId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageStepId());
+    Assertions.assertThat(harnessCDChangeEvent.getPlanExecutionId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getPlanExecutionId());
     Assertions.assertThat(harnessCDChangeEvent.getStageId())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageId());
-    Assertions.assertThat(harnessCDChangeEvent.getExecutionId())
-        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getExecutionId());
+    Assertions.assertThat(harnessCDChangeEvent.getPipelineId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getPipelineId());
+    Assertions.assertThat(harnessCDChangeEvent.getArtifactTag())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getArtifactTag());
+    Assertions.assertThat(harnessCDChangeEvent.getArtifactType())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getArtifactType());
+    Assertions.assertThat(harnessCDChangeEvent.getStatus())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStatus());
   }
 
   @Test
@@ -61,9 +71,19 @@ public class HarnessCDChangeEventTransformerTest {
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentEndTime());
     Assertions.assertThat(harnessCDChangeEvent.getDeploymentStartTime())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentStartTime());
+    Assertions.assertThat(harnessCDChangeEvent.getStageStepId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageStepId());
+    Assertions.assertThat(harnessCDChangeEvent.getPlanExecutionId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getPlanExecutionId());
+    Assertions.assertThat(harnessCDChangeEvent.getPipelineId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getPipelineId());
     Assertions.assertThat(harnessCDChangeEvent.getStageId())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageId());
-    Assertions.assertThat(harnessCDChangeEvent.getExecutionId())
-        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getExecutionId());
+    Assertions.assertThat(harnessCDChangeEvent.getArtifactType())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getArtifactType());
+    Assertions.assertThat(harnessCDChangeEvent.getArtifactTag())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getArtifactTag());
+    Assertions.assertThat(harnessCDChangeEvent.getStatus())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStatus());
   }
 }

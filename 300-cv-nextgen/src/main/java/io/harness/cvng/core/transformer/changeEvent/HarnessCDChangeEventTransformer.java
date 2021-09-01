@@ -14,12 +14,17 @@ public class HarnessCDChangeEventTransformer
         .orgIdentifier(changeEventDTO.getOrgIdentifier())
         .projectIdentifier(changeEventDTO.getProjectIdentifier())
         .serviceIdentifier(changeEventDTO.getServiceIdentifier())
+        .changeSourceIdentifier(changeEventDTO.getChangeSourceIdentifier())
         .envIdentifier(changeEventDTO.getEnvIdentifier())
         .eventTime(changeEventDTO.getEventTime())
         .type(changeEventDTO.getType())
         .status(metaData.getStatus())
+        .planExecutionId(metaData.getPlanExecutionId())
+        .stageStepId(metaData.getStageStepId())
+        .pipelineId(metaData.getPipelineId())
         .stageId(metaData.getStageId())
-        .executionId(metaData.getExecutionId())
+        .artifactTag(metaData.getArtifactTag())
+        .artifactType(metaData.getArtifactType())
         .deploymentStartTime(metaData.getDeploymentStartTime())
         .deploymentEndTime(metaData.getDeploymentEndTime())
         .build();
@@ -31,8 +36,12 @@ public class HarnessCDChangeEventTransformer
         .deploymentEndTime(changeEvent.getDeploymentEndTime())
         .deploymentStartTime(changeEvent.getDeploymentStartTime())
         .status(changeEvent.getStatus())
-        .executionId(changeEvent.getExecutionId())
+        .planExecutionId(changeEvent.getPlanExecutionId())
+        .stageStepId(changeEvent.getStageStepId())
+        .pipelineId(changeEvent.getPipelineId())
         .stageId(changeEvent.getStageId())
+        .artifactTag(changeEvent.getArtifactTag())
+        .artifactType(changeEvent.getArtifactType())
         .build();
   }
 }

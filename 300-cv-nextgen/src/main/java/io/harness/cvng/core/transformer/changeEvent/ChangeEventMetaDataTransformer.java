@@ -13,6 +13,7 @@ public abstract class ChangeEventMetaDataTransformer<E extends ChangeEvent, M ex
         .orgIdentifier(changeEvent.getOrgIdentifier())
         .projectIdentifier(changeEvent.getProjectIdentifier())
         .serviceIdentifier(changeEvent.getServiceIdentifier())
+        .changeSourceIdentifier(changeEvent.getChangeSourceIdentifier())
         .envIdentifier(changeEvent.getEnvIdentifier())
         .eventTime(changeEvent.getEventTime())
         .type(changeEvent.getType())

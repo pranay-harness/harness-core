@@ -14,41 +14,44 @@ import io.harness.persistence.HPersistence;
 import com.google.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class ChangeEventServiceImpl implements ChangeEventService {
   @Inject ChangeSourceService changeSourceService;
   @Inject ChangeEventEntityAndDTOTransformer transformer;
-  @Inject private Map<ChangeSourceType, ChangeEventUpdatableEntity> eventMongoUtilMap;
+  @Inject private Map<ChangeSourceType, ChangeEventUpdatableEntity> changeEventUpdatableEntityMap;
   @Inject HPersistence hPersistence;
 
   @Override
-  public Boolean register(String accountId, ChangeEventDTO changeEventDTO) {
+  public Boolean register(ChangeEventDTO changeEventDTO) {
     ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
-                                                            .accountIdentifier(accountId)
+                                                            .accountIdentifier(changeEventDTO.getAccountId())
                                                             .orgIdentifier(changeEventDTO.getOrgIdentifier())
                                                             .projectIdentifier(changeEventDTO.getProjectIdentifier())
                                                             .serviceIdentifier(changeEventDTO.getServiceIdentifier())
                                                             .environmentIdentifier(changeEventDTO.getEnvIdentifier())
                                                             .build();
-    Set<ChangeSourceDTO> changeSourceDTOS =
+    Optional<ChangeSourceDTO> changeSourceDTOOptional =
         changeSourceService.getByType(serviceEnvironmentParams, changeEventDTO.getType())
             .stream()
             .filter(source -> source.isEnabled())
-            .collect(Collectors.toSet());
-    if (changeSourceDTOS.isEmpty()) {
+            .findAny();
+    if (!changeSourceDTOOptional.isPresent()) {
       return false;
     }
+    if (StringUtils.isEmpty(changeEventDTO.getChangeSourceIdentifier())) {
+      changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
+    }
+    changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
     upsert(changeEventDTO);
     return true;
   }
 
   private void upsert(ChangeEventDTO changeEventDTO) {
     ChangeEvent changeEvent = transformer.getEntity(changeEventDTO);
-    ChangeEventUpdatableEntity changeEventUpdatableEntity = eventMongoUtilMap.get(changeEventDTO.getType());
-    Optional<ChangeEvent> optionalFromDb = getFromDb(changeEvent, changeEventUpdatableEntity);
+    ChangeEventUpdatableEntity changeEventUpdatableEntity = changeEventUpdatableEntityMap.get(changeEventDTO.getType());
+    Optional<ChangeEvent> optionalFromDb = getFromDb(changeEvent);
     if (optionalFromDb.isPresent()) {
       UpdateOperations<ChangeEvent> updateOperations =
           hPersistence.createUpdateOperations(changeEventUpdatableEntity.getEntityClass());
@@ -59,10 +62,10 @@ public class ChangeEventServiceImpl implements ChangeEventService {
     }
   }
 
-  private Optional<ChangeEvent> getFromDb(
-      ChangeEvent changeEventDTO, ChangeEventUpdatableEntity changeEventUpdatableEntity) {
+  private Optional<ChangeEvent> getFromDb(ChangeEvent changeEventDTO) {
+    ChangeEventUpdatableEntity changeEventUpdatableEntity = changeEventUpdatableEntityMap.get(changeEventDTO.getType());
     return Optional.ofNullable(
-        (ChangeEvent) eventMongoUtilMap.get(changeEventDTO.getType())
+        (ChangeEvent) changeEventUpdatableEntity
             .populateKeyQuery(hPersistence.createQuery(changeEventUpdatableEntity.getEntityClass()), changeEventDTO)
             .get());
   }

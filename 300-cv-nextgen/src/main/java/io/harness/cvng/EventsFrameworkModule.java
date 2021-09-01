@@ -32,6 +32,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
@@ -45,6 +49,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, CV_NEXT_GEN.getServiceId(), redisConfig,
               EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT, CV_NEXT_GEN.getServiceId(),
+              redisConfig, EventsFrameworkConstants.CD_DEPLOYMENT_EVENT_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.CD_DEPLOYMENT_EVENT_BATCH_SIZE));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
           .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redisConfig,

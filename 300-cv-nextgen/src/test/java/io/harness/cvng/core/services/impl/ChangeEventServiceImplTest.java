@@ -42,7 +42,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
         new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())));
     ChangeEventDTO changeEventDTO = builderFactory.getHarnessCDChangeEventDTOBuilder().build();
 
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO);
+    changeEventService.register(changeEventDTO);
 
     ChangeEvent changeEventFromDb = hPersistence.createQuery(ChangeEvent.class).get();
     Assertions.assertThat(changeEventFromDb).isNotNull();
@@ -56,12 +56,11 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
         new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())));
 
     ChangeEventDTO changeEventDTO = builderFactory.getHarnessCDChangeEventDTOBuilder().build();
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO);
+    changeEventService.register(changeEventDTO);
     Long eventTime = 123L;
     ChangeEventDTO changeEventDTO2 = builderFactory.getHarnessCDChangeEventDTOBuilder().eventTime(eventTime).build();
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO2);
+    changeEventService.register(changeEventDTO2);
 
-    Long count = hPersistence.createQuery(ChangeEvent.class).count();
     Assertions.assertThat(hPersistence.createQuery(ChangeEvent.class).count()).isEqualTo(1);
     ChangeEvent changeEventFromDb = hPersistence.createQuery(ChangeEvent.class).get();
     Assertions.assertThat(changeEventFromDb.getEventTime()).isEqualTo(eventTime);
@@ -75,7 +74,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
         new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())));
     ChangeEventDTO changeEventDTO = builderFactory.getHarnessCDChangeEventDTOBuilder().build();
 
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO);
+    changeEventService.register(changeEventDTO);
 
     ChangeEvent changeEventFromDb = hPersistence.createQuery(ChangeEvent.class).get();
     Assertions.assertThat(changeEventFromDb).isNotNull();
