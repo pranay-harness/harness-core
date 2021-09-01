@@ -155,8 +155,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> list(UserGroupFilterDTO userGroupFilterDTO) {
     validateFilter(userGroupFilterDTO);
-    Criteria criteria = createScopeCriteria(userGroupFilterDTO.getAccountIdentifier(),
-        userGroupFilterDTO.getOrgIdentifier(), userGroupFilterDTO.getProjectIdentifier());
+    Criteria criteria =
+        createUserGroupFilterCriteria(userGroupFilterDTO.getAccountIdentifier(), userGroupFilterDTO.getOrgIdentifier(),
+            userGroupFilterDTO.getProjectIdentifier(), userGroupFilterDTO.getSearchTerm());
     if (isNotEmpty(userGroupFilterDTO.getDatabaseIdFilter())) {
       criteria.and(UserGroupKeys.id).in(userGroupFilterDTO.getDatabaseIdFilter());
     } else if (isNotEmpty(userGroupFilterDTO.getIdentifierFilter())) {
