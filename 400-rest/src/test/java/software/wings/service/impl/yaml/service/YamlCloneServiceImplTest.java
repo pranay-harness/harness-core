@@ -39,7 +39,6 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.clone.YamlCloneService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.YamlVersion.Type;
@@ -67,7 +66,6 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
   public static final String NEW_WORKFLOW_NAME = "newWorkflowName";
   public static final String NEW_PIPELINE_NAME = "newPipelineName";
   public static final String NEW_PROVISIONER_NAME = "newProvisionerName";
-  @Mock private YamlGitService yamlGitSyncService;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
@@ -115,13 +113,12 @@ public class YamlCloneServiceImplTest extends WingsBaseTest {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
     directoryPath.add(APPLICATIONS_FOLDER);
     directoryPath.add(APP_NAME);
-    FolderNode workflowsFolder =
-        new FolderNode(ACCOUNT_ID, WORKFLOWS_FOLDER, Workflow.class, directoryPath, APP_ID, yamlGitSyncService);
+    FolderNode workflowsFolder = new FolderNode(ACCOUNT_ID, WORKFLOWS_FOLDER, Workflow.class, directoryPath, APP_ID);
 
     DirectoryPath workflowPath = directoryPath.clone();
     String workflowYamlFileName = NEW_WORKFLOW_NAME + YAML_EXTENSION;
     workflowsFolder.addChild(new AppLevelYamlNode(ACCOUNT_ID, WORKFLOW_ID, APP_ID, workflowYamlFileName, Workflow.class,
-        workflowPath.add(workflowYamlFileName), yamlGitSyncService, Type.WORKFLOW));
+        workflowPath.add(workflowYamlFileName), Type.WORKFLOW));
 
     doAnswer(new Answer() {
       @Override

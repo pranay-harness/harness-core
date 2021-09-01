@@ -1,6 +1,5 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlVersion.Type;
 
 public class ServiceLevelYamlNode extends AppLevelYamlNode {
@@ -13,8 +12,8 @@ public class ServiceLevelYamlNode extends AppLevelYamlNode {
   }
 
   public ServiceLevelYamlNode(String accountId, String uuid, String appId, String serviceId, String name,
-      Class theClass, DirectoryPath directoryPath, YamlGitService yamlGitSyncService, Type yamlVersionType) {
-    super(accountId, uuid, appId, name, theClass, directoryPath, yamlGitSyncService, yamlVersionType);
+      Class theClass, DirectoryPath directoryPath, Type yamlVersionType) {
+    super(accountId, uuid, appId, name, theClass, directoryPath, yamlVersionType);
     this.serviceId = serviceId;
   }
 

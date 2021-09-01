@@ -1,6 +1,5 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlVersion.Type;
 
 public class EnvLevelYamlNode extends AppLevelYamlNode {
@@ -8,13 +7,9 @@ public class EnvLevelYamlNode extends AppLevelYamlNode {
 
   public EnvLevelYamlNode() {}
 
-  public EnvLevelYamlNode(String accountId, String name, Class theClass) {
-    super(accountId, name, theClass);
-  }
-
   public EnvLevelYamlNode(String accountId, String uuid, String appId, String envId, String name, Class theClass,
-      DirectoryPath directoryPath, YamlGitService yamlGitSyncService, Type yamlVersionType) {
-    super(accountId, uuid, appId, name, theClass, directoryPath, yamlGitSyncService, yamlVersionType);
+      DirectoryPath directoryPath, Type yamlVersionType) {
+    super(accountId, uuid, appId, name, theClass, directoryPath, yamlVersionType);
     this.envId = envId;
   }
 

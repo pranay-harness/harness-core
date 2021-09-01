@@ -139,7 +139,6 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -206,7 +205,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private EnvironmentService environmentService;
   @Inject private SettingsService settingsService;
 
-  @Inject private InfrastructureMappingService infraMappingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private WorkflowService workflowService;
@@ -520,16 +518,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     String accountId = yamlDirectoryFetchPayload.getAccountId();
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
-    FolderNode configFolder = new FolderNode(accountId, SETUP_FOLDER, Account.class, directoryPath, yamlGitSyncService);
+    FolderNode configFolder = new FolderNode(accountId, SETUP_FOLDER, Account.class, directoryPath);
     long startTime = System.nanoTime();
 
     String defaultVarsYamlFileName = DEFAULTS_YAML;
     configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, defaultVarsYamlFileName, Defaults.class,
-        directoryPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.ACCOUNT_DEFAULTS));
+        directoryPath.clone().add(defaultVarsYamlFileName), Type.ACCOUNT_DEFAULTS));
 
     String tagsFileName = TAGS_YAML;
-    configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, tagsFileName, HarnessTag.class,
-        directoryPath.clone().add(tagsFileName), yamlGitSyncService, Type.TAGS));
+    configFolder.addChild(new YamlNode(
+        accountId, GLOBAL_APP_ID, tagsFileName, HarnessTag.class, directoryPath.clone().add(tagsFileName), Type.TAGS));
 
     List<Future<FolderNode>> futureList = new ArrayList<>();
     User user = UserThreadLocal.get();
@@ -642,7 +640,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @VisibleForTesting
   FolderNode doGovernance(String accountId, String entityId, DirectoryPath directoryPath) {
     FolderNode governanceFolder = new FolderNode(accountId, YamlConstants.GOVERNANCE_FOLDER, GovernanceConfig.class,
-        directoryPath.add(YamlConstants.GOVERNANCE_FOLDER), yamlGitSyncService);
+        directoryPath.add(YamlConstants.GOVERNANCE_FOLDER));
 
     doGovernanceConfig(accountId, directoryPath, governanceFolder, entityId);
     return governanceFolder;
@@ -659,7 +657,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     // if governance config exists
     if (isNotEmpty(governanceConfig.getUuid())) {
       parentFolder.addChild(new AccountLevelYamlNode(accountId, governanceConfig.getUuid(), yamlFileName,
-          GovernanceConfig.class, cpPath.add(yamlFileName), yamlGitSyncService, Type.GOVERNANCE_CONFIG));
+          GovernanceConfig.class, cpPath.add(yamlFileName), Type.GOVERNANCE_CONFIG));
     }
   }
 
@@ -667,7 +665,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   FolderNode doSourceRepoProviders(String accountId, DirectoryPath directoryPath) {
     // create source repo providers
     FolderNode sourceRepoFolder = new FolderNode(accountId, SOURCE_REPO_PROVIDERS_FOLDER, SettingAttribute.class,
-        directoryPath.add(YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER), yamlGitSyncService);
+        directoryPath.add(YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER));
 
     doSourceRepoProviderType(accountId, sourceRepoFolder, SettingVariableTypes.GIT, directoryPath.clone());
     sort(sourceRepoFolder.getChildren(), new DirectoryComparator());
@@ -689,9 +687,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       for (SettingAttribute settingAttribute : settingAttributes) {
         DirectoryPath cpPath = directoryPath.clone();
         String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-        parentFolder.addChild(
-            new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName), yamlGitSyncService));
+        parentFolder.addChild(new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName)));
       }
     }
   }
@@ -706,8 +703,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
-    FolderNode applicationsFolder = new FolderNode(
-        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+    FolderNode applicationsFolder =
+        new FolderNode(accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER));
 
     return doApplication(applicationId, true, appPermissionSummaryMap, applicationsFolder, directoryPath);
   }
@@ -735,8 +732,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode doApplicationLevelOnly(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
       Map<String, AppPermissionSummary> appPermissionSummaryMap, String appId) {
     log.info("Inside doApplicationLevelOnly");
-    FolderNode applicationsFolder = new FolderNode(
-        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+    FolderNode applicationsFolder =
+        new FolderNode(accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER));
 
     List<Application> apps = appService.getAppsByAccountId(accountId);
 
@@ -761,8 +758,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         doApplication(appId, applyPermissions, appPermissionSummaryMap, applicationsFolder, directoryPath);
       } else {
         DirectoryPath appPath = directoryPath.clone();
-        FolderNode appFolder = new FolderNode(
-            accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
+        FolderNode appFolder =
+            new FolderNode(accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid());
         setApplicationGitConfig(accountId, app.getUuid(), appFolder);
         applicationsFolder.addChild(appFolder);
       }
@@ -797,19 +794,19 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     DirectoryPath appPath = directoryPath.clone();
-    FolderNode appFolder = new FolderNode(
-        accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
+    FolderNode appFolder =
+        new FolderNode(accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid());
 
     setApplicationGitConfig(accountId, applicationId, appFolder);
 
     applicationsFolder.addChild(appFolder);
     String yamlFileName = INDEX_YAML;
-    appFolder.addChild(new YamlNode(accountId, app.getUuid(), yamlFileName, Application.class,
-        appPath.clone().add(yamlFileName), yamlGitSyncService, Type.APP));
+    appFolder.addChild(new YamlNode(
+        accountId, app.getUuid(), yamlFileName, Application.class, appPath.clone().add(yamlFileName), Type.APP));
 
     String defaultVarsYamlFileName = DEFAULTS_YAML;
     appFolder.addChild(new AppLevelYamlNode(accountId, app.getUuid(), app.getUuid(), defaultVarsYamlFileName,
-        Defaults.class, appPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.APPLICATION_DEFAULTS));
+        Defaults.class, appPath.clone().add(defaultVarsYamlFileName), Type.APPLICATION_DEFAULTS));
 
     AppPermissionSummary appPermissionSummary =
         appPermissionSummaryMap != null ? appPermissionSummaryMap.get(app.getUuid()) : null;
@@ -953,8 +950,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @VisibleForTesting
   FolderNode doApplications(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
       Map<String, AppPermissionSummary> appPermissionSummaryMap) {
-    FolderNode applicationsFolder = new FolderNode(
-        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+    FolderNode applicationsFolder =
+        new FolderNode(accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER));
 
     Set<String> allowedAppIds = null;
     if (applyPermissions) {
@@ -978,8 +975,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode doServices(
       Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedServices) {
     String accountId = app.getAccountId();
-    FolderNode servicesFolder = new FolderNode(accountId, SERVICES_FOLDER, Service.class,
-        directoryPath.add(SERVICES_FOLDER), app.getUuid(), yamlGitSyncService);
+    FolderNode servicesFolder =
+        new FolderNode(accountId, SERVICES_FOLDER, Service.class, directoryPath.add(SERVICES_FOLDER), app.getUuid());
 
     if (applyPermissions && isEmpty(allowedServices)) {
       return servicesFolder;
@@ -999,18 +996,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         DirectoryPath servicePath = directoryPath.clone();
         String yamlFileName = INDEX_YAML;
-        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), Service.class,
-            servicePath.add(service.getName()), service.getAppId(), yamlGitSyncService);
+        FolderNode serviceFolder = new FolderNode(
+            accountId, service.getName(), Service.class, servicePath.add(service.getName()), service.getAppId());
         servicesFolder.addChild(serviceFolder);
         serviceFolder.addChild(new AppLevelYamlNode(accountId, service.getUuid(), service.getAppId(), yamlFileName,
-            Service.class, servicePath.clone().add(yamlFileName), yamlGitSyncService, Type.SERVICE));
+            Service.class, servicePath.clone().add(yamlFileName), Type.SERVICE));
 
         // ------------------- SERVICE COMMANDS SECTION -----------------------
 
         if (!serviceResourceService.hasInternalCommands(service)) {
           DirectoryPath serviceCommandPath = servicePath.clone().add(COMMANDS_FOLDER);
-          FolderNode serviceCommandsFolder = new FolderNode(accountId, COMMANDS_FOLDER, ServiceCommand.class,
-              serviceCommandPath, service.getAppId(), yamlGitSyncService);
+          FolderNode serviceCommandsFolder =
+              new FolderNode(accountId, COMMANDS_FOLDER, ServiceCommand.class, serviceCommandPath, service.getAppId());
           serviceFolder.addChild(serviceCommandsFolder);
 
           List<ServiceCommand> serviceCommands =
@@ -1021,7 +1018,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String commandYamlFileName = serviceCommand.getName() + YAML_EXTENSION;
             serviceCommandsFolder.addChild(new ServiceLevelYamlNode(accountId, serviceCommand.getUuid(),
                 serviceCommand.getAppId(), serviceCommand.getServiceId(), commandYamlFileName, ServiceCommand.class,
-                serviceCommandPath.clone().add(commandYamlFileName), yamlGitSyncService, Type.SERVICE_COMMAND));
+                serviceCommandPath.clone().add(commandYamlFileName), Type.SERVICE_COMMAND));
           }
         }
 
@@ -1031,8 +1028,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         DirectoryPath deploymentSpecsPath = servicePath.clone().add(DEPLOYMENT_SPECIFICATION_FOLDER);
         if (service.getArtifactType() == ArtifactType.DOCKER) {
-          FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
-              ContainerTask.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+          FolderNode deploymentSpecsFolder = new FolderNode(
+              accountId, DEPLOYMENT_SPECIFICATION_FOLDER, ContainerTask.class, deploymentSpecsPath, service.getAppId());
           serviceFolder.addChild(deploymentSpecsFolder);
 
           ContainerTask kubernetesContainerTask = serviceResourceService.getContainerTaskByDeploymentType(
@@ -1041,7 +1038,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String kubernetesSpecFileName = YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME + YAML_EXTENSION;
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, kubernetesContainerTask.getUuid(),
                 kubernetesContainerTask.getAppId(), service.getUuid(), kubernetesSpecFileName, ContainerTask.class,
-                deploymentSpecsPath.clone().add(kubernetesSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+                deploymentSpecsPath.clone().add(kubernetesSpecFileName), Type.DEPLOYMENT_SPEC));
           }
 
           ContainerTask ecsContainerTask = serviceResourceService.getContainerTaskByDeploymentType(
@@ -1050,7 +1047,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String ecsSpecFileName = YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME + YAML_EXTENSION;
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, ecsContainerTask.getUuid(),
                 ecsContainerTask.getAppId(), service.getUuid(), ecsSpecFileName, ContainerTask.class,
-                deploymentSpecsPath.clone().add(ecsSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+                deploymentSpecsPath.clone().add(ecsSpecFileName), Type.DEPLOYMENT_SPEC));
           }
 
           // This is Service json spec for ECS
@@ -1061,7 +1058,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             deploymentSpecsFolder.addChild(
                 new ServiceLevelYamlNode(accountId, serviceSpecification.getUuid(), serviceSpecification.getAppId(),
                     service.getUuid(), ecsServiceSpecFileName, EcsServiceSpecification.class,
-                    deploymentSpecsPath.clone().add(ecsServiceSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+                    deploymentSpecsPath.clone().add(ecsServiceSpecFileName), Type.DEPLOYMENT_SPEC));
           }
 
           HelmChartSpecification helmChartSpecification =
@@ -1070,11 +1067,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String helmChartFileName = YamlConstants.HELM_CHART_YAML_FILE_NAME + YAML_EXTENSION;
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, helmChartSpecification.getUuid(),
                 helmChartSpecification.getAppId(), service.getUuid(), helmChartFileName, HelmChartSpecification.class,
-                deploymentSpecsPath.clone().add(helmChartFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+                deploymentSpecsPath.clone().add(helmChartFileName), Type.DEPLOYMENT_SPEC));
           }
         } else if (service.getArtifactType() == ArtifactType.AWS_LAMBDA) {
           FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
-              LambdaSpecification.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+              LambdaSpecification.class, deploymentSpecsPath, service.getAppId());
           serviceFolder.addChild(deploymentSpecsFolder);
 
           LambdaSpecification lambdaSpecification =
@@ -1083,11 +1080,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String lambdaSpecFileName = YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION;
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, lambdaSpecification.getUuid(),
                 lambdaSpecification.getAppId(), service.getUuid(), lambdaSpecFileName, LambdaSpecification.class,
-                deploymentSpecsPath.clone().add(lambdaSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+                deploymentSpecsPath.clone().add(lambdaSpecFileName), Type.DEPLOYMENT_SPEC));
           }
         } else if (service.getArtifactType() == ArtifactType.AMI) {
           FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
-              UserDataSpecification.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+              UserDataSpecification.class, deploymentSpecsPath, service.getAppId());
           serviceFolder.addChild(deploymentSpecsFolder);
 
           UserDataSpecification userDataSpecification =
@@ -1096,11 +1093,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String userDataSpecFileName = YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME + YAML_EXTENSION;
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, userDataSpecification.getUuid(),
                 userDataSpecification.getAppId(), service.getUuid(), userDataSpecFileName, UserDataSpecification.class,
-                deploymentSpecsPath.clone().add(userDataSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+                deploymentSpecsPath.clone().add(userDataSpecFileName), Type.DEPLOYMENT_SPEC));
           }
         } else if (service.getArtifactType() == ArtifactType.PCF) {
           FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
-              PcfServiceSpecification.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+              PcfServiceSpecification.class, deploymentSpecsPath, service.getAppId());
           serviceFolder.addChild(deploymentSpecsFolder);
 
           PcfServiceSpecification pcfServiceSpecification =
@@ -1110,7 +1107,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, pcfServiceSpecification.getUuid(),
                 pcfServiceSpecification.getAppId(), service.getUuid(), pcfServiceSpecificationFileName,
                 PcfServiceSpecification.class, deploymentSpecsPath.clone().add(pcfServiceSpecificationFileName),
-                yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+                Type.DEPLOYMENT_SPEC));
           }
         }
 
@@ -1119,8 +1116,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         // ------------------- ARTIFACT STREAMS SECTION -----------------------
         if (!featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
           DirectoryPath artifactStreamsPath = servicePath.clone().add(ARTIFACT_SOURCES_FOLDER);
-          FolderNode artifactStreamsFolder = new FolderNode(accountId, ARTIFACT_SOURCES_FOLDER, ArtifactStream.class,
-              artifactStreamsPath, service.getAppId(), yamlGitSyncService);
+          FolderNode artifactStreamsFolder = new FolderNode(
+              accountId, ARTIFACT_SOURCES_FOLDER, ArtifactStream.class, artifactStreamsPath, service.getAppId());
           serviceFolder.addChild(artifactStreamsFolder);
 
           List<ArtifactStream> artifactStreamList =
@@ -1129,7 +1126,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String artifactYamlFileName = artifactStream.getName() + YAML_EXTENSION;
             artifactStreamsFolder.addChild(new ServiceLevelYamlNode(accountId, artifactStream.getUuid(),
                 artifactStream.fetchAppId(), service.getUuid(), artifactYamlFileName, ArtifactStream.class,
-                artifactStreamsPath.clone().add(artifactYamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
+                artifactStreamsPath.clone().add(artifactYamlFileName), Type.ARTIFACT_STREAM));
           });
         }
 
@@ -1137,17 +1134,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         // ------------------- CONFIG FILES SECTION -----------------------
         DirectoryPath configFilesPath = servicePath.clone().add(CONFIG_FILES_FOLDER);
-        FolderNode configFilesFolder = new FolderNode(
-            accountId, CONFIG_FILES_FOLDER, ConfigFile.class, configFilesPath, service.getAppId(), yamlGitSyncService);
+        FolderNode configFilesFolder =
+            new FolderNode(accountId, CONFIG_FILES_FOLDER, ConfigFile.class, configFilesPath, service.getAppId());
         serviceFolder.addChild(configFilesFolder);
 
         List<ConfigFile> configFiles =
             configService.getConfigFilesForEntity(service.getAppId(), DEFAULT_TEMPLATE_ID, service.getUuid());
         configFiles.forEach(configFile -> {
           String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
-          configFilesFolder.addChild(new ServiceLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
-              configFile.getEntityId(), configFileName, ConfigFile.class, configFilesPath.clone().add(configFileName),
-              yamlGitSyncService, Type.CONFIG_FILE));
+          configFilesFolder.addChild(
+              new ServiceLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(), configFile.getEntityId(),
+                  configFileName, ConfigFile.class, configFilesPath.clone().add(configFileName), Type.CONFIG_FILE));
         });
 
         // ------------------- END CONFIG FILES SECTION -----------------------
@@ -1208,11 +1205,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return null;
     }
     DirectoryPath folderPath = servicePath.clone().add(appManifestKind.getYamlFolderName());
-    FolderNode folder = new FolderNode(accountId, appManifestKind.getYamlFolderName(), ApplicationManifest.class,
-        folderPath, service.getAppId(), yamlGitSyncService);
+    FolderNode folder = new FolderNode(
+        accountId, appManifestKind.getYamlFolderName(), ApplicationManifest.class, folderPath, service.getAppId());
     folder.addChild(new ServiceLevelYamlNode(accountId, appManifest.getUuid(), service.getAppId(), service.getUuid(),
-        INDEX_YAML, ApplicationManifest.class, folderPath.clone().add(INDEX_YAML), yamlGitSyncService,
-        Type.APPLICATION_MANIFEST));
+        INDEX_YAML, ApplicationManifest.class, folderPath.clone().add(INDEX_YAML), Type.APPLICATION_MANIFEST));
     if (appManifest.getStoreType() == StoreType.Local) {
       List<ManifestFile> manifestFiles =
           applicationManifestService.getManifestFilesByAppManifestId(service.getAppId(), appManifest.getUuid());
@@ -1220,7 +1216,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         ManifestFile valuesFile = manifestFiles.get(0);
         folder.addChild(new ServiceLevelYamlNode(accountId, valuesFile.getUuid(), service.getAppId(), service.getUuid(),
             valuesFile.getFileName(), ManifestFile.class, folderPath.clone().add(valuesFile.getFileName()),
-            yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+            Type.APPLICATION_MANIFEST_FILE));
       }
     }
     return folder;
@@ -1232,8 +1228,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     String manifestFolderName = getApplicationManifestFolderName(service);
 
-    FolderNode applicationManifestFolder = new FolderNode(accountId, manifestFolderName, ApplicationManifest.class,
-        applicationManifestPath, service.getAppId(), yamlGitSyncService);
+    FolderNode applicationManifestFolder = new FolderNode(
+        accountId, manifestFolderName, ApplicationManifest.class, applicationManifestPath, service.getAppId());
 
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
 
@@ -1247,7 +1243,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             String yamlFileName = getApplicationManifestYamlName(applicationManifest);
             applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
                 service.getAppId(), service.getUuid(), yamlFileName, ApplicationManifest.class,
-                applicationManifestPath.clone().add(yamlFileName), yamlGitSyncService, Type.APPLICATION_MANIFEST));
+                applicationManifestPath.clone().add(yamlFileName), Type.APPLICATION_MANIFEST));
 
             if (StoreType.Local == applicationManifest.getStoreType()) {
               FolderNode manifestFileFolder =
@@ -1267,7 +1263,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         String yamlFileName = getApplicationManifestYamlName(applicationManifest);
         applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
             service.getAppId(), service.getUuid(), yamlFileName, ApplicationManifest.class,
-            applicationManifestPath.clone().add(yamlFileName), yamlGitSyncService, Type.APPLICATION_MANIFEST));
+            applicationManifestPath.clone().add(yamlFileName), Type.APPLICATION_MANIFEST));
 
         if (StoreType.Local == applicationManifest.getStoreType()) {
           FolderNode manifestFileFolder =
@@ -1321,8 +1317,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public FolderNode generateManifestFileFolderNode(
       String accountId, Service service, List<ManifestFile> manifestFiles, DirectoryPath manifestFilePath) {
-    FolderNode manifestFileFolder = new FolderNode(
-        accountId, MANIFEST_FILE_FOLDER, ManifestFile.class, manifestFilePath, service.getAppId(), yamlGitSyncService);
+    FolderNode manifestFileFolder =
+        new FolderNode(accountId, MANIFEST_FILE_FOLDER, ManifestFile.class, manifestFilePath, service.getAppId());
 
     List<YamlManifestFileNode> manifestFilesDirectUnderFiles = new ArrayList<>();
     Map<String, YamlManifestFileNode> map = new HashMap<>();
@@ -1339,8 +1335,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     manifestFilesDirectUnderFiles.forEach(yamlManifestFileNode
         -> manifestFileFolder.addChild(new ServiceLevelYamlNode(accountId, yamlManifestFileNode.getUuId(),
             service.getAppId(), service.getUuid(), yamlManifestFileNode.getName(), ManifestFile.class,
-            manifestFilePath.clone().add(yamlManifestFileNode.getName()), yamlGitSyncService,
-            Type.APPLICATION_MANIFEST_FILE)));
+            manifestFilePath.clone().add(yamlManifestFileNode.getName()), Type.APPLICATION_MANIFEST_FILE)));
 
     return manifestFileFolder;
   }
@@ -1354,17 +1349,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private void addYamlDirectoryNode(String accountId, String appId, String serviceId, FolderNode parentFolder,
       YamlManifestFileNode node, DirectoryPath parentPath) {
     DirectoryPath directoryPath = parentPath.clone().add(node.getName());
-    FolderNode direcotryFolder =
-        new FolderNode(accountId, node.getName(), ManifestFile.class, directoryPath, appId, yamlGitSyncService);
+    FolderNode direcotryFolder = new FolderNode(accountId, node.getName(), ManifestFile.class, directoryPath, appId);
     parentFolder.addChild(direcotryFolder);
 
     for (YamlManifestFileNode childNode : node.getChildNodesMap().values()) {
       if (childNode.isDir()) {
         addYamlDirectoryNode(accountId, appId, serviceId, direcotryFolder, childNode, directoryPath);
       } else {
-        direcotryFolder.addChild(new ServiceLevelYamlNode(accountId, childNode.getUuId(), appId, serviceId,
-            childNode.getName(), ManifestFile.class, directoryPath.clone().add(childNode.getName()), yamlGitSyncService,
-            Type.APPLICATION_MANIFEST_FILE));
+        direcotryFolder.addChild(
+            new ServiceLevelYamlNode(accountId, childNode.getUuId(), appId, serviceId, childNode.getName(),
+                ManifestFile.class, directoryPath.clone().add(childNode.getName()), Type.APPLICATION_MANIFEST_FILE));
       }
     }
   }
@@ -1448,8 +1442,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   FolderNode doEnvironments(
       Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedEnvs) {
     String accountId = app.getAccountId();
-    FolderNode environmentsFolder = new FolderNode(accountId, ENVIRONMENTS_FOLDER, Environment.class,
-        directoryPath.add(ENVIRONMENTS_FOLDER), app.getUuid(), yamlGitSyncService);
+    FolderNode environmentsFolder = new FolderNode(
+        accountId, ENVIRONMENTS_FOLDER, Environment.class, directoryPath.add(ENVIRONMENTS_FOLDER), app.getUuid());
 
     if (applyPermissions && isEmpty(allowedEnvs)) {
       return environmentsFolder;
@@ -1471,15 +1465,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         String yamlFileName = INDEX_YAML;
         FolderNode envFolder = new FolderNode(accountId, environment.getName(), Environment.class,
-            envPath.add(environment.getName()), environment.getAppId(), yamlGitSyncService);
+            envPath.add(environment.getName()), environment.getAppId());
         environmentsFolder.addChild(envFolder);
         envFolder.addChild(new AppLevelYamlNode(accountId, environment.getUuid(), environment.getAppId(), yamlFileName,
-            Environment.class, envPath.clone().add(yamlFileName), yamlGitSyncService, Type.ENVIRONMENT));
+            Environment.class, envPath.clone().add(yamlFileName), Type.ENVIRONMENT));
 
         // ------------------- INFRA DEFINITION SECTION ------------------------
         DirectoryPath infraDefinitionPath = envPath.clone().add(INFRA_DEFINITION_FOLDER);
         FolderNode infraDefinitionFolder = new FolderNode(accountId, INFRA_DEFINITION_FOLDER,
-            InfrastructureDefinition.class, infraDefinitionPath, environment.getAppId(), yamlGitSyncService);
+            InfrastructureDefinition.class, infraDefinitionPath, environment.getAppId());
         envFolder.addChild(infraDefinitionFolder);
         PageRequest<InfrastructureDefinition> infrastructureDefinitionPageRequest =
             aPageRequest()
@@ -1491,18 +1485,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         infrastructureDefinitionsList.forEach(infraDefinition -> {
           String infraDefinitionYamlFileName = infraDefinition.getName() + YAML_EXTENSION;
-          infraDefinitionFolder.addChild(new EnvLevelYamlNode(accountId, infraDefinition.getUuid(),
-              infraDefinition.getAppId(), infraDefinition.getEnvId(), infraDefinitionYamlFileName,
-              InfrastructureDefinition.class, infraDefinitionPath.clone().add(infraDefinitionYamlFileName),
-              yamlGitSyncService, Type.INFRA_DEFINITION));
+          infraDefinitionFolder.addChild(
+              new EnvLevelYamlNode(accountId, infraDefinition.getUuid(), infraDefinition.getAppId(),
+                  infraDefinition.getEnvId(), infraDefinitionYamlFileName, InfrastructureDefinition.class,
+                  infraDefinitionPath.clone().add(infraDefinitionYamlFileName), Type.INFRA_DEFINITION));
         });
         // ------------------- END DEFINITION SECTION ------------------------
 
         // ------------------- CV CONFIG SECTION -----------------------
 
         DirectoryPath cvConfigPath = envPath.clone().add(CV_CONFIG_FOLDER);
-        FolderNode cvConfigFolder = new FolderNode(accountId, CV_CONFIG_FOLDER, CVConfiguration.class, cvConfigPath,
-            environment.getAppId(), yamlGitSyncService);
+        FolderNode cvConfigFolder =
+            new FolderNode(accountId, CV_CONFIG_FOLDER, CVConfiguration.class, cvConfigPath, environment.getAppId());
         envFolder.addChild(cvConfigFolder);
 
         PageRequest<CVConfiguration> cvConfigPageRequest = aPageRequest()
@@ -1517,15 +1511,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           String cvConfigYamlFileName = cvConfig.getName() + YAML_EXTENSION;
           cvConfigFolder.addChild(new EnvLevelYamlNode(accountId, cvConfig.getUuid(), cvConfig.getAppId(),
               cvConfig.getEnvId(), cvConfigYamlFileName, CVConfiguration.class,
-              cvConfigPath.clone().add(cvConfigYamlFileName), yamlGitSyncService, Type.SERVICE_CV_CONFIG));
+              cvConfigPath.clone().add(cvConfigYamlFileName), Type.SERVICE_CV_CONFIG));
         });
 
         // ------------------- END CV CONFIG SECTION -----------------------
 
         // ------------------- CONFIG FILES SECTION -----------------------
         DirectoryPath configFilesPath = envPath.clone().add(CONFIG_FILES_FOLDER);
-        FolderNode configFilesFolder = new FolderNode(accountId, CONFIG_FILES_FOLDER, ConfigFile.class, configFilesPath,
-            environment.getAppId(), yamlGitSyncService);
+        FolderNode configFilesFolder =
+            new FolderNode(accountId, CONFIG_FILES_FOLDER, ConfigFile.class, configFilesPath, environment.getAppId());
         envFolder.addChild(configFilesFolder);
 
         List<ConfigFile> configFiles =
@@ -1544,15 +1538,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         servicesConfigFileMap.forEach((serviceTemplate, configFilesOverrideForService) -> {
           String serviceName = serviceTemplateService.get(envFolder.getAppId(), serviceTemplate).getName();
           DirectoryPath servicesFolderPath = configFilesPath.clone().add(serviceName);
-          FolderNode servicesFolder = new FolderNode(accountId, serviceName, SettingAttribute.class, servicesFolderPath,
-              environment.getAppId(), yamlGitSyncService);
+          FolderNode servicesFolder = new FolderNode(
+              accountId, serviceName, SettingAttribute.class, servicesFolderPath, environment.getAppId());
           configFilesFolder.addChild(servicesFolder);
 
           configFilesOverrideForService.forEach(configFile -> {
             String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
             servicesFolder.addChild(new EnvLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
                 environment.getUuid(), configFileName, ConfigFile.class, servicesFolderPath.clone().add(configFileName),
-                yamlGitSyncService, Type.CONFIG_FILE_OVERRIDE));
+                Type.CONFIG_FILE_OVERRIDE));
           });
         });
 
@@ -1560,13 +1554,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         if (!globalConfigFiles.isEmpty()) {
           DirectoryPath servicesFolderPath = configFilesPath.clone().add(GLOBAL_SERVICE_NAME_FOR_YAML);
           FolderNode servicesFolder = new FolderNode(accountId, GLOBAL_SERVICE_NAME_FOR_YAML, SettingAttribute.class,
-              servicesFolderPath, environment.getAppId(), yamlGitSyncService);
+              servicesFolderPath, environment.getAppId());
           configFilesFolder.addChild(servicesFolder);
           globalConfigFiles.forEach(configFile -> {
             String configFileName = Utils.normalize(configFile.getRelativeFilePath()) + YAML_EXTENSION;
             servicesFolder.addChild(new EnvLevelYamlNode(accountId, configFile.getUuid(), configFile.getAppId(),
                 environment.getUuid(), configFileName, ConfigFile.class, servicesFolderPath.clone().add(configFileName),
-                yamlGitSyncService, Type.CONFIG_FILE_OVERRIDE));
+                Type.CONFIG_FILE_OVERRIDE));
           });
         }
 
@@ -1631,8 +1625,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     DirectoryPath valuesPath = envPath.clone().add(appManifestKind.getYamlFolderName());
-    FolderNode valuesFolder = new FolderNode(accountId, appManifestKind.getYamlFolderName(), ApplicationManifest.class,
-        valuesPath, env.getAppId(), yamlGitSyncService);
+    FolderNode valuesFolder = new FolderNode(
+        accountId, appManifestKind.getYamlFolderName(), ApplicationManifest.class, valuesPath, env.getAppId());
     ApplicationManifest applicationManifest =
         applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), appManifestKind);
     addValuesFolderFiles(accountId, env, valuesPath, valuesFolder, applicationManifest);
@@ -1657,8 +1651,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     DirectoryPath pcfOverridesPath = envPath.clone().add(PCF_OVERRIDES_FOLDER);
-    FolderNode pcfOverridesFolder = new FolderNode(accountId, PCF_OVERRIDES_FOLDER, ApplicationManifest.class,
-        pcfOverridesPath, env.getAppId(), yamlGitSyncService);
+    FolderNode pcfOverridesFolder =
+        new FolderNode(accountId, PCF_OVERRIDES_FOLDER, ApplicationManifest.class, pcfOverridesPath, env.getAppId());
     ApplicationManifest applicationManifest =
         applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), AppManifestKind.PCF_OVERRIDE);
     addPcfOverideFolderFiles(accountId, env, pcfOverridesPath, pcfOverridesFolder, applicationManifest);
@@ -1687,10 +1681,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     ApplicationManifest envHelmChartOverride =
         applicationManifestService.getByEnvId(env.getAppId(), env.getUuid(), HELM_CHART_OVERRIDE);
     if (envHelmChartOverride != null) {
-      helmOverridesFolder.addChild(
-          new EnvLevelYamlNode(accountId, envHelmChartOverride.getUuid(), env.getAppId(), env.getUuid(), INDEX_YAML,
-              ApplicationManifest.class, helmOverridesFolder.getDirectoryPath().clone().add(INDEX_YAML),
-              yamlGitSyncService, Type.APPLICATION_MANIFEST));
+      helmOverridesFolder.addChild(new EnvLevelYamlNode(accountId, envHelmChartOverride.getUuid(), env.getAppId(),
+          env.getUuid(), INDEX_YAML, ApplicationManifest.class,
+          helmOverridesFolder.getDirectoryPath().clone().add(INDEX_YAML), Type.APPLICATION_MANIFEST));
     }
 
     // Fetch service specific environment overrides
@@ -1714,7 +1707,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     DirectoryPath appSettingsOverridesPath = envPath.clone().add(AZURE_APP_SETTINGS_OVERRIDES_FOLDER);
     FolderNode appSettingsOverridesFolder = new FolderNode(accountId, AZURE_APP_SETTINGS_OVERRIDES_FOLDER,
-        ApplicationManifest.class, appSettingsOverridesPath, env.getAppId(), yamlGitSyncService);
+        ApplicationManifest.class, appSettingsOverridesPath, env.getAppId());
 
     // add env overrides
     ApplicationManifest applicationManifest = applicationManifestService.getByEnvId(
@@ -1743,7 +1736,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     DirectoryPath connStringsOverridesPath = envPath.clone().add(AZURE_CONN_STRINGS_OVERRIDES_FOLDER);
     FolderNode connStringsOverridesFolder = new FolderNode(accountId, AZURE_CONN_STRINGS_OVERRIDES_FOLDER,
-        ApplicationManifest.class, connStringsOverridesPath, env.getAppId(), yamlGitSyncService);
+        ApplicationManifest.class, connStringsOverridesPath, env.getAppId());
 
     // add env overrides
     ApplicationManifest applicationManifest = applicationManifestService.getByEnvId(
@@ -1765,8 +1758,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       FolderNode folderNode, ApplicationManifest applicationManifest) {
     if (applicationManifest != null) {
       folderNode.addChild(new EnvLevelYamlNode(accountId, applicationManifest.getUuid(), env.getAppId(), env.getUuid(),
-          INDEX_YAML, ApplicationManifest.class, directoryPath.clone().add(INDEX_YAML), yamlGitSyncService,
-          Type.APPLICATION_MANIFEST));
+          INDEX_YAML, ApplicationManifest.class, directoryPath.clone().add(INDEX_YAML), Type.APPLICATION_MANIFEST));
 
       if (StoreType.Local == applicationManifest.getStoreType()) {
         List<ManifestFile> manifestFiles =
@@ -1776,7 +1768,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           for (ManifestFile manifestFile : manifestFiles) {
             folderNode.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
                 manifestFile.getFileName(), ManifestFile.class, directoryPath.clone().add(manifestFile.getFileName()),
-                yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+                Type.APPLICATION_MANIFEST_FILE));
           }
         }
       }
@@ -1793,8 +1785,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     DirectoryPath serviceOverridesPath = valuesPath.clone().add(SERVICES_FOLDER);
-    FolderNode overridesServicesFolder = new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class,
-        serviceOverridesPath, env.getAppId(), yamlGitSyncService);
+    FolderNode overridesServicesFolder =
+        new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceOverridesPath, env.getAppId());
 
     for (ApplicationManifest appManifest : applicationManifests) {
       Service service = isNotBlank(appManifest.getServiceId())
@@ -1802,8 +1794,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           : null;
       if (isNotBlank(appManifest.getEnvId()) && service != null) {
         DirectoryPath serviceFolderPath = serviceOverridesPath.clone().add(service.getName());
-        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
-            serviceFolderPath, env.getAppId(), yamlGitSyncService);
+        FolderNode serviceFolder =
+            new FolderNode(accountId, service.getName(), ApplicationManifest.class, serviceFolderPath, env.getAppId());
         overridesServicesFolder.addChild(serviceFolder);
         addIndexAndManifestFilesToFolderNode(accountId, env, serviceFolderPath, serviceFolder, appManifest);
       }
@@ -1815,14 +1807,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode getEnvOverrideFolderNode(
       DirectoryPath envPath, String accountId, String appId, String folderName) {
     DirectoryPath pcfOverridesPath = envPath.clone().add(folderName);
-    return new FolderNode(
-        accountId, folderName, ApplicationManifest.class, pcfOverridesPath, appId, yamlGitSyncService);
+    return new FolderNode(accountId, folderName, ApplicationManifest.class, pcfOverridesPath, appId);
   }
 
   private FolderNode getOverrideServiceFolder(DirectoryPath overridePath, String accountId, String appId) {
     DirectoryPath serviceOverridesPath = overridePath.clone().add(SERVICES_FOLDER);
-    return new FolderNode(
-        accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceOverridesPath, appId, yamlGitSyncService);
+    return new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceOverridesPath, appId);
   }
 
   private FolderNode generateEnvServiceSpecificValuesFolder(
@@ -1835,8 +1825,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     DirectoryPath serviceValuesPath = valuesPath.clone().add(SERVICES_FOLDER);
-    FolderNode valuesServicesFolder = new FolderNode(
-        accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceValuesPath, env.getAppId(), yamlGitSyncService);
+    FolderNode valuesServicesFolder =
+        new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceValuesPath, env.getAppId());
 
     for (ApplicationManifest appManifest : applicationManifests) {
       Service service = isNotBlank(appManifest.getServiceId())
@@ -1844,8 +1834,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           : null;
       if (isNotBlank(appManifest.getEnvId()) && service != null) {
         DirectoryPath serviceFolderPath = serviceValuesPath.clone().add(service.getName());
-        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
-            serviceFolderPath, env.getAppId(), yamlGitSyncService);
+        FolderNode serviceFolder =
+            new FolderNode(accountId, service.getName(), ApplicationManifest.class, serviceFolderPath, env.getAppId());
         valuesServicesFolder.addChild(serviceFolder);
         addValuesFolderFiles(accountId, env, serviceFolderPath, serviceFolder, appManifest);
       }
@@ -1864,8 +1854,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     DirectoryPath serviceOverridesPath = valuesPath.clone().add(SERVICES_FOLDER);
-    FolderNode overridesServicesFolder = new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class,
-        serviceOverridesPath, env.getAppId(), yamlGitSyncService);
+    FolderNode overridesServicesFolder =
+        new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class, serviceOverridesPath, env.getAppId());
 
     for (ApplicationManifest appManifest : applicationManifests) {
       Service service = isNotBlank(appManifest.getServiceId())
@@ -1873,8 +1863,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           : null;
       if (isNotBlank(appManifest.getEnvId()) && service != null) {
         DirectoryPath serviceFolderPath = serviceOverridesPath.clone().add(service.getName());
-        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
-            serviceFolderPath, env.getAppId(), yamlGitSyncService);
+        FolderNode serviceFolder =
+            new FolderNode(accountId, service.getName(), ApplicationManifest.class, serviceFolderPath, env.getAppId());
         overridesServicesFolder.addChild(serviceFolder);
         addPcfOverideFolderFiles(accountId, env, serviceFolderPath, serviceFolder, appManifest);
       }
@@ -1900,8 +1890,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           : null;
       if (isNotBlank(appManifest.getEnvId()) && service != null) {
         DirectoryPath serviceFolderPath = overridesServicesFolder.getDirectoryPath().clone().add(service.getName());
-        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
-            serviceFolderPath, env.getAppId(), yamlGitSyncService);
+        FolderNode serviceFolder =
+            new FolderNode(accountId, service.getName(), ApplicationManifest.class, serviceFolderPath, env.getAppId());
         overridesServicesFolder.addChild(serviceFolder);
         serviceFolder.addChild(getEnvLevelYamlNodeForAppManifest(env, appManifest, serviceFolderPath));
       }
@@ -1913,16 +1903,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private EnvLevelYamlNode getEnvLevelYamlNodeForAppManifest(
       Environment env, ApplicationManifest applicationManifest, DirectoryPath serviceFolderPath) {
     return new EnvLevelYamlNode(env.getAccountId(), applicationManifest.getUuid(), env.getAppId(), env.getUuid(),
-        INDEX_YAML, ApplicationManifest.class, serviceFolderPath.clone().add(INDEX_YAML), yamlGitSyncService,
-        Type.APPLICATION_MANIFEST);
+        INDEX_YAML, ApplicationManifest.class, serviceFolderPath.clone().add(INDEX_YAML), Type.APPLICATION_MANIFEST);
   }
 
   private void addValuesFolderFiles(String accountId, Environment env, DirectoryPath valuesPath,
       FolderNode valuesFolder, ApplicationManifest applicationManifest) {
     if (applicationManifest != null) {
-      valuesFolder.addChild(new EnvLevelYamlNode(accountId, applicationManifest.getUuid(), env.getAppId(),
-          env.getUuid(), INDEX_YAML, ApplicationManifest.class, valuesPath.clone().add(INDEX_YAML), yamlGitSyncService,
-          Type.APPLICATION_MANIFEST));
+      valuesFolder.addChild(
+          new EnvLevelYamlNode(accountId, applicationManifest.getUuid(), env.getAppId(), env.getUuid(), INDEX_YAML,
+              ApplicationManifest.class, valuesPath.clone().add(INDEX_YAML), Type.APPLICATION_MANIFEST));
 
       if (StoreType.Local == applicationManifest.getStoreType()) {
         List<ManifestFile> manifestFiles =
@@ -1932,7 +1921,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           for (ManifestFile manifestFile : manifestFiles) {
             valuesFolder.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
                 manifestFile.getFileName(), ManifestFile.class, valuesPath.clone().add(manifestFile.getFileName()),
-                yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+                Type.APPLICATION_MANIFEST_FILE));
           }
         }
       }
@@ -1942,9 +1931,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private void addPcfOverideFolderFiles(String accountId, Environment env, DirectoryPath pcfOverridesPath,
       FolderNode valuesFolder, ApplicationManifest applicationManifest) {
     if (applicationManifest != null) {
-      valuesFolder.addChild(new EnvLevelYamlNode(accountId, applicationManifest.getUuid(), env.getAppId(),
-          env.getUuid(), INDEX_YAML, ApplicationManifest.class, pcfOverridesPath.clone().add(INDEX_YAML),
-          yamlGitSyncService, Type.APPLICATION_MANIFEST));
+      valuesFolder.addChild(
+          new EnvLevelYamlNode(accountId, applicationManifest.getUuid(), env.getAppId(), env.getUuid(), INDEX_YAML,
+              ApplicationManifest.class, pcfOverridesPath.clone().add(INDEX_YAML), Type.APPLICATION_MANIFEST));
 
       if (StoreType.Local == applicationManifest.getStoreType()) {
         List<ManifestFile> manifestFiles =
@@ -1954,8 +1943,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           for (ManifestFile manifestFile : manifestFiles) {
             valuesFolder.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
                 manifestFile.getFileName(), ManifestFile.class,
-                pcfOverridesPath.clone().add(manifestFile.getFileName()), yamlGitSyncService,
-                Type.APPLICATION_MANIFEST_FILE));
+                pcfOverridesPath.clone().add(manifestFile.getFileName()), Type.APPLICATION_MANIFEST_FILE));
           }
         }
       }
@@ -1965,8 +1953,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode doWorkflows(
       Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedWorkflows) {
     String accountId = app.getAccountId();
-    FolderNode workflowsFolder = new FolderNode(accountId, WORKFLOWS_FOLDER, Workflow.class,
-        directoryPath.add(WORKFLOWS_FOLDER), app.getUuid(), yamlGitSyncService);
+    FolderNode workflowsFolder =
+        new FolderNode(accountId, WORKFLOWS_FOLDER, Workflow.class, directoryPath.add(WORKFLOWS_FOLDER), app.getUuid());
 
     if (applyPermissions && isEmpty(allowedWorkflows)) {
       return workflowsFolder;
@@ -1987,9 +1975,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         DirectoryPath workflowPath = directoryPath.clone();
         String workflowYamlFileName = workflow.getName() + YAML_EXTENSION;
-        workflowsFolder.addChild(
-            new AppLevelYamlNode(accountId, workflow.getUuid(), workflow.getAppId(), workflowYamlFileName,
-                Workflow.class, workflowPath.add(workflowYamlFileName), yamlGitSyncService, Type.WORKFLOW));
+        workflowsFolder.addChild(new AppLevelYamlNode(accountId, workflow.getUuid(), workflow.getAppId(),
+            workflowYamlFileName, Workflow.class, workflowPath.add(workflowYamlFileName), Type.WORKFLOW));
       }
     }
 
@@ -1999,8 +1986,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode doPipelines(
       Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedPipelines) {
     String accountId = app.getAccountId();
-    FolderNode pipelinesFolder = new FolderNode(accountId, PIPELINES_FOLDER, Pipeline.class,
-        directoryPath.add(PIPELINES_FOLDER), app.getUuid(), yamlGitSyncService);
+    FolderNode pipelinesFolder =
+        new FolderNode(accountId, PIPELINES_FOLDER, Pipeline.class, directoryPath.add(PIPELINES_FOLDER), app.getUuid());
 
     if (applyPermissions && isEmpty(allowedPipelines)) {
       return pipelinesFolder;
@@ -2021,9 +2008,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         DirectoryPath pipelinePath = directoryPath.clone();
         String pipelineYamlFileName = pipeline.getName() + YAML_EXTENSION;
-        pipelinesFolder.addChild(
-            new AppLevelYamlNode(accountId, pipeline.getUuid(), pipeline.getAppId(), pipelineYamlFileName,
-                Pipeline.class, pipelinePath.add(pipelineYamlFileName), yamlGitSyncService, Type.PIPELINE));
+        pipelinesFolder.addChild(new AppLevelYamlNode(accountId, pipeline.getUuid(), pipeline.getAppId(),
+            pipelineYamlFileName, Pipeline.class, pipelinePath.add(pipelineYamlFileName), Type.PIPELINE));
       }
     }
 
@@ -2033,8 +2019,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   private FolderNode doTriggers(Application app, DirectoryPath directoryPath) {
     String accountId = app.getAccountId();
 
-    FolderNode triggersFolder = new FolderNode(
-        accountId, TRIGGER_FOLDER, Trigger.class, directoryPath.add(TRIGGER_FOLDER), app.getUuid(), yamlGitSyncService);
+    FolderNode triggersFolder =
+        new FolderNode(accountId, TRIGGER_FOLDER, Trigger.class, directoryPath.add(TRIGGER_FOLDER), app.getUuid());
     PageRequest<Trigger> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
     List<Trigger> triggers = triggerService.list(pageRequest, false, null).getResponse();
 
@@ -2042,9 +2028,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       for (Trigger trigger : triggers) {
         DirectoryPath triggerPath = directoryPath.clone();
         String triggerYamlFileName = trigger.getName() + YAML_EXTENSION;
-        triggersFolder.addChild(
-            new AppLevelYamlNode(accountId, trigger.getUuid(), trigger.getAppId(), triggerYamlFileName, Trigger.class,
-                triggerPath.add(triggerYamlFileName), yamlGitSyncService, Type.TRIGGER));
+        triggersFolder.addChild(new AppLevelYamlNode(accountId, trigger.getUuid(), trigger.getAppId(),
+            triggerYamlFileName, Trigger.class, triggerPath.add(triggerYamlFileName), Type.TRIGGER));
       }
     }
 
@@ -2055,7 +2040,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedProvisioners) {
     String accountId = app.getAccountId();
     FolderNode provisionersFolder = new FolderNode(accountId, PROVISIONERS_FOLDER, InfrastructureProvisioner.class,
-        directoryPath.add(PROVISIONERS_FOLDER), app.getUuid(), yamlGitSyncService);
+        directoryPath.add(PROVISIONERS_FOLDER), app.getUuid());
 
     if (applyPermissions && isEmpty(allowedProvisioners)) {
       return provisionersFolder;
@@ -2074,9 +2059,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         DirectoryPath provisionerPath = directoryPath.clone();
         String provisionerYamlFileName = provisioner.getName() + YAML_EXTENSION;
-        provisionersFolder.addChild(new AppLevelYamlNode(accountId, provisioner.getUuid(), provisioner.getAppId(),
-            provisionerYamlFileName, InfrastructureProvisioner.class, provisionerPath.add(provisionerYamlFileName),
-            yamlGitSyncService, Type.PROVISIONER));
+        provisionersFolder.addChild(
+            new AppLevelYamlNode(accountId, provisioner.getUuid(), provisioner.getAppId(), provisionerYamlFileName,
+                InfrastructureProvisioner.class, provisionerPath.add(provisionerYamlFileName), Type.PROVISIONER));
       }
     }
 
@@ -2106,7 +2091,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   FolderNode doCloudProviders(String accountId, DirectoryPath directoryPath) {
     // create cloud providers (and physical data centers)
     FolderNode cloudProvidersFolder = new FolderNode(accountId, CLOUD_PROVIDERS_FOLDER, SettingAttribute.class,
-        directoryPath.add(YamlConstants.CLOUD_PROVIDERS_FOLDER), yamlGitSyncService);
+        directoryPath.add(YamlConstants.CLOUD_PROVIDERS_FOLDER));
 
     // TODO - should these use AwsConfig GcpConfig, etc. instead?
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.AWS, directoryPath.clone());
@@ -2135,38 +2120,37 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         for (SettingAttribute settingAttribute : settingAttributes) {
           DirectoryPath cpPath = directoryPath.clone();
           String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-          parentFolder.addChild(
-              new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                  yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName), yamlGitSyncService));
+          parentFolder.addChild(new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(),
+              settingAttribute.getValue().getType(), yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName)));
         }
       }
     } else {
       if (settingAttributes != null) {
         for (SettingAttribute settingAttribute : settingAttributes) {
           DirectoryPath cpPath = directoryPath.clone();
-          FolderNode cloudProvidersTypeFolder = new FolderNode(accountId, settingAttribute.getName(),
-              SettingAttribute.class, cpPath.add(settingAttribute.getName()), yamlGitSyncService);
+          FolderNode cloudProvidersTypeFolder = new FolderNode(
+              accountId, settingAttribute.getName(), SettingAttribute.class, cpPath.add(settingAttribute.getName()));
           parentFolder.addChild(cloudProvidersTypeFolder);
 
           DirectoryPath indexYamlPath = cpPath.clone();
           String yamlFileName = INDEX_YAML;
           cloudProvidersTypeFolder.addChild(
               new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                  yamlFileName, SettingAttribute.class, indexYamlPath.add(yamlFileName), yamlGitSyncService));
+                  yamlFileName, SettingAttribute.class, indexYamlPath.add(yamlFileName)));
 
           if (!settingAttribute.getValue().getType().equals(PHYSICAL_DATA_CENTER.name())) {
             DirectoryPath artifactStreamsFolderPath = cpPath.clone();
             FolderNode artifactStreamsFolder = new FolderNode(accountId, ARTIFACT_STREAMS_FOLDER, ArtifactStream.class,
-                artifactStreamsFolderPath.add(ARTIFACT_STREAMS_FOLDER), yamlGitSyncService);
+                artifactStreamsFolderPath.add(ARTIFACT_STREAMS_FOLDER));
             cloudProvidersTypeFolder.addChild(artifactStreamsFolder);
 
             List<ArtifactStream> artifactStreams =
                 artifactStreamService.listBySettingId(GLOBAL_APP_ID, settingAttribute.getUuid());
             for (ArtifactStream artifactStream : artifactStreams) {
               yamlFileName = getArtifactStreamYamlName(artifactStream);
-              artifactStreamsFolder.addChild(new ArtifactStreamYamlNode(accountId, GLOBAL_APP_ID,
-                  artifactStream.getUuid(), yamlFileName, ArtifactStream.class,
-                  artifactStreamsFolderPath.clone().add(yamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
+              artifactStreamsFolder.addChild(
+                  new ArtifactStreamYamlNode(accountId, GLOBAL_APP_ID, artifactStream.getUuid(), yamlFileName,
+                      ArtifactStream.class, artifactStreamsFolderPath.clone().add(yamlFileName), Type.ARTIFACT_STREAM));
             }
           }
         }
@@ -2190,7 +2174,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   FolderNode doArtifactServers(String accountId, DirectoryPath directoryPath) {
     // create artifact servers
     FolderNode artifactServersFolder = new FolderNode(accountId, ARTIFACT_SOURCES_FOLDER, SettingAttribute.class,
-        directoryPath.add(YamlConstants.ARTIFACT_SERVERS_FOLDER), yamlGitSyncService);
+        directoryPath.add(YamlConstants.ARTIFACT_SERVERS_FOLDER));
 
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.JENKINS, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.BAMBOO, directoryPath.clone());
@@ -2226,37 +2210,36 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         for (SettingAttribute settingAttribute : settingAttributes) {
           DirectoryPath asPath = directoryPath.clone();
           String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-          parentFolder.addChild(
-              new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                  yamlFileName, SettingAttribute.class, asPath.add(yamlFileName), yamlGitSyncService));
+          parentFolder.addChild(new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(),
+              settingAttribute.getValue().getType(), yamlFileName, SettingAttribute.class, asPath.add(yamlFileName)));
         }
       }
     } else {
       if (settingAttributes != null) {
         for (SettingAttribute settingAttribute : settingAttributes) {
           DirectoryPath asPath = directoryPath.clone();
-          FolderNode artifactServersTypeFolder = new FolderNode(accountId, settingAttribute.getName(),
-              SettingAttribute.class, asPath.add(settingAttribute.getName()), yamlGitSyncService);
+          FolderNode artifactServersTypeFolder = new FolderNode(
+              accountId, settingAttribute.getName(), SettingAttribute.class, asPath.add(settingAttribute.getName()));
           parentFolder.addChild(artifactServersTypeFolder);
 
           DirectoryPath indexYamlPath = asPath.clone();
           String yamlFileName = INDEX_YAML;
           artifactServersTypeFolder.addChild(
               new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                  yamlFileName, SettingAttribute.class, indexYamlPath.add(yamlFileName), yamlGitSyncService));
+                  yamlFileName, SettingAttribute.class, indexYamlPath.add(yamlFileName)));
 
           DirectoryPath artifactStreamsFolderPath = asPath.clone();
           FolderNode artifactStreamsFolder = new FolderNode(accountId, ARTIFACT_STREAMS_FOLDER, ArtifactStream.class,
-              artifactStreamsFolderPath.add(ARTIFACT_STREAMS_FOLDER), yamlGitSyncService);
+              artifactStreamsFolderPath.add(ARTIFACT_STREAMS_FOLDER));
           artifactServersTypeFolder.addChild(artifactStreamsFolder);
 
           List<ArtifactStream> artifactStreams =
               artifactStreamService.listBySettingId(GLOBAL_APP_ID, settingAttribute.getUuid());
           for (ArtifactStream artifactStream : artifactStreams) {
             yamlFileName = getArtifactStreamYamlName(artifactStream);
-            artifactStreamsFolder.addChild(new ArtifactStreamYamlNode(accountId, GLOBAL_APP_ID,
-                artifactStream.getUuid(), yamlFileName, ArtifactStream.class,
-                artifactStreamsFolderPath.clone().add(yamlFileName), yamlGitSyncService, Type.ARTIFACT_STREAM));
+            artifactStreamsFolder.addChild(
+                new ArtifactStreamYamlNode(accountId, GLOBAL_APP_ID, artifactStream.getUuid(), yamlFileName,
+                    ArtifactStream.class, artifactStreamsFolderPath.clone().add(yamlFileName), Type.ARTIFACT_STREAM));
           }
         }
       }
@@ -2267,7 +2250,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   FolderNode doCollaborationProviders(String accountId, DirectoryPath directoryPath) {
     // create collaboration providers
     FolderNode collaborationProvidersFolder = new FolderNode(accountId, COLLABORATION_PROVIDERS_FOLDER,
-        SettingAttribute.class, directoryPath.add(YamlConstants.COLLABORATION_PROVIDERS_FOLDER), yamlGitSyncService);
+        SettingAttribute.class, directoryPath.add(YamlConstants.COLLABORATION_PROVIDERS_FOLDER));
 
     doCollaborationProviderType(
         accountId, collaborationProvidersFolder, SettingVariableTypes.SMTP, directoryPath.clone());
@@ -2295,9 +2278,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       for (SettingAttribute settingAttribute : settingAttributes) {
         DirectoryPath cpPath = directoryPath.clone();
         String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-        parentFolder.addChild(
-            new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName), yamlGitSyncService));
+        parentFolder.addChild(new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), yamlFileName, SettingAttribute.class, cpPath.add(yamlFileName)));
       }
     }
   }
@@ -2310,8 +2292,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode doNotificationGroups(String accountId, DirectoryPath directoryPath) {
     // create notification groups
-    FolderNode notificationGroupsFolder = new FolderNode(accountId, NOTIFICATION_GROUPS_FOLDER, NotificationGroup.class,
-        directoryPath.add(NOTIFICATION_GROUPS_FOLDER), yamlGitSyncService);
+    FolderNode notificationGroupsFolder = new FolderNode(
+        accountId, NOTIFICATION_GROUPS_FOLDER, NotificationGroup.class, directoryPath.add(NOTIFICATION_GROUPS_FOLDER));
     if (featureFlagService.isEnabled(FeatureName.YAML_RBAC, accountId)) {
       if (!userHasNotificationPermissions(accountId, UserThreadLocal.get())) {
         return notificationGroupsFolder;
@@ -2327,7 +2309,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         String notificationGroupYamlFileName = notificationGroup.getName() + YAML_EXTENSION;
         notificationGroupsFolder.addChild(new AccountLevelYamlNode(accountId, notificationGroup.getUuid(),
             notificationGroupYamlFileName, NotificationGroup.class,
-            notificationGroupPath.add(notificationGroupYamlFileName), yamlGitSyncService, Type.NOTIFICATION_GROUP));
+            notificationGroupPath.add(notificationGroupYamlFileName), Type.NOTIFICATION_GROUP));
       });
     }
 
@@ -2338,7 +2320,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   FolderNode doVerificationProviders(String accountId, DirectoryPath directoryPath) {
     // create verification providers
     FolderNode verificationProvidersFolder = new FolderNode(accountId, VERIFICATION_PROVIDERS_FOLDER,
-        SettingAttribute.class, directoryPath.add(YamlConstants.VERIFICATION_PROVIDERS_FOLDER), yamlGitSyncService);
+        SettingAttribute.class, directoryPath.add(YamlConstants.VERIFICATION_PROVIDERS_FOLDER));
 
     doVerificationProviderType(
         accountId, verificationProvidersFolder, SettingVariableTypes.JENKINS, directoryPath.clone());
@@ -2381,9 +2363,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       for (SettingAttribute settingAttribute : settingAttributes) {
         DirectoryPath vpPath = directoryPath.clone();
         String yamlFileName = getSettingAttributeYamlName(settingAttribute);
-        parentFolder.addChild(
-            new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(), settingAttribute.getValue().getType(),
-                yamlFileName, SettingAttribute.class, vpPath.add(yamlFileName), yamlGitSyncService));
+        parentFolder.addChild(new SettingAttributeYamlNode(accountId, settingAttribute.getUuid(),
+            settingAttribute.getValue().getType(), yamlFileName, SettingAttribute.class, vpPath.add(yamlFileName)));
       }
     }
   }
@@ -2391,8 +2372,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public FolderNode doTemplateLibrary(
       String accountId, DirectoryPath directoryPath, String appId, String templateLibraryFolderName, Type type) {
-    final FolderNode templateLibraryFolder = new FolderNode(accountId, templateLibraryFolderName,
-        SettingAttribute.class, directoryPath.add(templateLibraryFolderName), yamlGitSyncService);
+    final FolderNode templateLibraryFolder = new FolderNode(
+        accountId, templateLibraryFolderName, SettingAttribute.class, directoryPath.add(templateLibraryFolderName));
 
     // get the whole template folder tree  structure
     final TemplateFolder templateTree =
@@ -2427,8 +2408,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return null;
     }
     final DirectoryPath dirClone = directoryPath.clone();
-    final FolderNode rootYamlFolder = new FolderNode(accountId, rootFolder.getName(), SettingAttribute.class,
-        dirClone.add(rootFolder.getName()), yamlGitSyncService);
+    final FolderNode rootYamlFolder =
+        new FolderNode(accountId, rootFolder.getName(), SettingAttribute.class, dirClone.add(rootFolder.getName()));
     // process child folders
     ListUtils.emptyIfNull(rootFolder.getChildren()).forEach(childTemplateFolder -> {
       rootYamlFolder.addChild(
@@ -2443,9 +2424,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           final String templateYamlFileName = template.getName() + YAML_EXTENSION;
           rootYamlFolder.addChild(type == Type.GLOBAL_TEMPLATE_LIBRARY
                   ? new AccountLevelYamlNode(accountId, template.getUuid(), templateYamlFileName, Template.class,
-                      templatePath.add(templateYamlFileName), yamlGitSyncService, type)
+                      templatePath.add(templateYamlFileName), type)
                   : new AppLevelYamlNode(accountId, template.getUuid(), appId, templateYamlFileName, Template.class,
-                      templatePath.add(templateYamlFileName), yamlGitSyncService, type));
+                      templatePath.add(templateYamlFileName), type));
         });
 
     return rootYamlFolder;

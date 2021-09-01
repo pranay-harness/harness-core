@@ -1,7 +1,5 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -64,8 +62,7 @@ public class DirectoryNode {
     }
   }
 
-  public DirectoryNode(String accountId, String name, Class theClass, DirectoryPath directoryPath,
-      YamlGitService yamlGitSyncService, NodeType type) {
+  public DirectoryNode(String accountId, String name, Class theClass, DirectoryPath directoryPath, NodeType type) {
     this(accountId, name, theClass);
     this.directoryPath = directoryPath;
     this.type = type;
