@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(HarnessTeam.CDC)
-public class ManifestPollingResponseInfc implements PollingResponseInfc {
+public class ManifestPollingDelegateResponse implements PollingResponseInfc {
   private List<String> unpublishedManifests;
   private Set<String> toBeDeletedKeys;
   boolean firstCollectionOnDelegate;

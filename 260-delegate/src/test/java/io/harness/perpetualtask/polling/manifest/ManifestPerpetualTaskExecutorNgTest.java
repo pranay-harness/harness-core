@@ -12,7 +12,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.ManifestPollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
@@ -25,6 +25,7 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
+import io.harness.perpetualtask.polling.PollingResponsePublisher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -70,8 +71,10 @@ public class ManifestPerpetualTaskExecutorNgTest extends DelegateTestBase {
 
   @Before
   public void setup() {
+    PollingResponsePublisher pollingResponsePublisher =
+        new PollingResponsePublisher(kryoSerializer, delegateAgentManagerClient);
     manifestPerpetualTaskExecutor =
-        new ManifestPerpetualTaskExecutorNg(kryoSerializer, manifestCollectionService, delegateAgentManagerClient);
+        new ManifestPerpetualTaskExecutorNg(kryoSerializer, manifestCollectionService, pollingResponsePublisher);
     perpetualTaskId = PerpetualTaskId.newBuilder().setId(UUIDGenerator.generateUuid()).build();
     polling_doc_id = UUIDGenerator.generateUuid();
   }
@@ -187,13 +190,14 @@ public class ManifestPerpetualTaskExecutorNgTest extends DelegateTestBase {
     assertThat(pollingDelegateResponse.getPollingDocId()).isEqualTo(polling_doc_id);
     assertThat(pollingDelegateResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
 
-    ManifestPollingResponseInfc manifestPollingResponseInfc =
-        (ManifestPollingResponseInfc) pollingDelegateResponse.getPollingResponseInfc();
-    assertThat(manifestPollingResponseInfc).isNotNull();
-    assertThat(manifestPollingResponseInfc.getUnpublishedManifests().size())
+    ManifestPollingDelegateResponse manifestPollingDelegateResponse =
+        (ManifestPollingDelegateResponse) pollingDelegateResponse.getPollingResponseInfc();
+    assertThat(manifestPollingDelegateResponse).isNotNull();
+    assertThat(manifestPollingDelegateResponse.getUnpublishedManifests().size())
         .isEqualTo(unpublishedManifestsInResponseSize);
-    assertThat(manifestPollingResponseInfc.isFirstCollectionOnDelegate()).isEqualTo(isFirstCollectionOnDelegate);
-    assertThat(manifestPollingResponseInfc.getToBeDeletedKeys().size()).isEqualTo(manifestsToBeDeletedInResponseSize);
+    assertThat(manifestPollingDelegateResponse.isFirstCollectionOnDelegate()).isEqualTo(isFirstCollectionOnDelegate);
+    assertThat(manifestPollingDelegateResponse.getToBeDeletedKeys().size())
+        .isEqualTo(manifestsToBeDeletedInResponseSize);
 
     ManifestsCollectionCache manifestsCollectionCache =
         manifestPerpetualTaskExecutor.getCache().getIfPresent(polling_doc_id);
