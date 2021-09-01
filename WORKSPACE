@@ -4673,7 +4673,7 @@ plain_artifacts = [
     "org.apache.commons:commons-lang3:3.7",
     "org.apache.commons:commons-math3:3.6.1",
     "org.apache.commons:commons-text:1.2",
-    "org.apache.cxf:cxf-core:3.3.5",
+    "org.apache.cxf:cxf-core:3.3.10",
     "org.apache.cxf:cxf-rt-bindings-soap:3.3.5",
     "org.apache.cxf:cxf-rt-bindings-xml:3.3.5",
     "org.apache.cxf:cxf-rt-databinding-jaxb:3.3.5",
