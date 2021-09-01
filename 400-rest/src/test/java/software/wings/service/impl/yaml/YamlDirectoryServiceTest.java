@@ -113,6 +113,7 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.security.AppPermissionSummary;
+import software.wings.service.impl.yaml.directory.ServiceDirectoryGenerator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -120,7 +121,6 @@ import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -162,16 +162,16 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ConfigService configService;
   @Mock private EnvironmentService environmentService;
-  @Mock private InfrastructureMappingService infraMappingService;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private WorkflowService workflowService;
   @Mock private PipelineService pipelineService;
   @Mock private InfrastructureProvisionerService provisionerService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SettingsService settingsService;
-  @Mock ApplicationManifestService applicationManifestService;
+  @Mock private ApplicationManifestService applicationManifestService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private GovernanceConfigService governanceConfigService;
+  @Inject @InjectMocks private ServiceDirectoryGenerator serviceDirectoryGenerator;
   @Inject @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService;
 
   private DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
@@ -467,7 +467,6 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.AWS.name()))
         .thenReturn(Arrays.asList(awsCp, gcpCp));
     final FolderNode cloudProviderFolderNode = yamlDirectoryService.doCloudProviders(ACCOUNT_ID, directoryPath);
-    List<DirectoryNode> cloudProviderDirectoryNode = getNodesOfClass(cloudProviderFolderNode, SettingAttribute.class);
 
     // check if feature flag ARTIFACT_STREAM_REFACTOR
     final AmazonS3ArtifactStream artifactStream = AmazonS3ArtifactStream.builder()
