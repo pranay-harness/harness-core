@@ -2,6 +2,7 @@ package io.harness.event;
 
 import static io.harness.mongo.tracing.TracerConstants.QUERY_HASH;
 import static io.harness.mongo.tracing.TracerConstants.SERVICE_ID;
+import static io.harness.version.VersionConstants.MAJOR_VERSION_KEY;
 import static io.harness.version.VersionConstants.VERSION_KEY;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -34,14 +35,15 @@ public class QueryAnalysisMessageListener implements MessageListener {
                                               .data(ByteString.copyFromUtf8(data).toByteArray())
                                               .explainResult(queryExplainResult)
                                               .hash(metadataMap.get(QUERY_HASH))
-                                              .version(metadataMap.get(VERSION_KEY))
+                                              .fullVersion(metadataMap.get(VERSION_KEY))
+                                              .majorVersion(metadataMap.get(MAJOR_VERSION_KEY))
                                               .serviceName(metadataMap.get(SERVICE_ID))
                                               .createdAt(System.currentTimeMillis())
                                               .parsedQuery(queryExplainResult.getQueryPlanner().getParsedQuery())
                                               .collectionName(queryExplainResult.getQueryPlanner().getNamespace())
                                               .build();
     queryRecordsRepository.save(queryRecordEntity);
-    serviceInfoService.updateLatest(metadataMap.get(SERVICE_ID), metadataMap.get(VERSION_KEY));
+    serviceInfoService.updateLatest(metadataMap.get(SERVICE_ID), metadataMap.get(MAJOR_VERSION_KEY));
     return true;
   }
 }

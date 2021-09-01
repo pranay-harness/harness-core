@@ -14,9 +14,11 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -72,7 +74,7 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
     if (serviceInfo == null) {
       return Collections.emptyList();
     }
-    return serviceInfo.getVersions();
+    return serviceInfo.getVersions().stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
   }
 
   @Override
