@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -17,6 +16,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -55,7 +55,7 @@ import org.mockito.Mock;
  * Created by peeyushaggarwal on 6/7/16.
  */
 @OwnedBy(CDC)
-@TargetModule(_360_CG_MANAGER)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PauseStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   private static final String stateName = "PauseState1";

@@ -1,8 +1,5 @@
 package io.harness.pms.yaml;
 
-import io.harness.annotation.RecasterAlias;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.FunctorException;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
@@ -19,8 +16,6 @@ import lombok.experimental.FieldNameConstants;
 @Getter
 @NoArgsConstructor
 @FieldNameConstants(innerTypeName = "ParameterDocumentFieldKeys")
-@RecasterAlias("io.harness.pms.yaml.ParameterDocumentField")
-@OwnedBy(HarnessTeam.PIPELINE)
 public class ParameterDocumentField {
   @NotExpression private String expressionValue;
   private boolean expression;

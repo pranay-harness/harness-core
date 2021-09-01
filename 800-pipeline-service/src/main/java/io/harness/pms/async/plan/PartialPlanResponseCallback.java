@@ -1,10 +1,8 @@
 package io.harness.pms.async.plan;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
+import io.harness.OrchestrationPublisherName;
 import io.harness.async.AsyncResponseCallback;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanService;
@@ -25,6 +23,7 @@ import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +34,6 @@ import lombok.experimental.SuperBuilder;
 
 @Value
 @SuperBuilder
-@OwnedBy(HarnessTeam.PIPELINE)
 public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPlanResponse> {
   String accountId;
   String orgIdentifier;
@@ -43,12 +41,9 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
   String planUuid;
 
   @Inject PmsSdkHelper pmsSdkHelper;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject PlanService planService;
   @Inject PmsEventSender pmsEventSender;
-
-  public String getPublisherName() {
-    return PMS_PLAN_CREATION;
-  }
 
   @Override
   public void handleMaxDepthExceeded() {
@@ -86,7 +81,7 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
           PlanCreationBlobResponseUtils.mergeContext(
               finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getContextMap());
           PlanCreationBlobResponseUtils.addDependencies(
-              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getDeps());
+              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getDependenciesMap());
         } else {
           finalResponseBuilder.setErrorResponse(
               ErrorResponse.newBuilder()
@@ -146,7 +141,7 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
     PlanCreationBlobResponseUtils.mergeContext(
         finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getContextMap());
     PlanCreationBlobResponseUtils.addDependencies(
-        finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getDeps());
+        finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getDependenciesMap());
     if (interimResponse.hasErrorResponse()) {
       ErrorResponse.Builder errorResponseBuilder = ErrorResponse.newBuilder();
       if (finalResponse.hasErrorResponse()) {

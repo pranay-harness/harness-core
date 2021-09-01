@@ -10,7 +10,6 @@ import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -211,7 +210,6 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
 
   @Data
   @Builder
-  @RecasterAlias("io.harness.pms.expressions.PMSExpressionEvaluatorTest$TestStepParameters")
   public static class TestStepParameters implements StepParameters {
     String param;
   }

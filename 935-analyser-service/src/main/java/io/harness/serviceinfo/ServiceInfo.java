@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ServiceInfo {
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @FdUniqueIndex @NonNull String serviceId;
+  @NonNull String latestVersion;
   // Cannot be set rollbacks? Need to be a list as we need order
   @Singular List<String> versions;
 

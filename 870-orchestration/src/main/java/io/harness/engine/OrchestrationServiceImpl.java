@@ -11,6 +11,7 @@ import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.observers.OrchestrationStartObserver;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
+import io.harness.engine.utils.TransactionUtils;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.Interrupt;
@@ -23,7 +24,6 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.triggers.TriggerPayload;
-import io.harness.springdata.TransactionHelper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private InterruptManager interruptManager;
   @Inject private PlanService planService;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
-  @Inject private TransactionHelper transactionHelper;
+  @Inject private TransactionUtils transactionUtils;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Getter private final Subject<OrchestrationStartObserver> orchestrationStartSubject = new Subject<>();
@@ -107,7 +107,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                                       .metadata(metadata)
                                       .build();
 
-    return transactionHelper.performTransaction(() -> {
+    return transactionUtils.performTransaction(() -> {
       planExecutionMetadataService.save(planExecutionMetadata);
       return planExecutionService.save(planExecution);
     });

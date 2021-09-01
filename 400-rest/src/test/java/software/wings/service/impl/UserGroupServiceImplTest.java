@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
-import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -64,8 +62,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -126,8 +122,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-@OwnedBy(PL)
-@TargetModule(_360_CG_MANAGER)
+
 public class UserGroupServiceImplTest extends WingsBaseTest {
   private String accountId = generateUuid();
   private String userGroupId = generateUuid();

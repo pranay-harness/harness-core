@@ -46,7 +46,6 @@ import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.jre.JreConfig;
-import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
@@ -85,7 +84,7 @@ import lombok.EqualsAndHashCode;
 /**
  * Used to load all the application configuration.
  */
-@TargetModule(HarnessModule._957_CG_BEANS)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
@@ -191,7 +190,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
-  @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

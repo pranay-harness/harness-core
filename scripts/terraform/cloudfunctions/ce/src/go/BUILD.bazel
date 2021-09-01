@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go",
+    name = "go_default_library",
     srcs = ["awsdata_manifest_main.go"],
     importpath = "github.com/wings-software/portal/scripts/terraform/cloudfunctions/ce/src/go",
     visibility = ["//visibility:public"],

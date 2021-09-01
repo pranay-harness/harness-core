@@ -15,9 +15,6 @@ import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO.ChangeEventDTOBuilder;
-import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO.ChangeSourceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
@@ -26,11 +23,9 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.HarnessCDChangeSourceSpec;
-import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.PagerDutyChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.beans.params.ProjectParams;
-import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.core.entities.CVConfig;
@@ -47,10 +42,6 @@ import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource.HarnessCDChangeSourceBuilder;
-import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
-import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource.PagerDutyChangeSourceBuilder;
-import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent;
-import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent.HarnessCDChangeEventBuilder;
 import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
@@ -317,68 +308,8 @@ public class BuilderFactory {
         .type(ChangeSourceType.HARNESS_CD);
   }
 
-  public PagerDutyChangeSourceBuilder getPagerDutyChangeSourceBuilder() {
-    return PagerDutyChangeSource.builder()
-        .accountId(context.getAccountId())
-        .orgIdentifier(context.getOrgIdentifier())
-        .projectIdentifier(context.getProjectIdentifier())
-        .serviceIdentifier(context.getServiceIdentifier())
-        .envIdentifier(context.getEnvIdentifier())
-        .enabled(true)
-        .connectorIdentifier(randomAlphabetic(20))
-        .pagerDutyServiceId(randomAlphabetic(20))
-        .type(ChangeSourceType.PAGER_DUTY);
-  }
-
   public ChangeSourceDTOBuilder getHarnessCDChangeSourceDTOBuilder() {
     return getChangeSourceDTOBuilder(ChangeSourceType.HARNESS_CD).spec(new HarnessCDChangeSourceSpec());
-  }
-
-  public ChangeSourceDTOBuilder getPagerDutyChangeSourceDTOBuilder() {
-    return getChangeSourceDTOBuilder(ChangeSourceType.PAGER_DUTY)
-        .spec(PagerDutyChangeSourceSpec.builder()
-                  .connectorRef(randomAlphabetic(20))
-                  .pagerDutyServiceId(randomAlphabetic(20))
-                  .build());
-  }
-
-  public HarnessCDChangeEventBuilder getHarnessCDChangeEventBuilder() {
-    return HarnessCDChangeEvent.builder()
-        .accountId(context.getAccountId())
-        .orgIdentifier(context.getOrgIdentifier())
-        .projectIdentifier(context.getProjectIdentifier())
-        .serviceIdentifier(context.getServiceIdentifier())
-        .envIdentifier(context.getEnvIdentifier())
-        .eventTime(Instant.EPOCH.getEpochSecond())
-        .changeSourceIdentifier("changeSourceID")
-        .type(ChangeSourceType.HARNESS_CD)
-        .stageId("stage")
-        .executionId("executionId")
-        .deploymentEndTime(Instant.EPOCH.getEpochSecond())
-        .deploymentStartTime(Instant.EPOCH.getEpochSecond());
-  }
-
-  public ChangeEventDTOBuilder getHarnessCDChangeEventDTOBuilder() {
-    return getChangeEventDTOBuilder()
-        .type(ChangeSourceType.HARNESS_CD)
-        .changeEventMetaData(HarnessCDEventMetaData.builder()
-                                 .stageId("stage")
-                                 .executionId("executionId")
-                                 .deploymentEndTime(Instant.EPOCH.getEpochSecond())
-                                 .deploymentStartTime(Instant.EPOCH.getEpochSecond())
-                                 .status(io.harness.pms.contracts.execution.Status.SUCCEEDED)
-                                 .build());
-  }
-
-  public ChangeEventDTOBuilder getChangeEventDTOBuilder() {
-    return ChangeEventDTO.builder()
-        .accountId(context.getAccountId())
-        .orgIdentifier(context.getOrgIdentifier())
-        .projectIdentifier(context.getProjectIdentifier())
-        .serviceIdentifier(context.getServiceIdentifier())
-        .envIdentifier(context.getEnvIdentifier())
-        .eventTime(Instant.EPOCH.getEpochSecond())
-        .changeSourceIdentifier("changeSourceID");
   }
 
   private ChangeSourceDTOBuilder getChangeSourceDTOBuilder(ChangeSourceType changeSourceType) {
@@ -438,16 +369,6 @@ public class BuilderFactory {
 
     public String getProjectIdentifier() {
       return projectParams.getProjectIdentifier();
-    }
-
-    public ServiceEnvironmentParams getServiceEnvironmentParams() {
-      return ServiceEnvironmentParams.builder()
-          .accountIdentifier(projectParams.getAccountIdentifier())
-          .orgIdentifier(projectParams.getOrgIdentifier())
-          .projectIdentifier(projectParams.getProjectIdentifier())
-          .serviceIdentifier(serviceIdentifier)
-          .environmentIdentifier(envIdentifier)
-          .build();
     }
   }
 }

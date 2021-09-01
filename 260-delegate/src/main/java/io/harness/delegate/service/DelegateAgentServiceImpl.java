@@ -427,7 +427,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
-                                .version(getVersion())
+                                .version(getVersionWithPatch())
                                 .location(Paths.get("").toAbsolutePath().toString())
                                 .build();
 
@@ -528,7 +528,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
-                                          .version(getVersion())
+                                          .version(getVersionWithPatch())
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())

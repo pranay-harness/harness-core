@@ -2,7 +2,6 @@ package io.harness.cdng.provision.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.validation.Validator;
@@ -14,7 +13,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @OwnedBy(CDP)
-@RecasterAlias("io.harness.cdng.provision.terraform.TerraformConfigFilesWrapper")
 public class TerraformConfigFilesWrapper {
   @NotNull StoreConfigWrapper store;
 

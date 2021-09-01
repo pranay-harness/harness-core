@@ -14,6 +14,5 @@ public enum FilterType {
   @JsonProperty("PipelineSetup") PIPELINESETUP,
   @JsonProperty("PipelineExecution") PIPELINEEXECUTION,
   @JsonProperty("Deployment") DEPLOYMENT,
-  @JsonProperty("Audit") AUDIT,
-  @JsonProperty("Template") TEMPLATE
+  @JsonProperty("Audit") AUDIT
 }

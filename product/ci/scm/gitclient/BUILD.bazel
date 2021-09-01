@@ -1,12 +1,12 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "gitclient",
+    name = "go_default_library",
     srcs = ["gitclient.go"],
     importpath = "github.com/wings-software/portal/product/ci/scm/gitclient",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/scm/proto",
+        "//product/ci/scm/proto:go_default_library",
         "@com_github_drone_go_scm//scm:go_default_library",
         "@com_github_drone_go_scm//scm/driver/bitbucket:go_default_library",
         "@com_github_drone_go_scm//scm/driver/gitea:go_default_library",
@@ -22,15 +22,8 @@ go_library(
 )
 
 go_test(
-    name = "gitclient_test",
-    srcs = ["gitclient_test.go"],
-    embed = [":gitclient"],
-    deps = ["//product/ci/scm/proto"],
-)
-
-go_test(
     name = "go_default_test",
     srcs = ["gitclient_test.go"],
     embed = [":go_default_library"],
-    deps = ["//product/ci/scm/proto"],
+    deps = ["//product/ci/scm/proto:go_default_library"],
 )

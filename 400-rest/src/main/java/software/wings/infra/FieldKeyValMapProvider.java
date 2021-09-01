@@ -1,10 +1,5 @@
 package software.wings.infra;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
@@ -16,8 +11,6 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
-@OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface FieldKeyValMapProvider {
   @JsonIgnore
   default Map<String, Object> getFieldMapForClass() {

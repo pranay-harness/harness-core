@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.SourceCodeManagerAuthentication;
-import io.harness.mongo.index.FdIndex;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -25,7 +24,6 @@ import lombok.experimental.SuperBuilder;
 public abstract class SourceCodeManagerDTO {
   String id;
   String userIdentifier;
-  @FdIndex String accountIdentifier;
   @NotNull String name;
   Long createdAt;
   Long lastModifiedAt;

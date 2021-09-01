@@ -250,9 +250,6 @@ public class ViewsQueryBuilder {
     boolean isClusterConditionOrFilterPresent = false;
     boolean isPodFilterPresent = false;
     boolean isLabelsOperationPresent = false;
-    if (rules.isEmpty() && filters.isEmpty() && groupByEntity.isEmpty() && customFields.isEmpty()) {
-      isClusterConditionOrFilterPresent = true;
-    }
     for (ViewRule rule : rules) {
       for (ViewCondition condition : rule.getViewConditions()) {
         ViewIdCondition viewIdCondition = (ViewIdCondition) condition;
@@ -645,8 +642,6 @@ public class ViewsQueryBuilder {
         return FunctionCall.max();
       case MIN:
         return FunctionCall.min();
-      case AVG:
-        return FunctionCall.avg();
       default:
         return null;
     }

@@ -10,8 +10,8 @@ monitoredService:
   sources:
     healthSources:
     changeSources:
-      - name: Harness CD
-        identifier: harness_cd
+      - name:
+        identifier:
         type: HarnessCD
-        desc: Deployments from Harness CD
-        enabled : true
+        desc:
+        enabled :

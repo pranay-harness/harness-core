@@ -16,7 +16,6 @@ import static io.harness.ngtriggers.Constants.REPO_URL;
 import static io.harness.ngtriggers.Constants.SCHEDULED_TYPE;
 import static io.harness.ngtriggers.Constants.SOURCE_BRANCH;
 import static io.harness.ngtriggers.Constants.SOURCE_TYPE;
-import static io.harness.ngtriggers.Constants.TAG;
 import static io.harness.ngtriggers.Constants.TARGET_BRANCH;
 import static io.harness.ngtriggers.Constants.TYPE;
 import static io.harness.ngtriggers.Constants.WEBHOOK_TYPE;
@@ -79,9 +78,6 @@ public class TriggerHelper {
         jsonObject.put(TYPE, WEBHOOK_TYPE);
         jsonObject.put(REPO_URL, parsedPayload.getPush().getRepo().getLink());
         jsonObject.put(GIT_USER, parsedPayload.getPush().getSender().getLogin());
-        if (parsedPayload.getPush().getRepo().getBranch().startsWith("refs/tags/")) {
-          jsonObject.put(TAG, parsedPayload.getPush().getRepo().getBranch().replaceFirst("refs/tags/", ""));
-        }
         break;
       default:
         if (SCHEDULED == triggerPayload.getType()) {

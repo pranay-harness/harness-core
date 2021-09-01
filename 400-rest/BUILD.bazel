@@ -2790,9 +2790,4 @@ java_library(
     ],
 )
 
-exports_files([
-    "hazelcast.xml",
-    "redisson-jcache.yaml",
-])
-
 run_analysis(test_targets = test_targets)

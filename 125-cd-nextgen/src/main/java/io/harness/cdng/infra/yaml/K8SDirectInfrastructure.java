@@ -2,7 +2,6 @@ package io.harness.cdng.infra.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.infra.beans.InfraMapping;
@@ -33,7 +32,6 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("k8sDirectInfrastructure")
-@RecasterAlias("io.harness.cdng.infra.yaml.K8SDirectInfrastructure")
 public class K8SDirectInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
   @NotNull
   @NotEmpty

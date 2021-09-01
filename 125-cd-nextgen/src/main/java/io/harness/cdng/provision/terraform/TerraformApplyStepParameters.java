@@ -2,7 +2,6 @@ package io.harness.cdng.provision.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.yaml.ParameterField;
@@ -20,7 +19,6 @@ import lombok.NonNull;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDP)
-@RecasterAlias("io.harness.cdng.provision.terraform.TerraformApplyStepParameters")
 public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo implements SpecParameters {
   @NonNull TerraformStepConfigurationParameters configuration;
 

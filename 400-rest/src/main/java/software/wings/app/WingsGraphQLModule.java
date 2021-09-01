@@ -102,6 +102,7 @@ import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentStatsDataFetcher;
 import software.wings.graphql.datafetcher.environment.batch.EnvironmentBatchDataFetcher;
 import software.wings.graphql.datafetcher.environment.batch.EnvironmentBatchDataLoader;
+import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionConnectionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionDataFetcher;
 import software.wings.graphql.datafetcher.execution.ExecutionInputsDataFetcher;
@@ -308,6 +309,7 @@ public class WingsGraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(CloudTimeSeriesStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudEntityStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(CloudTrendStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(EfficiencyStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(EnvironmentDataFetcher.class);

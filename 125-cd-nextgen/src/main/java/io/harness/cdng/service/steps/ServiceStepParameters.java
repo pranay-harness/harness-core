@@ -1,6 +1,5 @@
 package io.harness.cdng.service.steps;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceConfig;
@@ -18,7 +17,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("serviceStepParameters")
-@RecasterAlias("io.harness.cdng.service.steps.ServiceStepParameters")
 public class ServiceStepParameters implements StepParameters {
   // Overrides from useFromStage are already applied.
   String type;

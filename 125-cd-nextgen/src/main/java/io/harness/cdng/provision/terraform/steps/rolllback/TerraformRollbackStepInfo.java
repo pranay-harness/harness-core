@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.executions.steps.StepSpecTypeConstants.TERRAFORM_ROLLBACK;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
@@ -28,7 +27,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(TERRAFORM_ROLLBACK)
-@RecasterAlias("io.harness.cdng.provision.terraform.steps.rolllback.TerraformRollbackStepInfo")
 public class TerraformRollbackStepInfo implements CDStepInfo {
   @NotNull String provisionerIdentifier;
   @YamlSchemaTypes(value = {runtime})

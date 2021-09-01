@@ -1,6 +1,5 @@
 package io.harness.cdng.provision.terraform;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
@@ -36,7 +35,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("terraformApplyStepInfo")
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_APPLY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@RecasterAlias("io.harness.cdng.provision.terraform.TerraformApplyStepInfo")
 public class TerraformApplyStepInfo
     extends TerraformApplyBaseStepInfo implements CDStepInfo, Visitable, WithConnectorRef {
   @NotNull @JsonProperty("configuration") TerraformStepConfiguration terraformStepConfiguration;

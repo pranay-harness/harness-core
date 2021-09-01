@@ -2,9 +2,7 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -25,7 +23,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
  * Created by peeyushaggarwal on 9/14/16.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ServiceVariableService extends OwnedByService, OwnedByEnvironment {
   /**
    * List page response.

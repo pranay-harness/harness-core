@@ -5,8 +5,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -60,11 +58,7 @@ func NewSCMServer(port uint, unixSocket string, log *zap.SugaredLogger) (SCMServ
 		log:        log,
 		stopCh:     stopCh,
 	}
-	server.grpcServer = grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_recovery.UnaryServerInterceptor(),
-		)),
-	)
+	server.grpcServer = grpc.NewServer()
 	server.listener = listener
 	return &server, nil
 }

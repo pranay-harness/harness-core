@@ -38,7 +38,3 @@ java_binary(
 )
 
 run_analysis()
-
-exports_files([
-    "config.yml",
-])

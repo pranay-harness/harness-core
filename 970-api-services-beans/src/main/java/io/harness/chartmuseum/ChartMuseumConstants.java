@@ -1,12 +1,7 @@
 package io.harness.chartmuseum;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-
-import io.harness.annotations.dev.OwnedBy;
-
 import lombok.experimental.UtilityClass;
 
-@OwnedBy(CDP)
 @UtilityClass
 public class ChartMuseumConstants {
   public final int CHART_MUSEUM_SERVER_START_RETRIES = 5;
@@ -34,10 +29,10 @@ public class ChartMuseumConstants {
   public final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
 
   public final String AMAZON_S3_COMMAND_TEMPLATE =
-      " --port=${PORT} --storage=amazon --storage-amazon-bucket=${BUCKET_NAME} --storage-amazon-prefix=${FOLDER_PATH} --storage-amazon-region=${REGION}";
+      " --debug --port=${PORT} --storage=amazon --storage-amazon-bucket=${BUCKET_NAME} --storage-amazon-prefix=${FOLDER_PATH} --storage-amazon-region=${REGION}";
 
   public final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
 
   public final String GCS_COMMAND_TEMPLATE =
-      " --port=${PORT} --storage=google --storage-google-bucket=${BUCKET_NAME} --storage-google-prefix=${FOLDER_PATH}";
+      " --debug --port=${PORT} --storage=google --storage-google-bucket=${BUCKET_NAME} --storage-google-prefix=${FOLDER_PATH}";
 }

@@ -8,7 +8,6 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.queue.QueueController;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -25,14 +24,12 @@ public class QueryAnalysisMessageConsumer implements Runnable {
 
   private final Consumer redisConsumer;
   private final MessageListener messageListener;
-  private final QueueController queueController;
 
   @Inject
-  public QueryAnalysisMessageConsumer(@Named(QUERY_ANALYSIS_TOPIC) Consumer redisConsumer,
-      @Named(QUERY_ANALYSIS_TOPIC) MessageListener queryListener, QueueController queueController) {
+  public QueryAnalysisMessageConsumer(
+      @Named(QUERY_ANALYSIS_TOPIC) Consumer redisConsumer, @Named(QUERY_ANALYSIS_TOPIC) MessageListener queryListener) {
     this.redisConsumer = redisConsumer;
     this.messageListener = queryListener;
-    this.queueController = queueController;
   }
 
   @Override
@@ -40,11 +37,6 @@ public class QueryAnalysisMessageConsumer implements Runnable {
     log.info("Started the Consumer {}", this.getClass().getSimpleName());
     try {
       while (!Thread.currentThread().isInterrupted()) {
-        if (queueController.isNotPrimary()) {
-          log.info("EntityActivity consumer is not running on primary deployment, will try again after some time...");
-          TimeUnit.SECONDS.sleep(30);
-          continue;
-        }
         readEventsFrameworkMessages();
       }
     } catch (Exception ex) {

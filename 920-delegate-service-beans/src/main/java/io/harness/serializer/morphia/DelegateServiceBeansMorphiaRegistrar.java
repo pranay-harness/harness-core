@@ -10,7 +10,6 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.beans.DelegateToken;
 import io.harness.delegate.beans.TaskSelectorMap;
-import io.harness.delegate.beans.perpetualtask.PerpetualTaskScheduleConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
@@ -28,7 +27,6 @@ public class DelegateServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateTaskProgressResponse.class);
     set.add(TaskSelectorMap.class);
     set.add(DelegateToken.class);
-    set.add(PerpetualTaskScheduleConfig.class);
   }
 
   @Override

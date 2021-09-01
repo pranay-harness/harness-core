@@ -2,7 +2,6 @@ package io.harness.steps.fork;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
@@ -17,7 +16,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("forkStepParameters")
-@RecasterAlias("io.harness.steps.fork.ForkStepParameters")
 public class ForkStepParameters implements StepParameters {
   @Singular @Size(min = 2) List<String> parallelNodeIds;
 }

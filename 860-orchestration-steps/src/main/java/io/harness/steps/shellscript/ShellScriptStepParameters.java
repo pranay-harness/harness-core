@@ -1,6 +1,5 @@
 package io.harness.steps.shellscript;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
@@ -21,7 +20,6 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("shellScriptStepParameters")
 @OwnedBy(HarnessTeam.CDC)
-@RecasterAlias("io.harness.steps.shellscript.ShellScriptStepParameters")
 public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implements SpecParameters {
   Map<String, Object> outputVariables;
   Map<String, Object> environmentVariables;

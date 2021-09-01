@@ -36,7 +36,7 @@ public class RunStepVariableCreator extends GenericStepVariableCreator {
     }
   }
 
-  protected void addVariablesForOutputVariables(
+  private void addVariablesForOutputVariables(
       YamlField outputVariablesField, Map<String, YamlOutputProperties> yamlOutputPropertiesMap) {
     List<YamlNode> variableNodes = outputVariablesField.getNode().asArray();
     variableNodes.forEach(variableNode -> {

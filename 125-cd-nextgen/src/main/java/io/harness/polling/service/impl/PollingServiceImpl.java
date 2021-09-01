@@ -9,7 +9,7 @@ import io.harness.polling.bean.PolledResponse;
 import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.bean.PollingDocument.PollingDocumentKeys;
 import io.harness.polling.contracts.PollingItem;
-import io.harness.polling.mapper.PollingDocumentMapper;
+import io.harness.polling.mapper.PollingRequestToPollingDocumentMapper;
 import io.harness.polling.service.intfc.PollingService;
 import io.harness.polling.service.intfc.PollingServiceObserver;
 import io.harness.repositories.polling.PollingRepository;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class PollingServiceImpl implements PollingService {
   @Inject private PollingRepository pollingRepository;
-  @Inject private PollingDocumentMapper pollingDocumentMapper;
+  @Inject private PollingRequestToPollingDocumentMapper pollingDocumentMapper;
   @Inject @Getter private final Subject<PollingServiceObserver> subject = new Subject<>();
 
   @Override
@@ -98,6 +98,11 @@ public class PollingServiceImpl implements PollingService {
           pollingDocument.getUuid(), pollingDocument.getAccountId(), pollingDocument.getSignatures());
     }
 
+    if (null != existingPollingDoc && pollingDocument.getUuid() != null) {
+      throw new InvalidRequestException(
+          "PollingDocument and ExistingPollingDocument both cannot be not null. Please check subscribers configuration"
+          + existingPollingDoc.getUuid());
+    }
     // Determine if update request
     if (existingPollingDoc == null) {
       return save(pollingDocument);

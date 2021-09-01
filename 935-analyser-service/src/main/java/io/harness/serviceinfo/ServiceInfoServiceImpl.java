@@ -43,21 +43,29 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
   public boolean updateLatest(String serviceId, String version) {
     Optional<ServiceInfo> serviceInfoOptional = serviceInfoCache.get(serviceId);
     if (!serviceInfoOptional.isPresent()) {
-      ServiceInfo insertedInfo = mongoTemplate.insert(
-          ServiceInfo.builder().uuid(generateUuid()).serviceId(serviceId).version(version).build());
+      ServiceInfo insertedInfo = mongoTemplate.insert(ServiceInfo.builder()
+                                                          .uuid(generateUuid())
+                                                          .serviceId(serviceId)
+                                                          .latestVersion(version)
+                                                          .version(version)
+                                                          .build());
       serviceInfoCache.put(serviceId, Optional.of(insertedInfo));
       return true;
     }
     ServiceInfo serviceInfo = serviceInfoOptional.get();
-    if (serviceInfo.getVersions().contains(version)) {
+    if (serviceInfo.getLatestVersion().equals(version)) {
       // All information already updated
       return true;
     }
     serviceInfoCache.invalidate(serviceId);
     serviceInfoOptional = serviceInfoCache.get(serviceId);
     if (serviceInfoOptional.isPresent()) {
+      serviceInfo = serviceInfoOptional.get();
+      if (serviceInfo.getLatestVersion().equals(version)) {
+        return true;
+      }
       Query query = query(where("serviceId").is(serviceId));
-      Update update = new Update().addToSet("versions", version);
+      Update update = new Update().set("latestVersion", version).push("versions", version);
       ServiceInfo andModify = mongoTemplate.findAndModify(query, update, ServiceInfo.class);
       serviceInfoCache.put(serviceId, Optional.ofNullable(andModify));
       return andModify != null;

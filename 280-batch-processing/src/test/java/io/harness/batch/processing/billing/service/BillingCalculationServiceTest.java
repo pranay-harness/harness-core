@@ -3,29 +3,35 @@ package io.harness.batch.processing.billing.service;
 import static io.harness.ccm.commons.constants.InstanceMetaDataConstants.GCE_STORAGE_CLASS;
 import static io.harness.ccm.commons.constants.InstanceMetaDataConstants.PV_TYPE;
 import static io.harness.perpetualtask.k8s.watch.PVInfo.PVType.PV_TYPE_GCE_PERSISTENT_DISK;
+import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.ROHIT;
+import static io.harness.rule.OwnerRule.SANDESH;
+import static io.harness.rule.OwnerRule.SHUBHANSHU;
+import static io.harness.rule.OwnerRule.UTSAV;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.batch.processing.billing.service.impl.ComputeInstancePricingStrategy;
+import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricingStrategy;
+import io.harness.batch.processing.billing.service.impl.StoragePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.pricing.InstancePricingStrategyFactory;
-import io.harness.batch.processing.pricing.PricingData;
-import io.harness.batch.processing.pricing.PricingSource;
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.banzai.ZonePrice;
-import io.harness.batch.processing.pricing.fargatepricing.EcsFargateInstancePricingStrategy;
-import io.harness.batch.processing.pricing.pricingprofile.PricingProfileService;
+import io.harness.batch.processing.ccm.PricingSource;
+import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
+import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
+import io.harness.batch.processing.pricing.data.ZonePrice;
+import io.harness.batch.processing.pricing.service.impl.VMPricingServiceImpl;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.pricing.service.intfc.AzureCustomBillingService;
-import io.harness.batch.processing.pricing.storagepricing.StoragePricingStrategy;
-import io.harness.batch.processing.pricing.vmpricing.ComputeInstancePricingStrategy;
-import io.harness.batch.processing.pricing.vmpricing.EcsFargatePricingInfo;
-import io.harness.batch.processing.pricing.vmpricing.VMInstanceBillingData;
-import io.harness.batch.processing.pricing.vmpricing.VMPricingServiceImpl;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.service.intfc.PricingProfileService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.PricingProfile;
 import io.harness.ccm.commons.beans.InstanceType;
@@ -36,7 +42,6 @@ import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
-import io.harness.rule.OwnerRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +54,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
 import org.assertj.core.data.Offset;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -63,7 +67,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class BillingCalculationServiceTest extends CategoryTest {
   @InjectMocks private BillingCalculationService billingCalculationService;
-  @Mock private InstancePricingStrategyFactory instancePricingStrategyRegistry;
+  @Mock private InstancePricingStrategyContext instancePricingStrategyRegistry;
   @Mock private VMPricingServiceImpl vmPricingService;
   @Mock private AwsCustomBillingService awsCustomBillingService;
   @Mock private AzureCustomBillingService azureCustomBillingService;
@@ -97,53 +101,53 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private static final double STORAGE_UTIL_VALUE = 10D;
   private static final double STORAGE_REQUEST_VALUE = 1000D;
   // Increase offset's absolute value in case test fails with minor difference.
-  private static final Offset<BigDecimal> BIG_DECIMAL_OFFSET = Assertions.within(new BigDecimal("0.000000000001"));
+  private static final Offset<BigDecimal> BIG_DECIMAL_OFFSET = within(new BigDecimal("0.000000000001"));
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInInterval() {
     InstanceData instanceData = getInstanceWithTime(INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     Long activeInstanceTimeInInterval = billingCalculationService.getActiveInstanceTimeInInterval(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(activeInstanceTimeInInterval).isEqualTo(ONE_DAY_SECONDS);
+    assertThat(activeInstanceTimeInInterval).isEqualTo(ONE_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInIntervalWhenStartedBefore() {
     InstanceData instanceData =
         getInstanceWithTime(INSTANCE_START_TIMESTAMP.minus(2, ChronoUnit.DAYS), INSTANCE_STOP_TIMESTAMP);
     Long activeInstanceTimeInInterval = billingCalculationService.getActiveInstanceTimeInInterval(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(activeInstanceTimeInInterval).isEqualTo(ONE_DAY_SECONDS);
+    assertThat(activeInstanceTimeInInterval).isEqualTo(ONE_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInIntervalWhenStartedAfter() {
     InstanceData instanceData =
         getInstanceWithTime(INSTANCE_START_TIMESTAMP.plus(12, ChronoUnit.HOURS), INSTANCE_STOP_TIMESTAMP);
     Long activeInstanceTimeInInterval = billingCalculationService.getActiveInstanceTimeInInterval(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(activeInstanceTimeInInterval).isEqualTo(HALF_DAY_SECONDS);
+    assertThat(activeInstanceTimeInInterval).isEqualTo(HALF_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetActiveInstanceTimeInIntervalWhenStoppedBefore() {
     InstanceData instanceData =
         getInstanceWithTime(INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS));
     Long activeInstanceTimeInInterval = billingCalculationService.getActiveInstanceTimeInInterval(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(activeInstanceTimeInInterval).isEqualTo(HALF_DAY_SECONDS);
+    assertThat(activeInstanceTimeInInterval).isEqualTo(HALF_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSeconds() {
     InstanceData instanceData = InstanceData.builder()
@@ -153,11 +157,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(ONE_DAY_SECONDS.doubleValue());
+    assertThat(instanceActiveSeconds).isEqualTo(ONE_DAY_SECONDS.doubleValue());
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsLessThanMinDuration() {
     InstanceData instanceData = InstanceData.builder()
@@ -167,11 +171,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(3600);
+    assertThat(instanceActiveSeconds).isEqualTo(3600);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceIsRunning() {
     InstanceData instanceData = InstanceData.builder()
@@ -180,11 +184,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(2);
+    assertThat(instanceActiveSeconds).isEqualTo(2);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsLessThanMinChargeableTime() {
     InstanceData instanceData = InstanceData.builder()
@@ -194,11 +198,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(56);
+    assertThat(instanceActiveSeconds).isEqualTo(56);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsEqualToMinChargeableTime() {
     InstanceData instanceData = InstanceData.builder()
@@ -208,11 +212,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(54);
+    assertThat(instanceActiveSeconds).isEqualTo(54);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveTimeIsGreaterThanMinChargeableTime() {
     InstanceData instanceData = InstanceData.builder()
@@ -222,11 +226,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(57);
+    assertThat(instanceActiveSeconds).isEqualTo(57);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveStartTimeIsNotInRange() {
     InstanceData instanceData = InstanceData.builder()
@@ -235,11 +239,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(0);
+    assertThat(instanceActiveSeconds).isEqualTo(0);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveSecondsWhenInstanceActiveEndTimeIsNotInRange() {
     InstanceData instanceData = InstanceData.builder()
@@ -249,11 +253,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
                                     .build();
     double instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceData, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).isEqualTo(0);
+    assertThat(instanceActiveSeconds).isEqualTo(0);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountForResource() {
     PricingData pricingData = new PricingData(0, 10, 0, 0, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
@@ -265,11 +269,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
     BillingAmountBreakup billingAmountForResource =
         billingCalculationService.getBillingAmountBreakupForResource(instanceData, BigDecimal.valueOf(200),
             instanceResource.getCpuUnits(), instanceResource.getMemoryMb(), 0, 0, pricingData);
-    Assertions.assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("75.000"));
+    assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("75.000"));
   }
 
   @Test
-  @Owner(developers = OwnerRule.SHUBHANSHU)
+  @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testGetIdleCostForResource() {
     Resource instanceResource = getInstanceResource(256, 512);
@@ -285,14 +289,14 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     IdleCostData idleCost =
         billingCalculationService.getIdleCostForResource(billingAmountBreakup, utilizationData, instanceData);
-    Assertions.assertThat(idleCost.getIdleCost()).isEqualTo(BigDecimal.valueOf(100.0));
-    Assertions.assertThat(idleCost.getMemoryIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
-    Assertions.assertThat(idleCost.getCpuIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
-    Assertions.assertThat(idleCost.getStorageIdleCost()).isEqualTo(BigDecimal.ZERO);
+    assertThat(idleCost.getIdleCost()).isEqualTo(BigDecimal.valueOf(100.0));
+    assertThat(idleCost.getMemoryIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
+    assertThat(idleCost.getCpuIdleCost()).isEqualTo(BigDecimal.valueOf(50.0));
+    assertThat(idleCost.getStorageIdleCost()).isEqualTo(BigDecimal.ZERO);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmount() {
     PricingData pricingData = new PricingData(0, 10, 0, 0, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
@@ -306,22 +310,19 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, ONE_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
-        .isEqualTo(new BigDecimal("90.0000"));
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount())
-        .isEqualTo(new BigDecimal("30.0000"));
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount())
-        .isEqualTo(new BigDecimal("60.000"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("45.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("15.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("30.0"));
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("90.0000"));
+    assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount()).isEqualTo(new BigDecimal("30.0000"));
+    assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount()).isEqualTo(new BigDecimal("60.000"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("45.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("15.0"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("30.0"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.ROHIT)
+  @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetBillingAmountWithZeroResourceInInstance() {
     PricingData pricingData = new PricingData(10, 10, 0, 0, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
@@ -334,23 +335,20 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilizationWithValues(CPU_UTILIZATION_HIGH, MEMORY_UTILIZATION_HIGH, 256, 512);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, ONE_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
-        .isEqualTo(new BigDecimal("90.0000"));
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount())
-        .isEqualTo(new BigDecimal("30.0000"));
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount())
-        .isEqualTo(new BigDecimal("60.000"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost().doubleValue()).isEqualTo(0.0);
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost().doubleValue()).isEqualTo(0.0);
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost().doubleValue()).isEqualTo(0.0);
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getNetworkCost()).isEqualTo(0d);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("90.0000"));
+    assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount()).isEqualTo(new BigDecimal("30.0000"));
+    assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount()).isEqualTo(new BigDecimal("60.000"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost().doubleValue()).isEqualTo(0.0);
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost().doubleValue()).isEqualTo(0.0);
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost().doubleValue()).isEqualTo(0.0);
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(ONE_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * ONE_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * ONE_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(0d);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountWhereResourceIsNotPresent() {
     PricingData pricingData = new PricingData(10, 10, 0, 0, 256.0, 512.0, 0, PricingSource.CUR_REPORT);
@@ -360,23 +358,20 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount =
         billingCalculationService.getBillingAmount(instanceData, utilizationData, pricingData, HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
-        .isEqualTo(new BigDecimal("120.0"));
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount())
-        .isEqualTo(new BigDecimal("60.00"));
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount())
-        .isEqualTo(new BigDecimal("60.00"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("60.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("30.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("30.0"));
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getNetworkCost()).isEqualTo(10d);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("120.0"));
+    assertThat(billingAmount.getBillingAmountBreakup().getCpuBillingAmount()).isEqualTo(new BigDecimal("60.00"));
+    assertThat(billingAmount.getBillingAmountBreakup().getMemoryBillingAmount()).isEqualTo(new BigDecimal("60.00"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("60.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("30.0"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("30.0"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(256.0 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(512.0 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(10d);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForCompute() throws IOException {
     when(vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
@@ -396,17 +391,17 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("9.60"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("4.8"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("2.4"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("2.4"));
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("9.60"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("4.8"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("2.4"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("2.4"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveDuration() throws IOException {
     InstanceData instanceDataNode = getInstance("node_id", "node_cluster_id", INSTANCE_START_TIMESTAMP,
@@ -419,22 +414,22 @@ public class BillingCalculationServiceTest extends CategoryTest {
         ImmutableList.of(instanceDataNode, instanceDataPod, instanceDataNode2, instanceDataPod);
     Map<String, Double> instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         instanceDataList, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds)
+    assertThat(instanceActiveSeconds)
         .containsExactlyInAnyOrderEntriesOf(ImmutableMap.of(
             "pod_id:node_cluster_id", 86400.0, "node_id:node_cluster_id", 43200.0, "node_id:cluster_id", 21600.0));
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceActiveDurationOfEmptyList() throws IOException {
     Map<String, Double> instanceActiveSeconds = billingCalculationService.getInstanceActiveSeconds(
         Collections.emptyList(), INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(instanceActiveSeconds).hasSize(0);
+    assertThat(instanceActiveSeconds).hasSize(0);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForComputeFromCurReport() throws IOException {
     when(instanceResourceService.getComputeVMResource(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
@@ -459,18 +454,18 @@ public class BillingCalculationServiceTest extends CategoryTest {
             VMInstanceBillingData.builder().resourceId("resourceId").networkCost(10.0).computeCost(40.0).build());
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("20.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("10.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("5.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("5.0"));
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getNetworkCost()).isEqualTo(10.0);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("20.0"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("10.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("5.0"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("5.0"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(10.0);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForComputeFromCurReport2() throws IOException {
     when(instanceResourceService.getComputeVMResource(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS))
@@ -495,18 +490,18 @@ public class BillingCalculationServiceTest extends CategoryTest {
             VMInstanceBillingData.builder().resourceId("resourceId").networkCost(10.0).computeCost(40.0).build());
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 16 * 3600D, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("30.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("15.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("7.5"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("7.5"));
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getNetworkCost()).isEqualTo(10.0);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("30.0"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("15.0"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("7.5"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("7.5"));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(18432 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(30720 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getNetworkCost()).isEqualTo(10.0);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForSpotComputeInstance() throws IOException {
     when(vmPricingService.getComputeVMPricingInfo(GCP_INSTANCE_FAMILY, GCP_REGION, CloudProvider.GCP)).thenReturn(null);
@@ -529,20 +524,20 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("19.2"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("9.6"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("4.8"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("4.8"));
-    Assertions.assertThat(billingAmount.getSystemCostData().getMemorySystemCost())
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("19.2"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(new BigDecimal("9.6"));
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(new BigDecimal("4.8"));
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(new BigDecimal("4.8"));
+    assertThat(billingAmount.getSystemCostData().getMemorySystemCost())
         .isEqualTo(BigDecimal.valueOf(1.1859374999999999));
-    Assertions.assertThat(billingAmount.getSystemCostData().getCpuSystemCost()).isEqualTo(BigDecimal.valueOf(0.253125));
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(4096 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(16384 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getSystemCostData().getCpuSystemCost()).isEqualTo(BigDecimal.valueOf(0.253125));
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(4096 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(16384 * HALF_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountForFargate() throws IOException {
     when(vmPricingService.getFargatePricingInfo(REGION)).thenReturn(createEcsFargatePricingInfo());
@@ -559,17 +554,17 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("24.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(BigDecimal.ZERO);
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(BigDecimal.ZERO);
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(BigDecimal.ZERO);
-    Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
-    Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(320 * HALF_DAY_SECONDS);
-    Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(2048 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("24.0"));
+    assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(BigDecimal.ZERO);
+    assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(BigDecimal.ZERO);
+    assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(BigDecimal.ZERO);
+    assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
+    assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(320 * HALF_DAY_SECONDS);
+    assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(2048 * HALF_DAY_SECONDS);
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountGCPCustomInstance() throws IOException {
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
@@ -587,7 +582,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 0.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("0.3358799999999999625"));
   }
 
@@ -598,7 +593,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.SANDESH)
+  @Owner(developers = SANDESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountCustomInstance() throws IOException {
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
@@ -622,12 +617,12 @@ public class BillingCalculationServiceTest extends CategoryTest {
     UtilizationData utilizationData = getUtilization(1, 1);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 43200.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("1.2960000000000001500"));
   }
 
   @Test
-  @Owner(developers = OwnerRule.HITESH)
+  @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetInstanceBillingAmountIBMInstance() throws IOException {
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.K8S_POD))
@@ -651,12 +646,12 @@ public class BillingCalculationServiceTest extends CategoryTest {
                         .build());
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("1.2960000000000001500"));
   }
 
   @Test
-  @Owner(developers = OwnerRule.UTSAV)
+  @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testGetPVTotalAndIdleCost() {
     StorageResource storageResource = StorageResource.builder().capacity(STORAGE_CAPACITY).build();
@@ -673,12 +668,11 @@ public class BillingCalculationServiceTest extends CategoryTest {
 
     BigDecimal totalCost = getTotalCost(0.040D, 12D);
     BigDecimal idleCost = getIdleCost(totalCost);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
-        .isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
 
-    Assertions.assertThat(billingAmount.getIdleCostData().getStorageIdleCost()).isCloseTo(idleCost, BIG_DECIMAL_OFFSET);
+    assertThat(billingAmount.getIdleCostData().getStorageIdleCost()).isCloseTo(idleCost, BIG_DECIMAL_OFFSET);
 
-    Assertions.assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
+    assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
   }
 
   /**
@@ -687,7 +681,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
    * so that default PricingSource.HARDCODED storage pricing is used without making a network call.
    */
   @Test
-  @Owner(developers = OwnerRule.UTSAV)
+  @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   @Ignore("API 404, the API is offline currently, ignoring till correct fix")
   public void testGetPVTotalAndIdleCostWithNULLStopTime() {
@@ -705,16 +699,15 @@ public class BillingCalculationServiceTest extends CategoryTest {
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
 
     BigDecimal totalCost = getTotalCost(0.17D, 24D);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
-        .isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
-    Assertions.assertThat(billingAmount.getIdleCostData().getStorageIdleCost())
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
+    assertThat(billingAmount.getIdleCostData().getStorageIdleCost())
         .isCloseTo(getIdleCost(totalCost), BIG_DECIMAL_OFFSET);
 
-    Assertions.assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.PUBLIC_API);
+    assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.PUBLIC_API);
   }
 
   @Test
-  @Owner(developers = OwnerRule.UTSAV)
+  @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testGetPVCostWithUtilizationNotAvailable() {
     StorageResource storageResource = StorageResource.builder().capacity(STORAGE_CAPACITY).build();
@@ -730,18 +723,16 @@ public class BillingCalculationServiceTest extends CategoryTest {
         instanceData, utilizationData, 43200.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
 
     BigDecimal totalCost = getTotalCost(0.040, 24D);
-    Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
-        .isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
+    assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isCloseTo(totalCost, BIG_DECIMAL_OFFSET);
     // The absence of util may indicate either orphaned PV or simply missing util data due to delegate/batch-process
     // errors. All cost becomes unallocated -> idle = 0;
-    Assertions.assertThat(billingAmount.getIdleCostData().getStorageIdleCost())
-        .isCloseTo(BigDecimal.ZERO, BIG_DECIMAL_OFFSET);
+    assertThat(billingAmount.getIdleCostData().getStorageIdleCost()).isCloseTo(BigDecimal.ZERO, BIG_DECIMAL_OFFSET);
 
-    Assertions.assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
+    assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
   }
 
   @Test
-  @Owner(developers = OwnerRule.UTSAV)
+  @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testGetPVIdleCostWithCapacityUsageRequestAsZero() {
     final BillingAmountBreakup billingDataForResource = BillingAmountBreakup.builder()
@@ -765,10 +756,9 @@ public class BillingCalculationServiceTest extends CategoryTest {
     try {
       IdleCostData idleCostData =
           billingCalculationService.getIdleCostForResource(billingDataForResource, utilizationData, instanceData);
-      Assertions.assertThat(idleCostData.getStorageIdleCost()).isCloseTo(BigDecimal.ZERO, BIG_DECIMAL_OFFSET);
+      assertThat(idleCostData.getStorageIdleCost()).isCloseTo(BigDecimal.ZERO, BIG_DECIMAL_OFFSET);
     } catch (Exception ex) {
-      Assertions.fail(
-          "Should calculate idle cost even if storageCapacity = storageRequest = storageUtilization = 0", ex);
+      fail("Should calculate idle cost even if storageCapacity = storageRequest = storageUtilization = 0", ex);
     }
   }
 

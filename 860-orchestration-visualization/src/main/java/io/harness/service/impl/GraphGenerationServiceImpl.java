@@ -25,6 +25,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
+import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
@@ -39,23 +40,28 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class GraphGenerationServiceImpl implements GraphGenerationService {
-  private static final long THRESHOLD_LOG = 20;
-
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private SpringMongoStore mongoStore;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject private VertexSkipperService vertexSkipperService;
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
+  @Inject private MongoTemplate mongoTemplate;
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private StepDetailsUpdateEventHandler stepDetailsUpdateEventHandler;
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Getter private final Subject<GraphNodeUpdateObserver> graphNodeUpdateObserverSubject = new Subject<>();
+
+  public Subject<GraphNodeUpdateObserver> getGraphNodeUpdateObserverSubject() {
+    return graphNodeUpdateObserverSubject;
+  }
 
   @Override
   public void updateGraph(String planExecutionId) {
@@ -64,6 +70,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
         OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
     if (lastUpdatedAt == null) {
+      log.info("entity is not present in db, ignoring this update");
       return;
     }
     List<OrchestrationEventLog> unprocessedEventLogs =
@@ -71,12 +78,10 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     if (!unprocessedEventLogs.isEmpty()) {
       OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
       if (orchestrationGraph == null) {
-        log.warn("[PMS_GRAPH] Graph not yet generated. Passing on to next iteration");
+        log.warn("Orchestration Graph not yet generated. Passing on to next iteration");
         return;
       }
-      if (unprocessedEventLogs.size() > THRESHOLD_LOG) {
-        log.warn("[PMS_GRAPH] Found [{}] unprocessed event logs", unprocessedEventLogs.size());
-      }
+      log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
         OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
         if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
@@ -94,8 +99,8 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
       cachePartialOrchestrationGraph(orchestrationGraph, lastUpdatedAt);
-      log.info("[[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
-          unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
+      log.info("Processing of [{}] orchestration event logs completed in [{}ms]", unprocessedEventLogs.size(),
+          System.currentTimeMillis() - startTs);
     }
   }
 

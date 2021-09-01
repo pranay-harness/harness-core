@@ -71,13 +71,13 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueStep = "testStep";
 
     pmsSweepingOutputService.consumeInternal(ambianceSection, outputName,
-        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), 2, null);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), 2);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consumeInternal(ambianceStep, outputName,
-        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), 0, null);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), 0);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);

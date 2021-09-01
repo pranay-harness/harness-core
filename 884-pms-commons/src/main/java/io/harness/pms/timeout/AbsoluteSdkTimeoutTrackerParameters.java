@@ -1,6 +1,5 @@
 package io.harness.pms.timeout;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.YamlException;
@@ -15,7 +14,6 @@ import lombok.Value;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
-@RecasterAlias("io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters")
 public class AbsoluteSdkTimeoutTrackerParameters implements SdkTimeoutTrackerParameters {
   ParameterField<String> timeout;
 

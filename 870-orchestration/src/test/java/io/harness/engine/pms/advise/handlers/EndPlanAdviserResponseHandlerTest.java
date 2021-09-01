@@ -33,6 +33,7 @@ import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.ProtoUtils;
+import io.harness.testlib.RealMongo;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -85,6 +86,7 @@ public class EndPlanAdviserResponseHandlerTest extends OrchestrationTestBase {
   }
 
   @Test
+  @RealMongo
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void shouldTestHandleAdviseWithEndTransition() {
@@ -95,6 +97,7 @@ public class EndPlanAdviserResponseHandlerTest extends OrchestrationTestBase {
   }
 
   @Test
+  @RealMongo
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void shouldTestHandlerAdviseWithAbort() {

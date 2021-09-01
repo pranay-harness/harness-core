@@ -1,6 +1,5 @@
 package io.harness.cdng.service.steps;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets.ArtifactOverrideSetsStepParametersWrapper;
@@ -21,7 +20,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("serviceSpecStepParameters")
-@RecasterAlias("io.harness.cdng.service.steps.ServiceSpecStepParameters")
 public class ServiceSpecStepParameters implements StepParameters {
   @SkipAutoEvaluation ParameterField<List<NGVariable>> originalVariables;
   @SkipAutoEvaluation ParameterField<List<NGVariableOverrideSetWrapper>> originalVariableOverrideSets;

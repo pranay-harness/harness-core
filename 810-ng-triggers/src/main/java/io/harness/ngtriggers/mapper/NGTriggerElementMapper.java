@@ -193,14 +193,13 @@ public class NGTriggerElementMapper {
   }
 
   public void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
-    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
-      PollingConfig existingPollingConfig = existingEntity.getMetadata().getBuildMetadata().getPollingConfig();
-
-      if (existingPollingConfig != null && isNotEmpty(existingPollingConfig.getSignature())) {
+    PollingConfig existingPollingConfig = existingEntity.getMetadata().getBuildMetadata().getPollingConfig();
+    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST && null != existingPollingConfig) {
+      if (isNotEmpty(existingPollingConfig.getSignature())) {
         newEntity.getMetadata().getBuildMetadata().getPollingConfig().setSignature(
             existingPollingConfig.getSignature());
       }
-      if (existingPollingConfig != null && isNotEmpty(existingPollingConfig.getPollingDocId())) {
+      if (isNotEmpty(existingPollingConfig.getPollingDocId())) {
         newEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
             existingPollingConfig.getPollingDocId());
       }
@@ -417,7 +416,6 @@ public class NGTriggerElementMapper {
                               : StringUtils.EMPTY)
             .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
             .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
-            .triggerStatus(ngTriggerEntity.getTriggerStatus())
             .webhookUrl(webhookUrl);
 
     // Webhook Details

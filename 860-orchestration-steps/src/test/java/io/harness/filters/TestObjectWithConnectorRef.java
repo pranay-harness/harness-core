@@ -1,6 +1,5 @@
 package io.harness.filters;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
@@ -17,7 +16,6 @@ import lombok.Data;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Data
 @Builder
-@RecasterAlias("io.harness.filters.TestObjectWithConnectorRef")
 public class TestObjectWithConnectorRef implements PMSStepInfo, WithConnectorRef {
   @Override
   public Map<String, ParameterField<String>> extractConnectorRefs() {

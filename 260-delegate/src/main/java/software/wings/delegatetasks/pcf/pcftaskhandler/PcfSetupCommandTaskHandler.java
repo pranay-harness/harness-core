@@ -13,7 +13,6 @@ import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.PcfUtils.encodeColor;
 import static io.harness.pcf.PcfUtils.getRevisionFromServiceName;
-import static io.harness.pcf.model.PcfConstants.HARNESS__STAGE__IDENTIFIER;
 import static io.harness.pcf.model.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
 import static software.wings.beans.LogColor.White;
@@ -32,7 +31,6 @@ import io.harness.delegate.beans.pcf.CfAppRenameInfo;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.cf.PcfCommandTaskHandler;
-import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
 import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
@@ -151,11 +149,10 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       printExistingApplicationsDetails(executionLogCallback, previousReleases);
 
       boolean nonVersioning = cfCommandSetupRequest.isNonVersioning();
-      String existingAppNamingStrategy = getExistingAppNamingStrategy(previousReleases, cfCommandSetupRequest);
       boolean versioningChanged =
           isVersioningChanged(nonVersioning, previousReleases, cfCommandSetupRequest.getReleaseNamePrefix());
       int activeAppRevision = -1;
-      if (versioningChanged && !cfCommandSetupRequest.isBlueGreen()) {
+      if (versioningChanged) {
         executionLogCallback.saveExecutionLog(getVersionChangeMessage(nonVersioning));
         activeAppRevision = executeVersioningChange(
             previousReleases, cfRequestConfig, cfCommandSetupRequest, nonVersioning, renames, executionLogCallback);
@@ -178,8 +175,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       }
 
       // Get new Revision version
-      String releaseRevision =
-          getReleaseRevisionForNewApplication(previousReleases, versioningChanged, cfCommandSetupRequest);
+      String releaseRevision = getReleaseRevisionForNewApplication(previousReleases, nonVersioning);
 
       // Delete any older application excpet most recent 1.
       deleteOlderApplications(previousReleases, cfRequestConfig, cfCommandSetupRequest, pcfAppAutoscalarRequestData,
@@ -193,7 +189,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           pcfDeploymentManager.getPreviousReleases(cfRequestConfig, cfCommandSetupRequest.getReleaseNamePrefix());
 
       Integer totalPreviousInstanceCount = CollectionUtils.isEmpty(previousReleases)
-          ? 0
+          ? Integer.valueOf(0)
           : previousReleases.stream().mapToInt(ApplicationSummary::getInstances).sum();
 
       Integer instanceCountForMostRecentVersion = CollectionUtils.isEmpty(previousReleases)
@@ -257,7 +253,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
               .downsizeDetails(downsizeAppDetails)
               .versioningChanged(versioningChanged)
               .nonVersioning(cfCommandSetupRequest.isNonVersioning())
-              .existingAppNamingStrategy(existingAppNamingStrategy)
               .activeAppRevision(activeAppRevision)
               .build();
 
@@ -291,25 +286,13 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     }
   }
 
-  private String getExistingAppNamingStrategy(
-      List<ApplicationSummary> previousReleases, CfCommandSetupRequest setupRequest) {
-    if (!setupRequest.isNonVersioningInactiveRollbackEnabled()) {
-      return AppNamingStrategy.VERSIONING.name();
-    }
-    return isNonVersionReleaseExist(previousReleases, setupRequest.getReleaseNamePrefix())
-        ? AppNamingStrategy.APP_NAME_WITH_VERSIONING.name()
-        : AppNamingStrategy.VERSIONING.name();
-  }
-
   private String getInActiveAppMessage(CfAppSetupTimeDetails mostRecentInactiveAppVersionDetails) {
     if (mostRecentInactiveAppVersionDetails == null
         || isEmpty(mostRecentInactiveAppVersionDetails.getApplicationName())) {
       return "No in-active app found";
     }
-    Integer initialInstanceCount = mostRecentInactiveAppVersionDetails.getInitialInstanceCount();
-    return String.format("Considering [%s] as in-active app. Instance count - [%d]",
-        PcfUtils.encodeColor(mostRecentInactiveAppVersionDetails.getApplicationName()),
-        initialInstanceCount != null ? initialInstanceCount : 0);
+    return String.format("Considering [%s] as in-active app",
+        PcfUtils.encodeColor(mostRecentInactiveAppVersionDetails.getApplicationName()));
   }
 
   private void handleAppRenameRevert(Deque<CfAppRenameInfo> renames, CfRequestConfig cfRequestConfig,
@@ -342,9 +325,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       LogCallback executionLogCallback) throws PivotalClientApiException {
     List<ApplicationSummary> releases =
         pcfDeploymentManager.getPreviousReleases(cfRequestConfig, cfCommandSetupRequest.getReleaseNamePrefix());
-    if (cfCommandSetupRequest.isBlueGreen()) {
-      return releases;
-    }
 
     if (nonVersioning) {
       executionLogCallback.saveExecutionLog("\n# Initiating renaming of apps");
@@ -395,13 +375,10 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
   private boolean isVersioningChanged(
       boolean nonVersioning, List<ApplicationSummary> releases, String releaseNamePrefix) {
-    boolean nonVersionReleaseExist = isNonVersionReleaseExist(releases, releaseNamePrefix);
+    boolean nonVersionReleaseExist =
+        releases.stream().anyMatch(app -> app.getName().equalsIgnoreCase(releaseNamePrefix));
     return isNotEmpty(releases)
         && ((nonVersioning && !nonVersionReleaseExist) || (!nonVersioning && nonVersionReleaseExist));
-  }
-
-  private boolean isNonVersionReleaseExist(List<ApplicationSummary> releases, String releaseNamePrefix) {
-    return releases.stream().anyMatch(app -> app.getName().equalsIgnoreCase(releaseNamePrefix));
   }
 
   /**
@@ -590,15 +567,9 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     cfRequestConfig.setSafeDisplayServiceVariables(cfCommandSetupRequest.getSafeDisplayServiceVariables());
   }
 
-  private String getReleaseRevisionForNewApplication(List<ApplicationSummary> previousReleases,
-      boolean versioningChanged, CfCommandSetupRequest cfCommandSetupRequest) {
-    boolean nonVersioning = cfCommandSetupRequest.isNonVersioning();
-
-    if (cfCommandSetupRequest.isBlueGreen() && (nonVersioning || versioningChanged)) {
-      return HARNESS__STAGE__IDENTIFIER;
-    }
-
+  private String getReleaseRevisionForNewApplication(List<ApplicationSummary> previousReleases, boolean nonVersioning) {
     String revision = StringUtils.EMPTY;
+
     if (!nonVersioning) {
       revision = CollectionUtils.isEmpty(previousReleases)
           ? "0"

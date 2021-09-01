@@ -15,7 +15,6 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
-import software.wings.app.MainConfiguration;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
 import software.wings.beans.sso.SSOType;
@@ -68,15 +67,13 @@ public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
   @Inject private MorphiaPersistenceProvider<SSOSettings> persistenceProvider;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
-  @Inject private MainConfiguration mainConfiguration;
 
   public void registerIterators() {
-    LdapSyncJobConfig ldapSyncJobConfig = mainConfiguration.getLdapSyncJobConfig();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("LdapGroupSyncTask")
-            .poolSize(ldapSyncJobConfig.getPoolSize())
-            .interval(ofMinutes(ldapSyncJobConfig.getSyncInterval()))
+            .poolSize(3)
+            .interval(ofMinutes(15))
             .build(),
         SSOSettings.class,
         MongoPersistenceIterator.<SSOSettings, MorphiaFilterExpander<SSOSettings>>builder()

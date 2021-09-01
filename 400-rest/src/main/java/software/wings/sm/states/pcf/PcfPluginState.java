@@ -291,8 +291,7 @@ public class PcfPluginState extends State {
     List<String> gitFiles = pathsFromScript.stream().map(this::toRelativePath).collect(Collectors.toList());
     // in case root folder is accessed, remove all the file paths
     if (gitFiles.contains("")) {
-      gitFiles = new ArrayList<>();
-      gitFiles.add("");
+      gitFiles = Collections.singletonList("");
     }
     serviceManifest.getGitFileConfig().setFilePathList(gitFiles);
     serviceManifest.getGitFileConfig().setFilePath(null);
@@ -445,7 +444,7 @@ public class PcfPluginState extends State {
   private List<FileData> prepareFilesForTransfer(
       ApplicationManifest serviceManifest, List<String> pathsFromScript, ExecutionContext context) {
     if (EmptyPredicate.isEmpty(pathsFromScript)) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
     Map<String, String> pathToContentMap;
     if (isServiceManifestRemote(serviceManifest)) {
@@ -454,7 +453,7 @@ public class PcfPluginState extends State {
       pathToContentMap = getLocalFilesForTransfer(serviceManifest, pathsFromScript);
     }
     if (EmptyPredicate.isEmpty(pathToContentMap)) {
-      return new ArrayList<>();
+      return Collections.emptyList();
     }
 
     return pathToContentMap.entrySet()

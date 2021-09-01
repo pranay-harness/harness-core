@@ -3,7 +3,6 @@ package io.harness.cdng.infra;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.InfrastructureType;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfrastructureDefVisitorHelper;
@@ -27,7 +26,6 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @SimpleVisitorHelper(helperClass = InfrastructureDefVisitorHelper.class)
 @TypeAlias("infrastructureDef")
-@RecasterAlias("io.harness.cdng.infra.InfrastructureDef")
 public class InfrastructureDef implements Visitable {
   @NotNull @JsonProperty("type") InfrastructureType type;
 

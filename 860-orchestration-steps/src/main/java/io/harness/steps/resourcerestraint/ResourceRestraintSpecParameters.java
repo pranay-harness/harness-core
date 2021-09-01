@@ -1,6 +1,5 @@
 package io.harness.steps.resourcerestraint;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
@@ -16,7 +15,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("resourceRestraintSpecParameters")
-@RecasterAlias("io.harness.steps.resourcerestraint.ResourceRestraintSpecParameters")
 public class ResourceRestraintSpecParameters implements SpecParameters {
   String name;
   @NotNull String resourceUnit;

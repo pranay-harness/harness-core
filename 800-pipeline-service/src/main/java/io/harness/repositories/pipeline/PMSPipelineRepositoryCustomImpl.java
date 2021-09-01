@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.helper.EntityDistinctElementHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
@@ -91,15 +92,24 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
-  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity,
-      PipelineConfig yamlDTO, ChangeType changeType) {
+  public PipelineEntity updatePipelineYaml(
+      PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO, ChangeType changeType) {
     Supplier<OutboxEvent> supplier = null;
     if (!gitSyncSdkService.isGitSyncEnabled(pipelineToUpdate.getAccountId(), pipelineToUpdate.getOrgIdentifier(),
             pipelineToUpdate.getProjectIdentifier())) {
-      supplier = ()
-          -> outboxService.save(
-              new PipelineUpdateEvent(pipelineToUpdate.getAccountIdentifier(), pipelineToUpdate.getOrgIdentifier(),
-                  pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate, oldPipelineEntity));
+      Optional<PipelineEntity> pipelineEntityOptional =
+          findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(pipelineToUpdate.getAccountId(),
+              pipelineToUpdate.getOrgIdentifier(), pipelineToUpdate.getProjectIdentifier(),
+              pipelineToUpdate.getIdentifier(), true);
+      if (pipelineEntityOptional.isPresent()) {
+        PipelineEntity oldPipeline = pipelineEntityOptional.get();
+        supplier = ()
+            -> outboxService.save(
+                new PipelineUpdateEvent(pipelineToUpdate.getAccountIdentifier(), pipelineToUpdate.getOrgIdentifier(),
+                    pipelineToUpdate.getProjectIdentifier(), pipelineToUpdate, oldPipeline));
+      } else {
+        throw new InvalidRequestException("No such pipeline exist", WingsException.USER);
+      }
     }
     return gitAwarePersistence.save(
         pipelineToUpdate, pipelineToUpdate.getYaml(), changeType, PipelineEntity.class, supplier);

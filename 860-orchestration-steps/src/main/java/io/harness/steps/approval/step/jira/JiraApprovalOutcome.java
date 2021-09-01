@@ -2,7 +2,6 @@ package io.harness.steps.approval.step.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.Outcome;
 
@@ -16,5 +15,4 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @JsonTypeName("jiraApprovalOutcome")
 @TypeAlias("jiraApprovalOutcome")
-@RecasterAlias("io.harness.steps.approval.step.jira.JiraApprovalOutcome")
 public class JiraApprovalOutcome implements Outcome {}

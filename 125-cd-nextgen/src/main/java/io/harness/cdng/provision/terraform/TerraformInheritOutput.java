@@ -1,6 +1,5 @@
 package io.harness.cdng.provision.terraform;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
@@ -20,7 +19,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("terraformInheritOutput")
 @JsonTypeName("terraformInheritOutput")
-@RecasterAlias("io.harness.cdng.provision.terraform.TerraformInheritOutput")
 public class TerraformInheritOutput implements ExecutionSweepingOutput {
   String workspace;
   GitStoreConfig configFiles;

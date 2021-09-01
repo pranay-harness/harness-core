@@ -9,8 +9,6 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.CPU_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_DOUBLE_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_STRING_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.ID_SEPARATOR;
-import static io.harness.ccm.views.utils.ClusterTableKeys.MAX_CPU_UTILIZATION_VALUE;
-import static io.harness.ccm.views.utils.ClusterTableKeys.MAX_MEMORY_UTILIZATION_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_LIMIT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_LIMIT;
@@ -69,11 +67,9 @@ public class PerspectiveTimeSeriesHelper {
       double cpuLimit = DEFAULT_DOUBLE_VALUE;
       double cpuRequest = DEFAULT_DOUBLE_VALUE;
       double cpuUtilizationValue = DEFAULT_DOUBLE_VALUE;
-      double maxCpuUtilizationValue = DEFAULT_DOUBLE_VALUE;
       double memoryLimit = DEFAULT_DOUBLE_VALUE;
       double memoryRequest = DEFAULT_DOUBLE_VALUE;
       double memoryUtilizationValue = DEFAULT_DOUBLE_VALUE;
-      double maxMemoryUtilizationValue = DEFAULT_DOUBLE_VALUE;
 
       String id = DEFAULT_STRING_VALUE;
       String stringValue = DEFAULT_STRING_VALUE;
@@ -121,9 +117,6 @@ public class PerspectiveTimeSeriesHelper {
               case AVG_CPU_UTILIZATION_VALUE:
                 cpuUtilizationValue = getNumericValue(row, field) / 1024;
                 break;
-              case MAX_CPU_UTILIZATION_VALUE:
-                maxCpuUtilizationValue = getNumericValue(row, field) / 1024;
-                break;
               case MEMORY_LIMIT:
                 memoryLimit = getNumericValue(row, field) / 1024;
                 break;
@@ -132,9 +125,6 @@ public class PerspectiveTimeSeriesHelper {
                 break;
               case AVG_MEMORY_UTILIZATION_VALUE:
                 memoryUtilizationValue = getNumericValue(row, field) / 1024;
-                break;
-              case MAX_MEMORY_UTILIZATION_VALUE:
-                maxMemoryUtilizationValue = getNumericValue(row, field) / 1024;
                 break;
               default:
                 break;
@@ -150,14 +140,10 @@ public class PerspectiveTimeSeriesHelper {
       addDataPointToMap(id, "REQUEST", "UTILIZATION", cpuRequest, cpuRequestDataPointsMap, startTimeTruncatedTimestamp);
       addDataPointToMap(
           id, "AVG", "UTILIZATION", cpuUtilizationValue, cpuUtilizationValueDataPointsMap, startTimeTruncatedTimestamp);
-      addDataPointToMap(id, "MAX", "UTILIZATION", maxCpuUtilizationValue, cpuUtilizationValueDataPointsMap,
-          startTimeTruncatedTimestamp);
       addDataPointToMap(id, "LIMIT", "UTILIZATION", memoryLimit, memoryLimitDataPointsMap, startTimeTruncatedTimestamp);
       addDataPointToMap(
           id, "REQUEST", "UTILIZATION", memoryRequest, memoryRequestDataPointsMap, startTimeTruncatedTimestamp);
       addDataPointToMap(id, "AVG", "UTILIZATION", memoryUtilizationValue, memoryUtilizationValueDataPointsMap,
-          startTimeTruncatedTimestamp);
-      addDataPointToMap(id, "MAX", "UTILIZATION", maxMemoryUtilizationValue, memoryUtilizationValueDataPointsMap,
           startTimeTruncatedTimestamp);
     }
     return PerspectiveTimeSeriesData.builder()

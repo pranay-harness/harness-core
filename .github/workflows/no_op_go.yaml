@@ -10,66 +10,75 @@ jobs:
     name: No-op tests for Go
     runs-on: ubuntu-18.04
     steps:
-      - name: Complete ti0
+      - name: Complete unit-tests-0
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap-ti0
-          description: 'Mark ti0 as success'
+          context: unittest0
+          description: 'Mark unit-tests-0 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
-      - name: Complete ti1
+      - name: Complete unit-tests-1
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap1-ti1
-          description: 'Mark ti1 as success'
+          context: unittest1
+          description: 'Mark unit-tests-1 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
-      - name: Complete ti2
+      - name: Complete unit-tests-2
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap2backup-ti2
-          description: 'Mark ti2 as success'
+          context: unittest2
+          description: 'Mark unit-tests-2 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
-      - name: Complete ti3
+      - name: Complete unit-tests-3
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap3-ti3
-          description: 'Mark ti3 as success'
+          context: unittest3
+          description: 'Mark unit-tests-3 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
-      - name: Complete ti4
+      - name: Complete unit-tests-4
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap4-ti4
-          description: 'Mark ti4 as success'
+          context: unittest4
+          description: 'Mark unit-tests-4 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
-      - name: Complete pmd checks
+      - name: Complete functional-tests
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runPMDCheck-PMDCheck
-          description: 'Mark PMD checks as success'
+          context: FunctionalTests
+          description: 'Mark functional-tests as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
-      - name: Complete maven build
+      - name: Complete pmd-checks
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runMavenBuild-mavenbuild
-          description: 'Mark maven build as success'
+          context: PMDCheck
+          description: 'Mark pmd-checks as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete warnings-checks
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: warnings-checks
+          description: 'Mark warnings-checks as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
@@ -77,16 +86,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runCheckstyleCheck-checkstylecheck
+          context: checkstylecheck
           description: 'Mark check-style as success'
-          state: 'success'
-          sha: ${{github.event.pull_request.head.sha || github.sha}}
-
-      - name: Complete aeriform check
-        uses: Sibz/github-status-action@v1
-        with:
-          authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runAeriformCheck-AeriformCheck
-          description: 'Mark aeriform-check as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}

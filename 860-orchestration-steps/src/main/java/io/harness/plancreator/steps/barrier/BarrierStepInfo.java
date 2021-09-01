@@ -2,7 +2,6 @@ package io.harness.plancreator.steps.barrier;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
@@ -30,7 +29,6 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.BARRIER)
 @TypeAlias("barrierStepInfo")
 @OwnedBy(PIPELINE)
-@RecasterAlias("io.harness.plancreator.steps.barrier.BarrierStepInfo")
 public class BarrierStepInfo implements PMSStepInfo {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
   @JsonProperty("barrierRef") @NotNull String identifier;

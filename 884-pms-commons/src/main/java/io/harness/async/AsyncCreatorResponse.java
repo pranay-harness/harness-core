@@ -1,11 +1,12 @@
 package io.harness.async;
 
-import io.harness.pms.contracts.plan.Dependencies;
+import io.harness.pms.yaml.YamlField;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AsyncCreatorResponse {
-  Dependencies getDependencies();
+  Map<String, YamlField> getDependencies();
 
   List<String> getErrorMessages();
 }

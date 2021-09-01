@@ -29,7 +29,6 @@ public class InviteMapper {
         .orgIdentifier(invite.getOrgIdentifier())
         .projectIdentifier(invite.getProjectIdentifier())
         .roleBindings(invite.getRoleBindings())
-        .userGroups(invite.getUserGroups())
         .inviteType(invite.getInviteType())
         .approved(invite.getApproved())
         .build();
@@ -44,7 +43,6 @@ public class InviteMapper {
         .name(inviteDTO.getName())
         .email(inviteDTO.getEmail())
         .roleBindings(inviteDTO.getRoleBindings())
-        .userGroups(inviteDTO.getUserGroups())
         .inviteType(inviteDTO.getInviteType())
         .accountIdentifier(ngAccess.getAccountIdentifier())
         .orgIdentifier(ngAccess.getOrgIdentifier())
@@ -67,7 +65,6 @@ public class InviteMapper {
         invites.add(Invite.builder()
                         .email(emailId)
                         .roleBindings(createInviteDTO.getRoleBindings())
-                        .userGroups(createInviteDTO.getUserGroups())
                         .inviteType(createInviteDTO.getInviteType())
                         .approved(Boolean.FALSE)
                         .accountIdentifier(accountIdentifier)

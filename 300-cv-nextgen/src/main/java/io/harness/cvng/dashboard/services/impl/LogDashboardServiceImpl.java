@@ -11,6 +11,7 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
@@ -25,7 +26,6 @@ import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.beans.PageResponse;
-import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -83,9 +83,16 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
   @Override
   public PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
-      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, List<String> healthSourceIdentifiers,
+      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, DataSourceType dataSourceType,
       PageParams pageParams) {
-    List<CVConfig> configs = cvConfigService.list(serviceEnvironmentParams, healthSourceIdentifiers);
+    List<CVConfig> configs =
+        cvConfigService.getConfigsOfProductionEnvironments(serviceEnvironmentParams.getAccountIdentifier(),
+            serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+            serviceEnvironmentParams.getEnvironmentIdentifier(), serviceEnvironmentParams.getServiceIdentifier(), null);
+    if (dataSourceType != null) {
+      configs =
+          configs.stream().filter(cvConfig -> cvConfig.getType().equals(dataSourceType)).collect(Collectors.toList());
+    }
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
     List<LogAnalysisTag> tags = isEmpty(clusterTypes) ? Arrays.asList(LogAnalysisTag.values()) : clusterTypes;
     return getLogs(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
@@ -212,7 +219,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<List<LogData>> logDataResults = cvngParallelExecutor.executeParallel(logDataCallables);
     logDataResults.forEach(result -> logDataToBeReturned.addAll(result));
 
-    List<AnalyzedLogDataDTO> sortedList = new ArrayList<>();
+    SortedSet<AnalyzedLogDataDTO> sortedList = new TreeSet<>();
     // create the sorted set first. Then form the page response.
     logDataToBeReturned.forEach(logData -> {
       sortedList.add(AnalyzedLogDataDTO.builder()
@@ -223,8 +230,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                          .logData(logData)
                          .build());
     });
-    Collections.sort(sortedList);
-    return PageUtils.offsetAndLimit(sortedList, page, size);
+
+    return formPageResponse(page, size, sortedList);
   }
 
   private List<AnalysisResult> getAnalysisResultForCvConfigId(

@@ -745,6 +745,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   @Override
   public ServiceDeploymentInfoDTO getServiceDeployments(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays) {
+    startTime = getStartTimeOfTheDayAsEpoch(startTime);
+    endTime = getStartTimeOfNextDay(endTime);
     String query = queryBuilderServiceDeployments(
         accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime, bucketSizeInDays, serviceIdentifier);
 
@@ -845,9 +847,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       totalBuildSqlBuilder.append(String.format(" and service_id='%s'", serviceIdentifier));
     }
 
-    totalBuildSqlBuilder.append(String.format(
-        ") and accountid='%s' and orgidentifier='%s' and projectidentifier='%s' and service_startts>=%s and service_startts<%s) as innertable group by status, time_entity;",
-        accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime));
+    totalBuildSqlBuilder.append(
+        String.format(") and service_startts>=%s and service_startts<%s) as innertable group by status, time_entity;",
+            startTime, endTime));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -885,25 +887,24 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public ServiceDeploymentListInfo getServiceDeploymentsInfo(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays)
       throws Exception {
-    startTime = getStartTimeOfTheDayAsEpoch(startTime);
-    endTime = getStartTimeOfNextDay(endTime);
     long numberOfDays = getNumberOfDays(startTime, endTime);
     validateBucketSize(numberOfDays, bucketSizeInDays);
-    long prevStartTime = getStartTimeOfPreviousInterval(startTime, numberOfDays);
+    long prevStartTime = startTime - (endTime - startTime + DAY_IN_MS);
+    long prevEndTime = startTime - DAY_IN_MS;
 
     ServiceDeploymentInfoDTO serviceDeployments = getServiceDeployments(
         accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime, serviceIdentifier, bucketSizeInDays);
     List<ServiceDeployment> serviceDeploymentList = serviceDeployments.getServiceDeploymentList();
 
     ServiceDeploymentInfoDTO prevServiceDeployment = getServiceDeployments(accountIdentifier, orgIdentifier,
-        projectIdentifier, prevStartTime, startTime, serviceIdentifier, bucketSizeInDays);
+        projectIdentifier, prevStartTime, prevEndTime, serviceIdentifier, bucketSizeInDays);
     List<ServiceDeployment> prevServiceDeploymentList = prevServiceDeployment.getServiceDeploymentList();
 
     long totalDeployments = getTotalDeployments(serviceDeploymentList);
     long prevTotalDeployments = getTotalDeployments(prevServiceDeploymentList);
     double failureRate = getFailureRate(serviceDeploymentList);
-    double frequency = totalDeployments / (double) numberOfDays;
-    double prevFrequency = prevTotalDeployments / (double) numberOfDays;
+    double frequency = totalDeployments / numberOfDays;
+    double prevFrequency = prevTotalDeployments / numberOfDays;
 
     double totalDeploymentChangeRate = calculateChangeRate(prevTotalDeployments, totalDeployments);
     double failureRateChangeRate = getFailureRateChangeRate(serviceDeploymentList, prevServiceDeploymentList);
@@ -1178,8 +1179,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     double failureRate = 0.0;
     double failureRateChangeRate = calculateChangeRate(previousFailure, failure);
     double totalDeploymentChangeRate = calculateChangeRate(prevTotalDeployment, totalDeployment);
-    double frequency = totalDeployment / (double) numberOfDays;
-    double prevFrequency = prevTotalDeployment / (double) numberOfDays;
+    double frequency = totalDeployment / numberOfDays;
+    double prevFrequency = prevTotalDeployment / numberOfDays;
     double frequencyChangeRate = calculateChangeRate(prevFrequency, frequency);
     if (totalDeployment != 0) {
       percentSuccess = success / (double) totalDeployment;
@@ -1265,7 +1266,6 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
               }
             }
           } else {
-            prevTotalDeployments++;
             if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
               previousSuccess++;
             }
@@ -1314,6 +1314,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startInterval, long endInterval, long previousStartInterval,
       EnvironmentType envType) {
+    endInterval = endInterval + DAY_IN_MS;
     String query = queryBuilderSelectWorkload(
         accountIdentifier, orgIdentifier, projectIdentifier, previousStartInterval, endInterval, envType);
 
@@ -1343,7 +1344,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           if (resultSet.getString("endTs") != null) {
             timeInterval.add(Pair.of(startTime, Long.valueOf(resultSet.getString("endTs"))));
           } else {
-            timeInterval.add(Pair.of(startTime, -1L));
+            timeInterval.add(Pair.of(startInterval, -1L));
           }
           deploymentTypeList.add(resultSet.getString("deployment_type"));
 
@@ -1479,10 +1480,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public TimeValuePairListDTO<Integer> getInstanceGrowthTrend(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
     List<TimeValuePair<Integer>> timeValuePairList = new ArrayList<>();
-    Map<Long, Integer> timeValuePairMap = new HashMap<>();
 
     final long tunedStartTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
-    final long tunedEndTimeInMs = getStartTimeOfNextDay(endTimeInMs);
+    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
 
     final String query =
         "select reportedat, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat order by reportedat asc";
@@ -1505,7 +1505,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           final long timestamp =
               resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
           final int count = Integer.parseInt(resultSet.getString("count"));
-          timeValuePairMap.put(getStartTimeOfTheDayAsEpoch(timestamp), count);
+          timeValuePairList.add(new TimeValuePair<>(getStartTimeOfTheDayAsEpoch(timestamp), count));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -1514,13 +1514,6 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
-
-    long currTime = tunedStartTimeInMs;
-    while (currTime < tunedEndTimeInMs) {
-      timeValuePairList.add(new TimeValuePair<>(currTime, timeValuePairMap.getOrDefault(currTime, 0)));
-      currTime = currTime + DAY.getDurationInMs();
-    }
-
     return new TimeValuePairListDTO<>(timeValuePairList);
   }
 
@@ -1534,7 +1527,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     Map<String, Map<Long, Integer>> envIdToTimestampAndCountMap = new HashMap<>();
 
     final long tunedStartTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
-    final long tunedEndTimeInMs = getStartTimeOfNextDay(endTimeInMs);
+    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
 
     final String query =
         "select reportedat, envid, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat, envid order by reportedat asc";

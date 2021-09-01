@@ -1,19 +1,12 @@
 package io.harness.version;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.VersionInfoException;
 import io.harness.serializer.YamlUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
-@Slf4j
-@OwnedBy(PL)
 public class VersionInfoManager {
   private static final String INIT_VERSION_INFO = "version   : 0.0.0.0\n"
       + "buildNo   : 0.0\n"
@@ -34,9 +27,8 @@ public class VersionInfoManager {
       if (stream != null) {
         versionInfo = IOUtils.toString(stream, StandardCharsets.UTF_8);
       }
-    } catch (IOException exception) {
-      log.error("Error reading version info from file: {}", VERSION_INFO_YAML);
-      throw new VersionInfoException(exception);
+    } catch (IOException ignore) {
+      // Do nothing
     }
     return versionInfo;
   }

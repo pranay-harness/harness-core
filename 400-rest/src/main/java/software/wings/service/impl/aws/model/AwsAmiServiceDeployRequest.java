@@ -41,7 +41,6 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
   private boolean rollback;
   private List<String> baseScalingPolicyJSONs;
   private List<String> existingInstanceIds;
-  private List<String> baseAsgScheduledActionJSONs;
 
   @Builder
   public AwsAmiServiceDeployRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
@@ -51,10 +50,8 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
       List<AwsAmiResizeData> asgDesiredCounts, int maxInstances, AwsAmiPreDeploymentData preDeploymentData,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, boolean rollback,
       List<String> baseScalingPolicyJSONs, int desiredInstances, List<String> existingInstanceIds,
-      boolean amiInServiceHealthyStateFFEnabled, List<String> baseAsgScheduledActionJSONs,
-      boolean amiAsgConfigCopyEnabled) {
-    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region, amiInServiceHealthyStateFFEnabled,
-        amiAsgConfigCopyEnabled);
+      boolean amiInServiceHealthyStateFFEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region, amiInServiceHealthyStateFFEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.activityId = activityId;
@@ -75,6 +72,5 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
     this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
     this.desiredInstances = desiredInstances;
     this.existingInstanceIds = existingInstanceIds;
-    this.baseAsgScheduledActionJSONs = baseAsgScheduledActionJSONs;
   }
 }

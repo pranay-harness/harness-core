@@ -38,7 +38,6 @@ public interface Constants {
   String HEADER = "header";
   String REPO_URL = "repoUrl";
   String GIT_USER = "gitUser";
-  String TAG = "tag";
   String PR_TITLE = "prTitle";
   String SOURCE_TYPE = "sourceType";
 

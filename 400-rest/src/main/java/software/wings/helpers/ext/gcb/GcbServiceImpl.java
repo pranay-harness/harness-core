@@ -206,16 +206,7 @@ public class GcbServiceImpl implements GcbService {
         throw new GcbClientException(msg);
       }
     } catch (TokenResponseException e) {
-      if (e.getDetails() != null) {
-        if (e.getDetails().getErrorDescription() != null) {
-          throw new GcbClientException("GCB_TASK - GCB task failed due to: " + e.getDetails().getErrorDescription(), e);
-        }
-        if (e.getDetails().getError() != null) {
-          throw new GcbClientException("GCB_TASK - GCB task failed due to: " + e.getDetails().getError(), e);
-        }
-      }
-
-      throw new GcbClientException("GCB_TASK - GCB task failed due to: " + e.getMessage(), e);
+      throw new GcbClientException("GCB_TASK - GCB task failed due to:" + e.getMessage(), e);
     }
   }
 

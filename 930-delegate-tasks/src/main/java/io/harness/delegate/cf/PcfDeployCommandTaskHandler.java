@@ -92,7 +92,21 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       CfInternalConfig pcfConfig = cfCommandRequest.getPcfConfig();
       secretDecryptionService.decrypt(pcfConfig, encryptedDataDetails, false);
 
-      CfRequestConfig cfRequestConfig = getCfRequestConfig(cfCommandDeployRequest, pcfConfig);
+      CfRequestConfig cfRequestConfig =
+          CfRequestConfig.builder()
+              .userName(String.valueOf(pcfConfig.getUsername()))
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .orgName(cfCommandDeployRequest.getOrganization())
+              .spaceName(cfCommandDeployRequest.getSpace())
+              .timeOutIntervalInMins(cfCommandDeployRequest.getTimeoutIntervalInMin())
+              .useCFCLI(cfCommandDeployRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
+                  cfCommandDeployRequest.isUseCfCLI(), cfCommandDeployRequest.getCfCliVersion()))
+              .cfCliVersion(cfCommandDeployRequest.getCfCliVersion())
+              .limitPcfThreads(cfCommandDeployRequest.isLimitPcfThreads())
+              .ignorePcfConnectionContextCache(cfCommandDeployRequest.isIgnorePcfConnectionContextCache())
+              .build();
 
       // This will be CF_HOME for any cli related operations
       workingDirectory = pcfCommandTaskBaseHelper.generateWorkingDirectoryForDeployment();
@@ -149,9 +163,13 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
       cfDeployCommandResponse.setInstanceDataUpdated(cfServiceDataUpdated);
       cfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElementsForVerification);
 
-    } catch (Exception e) {
+    } catch (PivotalClientApiException | IOException e) {
       exceptionOccured = true;
       exception = e;
+      logException(executionLogCallback, cfCommandDeployRequest, exception);
+    } catch (Exception ex) {
+      exceptionOccured = true;
+      exception = ex;
       logException(executionLogCallback, cfCommandDeployRequest, exception);
     } finally {
       try {
@@ -176,24 +194,6 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
         .commandExecutionStatus(cfDeployCommandResponse.getCommandExecutionStatus())
         .errorMessage(cfDeployCommandResponse.getOutput())
         .pcfCommandResponse(cfDeployCommandResponse)
-        .build();
-  }
-
-  private CfRequestConfig getCfRequestConfig(
-      CfCommandDeployRequest cfCommandDeployRequest, CfInternalConfig pcfConfig) {
-    return CfRequestConfig.builder()
-        .userName(String.valueOf(pcfConfig.getUsername()))
-        .password(String.valueOf(pcfConfig.getPassword()))
-        .endpointUrl(pcfConfig.getEndpointUrl())
-        .orgName(cfCommandDeployRequest.getOrganization())
-        .spaceName(cfCommandDeployRequest.getSpace())
-        .timeOutIntervalInMins(cfCommandDeployRequest.getTimeoutIntervalInMin())
-        .useCFCLI(cfCommandDeployRequest.isUseCfCLI())
-        .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
-            cfCommandDeployRequest.isUseCfCLI(), cfCommandDeployRequest.getCfCliVersion()))
-        .cfCliVersion(cfCommandDeployRequest.getCfCliVersion())
-        .limitPcfThreads(cfCommandDeployRequest.isLimitPcfThreads())
-        .ignorePcfConnectionContextCache(cfCommandDeployRequest.isIgnorePcfConnectionContextCache())
         .build();
   }
 

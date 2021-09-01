@@ -54,7 +54,6 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
         .add(CompoundMongoIndex.builder()
                  .name("assignerIterator")
                  .field(PerpetualTaskRecordKeys.state)
-                 .field(PerpetualTaskRecordKeys.assignAfterMs)
                  .field(PerpetualTaskRecordKeys.assignerIterations)
                  .build())
         .add(CompoundMongoIndex.builder()
@@ -80,11 +79,8 @@ public class PerpetualTaskRecord implements PersistentEntity, UuidAware, Persist
   List<Long> assignerIterations;
   long rebalanceIteration;
 
-  int assignTryCount;
-  long assignAfterMs;
-
-  long lastUpdatedAt;
   long createdAt;
+  long lastUpdatedAt;
 
   @Override
   public Long obtainNextIteration(String fieldName) {

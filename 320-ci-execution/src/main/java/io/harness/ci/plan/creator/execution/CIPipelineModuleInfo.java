@@ -16,5 +16,4 @@ public class CIPipelineModuleInfo implements PipelineModuleInfo {
   private String branch;
   private String repoName;
   private String tag;
-  private String prNumber;
 }

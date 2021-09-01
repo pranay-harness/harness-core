@@ -1,17 +1,12 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-
-import io.harness.annotations.dev.OwnedBy;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-@OwnedBy(CDP)
 public enum AwsCredentialType {
   @JsonProperty(AwsConstants.INHERIT_FROM_DELEGATE) INHERIT_FROM_DELEGATE(AwsConstants.INHERIT_FROM_DELEGATE),
-  @JsonProperty(AwsConstants.MANUAL_CONFIG) MANUAL_CREDENTIALS(AwsConstants.MANUAL_CONFIG),
-  @JsonProperty(AwsConstants.IRSA) IRSA(AwsConstants.IRSA);
+  @JsonProperty(AwsConstants.MANUAL_CONFIG) MANUAL_CREDENTIALS(AwsConstants.MANUAL_CONFIG);
+
   private final String displayName;
 
   AwsCredentialType(String displayName) {

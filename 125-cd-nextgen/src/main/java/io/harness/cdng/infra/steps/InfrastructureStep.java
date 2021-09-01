@@ -79,6 +79,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
 
   @Inject private EnvironmentService environmentService;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private SimpleVisitorFactory simpleVisitorFactory;
   @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
@@ -107,7 +108,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
 
     validateConnector(infrastructure, ambiance);
     validateInfrastructure(infrastructure);
-    EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputService.resolve(
+    EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutputExpressionConstants.ENVIRONMENT));
     ServiceStepOutcome serviceOutcome = (ServiceStepOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));

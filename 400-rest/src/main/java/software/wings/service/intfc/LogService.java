@@ -1,7 +1,5 @@
 package software.wings.service.intfc;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -16,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface LogService extends OwnedByActivity {
   /**
    * List.

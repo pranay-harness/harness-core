@@ -68,11 +68,6 @@ public class AppPermissionSummary {
   private Set<String> workflowExecutePermissionsForEnvs;
   private Set<String> pipelineExecutePermissionsForEnvs;
 
-  // Set of Workflows given Update permission by entity
-  private Set<String> workflowUpdatePermissionsByEntity;
-  // Set of Pipelines given Update permission by entity
-  private Set<String> pipelineUpdatePermissionsByEntity;
-
   /**
    * The environments that the user can rollback workflow to.
    */
@@ -101,8 +96,7 @@ public class AppPermissionSummary {
       Set<String> workflowUpdatePermissionsForEnvs, Set<String> pipelineCreatePermissionsForEnvs,
       Set<String> pipelineUpdatePermissionsForEnvs, Set<String> deploymentExecutePermissionsForEnvs,
       Set<String> pipelineExecutePermissionsForEnvs, Set<String> workflowExecutePermissionsForEnvs,
-      Set<String> rollbackWorkflowExecutePermissionsForEnvs, Set<String> pipelineUpdatePermissionsByEntity,
-      Set<String> workflowUpdatePermissionsByEntity, Map<Action, Set<String>> servicePermissions,
+      Set<String> rollbackWorkflowExecutePermissionsForEnvs, Map<Action, Set<String>> servicePermissions,
       Map<Action, Set<String>> provisionerPermissions, Map<Action, Set<EnvInfo>> envPermissions,
       Map<Action, Set<String>> workflowPermissions, Map<Action, Set<String>> deploymentPermissions,
       Map<Action, Set<String>> pipelinePermissions) {
@@ -127,7 +121,5 @@ public class AppPermissionSummary {
     this.workflowPermissions = workflowPermissions;
     this.deploymentPermissions = deploymentPermissions;
     this.pipelinePermissions = pipelinePermissions;
-    this.workflowUpdatePermissionsByEntity = workflowUpdatePermissionsByEntity;
-    this.pipelineUpdatePermissionsByEntity = pipelineUpdatePermissionsByEntity;
   }
 }

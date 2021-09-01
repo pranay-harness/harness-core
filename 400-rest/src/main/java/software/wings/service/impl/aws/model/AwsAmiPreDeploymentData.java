@@ -22,7 +22,6 @@ public class AwsAmiPreDeploymentData {
   private Integer minCapacity;
   private Integer desiredCapacity;
   private List<String> scalingPolicyJSON;
-  private List<String> scheduledActionJSONs;
 
   public static final int DEFAULT_DESIRED_COUNT = 10;
 

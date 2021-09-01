@@ -2,7 +2,6 @@ package io.harness.cdng.pipeline.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.SpecParameters;
 
@@ -14,7 +13,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("deploymentStageStepParameters")
 @OwnedBy(CDC)
-@RecasterAlias("io.harness.cdng.pipeline.beans.DeploymentStageStepParameters")
 public class DeploymentStageStepParameters implements SpecParameters {
   String childNodeID;
 

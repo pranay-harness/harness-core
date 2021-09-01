@@ -1,6 +1,5 @@
 package io.harness.cdng.service.steps;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.common.beans.NGTag;
@@ -20,7 +19,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("serviceStepOutcome")
 @JsonTypeName("serviceStepOutcome")
-@RecasterAlias("io.harness.cdng.service.steps.ServiceStepOutcome")
 public class ServiceStepOutcome implements Outcome {
   String identifier;
   String name;

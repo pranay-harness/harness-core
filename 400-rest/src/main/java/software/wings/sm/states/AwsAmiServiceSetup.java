@@ -164,10 +164,6 @@ public class AwsAmiServiceSetup extends State {
             .commandName(commandName)
             .oldAsgNames(amiServiceSetupResponse.getOldAsgNames())
             .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
-            .baseAsgScheduledActionJSONs(
-                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
-                    ? amiServiceSetupResponse.getBaseAsgScheduledActionJSONs()
-                    : null)
             .build();
 
     sweepingOutputService.save(
@@ -305,9 +301,7 @@ public class AwsAmiServiceSetup extends State {
               .blueGreen(blueGreen)
               .userData(awsStateHelper.getEncodedUserData(app.getUuid(), serviceId, context))
               .amiInServiceHealthyStateFFEnabled(
-                  featureFlagService.isEnabled(FeatureName.AMI_IN_SERVICE_HEALTHY_WAIT, activity.getAccountId()))
-              .amiAsgConfigCopyEnabled(
-                  featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, activity.getAccountId()));
+                  featureFlagService.isEnabled(FeatureName.AMI_IN_SERVICE_HEALTHY_WAIT, activity.getAccountId()));
 
       String asgNamePrefix = isNotEmpty(autoScalingGroupName)
           ? normalizeExpression(context.renderExpression(autoScalingGroupName))

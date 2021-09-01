@@ -34,20 +34,20 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
   @Inject private Map<SCMType, SourceCodeManagerMapper> scmMapBinder;
 
   @Override
-  public List<SourceCodeManagerDTO> get(String accountIdentifier) {
+  public List<SourceCodeManagerDTO> get() {
     Optional<String> userIdentifier = getUserIdentifier();
-    return getInternal(userIdentifier, accountIdentifier);
+    return getInternal(userIdentifier);
   }
 
   @Override
-  public List<SourceCodeManagerDTO> get(String userIdentifier, String accountIdentifier) {
-    return getInternal(Optional.of(userIdentifier), accountIdentifier);
+  public List<SourceCodeManagerDTO> get(String userIdentifier) {
+    return getInternal(Optional.of(userIdentifier));
   }
 
-  private List<SourceCodeManagerDTO> getInternal(Optional<String> userIdentifier, String accountIdentifier) {
+  private List<SourceCodeManagerDTO> getInternal(Optional<String> userIdentifier) {
     if (userIdentifier.isPresent()) {
       List<SourceCodeManagerDTO> sourceCodeManagerDTOS = new ArrayList<>();
-      sourceCodeManagerRepository.findByUserIdentifierAndAccountIdentifier(userIdentifier.get(), accountIdentifier)
+      sourceCodeManagerRepository.findByUserIdentifier(userIdentifier.get())
           .forEach(scm -> sourceCodeManagerDTOS.add(scmMapBinder.get(scm.getType()).toSCMDTO(scm)));
       return sourceCodeManagerDTOS;
     }
@@ -64,9 +64,8 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
         sourceCodeManager = sourceCodeManagerRepository.save(
             scmMapBinder.get(sourceCodeManagerDTO.getType()).toSCMEntity(sourceCodeManagerDTO));
       } catch (DuplicateKeyException e) {
-        throw new DuplicateFieldException(
-            format("Source Code Manager with userId [%s], accountId [%s] and name [%s] already exists",
-                userIdentifier.get(), sourceCodeManagerDTO.getAccountIdentifier(), sourceCodeManagerDTO.getName()));
+        throw new DuplicateFieldException(format("Source Code Manager with userId [%s], name [%s] already exists",
+            userIdentifier.get(), sourceCodeManagerDTO.getName()));
       }
       return scmMapBinder.get(sourceCodeManager.getType()).toSCMDTO(sourceCodeManager);
     }
@@ -88,9 +87,8 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
         try {
           toUpdateSCM = sourceCodeManagerRepository.save(toUpdateSCM);
         } catch (DuplicateKeyException e) {
-          throw new DuplicateFieldException(
-              format("Source Code Manager with userId [%s], accountId [%s] and name [%s] already exists",
-                  userIdentifier.get(), sourceCodeManagerDTO.getAccountIdentifier(), sourceCodeManagerDTO.getName()));
+          throw new DuplicateFieldException(format("Source Code Manager with userId [%s], name [%s] already exists",
+              userIdentifier.get(), sourceCodeManagerDTO.getName()));
         }
         return scmMapBinder.get(toUpdateSCM.getType()).toSCMDTO(toUpdateSCM);
       } else {
@@ -102,12 +100,10 @@ public class SourceCodeManagerServiceImpl implements SourceCodeManagerService {
   }
 
   @Override
-  public boolean delete(String name, String accountIdentifier) {
+  public boolean delete(String name) {
     Optional<String> userIdentifier = getUserIdentifier();
     if (userIdentifier.isPresent()) {
-      return sourceCodeManagerRepository.deleteByUserIdentifierAndNameAndAccountIdentifier(
-                 userIdentifier.get(), name, accountIdentifier)
-          > 0;
+      return sourceCodeManagerRepository.deleteByUserIdentifierAndName(userIdentifier.get(), name) > 0;
     }
     return false;
   }

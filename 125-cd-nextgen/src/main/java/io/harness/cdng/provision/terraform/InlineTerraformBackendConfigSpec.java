@@ -2,7 +2,6 @@ package io.harness.cdng.provision.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
@@ -19,7 +18,6 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName("Inline")
-@RecasterAlias("io.harness.cdng.provision.terraform.InlineTerraformBackendConfigSpec")
 public class InlineTerraformBackendConfigSpec implements TerraformBackendConfigSpec {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> content;
 }

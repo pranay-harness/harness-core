@@ -3,8 +3,9 @@ package io.harness.repositories;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
-import io.harness.gitsync.common.helper.EntityDistinctElementHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.outbox.OutboxEvent;
@@ -13,21 +14,15 @@ import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.events.TemplateCreateEvent;
-import io.harness.template.events.TemplateDeleteEvent;
 import io.harness.template.events.TemplateUpdateEvent;
 
 import com.google.inject.Inject;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
@@ -35,7 +30,6 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCustom {
   private final GitAwarePersistence gitAwarePersistence;
   private final GitSyncSdkService gitSyncSdkService;
-  private final MongoTemplate mongoTemplate;
   OutboxService outboxService;
 
   @Override
@@ -68,61 +62,29 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   }
 
   @Override
-  public Optional<TemplateEntity>
-  findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
-      String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier, boolean notDeleted) {
-    return gitAwarePersistence.findOne(Criteria.where(TemplateEntityKeys.deleted)
-                                           .is(!notDeleted)
-                                           .and(TemplateEntityKeys.isStableTemplate)
-                                           .is(true)
-                                           .and(TemplateEntityKeys.identifier)
-                                           .is(templateIdentifier)
-                                           .and(TemplateEntityKeys.projectIdentifier)
-                                           .is(projectIdentifier)
-                                           .and(TemplateEntityKeys.orgIdentifier)
-                                           .is(orgIdentifier)
-                                           .and(TemplateEntityKeys.accountId)
-                                           .is(accountId),
-        projectIdentifier, orgIdentifier, accountId, TemplateEntity.class);
-  }
-
-  @Override
-  public TemplateEntity updateTemplateYaml(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
-      NGTemplateConfig templateConfig, ChangeType changeType) {
+  public TemplateEntity updateTemplateYaml(
+      TemplateEntity templateToUpdate, NGTemplateConfig templateConfig, ChangeType changeType) {
     Supplier<OutboxEvent> supplier = null;
     if (!gitSyncSdkService.isGitSyncEnabled(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
             templateToUpdate.getProjectIdentifier())) {
-      supplier = ()
-          -> outboxService.save(
-              new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
-                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity));
+      Optional<TemplateEntity> optionalTemplate =
+          findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
+              templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
+              templateToUpdate.getProjectIdentifier(), templateToUpdate.getIdentifier(),
+              templateToUpdate.getVersionLabel(), true);
+      if (optionalTemplate.isPresent()) {
+        TemplateEntity oldTemplateEntity = optionalTemplate.get();
+        supplier = ()
+            -> outboxService.save(
+                new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
+                    templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity));
+      } else {
+        throw new InvalidRequestException("No such template exist with identifier - " + templateToUpdate.getIdentifier()
+                + " and versionLabel - " + templateToUpdate.getVersionLabel(),
+            WingsException.USER);
+      }
     }
     return gitAwarePersistence.save(
         templateToUpdate, templateToUpdate.getYaml(), changeType, TemplateEntity.class, supplier);
-  }
-
-  @Override
-  public TemplateEntity deleteTemplate(TemplateEntity templateToDelete, NGTemplateConfig templateConfig) {
-    Supplier<OutboxEvent> supplier = ()
-        -> outboxService.save(new TemplateDeleteEvent(templateToDelete.getAccountIdentifier(),
-            templateToDelete.getOrgIdentifier(), templateToDelete.getProjectIdentifier(), templateToDelete));
-    return gitAwarePersistence.save(
-        templateToDelete, templateToDelete.getYaml(), ChangeType.DELETE, TemplateEntity.class, supplier);
-  }
-
-  @Override
-  public Page<TemplateEntity> findAll(Criteria criteria, Pageable pageable, String accountIdentifier,
-      String orgIdentifier, String projectIdentifier, boolean getDistinctFromBranches) {
-    if (getDistinctFromBranches) {
-      return EntityDistinctElementHelper.getDistinctElementPage(mongoTemplate, criteria, pageable, TemplateEntity.class,
-          TemplateEntityKeys.accountId, TemplateEntityKeys.orgIdentifier, TemplateEntityKeys.projectIdentifier,
-          TemplateEntityKeys.identifier, TemplateEntityKeys.versionLabel);
-    }
-    List<TemplateEntity> templateEntities = gitAwarePersistence.find(
-        criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier, TemplateEntity.class);
-    return PageableExecutionUtils.getPage(templateEntities, pageable,
-        ()
-            -> gitAwarePersistence.count(
-                criteria, projectIdentifier, orgIdentifier, accountIdentifier, TemplateEntity.class));
   }
 }

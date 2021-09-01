@@ -7,8 +7,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 
 public enum ChangeSourceType {
-  @JsonProperty("HarnessCD") HARNESS_CD(ChangeCategory.DEPLOYMENT),
-  @JsonProperty("PagerDuty") PAGER_DUTY(ChangeCategory.ALERTS);
+  @JsonProperty("HarnessCD") HARNESS_CD(ChangeCategory.DEPLOYMENT);
 
   @Getter private ChangeCategory changeCategory;
 

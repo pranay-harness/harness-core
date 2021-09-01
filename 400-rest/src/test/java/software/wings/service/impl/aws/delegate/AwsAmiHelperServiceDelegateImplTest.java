@@ -243,8 +243,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
             any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt(), anyBoolean());
     awsAmiHelperServiceDelegate.resizeAsgs("us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 2,
         singletonList(AwsAmiResizeData.builder().asgName("oldName").desiredCount(0).build()), mockCallback, true, 10, 2,
-        0, AwsAmiPreDeploymentData.builder().build(), emptyList(), emptyList(), false, emptyList(), 1, false,
-        emptyList(), false);
+        0, AwsAmiPreDeploymentData.builder().build(), emptyList(), emptyList(), false, emptyList(), 1, false);
     verify(mockAwsAsgHelperServiceDelegate, times(2))
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
             any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt(), anyBoolean());
@@ -520,7 +519,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
 
     AwsAmiServiceSetupResponseBuilder builder = AwsAmiServiceSetupResponse.builder();
     awsAmiHelperServiceDelegate.populatePreDeploymentData(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", autoScalingGroup, builder, mockLogCallback, false);
+        AwsConfig.builder().build(), emptyList(), "us-east-1", autoScalingGroup, builder, mockLogCallback);
     AwsAmiServiceSetupResponse response = builder.build();
     AwsAmiPreDeploymentData preDeploymentData = response.getPreDeploymentData();
     assertThat(preDeploymentData.getOldAsgName()).isEqualTo("name_2");
@@ -856,8 +855,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     doThrow(Exception.class)
         .when(awsAmiHelperServiceDelegate)
         .resizeAsgs(anyString(), any(), anyList(), anyString(), anyInt(), anyList(), any(), anyBoolean(), anyInt(),
-            anyInt(), anyInt(), any(), anyList(), anyList(), anyBoolean(), anyList(), anyInt(), anyBoolean(), any(),
-            anyBoolean());
+            anyInt(), anyInt(), any(), anyList(), anyList(), anyBoolean(), anyList(), anyInt(), anyBoolean());
     AwsAmiServiceDeployResponse awsAmiServiceDeployResponse =
         awsAmiHelperServiceDelegate.deployAmiServiceTrafficShift(trafficShiftAlbDeployRequest);
     assertThat(awsAmiServiceDeployResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);

@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -266,7 +266,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
-@TargetModule(_360_CG_MANAGER)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserServiceImpl implements UserService {
   static final String ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   static final String USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME = "password_changed";
@@ -1196,8 +1196,8 @@ public class UserServiceImpl implements UserService {
       user.getPendingAccounts().remove(account);
       user.getAccounts().add(account);
     } else {
-      userInvite.setUuid(wingsPersistence.save(userInvite));
       if (isInviteAcceptanceRequired) {
+        userInvite.setUuid(wingsPersistence.save(userInvite));
         user.getPendingAccounts().add(account);
       } else {
         user.getAccounts().add(account);
@@ -2583,11 +2583,10 @@ public class UserServiceImpl implements UserService {
             if (accountService.isNextGenEnabled(accountId)) {
               Boolean isUserPartOfAccountInNG =
                   NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
-              log.info("User {} is {} of nextgen in account {}", userId,
-                  Boolean.TRUE.equals(isUserPartOfAccountInNG) ? "" : "not", accountId);
-              if (Boolean.TRUE.equals(isUserPartOfAccountInNG)) {
-                throw new InvalidRequestException(
-                    "User cannot be deleted because user is part of Harness NextGen as well. Please remove the user from NextGen first.");
+              log.info(
+                  "User {} is {} of nextgen in account {}", userId, isUserPartOfAccountInNG ? "" : "not", accountId);
+              if (isUserPartOfAccountInNG) {
+                updatedActiveAccounts.add(account);
               }
             }
           } else {
@@ -2970,8 +2969,8 @@ public class UserServiceImpl implements UserService {
     // Serialise to JWT compact form
     String jwtString = jwsObject.serialize();
 
-    String redirectUrl =
-        String.format("%s/access/jwt?jwt=%s", configuration.getPortal().getZendeskBaseUrl(), jwtString);
+    String redirectUrl = "https://"
+        + "harnesssupport.zendesk.com/access/jwt?jwt=" + jwtString;
 
     if (returnToUrl != null) {
       redirectUrl += "&return_to=" + returnToUrl;

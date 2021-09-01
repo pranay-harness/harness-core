@@ -3,7 +3,6 @@ package io.harness.beans.steps.stepinfo;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
@@ -31,7 +30,6 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("buildEnvSetupStepInfo")
 @OwnedBy(CI)
-@RecasterAlias("io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo")
 public class BuildEnvSetupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
 

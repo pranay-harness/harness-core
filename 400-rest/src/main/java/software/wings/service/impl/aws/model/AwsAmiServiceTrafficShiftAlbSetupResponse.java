@@ -35,5 +35,4 @@ public class AwsAmiServiceTrafficShiftAlbSetupResponse implements AwsResponse {
   private String newLaunchTemplateName;
   private String newLaunchTemplateVersion;
   private List<LbDetailsForAlbTrafficShift> lbDetailsWithTargetGroups;
-  private List<String> baseAsgScheduledActionJSONs;
 }

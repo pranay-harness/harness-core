@@ -1,6 +1,5 @@
 package io.harness.steps.cf;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
@@ -18,7 +17,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("flagConfigurationStepParameters")
-@RecasterAlias("io.harness.steps.cf.FlagConfigurationStepParameters")
 public class FlagConfigurationStepParameters implements SpecParameters {
   String type = "FlagConfiguration";
   String identifier;

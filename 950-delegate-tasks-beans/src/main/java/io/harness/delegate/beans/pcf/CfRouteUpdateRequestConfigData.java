@@ -12,7 +12,7 @@ import lombok.Data;
 @Builder
 @OwnedBy(CDP)
 public class CfRouteUpdateRequestConfigData {
-  private String newApplicationName;
+  private String newApplicatiaonName;
   private List<CfAppSetupTimeDetails> existingApplicationDetails;
   private List<String> existingApplicationNames;
   private List<String> tempRoutes;
@@ -23,10 +23,6 @@ public class CfRouteUpdateRequestConfigData {
   private boolean isMapRoutesOperation;
   private boolean skipRollback;
   private boolean upSizeInActiveApp;
-  private boolean versioningChanged;
-  private boolean nonVersioning;
   private CfAppSetupTimeDetails existingInActiveApplicationDetails;
-  private CfAppSetupTimeDetails newApplicationDetails;
   private String cfAppNamePrefix;
-  private String existingAppNamingStrategy;
 }

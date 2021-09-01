@@ -1,6 +1,5 @@
 package io.harness.cvng.cdng.beans;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
@@ -18,7 +17,6 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("verifyStepParameters")
 @OwnedBy(HarnessTeam.CV)
-@RecasterAlias("io.harness.cvng.cdng.beans.CVNGStepParameter")
 public class CVNGStepParameter implements StepParameters {
   ParameterField<String> serviceIdentifier;
   ParameterField<String> envIdentifier;

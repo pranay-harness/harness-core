@@ -2,7 +2,6 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.plancreator.steps.TaskSelectorYaml;
@@ -23,7 +22,6 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @EqualsAndHashCode
 @TypeAlias("k8sBGSwapServicesStepParameters")
-@RecasterAlias("io.harness.cdng.k8s.K8sBGSwapServicesStepParameters")
 public class K8sBGSwapServicesStepParameters extends K8sBGSwapServicesStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
   public K8sBGSwapServicesStepParameters(ParameterField<Boolean> skipDryRun,

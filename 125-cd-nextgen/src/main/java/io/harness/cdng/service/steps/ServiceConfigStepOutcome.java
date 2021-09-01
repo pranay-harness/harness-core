@@ -1,6 +1,5 @@
 package io.harness.cdng.service.steps;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.VariablesSweepingOutput;
@@ -18,7 +17,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("serviceConfigOutcome")
 @JsonTypeName("serviceConfigOutcome")
-@RecasterAlias("io.harness.cdng.service.steps.ServiceConfigStepOutcome")
 public class ServiceConfigStepOutcome implements Outcome {
   ServiceStepOutcome serviceResult;
   VariablesSweepingOutput variablesResult;

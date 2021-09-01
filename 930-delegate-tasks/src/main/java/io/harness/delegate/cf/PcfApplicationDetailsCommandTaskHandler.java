@@ -78,8 +78,12 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       cfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       cfInstanceSyncResponse.setOutput(StringUtils.EMPTY);
     } catch (Exception e) {
-      log.warn("Failed while collecting PCF Application Details For Application: {}, with Error: {}",
-          ((CfInstanceSyncRequest) cfCommandRequest).getPcfApplicationName(), e);
+      log.warn(new StringBuilder(128)
+                   .append("Failed while collecting PCF Application Details For Application: ")
+                   .append(((CfInstanceSyncRequest) cfCommandRequest).getPcfApplicationName())
+                   .append(", with Error: ")
+                   .append(e)
+                   .toString());
       cfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       cfInstanceSyncResponse.setOutput(ExceptionUtils.getMessage(e));
     }

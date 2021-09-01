@@ -447,7 +447,6 @@ public class WingsApplication extends Application<MainConfiguration> {
       registerManagedBeansManager(configuration, environment, injector);
     }
 
-    registerWaitEnginePublishers(injector);
     if (isManager()) {
       registerQueueListeners(injector);
     }
@@ -940,6 +939,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
+
+    registerWaitEnginePublishers(injector);
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     EventListener genericEventListener =

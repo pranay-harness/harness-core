@@ -105,16 +105,14 @@ public class StagesPlanCreatorTest extends CategoryTest {
     assertThat(planForChildrenNodes.containsKey(parallelStagesUuid)).isTrue();
 
     PlanCreationResponse approvalStageResponse = planForChildrenNodes.get(approvalStageUuid);
-    assertThat(approvalStageResponse.getDependencies().getDependenciesMap()).hasSize(1);
-    assertThat(approvalStageResponse.getDependencies().getDependenciesMap().containsKey(approvalStageUuid)).isTrue();
-    assertThat(approvalStageResponse.getDependencies().getDependenciesMap().get(approvalStageUuid))
-        .isEqualTo("pipeline/stages/[0]/stage");
+    assertThat(approvalStageResponse.getDependencies()).hasSize(1);
+    assertThat(approvalStageResponse.getDependencies().containsKey(approvalStageUuid)).isTrue();
+    assertThat(approvalStageResponse.getDependencies().get(approvalStageUuid)).isEqualTo(approvalStage);
 
     PlanCreationResponse parallelStagesResponse = planForChildrenNodes.get(parallelStagesUuid);
-    assertThat(parallelStagesResponse.getDependencies().getDependenciesMap()).hasSize(1);
-    assertThat(parallelStagesResponse.getDependencies().getDependenciesMap().containsKey(parallelStagesUuid)).isTrue();
-    assertThat(parallelStagesResponse.getDependencies().getDependenciesMap().get(parallelStagesUuid))
-        .isEqualTo("pipeline/stages/[1]/parallel");
+    assertThat(parallelStagesResponse.getDependencies()).hasSize(1);
+    assertThat(parallelStagesResponse.getDependencies().containsKey(parallelStagesUuid)).isTrue();
+    assertThat(parallelStagesResponse.getDependencies().get(parallelStagesUuid)).isEqualTo(parallelDeploymentStages);
   }
 
   @Test

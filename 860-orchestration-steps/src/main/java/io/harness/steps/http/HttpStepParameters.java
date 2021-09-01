@@ -2,7 +2,6 @@ package io.harness.steps.http;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.SpecParameters;
@@ -24,7 +23,6 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("httpStepParameters")
-@RecasterAlias("io.harness.steps.http.HttpStepParameters")
 public class HttpStepParameters extends HttpBaseStepInfo implements SpecParameters {
   @SkipAutoEvaluation ParameterField<Map<String, Object>> outputVariables;
   Map<String, String> headers;

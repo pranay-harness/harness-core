@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "converter",
+    name = "go_default_library",
     srcs = [
         "branch.go",
         "comment.go",
@@ -12,16 +12,10 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/scm/converter",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/scm/proto",
+        "//product/ci/scm/proto:go_default_library",
         "@com_github_drone_go_scm//scm:go_default_library",
         "@com_github_golang_protobuf//ptypes:go_default_library_gen",
     ],
-)
-
-go_test(
-    name = "converter_test",
-    srcs = ["pr_test.go"],
-    embed = [":converter"],
 )
 
 go_test(

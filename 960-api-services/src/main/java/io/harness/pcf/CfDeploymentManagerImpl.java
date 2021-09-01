@@ -300,11 +300,8 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
                 String suffix1 = getLowerCaseSuffix(name1, prefix);
                 String suffix2 = getLowerCaseSuffix(name2, prefix);
                 String inactiveIdentifier = HARNESS__INACTIVE__IDENTIFIER.toLowerCase();
-                String stageIdentifier = HARNESS__STAGE__IDENTIFIER.toLowerCase();
 
-                if (suffix1.equals(stageIdentifier) || suffix2.equals(stageIdentifier)) {
-                  return suffix1.equals(stageIdentifier) ? (suffix2.equals(stageIdentifier) ? 0 : 1) : -1;
-                } else if (suffix1.isEmpty() || suffix2.isEmpty()) {
+                if (suffix1.isEmpty() || suffix2.isEmpty()) {
                   return suffix1.isEmpty() ? (suffix2.isEmpty() ? 0 : 1) : -1;
                 } else if (suffix1.equals(inactiveIdentifier) || suffix2.equals(inactiveIdentifier)) {
                   return suffix1.equals(inactiveIdentifier) ? (suffix2.equals(inactiveIdentifier) ? 0 : 1) : -1;
@@ -358,8 +355,7 @@ public class CfDeploymentManagerImpl implements CfDeploymentManager {
   }
 
   boolean isValidRevisionSuffix(String suffix) {
-    boolean result = suffix.length() == 0 || suffix.equalsIgnoreCase(DELIMITER + HARNESS__INACTIVE__IDENTIFIER)
-        || suffix.equalsIgnoreCase(DELIMITER + HARNESS__STAGE__IDENTIFIER);
+    boolean result = suffix.length() == 0 || suffix.equalsIgnoreCase(DELIMITER + HARNESS__INACTIVE__IDENTIFIER);
     if (!result && suffix.startsWith(DELIMITER)) {
       suffix = suffix.substring(DELIMITER.length());
       result = getIntegerSafe(suffix) != -1;

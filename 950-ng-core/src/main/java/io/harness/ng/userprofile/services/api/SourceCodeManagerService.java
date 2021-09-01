@@ -9,13 +9,13 @@ import java.util.List;
 
 @OwnedBy(PL)
 public interface SourceCodeManagerService {
-  List<SourceCodeManagerDTO> get(String accountIdentifier);
+  List<SourceCodeManagerDTO> get();
 
-  List<SourceCodeManagerDTO> get(String userIdentifier, String accountIdentifier);
+  List<SourceCodeManagerDTO> get(String userIdentifier);
 
   SourceCodeManagerDTO save(SourceCodeManagerDTO sourceCodeManagerDTO);
 
   SourceCodeManagerDTO update(String sourceCodeManagerIdentifier, SourceCodeManagerDTO sourceCodeManagerDTO);
 
-  boolean delete(String scmIdentifier, String accountIdentifier);
+  boolean delete(String scmIdentifier);
 }

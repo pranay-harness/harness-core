@@ -34,9 +34,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.DatasetId;
 import com.google.cloud.bigquery.Table;
-import com.google.cloud.bigquery.TableId;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
@@ -81,7 +79,7 @@ public class GcpSyncTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    Long endTime = Long.parseLong(parameters.getString(CCMJobConstants.JOB_END_DATE));
+    Long startTime = Long.parseLong(parameters.getString(CCMJobConstants.JOB_START_DATE));
     BillingDataPipelineConfig billingDataPipelineConfig = mainConfig.getBillingDataPipelineConfig();
 
     if (billingDataPipelineConfig.isGcpSyncEnabled()) {
@@ -90,48 +88,34 @@ public class GcpSyncTasklet implements Tasklet {
         ConnectorInfoDTO connectorInfo = connector.getConnector();
         GcpCloudCostConnectorDTO gcpCloudCostConnectorDTO =
             (GcpCloudCostConnectorDTO) connectorInfo.getConnectorConfig();
-        try {
-          processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
-              gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
-              accountId, connectorInfo.getIdentifier(), endTime);
-        } catch (Exception e) {
-          log.error("Exception processing NG GCP Connector: {}", connectorInfo.getIdentifier(), e);
-        }
+        processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
+            gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
+            accountId, connectorInfo.getIdentifier(), startTime);
       }
 
       List<GcpBillingAccount> gcpBillingAccounts =
           cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId);
-      log.info("Processing batch size of {} in GCP Sync Job for CG Connectors", gcpBillingAccounts.size());
       for (GcpBillingAccount gcpBillingAccount : gcpBillingAccounts) {
         GcpServiceAccount gcpServiceAccount = cloudToHarnessMappingService.getGcpServiceAccount(accountId);
-        try {
-          processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(),
-              gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,
-              gcpBillingAccount.getUuid(), endTime);
-        } catch (Exception e) {
-          log.error("Exception processing CG GCP Connector: {}", gcpBillingAccount.getUuid(), e);
-        }
+        processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(), gcpBillingAccount.getBqDatasetId(),
+            gcpBillingAccount.getBqProjectId(), accountId, gcpBillingAccount.getUuid(), startTime);
       }
     }
     return null;
   }
 
   private void processGCPConnector(BillingDataPipelineConfig billingDataPipelineConfig, String serviceAccountEmail,
-      String datasetId, String projectId, String accountId, String connectorId, Long endTime) {
+      String datasetId, String projectId, String accountId, String connectorId, Long startTime) {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
     BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
-    DatasetId datasetIdFullyQualified = DatasetId.of(projectId, datasetId);
-    Dataset dataset = bigQuery.getDataset(datasetIdFullyQualified);
+    Dataset dataset = bigQuery.getDataset(datasetId);
     Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
     tableList.getValues().forEach(table -> {
       if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
-        TableId tableId = TableId.of(projectId, datasetId, table.getTableId().getTable());
-        Table tableGranularData = bigQuery.getTable(tableId);
-
-        Long lastModifiedTime = tableGranularData.getLastModifiedTime();
+        Long lastModifiedTime = table.getLastModifiedTime();
         lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
-        if (lastModifiedTime > endTime) {
+        if (lastModifiedTime > startTime) {
           try {
             publishMessage(billingDataPipelineConfig.getGcpProjectId(),
                 billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,

@@ -179,8 +179,6 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
             if (evaluatedValue != null) {
               outputVariablesEvaluated.put(name, evaluatedValue.toString());
             }
-          } else if (expr.getValue() != null) {
-            outputVariablesEvaluated.put(name, expr.getValue().toString());
           }
         }
       });

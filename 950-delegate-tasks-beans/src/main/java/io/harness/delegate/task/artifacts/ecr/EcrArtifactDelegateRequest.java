@@ -51,14 +51,12 @@ public class EcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
         new ArrayList<>(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
             encryptedDataDetails, maskingEvaluator));
     if (awsConnectorDTO.getCredential() != null) {
-      if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.INHERIT_FROM_DELEGATE
-          || awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.MANUAL_CREDENTIALS
-          || awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.IRSA) {
+      if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.INHERIT_FROM_DELEGATE) {
         populateDelegateSelectorCapability(capabilities, awsConnectorDTO.getDelegateSelectors());
-        if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.MANUAL_CREDENTIALS) {
-          capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-              AwsInternalConfig.AWS_URL, maskingEvaluator));
-        }
+      } else if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.MANUAL_CREDENTIALS) {
+        populateDelegateSelectorCapability(capabilities, awsConnectorDTO.getDelegateSelectors());
+        capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            AwsInternalConfig.AWS_URL, maskingEvaluator));
       } else {
         throw new UnknownEnumTypeException(
             "Ecr Credential Type", String.valueOf(awsConnectorDTO.getCredential().getAwsCredentialType()));

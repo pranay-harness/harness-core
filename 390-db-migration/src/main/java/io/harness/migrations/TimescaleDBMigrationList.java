@@ -37,7 +37,6 @@ import io.harness.migrations.timescaledb.CreateBudgetAlerts;
 import io.harness.migrations.timescaledb.CreateCeRecommendationTable;
 import io.harness.migrations.timescaledb.CreateDeploymentParentTable;
 import io.harness.migrations.timescaledb.CreateDeploymentStageTable;
-import io.harness.migrations.timescaledb.CreateIndexOnKubernetesUtilizationData;
 import io.harness.migrations.timescaledb.CreateInstanceStatsDayTable;
 import io.harness.migrations.timescaledb.CreateInstanceStatsHourTable;
 import io.harness.migrations.timescaledb.CreateKubernetesUtilizationData;
@@ -120,7 +119,6 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(51, CreateCeRecommendationTable.class))
         .add(Pair.of(52, CreateNodeInfoTableAndIsAliveFunction.class))
         .add(Pair.of(53, CreateAccountTables.class))
-        .add(Pair.of(54, CreateIndexOnKubernetesUtilizationData.class))
         .build();
   }
 }

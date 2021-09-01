@@ -2,7 +2,6 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.k8s.K8sCommandUnitConstants;
@@ -22,7 +21,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @TypeAlias("k8sDeleteStepParameters")
-@RecasterAlias("io.harness.cdng.k8s.K8sDeleteStepParameters")
 public class K8sDeleteStepParameters extends K8sDeleteBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
   public K8sDeleteStepParameters(DeleteResourcesWrapper deleteResources, ParameterField<Boolean> skipDryRun,

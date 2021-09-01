@@ -1,6 +1,5 @@
 package io.harness.ng.cdoverview;
 
-import static io.harness.NGDateUtils.getStartTimeOfNextDay;
 import static io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl.INVALID_CHANGE_RATE;
 import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
@@ -406,10 +405,10 @@ public class CDDashboardApisTest extends CategoryTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service3")
                                     .serviceId("ServiceId3")
-                                    .totalDeploymentChangeRate(0.0)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(50.0)
                                     .failureRateChangeRate(INVALID_CHANGE_RATE)
-                                    .frequency(0.8)
+                                    .frequency(0.0)
                                     .frequencyChangeRate(0.0)
                                     .lastExecuted(LastWorkloadInfo.builder()
                                                       .startTime(1619972127000L)
@@ -428,10 +427,10 @@ public class CDDashboardApisTest extends CategoryTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service2")
                                     .serviceId("ServiceId2")
-                                    .totalDeploymentChangeRate(0.0)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(0.0)
                                     .failureRateChangeRate(-100.00)
-                                    .frequency(0.4)
+                                    .frequency(0.0)
                                     .frequencyChangeRate(0.0)
                                     .rateSuccess(0.0)
                                     .percentSuccess(0.0)
@@ -450,10 +449,9 @@ public class CDDashboardApisTest extends CategoryTest {
     workloadDeploymentInfos.add(WorkloadDeploymentInfo.builder()
                                     .serviceName("Service1")
                                     .serviceId("ServiceId1")
-                                    .totalDeploymentChangeRate(0.0)
+                                    .totalDeploymentChangeRate(INVALID_CHANGE_RATE)
                                     .failureRate(50.0)
                                     .failureRateChangeRate(100)
-                                    .frequency(0.8)
                                     .frequencyChangeRate(0.00)
                                     .rateSuccess(0.0)
                                     .percentSuccess((2 / (double) 4) * 100)
@@ -481,6 +479,7 @@ public class CDDashboardApisTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetDeploymentsExecutionInfo() throws Exception {
     long prevStartInterval = 1619136000000L;
+    long prevEndInterval = 1619481600000L;
     long startInterval = 1619568000000L;
     long endInterval = 1619913600000L;
 
@@ -553,10 +552,10 @@ public class CDDashboardApisTest extends CategoryTest {
 
     doReturn(serviceDeploymentListWrap)
         .when(cdOverviewDashboardServiceImpl)
-        .getServiceDeployments("acc", "org", "pro", startInterval, getStartTimeOfNextDay(endInterval), null, 1);
+        .getServiceDeployments("acc", "org", "pro", startInterval, endInterval, null, 1);
     doReturn(prevExecutionDeploymentWrap)
         .when(cdOverviewDashboardServiceImpl)
-        .getServiceDeployments("acc", "org", "pro", prevStartInterval, startInterval, null, 1);
+        .getServiceDeployments("acc", "org", "pro", prevStartInterval, prevEndInterval, null, 1);
 
     ServiceDeploymentListInfo deploymentsExecutionInfo = cdOverviewDashboardServiceImpl.getServiceDeploymentsInfo(
         "acc", "org", "pro", startInterval, endInterval, null, 1);

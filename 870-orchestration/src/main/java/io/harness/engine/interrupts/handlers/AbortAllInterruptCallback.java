@@ -2,7 +2,6 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
-import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptService;
@@ -31,7 +30,5 @@ public class AbortAllInterruptCallback implements OldNotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, ResponseData> response) {
-    interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
-  }
+  public void notifyError(Map<String, ResponseData> response) {}
 }

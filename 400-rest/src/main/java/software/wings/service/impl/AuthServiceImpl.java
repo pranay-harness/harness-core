@@ -1095,7 +1095,6 @@ public class AuthServiceImpl implements AuthService {
     if (workflow == null) {
       return;
     }
-
     boolean envTemplatized = authHandler.isEnvTemplatized(workflow);
     String envId = workflow.getEnvId();
 
@@ -1110,13 +1109,6 @@ public class AuthServiceImpl implements AuthService {
 
     AppPermissionSummary appPermissionSummary =
         user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(appId);
-
-    // Do not check environment if update access is defined by workflow entity itself
-    if (UPDATE.equals(action) && isNotEmpty(appPermissionSummary.getWorkflowUpdatePermissionsByEntity())
-        && appPermissionSummary.getWorkflowUpdatePermissionsByEntity().contains(workflow.getUuid())) {
-      return;
-    }
-
     if (envTemplatized) {
       if (appPermissionSummary.isCanCreateTemplatizedWorkflow()) {
         return;
@@ -1176,13 +1168,6 @@ public class AuthServiceImpl implements AuthService {
 
     AppPermissionSummary appPermissionSummary =
         user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(appId);
-
-    // Do not check environment if RBAC is defined by pipeline entity itself
-    if (UPDATE.equals(action) && isNotEmpty(appPermissionSummary.getPipelineUpdatePermissionsByEntity())
-        && appPermissionSummary.getPipelineUpdatePermissionsByEntity().contains(pipeline.getUuid())) {
-      return;
-    }
-
     Set<String> allowedEnvIds;
 
     switch (action) {

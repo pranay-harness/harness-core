@@ -30,7 +30,6 @@ public class AwsAmiServiceSetupResponse implements AwsResponse {
   private int maxInstances;
   private int desiredInstances;
   private List<String> baseAsgScalingPolicyJSONs;
-  private List<String> baseAsgScheduledActionJSONs;
   private String baseLaunchTemplateName;
   private String baseLaunchTemplateVersion;
   private String newLaunchTemplateName;

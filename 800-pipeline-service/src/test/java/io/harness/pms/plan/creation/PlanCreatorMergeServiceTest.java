@@ -34,7 +34,7 @@ public class PlanCreatorMergeServiceTest extends CategoryTest {
                                               .setModuleType("cd")
                                               .setPipelineIdentifier("pipelineId")
                                               .build();
-    PlanCreatorMergeService planCreatorMergeService = new PlanCreatorMergeService(null, null, null);
+    PlanCreatorMergeService planCreatorMergeService = new PlanCreatorMergeService(null, null, null, null);
     Map<String, PlanCreationContextValue> initialPlanCreationContext =
         planCreatorMergeService.createInitialPlanCreationContext(accountId, orgId, projId, executionMetadata, null);
     assertThat(initialPlanCreationContext).hasSize(1);

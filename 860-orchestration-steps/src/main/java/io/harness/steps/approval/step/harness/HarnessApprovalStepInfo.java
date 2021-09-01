@@ -3,7 +3,6 @@ package io.harness.steps.approval.step.harness;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
@@ -32,7 +31,6 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.HARNESS_APPROVAL)
 @TypeAlias("harnessApprovalStepInfo")
-@RecasterAlias("io.harness.steps.approval.step.harness.HarnessApprovalStepInfo")
 public class HarnessApprovalStepInfo implements PMSStepInfo {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> approvalMessage;
 

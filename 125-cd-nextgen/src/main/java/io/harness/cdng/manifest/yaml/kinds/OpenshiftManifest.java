@@ -5,7 +5,6 @@ import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.Store
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
-import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -41,7 +40,6 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = OpenshiftManifestVisitorHelper.class)
 @TypeAlias("openshiftManifest")
 @OwnedBy(CDC)
-@RecasterAlias("io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest")
 public class OpenshiftManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither

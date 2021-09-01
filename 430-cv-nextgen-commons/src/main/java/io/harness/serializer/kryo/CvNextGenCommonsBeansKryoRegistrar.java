@@ -42,7 +42,6 @@ import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
-import io.harness.cvng.beans.pagerduty.PagerDutyServicesRequest;
 import io.harness.cvng.beans.prometheus.PrometheusFetchSampleDataRequest;
 import io.harness.cvng.beans.prometheus.PrometheusLabelNamesFetchRequest;
 import io.harness.cvng.beans.prometheus.PrometheusLabelValuesFetchRequest;
@@ -125,6 +124,5 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StackdriverLogDataCollectionInfo.class, 9059);
     kryo.register(SplunkSampleDataCollectionRequest.class, 9060);
     kryo.register(SplunkLatestHistogramDataCollectionRequest.class, 9061);
-    kryo.register(PagerDutyServicesRequest.class, 9062);
   }
 }

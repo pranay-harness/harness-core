@@ -513,7 +513,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .pcfConfig(
                 PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME_DECRYPTED).password(PASSWORD).build())
             .requestConfigData(CfRouteUpdateRequestConfigData.builder()
-                                   .newApplicationName("newApp")
+                                   .newApplicatiaonName("newApp")
                                    .downsizeOldApplication(false)
                                    .isRollback(false)
                                    .existingApplicationNames(Arrays.asList("oldApp"))
@@ -565,7 +565,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     CfRouteUpdateRequestConfigData cfRouteUpdateRequestConfigData =
         stateExecutionData.getPcfRouteUpdateRequestConfigData();
     assertThat(cfRouteUpdateRequestConfigData).isNotNull();
-    assertThat(cfRouteUpdateRequestConfigData.getNewApplicationName()).isEqualTo("newApp");
+    assertThat(cfRouteUpdateRequestConfigData.getNewApplicatiaonName()).isEqualTo("newApp");
     assertThat(cfRouteUpdateRequestConfigData.isDownsizeOldApplication()).isFalse();
     assertThat(cfRouteUpdateRequestConfigData.isRollback()).isFalse();
     assertThat(cfRouteUpdateRequestConfigData.getExistingApplicationDetails().size()).isEqualTo(1);

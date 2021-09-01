@@ -4,7 +4,6 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -61,8 +60,6 @@ import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
-import io.harness.pms.async.plan.PlanNotifyEventConsumer;
-import io.harness.pms.async.plan.PlanNotifyEventPublisher;
 import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
@@ -138,9 +135,7 @@ import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
-import io.harness.waiter.PmsNotifyEventConsumerRedis;
 import io.harness.waiter.PmsNotifyEventListener;
-import io.harness.waiter.PmsNotifyEventPublisher;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
@@ -290,7 +285,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
-    registerWaitEnginePublishers(appConfig.isUseRedisForOrchestrationNotify(), injector);
+    registerWaitEnginePublishers(injector);
     registerScheduledJobs(injector);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
@@ -519,18 +514,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
-  private void registerWaitEnginePublishers(boolean shouldUseRedis, Injector injector) {
+  private void registerWaitEnginePublishers(Injector injector) {
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    if (shouldUseRedis) {
-      notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
-    } else {
-      notifyQueuePublisherRegister.register(
-          PMS_ORCHESTRATION, payload -> publisher.send(singletonList(PMS_ORCHESTRATION), payload));
-    }
-    notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
+    notifyQueuePublisherRegister.register(
+        PMS_ORCHESTRATION, payload -> publisher.send(singletonList(PMS_ORCHESTRATION), payload));
   }
 
   private void registerScheduledJobs(Injector injector) {
@@ -571,8 +561,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
     pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class), 2);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {
