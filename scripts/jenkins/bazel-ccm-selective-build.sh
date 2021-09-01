@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -ex
+
+SCRIPT_DIR="$(dirname $0)"
+
+local_repo=${HOME}/.m2/repository
+BAZEL_ARGUMENTS=
+if [ "${PLATFORM}" == "jenkins" ]; then
+  bazelrc=--bazelrc=bazelrc.remote
+  local_repo=/root/.m2/repository
+  if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]; then
+    bash scripts/bazel/testDistribute.sh
+  fi
+fi
+
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --show_timestamps --announce_rc"
+
+BAZEL_DIRS=${HOME}/.bazel-dirs
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
+
+if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
+  local_repo=${OVERRIDE_LOCAL_M2}
+fi
+
+cat ${BAZEL_DIRS}/out/stable-status.txt
+cat ${BAZEL_DIRS}/out/volatile-status.txt
+
+build_bazel_application() {
+  module=$1
+  BAZEL_MODULE="//${module}:module"
+  BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
+
+  bazel ${bazelrc} build $BAZEL_DEPLOY_MODULE ${BAZEL_ARGUMENTS}
+
+  file "${BAZEL_DIRS}/bin/${module}/module_deploy.jar"
+}
+
+if [ "${BUILD_CG_MANAGER}" == "true" ]; then
+  echo "##### Building Everything #####"
+  mvn -B -T 2C clean package -e -Dbuild.number=$VERSION -DgitBranch=$BUILD_NAME -DskipTests --also-make -U #This one is used in Jenkins.
+  scripts/jenkins/portal-openjdk-bazel.sh || true
+#  # build manager
+#  build_bazel_application 360-cg-manager
+#  copy_cg_manager_jars
+#
+#  # build delegate
+#  # //TODO: Implement delegate build only
+else
+  echo "##### Using Selective Builds #####"
+  source "${SCRIPT_DIR}/portal-openjdk-bazel-commons.sh"
+
+  [ "$DOCKERIZE" == "true" ] && prepare_to_copy_jars
+
+  # Workaround to get away from building entire module
+  # For feature build we don't need to actually create checksum, since it's just copied but not used in docker image anyway.
+  if [ "$DOCKERIZE" == "true" ]; then 
+    RANDOM_CODEHASH=$(head -n 10000 /dev/urandom | sha256sum | cut -d' ' -f1);
+    echo "Codebase Hash:${RANDOM_CODEHASH}" > protocol.info;
+  fi
+
+  if [ "${BUILD_CE_NEXTGEN}" == "true" ]; then
+    build_bazel_application 340-ce-nextgen
+    [ "$DOCKERIZE" == "true" ] && copy_ce_nextgen_jars
+  fi
+
+  if [ "${BUILD_BATCH_PROCESSING}" == "true" ]; then
+    build_bazel_application 280-batch-processing
+    [ "$DOCKERIZE" == "true" ] && copy_batch_processing_jars
+  fi
+
+  if [ "${BUILD_NG_MANAGER}" == "true" ]; then
+    build_bazel_application 120-ng-manager
+    [ "$DOCKERIZE" == "true" ] && copy_ng_manager_jars
+  fi
+fi
+
+
+if [ "$DOCKERIZE" = "true" ] && [ "${BRANCH_IN_THE_TAG}" = "true" ] && [ "${BUILD_CG_MANAGER}" == "true" ];
+then
+  echo ${IMAGE_TAG} > dist/manager/image_tag.txt
+fi
+
