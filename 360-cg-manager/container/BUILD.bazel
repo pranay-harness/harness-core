@@ -2,7 +2,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 container_image(
-    name = "container",
+    name = "manager",
     base = "//dockerization/base-jdk:base_jdk",
     cmd = ["./run.sh"],
     tags = [
@@ -65,5 +65,6 @@ container_push(
         "manual",
         "no-cache",
         "no-ide",
+        "oss",
     ],
 )
