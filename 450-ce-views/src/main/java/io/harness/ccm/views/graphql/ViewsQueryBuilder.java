@@ -82,6 +82,7 @@ public class ViewsQueryBuilder {
   private static final String distinct = " DISTINCT(%s)";
   private static final String aliasStartTimeMaxMin = "%s_%s";
   private static final String searchFilter = "REGEXP_CONTAINS( LOWER(%s), LOWER('%s') )";
+  private static final String regexFilter = "REGEXP_CONTAINS( %s, r'%s' )";
   private static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
   private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labelsUnnested";
   private static final String leftJoinSelectiveLabels =
@@ -863,6 +864,8 @@ public class ViewsQueryBuilder {
         return UnaryCondition.isNotNull(conditionKey);
       case NULL:
         return UnaryCondition.isNull(conditionKey);
+      case LIKE:
+        return new CustomCondition(String.format(regexFilter, conditionKey, filter.getValues()[0]));
       default:
         throw new InvalidRequestException("Invalid View Filter operator: " + operator);
     }
