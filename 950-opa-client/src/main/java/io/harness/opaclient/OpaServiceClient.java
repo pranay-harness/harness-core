@@ -13,5 +13,6 @@ import retrofit2.http.Query;
 public interface OpaServiceClient {
   String API_PREFIX = "api/v1/";
 
-  @POST("internal/eval") Call<OpaEvaluationResponse> evaluate(@Query("type") String type, @Body Object context);
+  @POST("internal/evaluate-by-type")
+  Call<OpaEvaluationResponse> evaluate(@Query("type") String type, @Body Object context);
 }
