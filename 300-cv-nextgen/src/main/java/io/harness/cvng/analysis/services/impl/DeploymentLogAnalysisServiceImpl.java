@@ -12,6 +12,7 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnalysisKeys;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
+import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -53,7 +54,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   public List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(
       String accountId, String verificationJobInstanceId, String hostName) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
-        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
+        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId, null);
     if (isEmpty(latestDeploymentLogAnalysis)) {
       return Collections.emptyList();
     }
@@ -87,17 +88,18 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
 
   @Override
   public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(String accountId, String verificationJobInstanceId,
-      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType) {
-    List<LogAnalysisClusterDTO> logAnalysisClusters =
-        getLogAnalysisResult(accountId, verificationJobInstanceId, label, hostName, clusterType);
+      Integer label, String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypes,
+      PageParams pageParams) {
+    List<LogAnalysisClusterDTO> logAnalysisClusters = getLogAnalysisResult(
+        accountId, verificationJobInstanceId, label, hostName, healthSourceIdentifiersFilter, clusterTypes);
 
-    return formPageResponse(logAnalysisClusters, pageNumber, pageSize);
+    return formPageResponse(logAnalysisClusters, pageParams.getPage(), pageParams.getSize());
   }
 
-  private List<LogAnalysisClusterDTO> getLogAnalysisResult(
-      String accountId, String verificationJobInstanceId, Integer label, String hostName, ClusterType clusterType) {
+  private List<LogAnalysisClusterDTO> getLogAnalysisResult(String accountId, String verificationJobInstanceId,
+      Integer label, String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypes) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
-        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
+        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId, healthSourceIdentifiersFilter);
     if (isEmpty(latestDeploymentLogAnalysis)) {
       return Collections.emptyList();
     }
@@ -112,9 +114,9 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         logAnalysisClusters.addAll(getOverallLogAnalysisClusters(deploymentLogAnalysis, label));
       }
     }
-    if (clusterType != null) {
+    if (clusterTypes != null) {
       logAnalysisClusters = logAnalysisClusters.stream()
-                                .filter(logAnalysis -> logAnalysis.getClusterType().equals(clusterType))
+                                .filter(logAnalysis -> clusterTypes.contains(logAnalysis.getClusterType()))
                                 .collect(Collectors.toList());
     }
     logAnalysisClusters.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
@@ -130,7 +132,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         verificationJobInstanceIds, "Missing verificationJobInstanceIds when looking for summary");
     verificationJobInstanceIds.forEach(verificationJobInstanceId -> {
       List<LogAnalysisClusterDTO> logAnalysisClusters =
-          getLogAnalysisResult(accountId, verificationJobInstanceId, null, "", null);
+          getLogAnalysisResult(accountId, verificationJobInstanceId, null, "", null, null);
       int anomClusters = 0, totalClusters = 0;
       for (LogAnalysisClusterDTO logAnalysisClusterDTO : logAnalysisClusters) {
         if (logAnalysisClusterDTO.getRisk().isGreaterThan(Risk.LOW)) {
@@ -203,9 +205,19 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
 
   @Override
   public List<DeploymentLogAnalysis> getLatestDeploymentLogAnalysis(
-      String accountId, String verificationJobInstanceId) {
+      String accountId, String verificationJobInstanceId, List<String> healthSourceIdentifiersFilter) {
     Set<String> verificationTaskIds =
         verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
+    if (healthSourceIdentifiersFilter != null) {
+      List<String> cvConfigIds = verificationJobInstanceService.getCVConfigIdsForVerificationJobInstance(
+          verificationJobInstanceId, healthSourceIdentifiersFilter);
+      verificationTaskIds =
+          verificationTaskIds.stream()
+              .filter(verificationTaskId
+                  -> cvConfigIds.contains(verificationTaskService.get(verificationTaskId).getCvConfigId()))
+              .collect(Collectors.toSet());
+    }
+
     List<DeploymentLogAnalysis> deploymentLogAnalyses = new ArrayList<>();
     for (String taskId : verificationTaskIds) {
       DeploymentLogAnalysis logAnalysis = hPersistence.createQuery(DeploymentLogAnalysis.class)
