@@ -853,10 +853,11 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public javax.ws.rs.core.Response samlLogin(@FormParam(value = "SAMLResponse") String samlResponse,
-      @Context HttpServletRequest request, @Context HttpServletResponse response) {
+      @Context HttpServletRequest request, @Context HttpServletResponse response,
+      @QueryParam(value = "accountId") String accountId) {
     try {
       return authenticationManager.samlLogin(
-          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse);
+          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse, accountId);
     } catch (URISyntaxException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }

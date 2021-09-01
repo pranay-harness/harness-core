@@ -1,9 +1,11 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -42,6 +44,7 @@ import org.opensaml.saml.saml2.core.AttributeStatement;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SamlBasedAuthHandler implements AuthHandler {
   @Inject private SamlClientService samlClientService;
   @Inject private AuthenticationUtils authenticationUtils;
@@ -53,13 +56,17 @@ public class SamlBasedAuthHandler implements AuthHandler {
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
     try {
-      if (credentials == null || credentials.length != 2) {
+      if (credentials == null || credentials.length < 2) {
         throw new WingsException("Invalid arguments while authenticating using SAML");
       }
       String idpUrl = credentials[0];
       String samlResponseString = credentials[1];
+      String accountIdParam = null;
+      if (credentials.length == 3) {
+        accountIdParam = credentials[2];
+      }
 
-      User user = decodeResponseAndReturnUser(idpUrl, samlResponseString);
+      User user = decodeResponseAndReturnUser(idpUrl, samlResponseString, accountIdParam);
       String accountId = user == null ? null : user.getDefaultAccountId();
       String uuid = user == null ? null : user.getUuid();
       try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
@@ -77,7 +84,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
           throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
         }
         if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {
-          List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString);
+          List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString, accountIdParam);
           SamlUserAuthorization samlUserAuthorization =
               SamlUserAuthorization.builder().email(user.getEmail()).userGroups(userGroups).build();
 
@@ -99,12 +106,13 @@ public class SamlBasedAuthHandler implements AuthHandler {
     }
   }
 
-  private User decodeResponseAndReturnUser(String idpUrl, String samlResponseString) throws URISyntaxException {
+  private User decodeResponseAndReturnUser(String idpUrl, String samlResponseString, String accountId)
+      throws URISyntaxException {
     String host = samlClientService.getHost(idpUrl);
     HostType hostType = samlClientService.getHostType(idpUrl);
     switch (hostType) {
       case GOOGLE: {
-        Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host);
+        Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host, accountId);
         if (samlSettingsIterator != null) {
           while (samlSettingsIterator.hasNext()) {
             final SamlSettings samlSettings = samlSettingsIterator.next();
@@ -124,14 +132,14 @@ public class SamlBasedAuthHandler implements AuthHandler {
 
           // if you have reached here, it means none of the SAML IDP metadata matched, try a brute force approach the
           // 2nd time
-          User user = getUserForIdpUrl(idpUrl, samlResponseString);
+          User user = getUserForIdpUrl(idpUrl, samlResponseString, accountId);
           if (user != null) {
             return user;
           }
         }
       } break;
       case AZURE: {
-        Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host);
+        Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host, accountId);
         if (samlSettingsIterator != null) {
           while (samlSettingsIterator.hasNext()) {
             SamlSettings samlSettings = samlSettingsIterator.next();
@@ -146,7 +154,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
           }
           // if you have reached here, it means none of the SAML IDP metadata matched, try a brute force approach the
           // 2nd time
-          User user = getUserForIdpUrl(idpUrl, samlResponseString);
+          User user = getUserForIdpUrl(idpUrl, samlResponseString, accountId);
           if (user != null) {
             return user;
           }
@@ -155,7 +163,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
 
       break;
       default: {
-        User user = getUserForIdpUrl(idpUrl, samlResponseString);
+        User user = getUserForIdpUrl(idpUrl, samlResponseString, accountId);
         if (user != null) {
           return user;
         }
@@ -166,9 +174,9 @@ public class SamlBasedAuthHandler implements AuthHandler {
     throw new WingsException("Saml Authentication Failed");
   }
 
-  private User getUserForIdpUrl(String idpUrl, String samlResponseString) throws URISyntaxException {
+  private User getUserForIdpUrl(String idpUrl, String samlResponseString, String accountId) throws URISyntaxException {
     String host = new URI(idpUrl).getHost();
-    Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host);
+    Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host, accountId);
     if (samlSettingsIterator != null) {
       while (samlSettingsIterator.hasNext()) {
         SamlSettings samlSettings = samlSettingsIterator.next();
@@ -183,9 +191,10 @@ public class SamlBasedAuthHandler implements AuthHandler {
     return null;
   }
 
-  private List<String> getUserGroupsForIdpUrl(String idpUrl, String samlResponseString) throws URISyntaxException {
+  private List<String> getUserGroupsForIdpUrl(String idpUrl, String samlResponseString, String accountId)
+      throws URISyntaxException {
     String host = new URI(idpUrl).getHost();
-    Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host);
+    Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host, accountId);
     if (samlSettingsIterator != null) {
       while (samlSettingsIterator.hasNext()) {
         SamlSettings samlSettings = samlSettingsIterator.next();
