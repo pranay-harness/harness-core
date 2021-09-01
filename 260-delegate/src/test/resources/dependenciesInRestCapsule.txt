@@ -224,7 +224,7 @@ com.novemberain:quartz-mongodb:jar:2.1.1
 com.offbytwo.jenkins:jenkins-client:jar:0.3.8
 com.palominolabs.metrics:metrics-guice:jar:3.2.0
 com.papertrail:profiler:jar:1.0.2
-com.rabbitmq:amqp-client:jar:4.4.1
+com.rabbitmq:amqp-client:jar:4.8.0
 com.sangupta:murmur:jar:1.0.0
 com.segment.analytics.java:analytics-core:jar:2.1.1
 com.segment.analytics.java:analytics:jar:2.1.1
