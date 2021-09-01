@@ -7,6 +7,7 @@ import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 
 import java.util.Optional;
@@ -23,6 +24,8 @@ public interface ResourceGroupService {
   Optional<ResourceGroupResponse> get(Scope scope, String identifier);
 
   Page<ResourceGroupResponse> list(Scope scope, PageRequest pageRequest, String searchTerm);
+
+  Page<ResourceGroupResponse> list(ResourceGroupFilterDTO resourceGroupFilterDTO, PageRequest pageRequest);
 
   Page<ResourceGroup> list(Criteria criteria, Pageable pageable);
 

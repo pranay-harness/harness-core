@@ -3,7 +3,10 @@ package io.harness.ng.core.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.KARAN;
+import static io.harness.rule.OwnerRule.REETIKA;
+import static io.harness.utils.PageTestUtils.getPage;
 
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,6 +26,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.UserGroupDTO;
+import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.service.NgUserService;
@@ -37,6 +41,7 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -186,6 +191,24 @@ public class UserGroupServiceImplTest extends CategoryTest {
     } catch (InvalidRequestException exception) {
       // all good here
     }
+  }
+
+  @Test
+  @Owner(developers = REETIKA)
+  @Category(UnitTests.class)
+  public void testListUserGroups() throws IOException {
+    String searchTerm = randomAlphabetic(5);
+    final ArgumentCaptor<Criteria> userGroupCriteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
+
+    when(userGroupRepository.findAll(any(Criteria.class), any())).thenReturn(getPage(emptyList(), 0));
+    userGroupService.list(UserGroupFilterDTO.builder()
+                              .accountIdentifier(ACCOUNT_IDENTIFIER)
+                              .orgIdentifier(ORG_IDENTIFIER)
+                              .projectIdentifier(PROJECT_IDENTIFIER)
+                              .searchTerm(searchTerm)
+                              .identifierFilter(new HashSet<>(Arrays.asList("UG1", "UG2")))
+                              .build());
+    verify(userGroupRepository, times(1)).findAll(userGroupCriteriaArgumentCaptor.capture(), any());
   }
 
   @Test
