@@ -10,13 +10,15 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -29,6 +31,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -178,6 +181,17 @@ public class ActivityResource {
   }
 
   @GET
+  @Path("/{activityId}/healthSources")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get health sources  for an activity", nickname = "getHealthSources")
+  public RestResponse<Set<HealthSourceDTO>> getHealthSources(
+      @NotNull @NotEmpty @PathParam("activityId") String activityId,
+      @NotNull @QueryParam("accountId") String accountId) {
+    return new RestResponse(activityService.healthSources(accountId, activityId));
+  }
+
+  @GET
   @Path("/{activityId}/clusters")
   @Timed
   @ExceptionMetered
@@ -197,8 +211,13 @@ public class ActivityResource {
       @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("label") Integer label, @NotNull @QueryParam("pageNumber") int pageNumber,
       @NotNull @QueryParam("pageSize") int pageSize, @QueryParam("hostName") String hostName,
-      @QueryParam("clusterType") DeploymentLogAnalysisDTO.ClusterType clusterType) {
+      @QueryParam("healthSource") List<String> healthSourceIdentifiers,
+      @QueryParam("clusterType") ClusterType clusterType, @QueryParam("clusterTypes") List<ClusterType> clusterTypes) {
+    PageParams pageParams = PageParams.builder().page(pageNumber).size(pageSize).build();
+    if (clusterType != null) {
+      clusterTypes = Arrays.asList(clusterType);
+    }
     return new RestResponse(activityService.getDeploymentActivityLogAnalysisResult(
-        accountId, activityId, label, pageNumber, pageSize, hostName, clusterType));
+        accountId, activityId, label, hostName, healthSourceIdentifiers, clusterTypes, pageParams));
   }
 }
