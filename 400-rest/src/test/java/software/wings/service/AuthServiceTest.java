@@ -796,4 +796,89 @@ public class AuthServiceTest extends WingsBaseTest {
 
     UserThreadLocal.unset();
   }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void allowWorkflowUpdateWhenEnvironmentAccessNotPresentAndWorkflowAccessExplicit() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+    String workflowId = generateUuid();
+    Workflow workflow = aWorkflow().uuid(workflowId).envId(generateUuid()).build();
+
+    Set<String> workflowUpdatePermissionsForEnvs = new HashSet<>();
+    Set<String> workflowUpdatePermissionsByEntity = new HashSet<>();
+    workflowUpdatePermissionsByEntity.add(workflowId);
+    workflowUpdatePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .workflowUpdatePermissionsForEnvs(workflowUpdatePermissionsForEnvs)
+            .workflowUpdatePermissionsByEntity(workflowUpdatePermissionsByEntity)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+
+    try {
+      authService.checkWorkflowPermissionsForEnv(application.getUuid(), workflow, Action.UPDATE);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void allowPipelineCreationWhenEnvironmentAccessNotPresentAndPipelineAccessExplicit() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+    String pipelineId = generateUuid();
+
+    Pipeline pipeline = Pipeline.builder().uuid(pipelineId).build();
+
+    Set<String> pipelineUpdatePermissionsForEnvs = new HashSet<>();
+    Set<String> pipelineUpdatePermissionsByEntity = new HashSet<>();
+    pipelineUpdatePermissionsByEntity.add(pipelineId);
+    pipelineUpdatePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .pipelineUpdatePermissionsForEnvs(pipelineUpdatePermissionsForEnvs)
+            .pipelineUpdatePermissionsByEntity(pipelineUpdatePermissionsByEntity)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+
+    try {
+      authService.checkPipelinePermissionsForEnv(application.getUuid(), pipeline, Action.CREATE);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
 }

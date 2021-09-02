@@ -20,7 +20,7 @@ go_proto_library(
 )
 
 go_library(
-    name = "go_default_library",
+    name = "delegate",
     embed = [":955_delegate_beans_go_proto"],
     importpath = "github.com/wings-software/portal/955-delegate-beans/src/main/proto/io/harness/delegate",
     visibility = ["//visibility:public"],

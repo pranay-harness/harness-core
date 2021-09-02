@@ -941,8 +941,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerQueueListeners(Injector injector) {
     log.info("Initializing queue listeners...");
 
-
-
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     EventListener genericEventListener =
         injector.getInstance(Key.get(EventListener.class, Names.named("GenericEventListener")));

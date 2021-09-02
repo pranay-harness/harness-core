@@ -37,6 +37,7 @@ public class LdapConnectionSettings implements LdapConnectionConfig {
   String encryptedBindPassword;
   int connectTimeout = LdapConstants.DEFAULT_CONNECT_TIMEOUT;
   int responseTimeout = LdapConstants.DEFAULT_RESPONSE_TIMEOUT;
+  Boolean useRecursiveGroupMembershipSearch;
 
   @AssertTrue(message = "Bind password can't be empty if Bind DN is provided.")
   private boolean isNonEmptyCredentials() {

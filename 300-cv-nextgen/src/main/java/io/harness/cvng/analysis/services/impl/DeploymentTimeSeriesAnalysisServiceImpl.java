@@ -57,7 +57,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Override
   public TransactionMetricInfoSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
-      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber) {
+      boolean anomalousMetricsOnly, String hostName, String filter, DataSourceType dataSourceType, int pageNumber) {
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
@@ -82,6 +82,12 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
                       || transactionMetricInfo.getTransactionMetric().getTransactionName().toLowerCase().contains(
                           filter.toLowerCase()))
               .collect(Collectors.toList());
+    }
+
+    if (dataSourceType != null) {
+      transactionMetricInfoList = transactionMetricInfoList.stream()
+                                      .filter(metricInfo -> metricInfo.getDataSourceType().equals(dataSourceType))
+                                      .collect(Collectors.toList());
     }
 
     return TransactionMetricInfoSummaryPageDTO.builder()

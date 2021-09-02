@@ -1,0 +1,26 @@
+# Possible entity values for Pipeline aggregation
+enum PipelineEntityAggregation {
+  Application
+  Pipeline
+}
+
+# Set Pipeline aggregation criteria
+input PipelineAggregation {
+  # Aggregate by entity
+  entityAggregation: PipelineEntityAggregation
+  # Aggregate by tag
+  tagAggregation: PipelineTagAggregation
+}
+
+# Aggregate by Pipeline tag
+input PipelineTagAggregation {
+  # Set entity type
+  entityType: PipelineTagType
+  # Set tag name
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics of Pipelines
+  pipelineStats(filters: [PipelineFilter], groupBy: [PipelineAggregation]): Data @dataFetcher(name: pipelineStats)
+}

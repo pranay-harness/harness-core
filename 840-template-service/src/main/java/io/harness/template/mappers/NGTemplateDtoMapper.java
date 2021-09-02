@@ -12,6 +12,7 @@ import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.template.beans.TemplateResponseDTO;
+import io.harness.template.beans.TemplateSummaryResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.beans.yaml.NGTemplateInfoConfig;
 import io.harness.template.entity.TemplateEntity;
@@ -25,6 +26,26 @@ import lombok.experimental.UtilityClass;
 public class NGTemplateDtoMapper {
   public TemplateResponseDTO writeTemplateResponseDto(TemplateEntity templateEntity) {
     return TemplateResponseDTO.builder()
+        .accountId(templateEntity.getAccountId())
+        .orgIdentifier(templateEntity.getOrgIdentifier())
+        .projectIdentifier(templateEntity.getProjectIdentifier())
+        .yaml(templateEntity.getYaml())
+        .identifier(templateEntity.getIdentifier())
+        .description(templateEntity.getDescription())
+        .name(templateEntity.getName())
+        .isStableTemplate(templateEntity.isStableTemplate())
+        .childType(templateEntity.getChildType())
+        .templateEntityType(templateEntity.getTemplateEntityType())
+        .templateScope(templateEntity.getTemplateScope())
+        .versionLabel(templateEntity.getVersionLabel())
+        .tags(TagMapper.convertToMap(templateEntity.getTags()))
+        .version(templateEntity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(templateEntity))
+        .build();
+  }
+
+  public TemplateSummaryResponseDTO prepareTemplateSummaryResponseDto(TemplateEntity templateEntity) {
+    return TemplateSummaryResponseDTO.builder()
         .accountId(templateEntity.getAccountId())
         .orgIdentifier(templateEntity.getOrgIdentifier())
         .projectIdentifier(templateEntity.getProjectIdentifier())

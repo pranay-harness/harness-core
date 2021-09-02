@@ -359,7 +359,8 @@
           "type": "string",
           "enum": [
             "InheritFromDelegate",
-            "ManualConfig"
+            "ManualConfig",
+            "Irsa"
           ]
         }
       },
@@ -3803,7 +3804,8 @@
               "type": "string",
               "enum": [
                 "APP_ROLE",
-                "TOKEN"
+                "TOKEN",
+                "VAULT_AGENT"
               ]
             },
             "appRoleId": {
@@ -3825,6 +3827,9 @@
                 "type": "string"
               }
             },
+            "namespace": {
+              "type": "string"
+            },
             "readOnly": {
               "type": "boolean"
             },
@@ -3844,6 +3849,12 @@
             },
             "secretId": {
               "type": "string"
+            },
+            "sinkPath": {
+              "type": "string"
+            },
+            "useVaultAgent": {
+              "type": "boolean"
             },
             "vaultUrl": {
               "type": "string"

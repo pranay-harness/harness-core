@@ -1,0 +1,28 @@
+# Possible entity values for Service aggregation
+enum ServiceEntityAggregation {
+  Application
+  ArtifactType
+  DeploymentType
+  Service
+}
+
+# Set Service aggregation criteria
+input ServiceAggregation {
+  # Aggregate by entity
+  entityAggregation: ServiceEntityAggregation
+  # Aggregate by tag
+  tagAggregation: ServiceTagAggregation
+}
+
+# Aggregate by Service tag
+input ServiceTagAggregation {
+  # Set entity type
+  entityType: ServiceTagType
+  # Set tag name
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics of Harness Services.
+  serviceStats(filters: [ServiceFilter], groupBy: [ServiceAggregation]): Data @dataFetcher(name: serviceStats)
+}

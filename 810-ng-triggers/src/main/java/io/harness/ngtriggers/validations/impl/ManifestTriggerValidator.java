@@ -57,17 +57,15 @@ public class ManifestTriggerValidator implements TriggerValidator {
 
       // type is validated {HemlChart}
       validationHelper.validateBuildType(buildTriggerOpsData);
-
       validateBasedOnManifestType(buildTriggerOpsData);
-
     } catch (Exception e) {
-      String message = new StringBuilder(128)
-                           .append("Exception while applying ManifestTriggerValidation for Trigger: ")
-                           .append(TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()))
-                           .toString();
-      log.error(message, e);
+      log.error("Exception while applying ManifestTriggerValidation for Trigger: "
+              + TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()),
+          e);
       builder.success(false).message(
-          new StringBuilder(message).append(". Exception: ").append(e.getMessage()).toString());
+          new StringBuilder("Exception while applying ManifestTriggerValidation for Trigger. Exception: ")
+              .append(e.getMessage())
+              .toString());
     }
 
     return builder.build();

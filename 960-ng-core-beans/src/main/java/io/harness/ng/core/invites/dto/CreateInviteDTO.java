@@ -26,4 +26,5 @@ public class CreateInviteDTO {
   @ApiModelProperty(required = true) @NotEmpty @Size(max = 100) List<String> users;
   @ApiModelProperty(required = true) @NotEmpty List<RoleBinding> roleBindings;
   @ApiModelProperty(required = true) InviteType inviteType;
+  List<String> userGroups;
 }

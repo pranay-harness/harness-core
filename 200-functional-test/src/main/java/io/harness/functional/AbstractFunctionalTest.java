@@ -12,6 +12,8 @@ import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKey
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
@@ -21,6 +23,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
+import io.harness.rule.DistributeRule;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
 import io.harness.testframework.framework.CommandLibraryServiceExecutor;
@@ -89,6 +92,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
   protected static final String ADMIN_USER = "admin@harness.io";
 
@@ -96,6 +100,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   protected static User adminUser;
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
+  @Rule public DistributeRule distributeRule = new DistributeRule();
 
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;

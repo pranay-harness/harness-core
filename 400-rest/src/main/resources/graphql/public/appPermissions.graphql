@@ -75,16 +75,19 @@ enum WorkflowPermissionFilterType {
   PRODUCTION_WORKFLOWS
   NON_PRODUCTION_WORKFLOWS
   WORKFLOW_TEMPLATES
+  ALL_WORKFLOWS
 }
 
 type WorkflowPermissionFilter {
   filterTypes: [WorkflowPermissionFilterType]
   envIds: [String]
+  workflowIds: [String]
 }
 
 input WorkflowPermissionFilterInput {
   filterTypes: [WorkflowPermissionFilterType]
   envIds: [String!]
+  workflowIds: [String!]
 }
 
 enum DeploymentPermissionFilterType {
@@ -105,16 +108,19 @@ type DeploymentPermissionFilter {
 enum PipelinePermissionFilterType {
   PRODUCTION_PIPELINES
   NON_PRODUCTION_PIPELINES
+  ALL_PIPELINES
 }
 
 input PipelinePermissionFilterInput {
   filterTypes: [PipelinePermissionFilterType]
   envIds: [String!]
+  pipelineIds: [String!]
 }
 
 type PipelinePermissionFilter {
   filterTypes: [PipelinePermissionFilterType]
   envIds: [String]
+  pipelineIds: [String]
 }
 
 input ProvisionerPermissionFilterInput {

@@ -108,6 +108,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>867-polling-contracts</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>889-yaml-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

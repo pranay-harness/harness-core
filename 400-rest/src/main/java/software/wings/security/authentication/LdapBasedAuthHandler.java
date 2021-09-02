@@ -10,7 +10,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretText;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class LdapBasedAuthHandler implements AuthHandler {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AuthenticationUtils authenticationUtils;

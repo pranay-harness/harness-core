@@ -8,7 +8,9 @@ import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURA
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
+import io.harness.filter.mapper.FilterPropertiesMapper;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.mongo.AbstractMongoModule;
@@ -24,6 +26,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
 import io.harness.template.events.TemplateOutboxEventHandler;
+import io.harness.template.mappers.TemplateFilterPropertiesMapper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceImpl;
 import io.harness.time.TimeModule;
@@ -34,6 +37,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.List;
@@ -85,6 +89,10 @@ public class TemplateServiceModule extends AbstractModule {
     bind(OutboxEventHandler.class).to(TemplateOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(NGTemplateService.class).to(NGTemplateServiceImpl.class);
+
+    MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
+        MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
+    filterPropertiesMapper.addBinding(FilterType.TEMPLATE.toString()).to(TemplateFilterPropertiesMapper.class);
   }
 
   @Provides

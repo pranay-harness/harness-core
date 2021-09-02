@@ -108,7 +108,6 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
       }
     }
 
-    log.info("Deserialize and return the response for task {}", taskId);
     return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
   }
 }

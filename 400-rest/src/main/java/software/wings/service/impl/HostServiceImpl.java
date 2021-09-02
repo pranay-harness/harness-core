@@ -1,9 +1,14 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
@@ -44,6 +49,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
@@ -114,6 +121,12 @@ public class HostServiceImpl implements HostService {
         applicationHost.setEc2Instance(appHost.getEc2Instance());
         wingsPersistence.updateField(
             Host.class, applicationHost.getUuid(), HostKeys.ec2Instance, appHost.getEc2Instance());
+      }
+      if (isNotEmpty(applicationHost.getHostConnAttr())
+          && !applicationHost.getHostConnAttr().equals(appHost.getHostConnAttr())) {
+        applicationHost.setHostConnAttr(appHost.getHostConnAttr());
+        wingsPersistence.updateField(
+            Host.class, applicationHost.getUuid(), HostKeys.hostConnAttr, appHost.getHostConnAttr());
       }
       return applicationHost;
     } else {

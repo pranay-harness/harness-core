@@ -51,6 +51,6 @@ public class DelegateServiceClassicGrpcClient {
     ObjectMapper mapper = new ObjectMapper();
     return (T) mapper.convertValue(
         kryoSerializer.asInflatedObject(executeTaskResponse.getDelegateTaskResponseKryo().toByteArray()),
-        RemoteMethodReturnValueData.class);
+        DelegateResponseData.class);
   }
 }

@@ -57,3 +57,6 @@ io.harness.plancreator.flowcontrol.FlowControlConfig
 io.harness.steps.common.NGSectionStepParameters
 io.harness.plancreator.steps.resourceconstraint.ResourceConstraintStepInfo
 io.harness.steps.environment.EnvironmentOutcome
+io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters
+io.harness.pms.yaml.ParameterFieldValueWrapper
+io.harness.pms.yaml.ParameterDocumentField
