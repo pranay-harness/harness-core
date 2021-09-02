@@ -90,6 +90,7 @@ directories:
   959-common-entities
   959-file-service-commons
   959-psql-database-models
+  959-ng-core-psql-database-models
   959-timeout-engine
   960-api-services
   960-continuous-features

@@ -430,7 +430,11 @@ aeriform("//959-file-service-commons:module")
 
 aeriform("//959-psql-database-models:module")
 
+aeriform("//959-ng-core-psql-database-models:module")
+
 aeriform("//959-psql-database-models:tests")
+
+aeriform("//959-ng-core-psql-database-models:tests")
 
 aeriform("//959-timeout-engine:module")
 

@@ -160,6 +160,7 @@ BAZEL_MODULES="\
   //958-migration-sdk:module \
   //959-file-service-commons:module \
   //959-psql-database-models:module \
+  //959-ng-core-psql-database-models:module \
   //959-timeout-engine:module \
   //960-api-services:module \
   //960-continuous-features:module \
@@ -417,6 +418,7 @@ build_bazel_module 957-cg-beans
 build_bazel_module 958-migration-sdk
 build_bazel_module 959-file-service-commons
 build_bazel_module 959-psql-database-models
+build_bazel_module 959-ng-core-psql-database-models
 build_bazel_module 959-timeout-engine
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features

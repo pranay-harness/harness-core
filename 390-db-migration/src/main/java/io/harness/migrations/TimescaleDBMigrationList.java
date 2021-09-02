@@ -19,6 +19,7 @@ import io.harness.migrations.timescaledb.AddNewIndexToAnomalies;
 import io.harness.migrations.timescaledb.AddNewentityToAnomalies;
 import io.harness.migrations.timescaledb.AddNonComputeCostColumnToBillingData;
 import io.harness.migrations.timescaledb.AddPercentagesToCostEvents;
+import io.harness.migrations.timescaledb.AddProjectSummaryStatDataTables;
 import io.harness.migrations.timescaledb.AddRequestColumnToBillingData;
 import io.harness.migrations.timescaledb.AddRollbackToDeployment;
 import io.harness.migrations.timescaledb.AddSchemaForServiceGuardStats;
@@ -121,6 +122,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(52, CreateNodeInfoTableAndIsAliveFunction.class))
         .add(Pair.of(53, CreateAccountTables.class))
         .add(Pair.of(54, CreateIndexOnKubernetesUtilizationData.class))
+        .add(Pair.of(55, AddProjectSummaryStatDataTables.class))
         .build();
   }
 }

@@ -30,6 +30,7 @@ shared_dependencies = [
     "//958-migration-sdk:module",
     "//958-ng-file-service-sdk:module",
     "//965-api-key-filter:module",
+    "//959-ng-core-psql-database-models:module",
     "//product/ci/scm/proto:ciscm_java_proto",
     "@maven//:net_rcarz_jira_client",
     "@maven//:aopalliance_aopalliance",
