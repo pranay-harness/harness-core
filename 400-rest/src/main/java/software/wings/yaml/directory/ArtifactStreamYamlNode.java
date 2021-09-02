@@ -1,7 +1,11 @@
 package software.wings.yaml.directory;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.yaml.YamlVersion;
 
+@OwnedBy(HarnessTeam.DX)
 public class ArtifactStreamYamlNode extends YamlNode {
   private String artifactStreamId;
   private String appId;

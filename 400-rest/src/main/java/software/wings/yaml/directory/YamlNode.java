@@ -1,7 +1,11 @@
 package software.wings.yaml.directory;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.yaml.YamlVersion.Type;
 
+@OwnedBy(HarnessTeam.DX)
 public class YamlNode extends DirectoryNode {
   private String uuid;
   private Type yamlVersionType;

@@ -2,6 +2,10 @@ package software.wings.yaml.directory;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.DX)
 public class DirectoryPath implements Cloneable {
   private static final String delimiter = "/";
 

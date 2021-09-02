@@ -1,8 +1,12 @@
 package software.wings.yaml.directory;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+@OwnedBy(HarnessTeam.DX)
 public class DirectoryNode {
   private String accountId;
   private NodeType type;

@@ -67,6 +67,8 @@ import static java.util.Collections.sort;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -199,6 +201,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;

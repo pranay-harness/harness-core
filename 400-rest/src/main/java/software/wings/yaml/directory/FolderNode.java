@@ -1,5 +1,8 @@
 package software.wings.yaml.directory;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -7,6 +10,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+@OwnedBy(HarnessTeam.DX)
 public class FolderNode extends DirectoryNode {
   private boolean defaultToClosed;
   private List<DirectoryNode> children = new ArrayList<>();
