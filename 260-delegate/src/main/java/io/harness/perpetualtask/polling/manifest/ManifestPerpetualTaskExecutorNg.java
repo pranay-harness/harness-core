@@ -1,50 +1,49 @@
 package io.harness.perpetualtask.polling.manifest;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.network.SafeHttpCall.executeWithExceptions;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.ManifestPollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
+import io.harness.perpetualtask.polling.PollingResponsePublisher;
 import io.harness.serializer.KryoSerializer;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
+@Singleton
 public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
   private final KryoSerializer kryoSerializer;
   private final ManifestCollectionService manifestCollectionService;
-  private final DelegateAgentManagerClient delegateAgentManagerClient;
+  private final PollingResponsePublisher pollingResponsePublisher;
 
   private final @Getter Cache<String, ManifestsCollectionCache> cache = Caffeine.newBuilder().build();
-  private static final long TIMEOUT_IN_MILLIS = 100L * 1000;
+  private static final long TIMEOUT_IN_MILLIS = 120L * 1000;
 
   @Inject
   public ManifestPerpetualTaskExecutorNg(KryoSerializer kryoSerializer,
-      ManifestCollectionService manifestCollectionService, DelegateAgentManagerClient delegateAgentManagerClient) {
+      ManifestCollectionService manifestCollectionService, PollingResponsePublisher pollingResponsePublisher) {
     this.kryoSerializer = kryoSerializer;
     this.manifestCollectionService = manifestCollectionService;
-    this.delegateAgentManagerClient = delegateAgentManagerClient;
+    this.pollingResponsePublisher = pollingResponsePublisher;
   }
 
   @Override
@@ -75,7 +74,7 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
     ManifestDelegateConfig manifestConfig =
         (ManifestDelegateConfig) kryoSerializer.asObject(taskParams.getManifestCollectionParams().toByteArray());
     manifestCollectionService.cleanup(manifestConfig);
-    return false;
+    return true;
   }
 
   private ManifestCollectionTaskParamsNg getTaskParams(PerpetualTaskExecutionParams params) {
@@ -95,28 +94,13 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
       manifestsCollectionCache.populateCache(chartVersions);
     } catch (Exception e) {
       log.error("Error while collecting manifests ", e);
-      publishToManger(taskId,
+      pollingResponsePublisher.publishToManger(taskId,
           PollingDelegateResponse.builder()
               .accountId(taskParams.getAccountId())
               .commandExecutionStatus(CommandExecutionStatus.FAILURE)
               .errorMessage(e.getMessage())
               .pollingDocId(taskParams.getPollingDocId())
               .build());
-    }
-  }
-
-  private boolean publishToManger(String taskId, PollingDelegateResponse pollingDelegateResponse) {
-    try {
-      byte[] responseSerialized = kryoSerializer.asBytes(pollingDelegateResponse);
-
-      executeWithExceptions(
-          delegateAgentManagerClient.publishPollingResult(taskId, pollingDelegateResponse.getAccountId(),
-              RequestBody.create(MediaType.parse("application/octet-stream"), responseSerialized)));
-      return true;
-    } catch (Exception ex) {
-      log.error("Failed to publish manifest polling response with status: {}",
-          pollingDelegateResponse.getCommandExecutionStatus().name(), ex);
-      return false;
     }
   }
 
@@ -140,7 +124,7 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .pollingDocId(taskParams.getPollingDocId())
             .pollingResponseInfc(
-                ManifestPollingResponseInfc.builder()
+                ManifestPollingDelegateResponse.builder()
                     .unpublishedManifests(unpublishedManifests)
                     .toBeDeletedKeys(toBeDeletedKeys)
                     .firstCollectionOnDelegate(
@@ -148,7 +132,7 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
                     .build())
             .build();
 
-    if (publishToManger(taskId, response)) {
+    if (pollingResponsePublisher.publishToManger(taskId, response)) {
       manifestsCollectionCache.setFirstCollectionOnDelegateFalse();
       manifestsCollectionCache.clearUnpublishedVersions(unpublishedManifests);
       manifestsCollectionCache.removeDeletedArtifactKeys(toBeDeletedKeys);

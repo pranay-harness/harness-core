@@ -13,7 +13,8 @@ public class EcrArtifactInfoBuilder implements PollingInfoBuilder {
   public PollingInfo toPollingInfo(PollingPayloadData pollingPayloadData) {
     return EcrArtifactInfo.builder()
         .connectorRef(pollingPayloadData.getConnectorRef())
-        .imagePath(pollingPayloadData.getDockerEcrPayload().getImageName())
+        .imagePath(pollingPayloadData.getEcrPayload().getImagePath())
+        .region(pollingPayloadData.getEcrPayload().getRegion())
         .build();
   }
 }

@@ -10,6 +10,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//889-yaml-commons:module",
         "//890-pms-contracts:module",
         "//900-git-sync-sdk:module",
         "//920-delegate-service-beans:module",

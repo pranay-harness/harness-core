@@ -1,8 +1,16 @@
 package io.harness.cvng.core.beans.monitoredService.healthSouceSpec;
 
+import static io.harness.cvng.beans.MonitoredServiceDataSourceType.dataSourceTypeMonitoredServiceDataSourceTypeMap;
+
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
+import java.util.Arrays;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +31,18 @@ public class HealthSourceDTO {
         .name(healthSource.getName())
         .identifier(healthSource.getIdentifier())
         .type(healthSource.getSpec().getType())
+        .build();
+  }
+
+  public static HealthSource toHealthSource(CVConfig cvConfig, Injector injector) {
+    CVConfigToHealthSourceTransformer<CVConfig, HealthSourceSpec> cvConfigToHealthSourceTransformer =
+        injector.getInstance(Key.get(CVConfigToHealthSourceTransformer.class, Names.named(cvConfig.getType().name())));
+
+    return HealthSource.builder()
+        .name(cvConfig.getMonitoringSourceName())
+        .type(dataSourceTypeMonitoredServiceDataSourceTypeMap.get(cvConfig.getType()))
+        .identifier(cvConfig.getIdentifier())
+        .spec(cvConfigToHealthSourceTransformer.transform(Arrays.asList(cvConfig)))
         .build();
   }
 }

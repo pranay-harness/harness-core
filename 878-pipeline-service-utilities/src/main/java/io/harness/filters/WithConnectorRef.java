@@ -1,15 +1,12 @@
 package io.harness.filters;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.yaml.ParameterField;
 
 import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-@TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 public interface WithConnectorRef {
   /**
    *

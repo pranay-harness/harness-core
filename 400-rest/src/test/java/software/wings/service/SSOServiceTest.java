@@ -15,6 +15,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -65,6 +67,7 @@ import org.ldaptive.ResultCode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class SSOServiceTest extends WingsBaseTest {
   @Mock private AccountService ACCOUNT_SERVICE;
   @Mock private SSOSettingService SSO_SETTING_SERVICE;

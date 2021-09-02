@@ -17,6 +17,8 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 
@@ -68,11 +70,14 @@ public interface ActivityService {
       int pageSize);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 
-  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
-      String accountId, String activityId, String hostName);
+  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(String accountId, String activityId,
+      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter);
 
   PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
-      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType);
+      Integer label, String hostName, List<String> healthSourceIdentifiers, List<ClusterType> clusterType,
+      PageParams pageParams);
 
   void abort(String activityId);
+
+  Set<HealthSourceDTO> healthSources(String accountId, String activityId);
 }

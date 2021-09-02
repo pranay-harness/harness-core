@@ -291,7 +291,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
     registerWaitEnginePublishers(appConfig.isUseRedisForOrchestrationNotify(), injector);
-    registerScheduledJobs(injector);
+    registerScheduledJobs(injector, appConfig);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -533,15 +533,19 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
   }
 
-  private void registerScheduledJobs(Injector injector) {
+  private void registerScheduledJobs(Injector injector, PipelineServiceConfiguration appConfig) {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L,
+            appConfig.getDelegatePollingConfig().getSyncDelay(), TimeUnit.MILLISECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L,
+            appConfig.getDelegatePollingConfig().getAsyncDelay(), TimeUnit.MILLISECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L,
+            appConfig.getDelegatePollingConfig().getProgressDelay(), TimeUnit.MILLISECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("progressUpdateServiceExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L,
+            appConfig.getDelegatePollingConfig().getProgressDelay(), TimeUnit.MILLISECONDS);
 
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(

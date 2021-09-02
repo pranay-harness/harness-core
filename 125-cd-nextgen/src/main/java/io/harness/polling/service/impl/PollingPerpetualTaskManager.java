@@ -11,11 +11,11 @@ import com.google.inject.Singleton;
 
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
-public class PollingServiceObserverImpl implements PollingServiceObserver {
+public class PollingPerpetualTaskManager implements PollingServiceObserver {
   private PollingPerpetualTaskService pollingPerpetualTaskService;
 
   @Inject
-  public PollingServiceObserverImpl(PollingPerpetualTaskService pollingPerpetualTaskService) {
+  public PollingPerpetualTaskManager(PollingPerpetualTaskService pollingPerpetualTaskService) {
     this.pollingPerpetualTaskService = pollingPerpetualTaskService;
   }
 
