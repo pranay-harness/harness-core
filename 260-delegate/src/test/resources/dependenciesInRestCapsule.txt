@@ -271,7 +271,6 @@ de.javakaffee:kryo-serializers:jar:0.41
 de.jkeylockmanager:jkeylockmanager:jar:2.1.0:runtime
 dk.brics.automaton:automaton:jar:1.11-8
 dnsjava:dnsjava:jar:2.1.8
-dom4j:dom4j:jar:1.6.1
 es.moki.ratelimitj:ratelimitj-core:jar:0.6.0
 es.moki.ratelimitj:ratelimitj-inmemory:jar:0.6.0
 guru.nidi.com.kitfox:svgSalamander:jar:1.1.3

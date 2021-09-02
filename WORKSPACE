@@ -4484,7 +4484,6 @@ plain_artifacts = [
     "de.jkeylockmanager:jkeylockmanager:2.1.0",
     "dk.brics.automaton:automaton:1.11-8",
     "dnsjava:dnsjava:2.1.8",
-    "dom4j:dom4j:1.6.1",
     "es.moki.ratelimitj:ratelimitj-core:0.6.0",
     "es.moki.ratelimitj:ratelimitj-inmemory:0.6.0",
     "guru.nidi.com.kitfox:svgSalamander:1.1.3",
