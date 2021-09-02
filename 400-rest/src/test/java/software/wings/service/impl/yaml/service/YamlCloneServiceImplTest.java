@@ -22,6 +22,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
@@ -61,6 +63,7 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(HarnessTeam.CDP)
 public class YamlCloneServiceImplTest extends WingsBaseTest {
   private static final String YAML_EXTENSION = ".yaml";
   public static final String NEW_WORKFLOW_NAME = "newWorkflowName";
