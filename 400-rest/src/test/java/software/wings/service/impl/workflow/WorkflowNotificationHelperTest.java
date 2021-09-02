@@ -79,6 +79,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.ApprovalState;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import com.google.common.collect.ImmutableList;
@@ -235,7 +236,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Owner(developers = MOUNIK)
   @Category(UnitTests.class)
   public void shouldSendApprovalNotification() {
-    ApprovalState.ApprovalStateType approvalStateType = ApprovalState.ApprovalStateType.SERVICENOW;
+    ApprovalStateType approvalStateType = ApprovalStateType.SERVICENOW;
     when(executionContext.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
     workflowNotificationHelper.sendApprovalNotification(
         ACCOUNT_ID, WORKFLOW_NOTIFICATION, new HashMap<>(), executionContext, approvalStateType);
