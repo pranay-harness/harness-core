@@ -198,8 +198,10 @@ public class ActivityResource {
   @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisClusters")
   public RestResponse<List<LogAnalysisClusterChartDTO>> getDeploymentLogAnalysisClusters(
       @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("hostName") String hostName) {
-    return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(accountId, activityId, hostName));
+      @QueryParam("hostName") String hostName, @QueryParam("healthSource") List<String> healthSourceIdentifiers,
+      @QueryParam("clusterType") List<ClusterType> clusterTypes) {
+    return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(
+        accountId, activityId, hostName, healthSourceIdentifiers, clusterTypes));
   }
 
   @Path("/{activityId}/deployment-log-analysis-data")

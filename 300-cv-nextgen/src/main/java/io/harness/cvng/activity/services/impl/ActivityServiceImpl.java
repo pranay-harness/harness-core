@@ -636,14 +636,15 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
-      String accountId, String activityId, String hostName) {
+  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(String accountId, String activityId,
+      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
-    return deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceIds.get(0), hostName);
+    return deploymentLogAnalysisService.getLogAnalysisClusters(
+        accountId, verificationJobInstanceIds.get(0), hostName, healthSourceIdentifiersFilter, clusterTypesFilter);
   }
 
   @Override

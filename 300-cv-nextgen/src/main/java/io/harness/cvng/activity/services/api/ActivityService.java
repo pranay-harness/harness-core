@@ -70,8 +70,8 @@ public interface ActivityService {
       int pageSize);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 
-  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
-      String accountId, String activityId, String hostName);
+  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(String accountId, String activityId,
+      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter);
 
   PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
       Integer label, String hostName, List<String> healthSourceIdentifiers, List<ClusterType> clusterType,

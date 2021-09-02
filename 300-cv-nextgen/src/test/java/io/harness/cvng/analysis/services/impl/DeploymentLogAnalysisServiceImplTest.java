@@ -73,10 +73,68 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     deploymentLogAnalysisService.save(createDeploymentLogAnalysis(verificationTaskId));
     List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOlist =
-        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, null);
+        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, null, null, null);
 
     assertThat(logAnalysisClusterChartDTOlist).isNotNull();
     assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLogAnalysisClustersWithClusterTypeFilter() {
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    deploymentLogAnalysisService.save(createDeploymentLogAnalysis(verificationTaskId));
+    List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOlist =
+        deploymentLogAnalysisService.getLogAnalysisClusters(
+            accountId, verificationJobInstanceId, null, null, Arrays.asList(ClusterType.KNOWN_EVENT));
+    assertThat(logAnalysisClusterChartDTOlist).isNotNull();
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(3);
+
+    logAnalysisClusterChartDTOlist = deploymentLogAnalysisService.getLogAnalysisClusters(
+        accountId, verificationJobInstanceId, null, null, Arrays.asList(ClusterType.UNKNOWN_EVENT));
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLogAnalysisClustersWithHealthIdentifierFilter() {
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    deploymentLogAnalysisService.save(createDeploymentLogAnalysis(verificationTaskId));
+    List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOlist =
+        deploymentLogAnalysisService.getLogAnalysisClusters(
+            accountId, verificationJobInstanceId, null, null, Arrays.asList(ClusterType.KNOWN_EVENT));
+    assertThat(logAnalysisClusterChartDTOlist).isNotNull();
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(3);
+
+    String cvConfigIdentifier = verificationJobInstanceService.get(Arrays.asList(verificationJobInstanceId))
+                                    .get(0)
+                                    .getCvConfigMap()
+                                    .values()
+                                    .stream()
+                                    .collect(Collectors.toList())
+                                    .get(0)
+                                    .getIdentifier();
+
+    logAnalysisClusterChartDTOlist = deploymentLogAnalysisService.getLogAnalysisClusters(accountId,
+        verificationJobInstanceId, null, Arrays.asList(cvConfigIdentifier), Arrays.asList(ClusterType.KNOWN_EVENT));
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(3);
+
+    logAnalysisClusterChartDTOlist =
+        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, null,
+            Arrays.asList("some-random-identifier"), Arrays.asList(ClusterType.UNKNOWN_EVENT));
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(0);
+
+    logAnalysisClusterChartDTOlist = deploymentLogAnalysisService.getLogAnalysisClusters(
+        accountId, verificationJobInstanceId, null, Arrays.asList(cvConfigIdentifier), null);
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(3);
+
+    logAnalysisClusterChartDTOlist = deploymentLogAnalysisService.getLogAnalysisClusters(accountId,
+        verificationJobInstanceId, null, Arrays.asList(cvConfigIdentifier), Arrays.asList(ClusterType.UNKNOWN_EVENT));
+    assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(0);
   }
 
   @Test
@@ -87,7 +145,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     deploymentLogAnalysisService.save(createDeploymentLogAnalysis(verificationTaskId));
     List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOlist =
-        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, "node2");
+        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, "node2", null, null);
     assertThat(logAnalysisClusterChartDTOlist).isNotNull();
     assertThat(logAnalysisClusterChartDTOlist.size()).isEqualTo(1);
     assertThat(logAnalysisClusterChartDTOlist.get(0).getText()).isEqualTo("Error in cluster 2");
@@ -177,7 +235,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
   public void testGetLogAnalysisClusters_withNoDeploymentLogAnalysis() {
     verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOList =
-        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, null);
+        deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceId, null, null, null);
     assertThat(logAnalysisClusterChartDTOList).isEmpty();
   }
 
