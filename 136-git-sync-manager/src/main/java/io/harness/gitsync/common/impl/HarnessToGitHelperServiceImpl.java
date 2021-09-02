@@ -98,44 +98,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.userProfileHelper = userProfileHelper;
   }
 
-  //  @Override
-  //  public InfoForGitPush getInfoForPush(FileInfo fileInfo, EntityReference entityReference, EntityType entityType) {
-  //    final String accountId = fileInfo.getAccountId();
-  //    final String filePath = fileInfo.getFilePath();
-  //    final String branch = fileInfo.getBranch();
-  //    final String yamlGitConfigId = fileInfo.getYamlGitConfigId();
-  //    final UserPrincipal userPrincipal = fileInfo.getUserPrincipal();
-  //
-  //    final InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
-  //    final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
-  //            entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
-  //    final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType, branch);
-  //    if (gitSyncEntityDTO != null) {
-  //      if (filePath != null) {
-  //        if (!gitSyncEntityDTO.getEntityGitPath().equals(filePath)) {
-  //          throw new InvalidRequestException("Incorrect file path");
-  //        }
-  //      }
-  //    }
-  //    final boolean executeOnDelegate = scmOrchestratorService.isExecuteOnDelegate(
-  //            entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
-  //    log.info("Configuration for git push operation to execute on delegate {}", executeOnDelegate);
-  //    if (executeOnDelegate) {
-  //      final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
-  //              getConnectorWithEncryptionDetails(accountId, yamlGitConfig, userPrincipal);
-  //      infoForGitPushBuilder.encryptedDataDetailList(connectorWithEncryptionDetails.getRight())
-  //              .scmConnector(connectorWithEncryptionDetails.getLeft());
-  //    } else {
-  //      infoForGitPushBuilder.scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig, userPrincipal));
-  //    }
-  //    return infoForGitPushBuilder.filePath(filePath)
-  //            .branch(branch)
-  //            .accountId(accountId)
-  //            .orgIdentifier(entityReference.getOrgIdentifier())
-  //            .projectIdentifier(entityReference.getProjectIdentifier())
-  //            .build();
-  //  }
-
   private Pair<ScmConnector, List<EncryptedDataDetail>> getConnectorWithEncryptionDetails(
       String accountId, YamlGitConfigDTO yamlGitConfig, UserPrincipal userPrincipal) {
     final Optional<ConnectorResponseDTO> connectorResponseDTO = getConnector(accountId, yamlGitConfig, userPrincipal);

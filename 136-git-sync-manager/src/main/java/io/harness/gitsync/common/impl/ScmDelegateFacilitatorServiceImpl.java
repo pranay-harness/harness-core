@@ -101,7 +101,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     final ScmGitRefTaskParams scmGitRefTaskParams =
         getScmGitRefTaskParams(scmConnector, encryptionDetails, GitRefType.BRANCH);
-    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(
+    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(
         accountIdentifier, orgIdentifier, projectIdentifier, scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
@@ -128,7 +128,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final ScmGitFileTaskParams scmGitFileTaskParams = getScmGitFileTaskParams(
         scmConnector, encryptionDetails, gitFilePathDetails, GitFileTaskType.GET_FILE_CONTENT, null, branch, null);
     DelegateTaskRequest delegateTaskRequest =
-        getDelegateTaskRequestForPush(accountIdentifier, yamlGitConfigDTO.getOrganizationIdentifier(),
+        getDelegateTaskRequest(accountIdentifier, yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
@@ -215,7 +215,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                                     .foldersList(foldersList)
                                                     .encryptedDataDetails(encryptionDetails)
                                                     .build();
-    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(identifierRef.getAccountIdentifier(),
+    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(identifierRef.getAccountIdentifier(),
         orgIdentifier, projectIdentifier, scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) responseData;
@@ -239,9 +239,9 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmConnector);
     final ScmGitFileTaskParams scmGitFileTaskParams = getScmGitFileTaskParams(scmConnector, encryptionDetails, null,
         GitFileTaskType.GET_FILE_CONTENT_BATCH_BY_FILE_PATHS, null, branchName, filePaths);
-    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(yamlGitConfigDTO.getAccountIdentifier(),
-        yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams,
-        TaskType.SCM_GIT_FILE_TASK);
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
@@ -264,9 +264,9 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmConnector);
     final ScmGitFileTaskParams scmGitFileTaskParams = getScmGitFileTaskParams(scmConnector, encryptionDetails, null,
         GitFileTaskType.GET_FILE_CONTENT_BATCH_BY_REF, commitId, null, filePaths);
-    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(yamlGitConfigDTO.getAccountIdentifier(),
-        yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams,
-        TaskType.SCM_GIT_FILE_TASK);
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
@@ -294,9 +294,9 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                                         .scmConnector(scmConnector)
                                                         .encryptedDataDetails(encryptionDetails)
                                                         .build();
-    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(yamlGitConfigDTO.getAccountIdentifier(),
-        yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams,
-        TaskType.SCM_GIT_REF_TASK);
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
@@ -321,9 +321,9 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                                         .encryptedDataDetails(encryptionDetails)
                                                         .branch(branch)
                                                         .build();
-    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(yamlGitConfigDTO.getAccountIdentifier(),
-        yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams,
-        TaskType.SCM_GIT_REF_TASK);
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
@@ -348,9 +348,9 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                                         .encryptedDataDetails(encryptionDetails)
                                                         .branch(branch)
                                                         .build();
-    DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(yamlGitConfigDTO.getAccountIdentifier(),
-        yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams,
-        TaskType.SCM_GIT_REF_TASK);
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
     final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
     try {
@@ -375,7 +375,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                               .baseBranch(infoForPush.getBaseBranch())
                                               .build();
 
-    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(infoForPush, scmPushTaskParams);
+    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
@@ -402,7 +403,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                               .baseBranch(infoForPush.getBaseBranch())
                                               .build();
 
-    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(infoForPush, scmPushTaskParams);
+    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
@@ -429,7 +431,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                               .baseBranch(infoForPush.getBaseBranch())
                                               .build();
 
-    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequestForPush(infoForPush, scmPushTaskParams);
+    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
@@ -441,19 +444,6 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   }
 
   // ------------------------------- PRIVATE METHODS -------------------------------
-
-  private DelegateTaskRequest getDelegateTaskRequestForPush(
-      InfoForGitPush infoForPush, ScmPushTaskParams scmPushTaskParams) {
-    final Map<String, String> ngTaskSetupAbstractionsWithOwner = getNGTaskSetupAbstractionsWithOwner(
-        infoForPush.getAccountId(), infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier());
-    return DelegateTaskRequest.builder()
-        .accountId(infoForPush.getAccountId())
-        .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
-        .taskType(TaskType.SCM_PUSH_TASK.name())
-        .taskParameters(scmPushTaskParams)
-        .executionTimeout(Duration.ofMinutes(2))
-        .build();
-  }
 
   private List<EncryptedDataDetail> getEncryptedDataDetails(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, ScmConnector scmConnector) {
@@ -470,7 +460,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     return getScmConnector(gitConnectorIdentifierRef);
   }
 
-  private DelegateTaskRequest getDelegateTaskRequestForPush(String accountIdentifier, String orgIdentifier,
+  private DelegateTaskRequest getDelegateTaskRequest(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, TaskParameters taskParameters, TaskType taskType) {
     final Map<String, String> ngTaskSetupAbstractionsWithOwner =
         getNGTaskSetupAbstractionsWithOwner(accountIdentifier, orgIdentifier, projectIdentifier);
