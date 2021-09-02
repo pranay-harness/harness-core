@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
@@ -21,6 +22,7 @@ import lombok.experimental.UtilityClass;
 public class DelegateServiceRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(AccessControlClientRegistrars.kryoRegistrars)
           .addAll(CgOrchestrationRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .add(CgOrchestrationBeansKryoRegistrar.class)
