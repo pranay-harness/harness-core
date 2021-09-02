@@ -1,9 +1,11 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.service.NGTriggerService;
@@ -32,20 +34,26 @@ public class NGTriggersModule extends AbstractModule {
   private TriggerConfiguration triggerConfig;
   private ServiceHttpClientConfig pmsHttpClientConfig;
   private String pipelineServiceSecret;
+  private ServiceHttpClientConfig auditConfig;
+  private boolean isAuditEnabled;
 
-  public static NGTriggersModule getInstance(
-      TriggerConfiguration triggerConfig, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
+  public static NGTriggersModule getInstance(TriggerConfiguration triggerConfig,
+      ServiceHttpClientConfig pmsHttpClientConfig, ServiceHttpClientConfig auditConfig, String pipelineServiceSecret,
+      boolean isAuditEnabled) {
     if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new NGTriggersModule(triggerConfig, pmsHttpClientConfig, pipelineServiceSecret));
+      instanceRef.compareAndSet(null,
+          new NGTriggersModule(triggerConfig, pmsHttpClientConfig, auditConfig, pipelineServiceSecret, isAuditEnabled));
     }
     return instanceRef.get();
   }
 
-  private NGTriggersModule(
-      TriggerConfiguration triggerConfig, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
+  private NGTriggersModule(TriggerConfiguration triggerConfig, ServiceHttpClientConfig pmsHttpClientConfig,
+      ServiceHttpClientConfig auditConfig, String pipelineServiceSecret, boolean isAuditEnabled) {
     this.triggerConfig = triggerConfig;
     this.pmsHttpClientConfig = pmsHttpClientConfig;
+    this.auditConfig = auditConfig;
     this.pipelineServiceSecret = pipelineServiceSecret;
+    this.isAuditEnabled = isAuditEnabled;
   }
 
   @Override
@@ -81,5 +89,6 @@ public class NGTriggersModule extends AbstractModule {
     gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.GITHUB.name()).to(SCMDataObtainer.class);
     gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.BITBUCKET.name()).to(SCMDataObtainer.class);
     gitProviderBaseDataObtainerMap.addBinding(WebhookSourceRepo.GITLAB.name()).to(SCMDataObtainer.class);
+    install(new AuditClientModule(auditConfig, pipelineServiceSecret, NG_MANAGER.getServiceId(), isAuditEnabled));
   }
 }
