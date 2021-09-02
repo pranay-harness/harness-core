@@ -439,8 +439,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   public List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app) {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
-    FolderNode applicationsFolder = new FolderNode(
-        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+    FolderNode applicationsFolder =
+        new FolderNode(accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER));
 
     yamlDirectoryService.doApplication(app.getUuid(), false, null, applicationsFolder, directoryPath);
 
