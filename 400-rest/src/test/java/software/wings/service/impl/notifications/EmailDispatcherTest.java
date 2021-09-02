@@ -12,8 +12,10 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -38,6 +40,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 @OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._830_NOTIFICATION_SERVICE)
 public class EmailDispatcherTest extends WingsBaseTest {
   @Inject @InjectMocks EmailDispatcher emailDispatcher;
   @Mock private EmailNotificationService emailNotificationService;
