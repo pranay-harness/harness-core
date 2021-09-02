@@ -2,7 +2,6 @@ package io.harness.serializer.kryo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.async.AsyncResponseCallback;
 import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.data.output.PmsSweepingOutput;
@@ -27,6 +26,5 @@ public class PmsCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(AbsoluteSdkTimeoutTrackerParameters.class, 88404);
     kryo.register(PmsStepParameters.class, 88405);
     kryo.register(PmsStepDetails.class, 88406);
-    kryo.register(AsyncResponseCallback.class, 88407);
   }
 }

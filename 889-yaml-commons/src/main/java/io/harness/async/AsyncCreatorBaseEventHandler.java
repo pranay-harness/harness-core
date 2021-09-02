@@ -1,5 +1,7 @@
 package io.harness.async;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -19,7 +21,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-// Todo: Move to common layer to be used by template service
+@OwnedBy(HarnessTeam.PIPELINE)
 public abstract class AsyncCreatorBaseEventHandler<T extends Message, C extends AsyncCreatorContext>
     implements PmsCommonsBaseEventHandler<T> {
   @Inject public PmsGitSyncHelper pmsGitSyncHelper;
