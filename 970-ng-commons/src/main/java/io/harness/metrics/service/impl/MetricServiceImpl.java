@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.metrics.MetricConstants.ENV_LABEL;
 import static io.harness.metrics.MetricConstants.METRIC_LABEL_PREFIX;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.metrics.beans.MetricConfiguration;
 import io.harness.metrics.beans.MetricGroup;
 import io.harness.metrics.service.api.MetricDefinitionInitializer;
@@ -48,6 +50,7 @@ import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class MetricServiceImpl implements MetricService {
   public static final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
   private static boolean WILL_PUBLISH_METRICS;
