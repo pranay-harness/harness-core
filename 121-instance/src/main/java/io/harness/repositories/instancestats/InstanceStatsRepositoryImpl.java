@@ -41,7 +41,7 @@ public class InstanceStatsRepositoryImpl implements InstanceStatsRepository {
     return null;
   }
 
-  // ------------------------------- PRIVATE METHODS ------------------------------
+  // ------------------------------- PRIVATE METHODS -------------------------------
 
   private InstanceStats parseInstanceStatsRecord(ResultSet resultSet) throws SQLException {
     while (resultSet != null && resultSet.next()) {
