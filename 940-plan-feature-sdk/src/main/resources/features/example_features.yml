@@ -32,8 +32,8 @@ features:
         restrictionType: ENABLED
         enabled: true
   # Rate limit example
-  # Test2 feature
-  # Free is disabled, TEAM have a 10 limit, ENTERPRISE is unlimited.
+  # Test3 feature
+  # Free has 10 limit per day, TEAM has 100 limit per day, ENTERPRISE is unlimited.
   - name: TEST3
     description: test 3
     restrictions:

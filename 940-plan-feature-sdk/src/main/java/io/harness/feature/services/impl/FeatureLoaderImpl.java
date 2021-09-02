@@ -1,21 +1,24 @@
 package io.harness.feature.services.impl;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
+import io.harness.feature.EnforcementConfiguration;
 import io.harness.feature.bases.EnableDisableRestriction;
 import io.harness.feature.bases.Feature;
 import io.harness.feature.bases.RateLimitRestriction;
+import io.harness.feature.bases.Restriction;
 import io.harness.feature.bases.StaticLimitRestriction;
+import io.harness.feature.configs.FeatureCollection;
 import io.harness.feature.configs.FeatureInfo;
 import io.harness.feature.configs.FeaturesConfig;
 import io.harness.feature.configs.RestrictionConfig;
 import io.harness.feature.constants.RestrictionType;
 import io.harness.feature.interfaces.RateLimitInterface;
-import io.harness.feature.interfaces.RestrictionInterface;
 import io.harness.feature.interfaces.StaticLimitInterface;
-import io.harness.feature.services.FeaturesManagementJob;
+import io.harness.feature.services.FeatureLoader;
 import io.harness.licensing.Edition;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,56 +28,44 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
 
 @OwnedBy(HarnessTeam.GTM)
 @Slf4j
 @Singleton
-public class FeaturesManagementJobImpl implements FeaturesManagementJob {
-  private static final String FEATURES_YAML_PATH = "classpath*:io/harness/feature/*.yml";
-
+public class FeatureLoaderImpl implements FeatureLoader {
   private final FeatureServiceImpl featureService;
+  private final EnforcementConfiguration enforcementConfiguration;
   private final List<FeaturesConfig> featuresConfigs;
 
   @Inject
-  public FeaturesManagementJobImpl(FeatureServiceImpl featureService) {
-    ObjectMapper om = new ObjectMapper(new YAMLFactory());
-    ClassLoader cl = this.getClass().getClassLoader();
-    ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(cl);
-    try {
-      Resource[] resources = resolver.getResources(FEATURES_YAML_PATH);
-      featuresConfigs = new ArrayList<>();
-      for (Resource resource : resources) {
-        byte[] bytes = Resources.toByteArray(resource.getURL());
-        FeaturesConfig featuresConfig = om.readValue(bytes, FeaturesConfig.class);
-        featuresConfigs.add(featuresConfig);
-      }
-    } catch (IOException e) {
-      throw new IllegalStateException("Failed to load feature yaml file.", e);
-    }
-
+  public FeatureLoaderImpl(FeatureServiceImpl featureService, EnforcementConfiguration enforcementConfiguration) {
+    featuresConfigs = new ArrayList<>();
     this.featureService = featureService;
+    this.enforcementConfiguration = enforcementConfiguration;
   }
 
   public void run(Injector injector) {
+    for (String ymlPath : enforcementConfiguration.getFeatureYmlPaths()) {
+      loadYmlToFeaturesConfig(ymlPath, featuresConfigs);
+    }
+
     for (FeaturesConfig featuresConfig : featuresConfigs) {
       for (FeatureInfo featureInfo : featuresConfig.getFeatures()) {
-        Feature feature = generateFeature(featureInfo, injector);
+        Feature feature = generateFeature(featureInfo, featuresConfig.getModuleType(), injector);
         featureService.registerFeature(feature.getName(), feature);
       }
     }
   }
 
-  private Feature generateFeature(FeatureInfo featureInfo, Injector injector) {
+  private Feature generateFeature(FeatureInfo featureInfo, ModuleType moduleType, Injector injector) {
     validFeatureInfo(featureInfo);
-    Map<Edition, RestrictionInterface> restrictionMap =
+    Map<Edition, Restriction> restrictionMap =
         featureInfo.getRestrictions().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, v -> {
           try {
             return generateRestriction(v.getValue(), injector);
@@ -84,10 +75,10 @@ public class FeaturesManagementJobImpl implements FeaturesManagementJob {
                 e, WingsException.USER_SRE);
           }
         }));
-    return new Feature(featureInfo.getName().trim(), featureInfo.getDescription().trim(), restrictionMap);
+    return new Feature(featureInfo.getName().trim(), featureInfo.getDescription().trim(), moduleType, restrictionMap);
   }
 
-  private RestrictionInterface generateRestriction(RestrictionConfig restrictionConfig, Injector injector)
+  private Restriction generateRestriction(RestrictionConfig restrictionConfig, Injector injector)
       throws ClassNotFoundException {
     RestrictionType restrictionType = restrictionConfig.getRestrictionType();
     switch (restrictionType) {
@@ -139,6 +130,24 @@ public class FeaturesManagementJobImpl implements FeaturesManagementJob {
     if (featureInfo.getRestrictions() == null) {
       throw new InvalidArgumentsException(
           String.format("Missing mandatory information for feature [%s]", featureInfo.getName()));
+    }
+
+    if (!FeatureCollection.contains(featureInfo.getName())) {
+      throw new InvalidArgumentsException(
+          String.format("Feature [%s] is not registered in FeatureCollection", featureInfo.getName()));
+    }
+  }
+
+  private void loadYmlToFeaturesConfig(String ymlPath, List<FeaturesConfig> configs) {
+    ObjectMapper om = new ObjectMapper(new YAMLFactory());
+    URL url = getClass().getClassLoader().getResource(ymlPath);
+    try {
+      byte[] bytes = Resources.toByteArray(url);
+      FeaturesConfig featuresConfig = om.readValue(bytes, FeaturesConfig.class);
+      configs.add(featuresConfig);
+
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to load feature yaml file.", e);
     }
   }
 }
