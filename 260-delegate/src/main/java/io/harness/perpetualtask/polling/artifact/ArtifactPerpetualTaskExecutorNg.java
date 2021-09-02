@@ -132,6 +132,6 @@ public class ArtifactPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
   public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
     ArtifactCollectionTaskParamsNg taskParams = getTaskParams(params);
     cache.invalidate(taskParams.getPollingDocId());
-    return false;
+    return true;
   }
 }

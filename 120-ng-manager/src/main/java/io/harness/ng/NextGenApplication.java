@@ -99,8 +99,8 @@ import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEvent
 import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.polling.service.impl.PollingPerpetualTaskManager;
 import io.harness.polling.service.impl.PollingServiceImpl;
-import io.harness.polling.service.impl.PollingServiceObserverImpl;
 import io.harness.polling.service.intfc.PollingService;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -336,7 +336,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private static void registerObservers(Injector injector) {
     // register Polling Framework Observer
     PollingServiceImpl pollingService = (PollingServiceImpl) injector.getInstance(Key.get(PollingService.class));
-    pollingService.getSubject().register(injector.getInstance(Key.get(PollingServiceObserverImpl.class)));
+    pollingService.getSubject().register(injector.getInstance(Key.get(PollingPerpetualTaskManager.class)));
   }
 
   private void registerMigrations(Injector injector) {

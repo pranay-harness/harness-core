@@ -178,7 +178,7 @@ public class ManifestPerpetualTaskExecutorNgTest extends DelegateTestBase {
 
     PerpetualTaskExecutionParams executionParams =
         PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(manifestCollectionTaskParamsNg)).build();
-    assertThat(manifestPerpetualTaskExecutor.cleanup(perpetualTaskId, executionParams)).isFalse();
+    assertThat(manifestPerpetualTaskExecutor.cleanup(perpetualTaskId, executionParams)).isTrue();
     verify(manifestCollectionService).cleanup(manifestDelegateConfig);
     assertThat(manifestPerpetualTaskExecutor.getCache().getIfPresent(polling_doc_id)).isNull();
   }

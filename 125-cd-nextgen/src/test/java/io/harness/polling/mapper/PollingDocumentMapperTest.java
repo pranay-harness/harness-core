@@ -14,9 +14,13 @@ import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.polling.bean.PollingDocument;
+import io.harness.polling.bean.artifact.DockerHubArtifactInfo;
 import io.harness.polling.bean.artifact.EcrArtifactInfo;
+import io.harness.polling.bean.artifact.GcrArtifactInfo;
 import io.harness.polling.bean.manifest.HelmChartManifestInfo;
-import io.harness.polling.contracts.DockerEcrPayload;
+import io.harness.polling.contracts.DockerHubPayload;
+import io.harness.polling.contracts.EcrPayload;
+import io.harness.polling.contracts.GcrPayload;
 import io.harness.polling.contracts.GcsHelmPayload;
 import io.harness.polling.contracts.HelmVersion;
 import io.harness.polling.contracts.HttpHelmPayload;
@@ -60,6 +64,7 @@ public class PollingDocumentMapperTest extends CDNGTestBase {
 
     PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
     assertPollingDocument(pollingDocument);
+    assertThat(pollingDocument.getPollingType()).isEqualTo(io.harness.polling.bean.PollingType.MANIFEST);
     assertThat(pollingDocument.getPollingInfo()).isInstanceOf(HelmChartManifestInfo.class);
     HelmChartManifestInfo helmChartManifestInfo = (HelmChartManifestInfo) pollingDocument.getPollingInfo();
     assertThat(helmChartManifestInfo.getChartName()).isEqualTo(CHART_NAME);
@@ -88,6 +93,7 @@ public class PollingDocumentMapperTest extends CDNGTestBase {
 
     PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
     assertPollingDocument(pollingDocument);
+    assertThat(pollingDocument.getPollingType()).isEqualTo(io.harness.polling.bean.PollingType.MANIFEST);
     assertThat(pollingDocument.getPollingInfo()).isInstanceOf(HelmChartManifestInfo.class);
     HelmChartManifestInfo helmChartManifestInfo = (HelmChartManifestInfo) pollingDocument.getPollingInfo();
     assertThat(helmChartManifestInfo.getChartName()).isEqualTo(CHART_NAME);
@@ -119,6 +125,7 @@ public class PollingDocumentMapperTest extends CDNGTestBase {
 
     PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
     assertPollingDocument(pollingDocument);
+    assertThat(pollingDocument.getPollingType()).isEqualTo(io.harness.polling.bean.PollingType.MANIFEST);
     assertThat(pollingDocument.getPollingInfo()).isInstanceOf(HelmChartManifestInfo.class);
     HelmChartManifestInfo helmChartManifestInfo = (HelmChartManifestInfo) pollingDocument.getPollingInfo();
     assertThat(helmChartManifestInfo.getChartName()).isEqualTo(CHART_NAME);
@@ -134,20 +141,65 @@ public class PollingDocumentMapperTest extends CDNGTestBase {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testEcrArtifactInfoMapper() {
-    DockerEcrPayload ecrPayload = DockerEcrPayload.newBuilder().setImageName("my-image").build();
+    EcrPayload ecrPayload = EcrPayload.newBuilder().setRegion("region").setImagePath("my-image").build();
     PollingPayloadData pollingPayloadData = PollingPayloadData.newBuilder()
                                                 .setConnectorRef(CONNECTOR_REF)
-                                                .setDockerEcrPayload(ecrPayload)
-                                                .setType(Type.DOCKER_ECR)
+                                                .setEcrPayload(ecrPayload)
+                                                .setType(Type.ECR)
                                                 .build();
     PollingItem pollingItem = getPollingItem(ARTIFACT, pollingPayloadData);
 
     PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
     assertPollingDocument(pollingDocument);
+    assertThat(pollingDocument.getPollingType()).isEqualTo(io.harness.polling.bean.PollingType.ARTIFACT);
     assertThat(pollingDocument.getPollingInfo()).isInstanceOf(EcrArtifactInfo.class);
     EcrArtifactInfo ecrArtifactInfo = (EcrArtifactInfo) pollingDocument.getPollingInfo();
     assertThat(ecrArtifactInfo.getImagePath()).isEqualTo("my-image");
+    assertThat(ecrArtifactInfo.getRegion()).isEqualTo("region");
     assertThat(ecrArtifactInfo.getConnectorRef()).isEqualTo(CONNECTOR_REF);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGcrArtifactInfoMapper() {
+    GcrPayload gcrPayload = GcrPayload.newBuilder().setImagePath("my-image").setRegistryHostname("host").build();
+    PollingPayloadData pollingPayloadData = PollingPayloadData.newBuilder()
+                                                .setConnectorRef(CONNECTOR_REF)
+                                                .setGcrPayload(gcrPayload)
+                                                .setType(Type.GCR)
+                                                .build();
+    PollingItem pollingItem = getPollingItem(ARTIFACT, pollingPayloadData);
+
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
+    assertPollingDocument(pollingDocument);
+    assertThat(pollingDocument.getPollingType()).isEqualTo(io.harness.polling.bean.PollingType.ARTIFACT);
+    assertThat(pollingDocument.getPollingInfo()).isInstanceOf(GcrArtifactInfo.class);
+    GcrArtifactInfo gcrArtifactInfo = (GcrArtifactInfo) pollingDocument.getPollingInfo();
+    assertThat(gcrArtifactInfo.getImagePath()).isEqualTo("my-image");
+    assertThat(gcrArtifactInfo.getRegistryHostname()).isEqualTo("host");
+    assertThat(gcrArtifactInfo.getConnectorRef()).isEqualTo(CONNECTOR_REF);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testDockerHubArtifactInfoMapper() {
+    DockerHubPayload dockerHubArtifactPayload = DockerHubPayload.newBuilder().setImagePath("my-image").build();
+    PollingPayloadData pollingPayloadData = PollingPayloadData.newBuilder()
+                                                .setConnectorRef(CONNECTOR_REF)
+                                                .setDockerHubPayload(dockerHubArtifactPayload)
+                                                .setType(Type.DOCKER_HUB)
+                                                .build();
+    PollingItem pollingItem = getPollingItem(ARTIFACT, pollingPayloadData);
+
+    PollingDocument pollingDocument = pollingDocumentMapper.toPollingDocument(pollingItem);
+    assertPollingDocument(pollingDocument);
+    assertThat(pollingDocument.getPollingType()).isEqualTo(io.harness.polling.bean.PollingType.ARTIFACT);
+    assertThat(pollingDocument.getPollingInfo()).isInstanceOf(DockerHubArtifactInfo.class);
+    DockerHubArtifactInfo dockerHubArtifactInfo = (DockerHubArtifactInfo) pollingDocument.getPollingInfo();
+    assertThat(dockerHubArtifactInfo.getImagePath()).isEqualTo("my-image");
+    assertThat(dockerHubArtifactInfo.getConnectorRef()).isEqualTo(CONNECTOR_REF);
   }
 
   private void assertPollingDocument(PollingDocument pollingDocument) {
