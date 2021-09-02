@@ -141,7 +141,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
       CIWebhookInfoDTO ciWebhookInfoDTO = CIModuleInfoMapper.getCIBuildResponseDTO(executionSource);
       author = ciWebhookInfoDTO.getAuthor();
-      if (ciWebhookInfoDTO.getEvent() == "branch") {
+      if (ciWebhookInfoDTO.getEvent().equals("branch")) {
         triggerCommits = ciWebhookInfoDTO.getBranch().getCommits();
       } else {
         triggerCommits = ciWebhookInfoDTO.getPullRequest().getCommits();

@@ -93,7 +93,11 @@ public class CodeBaseTaskStepTest extends CategoryTest {
         ScmGitRefTaskResponseData.builder()
             .branch("main")
             .repoUrl("http://github.com/octocat/hello-world")
-            .getLatestCommitResponse(GetLatestCommitResponse.newBuilder().setCommitId("commitId").build().toByteArray())
+            .getLatestCommitResponse(GetLatestCommitResponse.newBuilder()
+                                         .setCommit(Commit.newBuilder().setSha("commitId").build())
+                                         .setCommitId("commitId")
+                                         .build()
+                                         .toByteArray())
             .build();
     CodebaseSweepingOutput codebaseSweepingOutput =
         codeBaseTaskStep.buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData);
