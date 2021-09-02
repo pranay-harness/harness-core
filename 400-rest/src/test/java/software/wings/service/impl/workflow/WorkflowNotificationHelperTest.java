@@ -74,7 +74,6 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
