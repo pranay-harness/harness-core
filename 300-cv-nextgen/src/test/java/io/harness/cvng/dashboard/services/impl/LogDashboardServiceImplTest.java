@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
 import io.harness.cvng.analysis.entities.LogAnalysisResult;
@@ -451,6 +452,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     pageResponse.getContent().forEach(analyzedLogDataDTO -> {
       assertThat(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED)
                      .contains(analyzedLogDataDTO.getLogData().getTag()));
+      assertThat(analyzedLogDataDTO.getLogData().getRiskStatus()).isEqualTo(Risk.HIGH);
+      assertThat(analyzedLogDataDTO.getLogData().getRiskScore()).isEqualTo(0.9);
     });
 
     boolean containsKnown = false;
@@ -579,6 +582,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     boolean containsKnown = false;
     for (AnalyzedLogDataDTO analyzedLogDataDTO : pageResponse.getContent()) {
       if (analyzedLogDataDTO.getLogData().getTag().equals(LogAnalysisTag.KNOWN)) {
+        assertThat(analyzedLogDataDTO.getLogData().getRiskStatus()).isEqualTo(Risk.LOW);
+        assertThat(analyzedLogDataDTO.getLogData().getRiskScore()).isEqualTo(0.1);
         containsKnown = true;
         break;
       }
@@ -639,6 +644,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
                 .tag(anomalousOnly       ? label % 2 == 0 ? LogAnalysisTag.UNKNOWN : LogAnalysisTag.UNEXPECTED
                         : label % 2 == 0 ? LogAnalysisTag.UNKNOWN
                                          : LogAnalysisTag.KNOWN)
+                .riskScore(anomalousOnly ? 0.9 : 0.1)
                 .build();
         resultList.add(result);
       });
