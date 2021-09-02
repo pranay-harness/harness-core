@@ -4,12 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.EncryptionHelper;
-import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -41,24 +39,20 @@ import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.gitsync.scm.ScmGitUtils;
 import io.harness.grpc.utils.StringValueUtils;
-import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 @Singleton
@@ -96,37 +90,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitBranchSyncService = gitBranchSyncService;
     this.gitCommitService = gitCommitService;
     this.userProfileHelper = userProfileHelper;
-  }
-
-  private Pair<ScmConnector, List<EncryptedDataDetail>> getConnectorWithEncryptionDetails(
-      String accountId, YamlGitConfigDTO yamlGitConfig, UserPrincipal userPrincipal) {
-    final Optional<ConnectorResponseDTO> connectorResponseDTO = getConnector(accountId, yamlGitConfig, userPrincipal);
-    return connectorResponseDTO
-        .map(connector -> {
-          final DecryptableEntity apiAccessDecryptableEntity =
-              GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(
-                  (ScmConnector) connector.getConnector().getConnectorConfig());
-          final BaseNGAccess ngAccess = BaseNGAccess.builder()
-                                            .accountIdentifier(accountId)
-                                            .orgIdentifier(connector.getConnector().getOrgIdentifier())
-                                            .projectIdentifier(connector.getConnector().getProjectIdentifier())
-                                            .build();
-          final List<EncryptedDataDetail> encryptionDetail =
-              encryptionHelper.getEncryptionDetail(apiAccessDecryptableEntity, ngAccess.getAccountIdentifier(),
-                  ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-          return Pair.of((ScmConnector) connector.getConnector().getConnectorConfig(), encryptionDetail);
-        })
-        .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist."));
-  }
-
-  private ScmConnector getDecryptedScmConnector(
-      String accountId, YamlGitConfigDTO yamlGitConfig, UserPrincipal userPrincipal) {
-    final Optional<ConnectorResponseDTO> connectorResponseDTO = getConnector(accountId, yamlGitConfig, userPrincipal);
-    return connectorResponseDTO
-        .map(connector
-            -> decryptScmApiAccess.decryptScmApiAccess((ScmConnector) connector.getConnector().getConnectorConfig(),
-                accountId, yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier()))
-        .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist."));
   }
 
   private Optional<ConnectorResponseDTO> getConnector(
