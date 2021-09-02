@@ -238,8 +238,6 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
     workflowNotificationHelper.sendApprovalNotification(
         ACCOUNT_ID, WORKFLOW_NOTIFICATION, new HashMap<>(), executionContext, approvalStateType);
-    NotificationRule notificationRule = aNotificationRule().build();
-    // verifyNotifications(notificationRule);
   }
 
   @Test
