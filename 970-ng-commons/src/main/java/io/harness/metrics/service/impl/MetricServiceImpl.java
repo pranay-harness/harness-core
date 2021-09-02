@@ -71,7 +71,6 @@ public class MetricServiceImpl implements MetricService {
       } else if (md instanceof MeasureLong) {
         statsRecorder.newMeasureMap().put((MeasureLong) md, (long) (double) d).record(tctx); // TODO: refactor
       }
-      log.info("Recorded metric to stackdriver");
     }
   }
 
@@ -169,7 +168,7 @@ public class MetricServiceImpl implements MetricService {
   public void recordMetric(String metricName, double value) {
     try {
       if (!WILL_PUBLISH_METRICS) {
-        log.info("Credentials to APM not set. We will not be able to publish metrics");
+        log.debug("Credentials to APM not set. We will not be able to publish metrics");
         return;
       }
 
