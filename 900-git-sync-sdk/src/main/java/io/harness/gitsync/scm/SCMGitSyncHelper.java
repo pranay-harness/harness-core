@@ -1,19 +1,15 @@
 package io.harness.gitsync.scm;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.GitSyncSdkModule.SCM_ON_DELEGATE;
-import static io.harness.gitsync.GitSyncSdkModule.SCM_ON_MANAGER;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
-import io.harness.gitsync.InfoForPush;
+import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.UserPrincipal;
-import io.harness.gitsync.common.beans.InfoForGitPush;
+import io.harness.gitsync.common.helper.ChangeTypeMapper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.beans.SCMNoOpResponse;
@@ -22,14 +18,10 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
-import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
@@ -37,11 +29,8 @@ import org.slf4j.MDC;
 @Slf4j
 @OwnedBy(DX)
 public class SCMGitSyncHelper {
-  @Inject private KryoSerializer kryoSerializer;
   @Inject private HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
   @Inject private EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
-  @Inject @Named(SCM_ON_MANAGER) private ScmGitHelper scmManagerGitHelper;
-  @Inject @Named(SCM_ON_DELEGATE) private ScmGitHelper scmDelegateGitHelper;
   @Inject GitSyncSdkService gitSyncSdkService;
 
   public ScmPushResponse pushToGit(
@@ -60,54 +49,27 @@ public class SCMGitSyncHelper {
           .commitId(gitBranchInfo.getCommitId())
           .build();
     }
-    final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
-    if (infoForPush.isExecuteOnDelegate()) {
-      log.info("Pushing the changes using delegate");
-      return scmDelegateGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
-    } else {
-      log.info("Pushing the changes using manager");
-      return scmManagerGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
-    }
-  }
-  private InfoForGitPush getInfoForPush(GitEntityInfo gitBranchInfo, EntityDetail entityDetail) {
-    final InfoForPush pushInfo = harnessToGitPushInfoServiceBlockingStub.getConnectorInfo(
-        FileInfo.newBuilder()
-            .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
-            .setBranch(gitBranchInfo.getBranch())
-            .setFolderPath(gitBranchInfo.getFolderPath())
-            .setFilePath(gitBranchInfo.getFilePath())
-            .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
-            .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
-            .setUserPrincipal(getUserPrincipal())
-            .putAllContextMap(MDC.getCopyOfContextMap())
-            .build());
-    if (!pushInfo.getStatus()) {
-      WingsException wingsException =
-          (WingsException) kryoSerializer.asObject(pushInfo.getException().getValue().toByteArray());
-      throw wingsException;
-    }
-    final ScmConnector scmConnector =
-        (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
-    List<EncryptedDataDetail> encryptedDataDetailList = null;
-    if (pushInfo.getExecuteOnDelegate()) {
-      encryptedDataDetailList = (List<EncryptedDataDetail>) kryoSerializer.asObject(
-          pushInfo.getEncryptedDataDetails().getValue().toByteArray());
-    }
-    return InfoForGitPush.builder()
-        .filePath(pushInfo.getFilePath().getValue())
-        .folderPath(pushInfo.getFolderPath().getValue())
-        .scmConnector(scmConnector)
-        .projectIdentifier(pushInfo.getProjectIdentifier().getValue())
-        .orgIdentifier(pushInfo.getOrgIdentifier().getValue())
-        .accountId(pushInfo.getAccountId())
-        .branch(gitBranchInfo.getBranch())
-        .isDefault(pushInfo.getIsDefault())
-        .yamlGitConfigId(pushInfo.getYamlGitConfigId())
-        .isNewBranch(gitBranchInfo.isNewBranch())
-        .defaultBranchName(pushInfo.getDefaultBranchName())
-        .executeOnDelegate(pushInfo.getExecuteOnDelegate())
-        .encryptedDataDetailList(encryptedDataDetailList)
-        .build();
+
+    final FileInfo fileInfo = FileInfo.newBuilder()
+                                  .setUserPrincipal(getUserPrincipal())
+                                  .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
+                                  .setBranch(gitBranchInfo.getBranch())
+                                  .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
+                                  .setChangeType(ChangeTypeMapper.toProto(changeType))
+                                  .setFilePath(gitBranchInfo.getFilePath())
+                                  .setFolderPath(gitBranchInfo.getFolderPath())
+                                  .setBaseBranch(StringValue.of(gitBranchInfo.getBaseBranch()))
+                                  .setOldFileSha(StringValue.of(gitBranchInfo.getLastObjectId()))
+                                  .setIsNewBranch(gitBranchInfo.isNewBranch())
+                                  .setCommitMsg(StringValue.of(gitBranchInfo.getCommitMsg()))
+                                  .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
+                                  .putAllContextMap(MDC.getCopyOfContextMap())
+                                  .setYaml(yaml)
+                                  .build();
+    final PushFileResponse pushFileResponse = harnessToGitPushInfoServiceBlockingStub.pushFile(fileInfo);
+    // todo(abhinav): error handling
+
+    return ScmGitUtils.createScmPushResponse(yaml, gitBranchInfo, pushFileResponse, entityDetail, changeType);
   }
 
   public UserPrincipal getUserPrincipal() {

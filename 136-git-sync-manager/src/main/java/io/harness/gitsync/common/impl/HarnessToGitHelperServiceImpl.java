@@ -3,7 +3,6 @@ package io.harness.gitsync.common.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
-import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
@@ -17,8 +16,11 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.gitsync.BranchDetails;
+import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.FileInfo;
+import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.RepoDetails;
 import io.harness.gitsync.UserPrincipal;
@@ -26,8 +28,6 @@ import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.InfoForGitPush;
-import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
-import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -40,10 +40,13 @@ import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.gitsync.scm.ScmGitUtils;
+import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
-import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
@@ -69,7 +72,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final ExecutorService executorService;
   private final GitBranchService gitBranchService;
   private final EncryptionHelper encryptionHelper;
-  private final SourceCodeManagerService sourceCodeManagerService;
   private final ScmOrchestratorService scmOrchestratorService;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitCommitService gitCommitService;
@@ -80,9 +82,8 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
-      SourceCodeManagerService sourceCodeManagerService, ScmOrchestratorService scmOrchestratorService,
-      GitBranchSyncService gitBranchSyncService, GitCommitService gitCommitService,
-      UserProfileHelper userProfileHelper) {
+      ScmOrchestratorService scmOrchestratorService, GitBranchSyncService gitBranchSyncService,
+      GitCommitService gitCommitService, UserProfileHelper userProfileHelper) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
@@ -91,54 +92,49 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.executorService = executorService;
     this.gitBranchService = gitBranchService;
     this.encryptionHelper = encryptionHelper;
-    this.sourceCodeManagerService = sourceCodeManagerService;
     this.scmOrchestratorService = scmOrchestratorService;
     this.gitBranchSyncService = gitBranchSyncService;
     this.gitCommitService = gitCommitService;
     this.userProfileHelper = userProfileHelper;
   }
 
-  @Override
-  public InfoForGitPush getInfoForPush(FileInfo fileInfo, EntityReference entityReference, EntityType entityType) {
-    final String accountId = fileInfo.getAccountId();
-    final String filePath = fileInfo.getFilePath();
-    final String branch = fileInfo.getBranch();
-    final String yamlGitConfigId = fileInfo.getYamlGitConfigId();
-    final UserPrincipal userPrincipal = fileInfo.getUserPrincipal();
-
-    final InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
-    final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
-        entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
-    final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType, branch);
-    if (gitSyncEntityDTO != null) {
-      if (filePath != null) {
-        if (!gitSyncEntityDTO.getEntityGitPath().equals(filePath)) {
-          throw new InvalidRequestException("Incorrect file path");
-        }
-      }
-    }
-    final boolean executeOnDelegate = scmOrchestratorService.isExecuteOnDelegate(
-        entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
-    log.info("Configuration for git push operation to execute on delegate {}", executeOnDelegate);
-    if (executeOnDelegate) {
-      final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
-          getConnectorWithEncryptionDetails(accountId, yamlGitConfig, userPrincipal);
-      infoForGitPushBuilder.encryptedDataDetailList(connectorWithEncryptionDetails.getRight())
-          .scmConnector(connectorWithEncryptionDetails.getLeft());
-    } else {
-      infoForGitPushBuilder.scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig, userPrincipal));
-    }
-    return infoForGitPushBuilder.filePath(filePath)
-        .branch(branch)
-        .isDefault(branch.equals(yamlGitConfig.getBranch()))
-        .yamlGitConfigId(yamlGitConfig.getIdentifier())
-        .accountId(accountId)
-        .orgIdentifier(entityReference.getOrgIdentifier())
-        .projectIdentifier(entityReference.getProjectIdentifier())
-        .defaultBranchName(yamlGitConfig.getBranch())
-        .executeOnDelegate(executeOnDelegate)
-        .build();
-  }
+  //  @Override
+  //  public InfoForGitPush getInfoForPush(FileInfo fileInfo, EntityReference entityReference, EntityType entityType) {
+  //    final String accountId = fileInfo.getAccountId();
+  //    final String filePath = fileInfo.getFilePath();
+  //    final String branch = fileInfo.getBranch();
+  //    final String yamlGitConfigId = fileInfo.getYamlGitConfigId();
+  //    final UserPrincipal userPrincipal = fileInfo.getUserPrincipal();
+  //
+  //    final InfoForGitPushBuilder infoForGitPushBuilder = InfoForGitPush.builder();
+  //    final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
+  //            entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
+  //    final GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(entityReference, entityType, branch);
+  //    if (gitSyncEntityDTO != null) {
+  //      if (filePath != null) {
+  //        if (!gitSyncEntityDTO.getEntityGitPath().equals(filePath)) {
+  //          throw new InvalidRequestException("Incorrect file path");
+  //        }
+  //      }
+  //    }
+  //    final boolean executeOnDelegate = scmOrchestratorService.isExecuteOnDelegate(
+  //            entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
+  //    log.info("Configuration for git push operation to execute on delegate {}", executeOnDelegate);
+  //    if (executeOnDelegate) {
+  //      final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
+  //              getConnectorWithEncryptionDetails(accountId, yamlGitConfig, userPrincipal);
+  //      infoForGitPushBuilder.encryptedDataDetailList(connectorWithEncryptionDetails.getRight())
+  //              .scmConnector(connectorWithEncryptionDetails.getLeft());
+  //    } else {
+  //      infoForGitPushBuilder.scmConnector(getDecryptedScmConnector(accountId, yamlGitConfig, userPrincipal));
+  //    }
+  //    return infoForGitPushBuilder.filePath(filePath)
+  //            .branch(branch)
+  //            .accountId(accountId)
+  //            .orgIdentifier(entityReference.getOrgIdentifier())
+  //            .projectIdentifier(entityReference.getProjectIdentifier())
+  //            .build();
+  //  }
 
   private Pair<ScmConnector, List<EncryptedDataDetail>> getConnectorWithEncryptionDetails(
       String accountId, YamlGitConfigDTO yamlGitConfig, UserPrincipal userPrincipal) {
@@ -271,5 +267,90 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       return BranchDetails.newBuilder().build();
     }
     return BranchDetails.newBuilder().setDefaultBranch(yamlGitConfigDTO.getBranch()).build();
+  }
+
+  @Override
+  public PushFileResponse pushFile(FileInfo request) {
+    final EntityDetail entityDetailDTO = entityDetailRestToProtoMapper.createEntityDetailDTO(request.getEntityDetail());
+    final EntityReference entityReference = entityDetailDTO.getEntityRef();
+    final String accountId = request.getAccountId();
+    final String yamlGitConfigId = request.getYamlGitConfigId();
+    final ChangeType changeType = request.getChangeType();
+    final YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.get(
+        entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId, yamlGitConfigId);
+
+    final InfoForGitPush infoForGitPush = getInfoForGitPush(request, entityReference, accountId, yamlGitConfig);
+
+    switch (changeType) {
+      case MODIFY:
+        final UpdateFileResponse updateFileResponse =
+            scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+                -> scmClientFacilitatorService.updateFile(infoForGitPush),
+                entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
+        return PushFileResponse.newBuilder()
+            .setAccountId(accountId)
+            .setError(updateFileResponse.getError())
+            .setScmResponseCode(updateFileResponse.getStatus())
+            .setStatus(1)
+            .setIsDefault(request.getBranch().equals(yamlGitConfig.getBranch()))
+            .setDefaultBranchName(yamlGitConfig.getBranch())
+            .setCommitId(updateFileResponse.getCommitId())
+            .build();
+      case ADD:
+        final CreateFileResponse createFileResponse =
+            scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+                -> scmClientFacilitatorService.createFile(infoForGitPush),
+                entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
+        return PushFileResponse.newBuilder()
+            .setAccountId(accountId)
+            .setError(createFileResponse.getError())
+            .setScmResponseCode(createFileResponse.getStatus())
+            .setStatus(1)
+            .setIsDefault(request.getBranch().equals(yamlGitConfig.getBranch()))
+            .setDefaultBranchName(yamlGitConfig.getBranch())
+            .setCommitId(createFileResponse.getCommitId())
+            .build();
+      case DELETE:
+        final DeleteFileResponse deleteFileResponse =
+            scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+                -> scmClientFacilitatorService.deleteFile(infoForGitPush),
+                entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
+        return PushFileResponse.newBuilder()
+            .setAccountId(accountId)
+            .setError(deleteFileResponse.getError())
+            .setScmResponseCode(deleteFileResponse.getStatus())
+            .setStatus(1)
+            .setIsDefault(request.getBranch().equals(yamlGitConfig.getBranch()))
+            .setDefaultBranchName(yamlGitConfig.getBranch())
+            .setCommitId(deleteFileResponse.getCommitId())
+            .build();
+    }
+    throw new UnexpectedException("Unknown change type encountered.");
+  }
+
+  private InfoForGitPush getInfoForGitPush(
+      FileInfo request, EntityReference entityReference, String accountId, YamlGitConfigDTO yamlGitConfig) {
+    final Optional<ConnectorResponseDTO> connector = getConnector(accountId, yamlGitConfig, request.getUserPrincipal());
+    if (!connector.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Connector with identifier %s deleted", yamlGitConfig.getGitConnectorRef()));
+    }
+    final ScmConnector connectorConfig = (ScmConnector) connector.get().getConnector().getConnectorConfig();
+    connectorConfig.setUrl(yamlGitConfig.getRepo());
+
+    return InfoForGitPush.builder()
+        .accountId(accountId)
+        .orgIdentifier(entityReference.getOrgIdentifier())
+        .projectIdentifier(entityReference.getProjectIdentifier())
+        .branch(request.getBranch())
+        .baseBranch(StringValueUtils.getStringFromStringValue(request.getBaseBranch()))
+        .isNewBranch(request.getIsNewBranch())
+        .commitMsg(StringValueUtils.getStringFromStringValue(request.getCommitMsg()))
+        .filePath(request.getFilePath())
+        .folderPath(request.getFolderPath())
+        .oldFileSha(StringValueUtils.getStringFromStringValue(request.getOldFileSha()))
+        .yaml(request.getYaml())
+        .scmConnector(connectorConfig)
+        .build();
   }
 }

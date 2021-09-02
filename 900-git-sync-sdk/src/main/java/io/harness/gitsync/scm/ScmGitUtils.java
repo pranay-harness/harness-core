@@ -4,20 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
-import io.harness.beans.gitsync.GitFileDetails;
-import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.exception.InvalidRequestException;
-import io.harness.gitsync.common.beans.InfoForGitPush;
-import io.harness.gitsync.helpers.ScmUserHelper;
+import io.harness.exception.UnexpectedException;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.interceptor.GitEntityInfo;
-import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.scm.beans.ScmCreateFileResponse;
 import io.harness.gitsync.scm.beans.ScmDeleteFileResponse;
+import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.gitsync.scm.beans.ScmUpdateFileResponse;
-import io.harness.product.ci.scm.proto.CreateFileResponse;
-import io.harness.product.ci.scm.proto.DeleteFileResponse;
-import io.harness.product.ci.scm.proto.UpdateFileResponse;
+import io.harness.ng.core.EntityDetail;
 
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -26,17 +22,65 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class ScmGitUtils {
-  public GitFileDetailsBuilder getGitFileDetails(GitEntityInfo gitEntityInfo, String yaml) {
-    final EmbeddedUser currentUser = ScmUserHelper.getCurrentUser();
-    String filePath = createFilePath(gitEntityInfo.getFolderPath(), gitEntityInfo.getFilePath());
-    return GitFileDetails.builder()
+  public ScmPushResponse createScmPushResponse(String yaml, GitEntityInfo gitEntityInfo,
+      PushFileResponse pushFileResponse, EntityDetail entityDetail, ChangeType changeType) {
+    switch (changeType) {
+      case ADD:
+        return createScmCreateFileResponse(yaml, gitEntityInfo, pushFileResponse, entityDetail);
+      case DELETE:
+        return createScmDeleteFileResponse(gitEntityInfo, pushFileResponse, entityDetail);
+      case MODIFY:
+        return createScmUpdateFileResponse(yaml, gitEntityInfo, pushFileResponse, entityDetail);
+    }
+    throw new UnexpectedException("Unexpected changetype encountered");
+  }
+
+  public ScmCreateFileResponse createScmCreateFileResponse(
+      String yaml, GitEntityInfo gitEntityInfo, PushFileResponse pushFileResponse, EntityDetail entityDetail) {
+    return ScmCreateFileResponse.builder()
+        .folderPath(gitEntityInfo.getFolderPath())
+        .filePath(gitEntityInfo.getFilePath())
+        .pushToDefaultBranch(pushFileResponse.getIsDefault())
+        .yamlGitConfigId(gitEntityInfo.getYamlGitConfigId())
+        .accountIdentifier(entityDetail.getEntityRef().getAccountIdentifier())
+        .orgIdentifier(entityDetail.getEntityRef().getOrgIdentifier())
+        .projectIdentifier(entityDetail.getEntityRef().getProjectIdentifier())
+        .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
         .branch(gitEntityInfo.getBranch())
-        .commitMessage(
-            isEmpty(gitEntityInfo.getCommitMsg()) ? GitSyncConstants.COMMIT_MSG : gitEntityInfo.getCommitMsg())
-        .fileContent(yaml)
-        .filePath(filePath)
-        .userEmail(currentUser.getEmail())
-        .userName(currentUser.getName());
+        .commitId(pushFileResponse.getCommitId())
+        .build();
+  }
+
+  public ScmUpdateFileResponse createScmUpdateFileResponse(
+      String yaml, GitEntityInfo gitEntityInfo, PushFileResponse pushFileResponse, EntityDetail entityDetail) {
+    return ScmUpdateFileResponse.builder()
+        .folderPath(gitEntityInfo.getFolderPath())
+        .filePath(gitEntityInfo.getFilePath())
+        .pushToDefaultBranch(pushFileResponse.getIsDefault())
+        .yamlGitConfigId(gitEntityInfo.getYamlGitConfigId())
+        .accountIdentifier(entityDetail.getEntityRef().getAccountIdentifier())
+        .orgIdentifier(entityDetail.getEntityRef().getOrgIdentifier())
+        .projectIdentifier(entityDetail.getEntityRef().getProjectIdentifier())
+        .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
+        .branch(gitEntityInfo.getBranch())
+        .commitId(pushFileResponse.getCommitId())
+        .build();
+  }
+
+  public ScmDeleteFileResponse createScmDeleteFileResponse(
+      GitEntityInfo gitEntityInfo, PushFileResponse pushFileResponse, EntityDetail entityDetail) {
+    return ScmDeleteFileResponse.builder()
+        .folderPath(gitEntityInfo.getFolderPath())
+        .filePath(gitEntityInfo.getFilePath())
+        .pushToDefaultBranch(pushFileResponse.getIsDefault())
+        .yamlGitConfigId(gitEntityInfo.getYamlGitConfigId())
+        .accountIdentifier(entityDetail.getEntityRef().getAccountIdentifier())
+        .orgIdentifier(entityDetail.getEntityRef().getOrgIdentifier())
+        .projectIdentifier(entityDetail.getEntityRef().getProjectIdentifier())
+        .objectId(null)
+        .branch(gitEntityInfo.getBranch())
+        .commitId(pushFileResponse.getCommitId())
+        .build();
   }
 
   public String createFilePath(String folderPath, String filePath) {
@@ -51,53 +95,5 @@ public class ScmGitUtils {
         updatedFolderPath.charAt(0) != '/' ? updatedFolderPath : updatedFolderPath.substring(1);
     String updatedFilePath = filePath.charAt(0) != '/' ? filePath : filePath.substring(1);
     return folderPathWithoutStartingSlash + updatedFilePath;
-  }
-
-  public ScmCreateFileResponse createScmCreateFileResponse(
-      String yaml, InfoForGitPush infoForPush, CreateFileResponse createFileResponse) {
-    return ScmCreateFileResponse.builder()
-        .folderPath(infoForPush.getFolderPath())
-        .filePath(infoForPush.getFilePath())
-        .pushToDefaultBranch(infoForPush.isDefault())
-        .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-        .accountIdentifier(infoForPush.getAccountId())
-        .orgIdentifier(infoForPush.getOrgIdentifier())
-        .projectIdentifier(infoForPush.getProjectIdentifier())
-        .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-        .branch(infoForPush.getBranch())
-        .commitId(createFileResponse.getCommitId())
-        .build();
-  }
-
-  public ScmUpdateFileResponse createScmUpdateFileResponse(
-      String yaml, InfoForGitPush infoForPush, UpdateFileResponse updateFileResponse) {
-    return ScmUpdateFileResponse.builder()
-        .folderPath(infoForPush.getFolderPath())
-        .filePath(infoForPush.getFilePath())
-        .pushToDefaultBranch(infoForPush.isDefault())
-        .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-        .accountIdentifier(infoForPush.getAccountId())
-        .orgIdentifier(infoForPush.getOrgIdentifier())
-        .projectIdentifier(infoForPush.getProjectIdentifier())
-        .objectId(EntityObjectIdUtils.getObjectIdOfYaml(yaml))
-        .branch(infoForPush.getBranch())
-        .commitId(updateFileResponse.getCommitId())
-        .build();
-  }
-
-  public ScmDeleteFileResponse createScmDeleteFileResponse(
-      InfoForGitPush infoForPush, DeleteFileResponse deleteFileResponse) {
-    return ScmDeleteFileResponse.builder()
-        .folderPath(infoForPush.getFolderPath())
-        .filePath(infoForPush.getFilePath())
-        .pushToDefaultBranch(infoForPush.isDefault())
-        .yamlGitConfigId(infoForPush.getYamlGitConfigId())
-        .accountIdentifier(infoForPush.getAccountId())
-        .orgIdentifier(infoForPush.getOrgIdentifier())
-        .projectIdentifier(infoForPush.getProjectIdentifier())
-        .objectId(null)
-        .branch(infoForPush.getBranch())
-        .commitId(deleteFileResponse.getCommitId())
-        .build();
   }
 }

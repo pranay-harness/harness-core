@@ -1,10 +1,13 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.IdentifierRef;
+import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
@@ -18,6 +21,9 @@ import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.gitsync.helpers.ScmUserHelper;
+import io.harness.gitsync.interceptor.GitSyncConstants;
+import io.harness.gitsync.scm.ScmGitUtils;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.utils.IdentifierRefHelper;
@@ -123,5 +129,18 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
       UserPrincipal userPrincipal = userProfileHelper.getUserPrincipal();
       userProfileHelper.setConnectorDetailsFromUserProfile(yamlGitConfigDTO, userPrincipal, connectorResponseDTO);
     }
+  }
+
+  GitFileDetails.GitFileDetailsBuilder getGitFileDetails(
+      String yaml, String filePath, String folderPath, String commitMsg, String branch) {
+    final EmbeddedUser currentUser = ScmUserHelper.getCurrentUser();
+    String filePathForPush = ScmGitUtils.createFilePath(folderPath, filePath);
+    return GitFileDetails.builder()
+        .branch(branch)
+        .commitMessage(isEmpty(commitMsg) ? GitSyncConstants.COMMIT_MSG : commitMsg)
+        .fileContent(yaml)
+        .filePath(filePathForPush)
+        .userEmail(currentUser.getEmail())
+        .userName(currentUser.getName());
   }
 }
