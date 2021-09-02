@@ -36,7 +36,7 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
   private final PollingResponsePublisher pollingResponsePublisher;
 
   private final @Getter Cache<String, ManifestsCollectionCache> cache = Caffeine.newBuilder().build();
-  private static final long TIMEOUT_IN_MILLIS = 100L * 1000;
+  private static final long TIMEOUT_IN_MILLIS = 120L * 1000;
 
   @Inject
   public ManifestPerpetualTaskExecutorNg(KryoSerializer kryoSerializer,
@@ -74,7 +74,7 @@ public class ManifestPerpetualTaskExecutorNg implements PerpetualTaskExecutor {
     ManifestDelegateConfig manifestConfig =
         (ManifestDelegateConfig) kryoSerializer.asObject(taskParams.getManifestCollectionParams().toByteArray());
     manifestCollectionService.cleanup(manifestConfig);
-    return false;
+    return true;
   }
 
   private ManifestCollectionTaskParamsNg getTaskParams(PerpetualTaskExecutionParams params) {
