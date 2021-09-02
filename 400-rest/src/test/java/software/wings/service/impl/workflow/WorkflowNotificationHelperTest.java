@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.MOUNIK;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -85,6 +86,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -237,6 +239,14 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(executionContext.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
     workflowNotificationHelper.sendApprovalNotification(
         ACCOUNT_ID, WORKFLOW_NOTIFICATION, new HashMap<>(), executionContext, approvalStateType);
+    InformationNotification notification = InformationNotification.builder()
+                                               .appId(GLOBAL_APP_ID)
+                                               .accountId(ACCOUNT_ID)
+                                               .notificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                                               .notificationTemplateVariables(new HashMap<>())
+                                               .build();
+
+    verify(notificationService).sendNotificationAsync(notification, new LinkedList<>());
   }
 
   @Test

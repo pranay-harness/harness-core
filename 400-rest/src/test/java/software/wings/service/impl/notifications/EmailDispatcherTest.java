@@ -51,12 +51,10 @@ public class EmailDispatcherTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testEmailIsSent() {
     List<String> toAddresses = Arrays.asList("a@b.com, c@d.com");
-
     EmailTemplate emailTemplate = new EmailTemplate();
     emailTemplate.setBody(ENTITY_CREATE_NOTIFICATION.name());
     emailTemplate.setSubject(ENTITY_CREATE_NOTIFICATION.name());
     when(notificationMessageResolver.getEmailTemplate(ENTITY_CREATE_NOTIFICATION.name())).thenReturn(emailTemplate);
-
     InformationNotification notification = InformationNotification.builder()
                                                .accountId(ACCOUNT_ID)
                                                .appId(APP_ID)
@@ -68,9 +66,8 @@ public class EmailDispatcherTest extends WingsBaseTest {
                                                .build();
 
     List<Notification> notifications = Collections.singletonList(notification);
-
-    emailDispatcher.dispatch(notifications, toAddresses);
     emailDispatcher.dispatch(notifications, new ArrayList<>());
+    emailDispatcher.dispatch(notifications, toAddresses);
     Mockito.verify(emailNotificationService).sendAsync(Mockito.any(EmailData.class));
   }
 }
