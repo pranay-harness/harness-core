@@ -22,4 +22,5 @@ public class CIBuildPRHook {
   private String targetBranch;
   private String state;
   private List<CIBuildCommit> commits;
+  private List<CIBuildCommit> triggerCommits;
 }

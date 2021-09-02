@@ -20,6 +20,7 @@ import lombok.Value;
 public class ScmGitRefTaskParams implements TaskParameters, ExecutionCapabilityDemander {
   ScmConnector scmConnector;
   String branch;
+  String ref;
   GitRefType gitRefType;
   long prNumber;
   String initialCommitId;

@@ -8,6 +8,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.TaskType.SCM_GIT_REF_TASK;
 
+import static java.util.Arrays.asList;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
@@ -17,6 +19,7 @@ import io.harness.beans.execution.PRWebhookEvent;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
+import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput.CodeBaseCommit;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
@@ -156,6 +159,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
 
     String branch = manualExecutionSource.getBranch();
     String prNumber = manualExecutionSource.getPrNumber();
+    String tag = manualExecutionSource.getTag();
     if (isNotEmpty(branch)) {
       return ScmGitRefTaskParams.builder()
           .branch(branch)
@@ -169,6 +173,13 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
           .gitRefType(GitRefType.PULL_REQUEST_WITH_COMMITS)
           .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
           .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
+          .build();
+    } else if (isNotEmpty(tag)) {
+      return ScmGitRefTaskParams.builder()
+          .ref(tag)
+          .gitRefType(GitRefType.LATEST_COMMIT_ID)
+          .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
+          .scmConnector(scmConnector)
           .build();
     } else {
       throw new CIStageExecutionException("Manual codebase git task needs at least PR number or branch");
@@ -185,14 +196,24 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     }
     GetLatestCommitResponse listCommitsResponse = GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
 
-    if (isEmpty(listCommitsResponse.getCommitId())) {
+    if (listCommitsResponse.getCommit() == null || isEmpty(listCommitsResponse.getCommit().getSha())) {
       throw new CIStageExecutionException("Codebase git commit information can't be obtained");
     }
-    codebaseSweepingOutput = CodebaseSweepingOutput.builder()
-                                 .branch(scmGitRefTaskResponseData.getBranch())
-                                 .commitSha(listCommitsResponse.getCommitId())
-                                 .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
-                                 .build();
+    codebaseSweepingOutput =
+        CodebaseSweepingOutput.builder()
+            .branch(scmGitRefTaskResponseData.getBranch())
+            .commits(asList(CodeBaseCommit.builder()
+                                .id(listCommitsResponse.getCommit().getSha())
+                                .link(listCommitsResponse.getCommit().getLink())
+                                .message(listCommitsResponse.getCommit().getMessage())
+                                .ownerEmail(listCommitsResponse.getCommit().getAuthor().getEmail())
+                                .ownerName(listCommitsResponse.getCommit().getAuthor().getName())
+                                .ownerId(listCommitsResponse.getCommit().getAuthor().getLogin())
+                                .timeStamp(listCommitsResponse.getCommit().getAuthor().getDate().getSeconds())
+                                .build()))
+            .commitSha(listCommitsResponse.getCommit().getSha())
+            .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
+            .build();
     return codebaseSweepingOutput;
   }
 

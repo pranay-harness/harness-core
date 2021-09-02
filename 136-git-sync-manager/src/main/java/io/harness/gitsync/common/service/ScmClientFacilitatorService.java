@@ -10,6 +10,7 @@ import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
+import io.harness.product.ci.scm.proto.Commit;
 
 import java.util.List;
 import java.util.Set;
@@ -44,5 +45,5 @@ public interface ScmClientFacilitatorService {
 
   List<String> listCommits(YamlGitConfigDTO yamlGitConfigDTO, String branch);
 
-  String getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch);
+  Commit getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch);
 }

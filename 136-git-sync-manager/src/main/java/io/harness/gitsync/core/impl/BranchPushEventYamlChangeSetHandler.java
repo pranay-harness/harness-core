@@ -324,7 +324,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
   private String getCommitIdToBeProcessed(YamlGitConfigDTO yamlGitConfigDTO, String branch) {
     return scmOrchestratorService.processScmRequest(scmClient
-        -> scmClient.getLatestCommit(yamlGitConfigDTO, branch),
+        -> scmClient.getLatestCommit(yamlGitConfigDTO, branch).getSha(),
         yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
         yamlGitConfigDTO.getAccountIdentifier());
   }

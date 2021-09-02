@@ -17,4 +17,5 @@ public class CIBuildBranchHook {
   private String link;
   private String state;
   private List<CIBuildCommit> commits;
+  private List<CIBuildCommit> triggerCommits;
 }

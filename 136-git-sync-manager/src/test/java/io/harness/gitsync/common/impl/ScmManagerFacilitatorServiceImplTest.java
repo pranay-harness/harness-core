@@ -24,6 +24,7 @@ import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageRequest;
+import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
@@ -135,10 +136,12 @@ public class ScmManagerFacilitatorServiceImplTest extends GitSyncTestBase {
   public void testGetLatestCommit() {
     String commitId = "commitId";
     ArgumentCaptor<String> branchNameCapture = ArgumentCaptor.forClass(String.class);
-    when(scmClient.getLatestCommit(any(), branchNameCapture.capture()))
-        .thenReturn(GetLatestCommitResponse.newBuilder().setCommitId(commitId).build());
+    ArgumentCaptor<String> ref = ArgumentCaptor.forClass(String.class);
+    when(scmClient.getLatestCommit(any(), branchNameCapture.capture(), ref.capture()))
+        .thenReturn(
+            GetLatestCommitResponse.newBuilder().setCommit(Commit.newBuilder().setSha(commitId).build()).build());
     YamlGitConfigDTO yamlGitConfigDTO = YamlGitConfigDTO.builder().branch("default").build();
-    final String returnedCommitId = scmManagerFacilitatorService.getLatestCommit(yamlGitConfigDTO, "branch1");
-    assertThat(returnedCommitId).isEqualTo(commitId);
+    final Commit returnedCommit = scmManagerFacilitatorService.getLatestCommit(yamlGitConfigDTO, "branch1");
+    assertThat(returnedCommit.getSha()).isEqualTo(commitId);
   }
 }

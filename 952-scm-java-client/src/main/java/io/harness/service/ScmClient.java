@@ -51,7 +51,7 @@ public interface ScmClient {
 
   FindFilesInCommitResponse findFilesInCommit(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
-  GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName);
+  GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName, String ref);
 
   ListBranchesResponse listBranches(ScmConnector scmConnector);
 

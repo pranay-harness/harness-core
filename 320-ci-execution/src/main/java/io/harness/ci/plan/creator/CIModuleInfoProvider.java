@@ -8,10 +8,13 @@ import static io.harness.git.GitClientHelper.getGitRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.pipeline.executions.beans.CIBuildAuthor;
+import io.harness.ci.pipeline.executions.beans.CIBuildBranchHook;
 import io.harness.ci.pipeline.executions.beans.CIBuildCommit;
 import io.harness.ci.pipeline.executions.beans.CIBuildPRHook;
 import io.harness.ci.pipeline.executions.beans.CIWebhookInfoDTO;
@@ -73,7 +76,11 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String tag = null;
     String prNumber = null;
     String repoName = null;
-
+    String buildType = null;
+    String url = null;
+    CIBuildAuthor author = null;
+    List<CIBuildCommit> triggerCommits = null;
+    ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
     Ambiance ambiance = event.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
@@ -94,6 +101,10 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
           try {
             ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(
                 baseNGAccess, liteEngineTaskStepInfo.getCiCodebase().getConnectorRef());
+            if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
+              url = IntegrationStageUtils.getGitURLFromConnector(
+                  connectorDetails, liteEngineTaskStepInfo.getCiCodebase());
+            }
             repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
           } catch (Exception exception) {
             log.warn("Failed to retrieve repo");
@@ -102,6 +113,9 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       }
 
       Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
+      if (build != null) {
+        buildType = build.getType().toString();
+      }
       if (build != null && build.getType().equals(BuildType.BRANCH)) {
         branch = (String) ((BranchBuildSpec) build.getSpec()).getBranch().fetchFinalValue();
       }
@@ -123,43 +137,55 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       log.error("Failed to retrieve branch and tag for filtering", ex);
     }
 
-    ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
-
-    if (executionTriggerInfo.getTriggerType() != TriggerType.WEBHOOK) {
-      // get codebase sweeping output
-      OptionalSweepingOutput optionalSweepingOutput =
-          executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
-      CodebaseSweepingOutput codebaseSweepingOutput = null;
-      if (optionalSweepingOutput.isFound()) {
-        codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+    if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
+      WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
+      CIWebhookInfoDTO ciWebhookInfoDTO = CIModuleInfoMapper.getCIBuildResponseDTO(executionSource);
+      author = ciWebhookInfoDTO.getAuthor();
+      if (ciWebhookInfoDTO.getEvent() == "branch") {
+        triggerCommits = ciWebhookInfoDTO.getBranch().getCommits();
+      } else {
+        triggerCommits = ciWebhookInfoDTO.getPullRequest().getCommits();
       }
-      if (codebaseSweepingOutput != null) {
-        log.info("Codebase sweeping output {}", codebaseSweepingOutput);
 
-        if (isEmpty(branch)) {
-          branch = codebaseSweepingOutput.getBranch();
-        }
-
+      if (IntegrationStageUtils.isURLSame(webhookExecutionSource, url) && isNotEmpty(prNumber)) {
         return CIPipelineModuleInfo.builder()
             .branch(branch)
-            .prNumber(prNumber)
             .tag(tag)
+            .buildType(buildType)
+            .prNumber(prNumber)
             .repoName(repoName)
-            .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput))
+            .ciExecutionInfoDTO(ciWebhookInfoDTO)
             .build();
+      }
+    }
+
+    // get codebase sweeping output
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+    CodebaseSweepingOutput codebaseSweepingOutput = null;
+    if (optionalSweepingOutput.isFound()) {
+      codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+    }
+    if (codebaseSweepingOutput != null) {
+      log.info("Codebase sweeping output {}", codebaseSweepingOutput);
+
+      if (isEmpty(branch) && codebaseSweepingOutput != null) {
+        branch = codebaseSweepingOutput.getBranch();
       }
     }
 
     return CIPipelineModuleInfo.builder()
         .branch(branch)
-        .tag(tag)
         .prNumber(prNumber)
+        .buildType(buildType)
+        .tag(tag)
         .repoName(repoName)
-        .ciExecutionInfoDTO(CIModuleInfoMapper.getCIBuildResponseDTO(executionSource))
+        .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput, author, prNumber, triggerCommits))
         .build();
   }
 
-  private CIWebhookInfoDTO getCiExecutionInfoDTO(CodebaseSweepingOutput codebaseSweepingOutput) {
+  private CIWebhookInfoDTO getCiExecutionInfoDTO(CodebaseSweepingOutput codebaseSweepingOutput,
+      CIBuildAuthor ciBuildAuthor, String prNumber, List<CIBuildCommit> triggerCommits) {
     if (codebaseSweepingOutput == null) {
       return null;
     }
@@ -183,26 +209,30 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     if (isEmpty(codebaseSweepingOutput.getCommits())) {
       return null;
     }
-    return CIWebhookInfoDTO.builder()
-        .event("pullRequest")
-        .author(CIBuildAuthor.builder()
-                    .name(codebaseSweepingOutput.getGitUser())
-                    .avatar(codebaseSweepingOutput.getGitUserAvatar())
-                    .email(codebaseSweepingOutput.getGitUserEmail())
-                    .id(codebaseSweepingOutput.getGitUserId())
-                    .build())
-        .pullRequest(CIBuildPRHook.builder()
-                         .id(Long.valueOf(codebaseSweepingOutput.getPrNumber()))
-                         .link(codebaseSweepingOutput.getPullRequestLink())
-                         .title(codebaseSweepingOutput.getPrTitle())
-                         .body(codebaseSweepingOutput.getPullRequestBody())
-                         .sourceBranch(codebaseSweepingOutput.getSourceBranch())
-                         .targetBranch(codebaseSweepingOutput.getTargetBranch())
-                         .state(codebaseSweepingOutput.getState())
-                         .commits(ciBuildCommits)
-                         .build())
 
-        .build();
+    if (isNotEmpty(prNumber)) {
+      return CIWebhookInfoDTO.builder()
+          .event("pullRequest")
+          .author(ciBuildAuthor)
+          .pullRequest(CIBuildPRHook.builder()
+                           .id(Long.valueOf(codebaseSweepingOutput.getPrNumber()))
+                           .link(codebaseSweepingOutput.getPullRequestLink())
+                           .title(codebaseSweepingOutput.getPrTitle())
+                           .body(codebaseSweepingOutput.getPullRequestBody())
+                           .sourceBranch(codebaseSweepingOutput.getSourceBranch())
+                           .targetBranch(codebaseSweepingOutput.getTargetBranch())
+                           .state(codebaseSweepingOutput.getState())
+                           .commits(ciBuildCommits)
+                           .triggerCommits(triggerCommits)
+                           .build())
+          .build();
+    } else {
+      return CIWebhookInfoDTO.builder()
+          .event("branch")
+          .author(ciBuildAuthor)
+          .branch(CIBuildBranchHook.builder().commits(ciBuildCommits).triggerCommits(triggerCommits).build())
+          .build();
+    }
   }
 
   @Override

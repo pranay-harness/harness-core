@@ -26,6 +26,7 @@ import io.harness.gitsync.common.helper.PRFileListMapper;
 import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
+import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.FileContent;
@@ -164,11 +165,11 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   }
 
   @Override
-  public String getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch) {
+  public Commit getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch) {
     final ScmConnector decryptedConnector =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
-    final GetLatestCommitResponse latestCommit = scmClient.getLatestCommit(decryptedConnector, branch);
+    final GetLatestCommitResponse latestCommit = scmClient.getLatestCommit(decryptedConnector, branch, null);
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
-    return latestCommit.getCommitId();
+    return latestCommit.getCommit();
   }
 }

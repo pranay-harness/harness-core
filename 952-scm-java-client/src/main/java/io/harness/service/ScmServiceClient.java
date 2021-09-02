@@ -66,7 +66,7 @@ public interface ScmServiceClient {
   FindFilesInPRResponse findFilesInPR(ScmConnector scmConnector, int prNumber, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   GetLatestCommitResponse getLatestCommit(
-      ScmConnector scmConnector, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
+      ScmConnector scmConnector, String branch, String ref, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   FindFilesInCommitResponse findFilesInCommit(
       ScmConnector scmConnector, String commitHash, SCMGrpc.SCMBlockingStub scmBlockingStub);

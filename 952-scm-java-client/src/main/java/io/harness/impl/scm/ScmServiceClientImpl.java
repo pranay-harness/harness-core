@@ -3,6 +3,7 @@ package io.harness.impl.scm;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.util.stream.Collectors.toList;
@@ -224,8 +225,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public GetLatestCommitResponse getLatestCommit(
-      ScmConnector scmConnector, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    GetLatestCommitRequest getLatestCommitRequest = getLatestCommitRequestObject(scmConnector, branch);
+      ScmConnector scmConnector, String branch, String ref, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    GetLatestCommitRequest getLatestCommitRequest = getLatestCommitRequestObject(scmConnector, branch, ref);
     return scmBlockingStub.getLatestCommit(getLatestCommitRequest);
   }
 
@@ -360,12 +361,20 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         .build();
   }
 
-  private GetLatestCommitRequest getLatestCommitRequestObject(ScmConnector scmConnector, String branch) {
-    return GetLatestCommitRequest.newBuilder()
-        .setSlug(scmGitProviderHelper.getSlug(scmConnector))
-        .setBranch(branch)
-        .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector))
-        .build();
+  private GetLatestCommitRequest getLatestCommitRequestObject(ScmConnector scmConnector, String branch, String ref) {
+    final GetLatestCommitRequest.Builder getLatestCommitRequestBuilder =
+        GetLatestCommitRequest.newBuilder()
+            .setBranch(branch)
+            .setSlug(scmGitProviderHelper.getSlug(scmConnector))
+            .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector));
+
+    if (isNotEmpty(branch)) {
+      getLatestCommitRequestBuilder.setBranch(branch);
+    } else if (isNotEmpty(ref)) {
+      getLatestCommitRequestBuilder.setRef(ref);
+    }
+
+    return getLatestCommitRequestBuilder.build();
   }
 
   private ListBranchesRequest getListBranchesRequest(ScmConnector scmConnector) {
@@ -400,7 +409,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         GetLatestCommitRequest.newBuilder().setBranch(branchName).setProvider(gitProvider).setSlug(slug).build());
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
         latestCommitResponse.getStatus(), latestCommitResponse.getError());
-    String latestCommitId = latestCommitResponse.getCommitId();
+    String latestCommitId = latestCommitResponse.getCommit().getSha();
     try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branchName, latestCommitId, OVERRIDE_ERROR)) {
       List<String> getFilesWhichArePartOfHarness =
           getFileNames(foldersList, slug, gitProvider, branchName, latestCommitId, scmBlockingStub);
@@ -433,7 +442,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     String slug = scmGitProviderHelper.getSlug(connector);
     final GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(
         GetLatestCommitRequest.newBuilder().setBranch(branch).setProvider(gitProvider).setSlug(slug).build());
-    return processListFilesByFilePaths(connector, filePaths, branch, latestCommit.getCommitId(), scmBlockingStub);
+    return processListFilesByFilePaths(
+        connector, filePaths, branch, latestCommit.getCommit().getSha(), scmBlockingStub);
   }
 
   // Find content of files for given files paths in the branch at given commit
@@ -652,7 +662,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                                                  .setProvider(gitProvider)
                                                                                  .build());
       ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
-      return latestCommit.getCommitId();
+      return latestCommit.getCommit().getSha();
     } catch (Exception ex) {
       log.error(
           "Error encountered while getting latest commit of branch [{}] in slug [{}]", defaultBranchName, slug, ex);

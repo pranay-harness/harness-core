@@ -92,8 +92,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch) {
-    return scmServiceClient.getLatestCommit(scmConnector, branch, scmBlockingStub);
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch, String ref) {
+    return scmServiceClient.getLatestCommit(scmConnector, branch, ref, scmBlockingStub);
   }
 
   @Override
