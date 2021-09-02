@@ -56,7 +56,12 @@ public class InstanceServiceImpl implements InstanceService {
     try {
       instance = instanceRepository.save(instance);
     } catch (DuplicateKeyException duplicateKeyException) {
-      log.warn("Duplicate key error while inserting instance : {}", instanceDTO);
+      // If instance exists in deleted state, undelete it
+      if (undeleteInstance(instance) != null) {
+        log.info("Undeleted instance : {}", instanceDTO);
+      } else {
+        log.error("Duplicate key error while inserting instance : {}", instanceDTO);
+      }
       return Optional.empty();
     }
     return Optional.of(InstanceMapper.toDTO(instance));
@@ -90,7 +95,10 @@ public class InstanceServiceImpl implements InstanceService {
    */
   @Override
   public Optional<InstanceDTO> findAndReplace(InstanceDTO instanceDTO) {
-    Criteria criteria = Criteria.where(InstanceKeys.instanceKey).is(instanceDTO.getInstanceKey());
+    Criteria criteria = Criteria.where(InstanceKeys.instanceKey)
+                            .is(instanceDTO.getInstanceKey())
+                            .and(InstanceKeys.infrastructureMappingId)
+                            .is(instanceDTO.getInfrastructureMappingId());
     Instance instanceOptional = instanceRepository.findAndReplace(criteria, InstanceMapper.toEntity(instanceDTO));
     if (instanceOptional == null) {
       return Optional.empty();
@@ -167,5 +175,19 @@ public class InstanceServiceImpl implements InstanceService {
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs) {
     return instanceRepository.getActiveServiceInstanceCountBreakdown(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
+  }
+
+  // ----------------------------------- PRIVATE METHODS -------------------------------------
+
+  private Instance undeleteInstance(Instance instance) {
+    Criteria criteria = Criteria.where(InstanceKeys.instanceKey)
+                            .is(instance.getInstanceKey())
+                            .and(InstanceKeys.infrastructureMappingId)
+                            .is(instance.getInfrastructureMappingId())
+                            .and(InstanceKeys.isDeleted)
+                            .is(true);
+    instance.setDeleted(false);
+    instance.setDeletedAt(0);
+    return instanceRepository.findAndReplace(criteria, instance);
   }
 }
