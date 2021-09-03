@@ -11,6 +11,7 @@ proto_library(
         "identifier_ref.proto",
         "input_set_ref.proto",
         "scope.proto",
+        "template_reference.proto",
     ],
     visibility = ["//visibility:public"],
     deps = [

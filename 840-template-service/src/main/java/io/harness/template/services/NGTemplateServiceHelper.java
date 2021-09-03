@@ -15,11 +15,16 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.springdata.SpringDataMongoUtils;
 import io.harness.template.beans.TemplateFilterPropertiesDTO;
+import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
+import io.harness.template.gitsync.TemplateGitSyncBranchContextGuard;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -43,6 +48,27 @@ public class NGTemplateServiceHelper {
 
   public static void validatePresenceOfRequiredFields(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
+  }
+
+  public TemplateGitSyncBranchContextGuard getTemplateGitContext(
+      TemplateEntity template, GitEntityFindInfoDTO gitEntityBasicInfo, String commitMsg) {
+    boolean defaultFromOtherRepo = false;
+    if (gitEntityBasicInfo.getDefaultFromOtherRepo() != null) {
+      defaultFromOtherRepo = gitEntityBasicInfo.getDefaultFromOtherRepo();
+    }
+    GitSyncBranchContext branchContext =
+        GitSyncBranchContext.builder()
+            .gitBranchInfo(GitEntityInfo.builder()
+                               .branch(gitEntityBasicInfo.getBranch())
+                               .yamlGitConfigId(gitEntityBasicInfo.getYamlGitConfigId())
+                               .findDefaultFromOtherRepos(defaultFromOtherRepo)
+                               .filePath(template.getFilePath())
+                               .folderPath(template.getRootFolder())
+                               .lastObjectId(template.getObjectIdOfYaml())
+                               .commitMsg(commitMsg)
+                               .build())
+            .build();
+    return new TemplateGitSyncBranchContextGuard(branchContext, false);
   }
 
   public Criteria formCriteria(String accountId, String orgId, String projectId, String filterIdentifier,
