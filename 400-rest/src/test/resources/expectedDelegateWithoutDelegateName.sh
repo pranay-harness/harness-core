@@ -313,7 +313,7 @@ fi
 
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then
   echo "Starting delegate - version $2 with java $JRE_BINARY"
-  $JRE_BINARY $JAVA_OPTS $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -DLANG=en_US.UTF-8 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -jar $2/delegate.jar config-delegate.yml watched $1
+  $JRE_BINARY $JAVA_OPTS $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -DLANG=en_US.UTF-8 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -jar $2/delegate.jar config-delegate.yml watched $1
 else
   echo "Starting delegate - version $REMOTE_DELEGATE_VERSION with java $JRE_BINARY"
   $JRE_BINARY $JAVA_OPTS $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -DLANG=en_US.UTF-8 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -jar delegate.jar config-delegate.yml watched $1
