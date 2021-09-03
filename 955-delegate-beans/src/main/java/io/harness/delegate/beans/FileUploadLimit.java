@@ -1,16 +1,13 @@
-package software.wings.app;
+package io.harness.delegate.beans;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 @OwnedBy(HarnessTeam.DEL)
-@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class FileUploadLimit {
   @JsonProperty private long appContainerLimit = 1000000000L;
   @JsonProperty private long configFileLimit = 100000000L;

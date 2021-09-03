@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCategory;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
@@ -43,8 +44,6 @@ import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.stream.BoundedInputStream;
 import io.harness.utils.PageUtils;
-
-import software.wings.app.FileUploadLimit;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
