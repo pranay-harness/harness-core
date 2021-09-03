@@ -4,7 +4,8 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.feature.annotation.FeatureCheck;
+import io.harness.feature.annotation.FeatureRestrictionCheck;
+import io.harness.feature.configs.FeatureName;
 import io.harness.feature.services.FeatureService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -26,7 +27,8 @@ public class FeatureCheckInterceptor implements MethodInterceptor {
 
   @Override
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {
-    FeatureCheck featureCheck = methodInvocation.getMethod().getDeclaredAnnotation(FeatureCheck.class);
+    FeatureRestrictionCheck featureCheck =
+        methodInvocation.getMethod().getDeclaredAnnotation(FeatureRestrictionCheck.class);
 
     Optional<String> accountIdentifierOptional = getAccountIdentifier(methodInvocation);
     if (!accountIdentifierOptional.isPresent()) {
@@ -34,7 +36,7 @@ public class FeatureCheckInterceptor implements MethodInterceptor {
     }
 
     String accountIdentifier = accountIdentifierOptional.get();
-    String featureName = featureCheck.value();
+    FeatureName featureName = featureCheck.value();
 
     AcquiredLock lock = null;
     if (featureService.isLockRequired(featureName, accountIdentifier)) {

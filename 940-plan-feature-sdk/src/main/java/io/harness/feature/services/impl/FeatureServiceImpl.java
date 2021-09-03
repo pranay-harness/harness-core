@@ -8,6 +8,7 @@ import io.harness.feature.bases.Restriction;
 import io.harness.feature.beans.FeatureDetailsDTO;
 import io.harness.feature.beans.RestrictionDTO;
 import io.harness.feature.cache.LicenseInfoCache;
+import io.harness.feature.configs.FeatureName;
 import io.harness.feature.constants.RestrictionType;
 import io.harness.feature.exceptions.FeatureNotSupportedException;
 import io.harness.feature.exceptions.LimitExceededException;
@@ -31,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class FeatureServiceImpl implements FeatureService {
-  private Map<String, Feature> featureMap;
+  private Map<FeatureName, Feature> featureMap;
   private final LicenseInfoCache licenseInfoCache;
   private final RestrictionHandlerFactory restrictionHandlerFactory;
 
@@ -47,7 +48,7 @@ public class FeatureServiceImpl implements FeatureService {
     this.restrictionHandlerFactory = restrictionHandlerFactory;
   }
 
-  void registerFeature(String featureName, Feature feature) {
+  void registerFeature(FeatureName featureName, Feature feature) {
     if (featureMap.containsKey(featureName)) {
       throw new IllegalArgumentException(String.format("Feature [%s] has been registered", featureName));
     }
@@ -55,7 +56,7 @@ public class FeatureServiceImpl implements FeatureService {
   }
 
   @Override
-  public boolean isFeatureAvailable(String featureName, String accountIdentifier) {
+  public boolean isFeatureAvailable(FeatureName featureName, String accountIdentifier) {
     try {
       checkAvailabilityOrThrow(featureName, accountIdentifier);
       return true;
@@ -66,7 +67,7 @@ public class FeatureServiceImpl implements FeatureService {
   }
 
   @Override
-  public void checkAvailabilityOrThrow(String featureName, String accountIdentifier) {
+  public void checkAvailabilityOrThrow(FeatureName featureName, String accountIdentifier) {
     if (!isFeatureDefined(featureName)) {
       throw new FeatureNotSupportedException(String.format("Feature [%s] is not defined", featureName));
     }
@@ -89,7 +90,7 @@ public class FeatureServiceImpl implements FeatureService {
   }
 
   @Override
-  public FeatureDetailsDTO getFeatureDetail(String featureName, String accountIdentifier) {
+  public FeatureDetailsDTO getFeatureDetail(FeatureName featureName, String accountIdentifier) {
     if (!isFeatureDefined(featureName)) {
       throw new InvalidRequestException(String.format("Feature [%s] is not defined", featureName));
     }
@@ -105,7 +106,7 @@ public class FeatureServiceImpl implements FeatureService {
       if (feature.getModuleType().equals(moduleType)) {
         LicensesWithSummaryDTO licenseInfo = getLicenseInfo(accountIdentifier, feature.getModuleType());
         RestrictionType restrictionType = feature.getRestrictions().get(licenseInfo.getEdition()).getRestrictionType();
-        if (RestrictionType.ENABLED.equals(restrictionType)) {
+        if (RestrictionType.AVAILABILITY.equals(restrictionType)) {
           result.add(toFeatureDetailsDTO(accountIdentifier, feature, licenseInfo));
         }
       }
@@ -114,12 +115,12 @@ public class FeatureServiceImpl implements FeatureService {
   }
 
   @Override
-  public Set<String> getAllFeatureNames() {
+  public Set<FeatureName> getAllFeatureNames() {
     return featureMap.keySet();
   }
 
   @Override
-  public boolean isLockRequired(String featureName, String accountIdentifier) {
+  public boolean isLockRequired(FeatureName featureName, String accountIdentifier) {
     if (!isFeatureDefined(featureName)) {
       throw new InvalidRequestException(String.format("Feature [%s] is not defined", featureName));
     }
@@ -129,7 +130,7 @@ public class FeatureServiceImpl implements FeatureService {
     return RestrictionType.RATE_LIMIT.equals(restrictionType) || RestrictionType.STATIC_LIMIT.equals(restrictionType);
   }
 
-  private boolean isFeatureDefined(String featureName) {
+  private boolean isFeatureDefined(FeatureName featureName) {
     return featureMap.containsKey(featureName);
   }
 
@@ -150,7 +151,7 @@ public class FeatureServiceImpl implements FeatureService {
     RestrictionHandler handler = restrictionHandlerFactory.getHandler(feature, licenseInfo.getEdition());
     RestrictionDTO restrictionDTO = handler.toRestrictionDTO(accountIdentifier);
     return FeatureDetailsDTO.builder()
-        .name(feature.getName())
+        .name(feature.getName().name())
         .moduleType(feature.getModuleType().name())
         .description(feature.getDescription())
         .restriction(restrictionDTO)
@@ -163,7 +164,7 @@ public class FeatureServiceImpl implements FeatureService {
     List<Edition> superiorEditions = Edition.getSuperiorEdition(edition);
     for (Edition superiorEdition : superiorEditions) {
       Restriction restriction = feature.getRestrictions().get(superiorEdition);
-      if (RestrictionType.ENABLED.equals(restriction.getRestrictionType())) {
+      if (RestrictionType.AVAILABILITY.equals(restriction.getRestrictionType())) {
         EnableDisableRestriction enableDisableRestriction = (EnableDisableRestriction) restriction;
         if (enableDisableRestriction.isEnabled()) {
           suggestionMessage.append(superiorEdition.name()).append(COLON).append(enableDefinition).append(SEMI_COLON);

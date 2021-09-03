@@ -3,7 +3,7 @@ package io.harness.feature.configs;
 /**
  * Please register all feature names here.
  */
-public enum FeatureCollection {
+public enum FeatureName {
   // Test purpose
   TEST1,
   TEST2,
@@ -13,7 +13,7 @@ public enum FeatureCollection {
 
   public static boolean contains(String featureName) {
     try {
-      FeatureCollection.valueOf(featureName);
+      FeatureName.valueOf(featureName);
       return true;
     } catch (IllegalArgumentException e) {
       return false;

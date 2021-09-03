@@ -39,6 +39,7 @@ public class RateLimitRestrictionHandler implements RestrictionHandler {
 
   private long getCurrentCount(String accountIdentifier) {
     Instant current = Instant.now();
+
     long startTime =
         current
             .minus(rateLimitRestriction.getTimeUnit().getNumberOfUnits(), rateLimitRestriction.getTimeUnit().getUnit())

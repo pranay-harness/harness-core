@@ -18,6 +18,7 @@ import io.harness.feature.bases.StaticLimitRestriction;
 import io.harness.feature.beans.FeatureDetailsDTO;
 import io.harness.feature.beans.RestrictionDTO;
 import io.harness.feature.cache.LicenseInfoCache;
+import io.harness.feature.configs.FeatureName;
 import io.harness.feature.constants.RestrictionType;
 import io.harness.feature.exceptions.LimitExceededException;
 import io.harness.feature.handlers.RestrictionHandlerFactory;
@@ -41,9 +42,9 @@ public class FeatureServiceImplTest extends CategoryTest {
   Feature feature;
   Feature featureNotEnabled;
   Feature ciFeature;
-  private static final String FEATURE_NAME = "TEST";
-  private static final String FEATURE_NAME_STATIC = "TEST_STATIC";
-  private static final String CI_FEATURE_NAME = "CI_TEST";
+  private static final FeatureName FEATURE_NAME = FeatureName.TEST1;
+  private static final FeatureName FEATURE_NAME_STATIC = FeatureName.TEST2;
+  private static final FeatureName CI_FEATURE_NAME = FeatureName.TEST3;
   private static final String ACCOUNT_ID = "1";
 
   @Before
@@ -53,7 +54,7 @@ public class FeatureServiceImplTest extends CategoryTest {
     featureService = new FeatureServiceImpl(licenseInfoCache, restrictionHandlerFactory);
     feature = new Feature(FEATURE_NAME, "description", ModuleType.CD,
         ImmutableMap.<Edition, Restriction>builder()
-            .put(Edition.FREE, new EnableDisableRestriction(RestrictionType.ENABLED, true))
+            .put(Edition.FREE, new EnableDisableRestriction(RestrictionType.AVAILABILITY, true))
             .build());
     featureNotEnabled = new Feature(FEATURE_NAME_STATIC, "description", ModuleType.CD,
         ImmutableMap.<Edition, Restriction>builder()
@@ -65,12 +66,12 @@ public class FeatureServiceImplTest extends CategoryTest {
                         return 3;
                       }
                     }))
-            .put(Edition.TEAM, new EnableDisableRestriction(RestrictionType.ENABLED, false))
-            .put(Edition.ENTERPRISE, new EnableDisableRestriction(RestrictionType.ENABLED, true))
+            .put(Edition.TEAM, new EnableDisableRestriction(RestrictionType.AVAILABILITY, false))
+            .put(Edition.ENTERPRISE, new EnableDisableRestriction(RestrictionType.AVAILABILITY, true))
             .build());
     ciFeature = new Feature(CI_FEATURE_NAME, "description", ModuleType.CI,
         ImmutableMap.<Edition, Restriction>builder()
-            .put(Edition.FREE, new EnableDisableRestriction(RestrictionType.ENABLED, false))
+            .put(Edition.FREE, new EnableDisableRestriction(RestrictionType.AVAILABILITY, false))
             .build());
     featureService.registerFeature(FEATURE_NAME, feature);
     featureService.registerFeature(FEATURE_NAME_STATIC, featureNotEnabled);
@@ -101,14 +102,6 @@ public class FeatureServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
-  public void testIsFeatureAvailableWithInvalidFeature() {
-    boolean result = featureService.isFeatureAvailable("null", ACCOUNT_ID);
-    assertThat(result).isFalse();
-  }
-
-  @Test
-  @Owner(developers = ZHUO)
-  @Category(UnitTests.class)
   public void testCheckAvailabilityOrThrowSucceed() {
     featureService.checkAvailabilityOrThrow(FEATURE_NAME, ACCOUNT_ID);
   }
@@ -126,10 +119,10 @@ public class FeatureServiceImplTest extends CategoryTest {
   public void testGetFeatureDetails() {
     FeatureDetailsDTO dto =
         FeatureDetailsDTO.builder()
-            .name(FEATURE_NAME)
+            .name(FEATURE_NAME.name())
             .description("description")
             .moduleType(ModuleType.CD.name())
-            .restriction(RestrictionDTO.builder().enabled(true).restrictionType(RestrictionType.ENABLED).build())
+            .restriction(RestrictionDTO.builder().enabled(true).restrictionType(RestrictionType.AVAILABILITY).build())
             .build();
     FeatureDetailsDTO featureDetail = featureService.getFeatureDetail(FEATURE_NAME, ACCOUNT_ID);
     assertThat(featureDetail).isEqualTo(dto);
@@ -139,7 +132,7 @@ public class FeatureServiceImplTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetEnabledFeatures() {
-    List<FeatureDetailsDTO> result = featureService.getEnabledFeatureDetails(FEATURE_NAME, ModuleType.CD);
+    List<FeatureDetailsDTO> result = featureService.getEnabledFeatureDetails(ACCOUNT_ID, ModuleType.CD);
     assertThat(result.size()).isEqualTo(1);
   }
 
@@ -147,7 +140,7 @@ public class FeatureServiceImplTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetAllFeatureNames() {
-    Set<String> result = featureService.getAllFeatureNames();
-    assertThat(result.size()).isEqualTo(3);
+    Set<FeatureName> result = featureService.getAllFeatureNames();
+    assertThat(result.size()).isEqualTo(FeatureName.values().length);
   }
 }

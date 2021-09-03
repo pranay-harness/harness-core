@@ -6,6 +6,7 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.exception.InvalidRequestException;
 import io.harness.feature.beans.FeatureDetailsDTO;
+import io.harness.feature.configs.FeatureName;
 import io.harness.feature.services.FeatureService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -47,7 +48,7 @@ public class FeatureResource {
   @Path("/{featureName}")
   @ApiOperation(value = "Gets Feature Details", nickname = "getFeatureDetails")
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
-  public ResponseDTO<FeatureDetailsDTO> getFeatureDetails(@NotNull @PathParam(FEATURE_NAME) String featureName,
+  public ResponseDTO<FeatureDetailsDTO> getFeatureDetails(@NotNull @PathParam(FEATURE_NAME) FeatureName featureName,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureDetail(featureName, accountIdentifier));
   }
@@ -56,7 +57,7 @@ public class FeatureResource {
   @Path("/{featureName}/available")
   @ApiOperation(value = "Check feature availability", nickname = "isFeatureAvailable")
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
-  public ResponseDTO<Boolean> isFeatureAvailable(@NotNull @PathParam(FEATURE_NAME) String featureName,
+  public ResponseDTO<Boolean> isFeatureAvailable(@NotNull @PathParam(FEATURE_NAME) FeatureName featureName,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.isFeatureAvailable(featureName, accountIdentifier));
   }
@@ -71,7 +72,7 @@ public class FeatureResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam("moduleType") String moduleType) {
     ModuleType module = ModuleType.fromString(moduleType);
-    if (module.isInternal()) {
+    if (module.isInternal() && !ModuleType.CORE.equals(module)) {
       throw new InvalidRequestException("Invalid module type");
     }
     return ResponseDTO.newResponse(featureService.getEnabledFeatureDetails(accountIdentifier, module));
@@ -81,7 +82,7 @@ public class FeatureResource {
   @Path("/names")
   @ApiOperation(value = "Gets List of Feature Names", nickname = "getAllFeatureNames")
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
-  public ResponseDTO<Set<String>> getAllFeatureNames(
+  public ResponseDTO<Set<FeatureName>> getAllFeatureNames(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getAllFeatureNames());
   }

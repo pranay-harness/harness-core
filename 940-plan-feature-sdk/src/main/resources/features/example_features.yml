@@ -1,4 +1,4 @@
-moduleType: CD
+moduleType: CORE
 features:
   # Feature availability example
   # TEST1 feature
@@ -7,13 +7,13 @@ features:
     description: test 1
     restrictions:
       FREE:
-        restrictionType: ENABLED
+        restrictionType: AVAILABILITY
         enabled: false
       TEAM:
-        restrictionType: ENABLED
+        restrictionType: AVAILABILITY
         enabled: true
       ENTERPRISE:
-        restrictionType: ENABLED
+        restrictionType: AVAILABILITY
         enabled: true
   # Static limit example
   # Test2 feature
@@ -22,14 +22,14 @@ features:
     description: test 2
     restrictions:
       FREE:
-        restrictionType: ENABLED
+        restrictionType: AVAILABILITY
         enabled: false
       TEAM:
         restrictionType: STATIC_LIMIT
         limit: 10
         implClass: io.harness.feature.example.StaticLimitExampleImpl
       ENTERPRISE:
-        restrictionType: ENABLED
+        restrictionType: AVAILABILITY
         enabled: true
   # Rate limit example
   # Test3 feature
@@ -52,5 +52,5 @@ features:
           numberOfUnits: 1
         implClass: io.harness.feature.example.RateLimitExampleImpl
       ENTERPRISE:
-        restrictionType: ENABLED
+        restrictionType: AVAILABILITY
         enabled: true

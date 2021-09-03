@@ -1,11 +1,13 @@
 package io.harness.feature;
 
-import io.harness.feature.annotation.FeatureCheck;
+import io.harness.feature.annotation.FeatureRestrictionCheck;
 import io.harness.feature.annotation.interceptor.FeatureCheckInterceptor;
 import io.harness.feature.cache.LicenseInfoCache;
 import io.harness.feature.cache.impl.LicenseInfoCacheImpl;
 import io.harness.feature.cache.impl.LicenseInfoLoader;
 import io.harness.feature.handlers.RestrictionHandlerFactory;
+import io.harness.feature.helpers.LicenseHelper;
+import io.harness.feature.helpers.impl.CentralizedLicenseHelper;
 import io.harness.feature.services.FeatureLoader;
 import io.harness.feature.services.FeatureService;
 import io.harness.feature.services.impl.FeatureLoaderImpl;
@@ -37,8 +39,9 @@ public class EnforcementModule extends AbstractModule {
     bind(LicenseInfoCache.class).to(LicenseInfoCacheImpl.class);
     bind(LicenseInfoLoader.class);
     bind(RestrictionHandlerFactory.class);
+    bind(LicenseHelper.class).to(CentralizedLicenseHelper.class);
 
     ProviderMethodInterceptor featureCheck = new ProviderMethodInterceptor(getProvider(FeatureCheckInterceptor.class));
-    bindInterceptor(Matchers.any(), Matchers.annotatedWith(FeatureCheck.class), featureCheck);
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(FeatureRestrictionCheck.class), featureCheck);
   }
 }

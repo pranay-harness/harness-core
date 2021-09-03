@@ -11,8 +11,8 @@ import io.harness.feature.bases.Feature;
 import io.harness.feature.bases.RateLimitRestriction;
 import io.harness.feature.bases.Restriction;
 import io.harness.feature.bases.StaticLimitRestriction;
-import io.harness.feature.configs.FeatureCollection;
 import io.harness.feature.configs.FeatureInfo;
+import io.harness.feature.configs.FeatureName;
 import io.harness.feature.configs.FeaturesConfig;
 import io.harness.feature.configs.RestrictionConfig;
 import io.harness.feature.constants.RestrictionType;
@@ -75,14 +75,15 @@ public class FeatureLoaderImpl implements FeatureLoader {
                 e, WingsException.USER_SRE);
           }
         }));
-    return new Feature(featureInfo.getName().trim(), featureInfo.getDescription().trim(), moduleType, restrictionMap);
+    return new Feature(FeatureName.valueOf(featureInfo.getName().trim()), featureInfo.getDescription().trim(),
+        moduleType, restrictionMap);
   }
 
   private Restriction generateRestriction(RestrictionConfig restrictionConfig, Injector injector)
       throws ClassNotFoundException {
     RestrictionType restrictionType = restrictionConfig.getRestrictionType();
     switch (restrictionType) {
-      case ENABLED:
+      case AVAILABILITY:
         if (restrictionConfig.getEnabled() == null) {
           throw new InvalidArgumentsException("Enabled is null");
         }
@@ -92,11 +93,11 @@ public class FeatureLoaderImpl implements FeatureLoader {
             || restrictionConfig.getImplClass() == null) {
           throw new InvalidArgumentsException("Invalid RateLimitRestriction definition");
         }
-        RateLimitInterface rateLimit =
+        RateLimitInterface rateLimitUsageImpl =
             findImplementationInstance(restrictionConfig.getImplClass(), RateLimitInterface.class, injector);
 
         return new RateLimitRestriction(restrictionConfig.getRestrictionType(), restrictionConfig.getLimit(),
-            restrictionConfig.getTimeUnit(), rateLimit);
+            restrictionConfig.getTimeUnit(), rateLimitUsageImpl);
       case STATIC_LIMIT:
         if (restrictionConfig.getLimit() == null || restrictionConfig.getImplClass() == null) {
           throw new InvalidArgumentsException("Invalid RateLimitRestriction definition");
@@ -132,7 +133,7 @@ public class FeatureLoaderImpl implements FeatureLoader {
           String.format("Missing mandatory information for feature [%s]", featureInfo.getName()));
     }
 
-    if (!FeatureCollection.contains(featureInfo.getName())) {
+    if (!FeatureName.contains(featureInfo.getName())) {
       throw new InvalidArgumentsException(
           String.format("Feature [%s] is not registered in FeatureCollection", featureInfo.getName()));
     }

@@ -15,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.feature.EnforcementConfiguration;
 import io.harness.feature.bases.Feature;
+import io.harness.feature.configs.FeatureName;
 import io.harness.feature.constants.RestrictionType;
 import io.harness.feature.example.RateLimitExampleImpl;
 import io.harness.feature.example.StaticLimitExampleImpl;
@@ -59,36 +60,36 @@ public class FeatureLoaderTest extends CategoryTest {
     when(injector.getInstance(rateImplClass)).thenReturn(new RateLimitExampleImpl());
     featuresManagementJob.run(injector);
 
-    ArgumentCaptor<String> featureNameCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<FeatureName> featureNameCaptor = ArgumentCaptor.forClass(FeatureName.class);
     ArgumentCaptor<Feature> featureCaptor = ArgumentCaptor.forClass(Feature.class);
     verify(featureService, times(3)).registerFeature(featureNameCaptor.capture(), featureCaptor.capture());
 
-    List<String> allFeatureNames = featureNameCaptor.getAllValues();
-    assertThat(allFeatureNames.get(0)).isEqualTo("TEST1");
-    assertThat(allFeatureNames.get(1)).isEqualTo("TEST2");
-    assertThat(allFeatureNames.get(2)).isEqualTo("TEST3");
+    List<FeatureName> allFeatureNames = featureNameCaptor.getAllValues();
+    assertThat(allFeatureNames.get(0)).isEqualTo(FeatureName.TEST1);
+    assertThat(allFeatureNames.get(1)).isEqualTo(FeatureName.TEST2);
+    assertThat(allFeatureNames.get(2)).isEqualTo(FeatureName.TEST3);
 
     List<Feature> allFeatures = featureCaptor.getAllValues();
-    assertThat(allFeatures.get(0).getModuleType()).isEqualTo(ModuleType.CD);
+    assertThat(allFeatures.get(0).getModuleType()).isEqualTo(ModuleType.CORE);
     assertThat(allFeatures.get(0).getRestrictions().get(Edition.FREE).getRestrictionType())
-        .isEqualTo(RestrictionType.ENABLED);
+        .isEqualTo(RestrictionType.AVAILABILITY);
     assertThat(allFeatures.get(0).getRestrictions().get(Edition.TEAM).getRestrictionType())
-        .isEqualTo(RestrictionType.ENABLED);
+        .isEqualTo(RestrictionType.AVAILABILITY);
     assertThat(allFeatures.get(0).getRestrictions().get(Edition.ENTERPRISE).getRestrictionType())
-        .isEqualTo(RestrictionType.ENABLED);
+        .isEqualTo(RestrictionType.AVAILABILITY);
 
     assertThat(allFeatures.get(1).getRestrictions().get(Edition.FREE).getRestrictionType())
-        .isEqualTo(RestrictionType.ENABLED);
+        .isEqualTo(RestrictionType.AVAILABILITY);
     assertThat(allFeatures.get(1).getRestrictions().get(Edition.TEAM).getRestrictionType())
         .isEqualTo(RestrictionType.STATIC_LIMIT);
     assertThat(allFeatures.get(1).getRestrictions().get(Edition.ENTERPRISE).getRestrictionType())
-        .isEqualTo(RestrictionType.ENABLED);
+        .isEqualTo(RestrictionType.AVAILABILITY);
 
     assertThat(allFeatures.get(2).getRestrictions().get(Edition.FREE).getRestrictionType())
         .isEqualTo(RestrictionType.RATE_LIMIT);
     assertThat(allFeatures.get(2).getRestrictions().get(Edition.TEAM).getRestrictionType())
         .isEqualTo(RestrictionType.RATE_LIMIT);
     assertThat(allFeatures.get(2).getRestrictions().get(Edition.ENTERPRISE).getRestrictionType())
-        .isEqualTo(RestrictionType.ENABLED);
+        .isEqualTo(RestrictionType.AVAILABILITY);
   }
 }

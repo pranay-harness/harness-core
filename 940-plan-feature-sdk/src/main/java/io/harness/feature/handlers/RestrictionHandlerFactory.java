@@ -22,7 +22,7 @@ public class RestrictionHandlerFactory {
     }
 
     switch (restriction.getRestrictionType()) {
-      case ENABLED:
+      case AVAILABILITY:
         return new EnableDisableRestrictionHandler((EnableDisableRestriction) restriction);
       case STATIC_LIMIT:
         return new StaticLimitRestrictionHandler((StaticLimitRestriction) restriction);
