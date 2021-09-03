@@ -13,6 +13,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import java.time.Instant;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -53,7 +54,7 @@ public abstract class ChangeEvent
   @NotNull String changeSourceIdentifier;
   @NotNull ChangeSourceType type;
 
-  long eventTime;
+  @NotNull Instant eventTime;
 
   public abstract static class ChangeEventUpdatableEntity<T extends ChangeEvent, D extends ChangeEvent>
       implements UpdatableEntity<T, D> {
