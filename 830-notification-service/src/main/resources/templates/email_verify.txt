@@ -368,7 +368,7 @@ body: >-
                                                                                       <td valign="top" align="center"
                                                                                           style="padding:20px;">
                                                                                           <!--[if !mso]><!-- -->
-                                                                                          <a href="{{token}}"
+                                                                                          <a href="${url!}"
                                                                                               target="_blank"
                                                                                               style="display:inline-block; text-decoration:none;"
                                                                                               class="fluid-on-mobile">
@@ -382,7 +382,6 @@ body: >-
                                                                                                       <tr>
                                                                                                           <td align="center"
                                                                                                               style="padding-top:8px;padding-right:56px;padding-bottom:8px;padding-left:56px;">
-                                                                                                              <a href="${url!}" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; padding: 0px 0px;">
                                                                                                               <span
                                                                                                                   style="color:#ffffff !important;font-family:Nunito Sans, Arial, Helvetica Neue, Helvetica, sans-serif;font-size:16px;mso-line-height:exactly;line-height:20px;mso-text-raise:2px;letter-spacing: normal;">
                                                                                                                   <font
@@ -391,7 +390,6 @@ body: >-
                                                                                                                       <span><strong>Verify Email</strong></span>
                                                                                                                   </font>
                                                                                                               </span>
-                                                                                                              </a>
                                                                                                           </td>
                                                                                                       </tr>
                                                                                                   </table>
@@ -409,7 +407,7 @@ body: >-
                                                                                                   <tr>
                                                                                                       <td align="center"
                                                                                                           style="padding-top:8px;padding-right:56px;padding-bottom:8px;padding-left:56px;">
-                                                                                                          <a href="{{token}}"
+                                                                                                          <a href="${url!}"
                                                                                                               target="_blank"
                                                                                                               style="color:#ffffff !important;font-family:Nunito Sans, Arial, Helvetica Neue, Helvetica, sans-serif;font-size:16px;mso-line-height:exactly;line-height:20px;mso-text-raise:2px;letter-spacing: normal;text-decoration:none;text-align:center;">
                                                                                                               <span
