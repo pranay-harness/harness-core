@@ -138,13 +138,14 @@ public class NGTemplateResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam("templateIdentifier") @ResourceIdentifier String templateIdentifier,
-      @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel) {
+      @PathParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info(String.format(
         "Updating Stable Template with identifier %s with versionLabel %s in project %s, org %s, account %s",
         templateIdentifier, versionLabel, projectId, orgId, accountId));
 
-    TemplateEntity templateEntity =
-        templateService.updateStableTemplateVersion(accountId, orgId, projectId, templateIdentifier, versionLabel);
+    TemplateEntity templateEntity = templateService.updateStableTemplateVersion(
+        accountId, orgId, projectId, templateIdentifier, versionLabel, gitEntityBasicInfo);
     return ResponseDTO.newResponse(templateEntity.getVersion().toString(), templateEntity.getVersionLabel());
   }
 
@@ -197,7 +198,8 @@ public class NGTemplateResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @QueryParam("filterIdentifier") String filterIdentifier, @Body TemplateFilterPropertiesDTO filterProperties,
+      @QueryParam("filterIdentifier") String filterIdentifier, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @Body TemplateFilterPropertiesDTO filterProperties,
       @QueryParam("getDistinctFromBranches") Boolean getDistinctFromBranches) {
     log.info(String.format("Get List of templates in project: %s, org: %s, account: %s", projectId, orgId, accountId));
     Criteria criteria = templateServiceHelper.formCriteria(

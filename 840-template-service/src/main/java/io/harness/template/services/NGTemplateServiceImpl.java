@@ -12,12 +12,14 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.TransactionHelper;
 import io.harness.template.beans.TemplateFilterPropertiesDTO;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
+import io.harness.template.gitsync.TemplateGitSyncBranchContextGuard;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 
 import com.google.inject.Inject;
@@ -161,6 +163,11 @@ public class NGTemplateServiceImpl implements NGTemplateService {
           "Template with identifier [%s] and versionLabel [%s], under Project[%s], Organization [%s] is not on the correct version.",
           templateIdentifier, versionLabel, projectIdentifier, orgIdentifier));
     }
+    if (existingTemplate.isStableTemplate()) {
+      throw new InvalidRequestException(format(
+          "Template with identifier [%s] and versionLabel [%s], under Project[%s], Organization [%s] is a stable template, thus cannot delete it.",
+          templateIdentifier, versionLabel, projectIdentifier, orgIdentifier));
+    }
     TemplateEntity withDeleted = existingTemplate.withDeleted(true);
     try {
       TemplateEntity deletedTemplate =
@@ -194,15 +201,17 @@ public class NGTemplateServiceImpl implements NGTemplateService {
 
   @Override
   public TemplateEntity updateStableTemplateVersion(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String templateIdentifier, String versionLabel) {
+      String projectIdentifier, String templateIdentifier, String versionLabel,
+      GitEntityFindInfoDTO gitEntityBasicInfo) {
     return transactionHelper.performTransaction(
         ()
-            -> updateStableTemplateVersionHelper(
-                accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel));
+            -> updateStableTemplateVersionHelper(accountIdentifier, orgIdentifier, projectIdentifier,
+                templateIdentifier, versionLabel, gitEntityBasicInfo));
   }
 
   private TemplateEntity updateStableTemplateVersionHelper(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String templateIdentifier, String versionLabel) {
+      String projectIdentifier, String templateIdentifier, String versionLabel,
+      GitEntityFindInfoDTO gitEntityBasicInfo) {
     try {
       NGTemplateServiceHelper.validatePresenceOfRequiredFields(accountIdentifier, templateIdentifier, versionLabel);
       Optional<TemplateEntity> optionalTemplateEntity =
@@ -211,8 +220,14 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       if (optionalTemplateEntity.isPresent()) {
         // make previous stable template as false.
         TemplateEntity oldTemplate = optionalTemplateEntity.get();
-        TemplateEntity templateToUpdate = oldTemplate.withStableTemplate(false);
-        makeTemplateUpdateCall(templateToUpdate, oldTemplate, ChangeType.MODIFY);
+
+        try (TemplateGitSyncBranchContextGuard ignored =
+                 templateServiceHelper.getTemplateGitContext(oldTemplate, gitEntityBasicInfo,
+                     format("Template with identifier [%s] and versionLabel [%s] marking stable template as false.",
+                         templateIdentifier, oldTemplate.getVersionLabel()))) {
+          TemplateEntity templateToUpdate = oldTemplate.withStableTemplate(false);
+          makeTemplateUpdateCall(templateToUpdate, oldTemplate, ChangeType.MODIFY);
+        }
       }
       optionalTemplateEntity =
           get(accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
@@ -223,8 +238,13 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       }
       // make current version stable template as true.
       TemplateEntity oldTemplateForGivenVersion = optionalTemplateEntity.get();
-      TemplateEntity templateToUpdateForGivenVersion = oldTemplateForGivenVersion.withStableTemplate(true);
-      return makeTemplateUpdateCall(templateToUpdateForGivenVersion, oldTemplateForGivenVersion, ChangeType.MODIFY);
+      try (TemplateGitSyncBranchContextGuard ignored =
+               templateServiceHelper.getTemplateGitContext(oldTemplateForGivenVersion, gitEntityBasicInfo,
+                   format("Template with identifier [%s] and versionLabel [%s] marking stable template as true.",
+                       templateIdentifier, versionLabel))) {
+        TemplateEntity templateToUpdateForGivenVersion = oldTemplateForGivenVersion.withStableTemplate(true);
+        return makeTemplateUpdateCall(templateToUpdateForGivenVersion, oldTemplateForGivenVersion, ChangeType.MODIFY);
+      }
     } catch (Exception e) {
       log.error(
           String.format("Error while updating template with identifier [%s] to stable template of versionLabel [%s]",
