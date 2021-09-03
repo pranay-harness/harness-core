@@ -33,7 +33,6 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
-import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -617,15 +616,15 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, DataSourceType dataSourceType, int pageNumber,
-      int pageSize) {
+      boolean anomalousMetricsOnly, String hostName, String filter, List<String> healthSourceIdentifiersFilter,
+      int pageNumber, int pageSize) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
     return deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceIds.get(0),
-        anomalousMetricsOnly, hostName, filter, dataSourceType, pageNumber);
+        anomalousMetricsOnly, hostName, filter, healthSourceIdentifiersFilter, pageNumber);
   }
 
   @Override
