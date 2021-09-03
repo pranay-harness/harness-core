@@ -10,6 +10,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.helpers.ext.azure.AcrService;
@@ -133,5 +136,33 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   public List<String> getArtifactPathsByStreamType(
       AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
     throw new InvalidRequestException("Operation not supported by Azure Build Service", WingsException.USER);
+  }
+
+  @Override
+  public List<AzureImageGallery> listImageGalleries(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String resourceGroupName) {
+    return azureHelperService.listImageGalleries(config, encryptionDetails, subscriptionId, resourceGroupName);
+  }
+
+  @Override
+  public List<AzureImageDefinition> listImageDefinitions(AzureConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName,
+      String galleryName) {
+    return azureHelperService.listImageDefinitions(
+        config, encryptionDetails, subscriptionId, resourceGroupName, galleryName);
+  }
+
+  @Override
+  public List<AzureResourceGroup> listResourceGroups(
+      AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    return azureHelperService.listResourceGroups(config, encryptionDetails, subscriptionId)
+        .stream()
+        .map(name -> AzureResourceGroup.builder().name(name).subscriptionId(subscriptionId).build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Map<String, String> listSubscriptions(AzureConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    return azureHelperService.listSubscriptions(config, encryptionDetails);
   }
 }
