@@ -4,9 +4,9 @@ import static com.google.common.base.Strings.emptyToNull;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegatesetup.DelegateGroupsCountResponse;
-import io.harness.delegatesetup.DelegateGroupsRequest;
-import io.harness.delegatesetup.DelegateSetupServiceGrpc.DelegateSetupServiceImplBase;
+import io.harness.delegatedetails.DelegateCountRequest;
+import io.harness.delegatedetails.DelegateCountResponse;
+import io.harness.delegatedetails.DelegateDetailsServiceGrpc.DelegateDetailsServiceImplBase;
 import io.harness.service.intfc.DelegateSetupService;
 
 import com.google.inject.Inject;
@@ -20,20 +20,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 @RequiredArgsConstructor(onConstructor = @__({ @Inject }))
-public class DelegateSetupServiceGrpcImpl extends DelegateSetupServiceImplBase {
+public class DelegateDetailsServiceGrpcImpl extends DelegateDetailsServiceImplBase {
   private final DelegateSetupService delegateSetupService;
 
   @Override
-  public void getDelegateGroupsCount(
-      final DelegateGroupsRequest request, final StreamObserver<DelegateGroupsCountResponse> responseObserver) {
+  public void getDelegateCount(
+      final DelegateCountRequest request, final StreamObserver<DelegateCountResponse> responseObserver) {
     try {
-      final String accountId = request.getAccountId().getId();
-      final String orgId = emptyToNull(request.getOrgId().getId());
-      final String projectId = emptyToNull(request.getProjectId().getId());
+      final String accountId = request.getDelegateDescriptor().getAccountId().getId();
+      final String orgId = emptyToNull(request.getDelegateDescriptor().getOrgId().getId());
+      final String projectId = emptyToNull(request.getDelegateDescriptor().getProjectId().getId());
       final long delegateGroupCount = delegateSetupService.getDelegateGroupCount(accountId, orgId, projectId);
 
-      responseObserver.onNext(
-          DelegateGroupsCountResponse.newBuilder().setDelegateGroupsCount(delegateGroupCount).build());
+      responseObserver.onNext(DelegateCountResponse.newBuilder().setDelegateCount(delegateGroupCount).build());
     } catch (final Exception e) {
       log.error("Unexpected error occurred while getting the number of delegates.", e);
       responseObserver.onError(Status.fromThrowable(e).asRuntimeException());
