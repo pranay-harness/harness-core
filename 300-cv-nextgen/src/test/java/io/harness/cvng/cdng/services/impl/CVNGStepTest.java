@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
@@ -17,7 +18,6 @@ import io.harness.cvng.cdng.beans.CVNGStepParameter;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
-import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.cdng.services.impl.CVNGStep.VerifyStepOutcome;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -34,6 +34,8 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -43,6 +45,7 @@ import io.harness.rule.Owner;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -57,7 +60,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject private MetricPackService metricPackService;
-  @Inject private CVNGStepTaskService cvngStepTaskService;
+  @Inject private ActivityService activityService;
   private BuilderFactory builderFactory;
   private String accountId;
   private String projectIdentifier;
@@ -65,6 +68,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   private String serviceIdentifier;
   private String envIdentifier;
   private MonitoredServiceDTO monitoredServiceDTO;
+  long activityStartTime;
 
   @Before
   public void setup() {
@@ -77,6 +81,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
     serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
     envIdentifier = builderFactory.getContext().getEnvIdentifier();
     monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
+    activityStartTime = builderFactory.getClock().instant().minus(Duration.ofMinutes(3)).toEpochMilli();
   }
   @Test
   @Owner(developers = KAMAL)
@@ -147,6 +152,8 @@ public class CVNGStepTest extends CvNextGenTestBase {
     CVNGStepTask cvngStepTask =
         hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
     assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity.getActivityStartTime()).isEqualTo(Instant.ofEpochMilli(activityStartTime));
   }
 
   @Test
@@ -356,14 +363,22 @@ public class CVNGStepTest extends CvNextGenTestBase {
   }
 
   private Ambiance getAmbiance() {
-    String uuid = generateUuid();
     HashMap<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", accountId);
     setupAbstractions.put("projectIdentifier", projectIdentifier);
     setupAbstractions.put("orgIdentifier", orgIdentifier);
+
     return Ambiance.newBuilder()
-        .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
         .setPlanExecutionId(generateUuid())
+        .addLevels(Level.newBuilder()
+                       .setRuntimeId(generateUuid())
+                       .setStartTs(activityStartTime)
+                       .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STAGE).build())
+                       .build())
+        .addLevels(Level.newBuilder()
+                       .setRuntimeId(generateUuid())
+                       .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STEP).build())
+                       .build())
         .putAllSetupAbstractions(setupAbstractions)
         .build();
   }
