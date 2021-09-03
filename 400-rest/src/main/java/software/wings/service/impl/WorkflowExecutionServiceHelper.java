@@ -510,12 +510,14 @@ public class WorkflowExecutionServiceHelper {
     for (StateExecutionInstance stateExecutionInstance : allExecutionInstances) {
       String failureDetails = "";
       if (!parentInstances.contains(stateExecutionInstance.getUuid())) {
-        String errorMessage =
-            stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName()).getErrorMsg();
-        if (isNotEmpty(errorMessage)) {
-          failureDetails = String.format("%s failed - %s ", stateExecutionInstance.getDisplayName(), errorMessage);
-        } else {
-          failureDetails = String.format("%s failed", stateExecutionInstance.getDisplayName());
+        if (stateExecutionInstance.getStateExecutionMap().containsKey(stateExecutionInstance.getStateName())) {
+          String errorMessage =
+                  stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName()).getErrorMsg();
+          if (isNotEmpty(errorMessage)) {
+            failureDetails = String.format("%s failed - %s ", stateExecutionInstance.getDisplayName(), errorMessage);
+          } else {
+            failureDetails = String.format("%s failed", stateExecutionInstance.getDisplayName());
+          }
         }
       }
       StateExecutionInstance phaseExecution = stateExecutionService.fetchCurrentPhaseStateExecutionInstance(
