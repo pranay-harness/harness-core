@@ -47,6 +47,7 @@ import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.core.fullsync.GitFullSyncEntityIterator;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.gitsync.core.webhook.GitSyncEventConsumerService;
+import io.harness.gitsync.migration.GitSyncMigrationProvider;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
@@ -357,6 +358,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(UserMetadataMigrationProvider.class); }
           { add(LicenseManagerMigrationProvider.class); }
           { add(SourceCodeManagerMigrationProvider.class); }
+          { add(GitSyncMigrationProvider.class); }
         })
         .build();
   }
