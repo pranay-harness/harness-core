@@ -63,4 +63,7 @@ public interface CVConfigService extends DeleteEntityByHandler<CVConfig> {
       String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers, boolean isEnabled);
 
   List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams, List<String> identifiers);
+
+  Map<String, DataSourceType> getDataSourceTypeForCVConfigs(
+      ServiceEnvironmentParams serviceEnvironmentParams, List<String> cvConfigIds);
 }
