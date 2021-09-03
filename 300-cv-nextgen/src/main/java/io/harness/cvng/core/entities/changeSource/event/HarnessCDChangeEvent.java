@@ -2,6 +2,7 @@ package io.harness.cvng.core.entities.changeSource.event;
 
 import io.harness.pms.contracts.execution.Status;
 
+import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,8 +20,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "HarnessCDChangeEventKeys")
 public class HarnessCDChangeEvent extends ChangeEvent {
-  long deploymentStartTime;
-  long deploymentEndTime;
+  Instant deploymentStartTime;
+  Instant deploymentEndTime;
   String executionId;
   String stageId;
   Status status;

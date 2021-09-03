@@ -34,11 +34,11 @@ public class HarnessCDChangeEventTransformerTest {
     Assertions.assertThat(harnessCDChangeEvent.getAccountId()).isEqualTo(changeEventDTO.getAccountId());
     Assertions.assertThat(harnessCDChangeEvent.getOrgIdentifier()).isEqualTo(changeEventDTO.getOrgIdentifier());
     Assertions.assertThat(harnessCDChangeEvent.getProjectIdentifier()).isEqualTo(changeEventDTO.getProjectIdentifier());
-    Assertions.assertThat(harnessCDChangeEvent.getEventTime()).isEqualTo(changeEventDTO.getEventTime());
+    Assertions.assertThat(harnessCDChangeEvent.getEventTime().toEpochMilli()).isEqualTo(changeEventDTO.getEventTime());
     Assertions.assertThat(harnessCDChangeEvent.getType()).isEqualTo(changeEventDTO.getType());
-    Assertions.assertThat(harnessCDChangeEvent.getDeploymentEndTime())
+    Assertions.assertThat(harnessCDChangeEvent.getDeploymentEndTime().toEpochMilli())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentEndTime());
-    Assertions.assertThat(harnessCDChangeEvent.getDeploymentStartTime())
+    Assertions.assertThat(harnessCDChangeEvent.getDeploymentStartTime().toEpochMilli())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentStartTime());
     Assertions.assertThat(harnessCDChangeEvent.getStageId())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageId());
@@ -55,11 +55,11 @@ public class HarnessCDChangeEventTransformerTest {
     Assertions.assertThat(harnessCDChangeEvent.getAccountId()).isEqualTo(changeEventDTO.getAccountId());
     Assertions.assertThat(harnessCDChangeEvent.getOrgIdentifier()).isEqualTo(changeEventDTO.getOrgIdentifier());
     Assertions.assertThat(harnessCDChangeEvent.getProjectIdentifier()).isEqualTo(changeEventDTO.getProjectIdentifier());
-    Assertions.assertThat(harnessCDChangeEvent.getEventTime()).isEqualTo(changeEventDTO.getEventTime());
+    Assertions.assertThat(harnessCDChangeEvent.getEventTime().toEpochMilli()).isEqualTo(changeEventDTO.getEventTime());
     Assertions.assertThat(harnessCDChangeEvent.getType()).isEqualTo(changeEventDTO.getType());
-    Assertions.assertThat(harnessCDChangeEvent.getDeploymentEndTime())
+    Assertions.assertThat(harnessCDChangeEvent.getDeploymentEndTime().toEpochMilli())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentEndTime());
-    Assertions.assertThat(harnessCDChangeEvent.getDeploymentStartTime())
+    Assertions.assertThat(harnessCDChangeEvent.getDeploymentStartTime().toEpochMilli())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentStartTime());
     Assertions.assertThat(harnessCDChangeEvent.getStageId())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageId());

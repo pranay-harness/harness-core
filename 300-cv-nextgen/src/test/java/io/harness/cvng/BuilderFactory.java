@@ -349,13 +349,13 @@ public class BuilderFactory {
         .projectIdentifier(context.getProjectIdentifier())
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier())
-        .eventTime(Instant.EPOCH.getEpochSecond())
+        .eventTime(clock.instant())
         .changeSourceIdentifier("changeSourceID")
         .type(ChangeSourceType.HARNESS_CD)
         .stageId("stage")
         .executionId("executionId")
-        .deploymentEndTime(Instant.EPOCH.getEpochSecond())
-        .deploymentStartTime(Instant.EPOCH.getEpochSecond());
+        .deploymentEndTime(clock.instant())
+        .deploymentStartTime(clock.instant());
   }
 
   public ChangeEventDTOBuilder getHarnessCDChangeEventDTOBuilder() {
