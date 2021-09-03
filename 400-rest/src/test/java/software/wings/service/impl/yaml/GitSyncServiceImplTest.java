@@ -29,6 +29,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.SettingAttribute;
@@ -80,6 +81,7 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
                            .withName(gitConnectorName)
                            .withValue(GitConfig.builder()
                                           .repoUrl(repoURL)
+                                          .providerType(ProviderType.GIT)
                                           .urlType(GitConfig.UrlType.REPO)
                                           .authenticationScheme(AuthenticationScheme.HTTP_PASSWORD)
                                           .branch("branchName")

@@ -186,6 +186,7 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitValidationParameters;
@@ -1704,5 +1705,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackStatus.class, 40113);
     kryo.register(EventsDeliveryCallback.class, 40014);
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
+    kryo.register(ProviderType.class, 40022);
   }
 }
