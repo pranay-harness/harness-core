@@ -81,6 +81,7 @@ java_library(
         ":module",
         "//:lombok",
         "//950-delegate-tasks-beans:module",
+        "//955-delegate-beans:module",
         "//960-persistence:module",
         "//960-persistence:supporter-test",
         "//970-api-services-beans:module",
