@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.directory;
 
-import static io.harness.beans.PageRequest.*;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -82,7 +82,7 @@ public class ServiceDirectoryGenerator {
     if (applyPermissions && isEmpty(allowedServices)) {
       return servicesFolder;
     }
-    PageRequest<Service> pageRequest = PageRequestBuilder.<Service>aPageRequest()
+    PageRequest<Service> pageRequest = aPageRequest()
                                            .addFilter(ServiceKeys.appId, EQ, app.getAppId())
                                            .addOrder(ServiceKeys.name, SortOrder.OrderType.ASC)
                                            .build();
