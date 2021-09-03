@@ -161,6 +161,7 @@ import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
@@ -244,7 +245,6 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.approval.ConditionalOperator;
 import software.wings.beans.approval.Criteria;
 import software.wings.beans.approval.ServiceNowApprovalParams;
@@ -911,7 +911,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppContainer.class, 5064);
     kryo.register(AppDynamicsConfig.class, 5074);
     kryo.register(ManifestFile.class, 5539);
-    kryo.register(StoreType.class, 5540);
     kryo.register(ArtifactFile.class, 5066);
     kryo.register(ArtifactStreamAttributes.class, 5007);
     kryo.register(AwsConfig.class, 5013);
@@ -1491,6 +1490,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureArtifactsPackage.class, 7287);
     kryo.register(AzureArtifactsPackageVersion.class, 7288);
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
+    kryo.register(AzureResourceGroup.class, 40016);
     kryo.register(UtmInfo.class, 7291);
 
     kryo.register(TerraformApplyMarkerParam.class, 7292);
