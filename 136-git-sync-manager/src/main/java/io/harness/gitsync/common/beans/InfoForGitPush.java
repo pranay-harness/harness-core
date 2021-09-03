@@ -11,7 +11,6 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(DX)
-// todo(abhinav): move to 136
 public class InfoForGitPush {
   ScmConnector scmConnector;
   String folderPath;
