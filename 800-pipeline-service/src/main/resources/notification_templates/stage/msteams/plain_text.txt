@@ -1,10 +1,38 @@
 {
   "@type": "MessageCard",
   "themeColor": "#FFFFFF",
-  "summary": "${event_name}",
+  "summary": "${EVENT_TYPE}",
   "sections": [
     {
-      "activityTitle": "${message}"
+      "activityTitle": "Stage ${PIPELINE_STEP} ${NODE_STATUS} for pipeline [${PIPELINE}](${URL})",
+      "activitySubtitle": "In Project ${PROJECT_IDENTIFIER}",
+      "activityImage": "https://s3.amazonaws.com/wings-assets/slackicons/${IMAGE_STATUS}.png",
+      "facts": [
+             {
+                  "name": "Stage",
+                  "value": "${PIPELINE_STEP}"
+             },
+             {
+                  "name": "Pipeline",
+                  "value": "${PIPELINE}"
+             },
+             {
+                  "name": "Project",
+                  "value": "${PROJECT_IDENTIFIER}"
+             },
+              {
+                  "name": "TriggeredBy",
+                  "value": "${USER_NAME}"
+              },
+             {
+                  "name": "Events",
+                  "value": "Started on ${START_DATE}, ${NODE_STATUS} at ${END_DATE}. Took ${DURATION}s"
+             },
+             {
+                  "name": "Execution",
+                  "value": "[${URL}](${URL})"
+             },
+      ],
     }
   ]
 }
