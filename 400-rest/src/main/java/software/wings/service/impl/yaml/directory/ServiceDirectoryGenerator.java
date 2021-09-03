@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.directory;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.*;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -82,7 +82,7 @@ public class ServiceDirectoryGenerator {
     if (applyPermissions && isEmpty(allowedServices)) {
       return servicesFolder;
     }
-    PageRequest<Service> pageRequest = aPageRequest()
+    PageRequest<Service> pageRequest = PageRequestBuilder.<Service>aPageRequest()
                                            .addFilter(ServiceKeys.appId, EQ, app.getAppId())
                                            .addOrder(ServiceKeys.name, SortOrder.OrderType.ASC)
                                            .build();
@@ -280,13 +280,12 @@ public class ServiceDirectoryGenerator {
     return servicesFolder;
   }
 
-  // DONE
   private FolderNode generateValuesFolder(String accountId, Service service, DirectoryPath servicePath) {
     return generateKindBasedFolder(accountId, service, servicePath, AppManifestKind.VALUES);
   }
-  // DONE
+
   private FolderNode generateOcParamsFolder(String accountId, Service service, DirectoryPath servicePath) {
-    // Hiding OC Params Folder when not OPEN_SHIFT_TEMPLATES
+    // Hiding OC Params Folder when not OC_TEMPLATES or CUSTOM_OPENSHIFT_TEMPLATE
     ApplicationManifest appManifest =
         applicationManifestService.getAppManifest(service.getAppId(), null, service.getUuid(), K8S_MANIFEST);
     if (appManifest == null) {
@@ -298,7 +297,7 @@ public class ServiceDirectoryGenerator {
     }
     return generateKindBasedFolder(accountId, service, servicePath, AppManifestKind.OC_PARAMS);
   }
-  // DONE
+
   private FolderNode generateKindBasedFolder(
       String accountId, Service service, DirectoryPath servicePath, AppManifestKind appManifestKind) {
     ApplicationManifest appManifest =
@@ -323,7 +322,7 @@ public class ServiceDirectoryGenerator {
     }
     return folder;
   }
-  // DONE
+
   @VisibleForTesting
   FolderNode generateApplicationManifestNodeForService(String accountId, Service service, DirectoryPath servicePath) {
     DirectoryPath applicationManifestPath = getApplicationManifestDirectoryPath(service, servicePath);
@@ -348,7 +347,6 @@ public class ServiceDirectoryGenerator {
                 applicationManifestPath.clone().add(yamlFileName), Type.APPLICATION_MANIFEST));
 
             if (StoreType.Local == applicationManifest.getStoreType()) {
-              // TODO bogdan
               FolderNode manifestFileFolder = manifestFileFolderNodeGenerator.generateManifestFileFolderNode(
                   accountId, service, applicationManifest, manifestFilePath);
               applicationManifestFolder.addChild(manifestFileFolder);
@@ -380,14 +378,12 @@ public class ServiceDirectoryGenerator {
     return null;
   }
 
-  // DONE
   @NotNull
   private DirectoryPath getApplicationManifestDirectoryPath(Service service, DirectoryPath servicePath) {
     return isAzureAppServiceDeploymentType(service) ? servicePath.clone().add(MANIFEST_FOLDER_APP_SERVICE)
                                                     : servicePath.clone().add(MANIFEST_FOLDER);
   }
 
-  // DONE
   @NotNull
   private String getApplicationManifestFolderName(Service service) {
     return isAzureAppServiceDeploymentType(service) ? MANIFEST_FOLDER_APP_SERVICE : MANIFEST_FOLDER;
