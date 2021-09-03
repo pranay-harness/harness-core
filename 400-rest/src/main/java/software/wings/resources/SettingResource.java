@@ -103,7 +103,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.SETTING)
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._410_CG_REST)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class SettingResource {
   private static final String LIMIT = "" + Integer.MAX_VALUE;
   private static final String CUSTOM_MAX_LIMIT = "1200";
