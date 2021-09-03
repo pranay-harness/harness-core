@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.directory;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder;
 import static io.harness.rule.OwnerRule.BOGDAN;
 import static io.harness.rule.OwnerRule.PRABU;
@@ -19,6 +20,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -50,6 +52,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DX)
 public class ServiceDirectoryGeneratorTest {
   private static final String APP_MANIFEST_NAME = "app_manifest_name";
   private static final String APP_NAME = "application_name";

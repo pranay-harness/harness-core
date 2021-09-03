@@ -1,8 +1,11 @@
 package software.wings.service.impl.yaml.directory;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -22,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(DX)
 @Singleton
 public class ManifestFileFolderNodeGenerator {
   @Inject private ApplicationManifestService applicationManifestService;

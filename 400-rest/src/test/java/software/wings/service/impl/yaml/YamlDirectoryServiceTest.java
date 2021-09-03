@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -63,6 +64,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -153,6 +155,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(DX)
 public class YamlDirectoryServiceTest extends WingsBaseTest {
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
