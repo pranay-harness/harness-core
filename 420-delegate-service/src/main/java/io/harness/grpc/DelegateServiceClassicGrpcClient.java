@@ -8,7 +8,6 @@ import io.harness.delegate.DelegateTaskGrpc;
 import io.harness.delegate.ExecuteTaskResponse;
 import io.harness.delegate.QueueTaskResponse;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.serializer.KryoSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +50,6 @@ public class DelegateServiceClassicGrpcClient {
     ObjectMapper mapper = new ObjectMapper();
     return (T) mapper.convertValue(
         kryoSerializer.asInflatedObject(executeTaskResponse.getDelegateTaskResponseKryo().toByteArray()),
-        RemoteMethodReturnValueData.class);
+        DelegateResponseData.class);
   }
 }
