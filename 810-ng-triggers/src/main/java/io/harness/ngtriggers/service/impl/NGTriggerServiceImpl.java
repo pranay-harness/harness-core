@@ -40,9 +40,6 @@ import io.harness.ngtriggers.beans.entity.metadata.status.WebhookAutoRegistratio
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
-import io.harness.ngtriggers.events.TriggerCreateEvent;
-import io.harness.ngtriggers.events.TriggerDeleteEvent;
-import io.harness.ngtriggers.events.TriggerUpdateEvent;
 import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
@@ -51,7 +48,6 @@ import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
 import io.harness.ngtriggers.utils.PollingSubscriptionHelper;
 import io.harness.ngtriggers.validations.TriggerValidationHandler;
 import io.harness.ngtriggers.validations.ValidationResult;
-import io.harness.outbox.api.OutboxService;
 import io.harness.polling.client.PollingResourceClient;
 import io.harness.polling.contracts.PollingItem;
 import io.harness.polling.contracts.service.PollingDocument;
@@ -101,7 +97,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   private final KryoSerializer kryoSerializer;
   private final PollingResourceClient pollingResourceClient;
   private final NGTriggerElementMapper ngTriggerElementMapper;
-  private final OutboxService outboxService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -110,8 +105,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     try {
       NGTriggerEntity savedNgTriggerEntity = ngTriggerRepository.save(ngTriggerEntity);
       performPostUpsertFlow(savedNgTriggerEntity);
-      outboxService.save(new TriggerCreateEvent(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-          ngTriggerEntity.getProjectIdentifier(), savedNgTriggerEntity));
       return savedNgTriggerEntity;
     } catch (DuplicateKeyException e) {
       throw new DuplicateFieldException(
@@ -249,10 +242,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   public NGTriggerEntity update(NGTriggerEntity ngTriggerEntity) {
     ngTriggerEntity.setYmlVersion(TRIGGER_CURRENT_YML_VERSION);
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
-    NGTriggerEntity updatedTriggerEntity = updateTriggerEntity(ngTriggerEntity, criteria);
-    outboxService.save(new TriggerUpdateEvent(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-        ngTriggerEntity.getProjectIdentifier(), updatedTriggerEntity, ngTriggerEntity));
-    return updatedTriggerEntity;
+    return updateTriggerEntity(ngTriggerEntity, criteria);
   }
 
   @NotNull
@@ -298,15 +288,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       throw new InvalidRequestException(String.format("NGTrigger [%s] couldn't be deleted", identifier));
     }
 
-    if (ngTriggerEntity.isPresent()) {
-      NGTriggerEntity foundTriggerEntity = ngTriggerEntity.get();
-      outboxService.save(new TriggerDeleteEvent(foundTriggerEntity.getAccountId(),
-          foundTriggerEntity.getOrgIdentifier(), foundTriggerEntity.getProjectIdentifier(), foundTriggerEntity));
-      if (foundTriggerEntity.getType() == MANIFEST || foundTriggerEntity.getType() == ARTIFACT) {
-        log.info("Submitting unsubscribe request after delete for Trigger :"
-            + TriggerHelper.getTriggerRef(foundTriggerEntity));
-        submitUnsubscribeAsync(foundTriggerEntity);
-      }
+    if (ngTriggerEntity.isPresent()
+        && (ngTriggerEntity.get().getType() == MANIFEST || ngTriggerEntity.get().getType() == ARTIFACT)) {
+      log.info("Submitting unsubscribe request after delete for Trigger :"
+          + TriggerHelper.getTriggerRef(ngTriggerEntity.get()));
+      submitUnsubscribeAsync(ngTriggerEntity.get());
     }
     return true;
   }
