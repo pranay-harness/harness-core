@@ -212,8 +212,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(NGTriggersModule.getInstance(configuration.getTriggerConfig(),
-        configuration.getPipelineServiceClientConfig(), configuration.getAuditClientConfig(),
-        configuration.getPipelineServiceSecret(), configuration.isEnableAudit()));
+        configuration.getPipelineServiceClientConfig(), configuration.getPipelineServiceSecret()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
