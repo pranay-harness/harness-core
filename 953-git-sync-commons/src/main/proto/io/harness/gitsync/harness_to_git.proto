@@ -3,7 +3,6 @@ syntax = "proto3";
 package io.harness.gitsync;
 
 import "google/protobuf/wrappers.proto";
-import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_scope_info.proto";
 

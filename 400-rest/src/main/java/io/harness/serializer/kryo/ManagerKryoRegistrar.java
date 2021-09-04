@@ -208,7 +208,6 @@ import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LambdaTestEvent;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
@@ -1024,7 +1023,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraConfig.class, 5581);
     kryo.register(KubernetesClusterConfig.class, 5244);
     kryo.register(LambdaTestEvent.class, 5604);
-    kryo.register(LicenseInfo.class, 5511);
     kryo.register(NameValuePair.class, 5226);
     kryo.register(NewRelicConfig.class, 5175);
     kryo.register(PcfConfig.class, 5296);
