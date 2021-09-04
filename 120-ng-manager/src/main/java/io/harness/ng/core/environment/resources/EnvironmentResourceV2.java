@@ -67,6 +67,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -85,6 +86,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class EnvironmentResourceV2 {
   private final EnvironmentService environmentService;
   private final AccessControlClient accessControlClient;
@@ -177,8 +179,10 @@ public class EnvironmentResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
+    log.info("Validating access for list environments call for account: {}", accountId);
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
         Resource.of(ENVIRONMENT, null), ENVIRONMENT_VIEW_PERMISSION, "Unauthorized to list environments");
+    log.info("Successfully validated access for list environments call for account: {}", accountId);
     Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;
 
@@ -192,6 +196,7 @@ public class EnvironmentResourceV2 {
     }
     Page<EnvironmentResponse> environmentList =
         environmentService.list(criteria, pageRequest).map(EnvironmentMapper::toResponseWrapper);
+    log.info("Found {} environments for the account {}", environmentList.getSize(), accountId);
     return ResponseDTO.newResponse(getNGPageResponse(environmentList));
   }
 
