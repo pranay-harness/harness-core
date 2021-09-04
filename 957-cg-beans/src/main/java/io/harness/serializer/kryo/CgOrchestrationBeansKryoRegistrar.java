@@ -7,6 +7,7 @@ import io.harness.context.ContextElementType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.GitFileConfig;
+import software.wings.beans.LicenseInfo;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -16,6 +17,8 @@ public class CgOrchestrationBeansKryoRegistrar implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(ContextElementType.class, 4004);
     kryo.register(GitFileConfig.class, 5472);
+    kryo.register(LicenseInfo.class, 5511);
+
     // Put promoted classes here and do not change the id
   }
 }
