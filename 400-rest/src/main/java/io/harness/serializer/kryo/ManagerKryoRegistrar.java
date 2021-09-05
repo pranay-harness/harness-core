@@ -39,7 +39,6 @@ import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerRollbackRequestElement;
-import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContinuePipelineResponseData;
 import software.wings.api.DeploymentType;
@@ -839,7 +838,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CommandStateExecutionData.class, 5093);
     kryo.register(CommandStepExecutionSummary.class, 5094);
     kryo.register(ContainerRollbackRequestElement.class, 4010);
-    kryo.register(ContainerServiceData.class, 5157);
     kryo.register(ContainerServiceElement.class, 5095);
     kryo.register(DeploymentType.class, 5096);
     kryo.register(EcsBGSetupData.class, 5611);

@@ -242,4 +242,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   PhaseStep generateRollbackProvisioners(
       PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName);
+
+  PhaseStep generateRollbackProvisionersReverse(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName);
 }
