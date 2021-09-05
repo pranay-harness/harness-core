@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK_PROVISIONER_AFTER_PHASES;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.STARTING;
@@ -35,17 +36,21 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.RepairActionCode;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.api.PhaseElement;
 import software.wings.beans.FailureStrategy.FailureStrategyBuilder;
 import software.wings.beans.workflow.StepSkipStrategy;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
@@ -88,6 +93,7 @@ import org.mongodb.morphia.annotations.Transient;
 @BreakDependencyOn("software.wings.service.impl.instance.InstanceHelper")
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public static final String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
+  public static final String ROLLBACK_PROVISIONERS_REVERSE = "Rollback Provisioners Reverse";
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
   public static final ExecutionInterruptType DEFAULT_ACTION_AFTER_TIMEOUT = ExecutionInterruptType.END_EXECUTION;
   public static final long DEFAULT_TIMEOUT = 1209600000L; // 14days
@@ -110,6 +116,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject @Transient private transient StateExecutionService stateExecutionService;
 
   @Inject @Transient private transient FeatureFlagService featureFlagService;
+
+  @Inject @Transient private transient WingsPersistence wingsPersistence;
 
   @Override
   @SuppressWarnings("PMD")
@@ -245,7 +253,15 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       } else if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow
           && ((PhaseStepSubWorkflow) state).getPhaseStepType() == PRE_DEPLOYMENT
           && executionEvent.getExecutionStatus() == FAILED) {
-        return getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
+        if (featureFlagService.isEnabled(
+                FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, executionEvent.getContext().getAccountId())) {
+          if (workflowExecution.isRollbackProvisionerAfterPhases()) {
+            return getRollbackProvisionerAdviceIfNeeded(
+                orchestrationWorkflow.getPreDeploymentSteps(), ROLLBACK_PROVISIONERS_REVERSE);
+          }
+        }
+        return getRollbackProvisionerAdviceIfNeeded(
+            orchestrationWorkflow.getPreDeploymentSteps(), ROLLBACK_PROVISIONERS);
       } else if (executionEvent.getExecutionStatus() == STARTING) {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
         return shouldSkipStep(context, phaseStep, state, featureFlagService);
@@ -254,7 +270,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       if (phaseSubWorkflow == null && executionInterrupts != null
-          && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)
+          && executionInterrupts.stream().anyMatch(ex
+              -> ex.getExecutionInterruptType() == ROLLBACK
+                  || ex.getExecutionInterruptType() == ROLLBACK_PROVISIONER_AFTER_PHASES)
           && !rollbackProvisioners) {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
@@ -269,7 +287,49 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       if (phaseSubWorkflow != null && executionInterrupts != null
           && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)) {
         return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+      } else if (phaseSubWorkflow != null && executionInterrupts != null
+          && executionInterrupts.stream().anyMatch(
+              ex -> ex.getExecutionInterruptType() == ROLLBACK_PROVISIONER_AFTER_PHASES)) {
+        /*
+        Handle execution interrupt when failure strategy is configured as
+        <ROLLBACK_PROVISIONER_AFTER_PHASES> action after timeout in Manual Intervention failure strategy
+         */
+        if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, context.getAccountId())) {
+          return phaseSubWorkflowAdviceWhenRollbackProvisionersAfterPhases(
+              orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+        } else {
+          /*
+          We need to fail the workflow execution when failure strategy is ROLLBACK_PROVISIONER_AFTER_PHASES but Feature
+          Flag is not enabled. This can happen if customer disables the feature after configuring the workflow It is
+          better to fail than fallback to any other default failur strategy to minimize ambiguity/random workflow
+          behaviors.
+           */
+          throw new InvalidRequestException(
+              "Rollback Provisioner after Phases not supported as ROLLBACK_PROVISIONER_AFTER_PHASES feature flag is not enabled",
+              WingsException.USER);
+        }
       } else if (rollbackProvisioners) {
+        /*
+        isRollbackProvisionerAfterPhases flag in stateExecutionInstance confirms that rollback has happened under the
+        failure strategy <ROLLBACK_PROVISIONER_AFTER_PHASES> Execution Interrupt <ROLLBACK_PROVISIONER_AFTER_PHASES>
+        here handles the action after retry scenario for Retry failure strategy
+         */
+        if (stateExecutionInstance.isRollbackProvisionerAfterPhases()
+            || (executionInterrupts != null
+                && executionInterrupts.stream().anyMatch(
+                    ex -> ex.getExecutionInterruptType() == ROLLBACK_PROVISIONER_AFTER_PHASES))) {
+          if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, context.getAccountId())) {
+            // All Done
+            return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.ROLLBACK_DONE).build();
+          } else {
+            // We need to fail the workflow execution when failure strategy is ROLLBACK_PROVISIONER_AFTER_PHASES but
+            // Feature Flag is not enabled.
+            throw new InvalidRequestException(
+                "Rollback Provisioner after Phases not supported as ROLLBACK_PROVISIONER_AFTER_PHASES feature flag is not enabled",
+                WingsException.USER);
+          }
+        }
+
         List<String> phaseNames =
             orchestrationWorkflow.getWorkflowPhases().stream().map(WorkflowPhase::getName).collect(toList());
 
@@ -329,10 +389,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, stateExecutionInstance);
 
     } catch (Exception ex) {
-      log.error("Error Occurred while calculating advise. This is really bad");
+      log.error("Error Occurred while calculating advise. This is really bad", ex);
       return null;
     } catch (Throwable t) {
-      log.error("Encountered a throwable while calculating execution advice: {}", t.getStackTrace());
+      log.error("Encountered a throwable while calculating execution advice: {}", t);
       return null;
     } finally {
       try {
@@ -345,7 +405,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         log.warn("Error while getting workflow execution data for instance sync for execution: {}",
             workflowExecution.getUuid(), ex);
       } catch (Throwable t) {
-        log.error("Encountered a throwable while extracting instance " + t.getStackTrace());
+        log.error("Encountered a throwable while extracting instance", t);
         return null;
       }
     }
@@ -549,6 +609,32 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             .build();
       }
 
+      case ROLLBACK_PROVISIONER_AFTER_PHASES: {
+        if (featureFlagService.isEnabled(
+                FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, executionEvent.getContext().getAccountId())) {
+          /*
+          We need to set this flag here. Using this flag later we mark rollback as completed once
+          the Provisioners are rolled back
+           */
+          stateExecutionInstance.setRollbackProvisionerAfterPhases(true);
+
+          WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
+              executionEvent.getContext().getAppId(), executionEvent.getContext().getWorkflowExecutionId());
+          workflowExecution.setRollbackProvisionerAfterPhases(true);
+          wingsPersistence.save(workflowExecution);
+
+          if (phaseSubWorkflow == null) {
+            return null;
+          }
+          return phaseSubWorkflowAdviceWhenRollbackProvisionersAfterPhases(
+              orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+        } else {
+          throw new InvalidRequestException(
+              "Rollback Provisioner after Phases not supported as ROLLBACK_PROVISIONER_AFTER_PHASES feature flag is not enabled",
+              WingsException.USER);
+        }
+      }
+
       case ROLLBACK_WORKFLOW: {
         if (phaseSubWorkflow == null) {
           return null;
@@ -556,6 +642,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
         return phaseSubWorkflowAdvice(orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
       }
+
       case RETRY: {
         String stateType = executionEvent.getState().getStateType();
         if (stateType.equals(StateType.PHASE.name()) || stateType.equals(StateType.PHASE_STEP.name())
@@ -714,6 +801,22 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
   }
 
+  private ExecutionEventAdvice phaseSubWorkflowAdviceWhenRollbackProvisionersAfterPhases(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, PhaseSubWorkflow phaseSubWorkflow,
+      StateExecutionInstance stateExecutionInstance) {
+    if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
+        && !workflowServiceHelper.isOrchestrationWorkflowForK8sV2Service(
+            stateExecutionInstance.getAppId(), orchestrationWorkflow)) {
+      // This is an invalid case. Should never happen. Rolling workflows do not support
+      // ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
+      throw new InvalidRequestException(
+          "Rollback Provisioner after Phases not applicable for Rolling workflow", WingsException.USER);
+    } else {
+      return phaseSubWorkflowAdviceForOthersWhenRollbackProvisionersAfterPhases(
+          orchestrationWorkflow, phaseSubWorkflow, stateExecutionInstance);
+    }
+  }
+
   private ExecutionEventAdvice phaseSubWorkflowOnDemandRollbackAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance, boolean rolling) {
     if (orchestrationWorkflow.checkLastPhaseForOnDemandRollback(phaseSubWorkflow.getName())) {
@@ -749,17 +852,15 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         .build();
   }
 
-  private ExecutionEventAdvice getRollbackProvisionerAdviceIfNeeded(PhaseStep preDeploymentSteps) {
+  private ExecutionEventAdvice getRollbackProvisionerAdviceIfNeeded(
+      PhaseStep preDeploymentSteps, String nextStateName) {
     if (preDeploymentSteps != null && preDeploymentSteps.getSteps() != null
         && preDeploymentSteps.getSteps().stream().anyMatch(step
             -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
                 || step.getType().equals(StateType.TERRAFORM_PROVISION.getType())
                 || step.getType().equals(StateType.TERRAGRUNT_PROVISION.getType())
                 || step.getType().equals(StateType.ARM_CREATE_RESOURCE.getType()))) {
-      return anExecutionEventAdvice()
-          .withNextStateName(ROLLBACK_PROVISIONERS)
-          .withExecutionInterruptType(ROLLBACK)
-          .build();
+      return anExecutionEventAdvice().withNextStateName(nextStateName).withExecutionInterruptType(ROLLBACK).build();
     }
     return null;
   }
@@ -768,7 +869,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
     if (!phaseSubWorkflow.isRollback()) {
       ExecutionEventAdvice rollbackProvisionerAdvice =
-          getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
+          getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps(), ROLLBACK_PROVISIONERS);
       if (rollbackProvisionerAdvice != null) {
         return rollbackProvisionerAdvice;
       }
@@ -789,6 +890,51 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     int index = phaseNames.indexOf(phaseSubWorkflow.getPhaseNameForRollback());
     if (index == 0) {
       // All Done
+      return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.ROLLBACK_DONE).build();
+    }
+
+    String phaseId = orchestrationWorkflow.getWorkflowPhases().get(index - 1).getUuid();
+    WorkflowPhase rollbackPhase = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseId);
+    if (rollbackPhase == null) {
+      return null;
+    }
+    return anExecutionEventAdvice()
+        .withExecutionInterruptType(ROLLBACK)
+        .withNextStateName(rollbackPhase.getName())
+        .build();
+  }
+
+  /*
+  Get execution advice when ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy is chosen
+  When rollback happens it returns deployment phase rollback before rollback provisioners
+   */
+  private ExecutionEventAdvice phaseSubWorkflowAdviceForOthersWhenRollbackProvisionersAfterPhases(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, PhaseSubWorkflow phaseSubWorkflow,
+      StateExecutionInstance stateExecutionInstance) {
+    if (!phaseSubWorkflow.isRollback()) {
+      if (!orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().containsKey(phaseSubWorkflow.getId())) {
+        return null;
+      }
+
+      return anExecutionEventAdvice()
+          .withNextStateName(
+              orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(phaseSubWorkflow.getId()).getName())
+          .withExecutionInterruptType(ROLLBACK)
+          .build();
+    }
+
+    List<String> phaseNames =
+        orchestrationWorkflow.getWorkflowPhases().stream().map(WorkflowPhase::getName).collect(toList());
+    int index = phaseNames.indexOf(phaseSubWorkflow.getPhaseNameForRollback());
+    if (index == 0) {
+      // Rollback Provisioners in reverse manner when ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy is chosen
+      ExecutionEventAdvice rollbackProvisionerAdvice = getRollbackProvisionerAdviceIfNeeded(
+          orchestrationWorkflow.getPreDeploymentSteps(), ROLLBACK_PROVISIONERS_REVERSE);
+      if (rollbackProvisionerAdvice != null) {
+        return rollbackProvisionerAdvice;
+      }
+
+      // Mark rollback of workflow as done as there is no provisioner to rollback
       return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.ROLLBACK_DONE).build();
     }
 
