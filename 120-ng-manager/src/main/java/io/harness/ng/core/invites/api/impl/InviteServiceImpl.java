@@ -266,7 +266,8 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String email, String jwtToken) {
+  public URI getRedirectUrl(
+      InviteAcceptResponse inviteAcceptResponse, String email, String decodedEmail, String jwtToken) {
     String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
     if (inviteAcceptResponse.getResponse().equals(INVITE_EXPIRED)
         || inviteAcceptResponse.getResponse().equals(INVITE_INVALID)) {
@@ -286,7 +287,7 @@ public class InviteServiceImpl implements InviteService {
       if (isPasswordRequired) {
         return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
       } else {
-        createAndInviteNonPasswordUser(accountIdentifier, jwtToken, email.trim());
+        createAndInviteNonPasswordUser(accountIdentifier, jwtToken, decodedEmail.trim());
         return getResourceUrl(inviteAcceptResponse);
       }
     } else {
