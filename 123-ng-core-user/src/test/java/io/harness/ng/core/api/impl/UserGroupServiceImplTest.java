@@ -27,6 +27,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
+import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.service.NgUserService;
@@ -66,6 +67,7 @@ public class UserGroupServiceImplTest extends CategoryTest {
   @Mock private AccessControlAdminClient accessControlAdminClient;
   @Mock private TransactionTemplate transactionTemplate;
   @Mock private NgUserService ngUserService;
+  @Mock private InviteService inviteService;
   @Spy @Inject @InjectMocks private UserGroupServiceImpl userGroupService;
 
   private static final String ACCOUNT_IDENTIFIER = "A1";

@@ -12,6 +12,7 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -310,6 +311,42 @@ public class NgUserServiceImpl implements NgUserService {
         .map(UserMetadataMapper::toDTO)
         .stream()
         .collect(toList());
+  }
+
+  @Override
+  public List<UserMetadataDTO> getUsersAtScope(List<String> userIdentifiers, Scope scope) {
+    List<UserMetadataDTO> users = getUsersByUserIdentifiers(userIdentifiers);
+    List<String> userIds = users.stream().map(UserMetadataDTO::getUuid).collect(toList());
+
+    Set<String> userIdsAtScope = listUserMemberships(Criteria.where(UserMembershipKeys.userId)
+                                                         .in(userIds)
+                                                         .and(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                                                         .is(scope.getAccountIdentifier())
+                                                         .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                                                         .is(scope.getOrgIdentifier())
+                                                         .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                                                         .is(scope.getProjectIdentifier()),
+        Pageable.unpaged())
+                                     .getContent()
+                                     .stream()
+                                     .map(UserMembership::getUserId)
+                                     .collect(toSet());
+
+    List<UserMetadataDTO> usersAtScope = new ArrayList<>();
+    users.forEach(userMetadata -> {
+      if (userIdsAtScope.contains(userMetadata.getUuid())) {
+        usersAtScope.add(userMetadata);
+      }
+    });
+    return usersAtScope;
+  }
+
+  @Override
+  public List<UserMetadataDTO> getUsersByUserIdentifiers(List<String> userIdentifiers) {
+    Criteria criteria = new Criteria();
+    criteria.orOperator(Criteria.where(UserMetadataKeys.userId).in(userIdentifiers),
+        Criteria.where(UserMetadataKeys.email).in(userIdentifiers));
+    return userMetadataRepository.findAll(criteria).stream().map(UserMetadataMapper::toDTO).collect(toList());
   }
 
   @Override

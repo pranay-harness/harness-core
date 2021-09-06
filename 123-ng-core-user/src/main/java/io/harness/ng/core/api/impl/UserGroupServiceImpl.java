@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.core.invites.mapper.InviteMapper.toInviteList;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
@@ -15,6 +16,7 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -37,6 +39,10 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
+import io.harness.ng.core.invites.InviteType;
+import io.harness.ng.core.invites.api.InviteService;
+import io.harness.ng.core.invites.dto.CreateInviteDTO;
+import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.remote.dto.UserFilter;
@@ -61,6 +67,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -90,6 +97,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   private final TransactionTemplate transactionTemplate;
   private final NgUserService ngUserService;
   private final AuthSettingsManagerClient managerClient;
+  private final InviteService inviteService;
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the user with the given identifier on attempt %s",
           "Could not find the user with the given identifier", Lists.newArrayList(InvalidRequestException.class),
@@ -101,7 +109,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient,
       OutboxService outboxService, @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, NgUserService ngUserService,
-      AuthSettingsManagerClient managerClient) {
+      AuthSettingsManagerClient managerClient, InviteService inviteService) {
     this.userGroupRepository = userGroupRepository;
     this.userClient = userClient;
     this.outboxService = outboxService;
@@ -109,6 +117,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     this.transactionTemplate = transactionTemplate;
     this.ngUserService = ngUserService;
     this.managerClient = managerClient;
+    this.inviteService = inviteService;
   }
 
   @Override
@@ -116,15 +125,61 @@ public class UserGroupServiceImpl implements UserGroupService {
     try {
       UserGroup userGroup = toEntity(userGroupDTO);
       validate(userGroup);
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      List<UserMetadataDTO> usersAlreadyPartOfScope = ngUserService.getUsersAtScope(userGroup.getUsers(),
+          Scope.of(userGroup.getAccountIdentifier(), userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier()));
+      Set<String> userIdentifiersAlreadyPartOfScope = new HashSet<>();
+      usersAlreadyPartOfScope.forEach(userMetadataDTO -> {
+        userIdentifiersAlreadyPartOfScope.add(userMetadataDTO.getUuid());
+        userIdentifiersAlreadyPartOfScope.add(userMetadataDTO.getEmail());
+      });
+      Set<String> inputUserIdentifiers = new HashSet<>(userGroup.getUsers());
+      List<String> toBeInvitedUserIdentifiers =
+          new ArrayList<>(Sets.difference(inputUserIdentifiers, userIdentifiersAlreadyPartOfScope));
+
+      userGroup.setUsers(usersAlreadyPartOfScope.stream().map(UserMetadataDTO::getUuid).collect(toList()));
+      UserGroup result = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         UserGroup savedUserGroup = userGroupRepository.save(userGroup);
         outboxService.save(new UserGroupCreateEvent(userGroupDTO.getAccountIdentifier(), userGroupDTO));
         return savedUserGroup;
       }));
+      invite(toBeInvitedUserIdentifiers,
+          Scope.of(userGroup.getAccountIdentifier(), userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier()),
+          userGroup.getIdentifier());
+      return result;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           String.format("Try using different user group identifier, [%s] cannot be used", userGroupDTO.getIdentifier()),
           USER_SRE, ex);
+    }
+  }
+
+  private void invite(List<String> userIdentifiers, Scope scope, String userGroupIdentifier) {
+    Set<UserMetadataDTO> users = new HashSet<>(ngUserService.getUsersByUserIdentifiers(userIdentifiers));
+    Set<String> emails = new HashSet<>();
+    users.forEach(userMetadataDTO -> emails.add(userMetadataDTO.getEmail()));
+    Set<String> userIdentifiersAlreadyPartOfScope = new HashSet<>();
+    users.forEach(userMetadataDTO -> {
+      userIdentifiersAlreadyPartOfScope.add(userMetadataDTO.getUuid());
+      userIdentifiersAlreadyPartOfScope.add(userMetadataDTO.getEmail());
+    });
+    userIdentifiers.forEach(userIdentifier -> {
+      if (!userIdentifiersAlreadyPartOfScope.contains(userIdentifier)) {
+        emails.add(userIdentifier);
+      }
+    });
+    CreateInviteDTO createInviteDTO = CreateInviteDTO.builder()
+                                          .users(new ArrayList<>(emails))
+                                          .inviteType(InviteType.ADMIN_INITIATED_INVITE)
+                                          .userGroups(singletonList(userGroupIdentifier))
+                                          .build();
+    List<Invite> invites = toInviteList(
+        createInviteDTO, scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+    for (Invite invite : invites) {
+      try {
+        inviteService.create(invite);
+      } catch (DuplicateFieldException ex) {
+        log.error("error: ", ex);
+      }
     }
   }
 
@@ -387,8 +442,10 @@ public class UserGroupServiceImpl implements UserGroupService {
   private UserGroup updateInternal(UserGroup newUserGroup, UserGroupDTO oldUserGroup) {
     log.info("[NGSamlUserGroupSync] Old User Group {}", oldUserGroup);
     validate(newUserGroup);
+    List<String> addedUserIdentifiers = new ArrayList<>(
+        Sets.difference(new HashSet<>(newUserGroup.getUsers()), new HashSet<>(oldUserGroup.getUsers())));
     try {
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      UserGroup result = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         log.info("[NGSamlUserGroupSync] Saving new User group {}", newUserGroup);
         UserGroup updatedUserGroup = userGroupRepository.save(newUserGroup);
         log.info("[NGSamlUserGroupSync] Saved New User Group Successfully");
@@ -396,6 +453,11 @@ public class UserGroupServiceImpl implements UserGroupService {
             new UserGroupUpdateEvent(updatedUserGroup.getAccountIdentifier(), toDTO(updatedUserGroup), oldUserGroup));
         return updatedUserGroup;
       }));
+      invite(addedUserIdentifiers,
+          Scope.of(newUserGroup.getAccountIdentifier(), newUserGroup.getOrgIdentifier(),
+              newUserGroup.getProjectIdentifier()),
+          newUserGroup.getIdentifier());
+      return result;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           String.format("Try using different user group identifier, [%s] cannot be used", newUserGroup.getIdentifier()),
