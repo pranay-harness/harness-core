@@ -6,6 +6,7 @@ import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
+import io.harness.dto.FailureInfoDTO;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -91,9 +92,10 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   String startingNodeId;
 
   ExecutionTriggerInfo executionTriggerInfo;
-  ExecutionErrorInfo executionErrorInfo;
+  @Deprecated ExecutionErrorInfo executionErrorInfo;
   @Deprecated ByteString gitSyncBranchContext;
   EntityGitDetails entityGitDetails;
+  FailureInfoDTO failureInfo;
 
   Long startTs;
   Long endTs;
