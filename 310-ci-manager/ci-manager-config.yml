@@ -135,7 +135,7 @@ ciExecutionServiceConfig:
       entrypoint:
         - /bin/drone-s3
     artifactoryUploadConfig:
-      image: plugins/artifactory:1.0.1
+      image: plugins/artifactory:1.0.2
       entrypoint:
         - /bin/plugin
     cacheGCSConfig:

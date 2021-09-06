@@ -32,6 +32,7 @@ public class YamlPipelineUtils {
   static {
     mapper = new ObjectMapper(new YAMLFactory());
     mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());

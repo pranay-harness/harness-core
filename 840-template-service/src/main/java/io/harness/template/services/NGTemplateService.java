@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.template.entity.TemplateEntity;
 
 import java.util.Optional;
@@ -27,5 +28,5 @@ public interface NGTemplateService {
       String projectIdentifier, Boolean getDistinctFromBranches);
 
   TemplateEntity updateStableTemplateVersion(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String templateIdentifier, String versionLabel);
+      String templateIdentifier, String versionLabel, GitEntityFindInfoDTO gitEntityBasicInfo);
 }

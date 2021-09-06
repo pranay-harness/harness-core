@@ -48,5 +48,6 @@ public enum SnippetTag implements YamlSnippetTags {
   datadog,
   sumologic,
   dynatrace,
-  pagerduty
+  pagerduty,
+  argoconnector
 }

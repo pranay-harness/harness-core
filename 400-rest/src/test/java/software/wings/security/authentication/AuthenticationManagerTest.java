@@ -192,7 +192,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(account1.getAuthenticationMechanism()).thenReturn(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     SSORequest SSORequest = new SSORequest();
     SSORequest.setIdpRedirectUrl("TestURL");
-    when(SAML_CLIENT_SERVICE.generateSamlRequest(mockUser)).thenReturn(SSORequest);
+    when(SAML_CLIENT_SERVICE.generateSamlRequestFromAccount(account1, false)).thenReturn(SSORequest);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
     assertThat(loginTypeResponse.getSSORequest()).isNotNull();

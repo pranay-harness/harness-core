@@ -790,13 +790,22 @@ fn check_for_promotion(
                     for_modules: mdls,
                 });
             } else if !dependent_real_module.external() {
+                let msg = if dependent_target_module.index > target_module.index {
+                    format!(
+                        "{} depends on {} that is in module {} but {} does not depend on it",
+                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                    )
+                } else {
+                    format!(
+                        "{} depends on {} that is in module {} but {} cannot depend on it",
+                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                    )
+                };
+
                 results.push(Report {
                     kind: Kind::Error,
                     explanation: Explanation::Empty,
-                    message: format!(
-                        "{} depends on {} that is in module {} but {} does not depend on it",
-                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
-                    ),
+                    message: msg,
                     action: Default::default(),
                     for_class: class.name.clone(),
                     for_team: class.team(module, &target_module.team),
@@ -981,13 +990,22 @@ fn check_for_demotion(
                         for_modules: mdls,
                     });
                 } else {
+                    let msg = if target_module.index > dependee_target_module.index {
+                        format!(
+                            "{} depends on {} that is in module {} but {} does not depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
+                        )
+                    } else {
+                        format!(
+                            "{} depends on {} that is in module {} but {} cannot depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
+                        )
+                    };
+
                     results.push(Report {
                         kind: Kind::Error,
                         explanation: Explanation::Empty,
-                        message: format!(
-                            "{} depends on {} that is in module {} but {} does not depend on it",
-                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
-                        ),
+                        message: msg,
                         action: Default::default(),
                         for_team: class.team(module, &target_module.team),
                         for_class: class.name.clone(),

@@ -47,6 +47,7 @@ import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.core.fullsync.GitFullSyncEntityIterator;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.gitsync.core.webhook.GitSyncEventConsumerService;
+import io.harness.gitsync.migration.GitSyncMigrationProvider;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
@@ -63,6 +64,7 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migrations.InstanceMigrationProvider;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
+import io.harness.ng.cdOverview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -356,6 +358,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(UserMetadataMigrationProvider.class); }
           { add(LicenseManagerMigrationProvider.class); }
           { add(SourceCodeManagerMigrationProvider.class); }
+          { add(GitSyncMigrationProvider.class); }
         })
         .build();
   }
@@ -497,7 +500,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         new HashMap<>();
     List<Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>>> orchestrationEventHandlersList =
         new ArrayList<>(Arrays.asList(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(),
-            DeploymentEventListenerRegistrar.getEngineEventHandlers()));
+            DeploymentEventListenerRegistrar.getEngineEventHandlers(),
+            DeploymentEventGenerator.getEngineEventHandlers()));
     orchestrationEventHandlersList.forEach(
         orchestrationEventHandlers -> mergeEventHandlers(orchestrationEventTypeSetHashMap, orchestrationEventHandlers));
     return orchestrationEventTypeSetHashMap;
