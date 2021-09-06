@@ -5,9 +5,7 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 
 import static java.time.Duration.ofMinutes;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -39,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 @Slf4j
 public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler<SSOSettings> {
   private static final SecureRandom random = new SecureRandom();

@@ -258,4 +258,15 @@ public class ViewsQueryHelper {
   public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery) {
     return buildQueryParams(accountId, false, false, isClusterQuery, false);
   }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery, boolean skipRoundOff) {
+    return ViewQueryParams.builder()
+        .accountId(accountId)
+        .isClusterQuery(isClusterQuery)
+        .skipRoundOff(skipRoundOff)
+        .isUsedByTimeSeriesStats(false)
+        .isTimeTruncGroupByRequired(false)
+        .isTotalCountQuery(false)
+        .build();
+  }
 }

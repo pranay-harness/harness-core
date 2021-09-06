@@ -276,8 +276,8 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       Thread.currentThread().interrupt();
       return null;
     }
-    return convertToEntityStatsData(
-        result, costTrendData, startTimeForTrendData, isClusterPerspective, queryParams.isUsedByTimeSeriesStats());
+    return convertToEntityStatsData(result, costTrendData, startTimeForTrendData, isClusterPerspective,
+        queryParams.isUsedByTimeSeriesStats(), queryParams.isSkipRoundOff());
   }
 
   @Override
@@ -852,9 +852,10 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   }
 
   private QLCEViewGridData convertToEntityStatsData(TableResult result, Map<String, ViewCostData> costTrendData,
-      long startTimeForTrend, boolean isClusterPerspective, boolean isUsedByTimeSeriesStats) {
+      long startTimeForTrend, boolean isClusterPerspective, boolean isUsedByTimeSeriesStats, boolean skipRoundOff) {
     if (isClusterPerspective) {
-      return convertToEntityStatsDataForCluster(result, costTrendData, startTimeForTrend, isUsedByTimeSeriesStats);
+      return convertToEntityStatsDataForCluster(
+          result, costTrendData, startTimeForTrend, isUsedByTimeSeriesStats, skipRoundOff);
     }
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
@@ -874,7 +875,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
             dataPointBuilder.name(name);
             break;
           case FLOAT64:
-            cost = getNumericValue(row, field);
+            cost = getNumericValue(row, field, skipRoundOff);
             dataPointBuilder.cost(cost);
             break;
           default:
@@ -891,7 +892,8 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   }
 
   private QLCEViewGridData convertToEntityStatsDataForCluster(TableResult result,
-      Map<String, ViewCostData> costTrendData, long startTimeForTrend, boolean isUsedByTimeSeriesStats) {
+      Map<String, ViewCostData> costTrendData, long startTimeForTrend, boolean isUsedByTimeSeriesStats,
+      boolean skipRoundOff) {
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
 
@@ -920,16 +922,16 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
             if (builderField.getType().equals(String.class)) {
               builderField.set(clusterDataBuilder, fetchStringValue(row, field));
             } else {
-              builderField.set(clusterDataBuilder, getNumericValue(row, field));
+              builderField.set(clusterDataBuilder, getNumericValue(row, field, skipRoundOff));
             }
           } else {
             switch (field.getName().toLowerCase()) {
               case BILLING_AMOUNT:
-                cost = getNumericValue(row, field);
+                cost = getNumericValue(row, field, skipRoundOff);
                 clusterDataBuilder.totalCost(cost);
                 break;
               case ACTUAL_IDLE_COST:
-                clusterDataBuilder.idleCost(getNumericValue(row, field));
+                clusterDataBuilder.idleCost(getNumericValue(row, field, skipRoundOff));
                 break;
               case PRICING_SOURCE:
                 pricingSource = fetchStringValue(row, field);
@@ -1019,9 +1021,14 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   }
 
   private double getNumericValue(FieldValueList row, Field field) {
+    return getNumericValue(row, field, false);
+  }
+
+  private double getNumericValue(FieldValueList row, Field field, boolean skipRoundOff) {
     FieldValue value = row.get(field.getName());
     if (!value.isNull()) {
-      return Math.round(value.getNumericValue().doubleValue() * 100D) / 100D;
+      return skipRoundOff ? value.getNumericValue().doubleValue()
+                          : Math.round(value.getNumericValue().doubleValue() * 100D) / 100D;
     }
     return 0;
   }
@@ -1116,10 +1123,11 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       Thread.currentThread().interrupt();
       return null;
     }
-    return convertToEntityStatsCostTrendData(result, isClusterTableQuery);
+    return convertToEntityStatsCostTrendData(result, isClusterTableQuery, queryParams.isSkipRoundOff());
   }
 
-  private Map<String, ViewCostData> convertToEntityStatsCostTrendData(TableResult result, boolean isClusterTableQuery) {
+  private Map<String, ViewCostData> convertToEntityStatsCostTrendData(
+      TableResult result, boolean isClusterTableQuery, boolean skipRoundOff) {
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
     Map<String, ViewCostData> costTrendData = new HashMap<>();
@@ -1135,7 +1143,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
             break;
           case FLOAT64:
             if (field.getName().equalsIgnoreCase(BILLING_AMOUNT) || field.getName().equalsIgnoreCase(COST)) {
-              viewCostDataBuilder.cost(getNumericValue(row, field));
+              viewCostDataBuilder.cost(getNumericValue(row, field, skipRoundOff));
             }
             break;
           default:

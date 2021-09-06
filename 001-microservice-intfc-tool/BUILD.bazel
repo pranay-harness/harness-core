@@ -19,6 +19,7 @@ java_binary(
         "//270-delegate-service-app:module",
         "//270-verification:module",
         "//280-batch-processing:module",
+        "//290-dashboard-service:module",
         "//300-cv-nextgen:module",
         "//310-ci-manager:module",
         "//320-ci-execution:module",
