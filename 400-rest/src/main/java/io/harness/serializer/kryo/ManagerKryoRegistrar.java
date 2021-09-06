@@ -642,7 +642,6 @@ import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
 import software.wings.service.impl.aws.model.AwsS3Request;
 import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
-import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
@@ -1511,7 +1510,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
 
     kryo.register(AwsVPC.class, 7319);
-    kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);
     kryo.register(SkipStateExecutionData.class, 7322);
     kryo.register(KustomizeConfig.class, 7323);
