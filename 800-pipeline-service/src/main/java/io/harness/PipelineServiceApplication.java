@@ -8,7 +8,6 @@ import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATIO
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static java.util.Collections.singletonList;
 
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
@@ -290,7 +289,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
-    registerWaitEnginePublishers(appConfig.isUseRedisForOrchestrationNotify(), injector);
+    registerWaitEnginePublishers(injector);
     registerScheduledJobs(injector, appConfig);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
@@ -519,17 +518,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
-  private void registerWaitEnginePublishers(boolean shouldUseRedis, Injector injector) {
+  private void registerWaitEnginePublishers(Injector injector) {
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    if (shouldUseRedis) {
-      notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
-    } else {
-      notifyQueuePublisherRegister.register(
-          PMS_ORCHESTRATION, payload -> publisher.send(singletonList(PMS_ORCHESTRATION), payload));
-    }
+    notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
     notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
   }
 
