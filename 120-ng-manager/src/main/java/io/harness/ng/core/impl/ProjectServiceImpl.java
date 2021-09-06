@@ -173,7 +173,7 @@ public class ProjectServiceImpl implements ProjectService {
     try {
       createDefaultResourceGroup(scope);
       assignProjectAdmin(scope, principalId, principalType);
-      //      busyPollUntilProjectSetupCompletes(scope, principalId);
+      busyPollUntilProjectSetupCompletes(scope, principalId);
     } catch (Exception e) {
       log.error("Failed to complete post project creation steps for [{}]", ScopeUtils.toString(scope));
     }
