@@ -54,15 +54,18 @@ public class RedissonBroadcaster extends AbstractBroadcasterProxy {
   @Inject
   public RedissonBroadcaster(@Named("atmosphere") RedisConfig redisAtmosphereConfig) {
     this.redisAtmosphereConfig = redisAtmosphereConfig;
+    log.info("redisAtmosphereConfig: {}", redisAtmosphereConfig, new Exception());
   }
 
   @Override
   public Broadcaster initialize(String id, AtmosphereConfig config) {
+    log.info("redisAtmosphereConfig: {}", config, new Exception());
     return initialize(id, URI.create("http://localhost:6379"), config);
   }
 
   @Override
   public Broadcaster initialize(String id, URI uri, AtmosphereConfig config) {
+    log.info("redisAtmosphereConfig: {}", config, new Exception());
     super.initialize(id, URI.create("http://localhost:6379"), config);
     setUp();
     return this;

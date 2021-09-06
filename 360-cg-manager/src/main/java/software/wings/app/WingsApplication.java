@@ -401,7 +401,6 @@ public class WingsApplication extends Application<MainConfiguration> {
   public void run(final MainConfiguration configuration, Environment environment) throws Exception {
     log.info("Starting app ...");
     log.info("Entering startup maintenance mode");
-    log.info("redis config is {}", configuration.getRedisAtmosphereConfig());
     MaintenanceController.forceMaintenance(true);
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
