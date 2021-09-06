@@ -669,12 +669,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode sourceRepoFolder = new FolderNode(accountId, SOURCE_REPO_PROVIDERS_FOLDER, SettingAttribute.class,
         directoryPath.add(YamlConstants.SOURCE_REPO_PROVIDERS_FOLDER));
 
-    doSourceRepoProviderType(accountId, sourceRepoFolder, SettingVariableTypes.GIT, directoryPath.clone());
+    doProviderType(accountId, sourceRepoFolder, SettingVariableTypes.GIT, directoryPath.clone());
     sourceRepoFolder.getChildren().sort(new DirectoryComparator());
     return sourceRepoFolder;
   }
 
-  private void doSourceRepoProviderType(
+  private void doProviderType(
       String accountId, FolderNode parentFolder, SettingVariableTypes type, DirectoryPath directoryPath) {
     List<SettingAttribute> settingAttributes;
 
@@ -1859,12 +1859,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode collaborationProvidersFolder = new FolderNode(accountId, COLLABORATION_PROVIDERS_FOLDER,
         SettingAttribute.class, directoryPath.add(YamlConstants.COLLABORATION_PROVIDERS_FOLDER));
 
-    doSourceRepoProviderType(accountId, collaborationProvidersFolder, SettingVariableTypes.SMTP, directoryPath.clone());
-    doSourceRepoProviderType(
-        accountId, collaborationProvidersFolder, SettingVariableTypes.SLACK, directoryPath.clone());
-    doSourceRepoProviderType(accountId, collaborationProvidersFolder, SettingVariableTypes.JIRA, directoryPath.clone());
-    doSourceRepoProviderType(
-        accountId, collaborationProvidersFolder, SettingVariableTypes.SERVICENOW, directoryPath.clone());
+    doProviderType(accountId, collaborationProvidersFolder, SettingVariableTypes.SMTP, directoryPath.clone());
+    doProviderType(accountId, collaborationProvidersFolder, SettingVariableTypes.SLACK, directoryPath.clone());
+    doProviderType(accountId, collaborationProvidersFolder, SettingVariableTypes.JIRA, directoryPath.clone());
+    doProviderType(accountId, collaborationProvidersFolder, SettingVariableTypes.SERVICENOW, directoryPath.clone());
     sort(collaborationProvidersFolder.getChildren(), new DirectoryComparator());
     return collaborationProvidersFolder;
   }
