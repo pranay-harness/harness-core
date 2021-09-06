@@ -8,6 +8,10 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        "@maven//:io_debezium_debezium_connector_mongodb",
+        "@maven//:io_debezium_debezium_embedded",
+    ],
     deps = [
         "//:lombok",
         "//947-access-control-core:module",
