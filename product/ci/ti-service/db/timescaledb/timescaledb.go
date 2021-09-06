@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
@@ -29,7 +30,6 @@ var (
 // TimeScaleDb is a wrapper on top of a timescale DB connection.
 type TimeScaleDb struct {
 	Conn           *db.DB
-	Log            *zap.SugaredLogger
 	EvalTable      string // table for test reports
 	CoverageTable  string // table for file coverage
 	SelectionTable string // table for test selection stats for test intelligence
@@ -59,7 +59,7 @@ func New(username, password, host, port, dbName,
 	if err != nil {
 		return nil, err
 	}
-	return &TimeScaleDb{Conn: db, Log: log, EvalTable: evalTable, CoverageTable: coverageTable, SelectionTable: selectionTable}, nil
+	return &TimeScaleDb{Conn: db, EvalTable: evalTable, CoverageTable: coverageTable, SelectionTable: selectionTable}, nil
 }
 
 func constructPsqlInsertStmt(low, high int) string {
@@ -108,7 +108,7 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, 
 					VALUES %s`, tdb.EvalTable, strings.Join(valueStrings, ","))
 			_, err := tdb.Conn.Exec(stmt, valueArgs...)
 			if err != nil {
-				tdb.Log.Errorw("could not write test data to database", zap.Error(err))
+				logger.FromContext(ctx).Errorw("could not write test data to database", zap.Error(err))
 				return err
 			}
 			// Reset all the values
@@ -127,7 +127,7 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, 
 				VALUES %s`, tdb.EvalTable, strings.Join(valueStrings, ","))
 		_, err := tdb.Conn.Exec(stmt, valueArgs...)
 		if err != nil {
-			tdb.Log.Errorw("could not write test data to database", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not write test data to database", zap.Error(err))
 			return err
 		}
 	}
@@ -143,7 +143,7 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId
 
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId, report)
 	if err != nil {
-		tdb.Log.Errorw("could not query database for test summary", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not query database for test summary", zap.Error(err))
 		return types.SummaryResponse{}, err
 	}
 	total := 0
@@ -156,7 +156,7 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId
 		err = rows.Scan(&zdur, &status, &testName)
 		if err != nil {
 			// Log error and return
-			tdb.Log.Errorw("could not read summary response from DB", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not read summary response from DB", zap.Error(err))
 			return types.SummaryResponse{}, err
 		}
 		total++
@@ -181,7 +181,7 @@ func (tdb *TimeScaleDb) GetReportsInfo(ctx context.Context, accountId, orgId, pr
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId)
 	defer rows.Close()
 	if err != nil {
-		tdb.Log.Errorw("could not query database for test summary", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not query database for test summary", zap.Error(err))
 		return res, err
 	}
 
@@ -191,7 +191,7 @@ func (tdb *TimeScaleDb) GetReportsInfo(ctx context.Context, accountId, orgId, pr
 		err = rows.Scan(&stepId, &stageId)
 		if err != nil {
 			// Log error and return
-			tdb.Log.Errorw("could not read step/stage response from DB", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not read step/stage response from DB", zap.Error(err))
 			return res, err
 		}
 		info := types.StepInfo{Stage: stageId.ValueOrZero(), Step: stepId.ValueOrZero()}
@@ -218,7 +218,7 @@ func (tdb *TimeScaleDb) GetIntelligenceInfo(ctx context.Context, accountId, orgI
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId)
 	defer rows.Close()
 	if err != nil {
-		tdb.Log.Errorw("could not query database for test summary", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not query database for test summary", zap.Error(err))
 		return res, err
 	}
 
@@ -228,7 +228,7 @@ func (tdb *TimeScaleDb) GetIntelligenceInfo(ctx context.Context, accountId, orgI
 		err = rows.Scan(&stepId, &stageId)
 		if err != nil {
 			// Log error and return
-			tdb.Log.Errorw("could not read step/stage response from DB", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not read step/stage response from DB", zap.Error(err))
 			return res, err
 		}
 		info := types.StepInfo{Stage: stageId.ValueOrZero(), Step: stepId.ValueOrZero()}
@@ -299,7 +299,7 @@ func (tdb *TimeScaleDb) GetTestCases(
 
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId, report, suiteName, limit, offset)
 	if err != nil {
-		tdb.Log.Errorw("could not query database for test cases", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not query database for test cases", zap.Error(err))
 		return types.TestCases{}, err
 	}
 	tests := []types.TestCase{}
@@ -312,7 +312,7 @@ func (tdb *TimeScaleDb) GetTestCases(
 		err = rows.Scan(&t.Name, &zsuite, &zclass, &zdur, &t.Result.Status, &zmessage, &zdesc, &ztype, &zout, &zerr, &total)
 		if err != nil {
 			// Log error and return
-			tdb.Log.Errorw("could not read test case response from DB", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not read test case response from DB", zap.Error(err))
 			return types.TestCases{}, err
 		}
 		t.SuiteName = zsuite.ValueOrZero()
@@ -395,7 +395,7 @@ func (tdb *TimeScaleDb) GetTestSuites(
 		LIMIT $9 OFFSET $10;`, tdb.EvalTable, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId, report, limit, offset)
 	if err != nil {
-		tdb.Log.Errorw("could not query database for test suites", "error_msg", err)
+		logger.FromContext(ctx).Errorw("could not query database for test suites", "error_msg", err)
 		return types.TestSuites{}, err
 	}
 	testSuites := []types.TestSuite{}
@@ -406,7 +406,7 @@ func (tdb *TimeScaleDb) GetTestSuites(
 		err = rows.Scan(&t.Name, &zdur, &t.TotalTests, &t.SkippedTests, &t.PassedTests, &t.FailedTests, &t.FailPct, &total)
 		if err != nil {
 			// Log the error and return
-			tdb.Log.Errorw("could not read suite response from DB", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not read suite response from DB", zap.Error(err))
 			return types.TestSuites{}, err
 		}
 		t.DurationMs = zdur.ValueOrZero()
@@ -464,7 +464,7 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 			var zdur zero.Float
 			err = rows.Scan(&zdur)
 			if err != nil {
-				tdb.Log.Errorw("could not get average test time", zap.Error(err))
+				logger.FromContext(ctx).Errorw("could not get average test time", zap.Error(err))
 				break
 			}
 			if zdur.ValueOrZero() != 0 {
@@ -501,7 +501,7 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 
 	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
 	if err != nil {
-		tdb.Log.Errorw("could not write test data to database", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not write test data to database", zap.Error(err))
 		return err
 	}
 	return nil
@@ -521,13 +521,13 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
 	defer rows.Close()
 	if err != nil {
-		tdb.Log.Errorw("could not query database for selection overview", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not query database for selection overview", zap.Error(err))
 		return res, err
 	}
 	for rows.Next() {
 		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd, &ztt, &zts, &repo, &source, &target)
 		if err != nil {
-			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not read overview response from db", zap.Error(err))
 			return res, err
 		}
 		res.Total = int(ztotal.ValueOrZero())
@@ -568,7 +568,7 @@ func (tdb *TimeScaleDb) WriteDiffFiles(ctx context.Context, accountID, orgId, pr
 					VALUES %s`, tdb.CoverageTable, strings.Join(valueStrings, ","))
 	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
 	if err != nil {
-		tdb.Log.Errorw("could not write file information to database", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not write file information to database", zap.Error(err))
 		return err
 	}
 	return nil
@@ -590,13 +590,13 @@ func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, accountID, orgId, proj
 	defer rows.Close()
 
 	if err != nil {
-		tdb.Log.Errorw("could not query database for changed files", zap.Error(err))
+		logger.FromContext(ctx).Errorw("could not query database for changed files", zap.Error(err))
 		return res, err
 	}
 	for rows.Next() {
 		err = rows.Scan(&sha, &path, &status)
 		if err != nil {
-			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
+			logger.FromContext(ctx).Errorw("could not read overview response from db", zap.Error(err))
 			return res, err
 		}
 		if path.ValueOrZero() != "" {
