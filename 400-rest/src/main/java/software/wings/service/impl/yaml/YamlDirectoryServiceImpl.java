@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessModule._951_CG_GIT_SYNC;
-import static io.harness.annotations.dev.HarnessTeam.*;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -69,7 +69,6 @@ import static java.util.Collections.sort;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
