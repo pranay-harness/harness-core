@@ -36,6 +36,7 @@ public class ConnectorFilterPropertiesDTO extends FilterPropertiesDTO {
   List<String> connectorIdentifiers;
   String description;
   List<ConnectorType> types;
+  List<ConnectorType> excludeTypes;
   List<ConnectorCategory> categories;
   List<ConnectivityStatus> connectivityStatuses;
   Boolean inheritingCredentialsFromDelegate;

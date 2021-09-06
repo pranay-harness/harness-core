@@ -11,7 +11,7 @@ import static io.harness.encryption.Scope.PROJECT;
 import static io.harness.filter.FilterType.CONNECTOR;
 import static io.harness.springdata.SpringDataMongoUtils.populateAllFilter;
 import static io.harness.springdata.SpringDataMongoUtils.populateInFilter;
-
+import static io.harness.springdata.SpringDataMongoUtils.populateNotInFilter;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -136,6 +136,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     }
     populateInFilter(criteria, ConnectorKeys.categories, connectorFilter.getCategories());
     populateInFilter(criteria, ConnectorKeys.type, connectorFilter.getTypes());
+    populateNotInFilter(criteria, ConnectorKeys.type, connectorFilter.getExcludeTypes());
     populateNameDesciptionAndSearchTermFilter(criteria, connectorFilter.getConnectorNames(),
         connectorFilter.getDescription(), searchTerm, connectorFilter.getInheritingCredentialsFromDelegate());
     populateInFilter(criteria, ConnectorKeys.identifier, connectorFilter.getConnectorIdentifiers());

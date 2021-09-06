@@ -14,7 +14,7 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredenti
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.SecretRefData.SECRET_DOT_DELIMINITER;
-
+import static io.harness.rule.OwnerRule.YOGESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -296,6 +296,19 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     assertThat(connectorTypes.containsAll(Arrays.asList(KUBERNETES_CLUSTER, DOCKER))).isTrue();
   }
 
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testListWithExcludeTypes() {
+    createConnectorsWithNames(Arrays.asList("docker connector test", "docker dev connector"));
+    createK8sConnector();
+    ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
+        ConnectorFilterPropertiesDTO.builder().excludeTypes(Arrays.asList(DOCKER)).build();
+    Page<ConnectorResponseDTO> connectorDTOS = connectorService.list(0, 100, accountIdentifier,
+        connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false, false);
+    assertThat(connectorDTOS).isNotNull();
+  }
+
   private void createK8sConnector() {
     ConnectorDTO connectorDTO =
         ConnectorDTO.builder()
@@ -457,7 +470,6 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   }
 
   private void createK8sConnectorWithInheritFromDelegate() {
-    String delegateName = "delegateName";
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
             .credential(
