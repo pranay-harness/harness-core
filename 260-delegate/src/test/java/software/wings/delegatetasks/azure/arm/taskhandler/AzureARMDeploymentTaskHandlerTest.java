@@ -16,6 +16,9 @@ import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentManagementGroupContext;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentResourceGroupContext;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentSubscriptionContext;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
@@ -27,9 +30,6 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.azure.arm.deployment.AzureARMDeploymentService;
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentManagementGroupContext;
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentResourceGroupContext;
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentSubscriptionContext;
 import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentTenantContext;
 
 import org.junit.Before;

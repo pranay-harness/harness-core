@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure.arm.deployment.context;
+package io.harness.delegate.azure.arm.deployment.context;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureDeploymentMode;
-import io.harness.delegate.azure.arm.deployment.context.DeploymentContext;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 
 import javax.validation.constraints.NotNull;
