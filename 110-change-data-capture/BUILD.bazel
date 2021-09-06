@@ -16,6 +16,7 @@ shared_dependencies = [
     "//960-persistence:module",
     "//970-grpc:module",
     "//980-commons:module",
+    "@maven//:io_dropwizard_dropwizard_configuration",
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_apis_google_api_services_bigquery",
     "@maven//:com_google_auth_google_auth_library_oauth2_http",
