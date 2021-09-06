@@ -2,7 +2,9 @@ package software.wings.beans.marketplace.gcp;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -22,6 +24,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "gcpMarketplaceCustomers", noClassnameStored = true)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public final class GCPMarketplaceCustomer implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
 
