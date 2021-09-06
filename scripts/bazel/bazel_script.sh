@@ -86,6 +86,7 @@ BAZEL_MODULES="\
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
   //865-cg-events:module \
+  //867-polling-contracts:module \
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //874-orchestration-delay:module \
@@ -363,6 +364,7 @@ build_bazel_module 835-notification-senders
 build_bazel_module 865-cg-events
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
+build_bazel_module 867-polling-contracts
 build_bazel_module 870-cg-orchestration
 build_bazel_module 870-orchestration
 build_bazel_module 874-orchestration-delay

@@ -11,7 +11,6 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
@@ -84,16 +83,9 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
   @Override
   public PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
-      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, DataSourceType dataSourceType,
+      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, List<String> healthSourceIdentifiers,
       PageParams pageParams) {
-    List<CVConfig> configs =
-        cvConfigService.getConfigsOfProductionEnvironments(serviceEnvironmentParams.getAccountIdentifier(),
-            serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
-            serviceEnvironmentParams.getEnvironmentIdentifier(), serviceEnvironmentParams.getServiceIdentifier(), null);
-    if (dataSourceType != null) {
-      configs =
-          configs.stream().filter(cvConfig -> cvConfig.getType().equals(dataSourceType)).collect(Collectors.toList());
-    }
+    List<CVConfig> configs = cvConfigService.list(serviceEnvironmentParams, healthSourceIdentifiers);
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
     List<LogAnalysisTag> tags = isEmpty(clusterTypes) ? Arrays.asList(LogAnalysisTag.values()) : clusterTypes;
     return getLogs(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
@@ -248,13 +240,15 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
   private List<LogData> mergeClusterWithResults(
       List<AnalysisResult> analysisResults, List<LogAnalysisCluster> analysisClusters, Instant start, Instant end) {
-    Map<Long, LogAnalysisTag> labelTagMap = new HashMap<>();
+    Map<Long, AnalysisResult> labelTagMap = new HashMap<>();
+
     analysisResults.forEach(result -> {
       Long label = result.getLabel();
-      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label))) {
-        labelTagMap.put(label, result.getTag());
+      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label).getTag())) {
+        labelTagMap.put(label, result);
       }
     });
+
     List<LogData> logDataList = new ArrayList<>();
 
     analysisClusters.forEach(cluster -> {
@@ -274,12 +268,15 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       trendMap.forEach(
           (timestamp, count) -> frequencies.add(FrequencyDTO.builder().timestamp(timestamp).count(count).build()));
 
+      AnalysisResult analysisResult = labelTagMap.get(cluster.getLabel());
       LogData data = LogData.builder()
                          .text(cluster.getText())
                          .label(cluster.getLabel())
                          .count(trendMap.values().stream().collect(Collectors.summingInt(Integer::intValue)))
                          .trend(frequencies)
-                         .tag(labelTagMap.get(cluster.getLabel()))
+                         .tag(analysisResult.getTag())
+                         .riskScore(analysisResult.getRiskScore())
+                         .riskStatus(analysisResult.getRisk())
                          .build();
       logDataList.add(data);
     });

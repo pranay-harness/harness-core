@@ -58,20 +58,6 @@ public class AmbianceUtilsTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void cloneForChild() {
-    Ambiance ambiance = buildAmbiance();
-    assertThat(ambiance.getLevelsList()).hasSize(4);
-
-    Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(ambiance);
-    assertThat(clonedAmbiance).isNotNull();
-    assertThat(clonedAmbiance.getLevelsList()).hasSize(4);
-    assertThat(clonedAmbiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
-    assertThat(clonedAmbiance.getPlanId()).isEqualTo(PLAN_ID);
-  }
-
-  @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testCloneForChildAndLevel() {

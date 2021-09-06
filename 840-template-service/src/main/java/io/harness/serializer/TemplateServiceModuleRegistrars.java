@@ -23,6 +23,7 @@ public class TemplateServiceModuleRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
+          .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.kryoRegistrars)
           .addAll(FiltersRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
@@ -30,6 +31,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(GitSyncSdkRegistrar.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
+          .addAll(SMCoreRegistrars.kryoRegistrars)
           .add(NGTemplateKryoRegistrar.class)
           .build();
 
@@ -38,12 +40,14 @@ public class TemplateServiceModuleRegistrars {
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(FiltersRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .addAll(FiltersRegistrars.morphiaRegistrars)
           .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(SMCoreRegistrars.morphiaRegistrars)
           .add(NGTemplateMorphiaRegistrar.class)
           .build();
 

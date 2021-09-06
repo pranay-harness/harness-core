@@ -101,6 +101,7 @@ public class StateExecutionInstance implements PersistentEntity, AccountDataRete
   private boolean continued;
   private boolean waitingForManualIntervention;
   private ExecutionInterruptType actionAfterManualInterventionTimeout;
+  private boolean isRollbackProvisionerAfterPhases;
 
   @Deprecated
   /**

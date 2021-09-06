@@ -172,7 +172,8 @@ import io.harness.delegate.beans.pcf.CfInternalInstanceElement;
 import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.delegate.beans.pcf.CfServiceData;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
-import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.ArtifactPollingDelegateResponse;
+import io.harness.delegate.beans.polling.ManifestPollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -886,6 +887,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sCanaryDeleteRequest.class, 543429);
     kryo.register(K8sRollingDeployRollbackResponse.class, 543430);
     kryo.register(PollingDelegateResponse.class, 543431);
-    kryo.register(ManifestPollingResponseInfc.class, 543432);
+    kryo.register(ManifestPollingDelegateResponse.class, 543432);
+    kryo.register(ArtifactPollingDelegateResponse.class, 543433);
   }
 }

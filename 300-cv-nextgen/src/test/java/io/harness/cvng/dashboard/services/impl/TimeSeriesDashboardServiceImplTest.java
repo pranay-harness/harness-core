@@ -20,7 +20,11 @@ import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -50,6 +54,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -65,6 +70,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
   private String serviceIdentifier;
   private String envIdentifier;
   private String accountId;
+  private ServiceEnvironmentParams serviceEnvironmentParams;
 
   @Mock private CVConfigService cvConfigService;
   @Mock private TimeSeriesRecordService timeSeriesRecordService;
@@ -78,6 +84,13 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
     accountId = generateUuid();
+    serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                   .accountIdentifier(accountId)
+                                   .orgIdentifier(orgIdentifier)
+                                   .projectIdentifier(projectIdentifier)
+                                   .serviceIdentifier(serviceIdentifier)
+                                   .environmentIdentifier(envIdentifier)
+                                   .build();
 
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(timeSeriesDashboardService, "cvConfigService", cvConfigService, true);
@@ -404,6 +417,43 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
       timeSeriesMetricDataDTO.getMetricDataList().forEach(
           metricData -> { assertThat(metricData.getRisk()).isNotEqualTo(Risk.LOW); });
     });
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetTimeSeriesMetricData_filterByHealthSourceIdentifiers() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(start).endTime(end).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+    String cvConfigId = generateUuid();
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(getTimeSeriesRecords(cvConfigId, true));
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setUuid(cvConfigId);
+    List<String> healthSourceIdentifiers = Arrays.asList(cvConfig.getIdentifier());
+    when(cvConfigService.list(serviceEnvironmentParams, healthSourceIdentifiers)).thenReturn(Arrays.asList(cvConfig));
+    when(cvConfigService.getDataSourceTypeForCVConfigs(serviceEnvironmentParams, Arrays.asList(cvConfigId)))
+        .thenReturn(Maps.of(cvConfigId, DataSourceType.APP_DYNAMICS));
+
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getTimeSeriesMetricData(
+        serviceEnvironmentParams, timeRangeParams, true, healthSourceIdentifiers, null, pageParams);
+
+    verify(cvConfigService).list(serviceEnvironmentParams, healthSourceIdentifiers);
+    verify(cvConfigService).getDataSourceTypeForCVConfigs(serviceEnvironmentParams, Arrays.asList(cvConfigId));
+    assertThat(response).isNotNull();
+    assertThat(response.getContent()).isNotEmpty();
+    assertThat(response.getContent().size()).isEqualTo(10);
+
+    response.getContent().forEach(timeSeriesMetricDataDTO -> {
+      assertThat(timeSeriesMetricDataDTO.getDataSourceType()).isEqualTo(DataSourceType.APP_DYNAMICS);
+    });
+
+    response = timeSeriesDashboardService.getTimeSeriesMetricData(
+        serviceEnvironmentParams, timeRangeParams, true, Arrays.asList("some-identifier"), null, pageParams);
+    assertThat(response).isNotNull();
+    assertThat(response.getContent()).isEmpty();
   }
 
   @Test

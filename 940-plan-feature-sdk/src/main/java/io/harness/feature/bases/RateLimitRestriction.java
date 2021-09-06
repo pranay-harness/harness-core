@@ -4,26 +4,19 @@ import io.harness.feature.TimeUnit;
 import io.harness.feature.constants.RestrictionType;
 import io.harness.feature.interfaces.RateLimitInterface;
 
-import java.time.Instant;
+import lombok.Getter;
 
+@Getter
 public class RateLimitRestriction extends Restriction {
   long limit;
   TimeUnit timeUnit;
-  RateLimitInterface rateLimit;
+  RateLimitInterface rateLimitInterface;
 
   public RateLimitRestriction(
-      RestrictionType restrictionType, long limit, TimeUnit timeUnit, RateLimitInterface rateLimit) {
+      RestrictionType restrictionType, long limit, TimeUnit timeUnit, RateLimitInterface rateLimitInterface) {
     super(restrictionType);
     this.limit = limit;
     this.timeUnit = timeUnit;
-    this.rateLimit = rateLimit;
-  }
-
-  @Override
-  public boolean check(String accountIdentifier) {
-    Instant current = Instant.now();
-    long startTime = current.minus(timeUnit.getNumberOfUnits(), timeUnit.getUnit()).toEpochMilli();
-    long endTime = current.toEpochMilli();
-    return rateLimit.getCurrentValue(accountIdentifier, startTime, endTime) < limit;
+    this.rateLimitInterface = rateLimitInterface;
   }
 }

@@ -28,10 +28,14 @@ import io.harness.resourcegroup.framework.service.ResourceTypeService;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupEventHandler;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupServiceImpl;
 import io.harness.resourcegroup.framework.service.impl.ResourceTypeServiceImpl;
+import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.service.ServiceResourceClientModule;
 import io.harness.serviceaccount.ServiceAccountClientModule;
+import io.harness.usergroups.UserGroupClient;
+import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -85,6 +89,8 @@ public class ResourceGroupModule extends AbstractModule {
     requireBinding(SecretNGManagerClient.class);
     requireBinding(ConnectorResourceClient.class);
     requireBinding(PipelineServiceClient.class);
+    requireBinding(UserGroupClient.class);
+    requireBinding(ResourceGroupClient.class);
     requireBinding(AccountClient.class);
     requireBinding(DelegateServiceResourceClient.class);
   }
@@ -99,6 +105,10 @@ public class ResourceGroupModule extends AbstractModule {
     install(
         new ServiceAccountClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new OrganizationClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(new UserGroupClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(new ResourceGroupClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getResourceGroupService().getBaseUrl()).build(),
+        resourceClients.getResourceGroupService().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
     install(
         new SecretNGManagerClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new ConnectorResourceClientModule(

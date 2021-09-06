@@ -20,7 +20,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import lombok.Builder;
-import lombok.Singular;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -65,8 +65,8 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   }
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
-  @NotEmpty String planExecutionId;
-  @Singular List<Level> levels;
+  @NonNull String planExecutionId;
+  String stageExecutionId;
   Level producedBy;
   @NotEmpty @Trimmed String name;
   String levelRuntimeIdIdx;
@@ -74,6 +74,7 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   PmsOutcome outcomeValue;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
+  String groupName;
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   public String getOutcomeJsonValue() {

@@ -29,6 +29,7 @@ import io.harness.exception.ProcessingException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
+import io.harness.ng.core.dto.GatewayAccountRequestDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.events.AddCollaboratorEvent;
 import io.harness.ng.core.events.RemoveCollaboratorEvent;
@@ -623,5 +624,18 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public boolean isUserPasswordSet(String accountIdentifier, String email) {
     return RestClientUtils.getResponse(userClient.isUserPasswordSet(accountIdentifier, email));
+  }
+
+  @Override
+  public List<String> listUserAccountIds(String userId) {
+    Optional<UserInfo> userInfoOptional = getUserById(userId);
+    if (userInfoOptional.isPresent()) {
+      return userInfoOptional.get()
+          .getAccounts()
+          .stream()
+          .map(GatewayAccountRequestDTO::getUuid)
+          .collect(Collectors.toList());
+    }
+    return Collections.emptyList();
   }
 }

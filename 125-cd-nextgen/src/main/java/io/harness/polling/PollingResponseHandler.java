@@ -13,7 +13,7 @@ import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.polling.ManifestPollingResponseInfc;
+import io.harness.delegate.beans.polling.ManifestPollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingDelegateResponse;
 import io.harness.delegate.beans.polling.PollingResponseInfc;
 import io.harness.exception.InvalidRequestException;
@@ -128,7 +128,7 @@ public class PollingResponseHandler {
   }
 
   public void handleManifestResponse(PollingDocument pollingDocument, PollingResponseInfc pollingResponseInfc) {
-    ManifestPollingResponseInfc response = (ManifestPollingResponseInfc) pollingResponseInfc;
+    ManifestPollingDelegateResponse response = (ManifestPollingDelegateResponse) pollingResponseInfc;
     ManifestPolledResponse savedResponse = (ManifestPolledResponse) pollingDocument.getPolledResponse();
     String accountId = pollingDocument.getAccountId();
     String pollDocId = pollingDocument.getUuid();

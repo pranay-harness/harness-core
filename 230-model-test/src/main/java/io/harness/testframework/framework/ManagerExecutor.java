@@ -7,6 +7,7 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 import static io.harness.testframework.framework.utils.ExecutorUtils.getJar;
 
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
+import static io.restassured.config.SSLConfig.sslConfig;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
@@ -53,9 +54,9 @@ public class ManagerExecutor {
     if (failedAlready) {
       return;
     }
-    String directoryPath = Project.rootDirectory(ManagerExecutor.class);
+    String directoryPath = "/tmp/locks/";
+    FileIo.createDirectoryIfDoesNotExist(directoryPath);
     final File lockfile = new File(directoryPath, "manager");
-
     if (FileIo.acquireLock(lockfile, waiting)) {
       try {
         if (isHealthy()) {
@@ -110,7 +111,6 @@ public class ManagerExecutor {
     ProcessExecutor processExecutor = new ProcessExecutor();
     processExecutor.directory(directory);
     processExecutor.command(command);
-
     processExecutor.redirectOutput(System.out);
     processExecutor.redirectError(System.err);
     return processExecutor;
@@ -120,10 +120,11 @@ public class ManagerExecutor {
 
   private static boolean isHealthy() {
     try {
-      RestAssuredConfig config =
-          RestAssured.config().httpClient(httpClientConfig()
-                                              .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
-                                              .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000));
+      RestAssuredConfig config = RestAssured.config()
+                                     .httpClient(httpClientConfig()
+                                                     .setParam(CoreConnectionPNames.CONNECTION_TIMEOUT, 5000)
+                                                     .setParam(CoreConnectionPNames.SO_TIMEOUT, 5000))
+                                     .sslConfig(sslConfig().relaxedHTTPSValidation());
 
       Setup.portal().config(config).when().get("/health").then().statusCode(HttpStatus.SC_OK);
     } catch (Exception exception) {

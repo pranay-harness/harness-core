@@ -37,6 +37,7 @@ public class ProgressUpdateService implements Runnable {
         if (progressUpdate.getExpireProcessing() > now) {
           continue;
         }
+        log.info("Starting to process progress response");
 
         ProgressData progressData = (ProgressData) kryoSerializer.asInflatedObject(progressUpdate.getProgressData());
 
@@ -46,6 +47,7 @@ public class ProgressUpdateService implements Runnable {
           injector.injectMembers(progressCallback);
           progressCallback.notify(progressUpdate.getCorrelationId(), progressData);
         }
+        log.info("Processed progress response");
         persistenceWrapper.delete(progressUpdate);
       } catch (Exception e) {
         log.error("Exception occurred while running progress service", e);

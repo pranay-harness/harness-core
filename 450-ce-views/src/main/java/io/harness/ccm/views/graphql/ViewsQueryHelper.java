@@ -4,6 +4,7 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewQueryParams;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -241,5 +242,20 @@ public class ViewsQueryHelper {
   public List<QLCEViewAggregation> getPerspectiveTotalCostAggregation() {
     return Collections.singletonList(
         QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isTimeTruncGroupByRequired,
+      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery) {
+    return ViewQueryParams.builder()
+        .accountId(accountId)
+        .isClusterQuery(isClusterQuery)
+        .isUsedByTimeSeriesStats(isUsedByTimeSeriesStats)
+        .isTimeTruncGroupByRequired(isTimeTruncGroupByRequired)
+        .isTotalCountQuery(isTotalCountQuery)
+        .build();
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery) {
+    return buildQueryParams(accountId, false, false, isClusterQuery, false);
   }
 }

@@ -52,7 +52,8 @@ public class InstallUtils {
 
   private static final String helmBaseDir = "./client-tools/helm/";
 
-  private static final String chartMuseumVersion = "v0.8.2";
+  private static final String chartMuseumVersion = "v0.13.0"; // updated version from v0.8.2 to v0.13.0
+  // to enable IRSA for chartmuseum
   private static final String chartMuseumBaseDir = "./client-tools/chartmuseum/";
 
   private static final String ocVersion = "v4.2.16";

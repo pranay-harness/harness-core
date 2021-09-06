@@ -1,9 +1,11 @@
 package io.harness.chartmuseum;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.chartmuseum.ChartMuseumConstants.AWS_ACCESS_KEY_ID;
 import static io.harness.chartmuseum.ChartMuseumConstants.AWS_SECRET_ACCESS_KEY;
 import static io.harness.chartmuseum.ChartMuseumConstants.GOOGLE_APPLICATION_CREDENTIALS;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.lang.String.format;
@@ -18,6 +20,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -37,6 +40,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.zeroturnaround.exec.StartedProcess;
 
+@OwnedBy(CDP)
 public class ChartMuseumClientHelperTest extends CategoryTest {
   private static final String CHARTMUSEUM_BIN_PATH = "/usr/bin/chartmuseum";
 
@@ -107,6 +111,28 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testStartS3ChartMuseumServerWithIRSACreds() throws Exception {
+    final String bucketName = "s3-bucket";
+    final String basePath = "charts";
+    final String region = "us-west1";
+
+    ChartMuseumServer startedServer =
+        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true);
+    assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
+    ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
+    verify(clientHelper, times(1)).startProcess(commandCaptor.capture(), any(Map.class), any(StringBuffer.class));
+
+    String command = commandCaptor.getValue();
+    assertThat(command).contains(
+        format("--storage=amazon --storage-amazon-bucket=%s --storage-amazon-prefix=%s --storage-amazon-region=%s",
+            bucketName, basePath, region));
+
+    assertThat(command).doesNotContain("--port=${PORT}");
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testStartGCSChartMuseumServer() throws Exception {
@@ -151,6 +177,15 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
   public void getEnvForAwsConfig() {
     testGetEnvForAwsConfig();
     testGetEnvForAwsConfigWithAssumeDelegateRole();
+    testGetEnvForAwsConfigWithIRSA();
+  }
+
+  private void testGetEnvForAwsConfigWithIRSA() {
+    Map<String, String> env = ChartMuseumClientHelper.getEnvForAwsConfig(null, null, false, true);
+    assertThat(env.get("AWS_SDK_LOAD_CONFIG").equals(true));
+    assertThat(env.get("AWS_ROLE_SESSION_NAME")).contains("aws-sdk-java-");
+    assertThat(env.containsKey("AWS_ROLE_ARN"));
+    assertThat(env.containsKey("AWS_WEB_IDENTITY_TOKEN_FILE"));
   }
 
   private void testGetEnvForAwsConfigWithAssumeDelegateRole() {

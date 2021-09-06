@@ -80,7 +80,10 @@ public enum EntityType {
   TRIGGERS(ModuleType.CD, EntityTypeConstants.TRIGGERS, TriggerReference.class, EntityYamlRootNames.TRIGGERS),
   @JsonProperty(EntityTypeConstants.MONITORED_SERVICE)
   MONITORED_SERVICE(
-      ModuleType.CV, EntityTypeConstants.MONITORED_SERVICE, IdentifierRef.class, EntityYamlRootNames.MONITORED_SERVICE);
+      ModuleType.CV, EntityTypeConstants.MONITORED_SERVICE, IdentifierRef.class, EntityYamlRootNames.MONITORED_SERVICE),
+  @JsonProperty(EntityTypeConstants.GIT_REPOSITORIES)
+  GIT_REPOSITORIES(
+      ModuleType.CORE, EntityTypeConstants.GIT_REPOSITORIES, IdentifierRef.class, EntityYamlRootNames.GIT_REPOSITORY);
 
   private final ModuleType moduleType;
   String yamlName;

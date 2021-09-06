@@ -1,5 +1,5 @@
 # to be used when building in Jenkins
-FROM us.gcr.io/platform-205701/ubuntu:safe-ubuntu18.04-sec1338
+FROM us.gcr.io/platform-205701/ubuntu:safe-ubuntu18.04-sec1509
 
 RUN apt-get update && apt-get -y upgrade && apt-get -y install apt-utils curl unzip apt-transport-https gnupg2
 

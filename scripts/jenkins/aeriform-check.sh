@@ -87,8 +87,10 @@ BASE_SHA=`git merge-base origin/${ghprbTargetBranch} HEAD`
 
 FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@BreakDependencyOn\|+@TargetModule' | wc -l)
 
-git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > raw_list.txt
-TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < raw_list.txt | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
+TMP_FILE=$(mktemp)
+
+git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > $TMP_FILE
+TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < $TMP_FILE | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
 
 scripts/bazel/prepare_aeriform.sh
 
@@ -117,5 +119,17 @@ then
     --kind-filter AutoAction \
     --kind-filter Error \
     --kind-filter Warning \
+    --exit-code
+fi
+
+RENAMED_FILES=$(git diff --diff-filter=R --name-status ${BASE_SHA}..HEAD | wc -l)
+
+if [ $RENAMED_FILES -eq 0 ]
+then
+	scripts/bazel/aeriform.sh analyze \
+    --team-filter ${HARNESS_TEAM} \
+    --kind-filter AutoAction \
+    --only-team-filter \
+    --auto-actionable-command \
     --exit-code
 fi

@@ -39,7 +39,6 @@ import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerRollbackRequestElement;
-import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContinuePipelineResponseData;
 import software.wings.api.DeploymentType;
@@ -161,6 +160,7 @@ import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
@@ -186,6 +186,7 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitValidationParameters;
@@ -206,7 +207,6 @@ import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LambdaTestEvent;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
@@ -243,7 +243,6 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.approval.ConditionalOperator;
 import software.wings.beans.approval.Criteria;
 import software.wings.beans.approval.ServiceNowApprovalParams;
@@ -839,7 +838,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CommandStateExecutionData.class, 5093);
     kryo.register(CommandStepExecutionSummary.class, 5094);
     kryo.register(ContainerRollbackRequestElement.class, 4010);
-    kryo.register(ContainerServiceData.class, 5157);
     kryo.register(ContainerServiceElement.class, 5095);
     kryo.register(DeploymentType.class, 5096);
     kryo.register(EcsBGSetupData.class, 5611);
@@ -910,7 +908,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppContainer.class, 5064);
     kryo.register(AppDynamicsConfig.class, 5074);
     kryo.register(ManifestFile.class, 5539);
-    kryo.register(StoreType.class, 5540);
     kryo.register(ArtifactFile.class, 5066);
     kryo.register(ArtifactStreamAttributes.class, 5007);
     kryo.register(AwsConfig.class, 5013);
@@ -1024,7 +1021,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraConfig.class, 5581);
     kryo.register(KubernetesClusterConfig.class, 5244);
     kryo.register(LambdaTestEvent.class, 5604);
-    kryo.register(LicenseInfo.class, 5511);
     kryo.register(NameValuePair.class, 5226);
     kryo.register(NewRelicConfig.class, 5175);
     kryo.register(PcfConfig.class, 5296);
@@ -1490,6 +1486,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureArtifactsPackage.class, 7287);
     kryo.register(AzureArtifactsPackageVersion.class, 7288);
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
+    kryo.register(AzureResourceGroup.class, 40016);
     kryo.register(UtmInfo.class, 7291);
 
     kryo.register(TerraformApplyMarkerParam.class, 7292);
@@ -1704,5 +1701,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackStatus.class, 40113);
     kryo.register(EventsDeliveryCallback.class, 40014);
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
+    kryo.register(ProviderType.class, 40022);
   }
 }
