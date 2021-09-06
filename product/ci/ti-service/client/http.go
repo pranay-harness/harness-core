@@ -16,15 +16,15 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
+	"go.uber.org/zap"
 )
 
 var _ Client = (*HTTPClient)(nil)
 
 const (
-	dbEndpoint       = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s&repo=%s&sha=%s"
-	testEndpoint     = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
-	cgEndpoint       = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s&timeMs=%d"
-	visGraphEndpoint = "/tests/uploadvis?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
+	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s&repo=%s&sha=%s"
+	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
+	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s&timeMs=%d"
 )
 
 // defaultClient is the default http.Client.
@@ -70,6 +70,7 @@ type HTTPClient struct {
 // Write writes test results to the TI server
 func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, stage, step, report, repo, sha string, tests []*types.TestCase) error {
 	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, pipeline, build, stage, step, report, repo, sha)
+	ctx = context.WithValue(ctx, "reqId", sha)
 	_, err := c.do(ctx, c.Endpoint+path, "POST", &tests, nil)
 	return err
 }
@@ -83,21 +84,16 @@ func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, rep
 	if err != nil {
 		return types.SelectTestsResp{}, err
 	}
-	_, err = c.do(context.Background(), c.Endpoint+path, "POST", &e, &resp)
+	ctx := context.WithValue(context.Background(), "reqId", sha)
+	_, err = c.do(ctx, c.Endpoint+path, "POST", &e, &resp)
 	return resp, err
 }
 
 // UploadCg uploads avro encoded callgraph to server
 func (c *HTTPClient) UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target string, timeMs int64, cg []byte) error {
 	path := fmt.Sprintf(cgEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source, target, timeMs)
-	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &cg, nil)
-	return err
-}
-
-// UploadVisgraph uploads avro encoded visualization callgraph to server
-func (c *HTTPClient) UploadVisgraph(org, project, pipeline, build, stage, step, repo, sha, source, target string, vis []byte) error {
-	path := fmt.Sprintf(visGraphEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, source, target)
-	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &vis, nil)
+	ctx := context.WithValue(context.Background(), "reqId", sha)
+	_, err := c.do(ctx, c.Endpoint+path, "POST", &cg, nil)
 	return err
 }
 
@@ -113,7 +109,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 
 		// do not retry on Canceled or DeadlineExceeded
 		if err := ctx.Err(); err != nil {
-			logger.FromContext(ctx).WithError(err).WithField("path", path).Errorln("http: context canceled")
+			logger.FromContext(ctx).Errorw("http: context canceled", "path", path, zap.Error(err))
 			return res, err
 		}
 
@@ -125,7 +121,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
 			if res.StatusCode >= 500 {
-				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: ti-server error: reconnect and retry")
+				logger.FromContext(ctx).Errorw("http: ti-server error: reconnect and retry", "path", path, zap.Error(err))
 				if duration == backoff.Stop {
 					return nil, err
 				}
@@ -133,7 +129,7 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 				continue
 			}
 		} else if err != nil {
-			logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: request error. Retrying ...")
+			logger.FromContext(ctx).Errorw("http: request error. Retrying ...", "path", path, zap.Error(err))
 			if duration == backoff.Stop {
 				return nil, err
 			}
@@ -163,6 +159,11 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 	// the request should include the secret shared between
 	// the agent and server for authorization.
 	req.Header.Add("X-Harness-Token", c.Token)
+	// adding sha as request-id for logging context
+	sha := ctx.Value("reqId").(string)
+	if len(sha) != 0 {
+		req.Header.Add("X-Request-ID", sha)
+	}
 	res, err := c.client().Do(req)
 	if res != nil {
 		defer func() {
