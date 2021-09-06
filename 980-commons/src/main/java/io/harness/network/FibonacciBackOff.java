@@ -16,6 +16,13 @@ public final class FibonacciBackOff {
 
   private FibonacciBackOff() {}
 
+  public static int getFibonacciElement(int index) {
+    if (index < FIBONACCI.length) {
+      return FIBONACCI[index];
+    }
+    throw new RuntimeException("Index out of bounds");
+  }
+
   public static <T, E extends Exception> T execute(FibonacciBackOffFunction<T> fn) throws IOException {
     for (int attempt = 0; attempt < FIBONACCI.length; attempt++) {
       try {

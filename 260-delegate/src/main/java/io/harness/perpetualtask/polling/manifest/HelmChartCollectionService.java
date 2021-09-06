@@ -15,9 +15,11 @@ import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDC)
+@Singleton
 public class HelmChartCollectionService implements ManifestCollectionService {
   private static final String MANIFEST_COLLECTION_DIR_BASE = "./manifest-collection/helm/";
   private static final long TIMEOUT_IN_MILLIS = 90L * 1000;

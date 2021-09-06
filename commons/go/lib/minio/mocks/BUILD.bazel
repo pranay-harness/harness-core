@@ -1,12 +1,12 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "mocks",
     srcs = ["minio_mock.go"],
     importpath = "github.com/wings-software/portal/commons/go/lib/minio/mocks",
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_golang_mock//gomock:go_default_library",
-        "@com_github_minio_minio_go_v6//:go_default_library",
+        "@com_github_golang_mock//gomock",
+        "@com_github_minio_minio_go_v6//:minio-go",
     ],
 )

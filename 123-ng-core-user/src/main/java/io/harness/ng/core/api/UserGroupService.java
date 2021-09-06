@@ -53,6 +53,8 @@ public interface UserGroupService {
 
   void addUserToUserGroups(String accountIdentifier, String userId, List<UserGroup> userGroups);
 
+  void addUserToUserGroups(Scope scope, String userId, List<String> userGroups);
+
   UserGroup removeMember(Scope scope, String userGroupIdentifier, String userIdentifier);
 
   void removeMemberAll(@NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier,

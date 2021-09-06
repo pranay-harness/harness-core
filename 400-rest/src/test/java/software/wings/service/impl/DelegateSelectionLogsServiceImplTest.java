@@ -9,11 +9,6 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
@@ -22,14 +17,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
-import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
@@ -58,12 +51,10 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.beans.Cd1SetupFields")
-@BreakDependencyOn("io.harness.beans.FeatureName")
 @BreakDependencyOn("software.wings.WingsBaseTest")
 @BreakDependencyOn("software.wings.beans.Application")
 @BreakDependencyOn("software.wings.beans.Environment")
@@ -89,7 +80,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
 
-  @Mock private FeatureFlagService featureFlagService;
   @Inject protected WingsPersistence wingsPersistence;
   @InjectMocks @Inject DelegateSelectionLogsServiceImpl delegateSelectionLogsService;
 
@@ -124,36 +114,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void shouldNotSaveWhenBatchIsNullOrNoLogs() {
-    delegateSelectionLogsService.save(null);
-    delegateSelectionLogsService.save(BatchDelegateSelectionLog.builder().build());
-
-    verify(featureFlagService, never()).isNotEnabled(eq(FeatureName.DISABLE_DELEGATE_SELECTION_LOG), anyString());
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldNotSaveWhenFFDisabled() {
-    DelegateSelectionLog selectionLog = createDelegateSelectionLogBuilder().uuid(generateUuid()).build();
-    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder().build();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
-                                          .delegateSelectionLogs(Arrays.asList(selectionLog))
-                                          .taskMetadata(taskMetadata)
-                                          .build();
-    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
-        .thenReturn(true);
-
-    delegateSelectionLogsService.save(batch);
-
-    assertThat(wingsPersistence.get(DelegateSelectionLog.class, selectionLog.getUuid())).isNull();
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldSaveWhenFFEnabled() {
+  public void shouldSaveSelectionLog() {
     DelegateSelectionLog selectionLog =
         createDelegateSelectionLogBuilder().uuid(generateUuid()).message("ffenabled").groupId(generateUuid()).build();
 
@@ -168,8 +129,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                           .delegateSelectionLogs(Arrays.asList(selectionLog))
                                           .taskMetadata(taskMetadata)
                                           .build();
-    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
-        .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
 
@@ -189,25 +148,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotSave_OnlyLogWhenFFEnabled() {
-    DelegateSelectionLog selectionLog =
-        createDelegateSelectionLogBuilder().uuid(generateUuid()).message("testMessage").groupId(generateUuid()).build();
-    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder().build();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
-                                          .delegateSelectionLogs(Arrays.asList(selectionLog))
-                                          .taskMetadata(taskMetadata)
-                                          .build();
-    when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
-        .thenReturn(true);
-
-    delegateSelectionLogsService.save(batch);
-
-    assertThat(wingsPersistence.get(DelegateSelectionLog.class, selectionLog.getUuid())).isNull();
-  }
-
-  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldSaveWithoutDuplicates() {
@@ -216,7 +156,6 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLog.class);
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLogTaskMetadata.class);
-    when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
 
     DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
                                                         .taskId(taskId)

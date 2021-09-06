@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -72,6 +73,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.query.Query;
 
 @ValidateOnExecution
 @Singleton
@@ -226,9 +228,13 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   }
 
   @Override
-  public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin) {
-    return new HIterator(
-        wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin).fetch());
+  public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin, String accountId) {
+    Query<SamlSettings> query =
+        wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin);
+    if (isNotEmpty(accountId)) {
+      query.field("accountId").equal(accountId);
+    }
+    return new HIterator(query.fetch());
   }
 
   @Override

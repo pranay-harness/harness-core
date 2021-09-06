@@ -1,27 +1,50 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_EXPIRED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.NANDAN;
+import static io.harness.rule.OwnerRule.VIKAS_M;
 import static io.harness.rule.OwnerRule.VOJIN;
 
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.invites.remote.NgInviteClient;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.dto.UserInviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -29,29 +52,39 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupService;
 
 import com.google.inject.Inject;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import org.apache.http.client.utils.URIBuilder;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import retrofit2.Response;
 
+@OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 public class UserServiceImplTest extends WingsBaseTest {
   @Mock AccountService accountService;
   @Inject @InjectMocks UserServiceImpl userServiceImpl;
+  @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock NgInviteClient ngInviteClient;
   @Mock SignupService signupService;
   @Mock EventPublishHelper eventPublishHelper;
+  @Mock UserServiceLimitChecker userServiceLimitChecker;
   @Inject WingsPersistence wingsPersistence;
+  private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
 
   @Test
   @Owner(developers = DEEPAK)
@@ -122,6 +155,304 @@ public class UserServiceImplTest extends WingsBaseTest {
     wingsPersistence.save(user1);
     wingsPersistence.save(user2);
     wingsPersistence.save(user3);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_checkInviteStatus_userAddedRequiredPassword() {
+    Account withNonSso = anAccount()
+                             .withAccountName("harness")
+                             .withCompanyName("harness")
+                             .withAppId(GLOBAL_APP_ID)
+                             .withUuid(UUID)
+                             .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                             .build();
+    wingsPersistence.save(withNonSso);
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.FALSE)
+                                .build();
+    wingsPersistence.save(userInvite);
+    User user = anUser()
+                    .uuid(UUIDGenerator.generateUuid())
+                    .name(userInvite.getName().trim())
+                    .email(userInvite.getEmail().trim().toLowerCase())
+                    .build();
+    user.getAccounts().add(withNonSso);
+    wingsPersistence.save(user);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(withNonSso);
+    UserInvite userInviteRetrieved = userServiceImpl.getUserInviteByEmailAndAccount(USER_EMAIL, ACCOUNT_ID);
+    InviteOperationResponse inviteOperationResponse =
+        userServiceImpl.checkInviteStatus(userInviteRetrieved, Generation.CG);
+    assertThat(inviteOperationResponse).isEqualTo(ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD);
+    verify(eventPublishHelper, times(1)).publishUserInviteVerifiedFromAccountEvent(withNonSso.getUuid(), USER_EMAIL);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_checkInviteStatus_userInviteAccepted() {
+    Account withNonSso = anAccount()
+                             .withAccountName("harness")
+                             .withCompanyName("harness")
+                             .withAppId(GLOBAL_APP_ID)
+                             .withUuid(UUID)
+                             .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                             .build();
+    wingsPersistence.save(withNonSso);
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.TRUE)
+                                .build();
+    wingsPersistence.save(userInvite);
+    User user = anUser()
+                    .uuid(UUIDGenerator.generateUuid())
+                    .name(userInvite.getName().trim())
+                    .email(userInvite.getEmail().trim().toLowerCase())
+                    .build();
+    user.getAccounts().add(withNonSso);
+    wingsPersistence.save(user);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(withNonSso);
+    UserInvite userInviteRetrieved = userServiceImpl.getUserInviteByEmailAndAccount(USER_EMAIL, ACCOUNT_ID);
+    InviteOperationResponse inviteOperationResponse =
+        userServiceImpl.checkInviteStatus(userInviteRetrieved, Generation.CG);
+    assertThat(inviteOperationResponse).isEqualTo(USER_ALREADY_ADDED);
+    verify(eventPublishHelper, times(0)).publishUserInviteVerifiedFromAccountEvent(withNonSso.getUuid(), USER_EMAIL);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_checkInviteStatus_userInvalid() {
+    Account withNonSso = anAccount()
+                             .withAccountName("harness")
+                             .withCompanyName("harness")
+                             .withAppId(GLOBAL_APP_ID)
+                             .withUuid(UUID)
+                             .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                             .build();
+    wingsPersistence.save(withNonSso);
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail("spam@harness.io")
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.TRUE)
+                                .build();
+    wingsPersistence.save(userInvite);
+    User user = anUser().uuid(UUIDGenerator.generateUuid()).name(userInvite.getName().trim()).email(USER_EMAIL).build();
+    user.getAccounts().add(withNonSso);
+    wingsPersistence.save(user);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(withNonSso);
+    UserInvite userInviteRetrieved = userServiceImpl.getUserInviteByEmailAndAccount("spam@harness.io", ACCOUNT_ID);
+    InviteOperationResponse inviteOperationResponse =
+        userServiceImpl.checkInviteStatus(userInviteRetrieved, Generation.CG);
+    assertThat(inviteOperationResponse).isEqualTo(INVITE_INVALID);
+    verify(eventPublishHelper, times(0)).publishUserInviteVerifiedFromAccountEvent(withNonSso.getUuid(), USER_EMAIL);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_checkInviteStatus_accountInvalid() {
+    Account withNonSso = anAccount()
+                             .withAccountName("harness")
+                             .withCompanyName("harness")
+                             .withAppId(GLOBAL_APP_ID)
+                             .withUuid(UUID)
+                             .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                             .build();
+    wingsPersistence.save(withNonSso);
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.TRUE)
+                                .build();
+    wingsPersistence.save(userInvite);
+    User user = anUser().uuid(UUIDGenerator.generateUuid()).name(userInvite.getName().trim()).email(USER_EMAIL).build();
+    user.getAccounts().add(withNonSso);
+    wingsPersistence.save(user);
+    UserInvite userInviteRetrieved = userServiceImpl.getUserInviteByEmailAndAccount(USER_EMAIL, ACCOUNT_ID);
+    InviteOperationResponse inviteOperationResponse =
+        userServiceImpl.checkInviteStatus(userInviteRetrieved, Generation.CG);
+    assertThat(inviteOperationResponse).isEqualTo(INVITE_INVALID);
+    verify(eventPublishHelper, times(0)).publishUserInviteVerifiedFromAccountEvent(withNonSso.getUuid(), USER_EMAIL);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_checkInviteStatus_userInviteInvalid() {
+    Account withNonSso = anAccount()
+                             .withAccountName("harness")
+                             .withCompanyName("harness")
+                             .withAppId(GLOBAL_APP_ID)
+                             .withUuid(UUID)
+                             .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                             .build();
+    wingsPersistence.save(withNonSso);
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.TRUE)
+                                .build();
+    User user = anUser().uuid(UUIDGenerator.generateUuid()).name(userInvite.getName().trim()).email(USER_EMAIL).build();
+    user.getAccounts().add(withNonSso);
+    wingsPersistence.save(user);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(withNonSso);
+    InviteOperationResponse inviteOperationResponse = userServiceImpl.checkInviteStatus(userInvite, Generation.CG);
+    assertThat(inviteOperationResponse).isEqualTo(INVITE_INVALID);
+    verify(eventPublishHelper, times(0)).publishUserInviteVerifiedFromAccountEvent(withNonSso.getUuid(), USER_EMAIL);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_checkInviteStatus_SsoUserAdded() {
+    Account withSso = anAccount()
+                          .withAccountName("harness")
+                          .withCompanyName("harness")
+                          .withAppId(GLOBAL_APP_ID)
+                          .withUuid(UUID)
+                          .withAuthenticationMechanism(AuthenticationMechanism.SAML)
+                          .build();
+    wingsPersistence.save(withSso);
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.FALSE)
+                                .build();
+    wingsPersistence.save(userInvite);
+    User user = anUser().uuid(UUIDGenerator.generateUuid()).name(userInvite.getName().trim()).email(USER_EMAIL).build();
+    user.getAccounts().add(withSso);
+    wingsPersistence.save(user);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(withSso);
+    UserInvite userInviteRetrieved = userServiceImpl.getUserInviteByEmailAndAccount(USER_EMAIL, ACCOUNT_ID);
+    InviteOperationResponse inviteOperationResponse =
+        userServiceImpl.checkInviteStatus(userInviteRetrieved, Generation.CG);
+    assertThat(inviteOperationResponse).isEqualTo(ACCOUNT_INVITE_ACCEPTED);
+    verify(eventPublishHelper, times(1)).publishUserInviteVerifiedFromAccountEvent(withSso.getUuid(), USER_EMAIL);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_CompleteNgInvite() throws Exception {
+    Account account = anAccount()
+                          .withAccountName("harness")
+                          .withCompanyName("harness")
+                          .withAppId(GLOBAL_APP_ID)
+                          .withUuid(UUID)
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .build();
+    wingsPersistence.save(account);
+    UserInviteDTO inviteDTO =
+        UserInviteDTO.builder().accountId(ACCOUNT_ID).email(USER_EMAIL).name(USER_NAME).token(UUID).build();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    retrofit2.Call<ResponseDTO<Boolean>> req = mock(retrofit2.Call.class);
+    when(ngInviteClient.completeInvite(anyString())).thenReturn(req);
+    when(req.execute()).thenReturn(Response.success(ResponseDTO.newResponse()));
+    userServiceImpl.completeNGInvite(inviteDTO);
+    verify(eventPublishHelper, times(1)).publishUserRegistrationCompletionEvent(anyString(), any());
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_getInviteAcceptRedirectURL_AccountInviteAcceptedNeedPassword() throws URISyntaxException {
+    InviteOperationResponse inviteOperationResponse = ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.FALSE)
+                                .build();
+    String jwtToken = "jwtToken";
+    String encodedEmail = "user%40wings.software";
+    String accountCreationFragment =
+        String.format("accountIdentifier=%s&email=%s&token=%s&generation=CG", ACCOUNT_ID, encodedEmail, jwtToken);
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(ACCOUNT_ID);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
+    uriBuilder.setFragment("/accept-invite?" + accountCreationFragment);
+    assertThat(userServiceImpl.getInviteAcceptRedirectURL(inviteOperationResponse, userInvite, jwtToken))
+        .isEqualTo(uriBuilder.build());
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_getInviteAcceptRedirectURL_FailedInvite() throws URISyntaxException {
+    InviteOperationResponse inviteOperationResponse = FAIL;
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.FALSE)
+                                .build();
+    String jwtToken = "jwtToken";
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(ACCOUNT_ID);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
+    assertThat(userServiceImpl.getInviteAcceptRedirectURL(inviteOperationResponse, userInvite, jwtToken))
+        .isEqualTo(uriBuilder.build());
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_getInviteAcceptRedirectURL_ExpiredInvite() throws URISyntaxException {
+    InviteOperationResponse inviteOperationResponse = INVITE_EXPIRED;
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.FALSE)
+                                .build();
+    String jwtToken = "jwtToken";
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(ACCOUNT_ID);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
+    uriBuilder.setFragment("/signin?errorCode=INVITE_EXPIRED");
+    assertThat(userServiceImpl.getInviteAcceptRedirectURL(inviteOperationResponse, userInvite, jwtToken))
+        .isEqualTo(uriBuilder.build());
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void test_getInviteAcceptRedirectURL_InvalidInvite() throws URISyntaxException {
+    InviteOperationResponse inviteOperationResponse = INVITE_INVALID;
+    UserInvite userInvite = anUserInvite()
+                                .withUuid(UUIDGenerator.generateUuid())
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .withName(USER_NAME)
+                                .withCompleted(Boolean.FALSE)
+                                .build();
+    String jwtToken = "jwtToken";
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(ACCOUNT_ID);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(NG_AUTH_UI_PATH_PREFIX);
+    uriBuilder.setFragment("/signin?errorCode=INVITE_INVALID");
+    assertThat(userServiceImpl.getInviteAcceptRedirectURL(inviteOperationResponse, userInvite, jwtToken))
+        .isEqualTo(uriBuilder.build());
   }
 
   @Test

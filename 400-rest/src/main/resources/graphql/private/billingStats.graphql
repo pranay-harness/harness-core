@@ -1,4 +1,5 @@
 extend type Query {
+  # Get statistics about Billing
   billingStatsTimeSeries(
     limit: Int
     includeOthers: Boolean
@@ -8,32 +9,38 @@ extend type Query {
     sortCriteria: [BillingSortCriteria]
   ): BillingStackedTimeSeriesData @dataFetcher(name: billingStatsTimeSeries)
 
+  # Get statistics about GCP Billing
   gcpBillingTimeSeriesStats(
     filters: [CCMFilter]
     aggregateFunction: CCMAggregationFunction
     groupBy: [CCMGroupBy]
   ): GcpBillingTimeSeriesStats @dataFetcher(name: gcpBillingTimeSeriesStats)
 
+  # Get statistics about Billing Trend
   billingTrendStats(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
   ): BillingStatsData @dataFetcher(name: billingTrendStats)
 
+  # Get information about Billing Forecast Cost
   billingForecastCost(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
   ): BillingStatsData @dataFetcher(name: billingForecastCost)
 
+  # Get statistics about GCP Billing Trend
   gcpBillingTrendStats(filters: [CCMFilter]): BillingStatsData @dataFetcher(name: gcpBillingTrendStats)
 
+  # Get statistics about Idle Cost Trend
   idleCostTrendStats(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
   ): IdleCostStatsData @dataFetcher(name: idleCostTrendStats)
 
+  # Get information about Billing Stats Entity
   billingStatsEntity(
     limit: Int
     offset: Int
@@ -44,12 +51,14 @@ extend type Query {
     sortCriteria: [BillingSortCriteria]
   ): BillingEntityData @dataFetcher(name: billingStatsEntity)
 
+  # Get information about GCP Billing Entity Data
   gcpBillingEntityData(
     filters: [CloudBillingFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CloudBillingGroupBy]
   ): GcpBillingEntityData @dataFetcher(name: gcpBillingEntityStats)
 
+  # Get values for Billing Stats Filter
   billingStatsFilterValues(
     limit: Int
     offset: Int
@@ -59,14 +68,17 @@ extend type Query {
     sortCriteria: [BillingSortCriteria]
   ): BillingFilterData @dataFetcher(name: billingStatsFilterValues)
 
+  # Get values for Billing Job Processed Values
   billingJobProcessedValues: BillingJobProcessedData @dataFetcher(name: billingJobProcessed)
 
+  # Get statistics about Efficiency
   efficiencyStats(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
     groupBy: [CCMGroupBy]
   ): EfficiencyStatsData @dataFetcher(name: efficiencyStats)
 
+  # Get statistics about Sunburst Chart
   sunburstChartStats(
     limit: Int
     includeOthers: Boolean
@@ -76,6 +88,7 @@ extend type Query {
     sortCriteria: [BillingSortCriteria]
   ): SunburstChartData @dataFetcher(name: sunburstChartStats)
 
+  # Get details about Node and Pod
   nodeAndPodDetails(
     limit: Int
     offset: Int
@@ -85,6 +98,7 @@ extend type Query {
     sortCriteria: [BillingSortCriteria]
   ): NodeAndPodData @dataFetcher(name: nodeAndPodDetails)
 
+  # Get information about CE Active Pod Count
   ceActivePodCount(
     filters: [CCMFilter]
     aggregateFunction: [CCMAggregationFunction]
@@ -92,11 +106,13 @@ extend type Query {
   ): PodCountTimeSeriesData @dataFetcher(name: ceActivePodCount)
 }
 
+# Set CCM aggregation function
 input CCMAggregationFunction {
   operationType: CCMAggregateOperation
   columnName: String
 }
 
+# Possible entity values for CCM aggregate operation
 enum CCMAggregateOperation {
   SUM
   MAX
@@ -113,6 +129,7 @@ input CCMGroupBy {
   labelAggregation: BillingDataLabelAggregation
 }
 
+# Possible CCM entity group by values
 enum CCMEntityGroupBy {
   Application
   Service
@@ -140,24 +157,29 @@ input CETimeTruncGroupby {
   resolution: TimeGroupType
 }
 
+# Aggregate CCM by time aggregators
 input CCMTimeSeriesAggregation {
   timeGroupType: TimeGroupType
 }
 
+# Aggregate by Billing Data tag
 input BillingDataTagAggregation {
   entityType: BillingDataTagType
   tagName: String
 }
 
+# Aggregate by Billing Data label
 input BillingDataLabelAggregation {
   name: String
 }
 
+# Set sort criteria
 input BillingSortCriteria {
   sortType: BillingSortType
   sortOrder: SortOrder
 }
 
+# Possible Billing Sort Type values
 enum BillingSortType {
   Time
   Amount
@@ -177,6 +199,7 @@ enum BillingSortType {
   Pod
 }
 
+# Define Billing Entity Data Point type
 type BillingEntityDataPoint {
   id: String
   name: String
@@ -220,6 +243,7 @@ type BillingEntityDataPoint {
   storageActualIdleCost: Number
 }
 
+# Define GCP Billing Entity Data Point type
 type GcpBillingEntityDataPoint {
   id: String
   name: String
@@ -232,15 +256,18 @@ type GcpBillingEntityDataPoint {
   region: String
 }
 
+# Define Billing Entity Data type
 type GcpBillingEntityData {
   data: [GcpBillingEntityDataPoint]
 }
 
+# Define Sunburst Chart Data type
 type SunburstChartData {
   totalCost: Number
   gridData: [SunburstGridDataPoint]
 }
 
+# Define Sunburst Chart Data Point type
 type SunburstChartDataPoint {
   id: String
   parent: String
@@ -252,6 +279,7 @@ type SunburstChartDataPoint {
   metadata: SunburstGridDataPoint
 }
 
+# Define Sunburst Grid Data Point type
 type SunburstGridDataPoint {
   id: String
   name: String
@@ -262,11 +290,13 @@ type SunburstGridDataPoint {
   efficiencyScore: Number
 }
 
+# Define Billing Entity Data type
 type BillingEntityData {
   data: [BillingEntityDataPoint]
   info: String
 }
 
+# Define Billing Filter Data Point type
 type BillingFilterDataPoint {
   cloudServiceNames: [EntityData]
   taskIds: [EntityData]
@@ -283,27 +313,32 @@ type BillingFilterDataPoint {
   tags: [Tags]
 }
 
+# Define Tags type
 type Tags {
   name: String
   values: [String]
 }
 
+# Define Entity Data type
 type EntityData {
   name: String
   id: String
   type: String
 }
 
+# Define Billing Filter Data type
 type BillingFilterData {
   data: [BillingFilterDataPoint]
   isHourlyDataPresent: Boolean
   total: Number
 }
 
+# Define Billing Job Processing Data type
 type BillingJobProcessedData {
   lastProcessedTime: DateTime
 }
 
+# Define Billing Stats Data type
 type BillingStatsData {
   totalCost: BillingStatsInfo
   costTrend: BillingStatsInfo
@@ -315,12 +350,14 @@ type BillingStatsData {
   efficiencyScore: BillingStatsInfo
 }
 
+# Define Efficiency Stats Data type
 type EfficiencyStatsData {
   context: ContextInfo
   efficiencyBreakdown: StatsBreakdownInfo
   efficiencyData: EfficiencyInfo
 }
 
+# Define Idle Cost Stats Data type
 type IdleCostStatsData {
   totalIdleCost: BillingStatsInfo
   cpuIdleCost: BillingStatsInfo
@@ -329,6 +366,7 @@ type IdleCostStatsData {
   unallocatedCost: BillingStatsInfo
 }
 
+# Define Billing Stacked Time Series Data type
 type BillingStackedTimeSeriesData {
   data: [BillingStackedTimeSeriesDataPoint]
   cpuIdleCost: [BillingStackedTimeSeriesDataPoint]
@@ -345,25 +383,30 @@ type BillingStackedTimeSeriesData {
   info: String
 }
 
+# Define GCP Billing Time Series Stats type
 type GcpBillingTimeSeriesStats {
   stats: [TimeSeriesDataPoints]
 }
 
+# Define Time Series Data Point type
 type TimeSeriesDataPoints {
   values: [DataPoint]
   time: DateTime
 }
 
+# Define Billing Stacked Time Series Data Point type
 type BillingStackedTimeSeriesDataPoint {
   values: [BillingDataPoint]
   time: DateTime
 }
 
+# Define Billing Data Point type
 type BillingDataPoint {
   key: Reference # Key refers to the label
   value: Number
 }
 
+# Define Billing Stats Info type
 type BillingStatsInfo {
   statsLabel: String
   statsDescription: String
@@ -372,12 +415,14 @@ type BillingStatsInfo {
   value: Number
 }
 
+# Define Context Info type
 type ContextInfo {
   totalCost: Number
   costTrend: Number
   totalCostDescription: String
 }
 
+# Define Stats Breakdown Info type
 type StatsBreakdownInfo {
   total: Number
   utilized: Number
@@ -385,75 +430,109 @@ type StatsBreakdownInfo {
   unallocated: Number
 }
 
+# Define Efficiency Info type
 type EfficiencyInfo {
   efficiencyScore: Number
   trend: Number
 }
 
+# Define Resource Stats Info type
 type ResourceStatsInfo {
   type: String
   info: StatsBreakdownInfo
 }
 
+# Set CCM filter criteria
 input CCMFilter {
+  # Filter by Application id
   application: IdFilter
+  # Filter by Service id
   service: IdFilter
+  # Filter by Environment id
   environment: IdFilter
+  # Filter by Cluster id
   cluster: IdFilter
+  # Filter by Cloud Service Name id
   cloudServiceName: IdFilter
+  # Filter by Launch Type id
   launchType: IdFilter
+  # Filter by Task id
   taskId: IdFilter
+  # Filter by Namespace id
   namespace: IdFilter
+  # Filter by Workload Name id
   workloadName: IdFilter
+  # Filter by Workload Type id
   workloadType: IdFilter
+  # Filter by start time
   startTime: TimeFilter
+  # Filter by end time
   endTime: TimeFilter
+  # Filter by Cloud Provider id
   cloudProvider: IdFilter
+  # Filter by Billing Data Tag
   tag: BillingDataTagFilter
+  # Filter Billing Data Label
   label: BillingDataLabelFilter
+  # Filter by Node Instance id
   nodeInstanceId: IdFilter
+  # Filter by Pod Instance id
   podInstanceId: IdFilter
+  # Filter by Parent Instance id
   parentInstanceId: IdFilter
+  # Filter by CE Environment Type
   envType: CEEnvironmentTypeFilter
+  # Filter by Label Search id
   labelSearch: IdFilter
+  # Filter by Tag Search id
   tagSearch: IdFilter
+  # Filter by Instance Type id
   instanceType: IdFilter
+  # Filter by Storage Utilization Value
   storageUtilizationValue: NumberFilter
 }
 
+# Set Billing Data Label Filter
 input BillingDataLabelFilter {
   operator: IdOperator
   labels: [K8sLabelInput]
 }
 
+# Set Billing Data Tag Filter
 input BillingDataTagFilter {
   operator: IdOperator
   entityType: BillingDataTagType
   tags: [TagInput]
 }
 
+# Possible Billing Data Tag Type values
 enum BillingDataTagType {
   APPLICATION
   SERVICE
   ENVIRONMENT
 }
 
+# Set CE Environment Type filter criteria
 input CEEnvironmentTypeFilter {
+  # Filter by Environment Type
   type: EnvType
 }
 
+# Possible Environment Type values
 enum EnvType {
   ALL
   PROD
   NON_PROD
 }
 
+# Define Node and Pod Data type
 type NodeAndPodData {
   data: [NodeAndPodDataPoint]
   pvData: [PVDataPoint]
   info: String
 }
 
+# Define PV Data Point type
 type PVDataPoint {
   id: String
   instanceId: String
@@ -479,6 +558,7 @@ type PVDataPoint {
   deleteTime: Number
 }
 
+# Define Node and Pod Data Point type
 type NodeAndPodDataPoint {
   id: String
   nodeId: String
@@ -520,15 +600,18 @@ type NodeAndPodDataPoint {
   storageRequest: Number
 }
 
+# Define Pod Count Time Series Data type
 type PodCountTimeSeriesData {
   data: [PodCountTimeSeriesDataPoint]
 }
 
+# Define Pod Count Time Series Data Point type
 type PodCountTimeSeriesDataPoint {
   values: [PodCountDataPoint]
   time: DateTime
 }
 
+# Define Pod Count Data Point type
 type PodCountDataPoint {
   key: Reference
   value: Number

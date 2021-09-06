@@ -87,3 +87,9 @@ java_binary(
 )
 
 run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "newrelic.yml",
+    "config.yml",
+])

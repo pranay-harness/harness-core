@@ -155,8 +155,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> list(UserGroupFilterDTO userGroupFilterDTO) {
     validateFilter(userGroupFilterDTO);
-    Criteria criteria = createScopeCriteria(userGroupFilterDTO.getAccountIdentifier(),
-        userGroupFilterDTO.getOrgIdentifier(), userGroupFilterDTO.getProjectIdentifier());
+    Criteria criteria =
+        createUserGroupFilterCriteria(userGroupFilterDTO.getAccountIdentifier(), userGroupFilterDTO.getOrgIdentifier(),
+            userGroupFilterDTO.getProjectIdentifier(), userGroupFilterDTO.getSearchTerm());
     if (isNotEmpty(userGroupFilterDTO.getDatabaseIdFilter())) {
       criteria.and(UserGroupKeys.id).in(userGroupFilterDTO.getDatabaseIdFilter());
     } else if (isNotEmpty(userGroupFilterDTO.getIdentifierFilter())) {
@@ -255,6 +256,20 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.info("[NGSamlUserGroupSync] Not adding user {} to UserGroup:{} CheckMember failed ", userId, userGroup);
       }
     }
+  }
+
+  @Override
+  public void addUserToUserGroups(Scope scope, String userId, List<String> userGroups) {
+    if (isEmpty(userGroups)) {
+      return;
+    }
+    userGroups.forEach(userGroup -> {
+      if (!checkMember(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroup,
+              userId)) {
+        addMember(
+            scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroup, userId);
+      }
+    });
   }
 
   @Override

@@ -8,6 +8,10 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        "@maven//:io_debezium_debezium_connector_mongodb",
+        "@maven//:io_debezium_debezium_embedded",
+    ],
     deps = [
         "//:lombok",
         "//947-access-control-core:module",
@@ -21,9 +25,7 @@ java_library(
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:io_debezium_debezium_api",
-        "@maven//:io_debezium_debezium_connector_mongodb",
         "@maven//:io_debezium_debezium_core",
-        "@maven//:io_debezium_debezium_embedded",
         "@maven//:io_dropwizard_dropwizard_lifecycle",
         "@maven//:io_github_resilience4j_resilience4j_core",
         "@maven//:io_github_resilience4j_resilience4j_retry",

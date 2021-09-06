@@ -4,6 +4,7 @@ import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -28,6 +29,7 @@ import io.harness.exception.ProcessingException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
+import io.harness.ng.core.dto.GatewayAccountRequestDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.events.AddCollaboratorEvent;
 import io.harness.ng.core.events.RemoveCollaboratorEvent;
@@ -136,12 +138,16 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public PageResponse<UserMetadataDTO> listUsers(Scope scope, PageRequest pageRequest, UserFilter userFilter) {
-    Criteria userMembershipCriteria = Criteria.where(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                                          .is(scope.getAccountIdentifier())
-                                          .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                                          .is(scope.getOrgIdentifier())
-                                          .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
-                                          .is(scope.getProjectIdentifier());
+    Criteria userMembershipCriteria;
+    if (userFilter == null || UserFilter.ParentFilter.NO_PARENT_SCOPES.equals(userFilter.getParentFilter())) {
+      userMembershipCriteria = getUserMembershipCriteria(scope, false);
+    } else if (UserFilter.ParentFilter.INCLUDE_PARENT_SCOPES.equals(userFilter.getParentFilter())) {
+      userMembershipCriteria = getUserMembershipCriteria(scope, true);
+    } else {
+      userMembershipCriteria = getUserMembershipCriteria(scope, true);
+      List<String> negativeUserIds = listUserIds(scope);
+      userMembershipCriteria.and(UserMembershipKeys.userId).nin(negativeUserIds);
+    }
     Criteria userMetadataCriteria = new Criteria();
     if (userFilter != null) {
       if (isNotBlank(userFilter.getSearchTerm())) {
@@ -163,6 +169,48 @@ public class NgUserServiceImpl implements NgUserService {
         userMetadataRepository.findAll(userMetadataCriteria, getPageRequest(pageRequest));
 
     return PageUtils.getNGPageResponse(userMetadataPage.map(UserMetadataMapper::toDTO));
+  }
+
+  private Criteria getUserMembershipCriteria(Scope scope, boolean includeParentScopes) {
+    Criteria userMembershipCriteria = new Criteria();
+    if (includeParentScopes) {
+      List<Criteria> scopeCriterion = new ArrayList<>();
+      scopeCriterion.add(Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                             .is(scope.getAccountIdentifier())
+                             .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                             .is(null)
+                             .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                             .is(null));
+      if (isNotEmpty(scope.getOrgIdentifier())) {
+        scopeCriterion.add(Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                               .is(scope.getAccountIdentifier())
+                               .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                               .is(scope.getOrgIdentifier())
+                               .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                               .is(null));
+        if (isNotEmpty(scope.getProjectIdentifier())) {
+          scopeCriterion.add(Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                                 .is(scope.getAccountIdentifier())
+                                 .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                                 .is(scope.getOrgIdentifier())
+                                 .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                                 .is(scope.getProjectIdentifier()));
+        }
+      }
+      if (scopeCriterion.size() == 1) {
+        userMembershipCriteria = scopeCriterion.get(0);
+      } else {
+        userMembershipCriteria.orOperator(scopeCriterion.toArray(new Criteria[0]));
+      }
+    } else {
+      userMembershipCriteria.and(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+          .is(scope.getAccountIdentifier())
+          .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+          .is(scope.getOrgIdentifier())
+          .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+          .is(scope.getProjectIdentifier());
+    }
+    return userMembershipCriteria;
   }
 
   @Override
@@ -576,5 +624,18 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public boolean isUserPasswordSet(String accountIdentifier, String email) {
     return RestClientUtils.getResponse(userClient.isUserPasswordSet(accountIdentifier, email));
+  }
+
+  @Override
+  public List<String> listUserAccountIds(String userId) {
+    Optional<UserInfo> userInfoOptional = getUserById(userId);
+    if (userInfoOptional.isPresent()) {
+      return userInfoOptional.get()
+          .getAccounts()
+          .stream()
+          .map(GatewayAccountRequestDTO::getUuid)
+          .collect(Collectors.toList());
+    }
+    return Collections.emptyList();
   }
 }

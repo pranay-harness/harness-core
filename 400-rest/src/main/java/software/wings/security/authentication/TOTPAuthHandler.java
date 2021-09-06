@@ -7,7 +7,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -34,6 +36,7 @@ import org.joda.time.DateTimeUtils;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class TOTPAuthHandler implements TwoFactorAuthHandler {
   @Inject private UserService userService;
   @Inject private AuthenticationUtils authenticationUtils;

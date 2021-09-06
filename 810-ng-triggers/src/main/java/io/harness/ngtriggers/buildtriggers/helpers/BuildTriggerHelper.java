@@ -66,8 +66,10 @@ public class BuildTriggerHelper {
 
     Map<String, Object> fqnToValueMap = new HashMap<>();
     for (Map.Entry<FQN, Object> entry : pipelineYamlConfig.getFqnToValueMap().entrySet()) {
-      String key =
-          fqnDisplayStrs.stream().filter(str -> entry.getKey().display().startsWith(str)).findFirst().orElse(null);
+      String key = fqnDisplayStrs.stream()
+                       .filter(str -> entry.getKey().display().toLowerCase().startsWith(str.toLowerCase()))
+                       .findFirst()
+                       .orElse(null);
       if (key == null) {
         continue;
       }
@@ -112,7 +114,10 @@ public class BuildTriggerHelper {
     String buildRef = triggerManifestSpecMap.get("manifestRef").asText();
     List<String> keys = Arrays.asList(
         "pipeline.stages.stage[identifier:STAGE_REF].spec.serviceConfig.serviceDefinition.spec.manifests.manifest[identifier:BUILD_REF]",
-        "pipeline.stages.parallel.stage[identifier:STAGE_REF].spec.serviceConfig.serviceDefinition.spec.manifests.manifest[identifier:BUILD_REF]");
+        "pipeline.stages.stage[identifier:STAGE_REF].spec.serviceConfig.stageOverrides.manifests.manifest[identifier:BUILD_REF]",
+        "pipeline.stages.PARALLEL.stage[identifier:STAGE_REF].spec.serviceConfig.serviceDefinition.spec.manifests.manifest[identifier:BUILD_REF]",
+        "pipeline.stages.PARALLEL.stage[identifier:STAGE_REF].spec.serviceConfig.stageOverrides.manifests.manifest[identifier:BUILD_REF]");
+
     Map<String, Object> pipelineBuildSpecMap =
         generateFinalMapWithBuildSpecFromPipeline(pipelineYml, stageRef, buildRef, keys);
 
@@ -146,6 +151,11 @@ public class BuildTriggerHelper {
 
   public String fetchStoreTypeForHelm(BuildTriggerOpsData buildTriggerOpsData) {
     EngineExpressionEvaluator engineExpressionEvaluator = new EngineExpressionEvaluator(null);
+    Object evaluateExpression =
+        engineExpressionEvaluator.evaluateExpression("spec.store.type", buildTriggerOpsData.getTriggerSpecMap());
+    if (evaluateExpression == null) {
+      return null;
+    }
     return ((TextNode) engineExpressionEvaluator.evaluateExpression(
                 "spec.store.type", buildTriggerOpsData.getTriggerSpecMap()))
         .asText();
@@ -153,6 +163,11 @@ public class BuildTriggerHelper {
 
   public String fetchValueFromJsonNode(String path, Map<String, Object> map) {
     EngineExpressionEvaluator engineExpressionEvaluator = new EngineExpressionEvaluator(null);
+    Object evaluateExpression = engineExpressionEvaluator.evaluateExpression(path, map);
+    if (evaluateExpression == null) {
+      return EMPTY;
+    }
+
     return ((TextNode) engineExpressionEvaluator.evaluateExpression(path, map)).asText();
   }
 

@@ -305,6 +305,18 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     dataCollectionTaskService.abortDeploymentDataCollectionTasks(verificationTaskIds);
   }
 
+  @Override
+  public List<String> getCVConfigIdsForVerificationJobInstance(
+      String verificationJobInstanceId, List<String> filterIdentifiers) {
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
+    return verificationJobInstance.getCvConfigMap()
+        .values()
+        .stream()
+        .filter(cvConfig -> filterIdentifiers.contains(cvConfig.getIdentifier()))
+        .map(cvConfig -> cvConfig.getUuid())
+        .collect(Collectors.toList());
+  }
+
   private void updateStatusIfDone(String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
     if (verificationJobInstance.getExecutionStatus() != ExecutionStatus.RUNNING) {

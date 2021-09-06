@@ -14,6 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 @HarnessRepo
 @Transactional
 public interface SourceCodeManagerRepository extends PagingAndSortingRepository<SourceCodeManager, String> {
-  List<SourceCodeManager> findByUserIdentifier(String userIdentifier);
-  long deleteByUserIdentifierAndName(String userIdentifier, String name);
+  List<SourceCodeManager> findByUserIdentifierAndAccountIdentifier(String userIdentifier, String accountIdentifier);
+  long deleteByUserIdentifierAndNameAndAccountIdentifier(String userIdentifier, String name, String accountIdentifier);
 }

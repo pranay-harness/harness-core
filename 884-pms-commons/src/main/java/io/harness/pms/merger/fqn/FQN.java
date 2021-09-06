@@ -102,6 +102,21 @@ public class FQN {
         && lastNode.getKey().equals(YAMLFieldNameConstants.NAME);
   }
 
+  public boolean isStageIdentifier() {
+    if (fqnList.size() < 2) {
+      return false;
+    }
+    String finalElementFieldName = getFieldName();
+    if (!finalElementFieldName.equals(YAMLFieldNameConstants.IDENTIFIER)) {
+      return false;
+    }
+    FQNNode penultimateElement = fqnList.get(fqnList.size() - 2);
+    if (penultimateElement.getNodeType() == FQNNode.NodeType.KEY_WITH_UUID) {
+      return penultimateElement.getKey().equals(YAMLFieldNameConstants.STAGE);
+    }
+    return false;
+  }
+
   public String getFieldName() {
     return fqnList.get(fqnList.size() - 1).getKey();
   }

@@ -163,7 +163,7 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class WatcherServiceImpl implements WatcherService {
-  private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
+  private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_UPGRADE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
@@ -1277,7 +1277,7 @@ public class WatcherServiceImpl implements WatcherService {
       if (!watcherConfiguration.getDelegateCheckLocation().startsWith("file://")) {
         String watcherMetadata = getResponseStringFromUrl();
         latestVersion = substringBefore(watcherMetadata, " ").trim();
-        if (Pattern.matches("\\d{1}\\.\\d{1}\\.\\d{5,6}(\\-\\d{3})?", latestVersion)) {
+        if (Pattern.matches("\\d{1}\\.\\d{1}\\.\\d{5,7}(\\-\\d{3})?", latestVersion)) {
           upgrade = !StringUtils.equals(getVersion(), latestVersion);
         }
       }

@@ -1,6 +1,7 @@
 package io.harness.ng.core.user.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
@@ -66,6 +67,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import retrofit2.http.Body;
@@ -153,12 +155,26 @@ public class UserResource {
   @Path("batch")
   @ApiOperation(value = "Get a list of users", nickname = "getUsers")
   public ResponseDTO<PageResponse<UserMetadataDTO>> getUsers(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(USER, null), VIEW_USER_PERMISSION);
+    if (userFilter == null || UserFilter.ParentFilter.NO_PARENT_SCOPES.equals(userFilter.getParentFilter())) {
+      accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+          Resource.of(USER, null), VIEW_USER_PERMISSION);
+    } else {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(accountIdentifier, null, null), Resource.of(USER, null), VIEW_USER_PERMISSION);
+      if (isNotEmpty(orgIdentifier)) {
+        accessControlClient.checkForAccessOrThrow(
+            ResourceScope.of(accountIdentifier, orgIdentifier, null), Resource.of(USER, null), VIEW_USER_PERMISSION);
+        if (isNotEmpty(projectIdentifier)) {
+          accessControlClient.checkForAccessOrThrow(
+              ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(USER, null),
+              VIEW_USER_PERMISSION);
+        }
+      }
+    }
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)

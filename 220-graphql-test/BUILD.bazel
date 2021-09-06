@@ -19,10 +19,12 @@ java_library(
     deps = [
         "//:lombok",
         "//230-model-test:module",
+        "//360-cg-manager:module",
         "//380-cg-graphql:module",
         "//400-rest:module",
         "//400-rest:supporter-test",
         "//940-feature-flag:tests",
+        "//955-delegate-beans:module",
         "//960-persistence:supporter-test",
         "//970-rbac-core:module",
         "//990-commons-test:module",

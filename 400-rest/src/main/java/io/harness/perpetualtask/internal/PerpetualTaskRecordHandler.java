@@ -113,7 +113,11 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
             .acceptableNoAlertDelay(ofSeconds(45))
             .acceptableExecutionTime(ofSeconds(30))
             .handler(this::assign)
-            .filterExpander(query -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED))
+            .filterExpander(query
+                -> query.filter(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
+                       .or(query.criteria(PerpetualTaskRecordKeys.assignAfterMs).doesNotExist(),
+                           query.criteria(PerpetualTaskRecordKeys.assignAfterMs)
+                               .lessThanOrEq(System.currentTimeMillis())))
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .schedulingType(IRREGULAR_SKIP_MISSED)
             .persistenceProvider(persistenceProvider)
@@ -155,7 +159,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
                 ((PerpetualTaskCapabilityCheckResponse) response).isAbleToExecutePerpetualTask();
             if (!isAbleToExecutePerpetualTask) {
               perpetualTaskService.updateTaskUnassignedReason(
-                  taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES);
+                  taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES, taskRecord.getAssignTryCount());
 
               raiseAlert(
                   taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
@@ -178,7 +182,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
 
         } else if ((response instanceof RemoteMethodReturnValueData)
             && (((RemoteMethodReturnValueData) response).getException() instanceof InvalidRequestException)) {
-          perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES);
+          perpetualTaskService.updateTaskUnassignedReason(
+              taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES, taskRecord.getAssignTryCount());
 
           raiseAlert(
               taskRecord, format(NO_ELIGIBLE_DELEGATE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
@@ -190,11 +195,13 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
         }
       } catch (NoInstalledDelegatesException exception) {
         ignoredOnPurpose(exception);
-        perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED);
+        perpetualTaskService.updateTaskUnassignedReason(
+            taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_INSTALLED, taskRecord.getAssignTryCount());
         raiseAlert(taskRecord, NO_DELEGATES_INSTALLED_TO_HANDLE_PERPETUAL_TASK);
       } catch (NoAvailableDelegatesException exception) {
         ignoredOnPurpose(exception);
-        perpetualTaskService.updateTaskUnassignedReason(taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE);
+        perpetualTaskService.updateTaskUnassignedReason(
+            taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE, taskRecord.getAssignTryCount());
         raiseAlert(
             taskRecord, format(NO_DELEGATE_AVAILABLE_TO_HANDLE_PERPETUAL_TASK, taskRecord.getPerpetualTaskType()));
       } catch (WingsException exception) {

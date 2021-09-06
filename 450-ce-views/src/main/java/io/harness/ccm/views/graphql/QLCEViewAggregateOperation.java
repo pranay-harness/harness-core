@@ -1,3 +1,3 @@
 package io.harness.ccm.views.graphql;
 
-public enum QLCEViewAggregateOperation { SUM, MAX, MIN }
+public enum QLCEViewAggregateOperation { SUM, MAX, MIN, AVG }

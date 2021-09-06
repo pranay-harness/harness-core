@@ -5,16 +5,29 @@ import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import lombok.AllArgsConstructor;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class NgLicenseHttpClientModule extends AbstractModule {
   private final ServiceHttpClientConfig ngManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
+  private static NgLicenseHttpClientModule instance;
+
+  private NgLicenseHttpClientModule(
+      ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret, String clientId) {
+    this.ngManagerClientConfig = ngManagerClientConfig;
+    this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
+  }
+
+  public static NgLicenseHttpClientModule getInstance(
+      ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret, String clientId) {
+    if (instance == null) {
+      instance = new NgLicenseHttpClientModule(ngManagerClientConfig, serviceSecret, clientId);
+    }
+    return instance;
+  }
 
   @Provides
   private NgLicenseHttpClientFactory ngLicenseHttpClientFactory(KryoConverterFactory kryoConverterFactory) {

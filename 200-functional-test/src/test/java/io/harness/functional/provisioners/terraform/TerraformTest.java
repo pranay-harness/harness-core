@@ -13,6 +13,8 @@ import static software.wings.utils.CryptoUtils.secureRandAlphaNumString;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
@@ -61,9 +63,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDP)
 public class TerraformTest extends AbstractFunctionalTest {
   private static final String secretKeyName = "aws_playground_secret_key";
   private static final long TEST_TIMEOUT_IN_MINUTES = 3;
@@ -164,6 +168,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void shouldFetchTerraformVariablesWithAccountGitConnector() throws Exception {
     setupStuff(
         Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);
@@ -184,6 +189,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void shouldFetchTerraformTargetsWithAccountGitConnector() throws Exception {
     setupStuff(
         Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);
@@ -199,6 +205,7 @@ public class TerraformTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void shouldRunTerraformWorkflowWithAccountGitConnector() throws Exception {
     setupStuff(
         Applications.GENERIC_TEST, Services.GENERIC_TEST, Environments.GENERIC_TEST, Settings.TERRAFORM_MAIN_GIT_AC);

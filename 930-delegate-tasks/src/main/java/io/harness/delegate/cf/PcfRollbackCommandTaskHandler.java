@@ -92,23 +92,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       }
 
       CfRequestConfig cfRequestConfig =
-          CfRequestConfig.builder()
-              .userName(String.valueOf(pcfConfig.getUsername()))
-              .password(String.valueOf(pcfConfig.getPassword()))
-              .endpointUrl(pcfConfig.getEndpointUrl())
-              .orgName(commandRollbackRequest.getOrganization())
-              .spaceName(commandRollbackRequest.getSpace())
-              .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin() == null
-                      ? 10
-                      : commandRollbackRequest.getTimeoutIntervalInMin())
-              .cfHomeDirPath(workingDirectory.getAbsolutePath())
-              .useCFCLI(commandRollbackRequest.isUseCfCLI())
-              .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
-                  cfCommandRequest.isUseCfCLI(), cfCommandRequest.getCfCliVersion()))
-              .cfCliVersion(cfCommandRequest.getCfCliVersion())
-              .limitPcfThreads(commandRollbackRequest.isLimitPcfThreads())
-              .ignorePcfConnectionContextCache(commandRollbackRequest.isIgnorePcfConnectionContextCache())
-              .build();
+          buildCfRequestConfig(cfCommandRequest, commandRollbackRequest, workingDirectory, pcfConfig);
 
       // Will be used if app autoscalar is configured
       CfAppAutoscalarRequestData autoscalarRequestData =
@@ -165,11 +149,8 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
 
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback completed successfully", INFO, SUCCESS);
 
-    } catch (IOException | PivotalClientApiException e) {
+    } catch (Exception e) {
       exception = e;
-      logExceptionMessage(executionLogCallback, commandRollbackRequest, exception);
-    } catch (Exception ex) {
-      exception = ex;
       logExceptionMessage(executionLogCallback, commandRollbackRequest, exception);
     } finally {
       executionLogCallback = logStreamingTaskClient.obtainLogCallback(Wrapup);
@@ -194,6 +175,27 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .commandExecutionStatus(cfDeployCommandResponse.getCommandExecutionStatus())
         .errorMessage(cfDeployCommandResponse.getOutput())
         .pcfCommandResponse(cfDeployCommandResponse)
+        .build();
+  }
+
+  private CfRequestConfig buildCfRequestConfig(CfCommandRequest cfCommandRequest,
+      CfCommandRollbackRequest commandRollbackRequest, File workingDirectory, CfInternalConfig pcfConfig) {
+    return CfRequestConfig.builder()
+        .userName(String.valueOf(pcfConfig.getUsername()))
+        .password(String.valueOf(pcfConfig.getPassword()))
+        .endpointUrl(pcfConfig.getEndpointUrl())
+        .orgName(commandRollbackRequest.getOrganization())
+        .spaceName(commandRollbackRequest.getSpace())
+        .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin() == null
+                ? 10
+                : commandRollbackRequest.getTimeoutIntervalInMin())
+        .cfHomeDirPath(workingDirectory.getAbsolutePath())
+        .useCFCLI(commandRollbackRequest.isUseCfCLI())
+        .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
+            cfCommandRequest.isUseCfCLI(), cfCommandRequest.getCfCliVersion()))
+        .cfCliVersion(cfCommandRequest.getCfCliVersion())
+        .limitPcfThreads(commandRollbackRequest.isLimitPcfThreads())
+        .ignorePcfConnectionContextCache(commandRollbackRequest.isIgnorePcfConnectionContextCache())
         .build();
   }
 

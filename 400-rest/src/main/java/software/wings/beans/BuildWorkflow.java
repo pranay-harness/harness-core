@@ -62,6 +62,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withRollbackProvisioners(getRollbackProvisioners())
+        .withRollbackProvisionersReverse(getRollbackProvisionersReverse())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -91,6 +92,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
     private PhaseStep rollbackProvisioners;
+    private PhaseStep rollbackProvisionersReverse;
 
     private BuildOrchestrationWorkflowBuilder() {}
     public static BuildOrchestrationWorkflowBuilder aBuildOrchestrationWorkflow() {
@@ -109,6 +111,11 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
 
     public BuildOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
       this.rollbackProvisioners = rollbackProvisioners;
+      return this;
+    }
+
+    public BuildOrchestrationWorkflowBuilder withRollbackProvisionersReverse(PhaseStep rollbackProvisionersReverse) {
+      this.rollbackProvisionersReverse = rollbackProvisionersReverse;
       return this;
     }
 
@@ -189,6 +196,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
       workflow.setDerivedVariables(derivedVariables);
       workflow.setRequiredEntityTypes(requiredEntityTypes);
       workflow.setRollbackProvisioners(rollbackProvisioners);
+      workflow.setRollbackProvisionersReverse(rollbackProvisionersReverse);
       return workflow;
     }
   }

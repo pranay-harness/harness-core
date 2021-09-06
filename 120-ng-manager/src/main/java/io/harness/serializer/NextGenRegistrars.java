@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
@@ -25,6 +26,7 @@ import org.mongodb.morphia.converters.TypeConverter;
 public class NextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(AccessControlClientRegistrars.kryoRegistrars)
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .addAll(CDNGRegistrars.kryoRegistrars)

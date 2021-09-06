@@ -3,18 +3,17 @@ package io.harness.feature.bases;
 import io.harness.feature.constants.RestrictionType;
 import io.harness.feature.interfaces.StaticLimitInterface;
 
+import lombok.Getter;
+
+@Getter
 public class StaticLimitRestriction extends Restriction {
   long limit;
-  StaticLimitInterface staticLimit;
+  StaticLimitInterface staticLimitInterface;
 
-  public StaticLimitRestriction(RestrictionType restrictionType, long limit, StaticLimitInterface staticLimit) {
+  public StaticLimitRestriction(
+      RestrictionType restrictionType, long limit, StaticLimitInterface staticLimitInterface) {
     super(restrictionType);
     this.limit = limit;
-    this.staticLimit = staticLimit;
-  }
-
-  @Override
-  public boolean check(String accountIdentifier) {
-    return staticLimit.getCurrentValue(accountIdentifier) < limit;
+    this.staticLimitInterface = staticLimitInterface;
   }
 }

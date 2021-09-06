@@ -585,9 +585,10 @@ permits {"name": "createdAt_1", "background": true} {"createdAt": 1}
 permits {"name": "expireAt_1", "background": true, "expireAfterSeconds": 0} {"expireAt": 1}
 permits {"name": "key_1", "unique": true} {"key": 1}
 perpetualTask {"name": "accountId_1", "background": true} {"accountId": 1}
-perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignerIterations": 1}
+perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignAfterMs": 1, "assignerIterations": 1}
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "rebalanceIterator", "background": true} {"state": 1, "rebalanceIteration": 1}
+perpetualTaskScheduleConfig {"name": "unique_perpetualTaskScheduleConfig_index1", "unique": true} {"accountId": 1, "perpetualTaskType": 1}
 personalization {"name": "unique_identification", "unique": true} {"accountId": 1, "userId": 1}
 pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}
 pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -712,7 +713,8 @@ settingAttributes {"name": "secretsMigrationIdx", "background": true} {"value.ty
 settingAttributes {"name": "secretsMigrationPerAccountIdx", "background": true} {"value.type": 1, "secretsMigrated": 1, "accountId": 1}
 settingAttributes {"name": "typeNextIterationIdx", "background": true} {"value.type": 1, "nextIteration": 1}
 signupVerificationTokens {"name": "token_signupVerificationToken_query_index", "background": true} {"token": 1}
-sourceCodeManagers {"name": "query_idx", "unique": true} {"userIdentifier": 1, "name": 1}
+sourceCodeManagers {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
+sourceCodeManagers {"name": "uniqueIndex", "unique": true} {"userIdentifier": 1, "name": 1, "accountIdentifier": 1}
 ssoSettings {"name": "accountIdTypeIdx", "background": true} {"accountId": 1, "type": 1}
 ssoSettings {"name": "appId_1", "background": true} {"appId": 1}
 ssoSettings {"name": "createdAt_1", "background": true} {"createdAt": 1}
