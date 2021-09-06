@@ -16,7 +16,6 @@ import java.util.List;
  * Created by rsingh on 6/7/18.
  */
 @OwnedBy(PL)
-@TargetModule(HarnessModule._890_SM_CORE)
 public interface ManagerDecryptionService {
   void decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails);
 
