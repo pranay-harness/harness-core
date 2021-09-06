@@ -166,16 +166,8 @@ public class InviteResource {
       @NotNull @Valid CreateInviteDTO createInviteDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
-    List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
-    List<Invite> invites = toInviteList(createInviteDTO, accountIdentifier, orgIdentifier, projectIdentifier);
-    for (Invite invite : invites) {
-      try {
-        InviteOperationResponse response = inviteService.create(invite);
-        inviteOperationResponses.add(response);
-      } catch (DuplicateFieldException ex) {
-        log.error("error: ", ex);
-      }
-    }
+    List<InviteOperationResponse> inviteOperationResponses =
+        inviteService.createInvitations(accountIdentifier, orgIdentifier, projectIdentifier, createInviteDTO);
     return ResponseDTO.newResponse(inviteOperationResponses);
   }
 

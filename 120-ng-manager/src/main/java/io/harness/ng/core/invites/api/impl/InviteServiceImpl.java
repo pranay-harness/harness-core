@@ -9,6 +9,7 @@ import static io.harness.ng.core.invites.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_EXPIRED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
+import static io.harness.ng.core.invites.mapper.InviteMapper.toInviteList;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.ACCEPTED_INVITE;
 
@@ -47,6 +48,7 @@ import io.harness.ng.core.events.UserInviteDeleteEvent;
 import io.harness.ng.core.events.UserInviteUpdateEvent;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.InviteService;
+import io.harness.ng.core.invites.dto.CreateInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.dto.RoleBinding;
@@ -193,6 +195,22 @@ public class InviteServiceImpl implements InviteService {
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(getExceptionMessage(invite), USER_SRE, ex);
     }
+  }
+
+  @Override
+  public List<InviteOperationResponse> createInvitations(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, CreateInviteDTO createInviteDTO) {
+    List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
+    List<Invite> invites = toInviteList(createInviteDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+    for (Invite invite : invites) {
+      try {
+        InviteOperationResponse response = inviteService.create(invite);
+        inviteOperationResponses.add(response);
+      } catch (DuplicateFieldException ex) {
+        log.error("error: ", ex);
+      }
+    }
+    return inviteOperationResponses;
   }
 
   private void preCreateInvite(Invite invite) {

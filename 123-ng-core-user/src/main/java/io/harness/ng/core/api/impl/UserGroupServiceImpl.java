@@ -172,15 +172,8 @@ public class UserGroupServiceImpl implements UserGroupService {
                                           .inviteType(InviteType.ADMIN_INITIATED_INVITE)
                                           .userGroups(singletonList(userGroupIdentifier))
                                           .build();
-    List<Invite> invites = toInviteList(
-        createInviteDTO, scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
-    for (Invite invite : invites) {
-      try {
-        inviteService.create(invite);
-      } catch (DuplicateFieldException ex) {
-        log.error("error: ", ex);
-      }
-    }
+    inviteService.createInvitations(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), createInviteDTO);
   }
 
   @Override
