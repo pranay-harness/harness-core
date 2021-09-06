@@ -50,13 +50,12 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
   @Override
   public void pushFile(FileInfo request, StreamObserver<PushFileResponse> responseObserver) {
     PushFileResponse pushFileResponse;
-    try (MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
-      log.debug("Grpc request received for pushFromHarness");
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
+         MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
+      log.debug("Grpc request received for pushFile");
       setUserPrincipal(request);
       pushFileResponse = harnessToGitHelperService.pushFile(request);
-      responseObserver.onNext(pushFileResponse);
-      responseObserver.onCompleted();
-      log.debug("Grpc request completed for pushFromHarness");
+      log.debug("Grpc request completed for pushFile");
     } catch (Exception e) {
       log.error("Push to git failed with exception", e);
       final String message = ExceptionUtils.getMessage(e);
