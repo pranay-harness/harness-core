@@ -12,7 +12,7 @@ import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.beans.security.HarnessUserGroupDTO;
+import software.wings.security.HarnessUserGroupDTO;
 
 import java.util.List;
 import java.util.Set;

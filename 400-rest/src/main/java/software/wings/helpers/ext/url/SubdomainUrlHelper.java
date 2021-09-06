@@ -38,7 +38,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private PortalConfig portalConfig;
 
-  /**
+  /**x
    * Returns Portal URL
    * @param accountId
    * @return Base URl

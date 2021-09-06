@@ -1,4 +1,4 @@
-package software.wings.beans.security;
+package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 
