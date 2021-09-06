@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure.arm.deployment.context;
+package io.harness.delegate.azure.arm.deployment.context;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
