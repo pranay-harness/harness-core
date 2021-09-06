@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
@@ -14,7 +13,6 @@ import lombok.Builder;
 
 @Builder
 @OwnedBy(CDP)
-@TargetModule(_970_API_SERVICES_BEANS)
 public class ExecutionLogWriter extends Writer {
   private final LogCallback logCallback;
   @SuppressWarnings("PMD.AvoidStringBufferField") // This buffer is getting cleared on every newline.
