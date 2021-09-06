@@ -14,6 +14,7 @@ import (
 	pb "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
@@ -209,7 +210,10 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			// Found the merge event with changed files
 			r.log.Infow("[redis stream]: calling merge CG", "account_id", accountId, "repo", repo,
 				"source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files)
-			err := fn(ctx, req)
+
+			// update ctx with log
+			log := r.log.With("request-id", sha, "accountID", accountId)
+			err := fn(logger.WithContext(ctx, log), req)
 			if err != nil {
 				r.log.Errorw("[redis stream]: could not merge partial call graph to master", "account_id", accountId,
 					"repo", repo, "source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files,

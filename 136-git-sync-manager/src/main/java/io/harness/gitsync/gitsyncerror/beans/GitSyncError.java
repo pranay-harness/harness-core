@@ -6,7 +6,6 @@ import io.harness.EntityType;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
@@ -14,11 +13,10 @@ import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarne
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
+import io.harness.security.dto.Principal;
 
 import lombok.Builder;
 import lombok.Data;
@@ -43,8 +41,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitSyncError")
 @OwnedBy(DX)
 @StoreIn(DbAliases.NG_MANAGER)
-public class GitSyncError
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+public class GitSyncError implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
   // The project details of the file
   private String accountIdentifier;
@@ -72,9 +69,9 @@ public class GitSyncError
   private GitSyncErrorType errorType;
   private GitSyncErrorDetails additionalErrorDetails;
 
-  @CreatedBy private EmbeddedUser createdBy;
+  @CreatedBy private Principal createdBy;
   @CreatedDate private long createdAt;
-  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
+  @LastModifiedBy private Principal lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
 
   @UtilityClass

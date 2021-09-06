@@ -38,5 +38,5 @@ public interface InviteService {
 
   boolean isUserPasswordSet(String accountIdentifier, String email);
 
-  URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String accountCreationFragment, String jwtToken);
+  URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String email, String decodedEmail, String jwtToken);
 }

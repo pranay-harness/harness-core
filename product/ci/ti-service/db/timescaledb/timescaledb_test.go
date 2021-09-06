@@ -11,6 +11,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -54,7 +55,7 @@ func Test_SingleWrite(t *testing.T) {
 	mock.ExpectExec(stmt).
 		WithArgs(tn, account, org, project,
 			pipeline, build, stage, step, report, repo, sha, "blah", "", "", 0, "", "", "", "", "", "").WillReturnResult(sqlmock.NewResult(0, 1))
-	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	tdb := &TimeScaleDb{Conn: db, EvalTable: table}
 	test1 := &types.TestCase{Name: "blah"}
 	err = tdb.Write(ctx, account, org, project, pipeline, build, stage, step, report, repo, sha, test1)
 	assert.Nil(t, err, nil)
@@ -114,7 +115,7 @@ func Test_Write_Batch(t *testing.T) {
 	test3 := &types.TestCase{Name: "test3", ClassName: "class3", SuiteName: "suite3",
 		SystemOut: "out3", SystemErr: "err3", DurationMs: 12,
 		Result: types.Result{Status: types.StatusError, Message: "msg3", Type: "type3", Desc: "desc3"}}
-	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	tdb := &TimeScaleDb{Conn: db, EvalTable: table}
 	err = tdb.Write(ctx, account, org, project, pipeline, build, stage, step, report, repo, sha, test1, test2, test3)
 	assert.Nil(t, err, nil)
 }
@@ -134,6 +135,7 @@ func Test_Summary(t *testing.T) {
 	stage := "stage"
 
 	log := zap.NewExample().Sugar()
+	logger.InitLogger(log)
 	db, mock, err := db.NewMockDB(log)
 	if err != nil {
 		t.Fatal(err)
@@ -156,7 +158,7 @@ func Test_Summary(t *testing.T) {
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
 		WithArgs(account, org, project, pipeline, build, step, stage, report).WillReturnRows(rows)
-	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	tdb := &TimeScaleDb{Conn: db, EvalTable: table}
 	got, err := tdb.Summary(ctx, account, org, project, pipeline, build, step, stage, report)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.TotalTests, exp.TotalTests)
@@ -229,7 +231,7 @@ func Test_GetTestCases(t *testing.T) {
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
 		WithArgs(account, org, project, pipeline, build, step, stage, report, suite, defaultLimit, defaultOffset).WillReturnRows(rows)
-	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	tdb := &TimeScaleDb{Conn: db, EvalTable: table}
 	got, err := tdb.GetTestCases(ctx, account, org, project, pipeline, build, step, stage, report, suite, "duration_ms", "failed", desc, "", "")
 	fmt.Println("\n\ngot: ", got)
 	li, _ := strconv.Atoi(defaultLimit)
@@ -299,7 +301,7 @@ func Test_GetTestSuites(t *testing.T) {
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
 		WithArgs(account, org, project, pipeline, build, step, stage, report, defaultLimit, defaultOffset).WillReturnRows(rows)
-	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
+	tdb := &TimeScaleDb{Conn: db, EvalTable: table}
 	got, err := tdb.GetTestSuites(ctx, account, org, project, pipeline, build, step, stage, report, "", "", "", "", "")
 	li, _ := strconv.Atoi(defaultLimit)
 	assert.Nil(t, err, nil)
@@ -358,7 +360,7 @@ func Test_WriteSelectedTests(t *testing.T) {
 	mock.ExpectExec(stmt).
 		WithArgs(account, org, project, pipeline, build, stage, step,
 			total, selected, src, new, updated, repo, source, target).WillReturnResult(sqlmock.NewResult(0, 1))
-	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
+	tdb := &TimeScaleDb{Conn: db, SelectionTable: table}
 	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, repo, source, target, arg, 0, false)
 	assert.Nil(t, err, nil)
 }
@@ -437,7 +439,7 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 	mock.ExpectExec(stmt).
 		WithArgs(total, selected, src, new, updated, 30, 120,
 			account, org, project, pipeline, build, step, stage).WillReturnResult(sqlmock.NewResult(0, 1))
-	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
+	tdb := &TimeScaleDb{Conn: db, SelectionTable: table}
 	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, repo, source, target, arg, 30, true)
 	assert.Nil(t, err, nil)
 }
@@ -478,7 +480,7 @@ func Test_GetDiffFiles(t *testing.T) {
 		AddRow(sha, path3, types.FileDeleted)
 	mock.ExpectQuery(query).WithArgs(account, org, project, pipeline, build, stage, step).WillReturnRows(rows)
 
-	tdb := &TimeScaleDb{Conn: db, Log: log, CoverageTable: table}
+	tdb := &TimeScaleDb{Conn: db, CoverageTable: table}
 	resp, err := tdb.GetDiffFiles(ctx, account, org, project, pipeline, build, step, stage)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, resp.Sha, sha)

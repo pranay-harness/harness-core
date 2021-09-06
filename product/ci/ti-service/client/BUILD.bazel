@@ -12,5 +12,6 @@ go_library(
         "//product/ci/ti-service/logger",
         "//product/ci/ti-service/types",
         "@com_github_cenkalti_backoff_v4//:backoff",
+        "@org_uber_go_zap//:zap",
     ],
 )

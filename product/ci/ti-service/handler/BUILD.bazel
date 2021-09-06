@@ -18,6 +18,7 @@ go_library(
         "//product/ci/common/avro",
         "//product/ci/ti-service/config",
         "//product/ci/ti-service/db",
+        "//product/ci/ti-service/logger",
         "//product/ci/ti-service/tidb",
         "//product/ci/ti-service/tidb/mongodb",
         "//product/ci/ti-service/types",
