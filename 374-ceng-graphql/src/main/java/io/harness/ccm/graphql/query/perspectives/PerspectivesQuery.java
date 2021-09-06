@@ -109,18 +109,20 @@ public class PerspectivesQuery {
       @GraphQLArgument(name = "sortCriteria") List<QLCEViewSortCriteria> sortCriteria,
       @GraphQLArgument(name = "limit") Integer limit, @GraphQLArgument(name = "offset") Integer offset,
       @GraphQLArgument(name = "isClusterQuery") Boolean isClusterQuery,
+      @GraphQLArgument(name = "skipRoundOff") Boolean skipRoundOff,
       @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
     isClusterQuery = isClusterQuery != null && isClusterQuery;
+    skipRoundOff = skipRoundOff != null && skipRoundOff;
 
     return PerspectiveEntityStatsData.builder()
-        .data(
-            viewsBillingService
-                .getEntityStatsDataPointsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
-                    cloudProviderTableName, limit, offset, viewsQueryHelper.buildQueryParams(accountId, isClusterQuery))
-                .getData())
+        .data(viewsBillingService
+                  .getEntityStatsDataPointsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
+                      cloudProviderTableName, limit, offset,
+                      viewsQueryHelper.buildQueryParams(accountId, isClusterQuery, skipRoundOff))
+                  .getData())
         .build();
   }
 

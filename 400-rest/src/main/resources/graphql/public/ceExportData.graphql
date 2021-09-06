@@ -1,5 +1,4 @@
 extend type Query {
-  # Beta: Cloud Cost Management export data apis
   ceClusterBillingData(
     limit: Int
     offset: Int
@@ -8,6 +7,7 @@ extend type Query {
     groupBy: [ceGroupBy]
     sortCriteria: [ceSort]
     select: [ceSelect]
+    skipRoundOff: Boolean
   ): ceClusterBillingData @dataFetcher(name: ceClusterBillingData)
 }
 
