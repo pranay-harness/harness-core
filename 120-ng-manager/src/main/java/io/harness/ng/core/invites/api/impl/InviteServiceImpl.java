@@ -204,7 +204,7 @@ public class InviteServiceImpl implements InviteService {
     List<Invite> invites = toInviteList(createInviteDTO, accountIdentifier, orgIdentifier, projectIdentifier);
     for (Invite invite : invites) {
       try {
-        InviteOperationResponse response = inviteService.create(invite);
+        InviteOperationResponse response = create(invite);
         inviteOperationResponses.add(response);
       } catch (DuplicateFieldException ex) {
         log.error("error: ", ex);
