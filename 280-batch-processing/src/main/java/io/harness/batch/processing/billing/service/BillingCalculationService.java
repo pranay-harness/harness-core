@@ -220,8 +220,8 @@ public class BillingCalculationService {
           * (1 - utilizationData.getAvgMemoryUtilization()));
     }
 
-    double storageRequest = utilizationData.getAvgStorageRequestValue();
-    double storageUsage = utilizationData.getAvgStorageUsageValue();
+    double storageRequest = utilizationData.getMaxStorageRequestValue();
+    double storageUsage = utilizationData.getMaxStorageUsageValue();
     StorageResource storageResource = instanceData.getStorageResource();
     if (instanceData.getInstanceType() == InstanceType.K8S_PV) {
       // in one cases (with NFS PV), the PV.Capacity is much less than claimed PVC.Request
@@ -242,8 +242,7 @@ public class BillingCalculationService {
           // But from Pod stats client we see that the request is 250 GB ( = 256000.0 / 1024.0) This
           // inconsistency is unknown. "But is very frequent" in NFS and some non-GCP based PV's
           log.warn("THIS IS HARMLESS, Inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
-              utilizationData.getAvgStorageUsageValue(), utilizationData.getAvgStorageRequestValue(),
-              instanceData.toString());
+              utilizationData.getMaxStorageUsageValue(), utilizationData.getMaxStorageRequestValue(), instanceData);
         }
       }
     }

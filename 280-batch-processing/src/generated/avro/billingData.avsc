@@ -68,6 +68,8 @@
      {"name": "storageunallocatedcost", "type" : ["double", "null"]},
      {"name": "storageutilizationvalue", "type" : ["double", "null"]},
      {"name": "storagerequest", "type" : ["double", "null"]},
+     {"name": "maxstorageutilizationvalue", "type" : ["double", "null"]},
+     {"name": "maxstoragerequest", "type" : ["double", "null"]},
      {"name" : "labels", "type": {
           "type": "array",
           "items": [{
