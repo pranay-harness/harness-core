@@ -123,7 +123,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
 
     boolean updateCallWithMaskedSecretKey = false;
-
+    savedGcpKmsConfig.setRegion(gcpKmsConfig.getRegion());
     savedGcpKmsConfig.setName(gcpKmsConfig.getName());
     savedGcpKmsConfig.setDefault(gcpKmsConfig.isDefault());
     savedGcpKmsConfig.setUsageRestrictions(gcpKmsConfig.getUsageRestrictions());
