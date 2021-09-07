@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -21,6 +21,7 @@ import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVA
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
+import static io.harness.persistence.AccountAccess.ACCOUNT_ID_KEY;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
@@ -266,7 +267,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
-@TargetModule(_360_CG_MANAGER)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserServiceImpl implements UserService {
   static final String ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   static final String USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME = "password_changed";
@@ -3041,8 +3042,21 @@ public class UserServiceImpl implements UserService {
     return pageResponse.getResponse();
   }
 
+  public Map<String, String> populateUserPrincipalClaim(
+      User user, Map<String, String> claims, boolean persistOldAccountId) {
+    String oldAccountId = claims.get(ACCOUNT_ID_KEY);
+    // User Principal needed in token for environments without gateway as this token will be sent back to different
+    // microservices
+    addUserPrincipal(claims, user);
+    if (persistOldAccountId && isNotEmpty(oldAccountId)) {
+      claims.put(ACCOUNT_ID_KEY, oldAccountId);
+    }
+    return claims;
+  }
+
   @Override
-  public String generateJWTToken(User user, Map<String, String> claims, JWT_CATEGORY category) {
+  public String generateJWTToken(
+      User user, Map<String, String> claims, JWT_CATEGORY category, boolean persistOldAccountId) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException(INCORRECT_PORTAL_SETUP);
@@ -3055,9 +3069,7 @@ public class UserServiceImpl implements UserService {
               .withIssuer(HARNESS_ISSUER)
               .withIssuedAt(new Date())
               .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()));
-      // User Principal needed in token for environments without gateway as this token will be sent back to different
-      // microservices
-      addUserPrincipal(claims, user);
+      claims = populateUserPrincipalClaim(user, claims, persistOldAccountId);
       if (claims != null && claims.size() > 0) {
         claims.forEach(jwtBuilder::withClaim);
       }
@@ -3487,7 +3499,6 @@ public class UserServiceImpl implements UserService {
     } else {
       query = getListUserQuery(accountId, includeUsersPendingInviteAcceptance);
     }
-    query.criteria(UserKeys.disabled).notEqual(true);
     applySortFilter(pageRequest, query);
     FindOptions findOptions = new FindOptions().skip(offset).limit(pageSize);
     List<User> userList = query.asList(findOptions);

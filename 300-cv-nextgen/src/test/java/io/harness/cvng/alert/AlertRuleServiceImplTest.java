@@ -8,9 +8,11 @@ import static io.harness.cvng.alert.util.VerificationStatus.VERIFICATION_PASSED;
 import static io.harness.cvng.beans.activity.ActivityType.CONFIG;
 import static io.harness.cvng.beans.activity.ActivityType.CUSTOM;
 import static io.harness.cvng.beans.activity.ActivityType.DEPLOYMENT;
+import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD;
 import static io.harness.cvng.beans.activity.ActivityType.INFRASTRUCTURE;
 import static io.harness.cvng.beans.activity.ActivityType.KUBERNETES;
 import static io.harness.cvng.beans.activity.ActivityType.OTHER;
+import static io.harness.cvng.beans.activity.ActivityType.PAGER_DUTY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.VUK;
@@ -207,7 +209,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     List<ActivityType> activityTypes = alertRuleService.getActivityTypes(accountId, orgIdentifier, projectIdentifier);
 
     assertThat(activityTypes).isNotNull();
-    assertThat(activityTypes).containsExactly(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, OTHER, KUBERNETES);
+    assertThat(activityTypes)
+        .containsExactly(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, OTHER, KUBERNETES, HARNESS_CD, PAGER_DUTY);
   }
 
   @Test

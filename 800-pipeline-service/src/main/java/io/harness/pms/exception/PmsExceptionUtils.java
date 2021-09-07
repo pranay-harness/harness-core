@@ -12,6 +12,7 @@ import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.yaml.YamlField;
 import io.harness.serializer.JsonUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +33,8 @@ public class PmsExceptionUtils {
         "Following yaml paths could not be parsed: %s", String.join(",", dependencies.getDependenciesMap().values()));
   }
 
-  private List<YamlNodeErrorInfo> getYamlNodeErrorInfo(Collection<YamlFieldBlob> yamlFieldBlobs) throws IOException {
+  @VisibleForTesting
+  List<YamlNodeErrorInfo> getYamlNodeErrorInfo(Collection<YamlFieldBlob> yamlFieldBlobs) throws IOException {
     List<YamlNodeErrorInfo> yamlNodeErrorInfos = new ArrayList<>();
     for (YamlFieldBlob yamlFieldBlob : yamlFieldBlobs) {
       YamlField yamlField = YamlField.fromFieldBlob(yamlFieldBlob);

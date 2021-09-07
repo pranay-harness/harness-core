@@ -62,6 +62,8 @@ public interface SecretManager extends OwnedByAccount {
 
   Optional<EncryptedDataDetail> encryptedDataDetails(
       String accountId, String fieldName, String refId, String workflowExecutionId);
+  Optional<EncryptedDataDetail> getEncryptedDataDetails(
+      String accountId, String fieldName, EncryptedData encryptedData, String workflowExecutionId);
 
   List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object);
 
@@ -88,6 +90,8 @@ public interface SecretManager extends OwnedByAccount {
   List<String> importSecretsViaFile(String accountId, InputStream uploadStream);
 
   String saveSecretText(String accountId, SecretText secretText, boolean validateScopes);
+
+  EncryptedData encryptSecret(String accountId, SecretText secretText, boolean validateScopes);
 
   boolean updateSecretText(String accountId, String uuId, SecretText secretText, boolean validateScopes);
 

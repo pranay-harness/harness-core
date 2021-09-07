@@ -52,6 +52,7 @@ fi
 BAZEL_MODULES="\
   //270-verification:module \
   //280-batch-processing:module \
+  //290-dashboard-service:module \
   //300-cv-nextgen:module \
   //310-ci-manager:module \
   //320-ci-execution:module \
@@ -68,6 +69,7 @@ BAZEL_MODULES="\
   //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
+  //440-secret-management-service:module \
   //441-cg-instance-sync:module \
   //445-cg-connectors:module \
   //450-ce-views:module \
@@ -352,6 +354,7 @@ build_bazel_module 420-delegate-service
 build_bazel_module 425-verification-commons
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
+build_bazel_module 440-secret-management-service
 build_bazel_module 445-cg-connectors
 build_bazel_module 450-ce-views
 build_bazel_module 460-capability

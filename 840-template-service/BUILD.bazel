@@ -6,6 +6,7 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
+    "//890-sm-core:module",
     "//900-git-sync-sdk:module",
     "//940-primary-version-manager:module",
     "//945-ng-audit-client:module",

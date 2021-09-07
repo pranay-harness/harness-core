@@ -27,4 +27,5 @@ enum EntityTypeProtoEnum {
   FEATURE_FLAG_STAGE = 19;
   MONITORED_SERVICE = 20;
   TEMPLATE = 21;
+  GIT_REPOSITORIES = 22;
 }

@@ -235,7 +235,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(analysisResult).isNotNull();
     assertThat(analysisResult.getOverallRisk()).isEqualTo(0.872);
     assertThat(analysisResult.getLogAnalysisResults().get(0))
-        .isEqualTo(AnalysisResult.builder().label(1).tag(LogAnalysisTag.KNOWN).count(14).riskScore(0.0).build());
+        .isEqualTo(AnalysisResult.builder().label(1).tag(LogAnalysisTag.KNOWN).count(14).build());
     assertThat(analysisResult.getLogAnalysisResults().get(1))
         .isEqualTo(AnalysisResult.builder().label(2).tag(LogAnalysisTag.UNEXPECTED).count(14).riskScore(1.0).build());
     List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
@@ -334,9 +334,9 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(analysisResult).isNotNull();
     assertThat(analysisResult.getOverallRisk()).isEqualTo(0.872);
     assertThat(analysisResult.getLogAnalysisResults().get(0))
-        .isEqualTo(AnalysisResult.builder().label(1).tag(LogAnalysisTag.KNOWN).count(14).riskScore(0.0).build());
+        .isEqualTo(AnalysisResult.builder().label(1).tag(LogAnalysisTag.KNOWN).count(14).build());
     assertThat(analysisResult.getLogAnalysisResults().get(1))
-        .isEqualTo(AnalysisResult.builder().label(2).tag(LogAnalysisTag.KNOWN).count(14).riskScore(0.0).build());
+        .isEqualTo(AnalysisResult.builder().label(2).tag(LogAnalysisTag.KNOWN).count(14).build());
     List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
     heatMaps.forEach(
         heatMap -> assertThat(heatMap.getHeatMapRisks().iterator().next().getAnomalousLogsCount()).isEqualTo(0));

@@ -23,8 +23,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -35,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "secrets", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("secrets")
+
 @StoreIn(DbAliases.NG_MANAGER)
 public class Secret {
   public static List<MongoIndex> mongoIndexes() {
@@ -71,7 +74,8 @@ public class Secret {
   SecretSpec secretSpec;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
-
+  @CreatedBy private Principal createdBy;
+  @LastModifiedBy private Principal lastUpdatedBy;
   public SecretDTOV2 toDTO() {
     SecretDTOV2 dto = SecretDTOV2.builder()
                           .orgIdentifier(getOrgIdentifier())

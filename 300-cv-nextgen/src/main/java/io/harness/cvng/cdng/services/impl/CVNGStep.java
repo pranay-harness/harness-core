@@ -13,6 +13,7 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -41,7 +42,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
@@ -75,15 +75,27 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     validate(stepParameters);
     String serviceIdentifier = stepParameters.getServiceIdentifier();
     String envIdentifier = stepParameters.getEnvIdentifier();
+
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(envIdentifier)
+                                                            .build();
+
     CVNGStepTaskBuilder cvngStepTaskBuilder = CVNGStepTask.builder();
-    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(serviceEnvironmentParams);
     if (monitoredServiceDTO == null || monitoredServiceDTO.getSources().getHealthSources().isEmpty()) {
       cvngStepTaskBuilder.skip(true);
       cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());
     } else {
       DeploymentActivity deploymentActivity =
-          getDeploymentActivity(stepParameters, accountId, projectIdentifier, orgIdentifier, monitoredServiceDTO);
+          getDeploymentActivity(stepParameters, accountId, projectIdentifier, orgIdentifier, monitoredServiceDTO,
+              Instant.ofEpochMilli(
+                  AmbianceUtils.getStageLevelFromAmbiance(ambiance)
+                      .orElseThrow(() -> new IllegalStateException("verify step needs to be part of a stage."))
+                      .getStartTs()));
       String activityUuid = activityService.register(deploymentActivity);
       cvngStepTaskBuilder.activityId(activityUuid).callbackId(activityUuid);
     }
@@ -95,7 +107,8 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
 
   @NotNull
   private DeploymentActivity getDeploymentActivity(CVNGStepParameter stepParameters, String accountId,
-      String projectIdentifier, String orgIdentifier, MonitoredServiceDTO monitoredServiceDTO) {
+      String projectIdentifier, String orgIdentifier, MonitoredServiceDTO monitoredServiceDTO,
+      Instant activityStartTime) {
     Instant startTime = clock.instant();
     VerificationJob verificationJob =
         stepParameters.getVerificationJobBuilder()
@@ -117,7 +130,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
                                                 .verificationStartTime(startTime.toEpochMilli())
                                                 .build();
     deploymentActivity.setVerificationJobs(Collections.singletonList(verificationJob));
-    deploymentActivity.setActivityStartTime(startTime.minus(Duration.ofMinutes(5)));
+    deploymentActivity.setActivityStartTime(activityStartTime);
     deploymentActivity.setOrgIdentifier(orgIdentifier);
     deploymentActivity.setAccountId(accountId);
     deploymentActivity.setProjectIdentifier(projectIdentifier);

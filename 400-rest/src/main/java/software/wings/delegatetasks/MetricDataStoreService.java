@@ -9,5 +9,5 @@ import java.util.List;
  */
 public interface MetricDataStoreService {
   boolean saveNewRelicMetrics(String accountId, String applicationId, String stateExecutionId, String delegateTaskID,
-      List<NewRelicMetricDataRecord> metricData);
+      List<NewRelicMetricDataRecord> metricData) throws Exception;
 }

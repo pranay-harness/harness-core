@@ -21,6 +21,10 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.PageRequest;
@@ -77,7 +81,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class SecretManagerImplTest extends WingsBaseTest {
   private Account account;
   @Mock private AccountService accountService;

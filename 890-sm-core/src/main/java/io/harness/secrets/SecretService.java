@@ -1,5 +1,7 @@
 package io.harness.secrets;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.HarnessSecret;
 import io.harness.beans.MigrateSecretTask;
@@ -18,8 +20,10 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(HarnessTeam.PL)
 public interface SecretService {
   EncryptedData createSecret(@NotEmpty String accountId, @NotNull HarnessSecret secret, boolean validateScopes);
+  EncryptedData encryptSecret(@NotEmpty String accountId, @NotNull HarnessSecret secret, boolean validateScopes);
   boolean updateSecret(@NotEmpty String accountId, @NotNull HarnessSecret secret, @NotEmpty String existingRecordId,
       boolean validateScopes);
   boolean updateSecretScopes(@NotEmpty String accountId, @NotEmpty String existingRecordId,

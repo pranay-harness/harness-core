@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.beans;
 
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,7 +20,7 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
   String environmentIdentifier;
   String serviceIdentifier;
   TimeSeriesMetricType metricType;
-
+  DataSourceType dataSourceType;
   CVMonitoringCategory category;
 
   String groupName;

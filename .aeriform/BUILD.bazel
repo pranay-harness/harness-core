@@ -64,6 +64,10 @@ aeriform("//280-batch-processing:supporter-test")
 
 aeriform("//280-batch-processing:tests")
 
+aeriform("//290-dashboard-service:module")
+
+aeriform("//290-dashboard-service:tests")
+
 aeriform("//300-cv-nextgen:module")
 
 aeriform("//300-cv-nextgen:tests")
@@ -131,6 +135,8 @@ aeriform("//430-cv-nextgen-commons:tests")
 aeriform("//440-connector-nextgen:module")
 
 aeriform("//440-connector-nextgen:tests")
+
+aeriform("//440-secret-management-service:module")
 
 aeriform("//441-cg-instance-sync:module")
 

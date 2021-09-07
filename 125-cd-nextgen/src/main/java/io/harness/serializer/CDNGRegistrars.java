@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
@@ -20,6 +21,7 @@ import lombok.experimental.UtilityClass;
 public class CDNGRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(AccessControlClientRegistrars.kryoRegistrars)
           .addAll(ManagerRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(DelegateServiceDriverRegistrars.kryoRegistrars)

@@ -12,6 +12,7 @@ go_library(
         "//product/ci/ti-service/db/timescaledb",
         "//product/ci/ti-service/eventsframework",
         "//product/ci/ti-service/handler",
+        "//product/ci/ti-service/logger",
         "//product/ci/ti-service/server",
         "//product/ci/ti-service/tidb",
         "//product/ci/ti-service/tidb/mongodb",
