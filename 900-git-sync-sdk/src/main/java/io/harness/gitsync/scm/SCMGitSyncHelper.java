@@ -1,6 +1,7 @@
 package io.harness.gitsync.scm;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 
 import io.harness.annotations.dev.OwnedBy;
