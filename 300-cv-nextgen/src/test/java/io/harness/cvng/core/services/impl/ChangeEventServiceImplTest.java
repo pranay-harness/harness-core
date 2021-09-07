@@ -49,7 +49,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
         new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())));
     ChangeEventDTO changeEventDTO = builderFactory.getHarnessCDChangeEventDTOBuilder().build();
 
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO);
+    changeEventService.register(changeEventDTO);
 
     Activity activityFromDb = hPersistence.createQuery(Activity.class).get();
     Assertions.assertThat(activityFromDb).isNotNull();
@@ -63,10 +63,10 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
         new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())));
 
     ChangeEventDTO changeEventDTO = builderFactory.getHarnessCDChangeEventDTOBuilder().build();
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO);
+    changeEventService.register(changeEventDTO);
     Long eventTime = 123L;
     ChangeEventDTO changeEventDTO2 = builderFactory.getHarnessCDChangeEventDTOBuilder().eventTime(eventTime).build();
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO2);
+    changeEventService.register(changeEventDTO2);
 
     Assertions.assertThat(hPersistence.createQuery(Activity.class).count()).isEqualTo(1);
     Activity changeEventFromDb = hPersistence.createQuery(Activity.class).get();
@@ -81,7 +81,7 @@ public class ChangeEventServiceImplTest extends CvNextGenTestBase {
         new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())));
     ChangeEventDTO changeEventDTO = builderFactory.getHarnessCDChangeEventDTOBuilder().build();
 
-    changeEventService.register(builderFactory.getContext().getAccountId(), changeEventDTO);
+    changeEventService.register(changeEventDTO);
 
     Activity changeEventFromDb = hPersistence.createQuery(Activity.class).get();
     Assertions.assertThat(changeEventFromDb).isNotNull();

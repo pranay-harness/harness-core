@@ -60,6 +60,9 @@ import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+import io.harness.eventsframework.schemas.deployment.ArtifactDetails;
+import io.harness.eventsframework.schemas.deployment.DeploymentEventDTO;
+import io.harness.eventsframework.schemas.deployment.ExecutionDetails;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO.EnvironmentResponseDTOBuilder;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -352,8 +355,13 @@ public class BuilderFactory {
         .eventTime(clock.instant())
         .changeSourceIdentifier("changeSourceID")
         .type(ChangeSourceType.HARNESS_CD.getActivityType())
-        .stageId("stage")
-        .executionId("executionId")
+        .stageStepId("stageStepId")
+        .stageId("stageId")
+        .pipelineId("pipelineId")
+        .planExecutionId("executionId")
+        .artifactType("artifactType")
+        .artifactTag("artifactTag")
+        .deploymentStatus("status")
         .activityEndTime(clock.instant())
         .activityStartTime(clock.instant());
   }
@@ -362,11 +370,17 @@ public class BuilderFactory {
     return getChangeEventDTOBuilder()
         .type(ChangeSourceType.HARNESS_CD)
         .changeEventMetaData(HarnessCDEventMetaData.builder()
-                                 .stageId("stage")
-                                 .executionId("executionId")
-                                 .deploymentEndTime(Instant.EPOCH.getEpochSecond())
-                                 .deploymentStartTime(Instant.EPOCH.getEpochSecond())
-                                 .status(io.harness.pms.contracts.execution.Status.SUCCEEDED)
+                                 .stageStepId("stage")
+                                 .planExecutionId("executionId")
+                                 .deploymentEndTime(Instant.now().toEpochMilli())
+                                 .deploymentStartTime(Instant.now().toEpochMilli())
+                                 .stageStepId("stageStepId")
+                                 .stageId("stageId")
+                                 .pipelineId("pipelineId")
+                                 .planExecutionId("executionId")
+                                 .artifactType("artifactType")
+                                 .artifactTag("artifactTag")
+                                 .status("status")
                                  .build());
   }
 
@@ -379,6 +393,26 @@ public class BuilderFactory {
         .envIdentifier(context.getEnvIdentifier())
         .eventTime(Instant.EPOCH.getEpochSecond())
         .changeSourceIdentifier("changeSourceID");
+  }
+
+  public DeploymentEventDTO.Builder getDeploymentEventDTOBuilder() {
+    return DeploymentEventDTO.newBuilder()
+        .setAccountId(context.getAccountId())
+        .setOrgIdentifier(context.getOrgIdentifier())
+        .setProjectIdentifier(context.getProjectIdentifier())
+        .setServiceIdentifier(context.getServiceIdentifier())
+        .setEnvironmentIdentifier(context.getEnvIdentifier())
+        .setDeploymentStartTime(Instant.now().toEpochMilli())
+        .setDeploymentEndTime(Instant.now().toEpochMilli())
+        .setDeploymentStatus("SUCCESS")
+        .setExecutionDetails(ExecutionDetails.newBuilder()
+                                 .setStageId("stageId")
+                                 .setPipelineId("pipelineId")
+                                 .setPlanExecutionId("planExecutionId")
+                                 .setStageSetupId("stageStepId")
+                                 .build())
+        .setArtifactDetails(
+            ArtifactDetails.newBuilder().setArtifactTag("artifactTag").setArtifactType("artifactType").build());
   }
 
   private ChangeSourceDTOBuilder getChangeSourceDTOBuilder(ChangeSourceType changeSourceType) {

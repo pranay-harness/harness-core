@@ -38,6 +38,6 @@ public class ChangeEventResource {
   @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
   public RestResponse<Boolean> register(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
-    return new RestResponse<>(changeEventService.register(accountId, changeEventDTO));
+    return new RestResponse<>(changeEventService.register(changeEventDTO));
   }
 }
