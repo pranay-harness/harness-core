@@ -206,7 +206,10 @@ instrPackages: %s`, dir, r.packages)
 	return fmt.Sprintf(javaAgentArg, iniFile), nil
 }
 
-func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
+func (r *runTestsTask) getMavenCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
+	if ignoreInstr {
+		return strings.TrimSpace(fmt.Sprintf("%s %s", mvnCmd, r.args)), nil
+	}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
@@ -220,7 +223,6 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	}
 	if !r.runOnlySelectedTests {
 		// Run all the tests
-		// TODO -- Aman - check if instumentation is required here too.
 		return strings.TrimSpace(fmt.Sprintf("%s -am -DargLine=%s %s", mvnCmd, instrArg, r.args)), nil
 	}
 	if len(tests) == 0 {
@@ -246,19 +248,17 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	return strings.TrimSpace(fmt.Sprintf("%s -Dtest=%s -am -DargLine=%s %s", mvnCmd, testStr, instrArg, r.args)), nil
 }
 
-func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
-	//tests = []types.RunnableTest{
-	//	{Pkg: "io.harness.pms.pipeline.service", Class: "PMSPipelineServiceImplTest"},
-	//	{Pkg: "software.wings.service.impl.trigger", Class: "TriggerServiceTest"},
-	//	{Pkg: "software.wings.service.impl.workflow", Class: "WorkflowServiceTest"},
-	//	{Pkg: "software.wings.service.impl.verification", Class: "CVConfigurationServiceImplTest"},
-	//}
+func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
+	if ignoreInstr {
+		return fmt.Sprintf("%s %s //...", bazelCmd, r.args), nil
+	}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
 	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
+
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd, nil
@@ -388,13 +388,13 @@ func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string
 	switch r.buildTool {
 	case "maven":
 		r.log.Infow("setting up maven as the build tool")
-		testCmd, err = r.getMavenCmd(selection.Tests)
+		testCmd, err = r.getMavenCmd(ctx, selection.Tests, isManual)
 		if err != nil {
 			return "", err
 		}
 	case "bazel":
 		r.log.Infow("setting up bazel as the build tool")
-		testCmd, err = r.getBazelCmd(ctx, selection.Tests)
+		testCmd, err = r.getBazelCmd(ctx, selection.Tests, isManual)
 		if err != nil {
 			return "", err
 		}
