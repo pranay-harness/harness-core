@@ -8,11 +8,13 @@ import io.harness.expression.Expression;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 
 import lombok.Builder;
+import lombok.ToString;
 import lombok.Value;
 
 @Value
 @Builder
 @OwnedBy(CDP)
+@ToString(exclude = {"fileContent"})
 public class FileData implements NestedAnnotationResolver {
   String filePath;
   byte[] fileBytes;
