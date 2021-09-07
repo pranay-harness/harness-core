@@ -1,7 +1,10 @@
 package io.harness.serializer.kryo;
 
-import io.harness.annotations.dev.HarnessTeam;
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
@@ -807,7 +810,8 @@ import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
 @Deprecated
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
