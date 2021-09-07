@@ -104,7 +104,11 @@ public class InviteResourceTest extends CategoryTest {
     List<String> emailIds = getDummyEmailIds(3);
     CreateInviteDTO createInviteDTO =
         CreateInviteDTO.builder().inviteType(ADMIN_INITIATED_INVITE).users(emailIds).build();
-    when(inviteService.create(any())).thenReturn(USER_ALREADY_INVITED, USER_INVITED_SUCCESSFULLY, USER_ALREADY_ADDED);
+    List<InviteOperationResponse> results = new ArrayList<>();
+    results.add(USER_ALREADY_INVITED);
+    results.add(USER_INVITED_SUCCESSFULLY);
+    results.add(USER_ALREADY_ADDED);
+    when(inviteService.createInvitations(any(), any(), any(), any())).thenReturn(results);
     List<InviteOperationResponse> operationResponses =
         inviteResource.createInvitations(accountIdentifier, orgIdentifier, projectIdentifier, createInviteDTO)
             .getData();
