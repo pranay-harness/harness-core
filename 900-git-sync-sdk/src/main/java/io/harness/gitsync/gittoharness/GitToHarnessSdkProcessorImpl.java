@@ -11,10 +11,13 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.ChangeSets;
+import io.harness.gitsync.EntityInfo;
 import io.harness.gitsync.FileProcessingResponse;
 import io.harness.gitsync.FileProcessingStatus;
 import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.GitToHarnessProcessRequest;
+import io.harness.gitsync.MarkEntityInvalidRequest;
+import io.harness.gitsync.MarkEntityInvalidResponse;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
 import io.harness.gitsync.beans.GitProcessRequest;
@@ -113,6 +116,28 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
     }
   }
 
+  @Override
+  public MarkEntityInvalidResponse markEntitiesInvalid(MarkEntityInvalidRequest markEntityInvalidRequest) {
+    String accountId = markEntityInvalidRequest.getAccountId();
+    String commitId = markEntityInvalidRequest.getCommitId().getValue();
+    GitToHarnessInfo branchInfo = markEntityInvalidRequest.getBranchInfo();
+    List<EntityInfo> entities = markEntityInvalidRequest.getEntityInfoList().getEntityInfoListList();
+
+    entities.forEach(entityInfo -> {
+      try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+        GlobalContextManager.upsertGlobalContextRecord(
+            createGitEntityInfo(branchInfo.getBranch(), entityInfo.getFilePath(), entityInfo.getYamlGitConfigId(),
+                entityInfo.getLastObjectId() == null ? null : entityInfo.getLastObjectId().getValue(), commitId));
+        try {
+          changeSetHelperService.markEntityInvalid(accountId, entityInfo);
+        } catch (Exception exception) {
+          log.error("Exception while marking entity " + entityInfo + " invalid, skipping it", exception);
+        }
+      }
+    });
+    return MarkEntityInvalidResponse.newBuilder().build();
+  }
+
   private boolean postProcessStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap,
       String commitId, String accountId) {
     try {
@@ -160,26 +185,32 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   }
 
   private GitSyncBranchContext createGitEntityInfo(
-      GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet, String commitId) {
-    String[] pathSplited = emptyIfNull(changeSet.getFilePath()).split(GitSyncConstants.FOLDER_PATH);
+      String branch, String filePath, String yamlGitConfigId, String lastObjectId, String commitId) {
+    String[] pathSplited = emptyIfNull(filePath).split(GitSyncConstants.FOLDER_PATH);
     if (pathSplited.length != 2) {
-      throw new InvalidRequestException(
-          String.format("The path %s doesn't contain the .harness folder, thus this file won't be processed",
-              changeSet.getFilePath()));
+      throw new InvalidRequestException(String.format(
+          "The path %s doesn't contain the .harness folder, thus this file won't be processed", filePath));
     }
     String folderPath = pathSplited[0] + GitSyncConstants.FOLDER_PATH;
-    String filePath = pathSplited[1];
+    filePath = pathSplited[1];
     return GitSyncBranchContext.builder()
         .gitBranchInfo(GitEntityInfo.builder()
-                           .branch(gitToHarnessBranchInfo.getBranch())
+                           .branch(branch)
                            .folderPath(folderPath)
                            .filePath(filePath)
-                           .yamlGitConfigId(changeSet.getYamlGitConfigInfo().getYamlGitConfigId())
-                           .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue())
+                           .yamlGitConfigId(yamlGitConfigId)
+                           .lastObjectId(lastObjectId)
                            .isSyncFromGit(true)
                            .commitId(commitId)
                            .build())
         .build();
+  }
+
+  private GitSyncBranchContext createGitEntityInfo(
+      GitToHarnessInfo gitToHarnessBranchInfo, ChangeSet changeSet, String commitId) {
+    return createGitEntityInfo(gitToHarnessBranchInfo.getBranch(), changeSet.getFilePath(),
+        changeSet.getYamlGitConfigInfo().getYamlGitConfigId(),
+        changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue(), commitId);
   }
 
   private boolean sortStage(ChangeSets changeSets, Map<String, FileProcessingResponse> processingResponseMap,

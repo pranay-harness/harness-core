@@ -61,6 +61,7 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidEntityException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -132,6 +133,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Optional<Connector> connector = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
         fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+    if (connector.isPresent() && connector.get().isEntityInvalid()) {
+      throw new InvalidEntityException("This entity is invalid, please check its yaml and try again.", USER);
+    }
     return connector.map(connectorMapper::writeDTO);
   }
 
@@ -751,5 +755,22 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                            -> new ConnectorNotFoundException(
                                String.format("No connector found with identifier %s", connectorIdentifier), USER));
     }
+  }
+
+  @Override
+  public boolean markEntity(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean invalid, String invalidYaml) {
+    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    Optional<Connector> existingConnectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+        fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+    if (!existingConnectorOptional.isPresent()) {
+      return false;
+    }
+    Connector existingConnector = existingConnectorOptional.get();
+    existingConnector.setEntityInvalid(invalid);
+    existingConnector.setInvalidYamlString(invalid ? invalidYaml : null);
+    connectorRepository.save(existingConnector, ChangeType.NONE);
+    return true;
   }
 }

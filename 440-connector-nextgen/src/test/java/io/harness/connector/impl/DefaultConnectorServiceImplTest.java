@@ -5,9 +5,11 @@ import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -37,6 +39,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswor
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
+import io.harness.exception.InvalidEntityException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -241,6 +244,39 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     createConnector(identifier, name);
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTO);
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testGetWhenConnectorIsInvalid() {
+    createConnector(identifier, name);
+    connectorService.markEntity(accountIdentifier, null, null, identifier, true, "xyz");
+    try {
+      connectorService.get(accountIdentifier, null, null, identifier);
+      fail("Execution should not reach here.");
+    } catch (InvalidEntityException invalidEntityException) {
+      // ignore
+    }
+  }
+
+  @Test
+  @Owner(developers = PHOENIKX)
+  @Category(UnitTests.class)
+  public void testMarkConnectorInvalid() {
+    createConnector(identifier, name);
+    Optional<ConnectorResponseDTO> connectorResponseDTO =
+        connectorService.get(accountIdentifier, null, null, identifier);
+    assertThat(connectorResponseDTO).isPresent();
+    assertThat(connectorResponseDTO.get().getEntityValidityDetails().isValid()).isEqualTo(true);
+    assertThat(connectorResponseDTO.get().getEntityValidityDetails().getInvalidYaml()).isEqualTo(null);
+    connectorService.markEntity(accountIdentifier, null, null, identifier, true, "xyz");
+    try {
+      connectorService.get(accountIdentifier, null, null, identifier);
+      fail("Execution should not reach here");
+    } catch (InvalidEntityException invalidEntityException) {
+      // ignore
+    }
   }
 
   @Test

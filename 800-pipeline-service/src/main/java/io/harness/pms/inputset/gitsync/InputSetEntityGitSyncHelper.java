@@ -81,6 +81,11 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
   }
 
   @Override
+  public boolean markEntity(String accountIdentifier, String yaml, boolean invalid) {
+    return false;
+  }
+
+  @Override
   public boolean delete(EntityReference entityReference) {
     return pmsInputSetService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
         entityReference.getProjectIdentifier(), ((InputSetReference) entityReference).getPipelineIdentifier(),

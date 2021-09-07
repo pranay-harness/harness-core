@@ -7,6 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceImplBase;
+import io.harness.gitsync.MarkEntityInvalidRequest;
+import io.harness.gitsync.MarkEntityInvalidResponse;
 import io.harness.gitsync.ProcessingResponse;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
@@ -45,5 +47,13 @@ public class GitToHarnessGrpcService extends GitToHarnessServiceImplBase {
       SecurityContextBuilder.unsetCompleteContext();
     }
     log.info("Grpc request completed");
+  }
+
+  @Override
+  public void markEntitiesInvalid(
+      MarkEntityInvalidRequest request, StreamObserver<MarkEntityInvalidResponse> responseObserver) {
+    gitToHarnessSdkProcessor.markEntitiesInvalid(request);
+    responseObserver.onNext(MarkEntityInvalidResponse.newBuilder().build());
+    responseObserver.onCompleted();
   }
 }

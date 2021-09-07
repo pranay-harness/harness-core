@@ -95,6 +95,11 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
   }
 
   @Override
+  public boolean markEntity(String accountIdentifier, String yaml, boolean invalid) {
+    return false;
+  }
+
+  @Override
   public boolean delete(EntityReference entityReference) {
     try {
       NGTemplateReference reference = (NGTemplateReference) entityReference;

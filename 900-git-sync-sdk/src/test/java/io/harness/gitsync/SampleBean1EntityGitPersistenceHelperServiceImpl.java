@@ -57,6 +57,11 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   }
 
   @Override
+  public boolean markEntity(String accountIdentifier, String yaml, boolean invalid) {
+    return false;
+  }
+
+  @Override
   public boolean delete(EntityReference entityReference) {
     return false;
   }

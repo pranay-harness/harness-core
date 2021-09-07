@@ -11,8 +11,31 @@ import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/
 
 service GitToHarnessService {
   rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
+
   rpc process(GitToHarnessProcessRequest) returns (ProcessingResponse);
+
+  rpc markEntitiesInvalid(MarkEntityInvalidRequest) returns (MarkEntityInvalidResponse);
 }
+
+message MarkEntityInvalidRequest {
+  string account_id = 1;
+  GitToHarnessInfo branch_info = 2;
+  google.protobuf.StringValue commit_id = 3;
+  EntityInfos entity_info_list = 4;
+}
+
+message EntityInfos {
+  repeated EntityInfo entityInfoList = 1;
+}
+message EntityInfo {
+  string yaml = 1;
+  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 2;
+  string file_path = 3;
+  string yaml_git_config_id = 4;
+  google.protobuf.StringValue last_object_id = 5;
+}
+
+message MarkEntityInvalidResponse {}
 
 message ChangeSets {
   repeated ChangeSet change_set = 1;
