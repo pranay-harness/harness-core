@@ -1,7 +1,7 @@
 package io.harness.cvng.core.beans.monitoredService;
 
 import io.harness.cvng.analysis.beans.Risk;
-import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -26,9 +26,11 @@ public class HistoricalTrend {
     HistoricalTrend historicalTrend = HistoricalTrend.builder().size(size).build();
 
     for (RiskData riskData : historicalTrend.getHealthScores()) {
-      TimeRange timeRange =
-          TimeRange.builder().startTime(trendStartTime).endTime(trendStartTime.plusMillis(windowInMillis)).build();
-      riskData.setTimeRange(timeRange);
+      TimeRangeParams timeRangeParams = TimeRangeParams.builder()
+                                            .startTime(trendStartTime)
+                                            .endTime(trendStartTime.plusMillis(windowInMillis))
+                                            .build();
+      riskData.setTimeRangeParams(timeRangeParams);
       trendStartTime = trendStartTime.plusMillis(windowInMillis);
     }
     return historicalTrend;
