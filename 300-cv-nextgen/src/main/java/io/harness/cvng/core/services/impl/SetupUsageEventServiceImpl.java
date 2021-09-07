@@ -11,7 +11,6 @@ import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SERV
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -29,6 +28,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -115,8 +115,7 @@ public class SetupUsageEventServiceImpl implements SetupUsageEventService {
 
   private List<EntityDetailProtoDTO> getReferredServiceEntities(
       ProjectParams projectParams, MonitoredServiceDTO monitoredServiceDTO) {
-    Set<String> serviceRefs =
-        monitoredServiceDTO.getDependencies().stream().map(ServiceRef::getServiceRef).collect(Collectors.toSet());
+    Set<String> serviceRefs = new HashSet<>();
     serviceRefs.add(monitoredServiceDTO.getServiceRef());
     return getEntityDetailProtoDTOList(projectParams, serviceRefs, SERVICE);
   }

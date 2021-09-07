@@ -409,6 +409,7 @@ import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.TaskType;
+import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
@@ -417,6 +418,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetr
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
@@ -891,5 +893,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ManifestPollingDelegateResponse.class, 543432);
     kryo.register(ArtifactPollingDelegateResponse.class, 543433);
     kryo.register(ElkValidationType.class, 543434);
+    kryo.register(ElkIndexTemplate.class, 543435);
+    kryo.register(ElkConnector.class, 543436);
   }
 }

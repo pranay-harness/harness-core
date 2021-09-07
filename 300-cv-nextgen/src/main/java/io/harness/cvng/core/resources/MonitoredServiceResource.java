@@ -111,8 +111,12 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("enable") Boolean enable) {
-    return new RestResponse<>(monitoredServiceService.setHealthMonitoringFlag(
-        accountId, orgIdentifier, projectIdentifier, identifier, enable));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(monitoredServiceService.setHealthMonitoringFlag(projectParams, identifier, enable));
   }
 
   @GET
@@ -156,8 +160,12 @@ public class MonitoredServiceResource {
   public ResponseDTO<MonitoredServiceResponse> get(@NotNull @PathParam("identifier") String identifier,
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
-    return ResponseDTO.newResponse(
-        monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, identifier));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(monitoredServiceService.get(projectParams, identifier));
   }
 
   @GET
@@ -172,8 +180,14 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
       @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier) {
-    return ResponseDTO.newResponse(monitoredServiceService.get(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier));
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .build();
+    return ResponseDTO.newResponse(monitoredServiceService.get(serviceEnvironmentParams));
   }
 
   @GET

@@ -330,12 +330,15 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams) {
+    Query<CVConfig> query = createQuery(serviceEnvironmentParams);
+    return query.asList();
+  }
+
+  @Override
   public List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams, List<String> identifiers) {
     Query<CVConfig> query = createQuery(serviceEnvironmentParams);
-
-    if (identifiers != null) {
-      query.field(CVConfigKeys.identifier).in(identifiers);
-    }
+    query.field(CVConfigKeys.identifier).in(identifiers);
     return query.asList();
   }
 

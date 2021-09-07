@@ -1,5 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -11,6 +15,8 @@ import java.util.List;
 /**
  * Created by anubhaw on 3/28/16.
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public interface RoleService extends OwnedByAccount {
   /**
    * List.

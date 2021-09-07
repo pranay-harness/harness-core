@@ -5,6 +5,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
+import io.harness.cvng.activity.entities.HarnessCDActivity;
+import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityBuilder;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
@@ -49,8 +51,6 @@ import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource.HarnessCDChangeSourceBuilder;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource.PagerDutyChangeSourceBuilder;
-import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent;
-import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent.HarnessCDChangeEventBuilder;
 import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
@@ -151,8 +151,8 @@ public class BuilderFactory {
         .description(generateUuid())
         .serviceRef(context.getServiceIdentifier())
         .environmentRef(context.getEnvIdentifier())
-        .dependencies(Sets.newHashSet(
-            ServiceRef.builder().serviceRef("service1").build(), ServiceRef.builder().serviceRef("service2").build()))
+        .dependencies(Sets.newHashSet(ServiceRef.builder().monitoredServiceIdentifier("service1").build(),
+            ServiceRef.builder().monitoredServiceIdentifier("service2").build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
                      .build());
@@ -342,20 +342,20 @@ public class BuilderFactory {
                   .build());
   }
 
-  public HarnessCDChangeEventBuilder getHarnessCDChangeEventBuilder() {
-    return HarnessCDChangeEvent.builder()
+  public HarnessCDActivityBuilder getHarnessCDActivityBuilder() {
+    return HarnessCDActivity.builder()
         .accountId(context.getAccountId())
         .orgIdentifier(context.getOrgIdentifier())
         .projectIdentifier(context.getProjectIdentifier())
         .serviceIdentifier(context.getServiceIdentifier())
-        .envIdentifier(context.getEnvIdentifier())
+        .environmentIdentifier(context.getEnvIdentifier())
         .eventTime(clock.instant())
         .changeSourceIdentifier("changeSourceID")
-        .type(ChangeSourceType.HARNESS_CD)
+        .type(ChangeSourceType.HARNESS_CD.getActivityType())
         .stageId("stage")
         .executionId("executionId")
-        .deploymentEndTime(clock.instant())
-        .deploymentStartTime(clock.instant());
+        .activityEndTime(clock.instant())
+        .activityStartTime(clock.instant());
   }
 
   public ChangeEventDTOBuilder getHarnessCDChangeEventDTOBuilder() {

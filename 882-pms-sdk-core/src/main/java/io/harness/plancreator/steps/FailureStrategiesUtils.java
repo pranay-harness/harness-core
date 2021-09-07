@@ -3,9 +3,7 @@ package io.harness.plancreator.steps;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.yaml.ParameterField;
@@ -29,7 +27,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(PIPELINE)
-@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public class FailureStrategiesUtils {
   public Map<FailureStrategyActionConfig, Collection<FailureType>> priorityMergeFailureStrategies(
       List<FailureStrategyConfig> stepFailureStrategies, List<FailureStrategyConfig> stepGroupFailureStrategies,

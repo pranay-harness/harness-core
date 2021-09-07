@@ -13,6 +13,7 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -74,9 +75,17 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     validate(stepParameters);
     String serviceIdentifier = stepParameters.getServiceIdentifier();
     String envIdentifier = stepParameters.getEnvIdentifier();
+
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(envIdentifier)
+                                                            .build();
+
     CVNGStepTaskBuilder cvngStepTaskBuilder = CVNGStepTask.builder();
-    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(serviceEnvironmentParams);
     if (monitoredServiceDTO == null || monitoredServiceDTO.getSources().getHealthSources().isEmpty()) {
       cvngStepTaskBuilder.skip(true);
       cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());

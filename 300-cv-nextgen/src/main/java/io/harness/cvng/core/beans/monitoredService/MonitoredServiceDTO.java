@@ -17,6 +17,7 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -39,7 +40,7 @@ public class MonitoredServiceDTO implements YamlDTO {
   @Data
   @Builder
   public static class ServiceRef {
-    @EntityIdentifier String serviceRef;
+    @NonNull String monitoredServiceIdentifier;
   }
 
   public Set<ServiceRef> getDependencies() {

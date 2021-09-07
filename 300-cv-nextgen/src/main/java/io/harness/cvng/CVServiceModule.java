@@ -8,9 +8,15 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CD10ActivitySource.CD10ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CDNGActivitySource.CDNGActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.CustomActivity.CustomActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
@@ -46,6 +52,7 @@ import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivitySourceType;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.cdng.services.api.CVNGStepService;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
@@ -65,8 +72,6 @@ import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConf
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
-import io.harness.cvng.core.entities.changeSource.event.ChangeEvent.ChangeEventUpdatableEntity;
-import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent.HarnessCDChangeEventUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -482,9 +487,18 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
         .to(PagerDutyChangeSourceSpecTransformer.class);
 
-    MapBinder<ChangeSourceType, ChangeEventUpdatableEntity> changeTypeMongoUtilMapBinder =
-        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventUpdatableEntity.class);
-    changeTypeMongoUtilMapBinder.addBinding(ChangeSourceType.HARNESS_CD).to(HarnessCDChangeEventUpdatableEntity.class);
+    MapBinder<ActivityType, ActivityUpdatableEntity> activityTypeActivityUpdatableEntityMapBinder =
+        MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.HARNESS_CD)
+        .to(HarnessCDActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.DEPLOYMENT)
+        .to(DeploymentActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.INFRASTRUCTURE)
+        .to(InfrastructureActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.KUBERNETES)
+        .to(KubernetesActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.CUSTOM)
+        .to(CustomActivityUpdatableEntity.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
