@@ -546,7 +546,6 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
-import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountRequest;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountResponse;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest;
@@ -1390,7 +1389,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sApplyResponse.class, 7187);
     kryo.register(AwsAsgGetRunningCountRequest.class, 7188);
     kryo.register(AwsAsgGetRunningCountResponse.class, 7189);
-    kryo.register(AwsAsgGetRunningCountData.class, 7190);
     kryo.register(StackDriverLogDataCollectionInfo.class, 7191);
     kryo.register(Artifact.class, 7192);
     kryo.register(Artifact.ContentStatus.class, 7193);
