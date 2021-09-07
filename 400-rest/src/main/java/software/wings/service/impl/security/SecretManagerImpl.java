@@ -122,7 +122,7 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._360_CG_MANAGER)
+@TargetModule(HarnessModule._440_SECRET_MANAGEMENT_SERVICE)
 public class SecretManagerImpl implements SecretManager, EncryptedSettingAttributes {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
 
@@ -193,7 +193,12 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
         return Optional.empty();
       }
     }
+    return getEncryptedDataDetails(accountId, fieldName, encryptedData, workflowExecutionId);
+  }
 
+  @Override
+  public Optional<EncryptedDataDetail> getEncryptedDataDetails(
+      String accountId, String fieldName, EncryptedData encryptedData, String workflowExecutionId) {
     SecretManagerConfig encryptionConfig = secretManagerConfigService.getSecretManager(
         accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
@@ -742,6 +747,11 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
   @Override
   public String saveSecretText(String accountId, SecretText secretText, boolean validateScopes) {
     return createHarnessSecret(accountId, secretText, validateScopes);
+  }
+
+  @Override
+  public EncryptedData encryptSecret(String accountId, SecretText secret, boolean validateScopes) {
+    return secretService.encryptSecret(accountId, secret, validateScopes);
   }
 
   @Override

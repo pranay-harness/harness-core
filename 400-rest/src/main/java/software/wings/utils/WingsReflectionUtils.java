@@ -3,6 +3,8 @@ package software.wings.utils;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFieldTag;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Encryptable;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretParentsUpdateDetail;
@@ -26,6 +28,7 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@TargetModule(HarnessModule._980_COMMONS)
 public class WingsReflectionUtils {
   public static boolean isSetByYaml(Encryptable object, Field encryptedField) throws IllegalAccessException {
     encryptedField.setAccessible(true);

@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessModule._440_SECRET_MANAGEMENT_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -10,6 +11,7 @@ import static software.wings.sm.states.ShellScriptState.ConnectionType.SSH;
 import static software.wings.sm.states.ShellScriptState.ConnectionType.WINRM;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -33,6 +35,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 @UtilityClass
+@TargetModule(_440_SECRET_MANAGEMENT_SERVICE)
 public class CustomSecretsManagerValidationUtils {
   static final String OUTPUT_VARIABLE = "secret";
 
