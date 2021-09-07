@@ -151,8 +151,8 @@ public class BuilderFactory {
         .description(generateUuid())
         .serviceRef(context.getServiceIdentifier())
         .environmentRef(context.getEnvIdentifier())
-        .dependencies(Sets.newHashSet(
-            ServiceRef.builder().serviceRef("service1").build(), ServiceRef.builder().serviceRef("service2").build()))
+        .dependencies(Sets.newHashSet(ServiceRef.builder().monitoredServiceIdentifier("service1").build(),
+            ServiceRef.builder().monitoredServiceIdentifier("service2").build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
                      .build());

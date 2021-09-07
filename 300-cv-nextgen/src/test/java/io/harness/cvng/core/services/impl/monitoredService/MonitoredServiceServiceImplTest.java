@@ -291,7 +291,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
     Set<ServiceRef> serviceRefs = serviceDependencyService.getDependentServicesForMonitoredService(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier);
+        builderFactory.getContext().getProjectParams(), monitoredServiceDTO.getIdentifier());
     assertThat(serviceRefs).isEqualTo(monitoredServiceDTO.getDependencies());
   }
 
@@ -300,7 +300,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGet_IdentifierNotPresent() {
     assertThatThrownBy(
-        () -> monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier))
+        () -> monitoredServiceService.get(builderFactory.getContext().getProjectParams(), monitoredServiceIdentifier))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             String.format("Monitored Source Entity with identifier %s is not present", monitoredServiceIdentifier));
@@ -313,7 +313,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredServiceDTO getMonitoredServiceDTO =
-        monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier)
+        monitoredServiceService.get(builderFactory.getContext().getProjectParams(), monitoredServiceIdentifier)
             .getMonitoredServiceDTO();
     assertThat(monitoredServiceDTO).isEqualTo(getMonitoredServiceDTO);
   }
@@ -322,9 +322,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
   public void testGet_usingServiceEnvironmentNotPresent() {
-    assertThat(monitoredServiceService.get(
-                   accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier))
-        .isNull();
+    assertThat(monitoredServiceService.get(builderFactory.getContext().getServiceEnvironmentParams())).isNull();
   }
 
   @Test
@@ -334,9 +332,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     MonitoredServiceDTO getMonitoredServiceDTO =
-        monitoredServiceService
-            .get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier)
-            .getMonitoredServiceDTO();
+        monitoredServiceService.get(builderFactory.getContext().getServiceEnvironmentParams()).getMonitoredServiceDTO();
     assertThat(monitoredServiceDTO).isEqualTo(getMonitoredServiceDTO);
   }
 
@@ -676,12 +672,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     monitoredServiceService.setHealthMonitoringFlag(
-        accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier, false);
+        builderFactory.getContext().getProjectParams(), monitoredServiceIdentifier, false);
     MonitoredService updatedMonitoredService = getMonitoredService(monitoredServiceIdentifier);
     getCVConfigs(updatedMonitoredService).forEach(cvConfig -> assertThat(cvConfig.isEnabled()).isFalse());
     assertThat(updatedMonitoredService.isEnabled()).isFalse();
     monitoredServiceService.setHealthMonitoringFlag(
-        accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier, true);
+        builderFactory.getContext().getProjectParams(), monitoredServiceIdentifier, true);
     updatedMonitoredService = getMonitoredService(monitoredServiceIdentifier);
     assertThat(updatedMonitoredService.isEnabled()).isTrue();
     getCVConfigs(updatedMonitoredService).forEach(cvConfig -> assertThat(cvConfig.isEnabled()).isTrue());
@@ -802,8 +798,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                 .healthSources(
                     Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
                 .build())
-        .dependencies(Sets.newHashSet(ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build(),
-            ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build()))
+        .dependencies(Sets.newHashSet(ServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
+            ServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build()))
         .build();
   }
 

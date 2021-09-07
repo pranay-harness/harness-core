@@ -27,13 +27,9 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO);
   MonitoredServiceResponse update(String accountId, MonitoredServiceDTO monitoredServiceDTO);
   boolean delete(ProjectParams projectParams, String identifier);
-  MonitoredServiceResponse get(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
-  MonitoredServiceResponse get(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
-  MonitoredServiceDTO getMonitoredServiceDTO(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier);
-  MonitoredServiceDTO getMonitoredServiceDTO(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
+  MonitoredServiceResponse get(ProjectParams projectParams, String identifier);
+  MonitoredServiceResponse get(ServiceEnvironmentParams serviceEnvironmentParams);
+  MonitoredServiceDTO getMonitoredServiceDTO(ServiceEnvironmentParams serviceEnvironmentParams);
 
   List<MonitoredService> list(
       @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String environmentIdentifier);
@@ -43,8 +39,7 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   List<EnvironmentResponse> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);
   MonitoredServiceResponse createDefault(
       ProjectParams projectParams, String serviceIdentifier, String environmentIdentifier);
-  HealthMonitoringFlagResponse setHealthMonitoringFlag(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean enable);
+  HealthMonitoringFlagResponse setHealthMonitoringFlag(ProjectParams projectParams, String identifier, boolean enable);
 
   HistoricalTrend getOverAllHealthScore(
       ProjectParams projectParams, String identifier, DurationDTO duration, Instant endTime);
