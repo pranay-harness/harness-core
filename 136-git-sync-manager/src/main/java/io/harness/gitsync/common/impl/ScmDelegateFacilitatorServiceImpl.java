@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
-import io.harness.beans.gitsync.GitFileDetails;
+import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.ConnectorResponseDTO;
@@ -362,8 +362,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
 
   @Override
   public CreateFileResponse createFile(InfoForGitPush infoForPush) {
-    GitFileDetails.GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(),
-        infoForPush.getFilePath(), infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
     final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(infoForPush.getAccountId(),
         infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
     ScmPushTaskParams scmPushTaskParams = ScmPushTaskParams.builder()
@@ -389,8 +389,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
 
   @Override
   public UpdateFileResponse updateFile(InfoForGitPush infoForPush) {
-    GitFileDetails.GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(),
-        infoForPush.getFilePath(), infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
     gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
     final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(infoForPush.getAccountId(),
         infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
@@ -417,8 +417,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
 
   @Override
   public DeleteFileResponse deleteFile(InfoForGitPush infoForPush) {
-    GitFileDetails.GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(),
-        infoForPush.getFilePath(), infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
     gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
     final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(infoForPush.getAccountId(),
         infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());

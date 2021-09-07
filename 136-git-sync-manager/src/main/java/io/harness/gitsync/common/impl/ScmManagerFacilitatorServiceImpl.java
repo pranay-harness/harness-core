@@ -6,7 +6,7 @@ import static io.harness.eraro.ErrorCode.PR_CREATION_ERROR;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.IdentifierRef;
-import io.harness.beans.gitsync.GitFileDetails;
+import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.ConnectorResponseDTO;
@@ -184,8 +184,8 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     if (infoForPush.isNewBranch()) {
       createBranch(infoForPush.getBranch(), infoForPush.getBaseBranch(), decryptedConnector);
     }
-    final GitFileDetails.GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(),
-        infoForPush.getFilePath(), infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    final GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
     return scmClient.createFile(decryptedConnector, gitFileDetails.build());
   }
 
@@ -196,8 +196,8 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     if (infoForPush.isNewBranch()) {
       createBranch(infoForPush.getBranch(), infoForPush.getBaseBranch(), decryptedConnector);
     }
-    final GitFileDetails.GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(),
-        infoForPush.getFilePath(), infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    final GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
     gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
     return scmClient.updateFile(decryptedConnector, gitFileDetails.build());
   }
@@ -209,8 +209,8 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     if (infoForPush.isNewBranch()) {
       createBranch(infoForPush.getBranch(), infoForPush.getBaseBranch(), decryptedConnector);
     }
-    final GitFileDetails.GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(),
-        infoForPush.getFilePath(), infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    final GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
     gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
     return scmClient.deleteFile(decryptedConnector, gitFileDetails.build());
   }

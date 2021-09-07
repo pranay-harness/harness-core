@@ -31,8 +31,9 @@ public class ScmGitUtils {
         return createScmDeleteFileResponse(gitEntityInfo, pushFileResponse, entityDetail);
       case MODIFY:
         return createScmUpdateFileResponse(yaml, gitEntityInfo, pushFileResponse, entityDetail);
+      default:
+        throw new UnexpectedException("Unexpected changetype encountered");
     }
-    throw new UnexpectedException("Unexpected changetype encountered");
   }
 
   public ScmCreateFileResponse createScmCreateFileResponse(

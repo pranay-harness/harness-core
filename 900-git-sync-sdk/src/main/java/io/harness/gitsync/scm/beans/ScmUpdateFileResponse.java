@@ -10,8 +10,8 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
-@EqualsAndHashCode(callSuper = true)
 @Value
+@EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)

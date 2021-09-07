@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFileDetails;
+import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
@@ -131,7 +132,7 @@ public abstract class AbstractScmClientFacilitatorServiceImpl implements ScmClie
     }
   }
 
-  GitFileDetails.GitFileDetailsBuilder getGitFileDetails(
+  GitFileDetailsBuilder getGitFileDetails(
       String yaml, String filePath, String folderPath, String commitMsg, String branch) {
     final EmbeddedUser currentUser = ScmUserHelper.getCurrentUser();
     String filePathForPush = ScmGitUtils.createFilePath(folderPath, filePath);

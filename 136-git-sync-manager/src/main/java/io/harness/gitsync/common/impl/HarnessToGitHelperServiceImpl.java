@@ -249,8 +249,9 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
             .setDefaultBranchName(yamlGitConfig.getBranch())
             .setCommitId(deleteFileResponse.getCommitId())
             .build();
+      default:
+        throw new UnexpectedException("Unknown change type encountered.");
     }
-    throw new UnexpectedException("Unknown change type encountered.");
   }
 
   private InfoForGitPush getInfoForGitPush(
