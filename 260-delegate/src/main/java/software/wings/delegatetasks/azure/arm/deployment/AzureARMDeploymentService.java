@@ -23,13 +23,12 @@ import io.harness.delegate.azure.arm.deployment.context.DeploymentContext;
 import io.harness.delegate.azure.arm.deployment.context.DeploymentManagementGroupContext;
 import io.harness.delegate.azure.arm.deployment.context.DeploymentResourceGroupContext;
 import io.harness.delegate.azure.arm.deployment.context.DeploymentSubscriptionContext;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentTenantContext;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.serializer.JsonUtils;
-
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentTenantContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
