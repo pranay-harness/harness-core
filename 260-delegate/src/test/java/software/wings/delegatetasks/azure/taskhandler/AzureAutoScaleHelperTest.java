@@ -5,6 +5,7 @@ import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MAX_INSTA
 import static io.harness.azure.model.AzureConstants.DEFAULT_AZURE_VMSS_MIN_INSTANCES;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
 import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.JELENA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -83,6 +84,7 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
     String subscriptionId = "subscriptionId";
     String resourceGroupName = "resourceGroupName";
     String mostRecentActiveVMSSName = "mostRecentActiveVMSSName";
+    int mostRecentActiveVMSSCapacity = 5;
     int minInstances = 0;
     int maxInstances = 2;
     int desiredInstances = 1;
@@ -96,6 +98,7 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
     doReturn(mostRecentActiveVMSSId).when(mostRecentActiveVMSS).id();
     doReturn(resourceGroupName).when(mostRecentActiveVMSS).resourceGroupName();
     doReturn(mostRecentActiveVMSSName).when(mostRecentActiveVMSS).name();
+    doReturn(mostRecentActiveVMSSCapacity).when(mostRecentActiveVMSS).capacity();
     mockAutoscaleProfile(azureConfig, mostRecentActiveVMSSId, subscriptionId, resourceGroupName, minInstances,
         maxInstances, desiredInstances);
 
@@ -106,6 +109,43 @@ public class AzureAutoScaleHelperTest extends WingsBaseTest {
     assertThat(response.getMinInstances()).isEqualTo(minInstances);
     assertThat(response.getMaxInstances()).isEqualTo(maxInstances);
     assertThat(response.getDesiredInstances()).isEqualTo(desiredInstances);
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testGetVMSSAutoScaleInstanceLimitsFromMostRecentActiveVMSSWithManualScaling() throws Exception {
+    mockExecutionLogCallbackMethods();
+    AzureConfig azureConfig = AzureConfig.builder().build();
+    String mostRecentActiveVMSSId = "id";
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    String mostRecentActiveVMSSName = "mostRecentActiveVMSSName";
+    int mostRecentActiveVMSSCapacity = 2;
+    AzureVMSSSetupTaskParameters setupTaskParameters = AzureVMSSSetupTaskParameters.builder()
+                                                           .subscriptionId(subscriptionId)
+                                                           .resourceGroupName(resourceGroupName)
+                                                           .build();
+    // when there's no default autoscaling profile for most recent VMSS (manual scaling), take capacity as instance
+    // limit
+    boolean isUseCurrentRunningCount = true;
+
+    VirtualMachineScaleSet mostRecentActiveVMSS = mock(VirtualMachineScaleSet.class);
+    doReturn(mostRecentActiveVMSSId).when(mostRecentActiveVMSS).id();
+    doReturn(resourceGroupName).when(mostRecentActiveVMSS).resourceGroupName();
+    doReturn(mostRecentActiveVMSSName).when(mostRecentActiveVMSS).name();
+    doReturn(mostRecentActiveVMSSCapacity).when(mostRecentActiveVMSS).capacity();
+    doReturn(Optional.empty())
+        .when(mockAzureAutoScaleSettingsClient)
+        .getDefaultAutoScaleProfile(azureConfig, subscriptionId, resourceGroupName, mostRecentActiveVMSSId);
+
+    AzureVMSSAutoScaleSettingsData response = azureAutoScaleHelper.getVMSSAutoScaleInstanceLimits(
+        azureConfig, setupTaskParameters, mostRecentActiveVMSS, isUseCurrentRunningCount, SETUP_COMMAND_UNIT);
+
+    assertThat(response).isNotNull();
+    assertThat(response.getMinInstances()).isEqualTo(mostRecentActiveVMSSCapacity);
+    assertThat(response.getMaxInstances()).isEqualTo(mostRecentActiveVMSSCapacity);
+    assertThat(response.getDesiredInstances()).isEqualTo(mostRecentActiveVMSSCapacity);
   }
 
   private void mockAutoscaleProfile(AzureConfig azureConfig, String targetResourceId, String subscriptionId,
